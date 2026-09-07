@@ -17,6 +17,43 @@ in `.claude/agents/`, update this file to match.
 | `smoke-test-runner` | `.claude/agents/smoke-test-runner.md` | Bash, Read, Write, Edit | A trivial end-to-end pipeline validation is needed: schematic → netlist → simulation → PCB → placement → routing → ERC/DRC → gerber/drill export. | Per-stage verdict (succeeded / partially succeeded / failed) with evidence, and explicit flags on any non-scriptable manual workaround. |
 | `docs-writer` (this role) | `.claude/agents/docs-writer.md` | Read, Write, Edit, Grep, Glob | README.md, AGENTS.md, or report sections need drafting from findings already gathered by other agents. | Markdown reflecting only verified findings; explicit `TODO: unverified` placeholders where information is missing; never invents capabilities/versions/results. |
 
+## Hi-fi project team
+
+The roster above is the *environment* team — the agents that built and validated the toolchain. The agents below are the *project* team that uses it to design audio hardware.
+
+**The orchestrator is the main session, not a subagent.** It runs on Opus, defines requirements with the user, arbitrates between roles, and owns decisions that are not delegated (architecture, source-of-truth boundaries, gate outcomes). There is deliberately no `.claude/agents/` file for it — you do not delegate to your own orchestrator.
+
+| Role | Agent | Model | Owns |
+|---|---|---|---|
+| Circuit design | `analog-topology-designer` | opus | `circuits/*.py` — the canonical topology, operating points, gain structure, predicted figures of merit |
+| Gate review | `design-reviewer` | opus | Independent challenge at gates only. No write access by design |
+| Measurement | `measurement-analyst` | sonnet | THD/THD+N, response, noise, PSRR, Zout, phase margin — verifies the designer's predictions |
+| Power supply | `psu-engineer` | sonnet | Rails, ripple, regulation, thermal, **mains safety** |
+| Layout | `pcb-automation-engineer` | sonnet | Placement, routing, **grounding/return paths/EMC**, DRC, fabrication export |
+| Components | `bom-component-manager` | sonnet | Part selection, sourcing, vendor models + provenance |
+| Regressions | `regression-runner` | haiku | Runs the verification scripts, reports exit codes verbatim. No judgment, no fixes |
+| Documentation | `docs-writer` | sonnet | Project docs and measurement dossiers, from verified results only |
+
+`installer-verifier` and `toolchain-researcher` are kept on the bench — invoked only when adding or evaluating a tool, not as part of ongoing project work.
+
+### Gates
+
+`design-reviewer` is invoked at three points, not continuously:
+
+- **G1 — Topology freeze**: before layout begins.
+- **G2 — Pre-layout**: schematic/netlist complete, before placement and routing.
+- **G3 — Pre-fabrication**: before any fabrication export is treated as final.
+
+A gate returns **PASS** or **BLOCK**. On a mains-connected design, a missing safety analysis is an automatic BLOCK.
+
+### What the team does not do
+
+No agent judges how a circuit *sounds*. Subjective evaluation belongs to the user, on real hardware. Simulation covers stability, noise, response, PSRR and impedance credibly; it does not cover listening, and distortion figures from generic macro-models are not trustworthy substitutes for measurement on a prototype.
+
+### Project roadmap
+
+Preamplifier first, then a phono stage, then a power amplifier. A DAC is possible but not committed. Agent mandates are written to be reusable across all of these rather than tuned to any one — but note the emphasis shifts: a phono stage is dominated by noise and RIAA equalisation accuracy, while a power amplifier is dominated by thermal design and mains safety.
+
 ## Delegation guidance for the orchestrator
 
 - Tool selection is a two-step handoff: `toolchain-researcher` gathers
