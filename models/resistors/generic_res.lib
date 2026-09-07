@@ -1,0 +1,12 @@
+* generic_res.lib - generic linear resistor model with temperature
+* coefficients. AUTHORED (not derived from any vendor file). Trivial
+* disposable test-fixture model, not a specific vendor part.
+*
+* USAGE (verified against ngspice 47):
+*   .include models/resistors/generic_res.lib
+*   R1 n1 n2 <value> RGEN          ; positional form (value then model)
+*   R1 n1 n2 RGEN R=<value>        ; equivalent named-parameter form
+*
+* R(T) = R0 * (1 + TC1*(T-TNOM) + TC2*(T-TNOM)^2)
+
+.model RGEN R (TC1=1e-3 TC2=0 TNOM=27)

@@ -1,0 +1,23 @@
+* generic_opamp.lib - generic single-pole op-amp macro model. AUTHORED
+* (not derived from any vendor file). Trivial disposable test-fixture
+* subcircuit, NOT a foundry/vendor part.
+*
+* Behavioral macro-model: open-loop DC gain 200,000 (~106 dB), single
+* dominant pole at 1kHz (set by R1/C1 -> unity-gain bandwidth ~200MHz),
+* ideal unity-gain output buffer stage. Supply pins (VCC/VEE) are
+* present for pinout compatibility with real op-amp subckts but are
+* NOT used internally - this model has no output swing clipping, no
+* slew-rate limiting, no supply current draw. That is a known,
+* intentional simplification - do not use this for anything beyond
+* exercising the SPICE model-management pipeline.
+*
+* USAGE:
+*   .include models/opamp/generic_opamp.lib
+*   X1 inp inn vcc vee out OPAMP_GENERIC
+
+.subckt OPAMP_GENERIC INP INN VCC VEE OUT
+E1 n1 0 INP INN 200k
+R1 n1 n2 1k
+C1 n2 0 159.2n
+Eout OUT 0 n2 0 1
+.ends OPAMP_GENERIC

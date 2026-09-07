@@ -1,0 +1,11 @@
+* vendor_diode.lib - fictitious "vendor-style" diode model file
+* Loosely modeled after a 1N4148-like small-signal switching diode,
+* written as a .subckt wrapper (as many vendor model files do) so that
+* we exercise .subckt + .model loading via .lib/.include, not just a bare .model.
+* THIS IS A DISPOSABLE TEST FIXTURE - not a verified vendor part.
+
+.subckt VENDOR_D1N4148_TEST A K
+D1 A K DVENDOR
+.model DVENDOR D(IS=4.352e-9 N=1.906 BV=100 IBV=1e-4 RS=0.6647
++ CJO=7.048e-13 VJ=0.869 M=0.03 TT=3.48e-9)
+.ends VENDOR_D1N4148_TEST

@@ -1,0 +1,9 @@
+* generic_pmos.lib - generic enhancement-mode PMOS, SPICE LEVEL=1.
+* AUTHORED (not derived from any vendor file). Trivial disposable
+* test-fixture model.
+*
+* USAGE:
+*   .include models/mosfet_p/generic_pmos.lib
+*   M1 drain gate source bulk MPGEN W=100u L=10u
+
+.model MPGEN PMOS (LEVEL=1 VTO=-1.0 KP=100e-6 LAMBDA=0.02 GAMMA=0.5 PHI=0.6)

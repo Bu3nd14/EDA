@@ -1,0 +1,11 @@
+.title RC lowpass - AC sweep
+V1 VIN GND DC 0 AC 1
+R1 VIN OUT 1k
+C1 OUT GND 100n
+.ac dec 20 1 1meg
+.control
+run
+wrdata rc_ac_out.txt vdb(out) v(out)
+quit
+.endc
+.end

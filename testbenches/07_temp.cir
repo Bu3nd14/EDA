@@ -1,0 +1,17 @@
+* 07_temp.cir - temperature sweep test
+* Diode forward voltage vs temperature (should decrease ~2mV/C)
+V1 in 0 DC 0.6
+R1 in a 1k
+D1 a 0 DMOD
+
+.model DMOD D(IS=1e-14 N=1)
+
+.control
+* ngspice native temp sweep mechanism: dc analysis can sweep "TEMP" as
+* a pseudo-source name (built-in), which behaves like a .temp list sweep.
+dc TEMP -20 100 20
+print v(a) i(V1)
+wrdata /Users/roberto/EDA/results/07_temp.csv v(a) i(V1)
+.endc
+
+.end

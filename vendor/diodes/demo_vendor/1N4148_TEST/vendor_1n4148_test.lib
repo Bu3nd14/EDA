@@ -1,0 +1,26 @@
+* =====================================================================
+* FABRICATED "VENDOR-STYLE" MODEL FILE - FOR PIPELINE DEMONSTRATION ONLY
+* =====================================================================
+* This file is NOT a real vendor download. It was written by hand to
+* demonstrate the vendor/ -> models/ provenance workflow required by
+* the EDA environment's model-management step. Its electrical
+* parameters are loosely 1N4148-like but have NOT been validated
+* against a real datasheet or vendor SPICE model and must never be
+* used for an actual design.
+*
+* (A real vendor file would typically be dropped in here byte-for-byte
+*  exactly as downloaded, with no modification.)
+* =====================================================================
+.SUBCKT D1N4148_VENDOR A K
+D1 A K DIO_1N4148_VENDOR
+.MODEL DIO_1N4148_VENDOR D
++ IS  = 4.352E-9
++ N   = 1.906
++ BV  = 100
++ IBV = 1E-4
++ RS  = 0.6647
++ CJO = 7.048E-13
++ VJ  = 0.869
++ M   = 0.03
++ TT  = 3.48E-9
+.ENDS D1N4148_VENDOR

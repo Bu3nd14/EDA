@@ -1,0 +1,9 @@
+* generic_nmos.lib - generic enhancement-mode NMOS, SPICE LEVEL=1.
+* AUTHORED (not derived from any vendor file). Trivial disposable
+* test-fixture model.
+*
+* USAGE:
+*   .include models/mosfet_n/generic_nmos.lib
+*   M1 drain gate source bulk MNGEN W=100u L=10u
+
+.model MNGEN NMOS (LEVEL=1 VTO=1.0 KP=200e-6 LAMBDA=0.02 GAMMA=0.5 PHI=0.6)

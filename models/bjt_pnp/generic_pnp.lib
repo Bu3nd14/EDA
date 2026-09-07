@@ -1,0 +1,8 @@
+* generic_pnp.lib - generic small-signal PNP BJT model. AUTHORED (not
+* derived from any vendor file). Trivial disposable test-fixture model.
+*
+* USAGE:
+*   .include models/bjt_pnp/generic_pnp.lib
+*   Q1 collector base emitter QPGEN
+
+.model QPGEN PNP (IS=1e-16 BF=100 VAF=100 RB=10 RC=1 RE=0.5)

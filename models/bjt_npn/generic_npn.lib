@@ -1,0 +1,8 @@
+* generic_npn.lib - generic small-signal NPN BJT model. AUTHORED (not
+* derived from any vendor file). Trivial disposable test-fixture model.
+*
+* USAGE:
+*   .include models/bjt_npn/generic_npn.lib
+*   Q1 collector base emitter QNGEN
+
+.model QNGEN NPN (IS=1e-16 BF=100 VAF=100 RB=10 RC=1 RE=0.5)

@@ -1,0 +1,9 @@
+* generic_njf.lib - generic N-channel JFET (depletion mode). AUTHORED
+* (not derived from any vendor file). Trivial disposable test-fixture
+* model.
+*
+* USAGE:
+*   .include models/jfet/generic_njf.lib
+*   J1 drain gate source JNGEN
+
+.model JNGEN NJF (VTO=-2 BETA=1e-3 LAMBDA=0.02)

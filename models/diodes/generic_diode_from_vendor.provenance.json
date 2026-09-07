@@ -1,0 +1,12 @@
+{
+  "canonical_file": "generic_diode_from_vendor.lib",
+  "device_class": "diodes",
+  "origin": "vendor_derived",
+  "vendor_source_path": "vendor/diodes/demo_vendor/1N4148_TEST/vendor_1n4148_test.lib",
+  "vendor_source_sha256": "f16608490455633f2d4e7af1bcc14591f32fc62ee7ac39ec5d240792934ee141",
+  "date_created": "2026-09-07",
+  "author": "AI agent (Claude Opus 5, session https://claude.ai/code/session_01JJhoTEsWwpGNF3ebqzKLoP) on behalf of roberto.carmeli@gmail.com",
+  "changes": "Renamed .SUBCKT D1N4148_VENDOR -> VENDOR_1N4148_GENERIC and internal .MODEL DIO_1N4148_VENDOR -> DIO_1N4148_GENERIC to match project naming convention. Added explicit TNOM=27 to the .model line. Reformatted continuation lines and lowercased directives (cosmetic). No IS/N/BV/IBV/RS/CJO/VJ/M/TT values were changed.",
+  "reason": "Demonstrate the vendor-original -> curated-copy conversion workflow with real provenance recorded, per project Step 4 requirements. This is a DEMO conversion of a FABRICATED vendor file, not a real datasheet-derived part.",
+  "notes": "Do not treat as a real 1N4148 model. See vendor/diodes/demo_vendor/1N4148_TEST/PROVENANCE.json and vendor_1n4148_test.lib header for the disclosed fabrication."
+}

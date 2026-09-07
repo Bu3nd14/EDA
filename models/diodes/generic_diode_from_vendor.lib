@@ -1,0 +1,35 @@
+* =====================================================================
+* generic_diode_from_vendor.lib - CURATED COPY, derived from vendor
+* file vendor/diodes/demo_vendor/1N4148_TEST/vendor_1n4148_test.lib
+*
+* THIS IS A DEMO CONVERSION. The "vendor" source file itself is a
+* fabricated stand-in (see that file's own header and its
+* PROVENANCE.json) - this copy exists only to demonstrate the
+* vendor-original -> curated-copy workflow end to end, not to certify
+* a real part.
+*
+* Changes made relative to the vendor original (see
+* generic_diode_from_vendor.provenance.json for the structured record):
+*   1. Renamed .SUBCKT D1N4148_VENDOR -> VENDOR_1N4148_GENERIC and the
+*      internal .MODEL name DIO_1N4148_VENDOR -> DIO_1N4148_GENERIC,
+*      to match this project's naming convention (avoid clashes with
+*      other libraries that might define D1N4148_VENDOR differently).
+*   2. Added an explicit TNOM=27 to the .model line (the vendor file
+*      omitted it; ngspice defaults to 27 anyway, but we make it
+*      explicit here to document the assumption for future readers).
+*   3. Reformatted to this project's continuation-line style.
+*   4. Uppercase/lowercase normalized to lowercase directive style used
+*      elsewhere in this library (SPICE is case-insensitive; purely
+*      cosmetic).
+* No electrical parameter values (IS, N, BV, RS, CJO, VJ, M, TT) were
+* changed from the vendor original.
+*
+* USAGE:
+*   .include models/diodes/generic_diode_from_vendor.lib
+*   X1 anode cathode VENDOR_1N4148_GENERIC
+* =====================================================================
+.subckt VENDOR_1N4148_GENERIC A K
+D1 A K DIO_1N4148_GENERIC
+.model DIO_1N4148_GENERIC D (IS=4.352E-9 N=1.906 BV=100 IBV=1E-4
++ RS=0.6647 CJO=7.048E-13 VJ=0.869 M=0.03 TT=3.48E-9 TNOM=27)
+.ends VENDOR_1N4148_GENERIC

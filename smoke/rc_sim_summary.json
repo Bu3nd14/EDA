@@ -1,0 +1,40 @@
+{
+  "fixture": "RC lowpass, R=1k, C=100n",
+  "R_ohm": 1000.0,
+  "C_farad": 1e-07,
+  "tau_theory_s": 9.999999999999999e-05,
+  "fc_theory_Hz": 1591.5494309189537,
+  "fc_sim_Hz": 1587.6199823809475,
+  "fc_error_pct": 0.24689453319319027,
+  "transient_step_checks": [
+    {
+      "t_target_s": 9.999999999999999e-05,
+      "t_actual_s": 0.000100032008,
+      "vout_sim_V": 0.632236483,
+      "vout_theory_V": 0.6321205588285577,
+      "abs_error_V": 0.00011592417144234979
+    },
+    {
+      "t_target_s": 0.00019999999999999998,
+      "t_actual_s": 0.000200032008,
+      "vout_sim_V": 0.864707374,
+      "vout_theory_V": 0.8646647167633873,
+      "abs_error_V": 4.26572366126754e-05
+    },
+    {
+      "t_target_s": 0.0003,
+      "t_actual_s": 0.000300032008,
+      "vout_sim_V": 0.950228629,
+      "vout_theory_V": 0.950212931632136,
+      "abs_error_V": 1.5697367863998224e-05
+    },
+    {
+      "t_target_s": 0.0005,
+      "t_actual_s": 0.000500032008,
+      "vout_sim_V": 0.993264178,
+      "vout_theory_V": 0.9932620530009145,
+      "abs_error_V": 2.124999085473256e-06
+    }
+  ],
+  "ngspice_version": "47"
+}

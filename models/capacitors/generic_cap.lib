@@ -1,0 +1,14 @@
+* generic_cap.lib - generic linear capacitor model with temperature
+* coefficients. AUTHORED (not derived from any vendor file). Trivial
+* disposable test-fixture model.
+*
+* USAGE (verified against ngspice 47):
+*   .include models/capacitors/generic_cap.lib
+*   C1 n1 n2 CGEN C=<value>         ; model name right after nodes,
+*                                    then C=value as a named parameter.
+*   NOTE: the positional form "C1 n1 n2 <value> CGEN" does NOT work in
+*   ngspice 47 - it errors "unknown parameter (cgen)". Unlike the R
+*   device, C does not support a bare positional model-name after the
+*   value. Confirmed via ngspice's own `devhelp capacitor`.
+
+.model CGEN C (TC1=0 TC2=0 TNOM=27)

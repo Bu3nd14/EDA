@@ -1,0 +1,13 @@
+* 01_op.cir - trivial DC operating point test
+* Simple resistive divider: 10V source, R1=1k, R2=2k
+V1 in 0 DC 10
+R1 in mid 1k
+R2 mid 0 2k
+
+.control
+op
+print v(in) v(mid) i(V1)
+wrdata /Users/roberto/EDA/results/01_op.csv v(in) v(mid) i(V1)
+.endc
+
+.end

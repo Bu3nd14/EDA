@@ -1,0 +1,13 @@
+* 02_dc.cir - DC sweep test
+* Resistive divider, sweep V1 from 0 to 10V
+V1 in 0 DC 0
+R1 in mid 1k
+R2 mid 0 2k
+
+.control
+dc V1 0 10 1
+print v(in) v(mid) i(V1)
+wrdata /Users/roberto/EDA/results/02_dc.csv v(in) v(mid) i(V1)
+.endc
+
+.end

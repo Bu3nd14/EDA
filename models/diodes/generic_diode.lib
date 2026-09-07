@@ -1,0 +1,8 @@
+* generic_diode.lib - generic small-signal diode model. AUTHORED (not
+* derived from any vendor file). Trivial disposable test-fixture model.
+*
+* USAGE:
+*   .include models/diodes/generic_diode.lib
+*   D1 anode cathode DGEN
+
+.model DGEN D (IS=1e-14 N=1 RS=1 BV=100 IBV=1e-4 CJO=2p TT=1n)

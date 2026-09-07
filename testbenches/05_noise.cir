@@ -1,0 +1,16 @@
+* 05_noise.cir - noise analysis test
+* Simple RC low-pass, noise from R1 dominates
+V1 in 0 DC 0 AC 1
+R1 in out 1k
+C1 out 0 159.15n
+
+.control
+noise v(out) V1 dec 10 1 1meg 1
+setplot noise1
+print inoise_spectrum onoise_spectrum
+wrdata /Users/roberto/EDA/results/05_noise.csv inoise_spectrum onoise_spectrum
+setplot noise2
+print onoise_total inoise_total
+.endc
+
+.end

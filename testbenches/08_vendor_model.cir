@@ -1,0 +1,20 @@
+* 08_vendor_model.cir - external vendor-style model file loaded via .lib
+* Uses vendor_diode.lib's VENDOR_D1N4148_TEST subckt (a disposable
+* test-fixture stand-in for a "1N4148-like" vendor part, NOT a verified
+* real vendor file). If vendor_diode.lib is missing/renamed, ngspice
+* errors out because X1's subckt is undefined - proving the external
+* file is genuinely required, not silently ignored.
+
+.include /Users/roberto/EDA/testbenches/vendor_diode.lib
+
+V1 in 0 DC 0.7
+R1 in a 100
+X1 a 0 VENDOR_D1N4148_TEST
+
+.control
+dc V1 0.5 0.8 0.01
+print v(a) i(V1)
+wrdata /Users/roberto/EDA/results/08_vendor_model.csv v(a) i(V1)
+.endc
+
+.end

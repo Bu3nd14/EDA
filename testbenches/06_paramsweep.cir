@@ -1,0 +1,26 @@
+* 06_paramsweep.cir - parameter sweep test
+* NOTE: ngspice does NOT implement LTspice's ".step param ..." directive.
+* The genuine ngspice-native mechanism for sweeping an arbitrary .param
+* across independent op-point (or any other) analyses is a .control
+* block loop using "foreach"/"alterparam"/"reset"/"<analysis>".
+* (ngspice also has a .step-like feature only via its "dc" analysis
+*  sweeping a source, or via the compatibility "altermparam"/"repeat"
+*  constructs; the foreach+alterparam+reset pattern below is the
+*  documented, portable way - see ngspice manual ch. 17 "control
+*  statements", alterparam/reset.)
+.param rval=1k
+
+V1 in 0 DC 10
+R1 in mid {rval}
+R2 mid 0 2k
+
+.control
+foreach val 500 1000 2000 5000 10000
+    alterparam rval = $val
+    reset
+    op
+    echo "RVAL=$val VMID=$&v(mid)"
+end
+.endc
+
+.end

@@ -1,0 +1,32 @@
+* generic_transformer.lib - generic 4-terminal multi-port subcircuit
+* example: an ideal-ish transformer built from two coupled inductors
+* (SPICE "K" mutual-coupling statement). AUTHORED (not derived from any
+* vendor file). Trivial disposable test-fixture model demonstrating a
+* non-2-terminal .subckt in the model library (as opposed to simple
+* R/C/L/D/Q/M/J 2- or 3-terminal primitives).
+*
+* Physics: with coupling K close to 1.0 and an ideal (zero source
+* impedance) primary drive, open-circuit secondary voltage ratio is
+*   V_sec / V_pri = K * N     (frequency-independent, verified below)
+* where N = turns ratio, set via LSEC = LPRI * N^2.
+*
+* USAGE:
+*   .include models/subckt_generic/generic_transformer.lib
+*   X1 pri_p pri_n sec_p sec_n XFMR_GENERIC PARAMS: N=5 LPRI=1m
+*
+* IMPORTANT ngspice quirk: driving the primary with a ZERO-impedance
+* voltage source (no series R at all) causes a singular-matrix error
+* during the operating-point solve ("Warning: singular matrix: check
+* node l.x1.l1#branch") because a pure inductor-only loop has no DC
+* resistive path. Always include at least a small series source
+* resistance (e.g. 1 ohm) or a load resistance for numerical
+* conditioning, as ngspice needs a real transient-op fallback path.
+* This is a real ngspice 47 behavior, confirmed while building this
+* model, not a bug in this subckt.
+
+.subckt XFMR_GENERIC PRI_P PRI_N SEC_P SEC_N PARAMS: N=1 LPRI=1m
+L1 PRI_P PRI_N LGENX inductance={LPRI}
+L2 SEC_P SEC_N LGENX inductance={LPRI*N*N}
+K1 L1 L2 0.999
+.model LGENX L
+.ends XFMR_GENERIC

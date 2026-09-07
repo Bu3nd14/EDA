@@ -1,0 +1,13 @@
+* 04_tran.cir - transient test
+* RC charging: tau = R*C = 1k*1u = 1ms
+V1 in 0 PULSE(0 5 0 1n 1n 10m 20m)
+R1 in out 1k
+C1 out 0 1u
+
+.control
+tran 10u 5m
+print v(in) v(out)
+wrdata /Users/roberto/EDA/results/04_tran.csv v(in) v(out)
+.endc
+
+.end

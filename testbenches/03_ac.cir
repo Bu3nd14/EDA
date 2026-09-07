@@ -1,0 +1,13 @@
+* 03_ac.cir - AC frequency response test
+* Simple RC low-pass filter, fc = 1/(2*pi*R*C) = 1/(2*pi*1k*159.15n) ~ 1kHz
+V1 in 0 DC 0 AC 1
+R1 in out 1k
+C1 out 0 159.15n
+
+.control
+ac dec 10 1 1meg
+print vdb(out) v(out)
+wrdata /Users/roberto/EDA/results/03_ac.csv vdb(out) vp(out)
+.endc
+
+.end

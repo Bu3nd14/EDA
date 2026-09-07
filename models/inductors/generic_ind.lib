@@ -1,0 +1,16 @@
+* generic_ind.lib - generic linear inductor model with temperature
+* coefficients. AUTHORED (not derived from any vendor file). Trivial
+* disposable test-fixture model.
+*
+* USAGE (verified against ngspice 47):
+*   .include models/inductors/generic_ind.lib
+*   L1 n1 n2 LGEN inductance=<value>   ; model name right after nodes,
+*                                       then inductance=value.
+*   NOTE: neither "L1 n1 n2 <value> LGEN" (positional, like R) nor
+*   "L1 n1 n2 LGEN L=<value>" work in ngspice 47 - the first errors
+*   "unknown parameter (lgen)", the second errors "unknown parameter
+*   (l)" because the inductor instance parameter is named "inductance"
+*   (no "L" alias), unlike the capacitor which does alias "C".
+*   Confirmed via ngspice's own `devhelp inductor`.
+
+.model LGEN L (TC1=0 TC2=0 TNOM=27)
