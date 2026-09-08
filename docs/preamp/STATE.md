@@ -6,7 +6,7 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-08** (L0 chiuso: piano a lotti depositato qui; prossimo lotto L1)
+Ultimo aggiornamento: **2026-09-08** (L1 chiuso: il preamp ha una vista d'insieme; prossimo lotto L2)
 
 ---
 
@@ -51,8 +51,8 @@ manciata di file, **M** = riempie una sessione da solo.
 | # | Lotto | Dim. | Stato |
 |---|---|---|---|
 | L0 | Riallineare questo file e depositarci il piano | XS | **fatto** |
-| L1 | Diagramma a blocchi del preamp intero | S/M | **prossimo** |
-| L2 | Collaudare la convenzione di percorso `wrdata` su un deck solo | XS | da fare |
+| L1 | Diagramma a blocchi del preamp intero | S/M | **fatto** |
+| L2 | Collaudare la convenzione di percorso `wrdata` su un deck solo | XS | **prossimo** |
 | L3 | Applicare la convenzione ai 3 deck che già scrivono | S | da fare |
 | L4 | `wrdata` sui deck muti **senza** cicli | S | da fare |
 | L5 | `wrdata` sui deck muti **con** cicli annidati | S/M | da fare |
@@ -68,14 +68,26 @@ componenti veri), **Fase 5** (misure), **dossier**, **G1**.
 
 ### Cosa contiene ciascun lotto
 
-**L1 — diagramma a blocchi.** Quello del blocco di guadagno esiste, la
-vista d'insieme no. `schemdraw 0.23` è nel venv e
-`schematic/gain_block_draw.py` è il template: stesse convenzioni, SVG nel
-repo. Sorgente della topologia: `circuits/preamp/preamp_audio.py` e
-l'ASCII in `REQUIREMENTS.md`. **Da scrivere nell'intestazione del file**:
-è un diagramma a blocchi, quindi **non** passa da `check_schematic.py`,
-che confronta dispositivi con la netlist — va detto, o sembrerà
-verificato meccanicamente quando non lo è.
+**L1 — diagramma a blocchi. FATTO.**
+`schematic/preamp_blocks_draw.py` → `preamp_blocks.svg`. Tre pannelli:
+ingresso + blocco A + le due uscite fisse; attenuatore + blocco B +
+uscita principale; relè condivisi, alimentazione e cosa sta su quale
+scheda. Disegnato **un canale**: il secondo è identico per contratto
+(T3/ADR-006), e ciò che i canali condividono — i quattro relè — sta nel
+terzo pannello, dove conta.
+
+Non produce manifesto e **non** è coperto da `check_schematic.py`: un
+diagramma a blocchi omette i dispositivi di proposito. La garanzia che ha
+è un'altra, ed è scritta in `../architecture.md`: **nessuna cifra sul
+disegno è scritta a mano**. Tutte vengono lette da
+`circuits/preamp/preamp_audio.net` e asserite — i sei condensatori
+d'accoppiamento devono coincidere, i resistori di scarico non possono
+divergere fra i canali, e il "+10 dB" è **calcolato** da R_f/R_g e deve
+cadere nella finestra di E2. Collaudato facendolo fallire di proposito su
+tutti e tre i casi.
+
+Il valore reale è +9,96 dB (R_f 1,50 kΩ / R_g 698 Ω): dentro tolleranza,
+ma vale saperlo prima che qualcuno lo scopra misurando.
 
 **L2-L5 — i testbench diventano artefatti.** Oggi solo 3 dei 12 deck in
 `spice/preamp/tb/` scrivono file dati, e **quei 3 scrivono nel posto
