@@ -6,16 +6,16 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-08** (dopo la Fase 1)
+Ultimo aggiornamento: **2026-09-08** (JFET scelto, Fase 2 sbloccata)
 
 ---
 
 ## Dove siamo
 
-**Fase 1 chiusa. In attesa di una decisione dell'utente prima della
-Fase 2.**
+**Fase 1 chiusa. Fase 2 sbloccata e avviata.**
 
-Le Fasi 0 e 1 sono chiuse. Dodici decisioni sono in `decisions/`.
+Le Fasi 0 e 1 sono chiuse. **Quattordici** decisioni sono in
+`decisions/`.
 Nessun circuito è ancora stato disegnato: `circuits/preamp/` non esiste.
 
 **Esito Fase 1: la topologia regge — le parti esistono.** Il punto debole
@@ -42,7 +42,7 @@ dinamica lamentata.
 |---|---|---|---|
 | 0 | Requisiti | orchestratore + utente | **fatto** |
 | 1 | Verifica parti critiche (JFET, BJT, modelli SPICE vendor) | `bom-component-manager` | **fatto** |
-| 2 | Bozza di topologia in `circuits/preamp/` | `analog-topology-designer` | da fare |
+| 2 | Bozza di topologia in `circuits/preamp/` | `analog-topology-designer` | **in corso** |
 | 3 | Giro componenti completo | `bom-component-manager` | da fare |
 | 4 | Revisione della topologia alla luce dei componenti | `analog-topology-designer` | da fare |
 | 5 | Misure (stabilità per prima) | `measurement-analyst` | da fare |
@@ -60,33 +60,44 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**Serve una decisione dell'utente: quale JFET d'ingresso.** È un
-compromesso fra genealogia e verificabilità della simulazione, e va
-registrato in una ADR nuova (sarà la 013) prima di disegnare.
+**Fase 2 avviata.** `analog-topology-designer` scrive il blocco di
+guadagno in `circuits/preamp/`, con:
 
-| Candidato | Pro | Contro |
-|---|---|---|
-| **LSK170 + LSJ74** | La genealogia 2SK170/2SJ74; complementari veri; in stock | Modello SPICE è un **PDF da trascrivere a mano**; **il modello LSJ74 non è confermato** |
-| **LSK489** (duale monolitico N) | Appaiamento e tracking termico **intrinseci**: elimina il problema del lotto | Stesso problema del modello PDF; niente complementare P |
-| **TI JFE2140** (duale monolitico N) | **Modelli SPICE nativi TI, verificati**; il più economico | Nessuna genealogia audio; polarizzazioni da ricalcolare; niente complementare P |
+- **LSK489** duale monolitico all'ingresso (ADR-013)
+- **coppia cascodata** (ADR-014)
+- retroazione globale, guadagno 0 / +10 dB via relè (ADR-004), disposta
+  in modo che **l'anello non si apra mai** durante la commutazione (V2)
+- inseguitore complementare Classe A in uscita, MJE15032/33
+- specchio con PNP appaiati o array THAT320 (miglior provenienza SPICE
+  del giro)
 
-Chiuso questo, si passa alla **Fase 2**: `analog-topology-designer`
-scrive il blocco in `circuits/preamp/`.
+In parallelo va importato il **modello SPICE LSK489**, con la procedura
+obbligatoria di ADR-013: PDF congelato in `vendor/`, trascrizione
+dichiarata nella provenance, controllo incrociato su datasheet.
 
-Da decidere in parallelo, minore: portare a **4,7 µF** anche il
+Decisione minore ancora aperta: portare a **4,7 µF** anche il
 condensatore verso il Singxer, visto che la sua impedenza d'ingresso non
-è pubblicata. Costa ingombro, elimina il rischio, aggiorna ADR-007.
+è pubblicata.
 
 ## Domande aperte
 
 | Cosa | Chi risponde | Blocca? |
 |---|---|---|
-| **Quale JFET d'ingresso** | **utente** | **Sì — blocca la Fase 2** |
 | Condensatore verso il Singxer: 2,2 o 4,7 µF | utente | No |
-| Modello SPICE LSJ74 (link non risolto) | Fase 2/3 | Solo se si sceglie LSJ74 |
-| Impedenza d'ingresso Singxer SA-1 V2 | — | **Non pubblicata**, verificato sul manuale. Chiedere a Singxer o misurare |
-| Conferma specifiche cj EV250 | — | **CHIUSA**: email costruttore + manuale MV50 |
-| Valore del cap d'uscita del phono a valvole | utente | **Rinviata** — non ha accesso agli schematici né può aprire agevolmente il telaio. Non blocca |
+| Trascrizione del modello LSK489 da PDF | Fase 2 | No, ma **la credibilità della distorsione ci poggia sopra** |
+| Impedenza d'ingresso Singxer SA-1 V2 | — | **Non pubblicata**, verificato sul manuale ufficiale |
+| Valore del cap d'uscita del phono a valvole | utente | **Rinviata** — non ha accesso agli schematici né può aprire agevolmente il telaio |
+| ~~Quale JFET d'ingresso~~ | — | **CHIUSA**: LSK489 (ADR-013) |
+| ~~Conferma specifiche cj EV250~~ | — | **CHIUSA**: email costruttore + manuale MV50 |
+
+## Attenzione per chi riprende
+
+`REQUIREMENTS.md` contiene ora una sezione **Requisiti di verifica**
+(V1–V4). Non è burocrazia: il relè del guadagno commuta la rete di
+controreazione, quindi **il margine di fase è diverso nelle due
+modalità**, e l'impedenza dell'attenuatore varia con la manopola, quindi
+**varia anche con la posizione del volume**. Se non si verifica tutta la
+matrice, si verifica solo il caso in cui il circuito passa.
 
 ## Come è organizzata la documentazione
 
