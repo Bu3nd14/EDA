@@ -8,6 +8,31 @@ phono → finale di potenza** (un DAC è possibile ma non deciso).
 `circuits/` è la fonte di verità della topologia ed è **ancora vuota**:
 il preamp sarà il primo circuito canonico del repo.
 
+## Progetto in corso: preamplificatore
+
+**Se stai riprendendo il lavoro sul preamp, leggi prima
+`docs/preamp/STATE.md`.** Dice dove siamo, cosa è aperto e qual è il
+prossimo passo.
+
+La documentazione di progetto sta in `docs/preamp/`, organizzata per
+ciclo di vita e non per fase:
+
+| Percorso | Tipo | Regola |
+|---|---|---|
+| `docs/preamp/STATE.md` | vivo | Il punto di ripresa. Sempre vero al presente |
+| `docs/preamp/REQUIREMENTS.md` | vivo | Requisiti congelati; ogni modifica sostanziale vuole una ADR |
+| `docs/preamp/decisions/ADR-*.md` | **immutabile** | Mai riscritte. Una decisione superata si supera con una ADR nuova |
+| `docs/preamp/reports/` | datato | Output di un'esecuzione: misure, giri BOM, verdetti dei gate |
+
+**Regola operativa: ogni sessione che tocca il progetto preamp aggiorna
+`docs/preamp/STATE.md` prima di chiudere, e lo committa insieme al
+lavoro.** È il meccanismo che rende sicuro interrompere una sessione a
+metà — se STATE.md è disallineato, il progetto non è ripartibile.
+
+**Tracciabilità**: ogni valore non ovvio in `circuits/preamp/*.py` porta
+un commento che punta alla ADR che l'ha prodotto. È il collegamento
+dall'artefatto al ragionamento, e costa un commento.
+
 Questo file non ripete la documentazione: è l'indice di orientamento più
 ciò che è stato scoperto e non è ancora finito negli altri documenti.
 
