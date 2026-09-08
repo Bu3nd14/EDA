@@ -51,3 +51,27 @@ attenuatore fa il suo mestiere onestamente.
 Cambia il finale (sensibilità diversa da 0,67 V) o entra in catena una
 sorgente a basso livello. Per quel caso esiste già il guadagno
 commutabile a +10 dB — vedi ADR-004.
+
+---
+
+## Aggiornamento 2026-09-08 — provenienza dei dati sul finale
+
+Il testo sopra **non è stato modificato** (le ADR non si riscrivono).
+Questa nota registra che i dati d'ingresso sono migliorati di
+provenienza dopo la stesura.
+
+Le specifiche del finale usate sopra (25 W, 670 mV) venivano da annunci
+d'asta. L'utente ha poi fornito uno scambio di email con l'assistenza
+**conrad-johnson**: l'EV250 è un **MV50 riconfigurato in triodo** ed è
+dato per **30 W**, non 25.
+
+- **Impedenza d'ingresso 100 kΩ: confermata** dal manuale ufficiale MV50.
+- La sensibilità esatta dell'EV250 non è pubblicata, ma è delimitabile
+  fra **612 e 750 mV** (guadagno 20,7×–25,3×, cioè 1,8 dB di scarto).
+- L'attenuazione che il Technics doveva applicare risulta **45,4–47,1 dB**
+  a seconda dell'ipotesi. **La manopola indicava 46 dB: in mezzo.**
+
+**La decisione non cambia, e la diagnosi si rafforza**: regge su tutto
+l'intervallo plausibile invece che su un singolo dato non verificato.
+
+Dettaglio in `../reports/2026-09-08-identificazione-cj-ev250.md`.
