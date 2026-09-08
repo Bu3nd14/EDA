@@ -19,7 +19,11 @@
 
 set -u
 
-ROOT=/Users/roberto/EDA
+# Resolve from this script's own location, NOT a hard-coded path: with a
+# hard-coded ROOT, running the suite from an isolated working copy silently
+# tests the main checkout instead of the tree you are editing - a wrong
+# answer with no error, which is exactly what this repo exists to avoid.
+ROOT=${0:A:h:h}
 SCRIPTS="$ROOT/scripts"
 SCRATCH="$ROOT/results/run_tests"
 mkdir -p "$SCRATCH"
@@ -84,9 +88,19 @@ fi
 echo
 
 echo "-- 2c. smoke pipeline artifact sanity check --"
+# Two classes of artifact, deliberately treated differently.
+#
+# TRACKED ones are in git, so their absence is a real failure.
+#
+# SCRATCH ones (gerbers, drill) are gitignored by design - fabrication output
+# is generated, never committed. A fresh clone or a new working copy simply
+# does not have them, so demanding their presence made the suite impossible
+# to pass anywhere but the one checkout that happened to have run the smoke
+# pipeline. They are SKIPPED when absent and CHECKED when present: an empty
+# or truncated file is still a failure.
 missing=0
-for f in smoke/rc_circuit.kicad_sch smoke/rc_circuit.net smoke/rc_circuit_routed.kicad_pcb \
-         smoke/gerbers/rc_circuit_routed.drl smoke/rc_sim_summary.json; do
+for f in smoke/rc_circuit.kicad_sch smoke/rc_circuit.net \
+         smoke/rc_circuit_routed.kicad_pcb smoke/rc_sim_summary.json; do
     p="$ROOT/$f"
     if [ -s "$p" ]; then
         echo "   OK: $f ($(stat -f%z "$p" 2>/dev/null || stat -c%s "$p") bytes)"
@@ -95,7 +109,50 @@ for f in smoke/rc_circuit.kicad_sch smoke/rc_circuit.net smoke/rc_circuit_routed
         missing=$((missing + 1))
     fi
 done
+for f in smoke/gerbers/rc_circuit_routed.drl; do
+    p="$ROOT/$f"
+    if [ -e "$p" ]; then
+        if [ -s "$p" ]; then
+            echo "   OK: $f ($(stat -f%z "$p" 2>/dev/null || stat -c%s "$p") bytes)"
+        else
+            echo "   EMPTY: $f" >&2
+            missing=$((missing + 1))
+        fi
+    else
+        echo "   SKIP: $f (scratch gitignorato - rigenera con: zsh smoke/run_pipeline.sh)"
+    fi
+done
 report "smoke pipeline artifacts present" $missing
+echo
+
+echo "-- 2d. schematic drawings vs netlists (see docs/limitations.md #16) --"
+# Readable analog schematics cannot be auto-placed, so drawings are laid out
+# by hand and MUST be checked against the netlist they claim to describe.
+# Discovers every manifest under docs/*/schematic/ - no per-project wiring.
+sch_fail=0
+sch_seen=0
+while IFS= read -r mf; do
+    [ -n "$mf" ] || continue
+    sch_seen=$((sch_seen + 1))
+    net=$(/usr/bin/python3 -c "
+import json,sys
+print(json.load(open('$mf')).get('source_netlist',''))" 2>/dev/null)
+    case "$net" in
+        /*) ;;                       # already absolute
+        "") echo "   MANIFEST WITHOUT source_netlist: $mf" >&2
+            sch_fail=$((sch_fail + 1)); continue ;;
+        *)  net="$ROOT/$net" ;;
+    esac
+    if /usr/bin/python3 "$ROOT/scripts/check_schematic.py" "$mf" "$net"; then
+        echo "   OK: $(basename "$mf")"
+    else
+        sch_fail=$((sch_fail + 1))
+    fi
+done < <(find "$ROOT/docs" -path '*/schematic/*.manifest.json' -type f 2>/dev/null | sort)
+if [ "$sch_seen" -eq 0 ]; then
+    echo "   (nessun disegno da controllare)"
+fi
+report "schematic drawings match their netlists" $sch_fail
 echo
 
 echo "== run_tests.sh SUMMARY: $n_pass passed, $n_fail failed =="

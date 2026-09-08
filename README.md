@@ -222,12 +222,34 @@ documentation, so their internals are not described here beyond intent:
 | `scripts/run_erc.sh <sch> [outjson]` | Run `kicad-cli sch erc` and emit JSON. |
 | `scripts/run_drc.sh <pcb> [outjson]` | Run `kicad-cli pcb drc` and emit JSON. |
 | `scripts/export_fab.sh <pcb> [outdir]` | Export gerbers/drill; **refuses to export if DRC fails.** |
+| `scripts/check_schematic.py <manifest.json> <netlist.cir>` | Verify a hand-laid-out schematic drawing against the netlist, in both directions. Exit 1 on any mismatch. |
 
 `TODO: unverified` — confirm the final invocation syntax/flags of the above
 against the actual script contents once they land; this table reflects the
 interface as specified to this documentation task, not a read of the scripts
 themselves (except `validate_models.py`, which already exists and is
 described above from `models/README.md`).
+
+## Human-reviewable schematics
+
+Readable analog schematics **cannot be auto-placed** — researched and tested
+against ASG, lcapy and netlistsvg, none of which work for this (see
+`docs/limitations.md` #16). Every tool that does automatic placement targets
+digital netlists, where dataflow dictates layout; analog readability lives in
+conventions that encode designer intent and are absent from the netlist.
+
+Drawings are therefore laid out **by hand, in code**, with `schemdraw` — a text
+source that versions and diffs. The resulting risk, a drawing drifting silently
+from the circuit, is mechanised away: each drawing emits a connectivity manifest
+next to its SVG, and `scripts/check_schematic.py` compares it to the netlist in
+both directions (nothing invented, nothing omitted). `scripts/run_tests.sh`
+discovers every manifest under `docs/*/schematic/` automatically.
+
+The checker was proven to catch an invented device, an omitted device and a
+miswired pin — it passes a correct manifest and fails a deliberately broken one.
+
+A human-reviewable schematic is a **precondition for gates G1 and G2**. See
+`docs/architecture.md` for the convention and `AGENTS.md` for the gate rule.
 
 ## Limitations
 
