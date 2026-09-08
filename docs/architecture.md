@@ -144,6 +144,36 @@ Formato **SVG** e non PDF: è testo, quindi versionabile e confrontabile,
 si apre in qualsiasi browser e si rende su GitHub. Chi vuole la copia su
 carta la stampa dal browser.
 
+### Il caso diverso: i diagrammi a blocchi
+
+Uno **schematico** mostra ogni dispositivo, quindi il manifesto lo copre
+per intero. Un **diagramma a blocchi** ne omette la quasi totalità di
+proposito — è la sua funzione — e per lui `check_schematic.py` non ha
+senso: non può che segnalare centinaia di dispositivi mancanti.
+
+Un diagramma a blocchi quindi **non emette manifesto** e non compare nel
+blocco 2d. Ma non per questo resta senza garanzia: si verifica **ciò che
+afferma**, cioè le cifre annotate. La regola è che nessun valore stampato
+sul disegno venga scritto a mano nel sorgente del disegno — va **letto
+dalla netlist generata** e asserito lì.
+
+Esempio, `docs/preamp/schematic/preamp_blocks_draw.py`: legge
+`circuits/preamp/preamp_audio.net` e muore se i sei condensatori
+d'accoppiamento non hanno tutti lo stesso valore, se i quattro resistori
+di scarico divergono fra i canali, o se `1 + R_f/R_g` esce dalla finestra
+che il requisito E2 chiede. Il "+10 dB" sul disegno è **calcolato**, non
+dichiarato. Anche questo è stato collaudato facendolo fallire di
+proposito su tutti e tre i casi.
+
+È una garanzia **più debole**: non vede una connessione sbagliata. Copre
+però l'errore più probabile in un documento derivato — la cifra che resta
+indietro quando il circuito cambia — e quell'errore in questo repo è già
+costato una volta (limitazione #13).
+
+Il disegno deve **dirlo di sé**, nella propria intestazione: chi lo apre
+non deve poter credere che sia coperto dal controllo per dispositivo
+quando non lo è.
+
 ### Cosa questo NON è
 
 Il disegno è **documentazione derivata**, non una fonte di verità. La

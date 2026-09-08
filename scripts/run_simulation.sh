@@ -23,7 +23,10 @@
 set -u
 
 NGSPICE=/opt/homebrew/bin/ngspice
-ROOT=/Users/roberto/EDA
+# ROOT is derived from this script's own location, never hard-coded: run
+# from a worktree, a hard-coded ROOT silently read and wrote the *other*
+# tree. Same defect, same fix, as run_tests.sh.
+ROOT=${0:A:h:h}
 
 if [ $# -lt 1 ]; then
     echo "Usage: $0 <netlist.cir> [outdir]" >&2
@@ -39,6 +42,9 @@ fi
 BASENAME=$(basename "$NETLIST" .cir)
 OUTDIR="${2:-$ROOT/results/$BASENAME}"
 mkdir -p "$OUTDIR"
+# Absolute, because this script cd's into $OUTDIR before running ngspice:
+# a relative outdir argument would leave $LOG/$CSV/$JSON pointing nowhere.
+OUTDIR=$(cd "$OUTDIR" && pwd)
 
 LOG="$OUTDIR/${BASENAME}.log"
 WRDATA="$OUTDIR/${BASENAME}_wrdata.txt"
@@ -51,15 +57,46 @@ NETLIST_ABS=$(cd "$(dirname "$NETLIST")" && pwd)/$(basename "$NETLIST")
 
 echo "== run_simulation.sh: $NETLIST_ABS -> $OUTDIR =="
 
+# @REPO@ placeholder: a deck writes `.include @REPO@/spice/...` and this
+# script resolves it against the checkout the script is itself part of.
+# That is what keeps a deck portable across worktrees and clones.
+#
+# Why a placeholder and not a plain relative path: ngspice resolves a
+# relative `.include` against the CURRENT WORKING DIRECTORY, not against
+# the directory of the deck that contains it - and this script cd's to
+# $OUTDIR (below) so that bare `wrdata <name>` lands there. Verified,
+# not assumed: two files both named ../real.lib, one reachable from the
+# deck's directory (1k) and one from the cwd (9k); ngspice -b read the
+# cwd one.
+#
+# A missing include is loud - ngspice exits 1 with "Could not find
+# include file" - so an unresolved @REPO@ fails safe. The dangerous case
+# is a same-named stray file reachable from $OUTDIR, which is what the
+# warning below exists for.
+SRC_DECK="$NETLIST_ABS"
+if grep -q '@REPO@' "$NETLIST_ABS"; then
+    SRC_DECK="$OUTDIR/${BASENAME}_resolved.cir"
+    sed "s|@REPO@|$ROOT|g" "$NETLIST_ABS" > "$SRC_DECK"
+    echo "   deck uses @REPO@; resolved against $ROOT -> $SRC_DECK"
+fi
+
+# A relative .include resolves against $OUTDIR, so it either fails loudly
+# or - worse - picks up a same-named stray file. Say so out loud.
+if grep -E '^[[:space:]]*\.include[[:space:]]+[^/@[:space:]]' "$SRC_DECK" > /dev/null 2>&1; then
+    echo "   WARNING: deck has a relative .include; ngspice resolves it against" >&2
+    echo "            the working directory ($OUTDIR), not the deck's directory." >&2
+    echo "            Use @REPO@/<path-from-repo-root> instead." >&2
+fi
+
 # Does the deck already have its own .control/wrdata? If not, wrap it
 # with a minimal .op + wrdata-all-vectors block so this script always
 # produces machine-readable output, at minimum an operating point.
-if grep -qi '^\s*\.control' "$NETLIST_ABS"; then
-    RUN_DECK="$NETLIST_ABS"
+if grep -qi '^\s*\.control' "$SRC_DECK"; then
+    RUN_DECK="$SRC_DECK"
     echo "   deck has its own .control block; running as-is"
 else
     RUN_DECK="$OUTDIR/${BASENAME}_autowrap.cir"
-    { grep -vi '^\s*\.end\s*$' "$NETLIST_ABS"
+    { grep -vi '^\s*\.end\s*$' "$SRC_DECK"
       echo ".control"
       echo "op"
       echo "wrdata $WRDATA all"

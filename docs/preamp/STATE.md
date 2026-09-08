@@ -6,63 +6,186 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-08** (Fase 2 consegnata; progetto in pausa per una lacuna dell'ambiente)
+Ultimo aggiornamento: **2026-09-08** (L2 chiuso: la convenzione di percorso è collaudata su `tb_op.cir`; prossimo lotto L3)
 
 ---
 
-## LEGGI PRIMA — lavoro in volo al 2026-09-08
+## Come si lavora da qui: a lotti piccoli e pushati
 
-Questa sezione esiste perché la sessione poteva interrompersi a metà.
-Cancellala quando i punti sotto sono chiusi.
+Il vincolo che governa il lavoro non è tecnico, è il **cap di token del
+piano**. Un lotto che non arriva in fondo non lascia lavoro a metà:
+lascia un repo in uno stato che la sessione dopo deve prima capire e poi
+riparare. Quindi il lavoro è ordinato per **dimensione**, non per
+importanza.
 
-### Dove sta il codice, e cosa manca a `main`
+### Le regole
 
-Il lavoro **non è su `main`**. Sta sul branch **`worktree-preamp-fase1`**,
-pushato su origin, **5 commit avanti a `origin/main`**. Fisicamente nel
-worktree `/Users/roberto/EDA/.claude/worktrees/preamp-fase1`.
+1. **Un lotto per volta.** Mai due agenti in parallelo: i loro resoconti
+   tornano insieme, e il ritorno è la parte che consuma.
+2. **Ogni lotto finisce con un commit pushato**, nell'ordine di
+   `CLAUDE.md`: `git push` → `STATE.md` → il resto. Verificato con
+   `git log --oneline origin/<branch>..HEAD`, mai assunto.
+3. **Questo file nomina sempre il lotto successivo.** È ciò che rende
+   economica una ripartenza a freddo: la sessione dopo non ricostruisce
+   il contesto, lo legge.
+4. **Il messaggio di commit dice quale lotto chiude**, così `git log` da
+   solo racconta a che punto è il progetto.
+5. **Nessun lotto si inizia sopra l'80% del cap.** Sopra l'80% si chiude
+   quello in corso e si aggiorna lo stato, punto.
+6. **Gli agenti scrivono su file, non nel discorso.** Un subagente che
+   torna con quattromila parole di resoconto costa quanto il lavoro:
+   deve lasciare un report in `reports/` e restituire dieci righe.
+   L'orchestratore riesegue i numeri prima di riferirli all'utente.
 
-Il branch è su origin, quindi **niente è a rischio anche se il worktree
-sparisce**. Ma il checkout principale dell'utente è indietro.
+Nota onesta sul punto 5: **l'orchestratore non vede la quota a 5 ore.**
+Vede solo un contatore della sessione corrente, che è un'altra cosa. Il
+numero vero lo legge l'utente con `/status`. Per questo il lavoro a lotti
+conta più del protocollo di avviso: se ogni lotto finisce pushato, il
+momento in cui il cap arriva smette di essere importante.
 
-### Le tre azioni che l'utente ha chiesto e che restano da fare
+### I lotti
 
-1. Aprire una **PR** dal branch verso `main`
-2. **Mergiarla**
-3. `git pull` sul checkout principale per **allineare il repo locale**
+Dimensioni relative, non promesse: **XS** = pochi minuti, **S** = una
+manciata di file, **M** = riempie una sessione da solo.
 
-Tempistica concordata: **subito dopo che lo schematico è disegnato e
-verificato**, non aspettando il dossier completo.
+| # | Lotto | Dim. | Stato |
+|---|---|---|---|
+| L0 | Riallineare questo file e depositarci il piano | XS | **fatto** |
+| L1 | Diagramma a blocchi del preamp intero | S/M | **fatto** |
+| L2 | Collaudare la convenzione di percorso su un deck solo (`.include` **e** `wrdata`) | S | **fatto** |
+| L3 | Applicare la convenzione agli altri 11 deck (26 righe cablate rimaste) | S | **prossimo** |
+| L4 | `wrdata` sui deck muti **senza** cicli | S | da fare |
+| L5 | `wrdata` sui deck muti **con** cicli annidati | S/M | da fare |
+| L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | da fare |
+| L7 | LSK489: passo 4, il controllo incrociato | S | da fare |
+| L8 | Fase 3a — le parti nuove, fatti verificabili | M | da fare |
+| L9 | Fase 3b — la rosa dei componenti di segnale | M | da fare |
+| L10 | Simbolo KiCad dell'LSK489 | S | da fare |
 
-### Cosa era in esecuzione
+Dopo, non pianificati in dettaglio perché dipendono dall'esito:
+**alimentatore + sicurezza rete**, **Fase 4** (revisione topologia coi
+componenti veri), **Fase 5** (misure), **dossier**, **G1**.
 
-`analog-topology-designer` stava disegnando lo schematico leggibile del
-blocco di guadagno. Consegna attesa in `docs/preamp/schematic/`:
-`gain_block_draw.py`, `gain_block.svg`, `gain_block.manifest.json`.
+### Cosa contiene ciascun lotto
 
-**Verificalo tu, non fidarti del resoconto:**
+**L1 — diagramma a blocchi. FATTO.**
+`schematic/preamp_blocks_draw.py` → `preamp_blocks.svg`. Tre pannelli:
+ingresso + blocco A + le due uscite fisse; attenuatore + blocco B +
+uscita principale; relè condivisi, alimentazione e cosa sta su quale
+scheda. Disegnato **un canale**: il secondo è identico per contratto
+(T3/ADR-006), e ciò che i canali condividono — i quattro relè — sta nel
+terzo pannello, dove conta.
 
-```sh
-/usr/bin/python3 scripts/check_schematic.py \
-  docs/preamp/schematic/gain_block.manifest.json \
-  spice/preamp/gain_block_flat.inc      # deve uscire 0, 44 dispositivi
-/bin/zsh scripts/run_tests.sh            # deve restare 5 passed, 0 failed
+Non produce manifesto e **non** è coperto da `check_schematic.py`: un
+diagramma a blocchi omette i dispositivi di proposito. La garanzia che ha
+è un'altra, ed è scritta in `../architecture.md`: **nessuna cifra sul
+disegno è scritta a mano**. Tutte vengono lette da
+`circuits/preamp/preamp_audio.net` e asserite — i sei condensatori
+d'accoppiamento devono coincidere, i resistori di scarico non possono
+divergere fra i canali, e il "+10 dB" è **calcolato** da R_f/R_g e deve
+cadere nella finestra di E2. Collaudato facendolo fallire di proposito su
+tutti e tre i casi.
+
+Il valore reale è +9,96 dB (R_f 1,50 kΩ / R_g 698 Ω): dentro tolleranza,
+ma vale saperlo prima che qualcuno lo scopra misurando.
+
+**L2-L5 — i testbench diventano artefatti.** Oggi solo 3 dei 12 deck in
+`spice/preamp/tb/` scrivono file dati. Ma aprendo i deck per L2 è emerso
+un problema **più grande di quello registrato**, e va detto per intero.
+
+**Tutti e 12 i deck leggono il circuito dal worktree vecchio.** Non sono
+4 righe `wrdata`: sono **28 righe** con un percorso assoluto cablato
+dentro `.claude/worktrees/preamp-fase1/`, e **24 di quelle sono
+`.include`**:
+
+```
+.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
 ```
 
-Se il disegno non c'è o non passa, l'agente si riprende con `SendMessage`
-mantenendo il contesto: ha progettato lui il circuito.
+La metà pericolosa è la lettura, non la scrittura. Una modifica al
+circuito su `main` **non raggiungerebbe le simulazioni**: continuerebbero
+a includere la copia di settembre, senza errore da nessuna parte. Oggi le
+due copie sono identiche — verificato con `diff` su
+`gain_block_flat.inc` e `placeholder_devices.lib` — quindi **nessun
+risultato prodotto finora è sbagliato**. Ma il meccanismo è armato, e
+cancellare quel worktree rompe di colpo tutti e 12 i deck.
 
-Il file non tracciato `spice/preamp/tb/_probe_anchors.py` è suo, scratch.
+**Due vincoli scoperti leggendo `scripts/run_simulation.sh`**, che
+decidono quale forma può avere il rimedio:
 
-### Il dossier: deciso ma non iniziato
+1. Lo script fa `cd "$OUTDIR"` prima di lanciare ngspice (riga 73).
+   Quindi **un `.include` relativo non funziona**: si risolverebbe contro
+   la directory dei risultati, non contro quella del deck. "Basta usare
+   percorsi relativi" è la risposta sbagliata.
+2. Lo stesso `cd` risolve però la metà `wrdata` quasi da sé: lo script
+   **cerca già** il file che il deck ha scritto dentro `$OUTDIR` (righe
+   80-90). Un `wrdata <nomefile>` **senza percorso** atterra nel posto
+   giusto da solo.
 
-L'utente vuole poter **guardare** il progetto. Formato **deciso con lui**:
+**L2 ha collaudato entrambe le metà su `tb_op.cir`, e la convenzione è
+decisa.** Il vincolo 1 non era un sospetto: è stato *misurato*. Due file
+entrambi chiamati `../real.lib`, uno raggiungibile dalla directory del
+deck (1 kΩ) e uno dal cwd (9 kΩ); `ngspice -b` ha letto **quello del
+cwd** — `i(V1) = -1.111e-04`, non `-1.000e-03`. Il percorso relativo è
+quindi falsificato, non scartato per prudenza.
+
+La convenzione, scritta per esteso in un commento dentro `tb_op.cir`:
+
+| Metà | Regola |
+|---|---|
+| lettura | `.include @REPO@/<percorso-dalla-radice>`, sostituito da `run_simulation.sh` |
+| scrittura | `wrdata <nome-nudo>`, che il `cd` porta in `$OUTDIR` da solo |
+
+Un `@REPO@` non sostituito **fallisce in modo rumoroso** (ngspice esce 1,
+"Could not find include file"): non è un fallimento silenzioso.
+
+`run_simulation.sh` ha preso tre correzioni della stessa famiglia:
+`ROOT` non è più cablato (come già in `run_tests.sh`); `OUTDIR` viene
+reso assoluto, perché un `outdir` relativo lasciava `$LOG` e `$CSV` a
+puntare nel nulla dopo il `cd` — **trovato eseguendolo, non leggendolo**;
+e un `.include` relativo ora emette un avviso, perché si risolve contro
+`$OUTDIR` e può pescare in silenzio un file omonimo di passaggio.
+
+**E `run_simulation.sh` ha lo stesso difetto dei deck**: `ROOT=/Users/roberto/EDA`
+cablato alla riga 26. `run_tests.sh` è stato corretto a suo tempo
+(`ROOT=${0:A:h:h}`), gli altri no — restano cablati anche
+`export_fab.sh` e `setup.sh`. Eseguito da un worktree, `run_simulation.sh`
+scrive i risultati nel checkout principale.
+
+Solo dopo aver sistemato i percorsi ha senso aggiungere `wrdata` ai 9
+deck muti. I deck con `foreach` sono l'ultimo lotto perché non sono
+meccanici: `tb_ac.cir` ha un doppio ciclo (2 modalità × 4 impedenze di
+sorgente = 8 curve) e chiude ogni iterazione con `destroy all`, quindi il
+`wrdata` va **dentro il ciclo, prima del `destroy all`**, col nome file
+parametrizzato.
+
+Serve al dossier **e** a `design-reviewer` per rieseguire le misure a G1:
+non è lavoro anticipato.
+
+**L6-L7 — i modelli veri.** `vendor/` non contiene **nessun** PDF (13
+sottodirectory, zero datasheet congelati) e `models/jfet/` ha solo
+`generic_njf.lib`: il passo 1 di ADR-013 non è iniziato. Finché i modelli
+sono segnaposto, **ogni cifra di distorsione è priva di significato** —
+ed è l'intera ragione per cui si è andati a discreti. I due lotti sono
+separati perché il passo 4 è il punto in cui la trascrizione può
+risultare sbagliata: in quel caso il lavoro è tornare su L6, non andare
+avanti.
+
+**L8 prima di L9** perché le parti nuove sono fatti chiudibili mentre la
+rosa è un giudizio aperto: se il cap arriva, è meglio che tagli la
+seconda.
+
+## Il dossier: formato deciso, non ancora iniziato
+
+L'utente vuole poter **guardare** il progetto. Formato **deciso con lui**,
+da non riproporre in altre forme:
 
 - **SVG dentro il repository** come formato primario — è testo, quindi
   versiona e si confronta con `git diff`, e si apre in ogni browser
 - **più una pagina** con schema e grafici impaginati insieme, da aprire
   da qualsiasi dispositivo
 - **niente PDF**: se lo vuole su carta lo stampa dal browser. Detto
-  esplicitamente, non riproporglielo
+  esplicitamente
 
 Contenuto previsto: lo schematico, i grafici delle misure (risposta nelle
 due modalità, guadagno d'anello con il margine di fase segnato, PSRR dei
@@ -70,27 +193,30 @@ due rail, Z_out in frequenza, il transitorio del relè **affiancato al
 controfattuale a −13,68 V**, recupero da sovraccarico), la tabella dei
 punti di lavoro e le previsioni dichiarate.
 
-**Lavoro preliminare necessario**: solo 3 dei 12 testbench scrivono file
-dati. Agli altri nove va aggiunta una riga `wrdata` dentro il blocco
-`.control` già esistente, dopo l'analisi. Non tocca il circuito né i
-risultati, e trasforma quelle misure in artefatti riproducibili invece
-che output di terminale — cosa che serve comunque a `design-reviewer` a
-G1.
+La pagina ha senso **dopo** che ci sono grafici veri da impaginare: viene
+dopo le misure, non prima. Il lavoro preliminare che la rende possibile è
+L2-L5.
 
-### Nota di scoping utile
-
-L'utente ha osservato che non serve un disegno da 205 componenti. Servono
-**il blocco di guadagno** (44 componenti, l'oggetto da giudicare, usato
-quattro volte) e un **diagramma a blocchi** del preamp intero. Il secondo
-non esiste ancora.
+**Nota di scoping dell'utente**: non serve un disegno da 205 componenti.
+Servono **il blocco di guadagno** (44 componenti, l'oggetto da giudicare,
+usato quattro volte) — che esiste — e un **diagramma a blocchi** del
+preamp intero, che è L1.
 
 ## Dove siamo
 
-**Fase 2 consegnata. Il progetto è in PAUSA deliberata** — non bloccato
-da un difetto, ma fermo perché mancava all'ambiente una capacità che
-serve a tutti i progetti.
+**Fase 2 consegnata, e la pausa è finita.** Il progetto si era fermato —
+non per un difetto, ma perché mancava all'ambiente una capacità che serve
+a tutti i progetti: produrre qualcosa che un umano possa guardare. Quella
+capacità ora esiste ed è verificata (`scripts/check_schematic.py`, blocco
+2d di `run_tests.sh`), quindi il lavoro riprende dalla lista dei lotti.
 
-### Perché la pausa
+Verificato all'apertura della sessione del piano a lotti, non assunto:
+`check_schematic.py` esce 0 con 44 dispositivi nella netlist e 44 nel
+disegno; `run_tests.sh` dà 5 passed / 0 failed; `main` è pulito e allineato
+a `origin`. **Le tre azioni "da fare" della vecchia sezione in volo (PR →
+merge → pull) erano già state fatte**: la PR #8 è dentro `main`.
+
+### Perché c'era stata la pausa
 
 **Non si può rivedere un progetto che nessuno può guardare.** La
 simulazione verifica i numeri; non verifica se il percorso del segnale è
@@ -193,33 +319,59 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**Fase 3, giro componenti.** La bozza chiede a
-`bom-component-manager` cose che la Fase 1 non copriva:
+**L3 — applicare agli altri 11 deck la convenzione collaudata in L2.**
+Non c'è niente da riprogettare: la convenzione e la sua motivazione
+stanno in un commento dentro `spice/preamp/tb/tb_op.cir`. Restano **26
+righe** cablate su `.claude/worktrees/preamp-fase1/` (22 `.include` +
+4 `wrdata`), che `grep -rn '\.claude/worktrees' spice/preamp/tb/` elenca.
+
+Due cose che L3 non deve ereditare per distrazione:
+
+- `tb_dc_headroom.cir` ha **due** `wrdata` e `tb_switch_v2.cir`/
+  `tb_v3_overload.cir` uno ciascuno. Il nome
+  `<basename>_wrdata.txt` è quello che `run_simulation.sh` cerca per
+  primo; con più di un `wrdata` per deck gli altri cadono sul fallback
+  `grep ... | head -1`, che ne vede **uno solo**.
+- I 4 `wrdata` cablati scrivono oggi in `results/preamp/` del worktree
+  vecchio. Con il nome nudo finiscono nella directory dei risultati
+  passata a `run_simulation.sh`: è un cambio di percorso, non di dato.
+
+Verifica di L3, la stessa di L2: `grep -c '\.claude/worktrees'` a zero su
+tutti e 12, ogni deck eseguito davvero, e `run_tests.sh` a 5 passed.
+
+### Materiale già raccolto per L8-L10 (il giro componenti)
+
+Da non ricercare di nuovo: sono le domande che la Fase 1 non copriva e
+che la bozza di Fase 2 ha lasciato aperte.
 
 - **2N5401** (VAS) e **2N5551** (cascode, generatori, moltiplicatore di
   Vbe): parti nuove, non verificate in Fase 1.
-- **Modello SPICE LSK489**, procedura obbligatoria di ADR-013.
-- **THAT320**: stock non ancora fissato, e va confermata la BVceo.
+- **Modello SPICE LSK489**: procedura obbligatoria di ADR-013 — è L6-L7,
+  precede il resto perché la credibilità della distorsione ci poggia
+  sopra.
+- **THAT320**: stock non ancora fissato, e va confermata la BVceo ≥ 35 V.
 - **Omron G6K-2F-Y**: confermare quale contatto è NO e quale NC. Il
   progetto fallisce in sicurezza solo se sono quelli giusti.
-- **Simbolo KiCad dell'LSK489**: non esiste. Oggi il duale è disegnato
-  come due JFET separati. Va creato un simbolo a 2 unità con il pinout
-  letto dal datasheet **prima del G2**, o il PCB piazzerà due package.
+- **Simbolo KiCad dell'LSK489** (L10): non esiste. Oggi il duale è
+  disegnato come due JFET separati. Serve un simbolo a 2 unità col
+  pinout letto dal datasheet **prima del G2**, o il PCB piazzerà due
+  package.
 
-Due tensioni fra requisiti sono state **segnalate, non aggirate**:
+La rosa dei componenti di segnale (L9) **non restituisce un vincitore**:
+restringe su basi misurabili — assorbimento dielettrico, rumore in
+eccesso, coefficiente di tensione — e la scelta finale fra parti tutte
+buone è dell'utente, all'ascolto. È la ragione per cui esiste P6.
 
-1. **E6 x E2 contro E7.** 2,7 V RMS a +10 dB vogliono 8,54 V RMS in
+### Due tensioni fra requisiti, segnalate e non aggirate
+
+1. **E6 × E2 contro E7.** 2,7 V RMS a +10 dB vogliono 8,54 V RMS in
    uscita; con rail a ±15 V il blocco clippa a 9,31 V RMS simulati.
-   Margine 0,75 dB. Il rimedio previsto è il trim di ADR-011 (-6 dB
-   sull'ingresso del K11). Decisione dell'utente.
+   Margine 0,75 dB. Il rimedio è il trim di ADR-011 (−6 dB sull'ingresso
+   del K11), che con ADR-015 **non è più opzionale**.
 2. **E4 contro E8 a 20 Hz.** Con accoppiamento capacitivo la |Zout| al
    jack a 20 Hz è ~1,7 kΩ (è la reattanza del 4,7 µF). A 1 kHz è
    58,8 Ω. E4 letta alla lettera non è soddisfacibile a 20 Hz da nessun
    circuito con condensatore d'uscita.
-
-Decisione minore ancora aperta: portare a **4,7 µF** anche il
-condensatore verso il Singxer, visto che la sua impedenza d'ingresso non
-è pubblicata.
 
 ## Domande aperte
 
@@ -245,7 +397,7 @@ Nessuna decisione dell'utente è pendente.
 ## Attenzione per chi riprende
 
 `REQUIREMENTS.md` contiene ora una sezione **Requisiti di verifica**
-(V1–V4). Non è burocrazia: il relè del guadagno commuta la rete di
+(V1–V5). Non è burocrazia: il relè del guadagno commuta la rete di
 controreazione, quindi **il margine di fase è diverso nelle due
 modalità**, e l'impedenza dell'attenuatore varia con la manopola, quindi
 **varia anche con la posizione del volume**. Se non si verifica tutta la
