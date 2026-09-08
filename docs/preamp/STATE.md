@@ -6,11 +6,128 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-08** (bozza di topologia consegnata)
+Ultimo aggiornamento: **2026-09-08** (Fase 2 consegnata; progetto in pausa per una lacuna dell'ambiente)
 
 ---
 
+## LEGGI PRIMA — lavoro in volo al 2026-09-08
+
+Questa sezione esiste perché la sessione poteva interrompersi a metà.
+Cancellala quando i punti sotto sono chiusi.
+
+### Dove sta il codice, e cosa manca a `main`
+
+Il lavoro **non è su `main`**. Sta sul branch **`worktree-preamp-fase1`**,
+pushato su origin, **5 commit avanti a `origin/main`**. Fisicamente nel
+worktree `/Users/roberto/EDA/.claude/worktrees/preamp-fase1`.
+
+Il branch è su origin, quindi **niente è a rischio anche se il worktree
+sparisce**. Ma il checkout principale dell'utente è indietro.
+
+### Le tre azioni che l'utente ha chiesto e che restano da fare
+
+1. Aprire una **PR** dal branch verso `main`
+2. **Mergiarla**
+3. `git pull` sul checkout principale per **allineare il repo locale**
+
+Tempistica concordata: **subito dopo che lo schematico è disegnato e
+verificato**, non aspettando il dossier completo.
+
+### Cosa era in esecuzione
+
+`analog-topology-designer` stava disegnando lo schematico leggibile del
+blocco di guadagno. Consegna attesa in `docs/preamp/schematic/`:
+`gain_block_draw.py`, `gain_block.svg`, `gain_block.manifest.json`.
+
+**Verificalo tu, non fidarti del resoconto:**
+
+```sh
+/usr/bin/python3 scripts/check_schematic.py \
+  docs/preamp/schematic/gain_block.manifest.json \
+  spice/preamp/gain_block_flat.inc      # deve uscire 0, 44 dispositivi
+/bin/zsh scripts/run_tests.sh            # deve restare 5 passed, 0 failed
+```
+
+Se il disegno non c'è o non passa, l'agente si riprende con `SendMessage`
+mantenendo il contesto: ha progettato lui il circuito.
+
+Il file non tracciato `spice/preamp/tb/_probe_anchors.py` è suo, scratch.
+
+### Il dossier: deciso ma non iniziato
+
+L'utente vuole poter **guardare** il progetto. Formato **deciso con lui**:
+
+- **SVG dentro il repository** come formato primario — è testo, quindi
+  versiona e si confronta con `git diff`, e si apre in ogni browser
+- **più una pagina** con schema e grafici impaginati insieme, da aprire
+  da qualsiasi dispositivo
+- **niente PDF**: se lo vuole su carta lo stampa dal browser. Detto
+  esplicitamente, non riproporglielo
+
+Contenuto previsto: lo schematico, i grafici delle misure (risposta nelle
+due modalità, guadagno d'anello con il margine di fase segnato, PSRR dei
+due rail, Z_out in frequenza, il transitorio del relè **affiancato al
+controfattuale a −13,68 V**, recupero da sovraccarico), la tabella dei
+punti di lavoro e le previsioni dichiarate.
+
+**Lavoro preliminare necessario**: solo 3 dei 12 testbench scrivono file
+dati. Agli altri nove va aggiunta una riga `wrdata` dentro il blocco
+`.control` già esistente, dopo l'analisi. Non tocca il circuito né i
+risultati, e trasforma quelle misure in artefatti riproducibili invece
+che output di terminale — cosa che serve comunque a `design-reviewer` a
+G1.
+
+### Nota di scoping utile
+
+L'utente ha osservato che non serve un disegno da 205 componenti. Servono
+**il blocco di guadagno** (44 componenti, l'oggetto da giudicare, usato
+quattro volte) e un **diagramma a blocchi** del preamp intero. Il secondo
+non esiste ancora.
+
 ## Dove siamo
+
+**Fase 2 consegnata. Il progetto è in PAUSA deliberata** — non bloccato
+da un difetto, ma fermo perché mancava all'ambiente una capacità che
+serve a tutti i progetti.
+
+### Perché la pausa
+
+**Non si può rivedere un progetto che nessuno può guardare.** La
+simulazione verifica i numeri; non verifica se il percorso del segnale è
+corto, dove passa il ritorno di massa, o se una scelta di polarizzazione
+convince chi conosce il dominio. Quel giudizio è dell'utente, e richiede
+di *vedere* il circuito.
+
+Finora l'ambiente non produceva nulla di guardabile: `generate_schematic()`
+non è mai stato chiamato, e comunque darebbe un file illeggibile
+(limitazione #5). E **non esiste alcuno strumento che pianifichi
+automaticamente uno schematico analogico leggibile** — ricercato e
+provato su ASG, lcapy e netlistsvg, vedi limitazione #16.
+
+Non è un problema del preamp: si ripresenta identico con
+l'**alimentatore**, il **phono** e il **finale**. Per questo è stato
+risolto a livello di ambiente e non dentro `docs/preamp/`.
+
+### Cosa è stato costruito
+
+- `scripts/check_schematic.py` — confronta un disegno con la netlist
+  **nelle due direzioni**: niente inventato, niente omesso. Collaudato
+  facendolo fallire di proposito su dispositivo inventato, dispositivo
+  omesso e pin cablato male.
+- `scripts/run_tests.sh` blocco **2d** — scopre da solo ogni manifesto
+  sotto `docs/*/schematic/` e lo verifica.
+- Convenzione documentata in `../architecture.md`, sezione **"Revisione
+  umana dello schematico"**.
+- **La revisione umana dello schematico è ora precondizione di G1 e G2**
+  (`../../AGENTS.md`).
+
+Due difetti latenti di `run_tests.sh` sono emersi e sono stati corretti:
+`ROOT` era cablato, quindi la suite eseguita da una copia isolata testava
+**silenziosamente un altro albero**; e il controllo degli artefatti smoke
+pretendeva file gitignorati, quindi la suite **non poteva passare su un
+clone fresco**.
+
+### Stato precedente
 
 **Fase 2: bozza di topologia consegnata. In attesa della Fase 3.**
 

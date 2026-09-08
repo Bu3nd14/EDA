@@ -29,6 +29,17 @@ ciclo di vita e non per fase:
 lavoro.** È il meccanismo che rende sicuro interrompere una sessione a
 metà — se STATE.md è disallineato, il progetto non è ripartibile.
 
+**E prima ancora: `git push`.** È l'azione che salva davvero. Un commit
+non pushato dentro un worktree sotto `.claude/worktrees/` sparisce
+insieme al worktree, ed è già successo una volta. Verificalo, non
+assumerlo:
+
+```sh
+git log --oneline origin/<branch>..HEAD    # deve essere vuoto
+```
+
+L'ordine, quando il tempo stringe, è: **push → stato → tutto il resto.**
+
 **Tracciabilità**: ogni valore non ovvio in `circuits/preamp/*.py` porta
 un commento che punta alla ADR che l'ha prodotto. È il collegamento
 dall'artefatto al ragionamento, e costa un commento.

@@ -147,3 +147,33 @@ Ogni esecuzione scrive `<script>.erc`, `<script>.log` e
 `<script>_sklib.py` nella cwd. Sono rigenerabili e vanno ignorati da
 git — il `.gitignore` non li copriva (stessa lacuna già annotata in
 `CLAUDE.md` per `skidl_REPL.*`), ora sì.
+
+## 16. Il piazzamento automatico di uno schematico analogico leggibile non esiste
+
+Ricercato e **provato**, non assunto. È una limitazione dello stato
+dell'arte, non di KiCad né di questo ambiente — ed è la ragione per cui
+la limitazione #5 (auto-piazzamento SKiDL inutilizzabile) non ha una
+soluzione alternativa.
+
+**Strumenti valutati, con l'esito reale:**
+
+| Strumento | Esito |
+|---|---|
+| **ASG** 1.1.0 (`pip install asg`) | **Non parte.** Importa `segments_intersections` da `bentley_ottmann.planar`, funzione rimossa dall'API. Fissando versioni storiche: 7.3.0 non ce l'ha; scendendo a 3.0.0 la dipendenza transitiva `cfractions` **non compila su Python 3.13**. Strumento accademico del 2020 (WOSET), non manutenuto. In più nasce per l'output di **qflow**, cioè celle standard digitali, ed emette Xschem o EEschema legacy che KiCad 10 non legge. |
+| **lcapy** 1.26 | **Non produce nulla in tempo utile.** Non legge SPICE ma un proprio dialetto: sono servite tre traduzioni separate solo per il parsing (i diodi non accettano il nome del modello, i transistor nemmeno, il suffisso `MEG` non è riconosciuto). Superato quello, il disegno è rimasto **al 100% di CPU per 4 minuti e 44 secondi su 44 componenti senza emettere un file**, ed è stato interrotto. Il suo auto-layout è pensato per circuiti da manuale, non per un amplificatore a tre stadi. |
+| **netlistsvg** | Disegna da netlist JSON di **Yosys**: sintesi digitale. Non applicabile. Valutato da documentazione, non provato. |
+
+**Perché è così, e perché non cambierà a breve.** Nel digitale il
+piazzamento segue il flusso dei dati, che un algoritmo ricostruisce dalla
+netlist. Uno schema analogico invece si legge grazie a **convenzioni che
+codificano l'intenzione del progettista** — alimentazioni in alto e in
+basso, segnale da sinistra a destra, massa verso il basso, uno specchio
+di corrente disegnato *come* uno specchio perché lo si riconosca a colpo
+d'occhio. Nessuna di queste informazioni è deducibile dalle connessioni.
+È il motivo per cui in ogni EDA analogico si piazza a mano.
+
+**Conseguenza operativa**: i disegni si fanno a mano, in codice, con
+`schemdraw`. Il rischio che ne deriva — il disegno che diverge in
+silenzio dal circuito — è **meccanizzato** da
+`scripts/check_schematic.py`. Non si può piazzare in automatico, ma si
+può verificare in automatico. Vedi `docs/architecture.md`.

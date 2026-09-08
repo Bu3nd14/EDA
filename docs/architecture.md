@@ -66,3 +66,87 @@ the smoke-test fixture at `smoke/rc_circuit.py` (scratch, per the
 smoke-test-runner's role). `TODO: unverified` — confirm with the
 orchestrator/scaffolding whether `circuits/` is created as part of ongoing
 scaffolding work.
+
+## Revisione umana dello schematico
+
+**Decisione**: ogni progetto produce uno schematico **leggibile da un
+umano**, disegnato a mano in codice con `schemdraw`, e **verificato
+automaticamente** contro la netlist generata dalla fonte canonica in
+`circuits/`.
+
+### Il problema
+
+Un progetto che un umano non può rivedere non è rivedibile. La
+simulazione verifica i numeri; non verifica se il percorso del segnale è
+corto, dove passa il ritorno di massa, se una scelta di polarizzazione
+convince chi conosce il dominio. Quel giudizio richiede di **guardare**
+il circuito.
+
+L'ambiente non aveva questa capacità. `generate_schematic()` di SKiDL
+produce un file machine-valid ma illeggibile (limitazione #5), e **non
+esiste alcuno strumento che pianifichi automaticamente uno schematico
+analogico leggibile** — ricercato e provato, vedi limitazione #16.
+
+Non è un problema di un singolo progetto: si ripresenta identico con
+l'alimentatore, lo stadio phono e il finale di potenza. Per questo è
+risolto qui, a livello di ambiente, e non dentro `docs/preamp/`.
+
+### La soluzione: non si può piazzare in automatico, si può verificare in automatico
+
+Il disegno è **codice Python** con `schemdraw`, quindi un sorgente di
+testo che versiona, si confronta con `git diff` e si rigenera in modo
+deterministico. Il piazzamento resta manuale — è irriducibile.
+
+Il rischio che ne deriva è il **disallineamento silenzioso**: il disegno
+che continua a descrivere un circuito che nel frattempo è cambiato. Quel
+rischio è meccanizzato.
+
+Ogni disegno emette, accanto all'SVG, un **manifesto di connettività**:
+
+```json
+{
+  "source_netlist": "spice/preamp/gain_block_flat.inc",
+  "devices": {
+    "Q106": {"C": "SRC", "B": "NREF", "E": "NTE"},
+    "R107": {"1": "NTE", "2": "VMINUS"}
+  }
+}
+```
+
+`scripts/check_schematic.py` confronta manifesto e netlist **nelle due
+direzioni**:
+
+- il disegno non può **inventare** connessioni o dispositivi assenti
+  dalla netlist;
+- il disegno non può **omettere** un dispositivo presente nella netlist.
+
+Una discordanza è un **fallimento**, non un avviso. Il disallineamento
+smette di essere un rischio silenzioso e diventa un test rosso.
+
+Il controllo è stato collaudato come si collauda un validatore: **passa
+su un manifesto corretto e fallisce su uno rotto di proposito**,
+individuando dispositivo inventato, dispositivo omesso e pin cablato
+male. Un validatore che non ha mai fallito è decorativo.
+
+### Convenzioni
+
+| Cosa | Dove |
+|---|---|
+| Sorgente del disegno | `docs/<progetto>/schematic/<nome>_draw.py` |
+| SVG generato | `docs/<progetto>/schematic/<nome>.svg` |
+| Manifesto | `docs/<progetto>/schematic/<nome>.manifest.json` |
+
+`scripts/run_tests.sh` (blocco 2d) **scopre da solo** ogni manifesto
+sotto `docs/*/schematic/` e lo verifica. Nessun cablaggio per progetto:
+un disegno nuovo entra nella suite appena esiste.
+
+Formato **SVG** e non PDF: è testo, quindi versionabile e confrontabile,
+si apre in qualsiasi browser e si rende su GitHub. Chi vuole la copia su
+carta la stampa dal browser.
+
+### Cosa questo NON è
+
+Il disegno è **documentazione derivata**, non una fonte di verità. La
+topologia resta in `circuits/*.py`. Il manifesto non autorizza a
+modificare il circuito dal disegno: se i due divergono, si corregge il
+disegno — o la topologia alla fonte — mai il controllo.

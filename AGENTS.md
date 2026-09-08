@@ -25,14 +25,14 @@ The roster above is the *environment* team — the agents that built and validat
 
 | Role | Agent | Model | Owns |
 |---|---|---|---|
-| Circuit design | `analog-topology-designer` | opus | `circuits/*.py` — the canonical topology, operating points, gain structure, predicted figures of merit |
+| Circuit design | `analog-topology-designer` | opus | `circuits/*.py` — the canonical topology, operating points, gain structure, predicted figures of merit. **Also owns the human-reviewable schematic drawing of its own circuit** (`docs/<project>/schematic/`) — the person who designed it draws it, because readability depends on knowing which structures matter |
 | Gate review | `design-reviewer` | opus | Independent challenge at gates only. No write access by design |
 | Measurement | `measurement-analyst` | sonnet | THD/THD+N, response, noise, PSRR, Zout, phase margin — verifies the designer's predictions |
 | Power supply | `psu-engineer` | sonnet | Rails, ripple, regulation, thermal, **mains safety** |
 | Layout | `pcb-automation-engineer` | sonnet | Placement, routing, **grounding/return paths/EMC**, DRC, fabrication export |
 | Components | `bom-component-manager` | sonnet | Part selection, sourcing, vendor models + provenance |
 | Regressions | `regression-runner` | haiku | Runs the verification scripts, reports exit codes verbatim. No judgment, no fixes |
-| Documentation | `docs-writer` | sonnet | Project docs and measurement dossiers, from verified results only |
+| Documentation | `docs-writer` | sonnet | Project docs and measurement dossiers, from verified results only. Has **no execution tools by design**, so it never produces anything requiring a run — schematics and measurements come to it already verified |
 
 `installer-verifier` and `toolchain-researcher` are kept on the bench — invoked only when adding or evaluating a tool, not as part of ongoing project work.
 
@@ -45,6 +45,19 @@ The roster above is the *environment* team — the agents that built and validat
 - **G3 — Pre-fabrication**: before any fabrication export is treated as final.
 
 A gate returns **PASS** or **BLOCK**. On a mains-connected design, a missing safety analysis is an automatic BLOCK.
+
+**A human-reviewable schematic is a precondition for G1 and G2.** A design
+nobody can look at has not been reviewed, however many numbers agree. Simulation
+verifies the figures; it does not verify whether the signal path is short, where
+the ground return runs, or whether a bias choice convinces someone who knows the
+domain — and that judgement belongs to the user, not to any agent here.
+
+Readable analog schematics cannot be auto-placed (researched and tested — see
+`docs/limitations.md` #16), so they are drawn by hand in code and checked
+mechanically against the netlist by `scripts/check_schematic.py`. The gate
+requirement is not "a drawing exists" but "a drawing exists **and**
+`scripts/run_tests.sh` confirms it matches the circuit". See
+`docs/architecture.md`.
 
 ### What the team does not do
 
