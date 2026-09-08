@@ -1,0 +1,40 @@
+tb_dc_headroom.cir - large-signal transfer, both gain modes, both rails
+* Answers three separate questions that are easy to confuse:
+*   1. where does the OUTPUT stage clip (V+/V- minus the drops)?
+*   2. where does the INPUT pair run out of common-mode range (the price
+*      ADR-014's cascode charges - see the 8.485 V note in gain_block.py)?
+*   3. is the clipping symmetric? (V3 cares: an asymmetric clip pumps DC
+*      into the 4.7 uF output cap and the recovery is then seconds long.)
+* Vds of both LSK489 halves is written out alongside Vout so that (2) shows
+* up as a curve, not as a guess.
+* Models are PLACEHOLDERS. Clipping levels depend on Vce(sat) and Vbe, which
+* a placeholder gets roughly right; the numbers are indicative, not verified.
+
+.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/placeholder_devices.lib
+.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN IN 0 DC 0
+
+* gain relay contact, altered inside .control
+CSTRAY RG 0 15p
+RRG    RG 0 1G
+
+RISO  OUT OUTA 47
+COUT  OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD JACK 0 100k
+
+.control
+* ---------- 0 dB mode: relay open (RRG = 1 Gohm) ----------
+alter rrg = 1G
+dc VIN -14 14 0.05
+wrdata /Users/roberto/EDA/.claude/worktrees/preamp-fase1/results/preamp/dc_0db.txt v(OUT) v(D1N)-v(S1) v(D2N)-v(S2) v(NX) v(NY)
+* ---------- +10 dB mode: relay closed (RRG = 0.1 ohm) ----------
+alter rrg = 0.1
+dc VIN -14 14 0.05
+wrdata /Users/roberto/EDA/.claude/worktrees/preamp-fase1/results/preamp/dc_10db.txt v(OUT) v(D1N)-v(S1) v(D2N)-v(S2) v(NX) v(NY)
+.endc
+
+.end

@@ -1,0 +1,53 @@
+tb_op.cir - gain block operating point, BLOCK B wired as the output stage
+* First line is a title (docs/limitations.md #10). Do not put a directive here.
+* Models are PLACEHOLDERS: DC bias is credible, distortion is not.
+
+.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/placeholder_devices.lib
+.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN IN 0 DC 0 AC 1
+
+* Gain relay: open contact = 0 dB. An open relay contact is not an infinite
+* impedance, it is ~15 pF of stray with a very large leakage resistance.
+CSTRAY RG 0 15p
+RLEAK  RG 0 1G
+
+* Output network of BLOCK B (main output), per E8 / ADR-007:
+RISO  OUT OUTA 47
+COUT  OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD JACK 0 100k
+
+.control
+op
+echo "=== NODE VOLTAGES ==="
+print v(IN) v(FB) v(OUT) v(JACK) v(NREF) v(NREFM) v(NCASC) v(SRC)
+print v(G1) v(G2) v(S1) v(S2) v(D1N) v(D2N) v(NMIRI) v(NHI)
+print v(NX) v(NY) v(NBB) v(NBN) v(NBP) v(NEN) v(NEP) v(NVE) v(NVLE) v(NTE)
+echo "=== INPUT JFET PAIR (LSK489 halves) ==="
+print @jq110[id]
+print @jq111[id]
+print @jq110[vgs]
+print @jq111[vgs]
+print @jq110[gm]
+print @jq111[gm]
+echo "=== RAIL CURRENTS (A) ==="
+print i(VPP) i(VMM)
+echo "=== BJT OPERATING POINTS: ic / vce ==="
+print @q106[ic] @q106[ib] @q106[vbe] @q106[vbc]
+print @q118[ic] @q118[ib] @q118[vbe] @q118[vbc]
+print @q119[ic] @q119[ib] @q119[vbe] @q119[vbc]
+print @q122[ic] @q122[ib] @q122[vbe] @q122[vbc]
+print @q123[ic] @q123[ib] @q123[vbe] @q123[vbc]
+print @q124[ic] @q124[ib] @q124[vbe] @q124[vbc]
+print @q127[ic] @q127[ib] @q127[vbe] @q127[vbc]
+print @q129[ic] @q129[ib] @q129[vbe] @q129[vbc]
+print @q134[ic] @q134[ib] @q134[vbe] @q134[vbc]
+print @q135[ic] @q135[ib] @q135[vbe] @q135[vbc]
+echo "=== KEY BRANCH CURRENTS ==="
+print @riso[i] @r138[i] @r136[i] @r137[i] @r107[i] @r125[i] @r128[i]
+.endc
+
+.end

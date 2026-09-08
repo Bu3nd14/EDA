@@ -1,0 +1,89 @@
+* placeholder_devices.lib
+* =============================================================================
+*                    *** NOT A VENDOR MODEL LIBRARY ***
+* =============================================================================
+* DESIGN-TIME PLACEHOLDERS for the Fase 2 topology draft of the line
+* preamplifier. AUTHORED BY HAND. Not derived from, not checked against, and
+* not equivalent to any manufacturer model.
+*
+* Deliberately NOT placed in models/: models/ is the canonical, provenance-
+* tracked library validated by scripts/validate_models.py (24/24). Adding
+* unqualified placeholders there would corrupt that contract.
+*
+* WHY THESE EXIST AT ALL
+* ----------------------
+* The repo's stock generic models (models/bjt_npn/generic_npn.lib etc.) carry
+* NO junction capacitances and NO transit time. A feedback amplifier built
+* from them has no high-frequency poles at all, so a loop-gain simulation
+* would report ~90 deg phase margin unconditionally - an answer that is worse
+* than no answer, because it looks like evidence.
+*
+* These models add capacitances and transit times of PLAUSIBLE ORDER for the
+* device classes chosen, so that the loop-gain / stability simulation produces
+* a finite, falsifiable number. That number is a DESIGN-TIME SANITY CHECK, not
+* a verified figure of merit.
+*
+* WHAT YOU MAY NOT DO WITH THEM
+* -----------------------------
+*  - Do NOT quote any THD / distortion figure obtained with these models.
+*    Distortion is a property of the model's nonlinearity; these have generic
+*    Gummel-Poon/Shichman-Hodges nonlinearity that was not fitted to anything.
+*    Any THD number from this file is MEANINGLESS.
+*  - Do NOT quote the phase margin as verified. It is provisional.
+*  - Do NOT quote the noise figure as verified: KF/AF (flicker noise) are
+*    zero here, so 1/f noise is entirely absent from any .noise run.
+*
+* REPLACE WITH, in Fase 3/4:
+*  - LSK489 : transcribed by hand from the Linear Systems PDF, per the
+*             mandatory procedure of ADR-013 (freeze PDF in vendor/ with
+*             sha256, transcribe into models/jfet/, provenance must say
+*             "transcribed manually from vendor PDF", cross-check IDSS/VP).
+*  - THAT320: native .lib from THAT Corp (Fase 1 report: downloaded and
+*             inspected - best SPICE provenance of the whole round).
+*  - MJE15032/33, 2N5551, 2N5401: vendor models, provenance to be established
+*             by bom-component-manager.
+*
+* Author: analog-topology-designer (Claude Opus 5), 2026-09-08,
+*         on behalf of roberto.carmeli@gmail.com
+* =============================================================================
+
+* --- LSK489 half (N-channel JFET) ------------------------------------------
+* Shichman-Hodges. VTO/BETA chosen to sit inside the LSK489 datasheet's own
+* IDSS window (2.6-15 mA) at a mid grade: IDSS = BETA*VTO^2 = 2e-3*1.5^2
+* = 4.5 mA.  CGD/CGS chosen so Ciss ~ 4 pF, the figure ADR-013 was decided on.
+* LAMBDA is a guess. The cascode of ADR-014 is what makes that guess cheap.
+.model LSK489X NJF (VTO=-1.5 BETA=2.0E-3 LAMBDA=0.010 IS=1E-14
++ RD=10 RS=10 CGS=2.9P CGD=1.1P PB=0.8 FC=0.5 KF=0 AF=1)
+
+* --- 2N5551-class small-signal NPN (cascode, current sinks, Vbe multiplier)--
+* fT ~ 300 MHz -> TF ~ 0.5 ns. BVceo 160 V in the real part; SPICE ignores it,
+* so breakdown margin is a paper check, not a simulated one.
+.model NSS2N5551 NPN (IS=1E-14 BF=150 VAF=100 IKF=0.15 NE=1.5 ISE=1E-13
++ BR=4 VAR=30 RB=20 RE=1 RC=5 CJE=12P VJE=0.7 MJE=0.33
++ CJC=4P VJC=0.5 MJC=0.33 TF=0.5N TR=50N XTB=1.5 KF=0 AF=1)
+
+* --- 2N5401-class small-signal PNP (VAS) -----------------------------------
+.model PSS2N5401 PNP (IS=1E-14 BF=120 VAF=80 IKF=0.10 NE=1.5 ISE=1E-13
++ BR=4 VAR=25 RB=20 RE=1 RC=5 CJE=15P VJE=0.7 MJE=0.33
++ CJC=6P VJC=0.5 MJC=0.33 TF=0.6N TR=50N XTB=1.5 KF=0 AF=1)
+
+* --- THAT320-class matched monolithic PNP (input-stage current mirror) ------
+* High beta, low VAF (small geometry), fT ~ 100 MHz.
+.model PTHAT320 PNP (IS=1E-15 BF=200 VAF=60 IKF=0.05 NE=1.5 ISE=1E-14
++ BR=4 VAR=20 RB=40 RE=2 RC=10 CJE=10P VJE=0.7 MJE=0.33
++ CJC=3P VJC=0.5 MJC=0.33 TF=1.5N TR=50N XTB=1.5 KF=0 AF=1)
+
+* --- MJE15032-class power NPN (output follower) ----------------------------
+* fT 30 MHz *at high current*; at 15 mA it is much lower. TF=5.3n is the
+* 30 MHz figure - i.e. OPTIMISTIC for the actual operating point. Cob ~ 100 pF.
+.model NMJE15032 NPN (IS=1E-13 BF=100 VAF=100 IKF=1.0 NE=1.5 ISE=1E-12
++ BR=4 VAR=50 RB=5 RE=0.1 RC=0.5 CJE=300P VJE=0.7 MJE=0.33
++ CJC=100P VJC=0.5 MJC=0.4 TF=5.3N TR=500N XTB=1.5 KF=0 AF=1)
+
+* --- MJE15033-class power PNP (output follower) ----------------------------
+.model PMJE15033 PNP (IS=1E-13 BF=100 VAF=100 IKF=1.0 NE=1.5 ISE=1E-12
++ BR=4 VAR=50 RB=5 RE=0.1 RC=0.5 CJE=300P VJE=0.7 MJE=0.33
++ CJC=120P VJC=0.5 MJC=0.4 TF=6.4N TR=500N XTB=1.5 KF=0 AF=1)
+
+* --- 1N4148-class small-signal diode (negative-rail bias reference) ---------
+.model D1N4148 D (IS=2.5E-9 N=1.85 RS=0.6 CJO=2P VJ=0.7 M=0.33 TT=6N BV=100)

@@ -103,3 +103,47 @@ Interactive-router and other GUI-only KiCad features were **not** tested in
 this environment and must not be claimed as scriptable. Everything
 documented as "working" in `README.md` was exercised via CLI or the
 `pcbnew` Python API, non-interactively.
+
+## 13. Le stringhe di valore KiCad non sono SPICE-safe, e il fallimento è silenzioso
+
+Scoperto durante la Fase 2 del preamplificatore.
+
+`"1M"` in una libreria KiCad significa **1 megaohm**. La stessa stringa
+passata a ngspice significa **1 milliohm** — in SPICE il suffisso `M` è
+"milli" e "mega" si scrive `MEG`. Sei ordini di grandezza, senza alcun
+errore da nessuna delle due parti.
+
+Un esportatore che passi il valore verbatim dal `Part` SKiDL alla
+netlist SPICE propaga l'errore in silenzio. Nel caso osservato la
+resistenza d'ingresso da 1 MΩ è diventata 1 mΩ, e **il difetto è rimasto
+invisibile a lungo**: `.op`, sweep in continua e guadagno d'anello
+pilotano tutti l'ingresso da una sorgente a bassa impedenza, quindi non
+se ne accorgono. È emerso solo al primo `.ac` con una impedenza di
+sorgente realistica, che è tornato 63 dB più basso del previsto.
+
+**Qualunque ponte SKiDL/KiCad → SPICE deve tradurre i suffissi, non
+copiarli.** `circuits/preamp/spice_export.py` contiene una funzione
+`spice_value()` che lo fa, con questa storia nel commento.
+
+Il pericolo non è il singolo suffisso `M`: è che nessuno dei due
+strumenti considera la stringa malformata, quindi non esiste un
+messaggio d'errore da cercare.
+
+## 14. `Net()` in SKiDL crea una rete nuova a ogni chiamata
+
+`Net("VPLUS")` chiamata due volte non restituisce la stessa rete: ne
+crea una seconda e **rinomina silenziosamente il duplicato**. Una
+funzione che istanzia un sottocircuito e crea le proprie reti di
+alimentazione al suo interno produce quindi un'alimentazione flottante
+diversa per ogni istanza.
+
+Rimedio: passare le reti condivise **come parametri** alla funzione del
+sottocircuito, invece di crearle dentro. Vedi
+`circuits/preamp/gain_block.py`.
+
+## 15. SKiDL lascia detriti nella directory di lavoro
+
+Ogni esecuzione scrive `<script>.erc`, `<script>.log` e
+`<script>_sklib.py` nella cwd. Sono rigenerabili e vanno ignorati da
+git — il `.gitignore` non li copriva (stessa lacuna già annotata in
+`CLAUDE.md` per `skidl_REPL.*`), ora sì.

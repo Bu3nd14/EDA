@@ -1,0 +1,61 @@
+tb_loop.cir - loop gain and phase margin, V1 matrix (gain mode x capacitive load)
+* METHOD: voltage injection at the inverting JFET gate. That node draws no
+* current (JFET gate, ~1e12 ohm) while the feedback network drives it from
+* ~470 ohm, so simple voltage injection is exact here - no Middlebrook
+* correction needed. The deck OPENS the generated gate stopper R109 and
+* re-creates it as RBRK + a DC=0 AC=1 source, so the loop topology and the DC
+* bias are untouched; only the injection point is added.
+*
+* T = V(FB)/V(G2). G2 is the INVERTING input, so T is negative real at DC:
+* its phase there is 180 deg. Phase margin is therefore read directly as
+* |ph(T)| at the frequency where |T| = 1.
+*
+* *** THE NUMBERS FROM THIS DECK ARE PROVISIONAL ***
+* Phase margin is set by device capacitances and transit times. Every one of
+* those in placeholder_devices.lib was CHOSEN BY HAND at a plausible order of
+* magnitude, not fitted to a datasheet. This deck exists so the design is not
+* flying blind; measurement-analyst must re-run it against vendor models.
+
+.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/placeholder_devices.lib
+.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN IN 0 DC 0
+
+CSTRAY RG 0 15p
+RRG    RG 0 1G
+
+* loop break, substituting for the generated 100 ohm gate stopper R109
+RBRK FB NBRK 100
+VINJ NBRK G2 DC 0 AC 1
+
+* BLOCK B output network + cable. CCABLE is altered in the loop below.
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+CCABLE JACK 0 1f
+
+.control
+alter r109 = 1G
+set units = degrees
+foreach mode 1G 0.1
+  alter rrg = $mode
+  foreach cab 1f 100p 470p 1n 2.2n 4.7n
+    alter ccable = $cab
+    ac dec 100 1 100meg
+    let T = v(fb)/v(g2)
+    let Tdb = db(T)
+    let Tph = ph(T)
+    meas ac fcross when Tdb=0
+    meas ac pmarg find Tph when Tdb=0
+    meas ac tdc find Tdb at=10
+    echo "mode(RRG)=$mode  Ccable=$cab"
+    print fcross pmarg tdc
+    destroy all
+  end
+end
+.endc
+
+.end

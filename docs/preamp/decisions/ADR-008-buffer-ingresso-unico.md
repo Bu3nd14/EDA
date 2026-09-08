@@ -52,3 +52,19 @@ risolto un vincolo elettrico.**
 
 Si aggiungono altre destinazioni a livello fisso, o una di esse risulta
 avere impedenza d'ingresso bassa (< 5 kΩ).
+
+---
+
+## Aggiornamento 2026-09-08 — il valore scende a 47 Ω
+
+Il testo sopra non è stato modificato. La Fase 2 ha rilevato che
+**~100 Ω di resistenza di isolamento pone le uscite fisse *a* 100 Ω**,
+cioè al limite di E4 e non sotto.
+
+`analog-topology-designer` ha implementato ADR-008 come scritta e ha
+sollevato il conflitto invece di correggerlo di propria iniziativa —
+comportamento corretto.
+
+**Valore adottato: 47 Ω.** Soddisfa E4 con margine e conserva
+l'isolamento reciproco fra Singxer e Stax, che era lo scopo della
+resistenza. Nessun'altra conseguenza.

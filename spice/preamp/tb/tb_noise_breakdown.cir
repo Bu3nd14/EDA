@@ -1,0 +1,58 @@
+tb_noise_breakdown.cir - which devices actually make the noise (E5)
+* Single-frequency noise summary at 1 kHz so ngspice prints the per-device
+* contribution table, plus the integrated 20 Hz - 20 kHz totals for the four
+* configurations that matter.
+* REMINDER: placeholder_devices.lib has KF = 0 everywhere. There is NO 1/f
+* noise in any of this. These are thermal + shot noise only, i.e. a FLOOR.
+
+.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/placeholder_devices.lib
+.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VSRC SRCN 0 DC 0 AC 1
+RSRC SRCN IN 430
+
+CSTRAY RG 0 15p
+RRG    RG 0 1G
+
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+
+.control
+echo "===== per-device noise contributions at 1 kHz, 0 dB mode, Rsrc=430 ====="
+noise v(JACK) VSRC lin 2 1000 1001 1
+destroy all
+
+echo "===== integrated totals, 20 Hz - 20 kHz ====="
+foreach cfg 1 2 3 4
+  if $cfg = 1
+    alter rrg = 1G
+    alter rsrc = 1
+    echo "A) 0 dB, source 1 ohm      (block A intrinsic)"
+  end
+  if $cfg = 2
+    alter rrg = 1G
+    alter rsrc = 430
+    echo "B) 0 dB, source 430 ohm    (block A on the tube phono)"
+  end
+  if $cfg = 3
+    alter rrg = 1G
+    alter rsrc = 2500
+    echo "C) 0 dB, source 2500 ohm   (block B, attenuator mid-rotation)"
+  end
+  if $cfg = 4
+    alter rrg = 0.1
+    alter rsrc = 2500
+    echo "D) +10 dB, source 2500 ohm (block B worst case)"
+  end
+  noise v(JACK) VSRC dec 100 20 20000 1
+  setplot noise2
+  print onoise_total inoise_total
+  destroy all
+end
+.endc
+
+.end

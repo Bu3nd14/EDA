@@ -1,0 +1,33 @@
+tb_bias_sweep.cir - find the Vbe-multiplier resistor that centres Iq on 15 mA
+* Sweeps R130 (the collector-base leg of the bias spreader) and reports the
+* resulting Class A quiescent current, measured as the current in R136 (the
+* NPN output emitter resistor). The hand calculation got this wrong twice;
+* this deck is the arbiter.
+* NOTE: the winning value must then be written back into
+* circuits/preamp/gain_block.py - that file, not this deck, is the topology.
+
+.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/placeholder_devices.lib
+.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN IN 0 DC 0
+
+CSTRAY RG 0 15p
+RLEAK  RG 0 1G
+
+RISO  OUT OUTA 47
+COUT  OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD JACK 0 100k
+
+.control
+foreach rval 1500 1600 1650 1690 1740 1780 1870
+  alter r130 = $rval
+  op
+  echo "R130 = $rval ohm"
+  print @r136[i] @q134[ic] v(nx) v(ny)
+end
+.endc
+
+.end
