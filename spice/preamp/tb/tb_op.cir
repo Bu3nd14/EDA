@@ -2,8 +2,39 @@ tb_op.cir - gain block operating point, BLOCK B wired as the output stage
 * First line is a title (docs/limitations.md #10). Do not put a directive here.
 * Models are PLACEHOLDERS: DC bias is credible, distortion is not.
 
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/placeholder_devices.lib
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+* ---------------------------------------------------------------------
+* CONVENZIONE DI PERCORSO (collaudata su questo deck in L2; L3 la replica
+* sugli altri 11 senza riprogettarla). Due regole, una per meta'.
+*
+* LETTURA - `.include @REPO@/<percorso-dalla-radice-del-repo>`.
+*   run_simulation.sh sostituisce @REPO@ con la radice del checkout di
+*   cui lo script stesso fa parte, e scrive un deck derivato
+*   <nome>_resolved.cir dentro la directory dei risultati.
+*
+*   Perche' non un percorso relativo: ngspice risolve un `.include`
+*   relativo contro la DIRECTORY DI LAVORO, non contro la directory del
+*   deck - e run_simulation.sh fa `cd "$OUTDIR"` prima di lanciare
+*   ngspice. Verificato, non dedotto: due file entrambi chiamati
+*   ../real.lib, uno raggiungibile dalla directory del deck (1 kohm) e
+*   uno dal cwd (9 kohm); ngspice -b ha letto quello del cwd
+*   (i(V1) = -1.111e-04 = 1/9k contro -1.000e-03 = 1/1k).
+*
+*   Un @REPO@ non sostituito fallisce in modo rumoroso: ngspice esce 1
+*   con "Could not find include file". Non e' un fallimento silenzioso.
+*
+* SCRITTURA - `wrdata <nome-nudo>`, senza alcun percorso.
+*   Lo stesso `cd "$OUTDIR"` lo fa atterrare nella directory dei
+*   risultati da solo. Il nome <basename-del-deck>_wrdata.txt e' quello
+*   che run_simulation.sh cerca per PRIMO (righe 80-90): usarlo evita il
+*   fallback che fa `grep ... | head -1`.
+*
+*   Nota per L3/L5: un deck con PIU' di un `wrdata` (tb_dc_headroom.cir
+*   ne ha 2) non puo' usare quel nome per entrambi e cade sul fallback,
+*   che ne vede solo il primo. Va gestito, non ereditato per distrazione.
+* ---------------------------------------------------------------------
+
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
 
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15
@@ -22,6 +53,8 @@ RLOAD JACK 0 100k
 
 .control
 op
+* Meta' scrittura della convenzione: nome nudo, nessun percorso.
+wrdata tb_op_wrdata.txt v(OUT) v(JACK) v(FB) v(SRC) i(VPP) i(VMM)
 echo "=== NODE VOLTAGES ==="
 print v(IN) v(FB) v(OUT) v(JACK) v(NREF) v(NREFM) v(NCASC) v(SRC)
 print v(G1) v(G2) v(S1) v(S2) v(D1N) v(D2N) v(NMIRI) v(NHI)
