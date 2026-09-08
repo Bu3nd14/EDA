@@ -6,7 +6,7 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-08** (L1 chiuso: il preamp ha una vista d'insieme; prossimo lotto L2)
+Ultimo aggiornamento: **2026-09-08** (L2 chiuso: la convenzione di percorso è collaudata su `tb_op.cir`; prossimo lotto L3)
 
 ---
 
@@ -52,8 +52,8 @@ manciata di file, **M** = riempie una sessione da solo.
 |---|---|---|---|
 | L0 | Riallineare questo file e depositarci il piano | XS | **fatto** |
 | L1 | Diagramma a blocchi del preamp intero | S/M | **fatto** |
-| L2 | Collaudare la convenzione di percorso su un deck solo (`.include` **e** `wrdata`) | S | **prossimo** |
-| L3 | Applicare la convenzione agli altri 11 deck (28 righe cablate in tutto) | S | da fare |
+| L2 | Collaudare la convenzione di percorso su un deck solo (`.include` **e** `wrdata`) | S | **fatto** |
+| L3 | Applicare la convenzione agli altri 11 deck (26 righe cablate rimaste) | S | **prossimo** |
 | L4 | `wrdata` sui deck muti **senza** cicli | S | da fare |
 | L5 | `wrdata` sui deck muti **con** cicli annidati | S/M | da fare |
 | L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | da fare |
@@ -119,12 +119,32 @@ decidono quale forma può avere il rimedio:
    percorsi relativi" è la risposta sbagliata.
 2. Lo stesso `cd` risolve però la metà `wrdata` quasi da sé: lo script
    **cerca già** il file che il deck ha scritto dentro `$OUTDIR` (righe
-   80-90). Un `wrdata <nomefile>` **senza percorso** dovrebbe atterrare
-   nel posto giusto da solo. Da collaudare, non da assumere: è L2.
+   80-90). Un `wrdata <nomefile>` **senza percorso** atterra nel posto
+   giusto da solo.
 
-Per gli `.include` il candidato principale è far **sostituire un
-segnaposto** (`@REPO@`) a `run_simulation.sh`, che già costruisce un deck
-derivato quando serve (riga 61). Va provato, non dato per buono.
+**L2 ha collaudato entrambe le metà su `tb_op.cir`, e la convenzione è
+decisa.** Il vincolo 1 non era un sospetto: è stato *misurato*. Due file
+entrambi chiamati `../real.lib`, uno raggiungibile dalla directory del
+deck (1 kΩ) e uno dal cwd (9 kΩ); `ngspice -b` ha letto **quello del
+cwd** — `i(V1) = -1.111e-04`, non `-1.000e-03`. Il percorso relativo è
+quindi falsificato, non scartato per prudenza.
+
+La convenzione, scritta per esteso in un commento dentro `tb_op.cir`:
+
+| Metà | Regola |
+|---|---|
+| lettura | `.include @REPO@/<percorso-dalla-radice>`, sostituito da `run_simulation.sh` |
+| scrittura | `wrdata <nome-nudo>`, che il `cd` porta in `$OUTDIR` da solo |
+
+Un `@REPO@` non sostituito **fallisce in modo rumoroso** (ngspice esce 1,
+"Could not find include file"): non è un fallimento silenzioso.
+
+`run_simulation.sh` ha preso tre correzioni della stessa famiglia:
+`ROOT` non è più cablato (come già in `run_tests.sh`); `OUTDIR` viene
+reso assoluto, perché un `outdir` relativo lasciava `$LOG` e `$CSV` a
+puntare nel nulla dopo il `cd` — **trovato eseguendolo, non leggendolo**;
+e un `.include` relativo ora emette un avviso, perché si risolve contro
+`$OUTDIR` e può pescare in silenzio un file omonimo di passaggio.
 
 **E `run_simulation.sh` ha lo stesso difetto dei deck**: `ROOT=/Users/roberto/EDA`
 cablato alla riga 26. `run_tests.sh` è stato corretto a suo tempo
@@ -299,9 +319,25 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L1 — il diagramma a blocchi del preamp intero.** Vedi "Cosa contiene
-ciascun lotto" più sopra. È il primo lotto perché restituisce subito un
-oggetto guardabile e non dipende da nient'altro.
+**L3 — applicare agli altri 11 deck la convenzione collaudata in L2.**
+Non c'è niente da riprogettare: la convenzione e la sua motivazione
+stanno in un commento dentro `spice/preamp/tb/tb_op.cir`. Restano **26
+righe** cablate su `.claude/worktrees/preamp-fase1/` (22 `.include` +
+4 `wrdata`), che `grep -rn '\.claude/worktrees' spice/preamp/tb/` elenca.
+
+Due cose che L3 non deve ereditare per distrazione:
+
+- `tb_dc_headroom.cir` ha **due** `wrdata` e `tb_switch_v2.cir`/
+  `tb_v3_overload.cir` uno ciascuno. Il nome
+  `<basename>_wrdata.txt` è quello che `run_simulation.sh` cerca per
+  primo; con più di un `wrdata` per deck gli altri cadono sul fallback
+  `grep ... | head -1`, che ne vede **uno solo**.
+- I 4 `wrdata` cablati scrivono oggi in `results/preamp/` del worktree
+  vecchio. Con il nome nudo finiscono nella directory dei risultati
+  passata a `run_simulation.sh`: è un cambio di percorso, non di dato.
+
+Verifica di L3, la stessa di L2: `grep -c '\.claude/worktrees'` a zero su
+tutti e 12, ogni deck eseguito davvero, e `run_tests.sh` a 5 passed.
 
 ### Materiale già raccolto per L8-L10 (il giro componenti)
 

@@ -1,31 +1,25 @@
-# Prompt per la sessione successiva
+# Prompt per la sessione successiva — L3
 
-Copia il blocco qui sotto in una sessione nuova aperta su
-`/Users/roberto/EDA`. È scritto per essere autosufficiente: non presuppone
-nulla della conversazione precedente.
-
-Riscrivilo — non aggiungerci in coda — quando il lotto che descrive è
-chiuso. Deve descrivere **un lotto solo**, quello prossimo.
+Copiare da qui in giù.
 
 ---
 
-```
 Riprendo il progetto del preamplificatore hi-fi in questo repository.
-Il lavoro è organizzato in LOTTI PICCOLI: questa sessione ne fa UNO, L2,
+Il lavoro è organizzato in LOTTI PICCOLI: questa sessione ne fa UNO, L3,
 e si ferma. Non iniziarne un secondo.
 
 Leggi PRIMA, in quest'ordine, e non saltare:
   1. CLAUDE.md — ambiente, percorsi assoluti, trappole che falliscono in
      silenzio, e la regola di fine sessione (push PRIMA di tutto)
-  2. docs/preamp/STATE.md — in particolare la sezione "Come si lavora da
-     qui: a lotti piccoli e pushati", la tabella dei lotti, e il
-     paragrafo "L2-L5 — i testbench diventano artefatti", che contiene
-     l'analisi già fatta e i vincoli già scoperti
-  3. docs/limitations.md — obbligatorio prima di scrivere codice; in
-     particolare la #10 (trappole di ngspice batch) e la #13 (i suffissi
-     di valore che falliscono in silenzio)
+  2. docs/preamp/STATE.md — la sezione "Come si lavora da qui", la
+     tabella dei lotti, e il paragrafo "L2-L5 — i testbench diventano
+     artefatti", che contiene la convenzione già decisa e misurata
+  3. spice/preamp/tb/tb_op.cir — il commento in testa al file È la
+     convenzione. Non va riprogettata: va replicata
+  4. docs/limitations.md — #10 (trappole di ngspice batch) e #13
+     (i suffissi di valore che falliscono in silenzio)
 
-Non serve rileggere le ADR per questo lotto: L2 non tocca il circuito.
+Non serve rileggere le ADR: L3 non tocca il circuito.
 
 Contesto in due righe: preamplificatore di linea a guadagno unitario,
 Classe A pura a discreti senza operazionali, per sostituire un Technics
@@ -34,74 +28,64 @@ richiesta) è la causa misurabile della mancanza di dinamica lamentata.
 La topologia canonica è in circuits/preamp/, i banchi di prova in
 spice/preamp/tb/ (12 deck).
 
+ATTENZIONE AL RAMO. Il lavoro sta su `worktree-preamp-lotti`, pushato su
+origin. Se la PR verso `main` è già stata mergiata, riparti da `main`
+aggiornato; altrimenti riusa quel worktree. `main` da solo NON contiene
+L0/L1/L2.
+
 ------------------------------------------------------------------
-IL LOTTO: L2 — collaudare la convenzione di percorso su UN deck solo
+IL LOTTO: L3 — applicare la convenzione agli altri 11 deck
 ------------------------------------------------------------------
 
-IL PROBLEMA, già analizzato e verificato — non ricominciare da capo
+LA CONVENZIONE È GIÀ DECISA E MISURATA. Non riaprirla.
 
-Tutti e 12 i deck in spice/preamp/tb/ contengono percorsi assoluti
-cablati dentro un worktree: .claude/worktrees/preamp-fase1/. In tutto
-28 righe, e 24 di queste sono .include, cioè la METÀ CHE LEGGE:
+  lettura   .include @REPO@/<percorso-dalla-radice-del-repo>
+            run_simulation.sh sostituisce @REPO@ con la radice del
+            checkout di cui lo script stesso fa parte
+  scrittura wrdata <nome-nudo>, senza percorso
+            il `cd "$OUTDIR"` dello script lo porta nel posto giusto
 
-  .include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+Perché non un percorso relativo, misurato in L2 e non da rifare: ngspice
+risolve un `.include` relativo contro la DIRECTORY DI LAVORO, non contro
+la directory del deck. Due file omonimi, uno da 1 kΩ raggiungibile dal
+deck e uno da 9 kΩ dal cwd: ngspice ha letto quello del cwd
+(i(V1) = -1.111e-04). Il vincolo è reale.
 
-Il pericolo è la lettura, non la scrittura. Una modifica al circuito su
-main NON raggiungerebbe le simulazioni: continuerebbero a includere la
-copia di settembre, senza errore da nessuna delle due parti. Oggi le due
-copie sono identiche (verificato con diff su gain_block_flat.inc e
-placeholder_devices.lib), quindi nessun risultato prodotto finora è
-sbagliato — ma il meccanismo è armato, e cancellare quel worktree rompe
-di colpo tutti e 12 i deck.
+COSA RESTA DA FARE
 
-Le altre 4 righe sono wrdata, e scrivono i risultati nell'albero vecchio.
+Restano 26 righe cablate su `.claude/worktrees/preamp-fase1/` negli 11
+deck diversi da tb_op.cir: 22 `.include` e 4 `wrdata`. L'elenco esatto:
 
-È la stessa classe di difetto già corretta una volta in run_tests.sh
-(ROOT cablato, che faceva testare in silenzio un altro albero).
+  grep -rn '\.claude/worktrees' spice/preamp/tb/
 
-DUE VINCOLI GIÀ SCOPERTI leggendo scripts/run_simulation.sh. Verificali,
-ma non riscoprirli:
+DUE TRAPPOLE, già viste aprendo i deck — non riscoprirle
 
-  1. Lo script fa  cd "$OUTDIR"  prima di lanciare ngspice (riga 73).
-     Quindi un .include RELATIVO non funziona: si risolverebbe contro la
-     directory dei risultati, non contro quella del deck. "Basta usare
-     percorsi relativi" è la risposta sbagliata.
-
-  2. Lo stesso cd risolve però la metà wrdata quasi da sé: lo script CERCA
-     GIÀ il file che il deck ha scritto dentro $OUTDIR (righe 80-90).
-     Un  wrdata <nomefile>  SENZA percorso dovrebbe atterrare nel posto
-     giusto da solo.
-
-  3. run_simulation.sh ha lo stesso difetto dei deck: ROOT=/Users/roberto/EDA
-     cablato alla riga 26. run_tests.sh è stato corretto a suo tempo
-     (ROOT=${0:A:h:h}); export_fab.sh e setup.sh no.
-
-CANDIDATO PRINCIPALE PER GLI .include, da provare e non da dare per
-buono: far sostituire a run_simulation.sh un segnaposto @REPO@ nel deck,
-producendo un deck derivato — cosa che lo script già fa quando serve
-(riga 61, "autowrap"). Se trovi una via migliore, prendila e scrivi
-perché.
-
-COSA DEVE FARE QUESTO LOTTO, e nient'altro
-
-  - Scegliere e collaudare la convenzione su UN SOLO deck: tb_op.cir.
-    È il più semplice (un .op e una lista di print, nessun ciclo) ed è
-    già usato dalla suite.
-  - Correggere ROOT in run_simulation.sh, se serve alla convenzione.
-  - Lasciare gli altri 11 deck INTATTI. Toccarli è L3.
-  - Scrivere la convenzione in un commento dentro tb_op.cir, così L3 la
-    replica senza riprogettarla.
+  1. `tb_dc_headroom.cir` ha DUE `wrdata` (dc_0db, dc_10db).
+     `run_simulation.sh` cerca per primo `<basename>_wrdata.txt` e, se
+     non lo trova, ripiega su `grep ... | head -1`, che vede UN SOLO
+     wrdata. Con due file per deck il secondo non viene convertito in
+     CSV/JSON. Va gestito consapevolmente: o si accetta (i .txt ci sono
+     comunque) e lo si scrive in STATE.md, o si migliora lo script.
+     Decidere, non subire.
+  2. `tb_ac.cir` ha un doppio ciclo `foreach` che chiude ogni iterazione
+     con `destroy all`. NON è un deck da L3: aggiungere lì un wrdata è
+     L5. In L3 gli si cambiano solo i due `.include`.
 
 FATTO QUANDO
 
-  - tb_op.cir non contiene più la stringa .claude/worktrees
-  - eseguito dal checkout corrente, include i file DI QUEL checkout e
-    scrive il suo file DENTRO quel checkout — verificato con ls, non
-    dedotto
-  - la prova che conta: il deck deve funzionare anche se il worktree
-    .claude/worktrees/preamp-fase1 non esiste. Non cancellarlo per
-    provarlo — basta verificare che nessun percorso lo nomini più
+  - `grep -rc '\.claude/worktrees' spice/preamp/tb/*.cir` dà 0 ovunque
+  - OGNI deck toccato è stato ESEGUITO davvero con
+    `/bin/zsh scripts/run_simulation.sh <deck> results/preamp/<nome>`,
+    con exit code 0 e nessun "Could not find include file" nel log —
+    verificato con ls e grep, non dedotto
+  - i numeri non cambiano: per almeno i deck che stampano un .op, il
+    confronto con la versione committata deve dare risultati identici
+    (le due copie incluse sono identiche, quindi uno scostamento
+    significa che si include il file sbagliato)
   - /bin/zsh scripts/run_tests.sh resta 5 passed, 0 failed
+
+NON FA PARTE DI L3: aggiungere `wrdata` ai 9 deck muti (è L4/L5), e
+toccare il circuito.
 
 COME LAVORIAMO
 
@@ -116,16 +100,5 @@ COME LAVORIAMO
     .claude/worktrees/ spariscono col worktree, ed è già successo.
   - CHIUSURA, nell'ordine: git push PRIMO (verifica con
     git log --oneline origin/<branch>..HEAD, che deve essere VUOTO),
-    poi aggiorna docs/preamp/STATE.md segnando L2 fatto e L3 prossimo,
-    poi riscrivi questo file per L3, poi fermati.
-
-STATO DEL REPO A QUESTO PUNTO
-
-Il lavoro sta sul branch worktree-preamp-lotti, pushato su origin, due
-commit avanti a origin/main (L0: il piano dentro STATE.md; L1: il
-diagramma a blocchi del preamp intero). Se preferisco averlo su main te
-lo dico io: non aprire una PR di tua iniziativa.
-
-Comincia dicendomi cosa hai trovato aprendo tb_op.cir e
-run_simulation.sh, e quale convenzione proponi. Poi falla.
-```
+    poi aggiorna docs/preamp/STATE.md segnando L3 fatto e L4 prossimo,
+    poi riscrivi questo file per L4, poi fermati.
