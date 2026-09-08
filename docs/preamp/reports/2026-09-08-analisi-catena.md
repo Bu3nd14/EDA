@@ -117,10 +117,16 @@ guadagno esiste comunque ed è indipendente dall'età dell'apparecchio.**
 
 ## Dati non verificati
 
-- Le specifiche del cj Evolution 250 (670 mV, 100 kΩ, 25 W) provengono
-  da schede online e da annunci d'asta, **non dal costruttore**. Da
-  confermare sul manuale dell'utente: tutto il resto ci poggia sopra.
-- L'impedenza d'**ingresso** del Singxer SA-1 V2 non è stata trovata.
+- ~~Le specifiche del cj Evolution 250 (670 mV, 100 kΩ, 25 W) provengono
+  da schede online e da annunci d'asta, non dal costruttore.~~
+  **RISOLTO in giornata** — vedi `2026-09-08-identificazione-cj-ev250.md`.
+  L'EV250 è un **MV50 in triodo**, dato per **30 W** dal costruttore;
+  **Zin 100 kΩ confermata** dal manuale ufficiale MV50. La sensibilità
+  resta non pubblicata ma delimitata fra 612 e 750 mV — intervallo
+  troppo stretto per cambiare qualsiasi conclusione.
+- L'impedenza d'**ingresso** del Singxer SA-1 V2 **non è pubblicata** —
+  confermato leggendo il manuale ufficiale (Fase 1). Non è un limite
+  della ricerca: il dato non esiste in forma pubblica.
 - Il valore del condensatore d'uscita del phono dell'utente non è noto.
 
 ## Fonti

@@ -14,7 +14,7 @@ report `reports/2026-09-08-analisi-catena.md`.
 |---|---|
 | Sorgente | Phono MC a valvole autocostruito — uscita cathode follower ECC82, Zout ≈ 430 Ω, ~0,5 V |
 | Sorgente | FiiO K11 R2R (Raspberry Pi / Volumio / Tidal) — 2,7 V RMS |
-| Carico principale | conrad-johnson Evolution 250 — Zin 100 kΩ, sensibilità 670 mV |
+| Carico principale | conrad-johnson Evolution 250 (= **MV50 in triodo**, 30 W) — **Zin 100 kΩ confermata**, sensibilità 612–750 mV |
 | Carico fisso | Singxer SA-1 V2 — volume proprio |
 | Carico fisso | Stax SRM-T1 — Zin ~50 kΩ, volume proprio |
 | Diffusori | Klipsch Heresy I — 96 dB/1W/1m |
@@ -38,6 +38,7 @@ report `reports/2026-09-08-analisi-catena.md`.
 | E1 | Guadagno nominale | **0 dB** | ADR-001 |
 | E2 | Guadagno alternativo | **+10 dB** commutabile | ADR-004 |
 | E3 | Impedenza d'ingresso | **≥ 100 kΩ** | Cap di accoppiamento del phono — vedi report |
+| E3b | Attenuazione tipica all'ascolto | ~29–31 dB con il nuovo preamp | Guadagno finale 20,7×–25,3× |
 | E4 | Impedenza d'uscita | **< 100 Ω**, costante con la posizione del volume | ADR-002 |
 | E5 | Rumore in uscita | **< 10 µV RMS** (20 Hz–20 kHz, non pesato) | vedi nota sotto |
 | E6 | Livello massimo d'ingresso | 2,7 V RMS | FiiO K11 R2R |
@@ -101,8 +102,10 @@ Due blocchi identici per canale, quattro in totale.
 
 ## Aperti
 
-| Cosa | Impatto | Assegnato a |
-|---|---|---|
-| Impedenza d'**ingresso** Singxer SA-1 V2 | Dimensionamento C uscita fissa (2,2 vs 4,7 µF) | Fase 1 |
-| Conferma specifiche cj EV250 dal manuale | Tutto il conto della struttura di guadagno | **utente** |
-| Valore del cap d'uscita del phono | Verifica del margine su E3 | **utente** |
+| Cosa | Impatto | Assegnato a | Stato |
+|---|---|---|---|
+| ~~Conferma specifiche cj EV250~~ | Struttura di guadagno | utente | **CHIUSO** — email costruttore + manuale MV50, vedi report 2026-09-08 |
+| Impedenza d'**ingresso** Singxer SA-1 V2 | Dimensionamento C uscita fissa | Fase 1 | **NON PUBBLICATA.** Verificato sul manuale ufficiale. Vie residue: chiedere a Singxer, misurare, o adottare 4,7 µF e chiudere la questione |
+| Scelta del JFET d'ingresso | Topologia dello stadio d'ingresso | **utente** | **APERTO** — LSK170/LSJ74 vs LSK489 vs JFE2140, vedi report Fase 1. Richiede una ADR |
+| Valore del cap d'uscita del phono a valvole | Verifica del margine su E3 | utente | **RINVIATO** — non ha accesso agli schematici né può aprire agevolmente il telaio. Non blocca: E3 ≥ 100 kΩ copre il caso peggiore ragionevole |
+| Modello SPICE LSJ74 | Credibilità della simulazione di distorsione | Fase 2/3 | **APERTO** — link non risolto in Fase 1 |
