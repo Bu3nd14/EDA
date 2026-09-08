@@ -177,6 +177,17 @@ seconda.
 
 ## Il dossier: formato deciso, non ancora iniziato
 
+**Il dossier non è negoziabile, e non si taglia per arrivare prima a G1.**
+Detto dall'utente il 2026-09-08 («il dossier per me è estremamente
+importante»), in risposta a una stima in giornate uomo in cui era stato
+proposto un percorso corto che saltava L3-L5. La proposta era razionale
+sul tempo e sbagliava l'obiettivo: **L3-L5 sono l'infrastruttura del
+dossier**, quindi stanno nel percorso, non fra gli extra.
+
+Se il cap di token stringe si rallenta l'ordine dei lotti — non si toglie
+il dossier. Questa nota esiste perché la proposta di tagliarlo è già
+stata fatta una volta, e senza un divieto scritto verrebbe rifatta.
+
 L'utente vuole poter **guardare** il progetto. Formato **deciso con lui**,
 da non riproporre in altre forme:
 
