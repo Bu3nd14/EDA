@@ -1,0 +1,51 @@
+tb_switch_v2.cir - V2: the feedback loop must never open during gain switching
+* Models the gain relay as a real contact with real bounce:
+*   make  at t = 5 ms  with 3 bounces over 0.7 ms
+*   break at t = 25 ms with 2 bounces over 0.4 ms
+* RON = 50 mohm, ROFF = 1e12 ohm - i.e. a genuinely open contact, not a
+* convenient large resistor.
+*
+* THE CLAIM UNDER TEST (ADR-004 + V2): because the relay switches R_g to
+* ground and R_f is hard-wired, the loop stays closed in EVERY contact state.
+* The falsifiable prediction: v(OUT) stays bounded by the +10 dB envelope at
+* all times, never approaches a rail, and settles within a few loop time
+* constants after each bounce.
+*
+* The counterfactual (the arrangement ADR-004 rejected) is in
+* tb_switch_v2_counterfactual.cir - run both, they are only meaningful
+* together.
+
+.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/placeholder_devices.lib
+.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VSRC SRCN 0 DC 0 SIN(0 0.5 1k)
+RSRC SRCN IN 430
+
+* --- the gain relay contact ---
+.model RLYSW SW(RON=0.05 ROFF=1E12 VT=2.5 VH=0.5)
+SREL RG NRG CTRL 0 RLYSW
+RCONT NRG 0 0.001
+CSTRAY RG 0 15p
+VCTRL CTRL 0 PWL(0 0 4.999m 0 5.000m 5 5.200m 5 5.201m 0 5.400m 0
++ 5.401m 5 5.600m 5 5.601m 0 5.700m 0 5.701m 5 24.999m 5
++ 25.000m 0 25.200m 0 25.201m 5 25.400m 5 25.401m 0 40m 0)
+
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+
+.control
+tran 2u 40m 0 2u
+wrdata /Users/roberto/EDA/.claude/worktrees/preamp-fase1/results/preamp/switch_v2.txt v(OUT) v(JACK) v(NX) v(NY) v(CTRL) v(FB)
+let vmax = maximum(v(OUT))
+let vmin = minimum(v(OUT))
+let nxmax = maximum(v(NX))
+let nymin = minimum(v(NY))
+echo "extremes over the whole 40 ms, including both bounce bursts:"
+print vmax vmin nxmax nymin
+.endc
+
+.end

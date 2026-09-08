@@ -1,0 +1,119 @@
+tb_zout_psrr_noise.cir - E4 (Zout), PSRR, and E5 (output noise)
+* Zout  : 1 A AC current injected at the jack, input grounded, load removed.
+*         The 220k bleeder stays because the real circuit has it.
+*         Measured AT THE JACK, i.e. what the cable and the cj EV250 see -
+*         which is the quantity E4 constrains, not the raw emitter impedance.
+* PSRR  : 1 V AC in series with each rail, separately. Reported as
+*         20*log10(Vrail/Vout), so BIGGER IS BETTER.
+* NOISE : output noise integrated 20 Hz - 20 kHz, unweighted (E5 < 10 uV).
+*
+* *** THE NOISE NUMBER IS A FLOOR, NOT A PREDICTION ***
+* placeholder_devices.lib has KF = 0 on every device: there is NO 1/f noise
+* in this simulation at all. The LSK489's real 1/f corner and the real
+* mirror/VAS flicker noise are missing. Treat the result as "the thermal and
+* shot noise alone are already this far below target", nothing more.
+
+.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/placeholder_devices.lib
+.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS NPP DC 0 AC 0
+VPRAIL NPP 0 DC 15
+VMM VMINUS NMM DC 0 AC 0
+VMRAIL NMM 0 DC -15
+
+VSRC SRCN 0 DC 0 AC 1
+RSRC SRCN IN 430
+
+CSTRAY RG 0 15p
+RRG    RG 0 1G
+
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+IOUT   0 JACK DC 0 AC 0
+
+.control
+set units = degrees
+
+echo "########## Zout at the jack, load removed, both gain modes ##########"
+alter rload = 1G
+alter @iout[acmag] = 1
+foreach mode 1G 0.1
+  alter rrg = $mode
+  ac dec 20 20 100k
+  let Z = mag(v(JACK))
+  meas ac z20   find Z at=20
+  meas ac z1k   find Z at=1000
+  meas ac z20k  find Z at=20000
+  let ZA = mag(v(OUT))
+  meas ac za20  find ZA at=20
+  meas ac za1k  find ZA at=1000
+  meas ac za20k find ZA at=20000
+  meas ac za100k find ZA at=100000
+  echo "RRG=$mode"
+  print z20 z1k z20k za20 za1k za20k za100k
+  destroy all
+end
+alter @iout[acmag] = 0
+alter rload = 100k
+
+echo "########## PSRR (input source silenced) ##########"
+alter @vsrc[acmag] = 0
+alter @vpp[acmag] = 1
+foreach mode 1G 0.1
+  alter rrg = $mode
+  ac dec 20 20 100k
+  let P = -db(v(JACK))
+  meas ac p100  find P at=100
+  meas ac p1k   find P at=1000
+  meas ac p10k  find P at=10000
+  meas ac p100k find P at=100000
+  echo "PSRR+ RRG=$mode (dB, bigger is better)"
+  print p100 p1k p10k p100k
+  destroy all
+end
+alter @vpp[acmag] = 0
+
+echo "########## PSRR from V- ##########"
+alter @vmm[acmag] = 1
+foreach mode 1G 0.1
+  alter rrg = $mode
+  ac dec 20 20 100k
+  let P = -db(v(JACK))
+  meas ac p100  find P at=100
+  meas ac p1k   find P at=1000
+  meas ac p10k  find P at=10000
+  meas ac p100k find P at=100000
+  echo "PSRR- RRG=$mode (dB, bigger is better)"
+  print p100 p1k p10k p100k
+  destroy all
+end
+alter @vmm[acmag] = 0
+alter @vsrc[acmag] = 1
+
+echo "########## output noise 20 Hz - 20 kHz ##########"
+foreach mode 1G 0.1
+  alter rrg = $mode
+  noise v(JACK) VSRC dec 50 20 20000 1
+  setplot noise2
+  echo "RRG=$mode  RSRC=430 (phono cathode follower)"
+  print onoise_total inoise_total
+  destroy all
+end
+* and with a dead-short source, to separate source-resistance noise
+alter rsrc = 1
+alter rrg = 1G
+noise v(JACK) VSRC dec 50 20 20000 1
+setplot noise2
+echo "RRG=1G  RSRC=1 ohm (intrinsic)"
+print onoise_total inoise_total
+alter rsrc = 2500
+alter rrg = 0.1
+noise v(JACK) VSRC dec 50 20 20000 1
+setplot noise2
+echo "RRG=0.1  RSRC=2500 (attenuator at mid-rotation, +10 dB) - WORST CASE"
+print onoise_total inoise_total
+.endc
+
+.end

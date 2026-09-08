@@ -1,0 +1,53 @@
+tb_loop_blockA.cir - loop gain of BLOCK A, loaded exactly as ADR-008 wires it
+* BLOCK A has NO output isolation resistor: its feedback take-off IS the node
+* that drives the 10 kohm stepped attenuator, plus the two 100 ohm isolation
+* resistors feeding the fixed outputs. So the wiring capacitance to the
+* front-panel attenuator sits DIRECTLY on the loop's output node, with no
+* 47 ohm buffer in front of it - the opposite of BLOCK B's situation.
+* CWIRE is swept from 0 to 1 nF: 1 nF is far more than a 20 cm harness can
+* present, and is here as a margin probe, not as a realistic value.
+* Gain relay not fitted (ADR-006): unity gain, RG left open.
+* PROVISIONAL - placeholder device models, see tb_loop.cir header.
+
+.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/placeholder_devices.lib
+.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN IN 0 DC 0
+
+* R_g / relay not fitted on block A
+RRG RG 0 1G
+
+RBRK FB NBRK 100
+VINJ NBRK G2 DC 0 AC 1
+
+* --- ADR-008 load: attenuator + two isolated fixed outputs ---
+CWIRE  OUT 0 1f
+RATT   OUT 0 10k
+RSEP1  OUT FIX1 100
+CFIX1  FIX1 J1 2.2u
+RJ1    J1 0 50k
+RSEP2  OUT FIX2 100
+CFIX2  FIX2 J2 2.2u
+RJ2    J2 0 50k
+
+.control
+alter r109 = 1G
+set units = degrees
+foreach cw 1f 47p 100p 220p 470p 1n
+  alter cwire = $cw
+  ac dec 100 1 100meg
+  let T = v(fb)/v(g2)
+  let Tdb = db(T)
+  let Tph = ph(T)
+  meas ac fcross when Tdb=0
+  meas ac pmarg find Tph when Tdb=0
+  meas ac tdc find Tdb at=10
+  echo "BLOCK A  Cwire=$cw"
+  print fcross pmarg tdc
+  destroy all
+end
+.endc
+
+.end

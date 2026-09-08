@@ -39,7 +39,7 @@ report `reports/2026-09-08-analisi-catena.md`.
 | E2 | Guadagno alternativo | **+10 dB** commutabile | ADR-004 |
 | E3 | Impedenza d'ingresso | **≥ 100 kΩ** | Cap di accoppiamento del phono — vedi report |
 | E3b | Attenuazione tipica all'ascolto | ~29–31 dB con il nuovo preamp | Guadagno finale 20,7×–25,3× |
-| E4 | Impedenza d'uscita | **< 100 Ω**, costante con la posizione del volume | ADR-002 |
+| E4 | Impedenza d'uscita | **< 100 Ω in banda passante** (misurata escludendo la reattanza del condensatore d'accoppiamento), costante con la posizione del volume | ADR-002 |
 | E5 | Rumore in uscita | **< 10 µV RMS** (20 Hz–20 kHz, non pesato) | vedi nota sotto |
 | E6 | Livello massimo d'ingresso | 2,7 V RMS | FiiO K11 R2R |
 | E7 | Alimentazione | ±15 V regolati | ADR-003 |
@@ -139,6 +139,26 @@ THD/THD+N, risposta, rumore in banda (target E5), PSRR, Zout in
 funzione della frequenza. Ognuna con la **provenienza del modello**
 dichiarata accanto: una cifra di distorsione ottenuta da un modello
 trascritto a mano da PDF (ADR-013) va riportata con quel caveat.
+
+### V5 — Equivalenza fra netlist SPICE e netlist KiCad
+
+La Fase 2 **non** ha usato il percorso documentato
+`generate_schematic()` → `kicad-cli sch export netlist --format spice`:
+per ~40 componenti finisce dritto nelle limitazioni #3 e #5. Al suo
+posto `circuits/preamp/spice_export.py` percorre gli stessi oggetti
+`Part`/`Net` di SKiDL, quindi **la definizione della topologia resta
+una sola**.
+
+Ma il rischio si sposta sull'esportatore: un suo difetto farebbe
+divergere ciò che si simula da ciò che si manda in produzione, **senza
+errori da nessuna delle due parti**. Non è teorico — è già successo una
+volta in Fase 2 con i suffissi dei valori (vedi `docs/limitations.md`
+#13), ed è rimasto invisibile per diverse analisi.
+
+Prima di G2, le due netlist vanno **confrontate per equivalenza
+topologica**, non lette a occhio: stessi nodi, stessi collegamenti,
+stessi valori tradotti correttamente. È un controllo automatizzabile e
+va automatizzato.
 
 ## Architettura
 
