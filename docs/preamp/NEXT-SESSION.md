@@ -4,119 +4,128 @@ Copia il blocco qui sotto in una sessione nuova aperta su
 `/Users/roberto/EDA`. È scritto per essere autosufficiente: non presuppone
 nulla della conversazione precedente.
 
-Cancella questo file quando le fasi che descrive sono chiuse.
+Riscrivilo — non aggiungerci in coda — quando il lotto che descrive è
+chiuso. Deve descrivere **un lotto solo**, quello prossimo.
 
 ---
 
 ```
 Riprendo il progetto del preamplificatore hi-fi in questo repository.
+Il lavoro è organizzato in LOTTI PICCOLI: questa sessione ne fa UNO, L2,
+e si ferma. Non iniziarne un secondo.
 
 Leggi PRIMA, in quest'ordine, e non saltare:
-  1. CLAUDE.md — orientamento all'ambiente, percorsi assoluti, trappole
-     che falliscono in silenzio, e la regola di fine sessione
-  2. docs/preamp/STATE.md — dove siamo, cosa è aperto, prossimo passo
-  3. docs/preamp/REQUIREMENTS.md — requisiti congelati, inclusa la
-     sezione "Requisiti di verifica" V1-V5
-  4. docs/preamp/decisions/ — le ADR. Sono la ragione per cui il
-     circuito è così. Non ridiscuterle: se ne trovi una tecnicamente
-     sbagliata dillo esplicitamente, ma non aggirarla in silenzio
-  5. docs/limitations.md — obbligatorio prima di scrivere codice
+  1. CLAUDE.md — ambiente, percorsi assoluti, trappole che falliscono in
+     silenzio, e la regola di fine sessione (push PRIMA di tutto)
+  2. docs/preamp/STATE.md — in particolare la sezione "Come si lavora da
+     qui: a lotti piccoli e pushati", la tabella dei lotti, e il
+     paragrafo "L2-L5 — i testbench diventano artefatti", che contiene
+     l'analisi già fatta e i vincoli già scoperti
+  3. docs/limitations.md — obbligatorio prima di scrivere codice; in
+     particolare la #10 (trappole di ngspice batch) e la #13 (i suffissi
+     di valore che falliscono in silenzio)
+
+Non serve rileggere le ADR per questo lotto: L2 non tocca il circuito.
 
 Contesto in due righe: preamplificatore di linea a guadagno unitario,
 Classe A pura a discreti senza operazionali, per sostituire un Technics
 SU-9070 la cui struttura di guadagno sbagliata (46 dB di attenuazione
 richiesta) è la causa misurabile della mancanza di dinamica lamentata.
-La Fase 2 ha consegnato il primo circuito canonico in circuits/preamp/.
+La topologia canonica è in circuits/preamp/, i banchi di prova in
+spice/preamp/tb/ (12 deck).
 
-Come lavoriamo, per non ripartire col piede sbagliato:
+------------------------------------------------------------------
+IL LOTTO: L2 — collaudare la convenzione di percorso su UN deck solo
+------------------------------------------------------------------
 
-- Definisco i requisiti CONVERSANDO. Non aprire con un questionario a
-  scelta multipla: raccontami cosa hai trovato e i vincoli reali, poi
-  parliamo.
-- Verifica invece di fidarti. Se un subagente riporta dei numeri,
-  rieseguili tu prima di riferirmeli. È già servito.
-- Niente cifre non eseguite. Una simulazione descritta e non lanciata
-  non è evidenza.
-- Ti avviso intorno all'80% del cap token. A quel punto: git push PER
-  PRIMO (verifica con `git log --oneline origin/<branch>..HEAD`, non
-  assumere), poi aggiorna STATE.md, poi il resto.
-- Lavora in un worktree, e ricordati che i commit non pushati dentro
-  .claude/worktrees/ spariscono col worktree.
+IL PROBLEMA, già analizzato e verificato — non ricominciare da capo
 
-I prossimi passi previsti dal piano:
+Tutti e 12 i deck in spice/preamp/tb/ contengono percorsi assoluti
+cablati dentro un worktree: .claude/worktrees/preamp-fase1/. In tutto
+28 righe, e 24 di queste sono .include, cioè la METÀ CHE LEGGE:
 
-  FASE 3 — giro componenti completo (bom-component-manager)
-    Condensatori di segnale, resistenze dell'attenuatore e del feedback,
-    generatori di corrente. Restituisce una ROSA per ogni posizione con
-    i dati misurabili a confronto e la disponibilità reale verificata,
-    non un vincitore. Parti nuove da coprire: 2N5401, 2N5551, stock
-    THAT320 con conferma BV_ceo >= 35 V, e quale contatto del G6K-2F-Y
-    e' NO e quale NC.
-    Nota importante: nessun agente puo' dirmi quale componente "suona
-    meglio" - quella e' una regola di AGENTS.md. Puo' restringere il
-    campo su basi misurabili (assorbimento dielettrico, rumore in
-    eccesso, coefficiente di tensione); la scelta finale fra parti tutte
-    buone e' mia, all'ascolto. Il requisito P6 esiste per questo: i
-    componenti di segnale devono essere sostituibili senza dissaldatore.
+  .include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
 
-  IMPORTAZIONE MODELLI SPICE — precondizione di tutto il resto
-    Il repository non ha NESSUN modello vendor reale: sono fixture
-    generiche, e il macro-modello di operazionale dichiara di non avere
-    clipping ne' slew rate. Finche' non ci sono modelli veri, ogni cifra
-    di distorsione e' priva di significato - ed e' l'intera ragione per
-    cui siamo andati a discreti.
-    Il modello LSK489 va importato con la procedura obbligatoria di
-    ADR-013: PDF congelato in vendor/ con sha256, trascrizione a mano in
-    models/jfet/, provenance che dichiari esplicitamente la trascrizione
-    manuale, e controllo incrociato di I_DSS e V_P contro il datasheet
-    con scripts/validate_models.py. Il quarto passo e' cio' che rende
-    accettabile il secondo.
+Il pericolo è la lettura, non la scrittura. Una modifica al circuito su
+main NON raggiungerebbe le simulazioni: continuerebbero a includere la
+copia di settembre, senza errore da nessuna delle due parti. Oggi le due
+copie sono identiche (verificato con diff su gain_block_flat.inc e
+placeholder_devices.lib), quindi nessun risultato prodotto finora è
+sbagliato — ma il meccanismo è armato, e cancellare quel worktree rompe
+di colpo tutti e 12 i deck.
 
-  FASE 4 — revisione della topologia alla luce dei componenti
-    (analog-topology-designer). Puo' iterare piu' di una volta: e'
-    normale, ed e' il senso del giro.
+Le altre 4 righe sono wrdata, e scrivono i risultati nell'albero vecchio.
 
-  FASE 5 — misure (measurement-analyst)
-    La STABILITA' e' la voce di testa, non la distorsione. Il relè del
-    guadagno commuta la rete di controreazione, quindi il margine di
-    fase e' DIVERSO nelle due modalita'; e l'impedenza dell'attenuatore
-    varia con la manopola, quindi varia anche con la posizione del
-    volume. La matrice completa e' in REQUIREMENTS.md, V1-V3. Il modo
-    peggiore risulta 0 dB, cioe' quello normale.
+È la stessa classe di difetto già corretta una volta in run_tests.sh
+(ROOT cablato, che faceva testare in silenzio un altro albero).
 
-  FASE 6 — alimentatore (psu-engineer), in parallelo
-    +-15 V, 105/110 mA, 3,22 W. V+ e' il rail debole per il PSRR di ~30
-    dB ed e' strutturale. Requisito: <= 1 mV picco di ripple a 100 Hz su
-    V+ e <= 30 uV di rumore sopra 10 kHz.
-    ATTENZIONE: telaio unico, quindi la rete elettrica entra
-    nell'apparecchio. L'analisi di sicurezza parte SUBITO, in parallelo
-    alla progettazione, non alla fine: al gate G3 la sua assenza e' un
-    BLOCK automatico. E il trasformatore finisce vicino a un nodo da 100
-    kOhm in un mobile chiuso: il ronzio e' il rischio numero uno.
+DUE VINCOLI GIÀ SCOPERTI leggendo scripts/run_simulation.sh. Verificali,
+ma non riscoprirli:
 
-  G1 — congelamento topologia (design-reviewer)
-    Arriva DOPO il giro componenti, non prima: congela una topologia che
-    sappiamo costruibile con parti che esistono. Precondizione: uno
-    schematico rivedibile da un umano che passi scripts/run_tests.sh.
+  1. Lo script fa  cd "$OUTDIR"  prima di lanciare ngspice (riga 73).
+     Quindi un .include RELATIVO non funziona: si risolverebbe contro la
+     directory dei risultati, non contro quella del deck. "Basta usare
+     percorsi relativi" è la risposta sbagliata.
 
-C'e' anche un lavoro sospeso che mi interessa: il DOSSIER da guardare.
-Formato gia' deciso, non riproporre alternative - SVG nel repository
-come formato primario (e' testo, quindi versiona e si confronta con git
-diff) piu' una pagina da aprire da qualsiasi dispositivo. Niente PDF: lo
-stampo dal browser.
-Contenuto: lo schematico, i grafici delle misure (risposta nelle due
-modalita', guadagno d'anello col margine di fase segnato, PSRR dei due
-rail, Z_out in frequenza, il transitorio del rele' affiancato al
-controfattuale a -13,68 V, recupero da sovraccarico), la tabella dei
-punti di lavoro e le previsioni dichiarate.
-Lavoro preliminare: solo 3 testbench su 12 scrivono file dati. Agli
-altri nove va aggiunta una riga wrdata dentro il blocco .control gia'
-esistente, dopo l'analisi. Non tocca circuito ne' risultati, e serve
-comunque a design-reviewer per rieseguire le misure a G1.
+  2. Lo stesso cd risolve però la metà wrdata quasi da sé: lo script CERCA
+     GIÀ il file che il deck ha scritto dentro $OUTDIR (righe 80-90).
+     Un  wrdata <nomefile>  SENZA percorso dovrebbe atterrare nel posto
+     giusto da solo.
 
-Manca anche un diagramma a blocchi del preamp intero: quello del blocco
-di guadagno esiste, la vista d'insieme no.
+  3. run_simulation.sh ha lo stesso difetto dei deck: ROOT=/Users/roberto/EDA
+     cablato alla riga 26. run_tests.sh è stato corretto a suo tempo
+     (ROOT=${0:A:h:h}); export_fab.sh e setup.sh no.
 
-Comincia dicendomi cosa hai trovato leggendo, e da cosa proporresti di
-partire.
+CANDIDATO PRINCIPALE PER GLI .include, da provare e non da dare per
+buono: far sostituire a run_simulation.sh un segnaposto @REPO@ nel deck,
+producendo un deck derivato — cosa che lo script già fa quando serve
+(riga 61, "autowrap"). Se trovi una via migliore, prendila e scrivi
+perché.
+
+COSA DEVE FARE QUESTO LOTTO, e nient'altro
+
+  - Scegliere e collaudare la convenzione su UN SOLO deck: tb_op.cir.
+    È il più semplice (un .op e una lista di print, nessun ciclo) ed è
+    già usato dalla suite.
+  - Correggere ROOT in run_simulation.sh, se serve alla convenzione.
+  - Lasciare gli altri 11 deck INTATTI. Toccarli è L3.
+  - Scrivere la convenzione in un commento dentro tb_op.cir, così L3 la
+    replica senza riprogettarla.
+
+FATTO QUANDO
+
+  - tb_op.cir non contiene più la stringa .claude/worktrees
+  - eseguito dal checkout corrente, include i file DI QUEL checkout e
+    scrive il suo file DENTRO quel checkout — verificato con ls, non
+    dedotto
+  - la prova che conta: il deck deve funzionare anche se il worktree
+    .claude/worktrees/preamp-fase1 non esiste. Non cancellarlo per
+    provarlo — basta verificare che nessun percorso lo nomini più
+  - /bin/zsh scripts/run_tests.sh resta 5 passed, 0 failed
+
+COME LAVORIAMO
+
+  - Verifica invece di fidarti. Se un subagente riporta dei numeri,
+    rieseguili tu prima di riferirmeli. È già servito.
+  - Niente cifre non eseguite. Una simulazione descritta e non lanciata
+    non è evidenza.
+  - Un lotto per volta, mai due agenti in parallelo: il vincolo è il cap
+    di token del piano, e i resoconti che tornano insieme sono la parte
+    che consuma.
+  - Lavora in un worktree. I commit non pushati dentro
+    .claude/worktrees/ spariscono col worktree, ed è già successo.
+  - CHIUSURA, nell'ordine: git push PRIMO (verifica con
+    git log --oneline origin/<branch>..HEAD, che deve essere VUOTO),
+    poi aggiorna docs/preamp/STATE.md segnando L2 fatto e L3 prossimo,
+    poi riscrivi questo file per L3, poi fermati.
+
+STATO DEL REPO A QUESTO PUNTO
+
+Il lavoro sta sul branch worktree-preamp-lotti, pushato su origin, due
+commit avanti a origin/main (L0: il piano dentro STATE.md; L1: il
+diagramma a blocchi del preamp intero). Se preferisco averlo su main te
+lo dico io: non aprire una PR di tua iniziativa.
+
+Comincia dicendomi cosa hai trovato aprendo tb_op.cir e
+run_simulation.sh, e quale convenzione proponi. Poi falla.
 ```

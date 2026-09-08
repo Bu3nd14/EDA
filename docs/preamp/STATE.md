@@ -52,8 +52,8 @@ manciata di file, **M** = riempie una sessione da solo.
 |---|---|---|---|
 | L0 | Riallineare questo file e depositarci il piano | XS | **fatto** |
 | L1 | Diagramma a blocchi del preamp intero | S/M | **fatto** |
-| L2 | Collaudare la convenzione di percorso `wrdata` su un deck solo | XS | **prossimo** |
-| L3 | Applicare la convenzione ai 3 deck che già scrivono | S | da fare |
+| L2 | Collaudare la convenzione di percorso su un deck solo (`.include` **e** `wrdata`) | S | **prossimo** |
+| L3 | Applicare la convenzione agli altri 11 deck (28 righe cablate in tutto) | S | da fare |
 | L4 | `wrdata` sui deck muti **senza** cicli | S | da fare |
 | L5 | `wrdata` sui deck muti **con** cicli annidati | S/M | da fare |
 | L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | da fare |
@@ -90,21 +90,54 @@ Il valore reale è +9,96 dB (R_f 1,50 kΩ / R_g 698 Ω): dentro tolleranza,
 ma vale saperlo prima che qualcuno lo scopra misurando.
 
 **L2-L5 — i testbench diventano artefatti.** Oggi solo 3 dei 12 deck in
-`spice/preamp/tb/` scrivono file dati, e **quei 3 scrivono nel posto
-sbagliato**: le uniche 4 righe `wrdata` contengono un percorso assoluto
-cablato dentro `.claude/worktrees/preamp-fase1/`. Quel worktree esiste
-ancora, quindi eseguendo i deck da `main` i risultati **finiscono in
-silenzio nell'albero vecchio** — nessun errore. È la stessa classe di
-difetto già corretta una volta in `run_tests.sh` (`ROOT` cablato), ed è
-destinata a rompersi quando quel worktree sparirà.
+`spice/preamp/tb/` scrivono file dati. Ma aprendo i deck per L2 è emerso
+un problema **più grande di quello registrato**, e va detto per intero.
 
-Quindi il lavoro non è "aggiungere 9 righe": è rendere coerenti tutti e
-12 i deck su un percorso derivato dal repo. Si collauda su **un** deck
-(L2) prima di replicare su dodici. I deck con `foreach` sono l'ultimo
-lotto perché non sono meccanici: `tb_ac.cir` ha un doppio ciclo (2
-modalità × 4 impedenze di sorgente = 8 curve) e chiude ogni iterazione
-con `destroy all`, quindi il `wrdata` va **dentro il ciclo, prima del
-`destroy all`**, col nome file parametrizzato.
+**Tutti e 12 i deck leggono il circuito dal worktree vecchio.** Non sono
+4 righe `wrdata`: sono **28 righe** con un percorso assoluto cablato
+dentro `.claude/worktrees/preamp-fase1/`, e **24 di quelle sono
+`.include`**:
+
+```
+.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+```
+
+La metà pericolosa è la lettura, non la scrittura. Una modifica al
+circuito su `main` **non raggiungerebbe le simulazioni**: continuerebbero
+a includere la copia di settembre, senza errore da nessuna parte. Oggi le
+due copie sono identiche — verificato con `diff` su
+`gain_block_flat.inc` e `placeholder_devices.lib` — quindi **nessun
+risultato prodotto finora è sbagliato**. Ma il meccanismo è armato, e
+cancellare quel worktree rompe di colpo tutti e 12 i deck.
+
+**Due vincoli scoperti leggendo `scripts/run_simulation.sh`**, che
+decidono quale forma può avere il rimedio:
+
+1. Lo script fa `cd "$OUTDIR"` prima di lanciare ngspice (riga 73).
+   Quindi **un `.include` relativo non funziona**: si risolverebbe contro
+   la directory dei risultati, non contro quella del deck. "Basta usare
+   percorsi relativi" è la risposta sbagliata.
+2. Lo stesso `cd` risolve però la metà `wrdata` quasi da sé: lo script
+   **cerca già** il file che il deck ha scritto dentro `$OUTDIR` (righe
+   80-90). Un `wrdata <nomefile>` **senza percorso** dovrebbe atterrare
+   nel posto giusto da solo. Da collaudare, non da assumere: è L2.
+
+Per gli `.include` il candidato principale è far **sostituire un
+segnaposto** (`@REPO@`) a `run_simulation.sh`, che già costruisce un deck
+derivato quando serve (riga 61). Va provato, non dato per buono.
+
+**E `run_simulation.sh` ha lo stesso difetto dei deck**: `ROOT=/Users/roberto/EDA`
+cablato alla riga 26. `run_tests.sh` è stato corretto a suo tempo
+(`ROOT=${0:A:h:h}`), gli altri no — restano cablati anche
+`export_fab.sh` e `setup.sh`. Eseguito da un worktree, `run_simulation.sh`
+scrive i risultati nel checkout principale.
+
+Solo dopo aver sistemato i percorsi ha senso aggiungere `wrdata` ai 9
+deck muti. I deck con `foreach` sono l'ultimo lotto perché non sono
+meccanici: `tb_ac.cir` ha un doppio ciclo (2 modalità × 4 impedenze di
+sorgente = 8 curve) e chiude ogni iterazione con `destroy all`, quindi il
+`wrdata` va **dentro il ciclo, prima del `destroy all`**, col nome file
+parametrizzato.
 
 Serve al dossier **e** a `design-reviewer` per rieseguire le misure a G1:
 non è lavoro anticipato.
