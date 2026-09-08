@@ -115,12 +115,15 @@ condensatore verso il Singxer, visto che la sua impedenza d'ingresso non
 | ~~Quale JFET d'ingresso~~ | — | **CHIUSA**: LSK489 (ADR-013) |
 | ~~Conferma specifiche cj EV250~~ | — | **CHIUSA**: email costruttore + manuale MV50 |
 
-## Decisioni che aspettano l'utente
+## Decisioni chiuse il 2026-09-08
 
-| Cosa | Perché |
+| Cosa | Esito |
 |---|---|
-| **Rail ±15 V o ±18 V** | A +10 dB con il K11 a fondo scala restano **0,75 dB** di margine prima del clipping. Mitigato dal trim di ADR-011 a −6 dB, che da comodità è diventato **portante**. ±18 V darebbero ~11,4 V RMS ma contraddicono E7 e vogliono una ADR |
-| Condensatore verso il Singxer: 2,2 o 4,7 µF | La sua impedenza d'ingresso non è pubblicata |
+| Rail ±15 V o ±18 V | **±15 V** — ADR-015. Il trim di ADR-011 in modalità +10 dB **non è più opzionale** |
+| Condensatore verso il Singxer | **4,7 µF su tutte e tre le uscite** — ADR-007 addendum. Chiude la domanda sull'impedenza ignota del Singxer |
+| Resistenze di isolamento ADR-008 | **47 Ω** invece di ~100 Ω — soddisfa E4 con margine |
+
+Nessuna decisione dell'utente è pendente.
 
 ## Attenzione per chi riprende
 

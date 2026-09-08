@@ -78,3 +78,26 @@ L'impedenza d'ingresso del **Singxer SA-1 V2 non è verificata** — in
 rete si trovano solo le impedenze d'uscita (22,5 Ω sbilanciata / 45 Ω
 bilanciata). Se risultasse ~10 kΩ, i 2,2 µF danno 7,2 Hz e vanno portati
 a 4,7 µF. Verifica assegnata alla Fase 1.
+
+---
+
+## Aggiornamento 2026-09-08 — 4,7 µF anche sulle uscite fisse
+
+Il testo sopra non è stato modificato.
+
+La Fase 1 ha stabilito che l'impedenza d'ingresso del Singxer SA-1 V2
+**non è pubblicata** — verificato leggendo il manuale ufficiale. Non è un
+limite della ricerca: il dato non esiste in forma pubblica. La frequenza
+di taglio su quell'uscita è quindi **inconoscibile**, e i 2,2 µF
+sarebbero una scommessa.
+
+**Adottati 4,7 µF su tutte e tre le uscite.** Sullo Stax i 2,2 µF
+sarebbero bastati (50 kΩ → 1,4 Hz), ma un valore unico su tutte le
+uscite toglie una riga di distinta e un errore di montaggio: montare il
+condensatore sbagliato nella posizione sbagliata sarebbe **silenzioso**.
+
+Il prezzo è area di circuito stampato, che il telaio unico di ADR-010
+può assorbire.
+
+Questo **chiude** la domanda aperta sull'impedenza del Singxer: non
+serve più conoscerla.

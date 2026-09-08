@@ -9,8 +9,8 @@ This file demonstrates the ADR-006 contract in the only way that counts: the
 SAME function, gain_block(), is called four times. There is no second
 topology to validate, and no place for the two channels to drift apart.
 
-                 IN_L -> [BLOCK A] -+-> 100R -> 2.2u -> FIXED OUT 1 (Singxer)
-                (buffer, gain 1)    +-> 100R -> 2.2u -> FIXED OUT 2 (Stax)
+                 IN_L -> [BLOCK A] -+->  47R -> 4.7u -> FIXED OUT 1 (Singxer)
+                (buffer, gain 1)    +->  47R -> 4.7u -> FIXED OUT 2 (Stax)
                                     +-> attenuator (off board, 10k stepped)
                                             |
                                             v
@@ -113,22 +113,25 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_mute, k_pole):
     inconn[2] += gnd
 
     # ---- two fixed-level outputs, ADR-008 -------------------------------
-    # 100 ohm isolation resistors, per T5/ADR-008. NOTE THE TENSION WITH E4:
-    # E4 asks for Zout < 100 ohm and these put the fixed outputs AT 100 ohm,
-    # not below it. ADR-008 chose "~100 ohm" explicitly and E4/ADR-002 was
-    # argued about the MAIN output (constant Zout vs a passive preamp), so
-    # this file implements ADR-008 as written. 47 ohm would satisfy both and
-    # still give useful isolation - but that is an ADR decision, not a
-    # designer's unilateral edit. Raised for the orchestrator.
-    for k, (name, cval) in enumerate((("SINGXER", "2.2u"), ("STAX", "2.2u"))):
-        # ADR-007 sized these 2.2 uF for a ~50 kOhm load (Stax) => 1.4 Hz.
-        # STATE.md carries an OPEN question: the Singxer's input impedance is
-        # NOT PUBLISHED (Fase 1 read the official manual), so its corner is
-        # unknown. Going to 4.7 uF closes the question at the price of size.
-        # Left at 2.2 uF because that is what E8 says today.
+    # 47 ohm isolation resistors - see the ADR-008 addendum of 2026-09-08.
+    # The designer implemented the original "~100 ohm" as written and RAISED
+    # the conflict with E4 (which asks Zout < 100 ohm, and 100 ohm sits AT
+    # the limit rather than under it) instead of editing the ADR unilaterally.
+    # The orchestrator resolved it to 47 ohm: satisfies E4 with margin and
+    # still gives the mutual isolation between Singxer and Stax that was the
+    # whole point of the resistor.
+    for k, (name, cval) in enumerate((("SINGXER", "4.7u"), ("STAX", "4.7u"))):
+        # 4.7 uF on BOTH fixed outputs - see the ADR-007 addendum.
+        # The Stax alone would be happy at 2.2 uF (50 kOhm => 1.4 Hz), but the
+        # Singxer's input impedance is NOT PUBLISHED (Fase 1 read the official
+        # manual), so its corner is unknowable. 4.7 uF closes that question,
+        # and using one value on all three outputs removes a BOM line and an
+        # assembly error - fitting the wrong cap in the wrong position would
+        # be silent. The cost is board area, which ADR-010's single chassis
+        # can absorb.
         fx = Net(f"{ch}_FIX{k + 1}")
         jk = Net(f"{ch}_FIXJACK{k + 1}")
-        R("100", a["OUT"], fx, base)
+        R("47", a["OUT"], fx, base)
         C(cval, fx, jk, base, fp=FP_FILM_P15)
         # DC return for the coupling cap. Without it the far side floats when
         # nothing is plugged in, charges on leakage, and thumps on connection.

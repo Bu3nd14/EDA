@@ -42,8 +42,8 @@ report `reports/2026-09-08-analisi-catena.md`.
 | E4 | Impedenza d'uscita | **< 100 Ω in banda passante** (misurata escludendo la reattanza del condensatore d'accoppiamento), costante con la posizione del volume | ADR-002 |
 | E5 | Rumore in uscita | **< 10 µV RMS** (20 Hz–20 kHz, non pesato) | vedi nota sotto |
 | E6 | Livello massimo d'ingresso | 2,7 V RMS | FiiO K11 R2R |
-| E7 | Alimentazione | ±15 V regolati | ADR-003 |
-| E8 | Accoppiamento d'uscita | Capacitivo: 4,7 µF principale, 2,2 µF uscite fisse | ADR-007 |
+| E7 | Alimentazione | **±15 V** regolati — confermati contro ±18 V | ADR-015 |
+| E8 | Accoppiamento d'uscita | Capacitivo, **4,7 µF su tutte e tre le uscite** | ADR-007 |
 
 **Nota su E5.** Con il guadagno del finale (21,1×) e le Heresy a
 96 dB/1W/1m, 10 µV in uscita dal preamplificatore producono circa
@@ -61,7 +61,7 @@ quindi il target va rispettato, non trattato come formalità.
 | T2 | **Nessun servo di continua** (sarebbe un operazionale mascherato) | ADR-007 |
 | T3 | **Un solo blocco di guadagno**, progettato una volta, usato due volte per canale | ADR-006 |
 | T4 | Coppia JFET d'ingresso: **LSK489 duale monolitico** — appaiamento intrinseco, supera il "stesso lotto" di ADR-005 | ADR-013 |
-| T5 | Buffer d'ingresso **unico**, uscite fisse via resistenze di isolamento ~100 Ω | ADR-008 |
+| T5 | Buffer d'ingresso **unico**, uscite fisse via resistenze di isolamento **47 Ω** | ADR-008 |
 | T6 | **Coppia d'ingresso cascodata** in entrambi i blocchi | ADR-014 |
 
 ## Requisiti fisici e di sicurezza

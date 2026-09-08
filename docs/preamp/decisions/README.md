@@ -49,3 +49,4 @@ Costa un commento. È il collegamento dall'artefatto al ragionamento, ed
 | [012](ADR-012-rele-di-mute.md) | Relè di mute su tutte le uscite | accettata |
 | [013](ADR-013-jfet-ingresso-lsk489.md) | JFET d'ingresso: LSK489 | accettata |
 | [014](ADR-014-cascode-ingresso.md) | Cascode sulla coppia d'ingresso | accettata |
+| [015](ADR-015-rail-15v.md) | Rail a ±15 V, non ±18 V | accettata |
