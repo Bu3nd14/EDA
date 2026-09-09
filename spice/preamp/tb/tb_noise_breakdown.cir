@@ -26,29 +26,73 @@ echo "===== per-device noise contributions at 1 kHz, 0 dB mode, Rsrc=430 ====="
 noise v(JACK) VSRC lin 2 1000 1001 1
 destroy all
 
+* --- wrdata (L5): uno spettro PER CONFIGURAZIONE ----------------------
+* NOMI PARAMETRIZZATI: un `$var` dentro un nome di file non si chiude da
+* solo - ngspice fa entrare nel nome della variabile anche `.`, `-` e `_`,
+* quindi `wrdata x_$lbl.txt` cercherebbe la variabile "lbl.txt". Un `$`
+* invece TERMINA il nome: la forma che funziona e' `$lbl$t` con t = ".txt".
+* Misurato con una sonda in L5, non dedotto.
+*
+* DOVE: plot `noise1`. Un'analisi `noise` ne produce DUE - noise1 (densita'
+* spettrale, 301 righe) e noise2 (integrato, 1 riga) - e il `setplot`
+* decide quale si scrive. Il `wrdata` sta DENTRO il ciclo e PRIMA del
+* `destroy all`: senza quel destroy la seconda `noise` creerebbe
+* noise3/noise4 e il `setplot noise2` continuerebbe a leggere la PRIMA
+* configurazione. E' docs/limitations.md #10, ed e' esattamente il difetto
+* che L5 corregge in tb_zout_psrr_noise.cir - qui il ciclo lo evita gia'.
+*
+* COSA NON SI SCRIVE, di proposito:
+*  - la sezione per dispositivo a 1 kHz qui sopra: e' gia' il lavoro di
+*    tb_noise_vectors.cir (L4). Due file per lo stesso dato divergono.
+*  - gli integrati onoise_total/inoise_total: sono scalari, restano
+*    stampati nel log, e la cifra credibile arrivera' con i modelli vendor.
+*
+* COLONNE (301 righe, 20 Hz - 20 kHz, 100 punti/decade). Per ogni vettore
+* una COPPIA (frequenza, valore): le colonne PARI sono la frequenza
+* ripetuta, i dati sono le DISPARI.
+*   col0 = frequenza [Hz]   col1 = onoise_spectrum [V/sqrt(Hz)]
+*   col2 = frequenza [Hz]   col3 = inoise_spectrum [V/sqrt(Hz)]
+* La configurazione non e' una colonna: e' nel NOME del file.
+*
+* NOTA: nessun file si chiama tb_noise_breakdown_wrdata.txt, quindi il
+* percorso primario di run_simulation.sh avvisa e scrive un
+* tb_noise_breakdown.json con rows: 0. E' atteso: i 4 file veri li
+* converte il SECONDO passaggio, che guarda i file prodotti.
+*
+* ATTENZIONE DI MERITO: KF = 0 su ogni dispositivo segnaposto, quindi qui
+* NON c'e' rumore 1/f. E' un pavimento termico+shot, non una previsione, e
+* per questo non va nel dossier finche' non ci sono i modelli vendor.
+* ---------------------------------------------------------------------
+set t = .txt
 echo "===== integrated totals, 20 Hz - 20 kHz ====="
 foreach cfg 1 2 3 4
   if $cfg = 1
     alter rrg = 1G
     alter rsrc = 1
+    set lbl = "a_0db_1r"
     echo "A) 0 dB, source 1 ohm      (block A intrinsic)"
   end
   if $cfg = 2
     alter rrg = 1G
     alter rsrc = 430
+    set lbl = "b_0db_430r"
     echo "B) 0 dB, source 430 ohm    (block A on the tube phono)"
   end
   if $cfg = 3
     alter rrg = 1G
     alter rsrc = 2500
+    set lbl = "c_0db_2500r"
     echo "C) 0 dB, source 2500 ohm   (block B, attenuator mid-rotation)"
   end
   if $cfg = 4
     alter rrg = 0.1
     alter rsrc = 2500
+    set lbl = "d_10db_2500r"
     echo "D) +10 dB, source 2500 ohm (block B worst case)"
   end
   noise v(JACK) VSRC dec 100 20 20000 1
+  setplot noise1
+  wrdata tb_noise_breakdown_$lbl$t onoise_spectrum inoise_spectrum
   setplot noise2
   print onoise_total inoise_total
   destroy all

@@ -6,7 +6,7 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-09** (L3b chiuso: `REPO` derivato da `__file__`, rigenerazione verificata; prossimo lotto L5)
+Ultimo aggiornamento: **2026-09-09** (L5 chiuso: tutti e 12 i deck scrivono dati, e il rumore di caso peggiore e' corretto; prossimo lotto L6)
 
 ---
 
@@ -69,8 +69,8 @@ manciata di file, **M** = riempie una sessione da solo.
 | L3c | Chiusura di lotto che rifiuta, gate agganciato ai dati, dati del dossier versionati | S | **fatto** |
 | L3d | Annotare il difetto `setplot`/plot stale di `tb_zout_psrr_noise.cir` (warning per L5) | XS | **fatto** |
 | L4 | `wrdata` sui deck muti **senza** cicli | S | **fatto** |
-| L5 | `wrdata` sui deck muti **con** cicli (`tb_bias_sweep` incluso) | S/M | **prossimo** |
-| L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | da fare |
+| L5 | `wrdata` sui deck muti **con** cicli + correzione del caso peggiore | S/M | **fatto** |
+| L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | **prossimo** |
 | L7 | LSK489: passo 4, il controllo incrociato | S | da fare |
 | L8 | Fase 3a — le parti nuove, fatti verificabili | M | da fare |
 | L9 | Fase 3b — la rosa dei componenti di segnale | M | da fare |
@@ -103,13 +103,12 @@ tutti e tre i casi.
 Il valore reale è +9,96 dB (R_f 1,50 kΩ / R_g 698 Ω): dentro tolleranza,
 ma vale saperlo prima che qualcuno lo scopra misurando.
 
-**L2-L5 — i testbench diventano artefatti.** Dopo L4 scrivono file dati
-**6 deck su 12** (`tb_op`, `tb_dc_headroom` con due file, `tb_switch_v2`,
-`tb_v3_overload`, e i due di L4): 9 file in tutto. I **6 muti rimasti**
-sono tutti L5, perche' hanno tutti un `foreach`. Ma aprendo i
-deck per L2 è emerso un problema **più grande di quello registrato**, e
-va detto per intero — anche ora che è chiuso, perché è il ragionamento
-che ha prodotto la convenzione.
+**L2-L5 — i testbench diventano artefatti. CHIUSO.** Dopo L5 scrivono
+file dati **12 deck su 12**: 9 file dai deck senza ciclo (L2-L4) più i
+**48** dei sei deck con `foreach` (L5), ognuno convertito in CSV e JSON.
+Ma aprendo i deck per L2 è emerso un problema **più grande di quello
+registrato**, e va detto per intero — anche ora che è chiuso, perché è il
+ragionamento che ha prodotto la convenzione.
 
 **RISOLTO IN L3 — quello che segue è la diagnosi, non lo stato attuale.**
 Tutti e 12 i deck leggevano il circuito dal worktree vecchio. Non erano
@@ -256,11 +255,12 @@ state inseguite e nessuna è un numero:
   indipendente dai modelli segnaposto, per non fidarsi di un THD preso da
   quel deck**.
 
-### ⚠ WARNING PER L5 — un numero già stampato oggi è sbagliato
+### Il rumore di caso peggiore — CORRETTO IN L5
 
-**`tb_zout_psrr_noise.cir` riporta un rumore di caso peggiore sbagliato di
-un fattore 3,4, e lo fa in silenzio.** Trovato il 2026-09-09 rispondendo a
-una domanda sullo stato delle misure, non cercandolo.
+**Era sbagliato di un fattore 3,4, e lo era in silenzio.** Trovato il
+2026-09-09 rispondendo a una domanda sullo stato delle misure, non
+cercandolo; corretto lo stesso giorno in L5. Quel che segue è la diagnosi,
+non lo stato attuale.
 
 La riga finale del deck, `RRG=0.1 RSRC=2500 ... WORST CASE`, stampa
 **1,676 µV** — che è *identico* al valore "intrinsic" della riga
@@ -281,12 +281,20 @@ selezionare il plot della **prima**. Vedi `docs/limitations.md` #10.
    riga diventa **5,696896e-06** — coincide a sette cifre. Il rimedio è
    verificato.
 
-**Cosa deve fare L5**: quel deck è già suo (è uno dei deck con `foreach` e
-`destroy all`). Oltre ad aggiungerci i `wrdata`, deve **correggere questa
-coda** e ricontrollare che le due righe finali tornino diverse. Attenzione
-al caso generale: ogni `wrdata` piazzato dopo un'analisi ripetuta senza
-`destroy all` scriverà i dati del plot **sbagliato** — che è lo stesso
-guasto, ma dentro un file che poi finisce nel dossier.
+**Come è stato chiuso in L5.** I due `destroy all` mancanti sono ora in
+coda al deck, e la riga stampa **5,696896e-06**. La prova non è che il
+numero sia cambiato, ma **quanto poco altro è cambiato**: il diff fra il
+log della baseline (presa prima della modifica) e quello dopo tocca
+**esattamente due righe**, ed è la coppia `onoise_total`/`inoise_total` del
+caso peggiore. Le due righe finali del deck sono ora diverse fra loro —
+1,676 µV l'intrinseco, 5,697 µV il caso peggiore — che era il sintomo da
+cui il difetto era stato notato.
+
+Una **quarta gamba** di conferma è arrivata dai dati che L5 ha iniziato a
+scrivere: lo spettro di rumore della configurazione D di
+`tb_noise_breakdown` è piatto a 4,03e-08 V/√Hz, e 4,03e-08 × √19980 ≈
+**5,70e-06**. Il totale integrato si ricostruisce dallo spettro, quindi ora
+il numero ha una verifica che non passa da `onoise_total`.
 
 **L3b — il `REPO` cablato in `gain_block.py`. FATTO.** Chiusa fuori
 ordine, prima di L5, su richiesta dell'utente e per una ragione precisa:
@@ -404,14 +412,92 @@ dispositivo escono da modelli segnaposto, quindi non sono una cifra di
 rumore credibile — lo diventeranno dopo L6-L7. Non riempire la directory
 per abitudine è un esito, non una mancanza.
 
-Restano da aggiungere `wrdata` ai **6 deck muti rimasti**, tutti con
-`foreach`, e sono L5. Non sono meccanici: `tb_ac.cir` ha un doppio ciclo
-(2 modalità × 4 impedenze di sorgente = 8 curve) e chiude ogni iterazione
-con `destroy all`, quindi il `wrdata` va **dentro il ciclo, prima del
-`destroy all`**, col nome file parametrizzato.
+I **6 deck muti rimasti**, tutti con `foreach`, sono stati chiusi in L5 —
+vedi sotto.
+
+**L5 — i sei deck con ciclo, e la coda corretta. FATTO.**
+I sei deck scrivono ora **48 file**, e con essi il progetto ha per la prima
+volta i dati che il dossier deve impaginare: risposta in frequenza,
+guadagno d'anello, PSRR e Z_out.
+
+| Deck | File | Righe/file | Contenuto |
+|---|---|---|---|
+| `tb_bias_sweep` | 7 | 1 | Iq per valore di R130 (la curva Iq(R130)) |
+| `tb_noise_breakdown` | 4 | 301 | spettro di rumore per configurazione |
+| `tb_ac` | 8 + 1 | 1636 / 801 | risposta, 2 modalità × 4 Z sorgente, + corner LF |
+| `tb_loop` | 12 | 801 | guadagno d'anello, 2 modalità × 6 C di cavo |
+| `tb_loop_blockA` | 6 | 801 | guadagno d'anello del blocco A |
+| `tb_zout_psrr_noise` | 10 | 74 / 151 | Z_out, PSRR dei due rail, rumore |
+
+**La prima decisione del lotto era la convenzione di nome, ed è stata presa
+misurando.** Un `$var` dentro un nome di file `wrdata` **non si chiude da
+solo**: ngspice fa entrare nel nome della variabile anche `.`, `-` e `_`,
+quindi `wrdata tb_ac_$rs.txt` cerca una variabile chiamata `rs.txt`, non la
+trova, e scrive un file chiamato **`tb_ac_`** — senza errore e con exit
+code 0. Le graffe non sono supportate. La forma che funziona è quella di
+**due variabili adiacenti**, perché `$` invece termina il nome:
+
+```
+set t = .txt
+wrdata tb_ac_$gm$u$rs$t G Gph      ->  tb_ac_0db_2500.txt
+```
+
+È finita in `docs/limitations.md` #10, perché è un fallimento **silenzioso**
+e vale per qualunque deck futuro. Insieme a due sue conseguenze: `set`
+converte in numero ciò che sembra un numero (`set gm = 0db` memorizza `0`,
+`set mode = 1G` memorizza `1000000000`), quindi un'etichetta **va quotata**.
+
+**I nomi portano l'etichetta, non il valore del componente** (deciso
+dall'utente): `tb_ac_0db_2500.txt`, non `tb_ac_1G_2500.txt`. Chi apre la
+directory dei risultati non deve ricordare che RRG = 1 GΩ significa "relè
+aperto, guadagno unitario". Il `foreach` è però rimasto **quello di prima** e
+l'etichetta si ricava con un `if $mode = 1G`: così `alter` e gli `echo`
+usano ancora i valori originali, e **il log resta confrontabile riga per
+riga** con quello di prima della modifica. Sdoppiare il ciclo avrebbe dato
+lo stesso risultato al costo di ~120 righe duplicate.
+
+**La verifica è stata la baseline, e ha tenuto.** I sei deck sono stati
+eseguiti **prima** della modifica e i log conservati fuori dall'albero. Dopo
+la modifica: **cinque log su sei byte-identici**. L'unico diverso è
+`tb_zout_psrr_noise`, e il suo diff tocca **esattamente due righe** — la
+coppia del caso peggiore, che è il punto della correzione. Nessun altro
+numero si è mosso, che è ciò che "additivo" deve voler dire.
+
+Controprove incrociate, non solo conteggi di file: il CSV di `tb_bias_sweep`
+a R130 = 1690 Ω riporta le stesse quattro cifre che il deck stampa; il CSV
+di `tb_ac` a 1 kHz vale 9,927404 dB contro `g1k = 9.927404e+00`; il CSV di
+Z_out a 20 Hz vale 1693,4 Ω contro `z20 = 1.69341e+03`.
+
+**Una cosa da sapere sui 4 deck senza sezione fuori ciclo**
+(`tb_bias_sweep`, `tb_noise_breakdown`, `tb_loop`, `tb_loop_blockA`):
+`run_simulation.sh` cerca per primo `<basename>_wrdata.txt`, che lì non
+esiste, quindi **avvisa su stderr e scrive un `<basename>.json` con
+`rows: 0`**. È atteso, non un guasto: i file veri li converte il secondo
+passaggio, quello costruito in L3 apposta per i nomi parametrizzati. Sta
+scritto nel commento di ciascuno di quei deck perché nessuno lo insegua.
+
+**Nel dossier sono finiti 15 file** in `data/2026-09-09/`, con il `README.md`
+esteso a portare la legenda delle colonne e i numeri chiave: le 4 curve che
+provano la claim di ADR-014 più il corner LF, 4 curve di guadagno d'anello
+ai due estremi di capacità, Z_out ×2 e PSRR ×4. Tre `.log` come evidenza.
+**Il rumore no**, deliberatamente, per la stessa ragione per cui L4 aveva
+tenuto fuori `tb_noise_vectors`: `KF = 0` su ogni segnaposto, quindi non c'è
+rumore 1/f e la cifra è un pavimento, non una previsione.
+
+**Tre numeri che ora esistono e prima no** — provvisori sui modelli
+segnaposto, ma non più assenti:
+
+- **ADR-014 regge**: fra manopola a 0 Ω e manopola a 2500 Ω la risposta a
+  20 kHz si muove di **0,022 dB**, in entrambe le modalità.
+- **Margine di fase**: 63,5° a vuoto e **56,9° con 4,7 nF di cavo** in
+  modalità 0 dB; 86,2° e 80,6° in +10 dB. Il relè cambia la rete di
+  controreazione, quindi il margine è diverso nelle due modalità — è
+  esattamente perché `REQUIREMENTS.md` chiede la matrice V1.
+- **PSRR**: il rail **positivo** è il lato debole, e in +10 dB scende a
+  **29,8 dB a 10 kHz**. Da tenere in mano quando si progetta l'alimentatore.
 
 Serve al dossier **e** a `design-reviewer` per rieseguire le misure a G1:
-non è lavoro anticipato.
+non era lavoro anticipato.
 
 **L3c — la consegna diventa affidabile. FATTO.**
 Nasce da una cosa che l'utente ha dovuto far notare: alla chiusura di L3
@@ -639,38 +725,26 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L5 — aggiungere `wrdata` ai 6 deck muti *con* cicli, e correggere la
-coda di `tb_zout_psrr_noise.cir`.**
+**L6 — LSK489: i passi 1-3 di ADR-013 (congela il datasheet, trascrivi il
+modello, registra la provenance).**
 
-Sono i deck che restano dopo L4, e non sono meccanici: dove c'è un
-`destroy all` dentro il ciclo, il `wrdata` va **dentro il ciclo, prima
-del `destroy all`**, col nome file parametrizzato. Un `wrdata` piazzato
-dopo un'analisi ripetuta **senza** `destroy all` scrive i dati del plot
-sbagliato — che è lo stesso guasto del riquadro qui sopra, ma dentro un
-file che poi finisce nel dossier.
+È il lotto che rende credibili le cifre che oggi non lo sono. Stato di
+partenza, verificato e non assunto: `vendor/` non contiene **nessun** PDF
+(13 sottodirectory, zero datasheet congelati) e `models/jfet/` ha solo
+`generic_njf.lib`. Il passo 1 di ADR-013 non è iniziato.
 
-| Deck muto | Forma | Nota |
-|---|---|---|
-| `tb_bias_sweep` | `foreach` (7 × `op`), **nessun** `destroy all` | assegnato a L5 in L4: serve un file per iterazione |
-| `tb_noise_breakdown` | `foreach` + `destroy all` | |
-| `tb_ac` | `foreach` doppio + `destroy all` | 2 modalità × 4 Z sorgente = 8 curve |
-| `tb_loop` | `foreach` doppio + `destroy all` | |
-| `tb_loop_blockA` | `foreach` + `destroy all` | |
-| `tb_zout_psrr_noise` | quattro sezioni + `destroy all` | **porta anche la correzione del riquadro ⚠ qui sopra** |
+Perché viene ora: l'infrastruttura di misura è finita. Dopo L5 tutti e 12 i
+deck scrivono dati, quindi il giorno in cui i modelli veri entrano nel repo
+**basta rieseguire i deck** per avere numeri nuovi e confrontabili con
+quelli di oggi, senza toccare nessun banco di prova.
 
-La prima decisione di L5 è **la convenzione di nome per gli output
-parametrizzati**, e va presa una volta sola per tutti e sei. Il secondo
-passaggio di `run_simulation.sh` guarda i file **prodotti** e non il testo
-del deck, proprio perché un nome dentro un `foreach` non è ricavabile con
-un grep: quando `tb_ac.cir` scriverà le sue 8 curve, saranno 8 CSV.
+**L7 è separato di proposito**: il passo 4 di ADR-013 è il controllo
+incrociato, ed è il punto in cui la trascrizione può risultare sbagliata. Se
+succede, il lavoro è tornare su L6, non andare avanti.
 
-Due regole ereditate da L4: ogni `wrdata` non banale porta sopra di sé un
-commento con **l'ordine delle colonne** (i CSV sono intestati
-`col0…colN`), e si scrivono i vettori **scelti**, non `all`.
-
-Verifica: deck eseguito davvero, CSV/JSON non vuoti col numero di righe
-atteso dal tipo di analisi, numeri dei deck esistenti invariati rispetto a
-una baseline presa prima della modifica, e `run_tests.sh` a 5 passed.
+Attenzione a `docs/limitations.md` #13 mentre si trascrive: `"1M"` in KiCad
+è 1 MΩ, in SPICE è 1 mΩ. Sei ordini di grandezza senza alcun errore da
+nessuna delle due parti.
 
 **La Fase 4 non ha più il preliminare che aveva.** L3b è chiusa: il
 circuito si rigenera nel checkout corrente, verificato rieseguendo

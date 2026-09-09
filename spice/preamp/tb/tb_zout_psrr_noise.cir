@@ -34,6 +34,52 @@ RLOAD  JACK 0 100k
 IOUT   0 JACK DC 0 AC 0
 
 .control
+* --- wrdata (L5) + CORREZIONE DELLA CODA -----------------------------
+* NOMI PARAMETRIZZATI: un `$var` in un nome di file non si chiude da solo
+* - ngspice fa entrare nel nome della variabile anche `.`, `-` e `_`,
+* quindi `wrdata ..._$gm.txt` cercherebbe la variabile "gm.txt". Un `$`
+* invece TERMINA il nome: la forma che funziona e' `$gm$t` con t = ".txt".
+* Misurato con una sonda in L5, non dedotto.
+*
+* ETICHETTE: 0db/10db nel nome invece del valore di RRG. I `foreach`
+* restano quelli di prima e l'etichetta si ricava con un `if`, cosi'
+* `alter` e gli echo usano ancora i valori originali.
+*
+* I 10 FILE, per sezione:
+*   _zout_0db / _zout_10db        Z al jack e Z al nodo OUT
+*   _psrrp_0db / _psrrp_10db      PSRR dal rail +
+*   _psrrm_0db / _psrrm_10db      PSRR dal rail -
+*   _noise_0db / _noise_10db      spettro di rumore, RSRC = 430
+*   _noise_intrinsic              coda: RRG=1G, RSRC=1 ohm
+*   tb_zout_psrr_noise_wrdata     coda: RRG=0.1, RSRC=2500 - IL CASO
+*                                 PEGGIORE, ed e' il file principale
+*                                 perche' <basename>_wrdata.txt e' il nome
+*                                 che run_simulation.sh cerca per primo.
+*
+* COLONNE. Per ogni vettore una COPPIA (frequenza, valore): le PARI sono
+* la frequenza ripetuta, i dati sono le DISPARI.
+*   sezione Zout  (75 righe, 20 Hz - 100 kHz, 20 punti/decade)
+*     col0 = f [Hz]  col1 = Z  = |v(JACK)| = ohm AL JACK (1 A iniettato)
+*     col2 = f [Hz]  col3 = ZA = |v(OUT)|  = ohm al nodo OUT, prima di RISO
+*   sezioni PSRR  (75 righe)
+*     col0 = f [Hz]  col1 = P = -db(v(JACK)) in dB, PIU' GRANDE E' MEGLIO
+*   sezioni rumore (151 righe, 20 Hz - 20 kHz, 50 punti/decade, plot noise1)
+*     col0 = f [Hz]  col1 = onoise_spectrum [V/sqrt(Hz)]
+*     col2 = f [Hz]  col3 = inoise_spectrum [V/sqrt(Hz)]
+*
+* *** LA CORREZIONE (L5, warning aperto in L3d) ***
+* In coda a questo deck mancavano i `destroy all` che i `foreach` qui
+* sopra hanno. Ogni analisi crea plot numerati, quindi la SECONDA `noise`
+* di coda produceva noise3/noise4 mentre `setplot noise2` continuava a
+* selezionare il plot della PRIMA: la riga "WORST CASE" stampava
+* 1.676227e-06, cioe' esattamente il valore "intrinsic" della riga sopra,
+* invece di 5.6969e-06. Un fattore 3,4 sul rumore in uscita, senza alcun
+* errore. Vedi docs/limitations.md #10. I due `destroy all` in fondo sono
+* il rimedio, ed erano gia' stati verificati su una copia di scratch.
+* Controprova indipendente: tb_noise_breakdown.cir misura la stessa
+* configurazione (D) e da' 5.696897e-06.
+* ---------------------------------------------------------------------
+set t = .txt
 set units = degrees
 
 echo "########## Zout at the jack, load removed, both gain modes ##########"
@@ -41,6 +87,12 @@ alter rload = 1G
 alter @iout[acmag] = 1
 foreach mode 1G 0.1
   alter rrg = $mode
+  if $mode = 1G
+    set gm = "0db"
+  end
+  if $mode = 0.1
+    set gm = "10db"
+  end
   ac dec 20 20 100k
   let Z = mag(v(JACK))
   meas ac z20   find Z at=20
@@ -53,6 +105,7 @@ foreach mode 1G 0.1
   meas ac za100k find ZA at=100000
   echo "RRG=$mode"
   print z20 z1k z20k za20 za1k za20k za100k
+  wrdata tb_zout_psrr_noise_zout_$gm$t Z ZA
   destroy all
 end
 alter @iout[acmag] = 0
@@ -63,6 +116,12 @@ alter @vsrc[acmag] = 0
 alter @vpp[acmag] = 1
 foreach mode 1G 0.1
   alter rrg = $mode
+  if $mode = 1G
+    set gm = "0db"
+  end
+  if $mode = 0.1
+    set gm = "10db"
+  end
   ac dec 20 20 100k
   let P = -db(v(JACK))
   meas ac p100  find P at=100
@@ -71,6 +130,7 @@ foreach mode 1G 0.1
   meas ac p100k find P at=100000
   echo "PSRR+ RRG=$mode (dB, bigger is better)"
   print p100 p1k p10k p100k
+  wrdata tb_zout_psrr_noise_psrrp_$gm$t P
   destroy all
 end
 alter @vpp[acmag] = 0
@@ -79,6 +139,12 @@ echo "########## PSRR from V- ##########"
 alter @vmm[acmag] = 1
 foreach mode 1G 0.1
   alter rrg = $mode
+  if $mode = 1G
+    set gm = "0db"
+  end
+  if $mode = 0.1
+    set gm = "10db"
+  end
   ac dec 20 20 100k
   let P = -db(v(JACK))
   meas ac p100  find P at=100
@@ -87,6 +153,7 @@ foreach mode 1G 0.1
   meas ac p100k find P at=100000
   echo "PSRR- RRG=$mode (dB, bigger is better)"
   print p100 p1k p10k p100k
+  wrdata tb_zout_psrr_noise_psrrm_$gm$t P
   destroy all
 end
 alter @vmm[acmag] = 0
@@ -95,7 +162,15 @@ alter @vsrc[acmag] = 1
 echo "########## output noise 20 Hz - 20 kHz ##########"
 foreach mode 1G 0.1
   alter rrg = $mode
+  if $mode = 1G
+    set gm = "0db"
+  end
+  if $mode = 0.1
+    set gm = "10db"
+  end
   noise v(JACK) VSRC dec 50 20 20000 1
+  setplot noise1
+  wrdata tb_zout_psrr_noise_noise_$gm$t onoise_spectrum inoise_spectrum
   setplot noise2
   echo "RRG=$mode  RSRC=430 (phono cathode follower)"
   print onoise_total inoise_total
@@ -105,15 +180,24 @@ end
 alter rsrc = 1
 alter rrg = 1G
 noise v(JACK) VSRC dec 50 20 20000 1
+setplot noise1
+wrdata tb_zout_psrr_noise_noise_intrinsic.txt onoise_spectrum inoise_spectrum
 setplot noise2
 echo "RRG=1G  RSRC=1 ohm (intrinsic)"
 print onoise_total inoise_total
+* IL `destroy all` CHE MANCAVA. Senza, la `noise` qui sotto crea
+* noise3/noise4 e il `setplot noise2` che segue continua a selezionare
+* QUESTO plot: la riga WORST CASE ristampava questo stesso numero.
+destroy all
 alter rsrc = 2500
 alter rrg = 0.1
 noise v(JACK) VSRC dec 50 20 20000 1
+setplot noise1
+wrdata tb_zout_psrr_noise_wrdata.txt onoise_spectrum inoise_spectrum
 setplot noise2
 echo "RRG=0.1  RSRC=2500 (attenuator at mid-rotation, +10 dB) - WORST CASE"
 print onoise_total inoise_total
+destroy all
 .endc
 
 .end

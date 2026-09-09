@@ -27,9 +27,57 @@ RLOAD  JACK 0 100k
 CCABLE JACK 0 100p
 
 .control
+* --- wrdata (L5): una curva PER ITERAZIONE, 8 + 1 -------------------
+* NOMI PARAMETRIZZATI: un `$var` dentro un nome di file non si chiude da
+* solo - ngspice fa entrare nel nome della variabile anche `.`, `-` e `_`,
+* quindi `wrdata tb_ac_$rs.txt` cercherebbe la variabile "rs.txt" e
+* scriverebbe un file chiamato "tb_ac_". Un `$` invece TERMINA il nome:
+* la forma che funziona e' quella delle variabili adiacenti, `$rs$t` con
+* t = ".txt" e u = "_". Misurato con una sonda in L5, non dedotto.
+*
+* ETICHETTE: il nome porta 0db/10db, non il valore di RRG, perche' chi
+* apre la directory dei risultati non deve ricordare che RRG = 1G
+* significa "relais aperto, 0 dB". Il ciclo resta pero' `foreach mode
+* 1G 0.1` intatto e l'etichetta si ricava con un `if`: cosi' il valore
+* usato da `alter` e quello stampato dall'echo restano gli originali, e
+* il log e' confrontabile riga per riga con quello di prima.
+*
+* DOVE: DENTRO il ciclo interno e PRIMA del `destroy all`. Fuori dal
+* ciclo si scriverebbe una curva sola su otto; e senza il `destroy all`
+* ogni `ac` successiva creerebbe ac2, ac3... e un `wrdata` finale
+* leggerebbe il plot SBAGLIATO senza alcun errore (limitations #10).
+*
+* GLI 8 + 1 FILE:
+*   tb_ac_0db_<rs>.txt    RRG = 1G  (relais aperto, guadagno unitario)
+*   tb_ac_10db_<rs>.txt   RRG = 0.1 (relais chiuso, +10 dB)
+*   con <rs> in 1.5 / 430 / 2500 / 10k = impedenza della sorgente
+*   tb_ac_wrdata.txt      la sezione FUORI ciclo: corner LF con RLOAD=50k
+*
+* Il nono nome e' <basename>_wrdata.txt di proposito: e' quello che
+* run_simulation.sh cerca per PRIMO, quindi la sezione fuori ciclo
+* diventa il CSV principale del deck e le 8 curve le converte il secondo
+* passaggio.
+*
+* COLONNE (~1636 righe, 0,2 Hz - 30 MHz, 200 punti/decade; il file
+* principale ne ha ~801, 0,1 Hz - 1 kHz). Per ogni vettore una COPPIA
+* (frequenza, valore): le PARI sono la frequenza ripetuta, i dati sono
+* le DISPARI.
+*   col0 = frequenza [Hz]   col1 = G   = |v(JACK)| in dB
+*   col2 = frequenza [Hz]   col3 = Gph = fase di v(JACK) in GRADI
+*                                        (`set units = degrees` qui sopra)
+* L'impedenza di sorgente e la modalita' non sono colonne: sono nel NOME.
+* --------------------------------------------------------------------
+set t = .txt
+set u = "_"
 set units = degrees
 foreach mode 1G 0.1
   alter rrg = $mode
+  if $mode = 1G
+    set gm = "0db"
+  end
+  if $mode = 0.1
+    set gm = "10db"
+  end
   foreach rs 1.5 430 2500 10k
     alter rsrc = $rs
     ac dec 200 0.2 30meg
@@ -43,6 +91,8 @@ foreach mode 1G 0.1
     meas ac flo when Gn=-3 fall=1
     echo "RRG=$mode  RSRC=$rs"
     print g1k g20 g20k g100k fhi flo
+    let Gph = ph(v(JACK))
+    wrdata tb_ac_$gm$u$rs$t G Gph
     destroy all
   end
 end
@@ -57,6 +107,8 @@ meas ac g20b find G at=20
 meas ac g5b  find G at=5
 echo "LF corner, RLOAD=50k, RBLEED=220k, COUT=4.7u"
 print g1kb g20b g5b
+let Gph = ph(v(JACK))
+wrdata tb_ac_wrdata.txt G Gph
 .endc
 
 .end
