@@ -6,7 +6,7 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-09** (L5b chiuso: prima bozza del dossier, generata dai dati; prossimo lotto L6)
+Ultimo aggiornamento: **2026-09-09** (L5c chiuso: **G0 definito**, la prima revisione del prodotto; prossimo lotto **L5d**, che lo esegue)
 
 ---
 
@@ -71,7 +71,9 @@ manciata di file, **M** = riempie una sessione da solo.
 | L4 | `wrdata` sui deck muti **senza** cicli | S | **fatto** |
 | L5 | `wrdata` sui deck muti **con** cicli + correzione del caso peggiore | S/M | **fatto** |
 | L5b | Prima bozza del dossier, generata dai dati + correzione di `za100k`/`p100k` | S/M | **fatto** |
-| L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | **prossimo** |
+| L5c | Definire **G0**, la prima revisione del prodotto | XS/S | **fatto** |
+| L5d | **Eseguire G0**: report datato + non conformità | S | **prossimo** |
+| L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | da fare |
 | L7 | LSK489: passo 4, il controllo incrociato | S | da fare |
 | L8 | Fase 3a — le parti nuove, fatti verificabili | M | da fare |
 | L9 | Fase 3b — la rosa dei componenti di segnale | M | da fare |
@@ -793,8 +795,39 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L6 — LSK489: i passi 1-3 di ADR-013 (congela il datasheet, trascrivi il
-modello, registra la provenance).**
+**L5d — eseguire G0.**
+
+`design-reviewer` gira **a freddo**, offline su `main`, sul dossier e sui
+dati versionati, con il mandato scritto in `../../AGENTS.md` sezione **G0**.
+Produce un report datato in `reports/` e apre le non conformità in
+`NONCOMPLIANCE.md`.
+
+**C'è un controllo cieco dentro questo gate, ed è la ragione per cui va
+eseguito così.** L'utente ha trovato un errore **nel diagramma a blocchi**
+guardando il dossier, e ha chiesto esplicitamente che **non sia
+l'orchestratore a cercarlo**: lo deve trovare il revisore. Quindi
+l'orchestratore non ha aperto il corpo di `preamp_blocks_draw.py` né le
+etichette del disegno, e non deve farlo. Con l'utente che conosce l'errore,
+l'orchestratore che non l'ha visto e il revisore che parte a freddo, quella
+voce diventa una **calibrazione del gate**: se il revisore la trova, G0 ha
+dimostrato sensibilità invece che dichiararla; se non la trova, sappiamo che
+il gate è più debole di quanto avremmo assunto, ed è un'informazione che
+vale quanto la voce stessa.
+
+**Ostacolo pratico già risolto**: i due SVG sotto `schematic/` hanno il
+testo convertito in tracciati da matplotlib, quindi leggere il file non
+mostra nessuna etichetta. Si rasterizzano con
+
+```sh
+qlmanage -t -s 2400 -o <outdir> docs/preamp/schematic/preamp_blocks.svg
+```
+
+oppure si legge lo script che li genera, che è la loro vera fonte. Sta in
+`AGENTS.md` perché un revisore che si limitasse a `cat` sull'SVG
+concluderebbe di non poter giudicare il disegno, e sbaglierebbe.
+
+**Poi L6 — LSK489: i passi 1-3 di ADR-013 (congela il datasheet, trascrivi
+il modello, registra la provenance).**
 
 È il lotto che rende credibili le cifre che oggi non lo sono. Stato di
 partenza, verificato e non assunto: `vendor/` non contiene **nessun** PDF
