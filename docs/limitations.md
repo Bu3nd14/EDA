@@ -88,6 +88,25 @@ coordinate unit scale) fails silently with no diagnostic.
   inductor` output).
 - The **first line** of any `.cir` file is always treated as a
   title/comment, regardless of content.
+- **Un'analisi ripetuta senza `destroy all` fa leggere a `setplot` il plot
+  VECCHIO, e il numero stampato è sbagliato senza alcun errore.** Ogni
+  analisi crea plot numerati progressivamente: due `noise` di fila
+  producono `noise1`/`noise2` e poi `noise3`/`noise4`, quindi un
+  `setplot noise2` dopo la seconda seleziona ancora la **prima**. Vale
+  identico per `ac`/`tran`/`dc`, ed è insidioso perché il numero c'è, è
+  plausibile, ed è quello della configurazione precedente.
+
+  Trovato il 2026-09-09 in `spice/preamp/tb/tb_zout_psrr_noise.cir`, la
+  cui riga "WORST CASE" riportava **1,676 µV** — cioè esattamente il
+  valore "intrinsic" della riga sopra — invece di **5,697 µV**: un
+  fattore **3,4** in meno sul rumore in uscita nel caso peggiore.
+
+  Provato, non dedotto, su tre gambe: (1) `alter` funziona in quel deck,
+  perché il `foreach` sopra dà numeri diversi per le due modalità; (2)
+  `tb_noise_breakdown.cir`, che misura la **stessa** configurazione con
+  `destroy all`, dà 5,696897e-06; (3) aggiungendo `destroy all` a una
+  copia di scratch dello stesso deck la riga diventa 5,696896e-06, cioè
+  coincide a sette cifre. Il rimedio è quindi verificato, non ipotizzato.
 
 ## 11. Model-validation coverage is uneven
 
