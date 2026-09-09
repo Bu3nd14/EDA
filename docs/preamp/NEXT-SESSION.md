@@ -154,7 +154,10 @@ COME LAVORIAMO
       1. aggiorna `docs/preamp/STATE.md` segnando **L4 fatto** e L5
          prossimo (la tabella dei lotti deve dire `**fatto**`)
       2. riscrivi QUESTO file per **L5** — se il titolo nomina ancora L4,
-         lo script rifiuta, ed è il controllo che esiste apposta
+         lo script rifiuta, ed è il controllo che esiste apposta.
+         **Riporta nel prompt di L5 il riquadro "⚠ WARNING PER L5" che sta
+         in `STATE.md`**: è un numero già misurato e sbagliato di 3,4x in
+         `tb_zout_psrr_noise.cir`, e L5 è il lotto che apre quel deck
       3. committa, pusha, apri la PR
       4. `/bin/zsh scripts/chunk_close.sh L4`
          Verifica tutto, merghia, riallinea il checkout dell'utente e

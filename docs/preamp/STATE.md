@@ -6,7 +6,7 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-09** (L3c chiuso: la chiusura di lotto è uno script che rifiuta, e il gate è agganciato ai dati e non alla PR; prossimo lotto L4)
+Ultimo aggiornamento: **2026-09-09** (L3d chiuso: annotato un difetto misurato in `tb_zout_psrr_noise.cir` come warning per L5; prossimo lotto L4)
 
 ---
 
@@ -67,6 +67,7 @@ manciata di file, **M** = riempie una sessione da solo.
 | L3 | Applicare la convenzione agli altri 11 deck (26 righe cablate rimaste) | S | **fatto** |
 | L3b | `REPO` cablato in `circuits/preamp/gain_block.py` — **obbligatorio prima della Fase 4** | XS/S | da fare |
 | L3c | Chiusura di lotto che rifiuta, gate agganciato ai dati, dati del dossier versionati | S | **fatto** |
+| L3d | Annotare il difetto `setplot`/plot stale di `tb_zout_psrr_noise.cir` (warning per L5) | XS | **fatto** |
 | L4 | `wrdata` sui deck muti **senza** cicli | S | **prossimo** |
 | L5 | `wrdata` sui deck muti **con** cicli annidati | S/M | da fare |
 | L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | da fare |
@@ -250,6 +251,38 @@ state inseguite e nessuna è un numero:
   proprietà di ngspice, non della modifica, ed è **una ragione in più,
   indipendente dai modelli segnaposto, per non fidarsi di un THD preso da
   quel deck**.
+
+### ⚠ WARNING PER L5 — un numero già stampato oggi è sbagliato
+
+**`tb_zout_psrr_noise.cir` riporta un rumore di caso peggiore sbagliato di
+un fattore 3,4, e lo fa in silenzio.** Trovato il 2026-09-09 rispondendo a
+una domanda sullo stato delle misure, non cercandolo.
+
+La riga finale del deck, `RRG=0.1 RSRC=2500 ... WORST CASE`, stampa
+**1,676 µV** — che è *identico* al valore "intrinsic" della riga
+precedente — invece di **5,697 µV**.
+
+**Causa**: in coda a quel deck mancano i `destroy all` che invece ci sono
+dentro i `foreach`. Ogni analisi crea plot numerati, quindi la seconda
+`noise` produce `noise3`/`noise4` e il `setplot noise2` continua a
+selezionare il plot della **prima**. Vedi `docs/limitations.md` #10.
+
+**Provato su tre gambe, non dedotto:**
+
+1. `alter` funziona in quel deck — il `foreach` sopra dà 1,718 µV e
+   5,070 µV per le due modalità, quindi non è `alter` a non avere effetto;
+2. `tb_noise_breakdown.cir` misura la **stessa** configurazione con
+   `destroy all` e dà **5,696897e-06**;
+3. aggiungendo `destroy all` a una copia di scratch dello stesso deck la
+   riga diventa **5,696896e-06** — coincide a sette cifre. Il rimedio è
+   verificato.
+
+**Cosa deve fare L5**: quel deck è già suo (è uno dei deck con `foreach` e
+`destroy all`). Oltre ad aggiungerci i `wrdata`, deve **correggere questa
+coda** e ricontrollare che le due righe finali tornino diverse. Attenzione
+al caso generale: ogni `wrdata` piazzato dopo un'analisi ripetuta senza
+`destroy all` scriverà i dati del plot **sbagliato** — che è lo stesso
+guasto, ma dentro un file che poi finisce nel dossier.
 
 Restano da aggiungere `wrdata` ai 9 deck muti. I deck con `foreach` sono
 l'ultimo lotto perché non sono meccanici: `tb_ac.cir` ha un doppio ciclo
