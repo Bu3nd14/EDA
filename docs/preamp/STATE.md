@@ -6,7 +6,7 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-09** (L4 chiuso: `wrdata` sui due deck muti senza cicli, `tb_bias_sweep` assegnato a L5; prossimo lotto L5)
+Ultimo aggiornamento: **2026-09-09** (L3b chiuso: `REPO` derivato da `__file__`, rigenerazione verificata; prossimo lotto L5)
 
 ---
 
@@ -65,7 +65,7 @@ manciata di file, **M** = riempie una sessione da solo.
 | L1 | Diagramma a blocchi del preamp intero | S/M | **fatto** |
 | L2 | Collaudare la convenzione di percorso su un deck solo (`.include` **e** `wrdata`) | S | **fatto** |
 | L3 | Applicare la convenzione agli altri 11 deck (26 righe cablate rimaste) | S | **fatto** |
-| L3b | `REPO` cablato in `circuits/preamp/gain_block.py` — **obbligatorio prima della Fase 4** | XS/S | da fare |
+| L3b | `REPO` cablato in `circuits/preamp/gain_block.py` | XS/S | **fatto** |
 | L3c | Chiusura di lotto che rifiuta, gate agganciato ai dati, dati del dossier versionati | S | **fatto** |
 | L3d | Annotare il difetto `setplot`/plot stale di `tb_zout_psrr_noise.cir` (warning per L5) | XS | **fatto** |
 | L4 | `wrdata` sui deck muti **senza** cicli | S | **fatto** |
@@ -130,7 +130,8 @@ quindi **nessun risultato prodotto è sbagliato**. Ma il meccanismo era
 armato, e cancellare quel worktree avrebbe rotto di colpo tutti e 12 i
 deck.
 
-**Ma quel worktree NON è ancora cancellabile, e la ragione è peggiore.**
+**RISOLTO IN L3b — quello che segue è la diagnosi, non lo stato attuale.**
+**Il worktree vecchio non era cancellabile, e la ragione era peggiore.**
 Cercato su tutto il repo con `git grep preamp-fase1` invece di fidarsi
 dei soli deck: `circuits/preamp/gain_block.py:63` contiene
 
@@ -152,7 +153,8 @@ il mandato esplicito di non toccare, e perché verificare la correzione
 vuol dire **rieseguire `gain_block.py`** sul venv SKiDL e confrontare gli
 artefatti rigenerati: è un lotto suo, non una riga in coda a questo. La
 correzione è una riga (`REPO` derivato da `__file__`, come
-`ROOT=${0:A:h:h}` negli script), la **verifica** non lo è.
+`ROOT=${0:A:h:h}` negli script), la **verifica** non lo è. È stata fatta
+in **L3b** — vedi sotto.
 
 **Due vincoli scoperti leggendo `scripts/run_simulation.sh`**, che
 decidono quale forma può avere il rimedio:
@@ -202,8 +204,9 @@ famiglia di difetti, da sistemare quando uno dei due verrà toccato.
 22 `.include` diventati `@REPO@/<percorso-dalla-radice>` e 4 `wrdata`
 diventati nomi nudi. `grep -c '\.claude/worktrees' spice/preamp/tb/*.cir`
 dà **0 su tutti e 12**: il meccanismo armato è disinnescato **dal lato
-della lettura**. Non su tutto il repo: `circuits/preamp/gain_block.py`
-scrive ancora nel worktree vecchio — vedi il riquadro sopra.
+della lettura**. Il lato della **scrittura** — `gain_block.py`, che
+depositava gli artefatti nel worktree vecchio — è stato disinnescato in
+**L3b**, che ha anche verificato la correzione rigenerando davvero.
 
 I nomi dei `wrdata` seguono la precedenza di `tb_op`, cioè
 `<basename>_wrdata.txt`, che è il nome che `run_simulation.sh` cerca per
@@ -284,6 +287,66 @@ coda** e ricontrollare che le due righe finali tornino diverse. Attenzione
 al caso generale: ogni `wrdata` piazzato dopo un'analisi ripetuta senza
 `destroy all` scriverà i dati del plot **sbagliato** — che è lo stesso
 guasto, ma dentro un file che poi finisce nel dossier.
+
+**L3b — il `REPO` cablato in `gain_block.py`. FATTO.** Chiusa fuori
+ordine, prima di L5, su richiesta dell'utente e per una ragione precisa:
+**oggi la rigenerazione doveva dare un output identico a quello
+committato**, quindi qualsiasi differenza era segnale puro. In Fase 4 il
+circuito cambia insieme al percorso, i due effetti si mescolano e quel
+controllo pulito non esiste più.
+
+La correzione è una riga: `REPO` derivato da `__file__` (due directory
+sopra `circuits/preamp/gain_block.py`), l'equivalente Python di
+`ROOT=${0:A:h:h}`. Il file **calcolava già** la propria posizione tre
+righe sopra, per il `sys.path`, e poi cablava `REPO`.
+
+**La verifica, che è la parte che costava.** Rieseguiti davvero
+`gain_block.py` e `preamp_audio.py` sul venv SKiDL — ed è la prima volta
+che il progetto rigenera il circuito da quando gli artefatti esistono:
+
+| Artefatto | Esito |
+|---|---|
+| `spice/preamp/gain_block_flat.inc` | **byte-identico** (stesso SHA-256) |
+| `spice/preamp/gain_block.subckt` | **byte-identico** |
+| `circuits/preamp/gain_block.net` | elettricamente identico, 1447 righe |
+| `circuits/preamp/preamp_audio.net` | elettricamente identico, 6567 righe |
+
+I due file che le simulazioni **leggono** sono byte-identici, ed è il
+risultato che conta: nessun deck cambia numero.
+
+**Scoperta: un `.net` di SKiDL non è riproducibile byte a byte.** I due
+`.net` differiscono, e la differenza è tutta metadato: il campo `(date)`,
+i **tag casuali** che SKiDL genera per ogni parte senza tag esplicito
+(«Random tag ... generated»), gli UUID `(tstamps)` che ne derivano, e i
+riferimenti `SKiDL Line`, che si spostano appena il sorgente cambia di
+qualche riga. Conseguenza operativa: **un `git diff` su un `.net`
+rigenerato non dice se la topologia è cambiata.** La verifica è il
+confronto normalizzato — si tolgono `(date`, `SKiDL Tag`, `SKiDL Line` e
+`(tstamps`, e si confronta il resto; con quel filtro il diff è **vuoto**
+su entrambi i file. È la stessa famiglia del `Reference value` della
+`fourier` di ngspice trovato in L3: un campo non riproducibile dentro un
+artefatto per il resto deterministico.
+
+**Provato che il worktree vecchio non viene più scritto**, non dedotto:
+gli mtime dei quattro artefatti dentro `.claude/worktrees/preamp-fase1/`
+sono ancora quelli dell'8 settembre dopo entrambe le rigenerazioni.
+
+**Il worktree `preamp-fase1` è ora eliminabile**, e non lo era prima: non
+lo legge più nessuno (da L3) e non ci scrive più nessuno (da L3b), e il
+suo ramo ha **0 commit** che non siano già su `main`. Non è stato
+eliminato in L3b perché è roba di una sessione dell'utente e la decisione
+è sua; `worktree remove` rifiuta da solo se ci sono modifiche non
+committate, quindi il comando è già sicuro di suo.
+
+**Cosa resta di questa famiglia di difetti.** `export_fab.sh` e
+`setup.sh` hanno ancora `ROOT` cablato su `/Users/roberto/EDA` (righe 28
+e 24): eseguiti da un worktree leggono e scrivono nel checkout
+principale, in silenzio. Non è un lotto assegnato — si sistemano quando
+uno dei due verrà toccato. E il guardiano che renderebbe impossibile una
+ricaduta (un controllo in `run_tests.sh` che rifiuti qualsiasi percorso
+cablato verso `.claude/worktrees/` nei sorgenti) **non è stato aggiunto**:
+cambierebbe il conteggio della suite, che tutta la documentazione cita
+come «5 passed». È un candidato dichiarato, non una dimenticanza.
 
 **L4 — i due deck muti senza cicli. FATTO.** Additivo per costruzione:
 solo righe `wrdata` e commenti, nessun `.include`, nessuna analisi,
@@ -609,10 +672,10 @@ Verifica: deck eseguito davvero, CSV/JSON non vuoti col numero di righe
 atteso dal tipo di analisi, numeri dei deck esistenti invariati rispetto a
 una baseline presa prima della modifica, e `run_tests.sh` a 5 passed.
 
-**L3b resta obbligatorio prima della Fase 4** (il `REPO` cablato in
-`gain_block.py`): se si rigenera il circuito con quel percorso, l'`.inc`
-nuovo va nel worktree vecchio e le simulazioni continuano sulla copia
-vecchia in silenzio. Chi apre la Fase 4 la apre da L3b.
+**La Fase 4 non ha più il preliminare che aveva.** L3b è chiusa: il
+circuito si rigenera nel checkout corrente, verificato rieseguendo
+davvero i due generatori. Chi apre la Fase 4 la apre dalla topologia, non
+da una correzione di percorso.
 
 ### Materiale già raccolto per L8-L10 (il giro componenti)
 

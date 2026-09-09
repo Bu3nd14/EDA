@@ -60,7 +60,22 @@ from skidl import Part, Net, generate_netlist, POWER, ERC  # noqa: E402
 
 import spice_export as sx  # noqa: E402
 
-REPO = "/Users/roberto/EDA/.claude/worktrees/preamp-fase1"
+# REPO e' la radice del checkout di cui QUESTO file fa parte, DERIVATA e mai
+# cablata: <repo>/circuits/preamp/gain_block.py, quindi due directory sopra
+# quella del file. E' l'equivalente Python di ROOT=${0:A:h:h}, gia' la regola
+# in run_tests.sh e run_simulation.sh.
+#
+# Perche' non un percorso cablato (L3b): qui REPO e' un percorso di
+# SCRITTURA - gain_block.net, gain_block.subckt, gain_block_flat.inc, e
+# preamp_audio.net attraverso preamp_audio.py. Cablato su un worktree, era la
+# meta' di scrittura dello stesso guasto che L3 ha tolto dai deck: rigenerando
+# il circuito, gli artefatti nuovi finivano nell'albero vecchio e le
+# simulazioni continuavano a leggere la copia non aggiornata del checkout
+# corrente. Senza errore da nessuna parte, perche' la riga 498 fa
+# os.makedirs(..., exist_ok=True) e la directory se la crea da se'.
+REPO = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
 
 # --- Footprints -------------------------------------------------------------
 # P6: everything through-hole on generous pitch so the user can swap signal
