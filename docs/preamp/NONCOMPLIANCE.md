@@ -5,7 +5,8 @@ chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
 Ultimo aggiornamento: **2026-09-09** (creato in L3c; **nessuna voce
-aperta**, perché nessun gate è ancora stato eseguito)
+aperta**, perché nessun gate è ancora stato eseguito. **G0 è definito e
+attende esecuzione** — vedi sotto)
 
 ---
 
@@ -25,9 +26,28 @@ lavoro non si ferma ad aspettare un gate: il gate lo genera.
 
 | Severità | Significato | Effetto |
 |---|---|---|
-| **bloccante** | un requisito non è soddisfatto, oppure manca l'evidenza per dire se lo è | la fase successiva non si apre: niente layout, niente fabbricazione |
+| **bloccante** | un requisito non è soddisfatto, oppure manca l'evidenza per dire se lo è | la fase successiva non si apre: niente layout, niente fabbricazione. **A G0 significa: non si accede a G1**, quindi la topologia non si congela |
 | **maggiore** | scostamento reale, con margine residuo o rimedio noto | va chiusa prima del gate successivo |
 | **minore** | osservazione da registrare, nessun rimedio richiesto ora | resta aperta e visibile |
+
+## G0 — il gate che sta prima del congelamento
+
+Aggiunto il 2026-09-09 su proposta dell'utente, con un argomento di costo:
+**gli errori a catena costano moltissimo**, e G1, G2 e G3 stanno tutti dopo
+il punto in cui un errore ha già propagato. G0 chiede una cosa sola:
+*quello che il progetto ha misurato finora dice che il circuito fa quello
+che ha promesso?*
+
+**Giudica il prodotto, non l'ambiente.** Circuito, comportamento misurato,
+ADR e **i disegni che rappresentano il circuito**. Non i banchi di prova,
+non gli script, non la toolchain: se il revisore ci inciampa lo annota
+sotto «osservazioni fuori scope» e non apre una non conformità.
+
+Le sei domande, il perché della sesta e cosa blocca una voce bloccante
+stanno in `../../AGENTS.md`, sezione **G0**. Qui sta solo l'effetto: una
+voce **bloccante** aperta a G0 impedisce l'accesso a **G1**, e si chiude o
+con una modifica del circuito o con una ADR che accetti lo scostamento
+consapevolmente e per iscritto.
 
 **Il BLOCK non è sparito, si è spostato.** Prima era un veto su un merge;
 ora è una non conformità bloccante che impedisce l'**avanzamento di

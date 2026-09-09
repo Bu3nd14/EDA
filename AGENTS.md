@@ -38,11 +38,96 @@ The roster above is the *environment* team — the agents that built and validat
 
 ### Gates
 
-`design-reviewer` is invoked at three points, not continuously:
+`design-reviewer` is invoked at four points, not continuously:
 
+- **G0 — First product review**: as soon as there is a dossier to judge,
+  before the topology is frozen. Added 2026-09-09 (see below).
 - **G1 — Topology freeze**: before layout begins.
 - **G2 — Pre-layout**: schematic/netlist complete, before placement and routing.
 - **G3 — Pre-fabrication**: before any fabrication export is treated as final.
+
+#### G0 — la prima revisione del prodotto
+
+Proposta dall'utente il 2026-09-09, con un argomento di costo: **gli errori
+a catena costano moltissimo**, e i tre gate esistenti stanno tutti dopo il
+punto in cui un errore ha già propagato. G1 congela la topologia; se la
+topologia era sbagliata, G1 arriva tardi. G0 sta prima e chiede una cosa
+sola: **quello che il progetto ha misurato finora dice che il circuito fa
+quello che ha promesso?**
+
+**Soggetto: il prodotto, non l'ambiente.** Questa riga è una correzione
+esplicita dell'utente e va rispettata. G0 giudica il preamplificatore — il
+circuito, il suo comportamento misurato, le decisioni che lo hanno prodotto
+e i disegni che lo rappresentano. **Non** giudica i banchi di prova,
+`run_simulation.sh`, il generatore del dossier o la toolchain: quella è
+qualità dell'ambiente EDA, ed è un'altra conversazione. Se il revisore
+inciampa in un difetto della catena lo annota a parte, sotto «osservazioni
+fuori scope», e non apre una non conformità di prodotto.
+
+**Le sei domande di G0.** Sono queste e vanno chiuse una per una, ognuna
+con l'evidenza aperta o con l'ammissione che l'evidenza manca:
+
+1. **La struttura di guadagno fa quello che ADR-001 promette?** È la
+   diagnosi da cui nasce il progetto: il Technics SU-9070 richiede 46 dB di
+   attenuazione, e quella è la causa misurabile del difetto lamentato. E1 e
+   E2 sono misurati; l'attenuazione risultante all'ascolto (E3b) è quella
+   prevista?
+2. **I requisiti elettrici con evidenza sono soddisfatti, e dove non lo sono
+   il rimedio dichiarato basta?** In particolare E4 con la sua tensione
+   contro E8 a 20 Hz, e E6×E2, dove il margine misurato è stretto e il
+   rimedio è il trim di ADR-011.
+3. **È stabile, o è stabile nel caso comodo?** Il relè commuta la rete di
+   controreazione, quindi il margine di fase è diverso nelle due modalità:
+   V1 esiste per questo. Il revisore deve dire se i casi coperti sono i casi
+   giusti, non solo se i numeri coperti sono buoni.
+4. **Le ADR sono confermate o smentite dalle misure?** Alcune hanno una
+   claim falsificabile e ora hanno i dati per verificarla; altre sono ancora
+   solo ragionamento. Il revisore deve separare le due categorie.
+5. **Dove il progetto dice «non lo so», lo dice davvero?** Rumore e
+   distorsione non hanno cifre credibili finché i modelli sono segnaposto.
+   Una cifra presentata come più solida di quanto sia è una non conformità,
+   non una svista di stile.
+6. **I disegni dicono la verità sul circuito?** Lo schema del blocco di
+   guadagno e il diagramma a blocchi sono il prodotto tanto quanto la
+   netlist: sono ciò su cui la revisione umana — precondizione dichiarata di
+   G1 e G2 — viene esercitata. Un disegno che mente fa prendere decisioni
+   sbagliate a chi lo guarda, ed è una non conformità di prodotto a tutti
+   gli effetti.
+
+**Perché la sesta domanda ha un peso diverso.** `scripts/check_schematic.py`
+confronta un disegno con la netlist nelle due direzioni, ma **copre solo i
+disegni che hanno un manifesto**, e un diagramma a blocchi non ce l'ha
+perché omette i dispositivi di proposito. La sua unica garanzia sono le
+asserzioni dentro il proprio script di disegno. Struttura, collegamenti ed
+etichette non sono verificati da niente: è il punto del progetto in cui un
+errore può sopravvivere più a lungo.
+
+E c'è un ostacolo pratico da conoscere: i due SVG sotto
+`docs/preamp/schematic/` sono prodotti da matplotlib **con il testo
+convertito in tracciati**, quindi non contengono un solo elemento `<text>` e
+leggere il file non mostra nessuna etichetta. Per *guardarli* vanno
+rasterizzati:
+
+```sh
+qlmanage -t -s 2400 -o <outdir> docs/preamp/schematic/preamp_blocks.svg
+```
+
+In alternativa si legge lo script che li genera, che è la loro vera fonte.
+Un revisore che si limitasse a `cat` sull'SVG concluderebbe di non poter
+giudicare il disegno, e sbaglierebbe.
+
+**Cosa blocca una non conformità bloccante a G0**: l'accesso a G1. La
+topologia non si congela finché la voce non è chiusa, o da una modifica del
+circuito o da una ADR che accetti lo scostamento **consapevolmente e per
+iscritto**. Non blocca invece i lotti che procurano i modelli vendor
+(L6-L7): quelli sono il rimedio naturale a metà delle voci prevedibili, non
+un avanzamento di fase.
+
+**G0 è anche la risposta alla domanda sul «revisore avversariale».** Non
+serve un agente nuovo: serve `design-reviewer` con questo mandato. Ha già le
+proprietà che contano — nessun accesso in scrittura per costruzione, e
+l'obbligo di rieseguire le verifiche invece di fidarsi dei resoconti — e G0
+le punta sul prodotto invece che sul processo.
 
 **A gate is triggered by test results, not by a pull request** (decided
 2026-09-09). A diff is the wrong artefact to judge an analog design on: the
