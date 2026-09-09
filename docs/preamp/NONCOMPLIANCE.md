@@ -84,14 +84,18 @@ apribile non è una non conformità, è un'opinione.
 
 ## Voci aperte
 
-Dodici voci, da **due** revisioni distinte:
+Tredici voci, da **tre** origini distinte:
 
 - **NC-001 … NC-008** da `reports/2026-09-09-gate-G0.md`, il primo gate
   eseguito (L5d): 2 bloccanti, 1 maggiore, 5 minori.
 - **NC-009 … NC-012** da `reports/2026-09-09-revisione-utente-dossier.md`,
   la revisione umana del dossier (L5e): 1 bloccante, 3 maggiori.
+- **NC-013** da `reports/2026-09-09-L7-controllo-incrociato-lsk489.md`, il
+  controllo incrociato del modello LSK489 (L7): 1 maggiore. È la prima
+  voce che non nasce da una revisione ma da un **controllo prescritto da
+  una ADR** — ADR-013 passo 4.
 
-In tutto: **3 bloccanti, 4 maggiori, 5 minori**. **L'accesso a G1 non è
+In tutto: **3 bloccanti, 5 maggiori, 5 minori**. **L'accesso a G1 non è
 concesso** finché NC-001, NC-004 e NC-010 restano aperte.
 
 Le due revisioni non si sovrappongono per caso: G0 giudica incrociando
@@ -423,6 +427,78 @@ capacità di prova vanno scritte insieme.
 carico di prova dichiarato accanto, e i KPI del dossier riferiti a quella.
 È la voce che rende decidibili **NC-002** e **NC-003**: finché non c'è, le
 altre due discutono di un confine che nessuno ha tracciato.
+
+### NC-013 — Il modello vendor dell'LSK489 descrive un esemplare d'angolo, non il tipico
+
+| | |
+|---|---|
+| Requisito | **ADR-013** passo 4 / **E5** / **V4** — la credibilità dei numeri di rumore e distorsione |
+| Severità | **maggiore** |
+| Aperta da | `reports/2026-09-09-L7-controllo-incrociato-lsk489.md` |
+| Stato | aperta |
+
+**Evidenza.** Il controllo incrociato di ADR-013 passo 4, eseguito in L7
+alle condizioni di prova del datasheet (RevA40 pagina 2, gruppo **A**,
+25 °C — non i 27 °C di default di ngspice, perché il modello porta
+`Vtotc=-2.5m`):
+
+| Grandezza | Misurata | Finestra LSK489A | Verdetto |
+|---|---|---|---|
+| I_DSS (V_DG = 15 V, V_GS = 0) | **2,59283 mA** | 2,5 … 8,5 mA | dentro, 3,7% sopra il minimo, **52,9% sotto il tipico** |
+| V_GS(off) (V_DS = 15 V, I_D = 1 nA) | **−1,124355 V** | −1,5 … −3,5 V | **fuori**, 0,376 V sotto il minimo in modulo |
+| V_GS (V_DS = 15 V, I_D = 500 µA) | −0,650211 V | −0,5 … −3,5 V | dentro |
+
+V_P misurato su **tre strade indipendenti** concordi entro 1,0 mV:
+attraversamento della soglia di 1 nA, estrapolazione ai minimi quadrati di
+√I_D → 0 su 6315 campioni, e `Vto + Vtotc·(T − Tnom)` letto dal modello.
+
+**Non è un errore di trascrizione, ed è misurato e non argomentato.**
+Dentro il modello I_DSS e V_P sono legati da `Beta`, che è trascritto:
+tenendo `Beta = 2.2m` e portando `Vto` al minimo V_GS(off) del datasheet
+(−1,50 V) la I_DSS sale a **4,392 mA**, comodamente dentro la finestra A.
+Le due finestre del datasheet sono quindi compatibili fra loro e il
+modello sta sotto **entrambe in modo coerente**: uno scarto solo, non due.
+Un `Vto` sbagliato avrebbe mosso le due grandezze in direzioni scorrelate.
+La trascrizione è stata inoltre **riverificata** lo stesso giorno —
+`pdf_glyphs.py` riproduce gli stessi 223 byte e lo stesso sha256 di L6, e
+il `diff` contro la riga del `.lib` è vuoto.
+
+La discrepanza è quindi fra il **modello SPICE del costruttore** e il
+**datasheet dello stesso costruttore**, non fra il PDF e ciò che il repo
+ne ha trascritto.
+
+*Nota sull'evidenza.* Questa voce non nomina un file sotto
+`docs/preamp/data/<data>/`, e la deviazione è deliberata: non è una misura
+del prodotto ma del modello, e il suo mandato vietava esplicitamente di
+toccare i dati del dossier. La regola che quella convenzione protegge —
+«una non conformità senza evidenza apribile è un'opinione» — è comunque
+soddisfatta, e in forma più forte: ogni deck sta nel report ed è
+rieseguibile, e i tre numeri li **riesegue la suite a ogni giro**
+(`scripts/validate_models.py`, ricetta `tb_lsk489`).
+
+**Conseguenza.** Il modello descrive un esemplare allo spigolo a bassa
+I_DSS del gruppo A. Non lo rende inutilizzabile — è il modello che il
+costruttore pubblica, ed è il primo del repo ad avere il `Kf` che i
+segnaposto non hanno. Ma:
+
+- le polarizzazioni che la **Fase 4** calcolerà con esso sono un **caso
+  d'angolo**: esemplari reali avranno transconduttanza più alta;
+- le cifre di rumore che chiuderanno la metà mancante di **NC-004** sono
+  perciò conservative sul contributo del JFET d'ingresso — direzione
+  giusta, ma va detta;
+- il progetto **non deve dipendere** da una I_DSS di 2,6 mA: è il minimo
+  garantito, non il valore atteso.
+
+**Cosa serve per chiuderla.** Non ritoccare il modello — la trascrizione è
+corretta e ritoccarla cancellerebbe la traccia. Serve **quantificare la
+sensibilità del progetto** a I_DSS: rieseguire il punto di lavoro e il
+rumore del blocco di guadagno con `Vto` ai due estremi compatibili con la
+finestra A (il modello vendor com'è, e un `Vto` che porti I_DSS al tipico
+di 5,5 mA), e registrare in `REQUIREMENTS.md` o in una ADR quale
+dispersione il progetto tollera. Se ne esce che il progetto è sensibile,
+la scelta di ADR-013 va riaperta con un numero in mano. Lotto **L20**.
+
+**Non chiude NC-004**, e non la aggrava: la rende leggibile.
 
 ### NC-003 — Il KPI «margine di fase, peggiore» non è il peggiore del prodotto
 

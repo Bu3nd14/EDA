@@ -1,11 +1,11 @@
-# Prompt per la sessione successiva — L7
+# Prompt per la sessione successiva — L8
 
 Copiare da qui in giù.
 
 ---
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository.
-Il lavoro è organizzato in LOTTI PICCOLI: questa sessione ne fa UNO, L7,
+Il lavoro è organizzato in LOTTI PICCOLI: questa sessione ne fa UNO, L8,
 e si ferma. Non iniziarne un secondo.
 
 Leggi PRIMA, in quest'ordine, e non saltare:
@@ -13,108 +13,100 @@ Leggi PRIMA, in quest'ordine, e non saltare:
   1. `CLAUDE.md` — ambiente, percorsi assoluti, trappole che falliscono
      in silenzio, e la regola di fine sessione (push PRIMA di tutto)
   2. `docs/preamp/STATE.md` — la sezione "Come si lavora da qui", la
-     tabella dei lotti, la sezione **L6** e "Prossimo passo concreto"
-  3. `docs/preamp/decisions/ADR-013-jfet-ingresso-lsk489.md` — il
-     mandato: questo lotto è il **passo 4**, e la ADR dice perché non è
-     un di più
-  4. `docs/preamp/reports/2026-09-09-L6-trascrizione-lsk489.md` — cosa
-     L6 ha trascritto, come, e le due cose che ha lasciato a te
-  5. `docs/limitations.md` **#13** — la trappola che morde proprio
-     mentre si leggono valori da un datasheet
+     tabella dei lotti, la sezione **L7**, "Prossimo passo concreto" e
+     **"Materiale già raccolto per L8-L10"**, che è il tuo punto di
+     partenza e che NON va ricercato di nuovo
+  3. `docs/preamp/reports/2026-09-09-L7-controllo-incrociato-lsk489.md` —
+     non per l'LSK489, che è chiuso, ma per **il metodo**: come si legge
+     un datasheet in modo che il numero regga
+  4. `docs/preamp/decisions/ADR-003-classe-a-discreti.md` e
+     `ADR-014-cascode-ingresso.md` — perché queste parti sono in lista
+  5. `docs/limitations.md` — da leggere prima di scrivere codice
 
-## IL LOTTO: L7 — il controllo incrociato di ADR-013, passo 4
+## IL LOTTO: L8 — Fase 3a, le parti nuove come fatti verificabili
 
-L6 ha congelato i PDF vendor e trascritto il modello. **Nessuno ha ancora
-verificato che i parametri trascritti descrivano la parte vera.** ADR-013
-lo dice senza ammorbidire:
+Il giro componenti è diviso in tre lotti. **L8 viene prima di L9** perché
+le parti nuove sono fatti chiudibili, mentre la rosa dei componenti di
+segnale è un giudizio aperto: se il cap arriva, è meglio che tagli la
+seconda.
 
-> Il punto 4 non è un di più: è ciò che rende accettabile il punto 2.
+Quattro cose da rendere verificabili, tutte già identificate — il lavoro
+è **verificarle**, non riscoprirle:
 
-Finché L7 non chiude, `models/jfet/lsk489.lib` è **trascritto e verificato
-sintatticamente, non validato contro i limiti pubblicati della parte** —
-ed è scritto così nella sua intestazione, nella provenance e in STATE.md.
-Se il controllo non torna, **il lavoro è tornare su L6**, non andare
-avanti. È l'intera ragione per cui i due lotti sono separati.
+1. **2N5401** (VAS) e **2N5551** (cascode, generatori di corrente,
+   moltiplicatore di Vbe). Parti nuove, mai verificate in Fase 1.
+   Servono: disponibilità e prezzo reali, e soprattutto **da dove viene
+   il modello SPICE** e se esiste in forma macchina o va trascritto come
+   l'LSK489.
+2. **THAT320**: lo stock non è mai stato fissato, e va confermata la
+   **BVceo ≥ 35 V** — **contro il datasheet del costruttore**, non
+   contro la scheda di un distributore.
+3. **Omron G6K-2F-Y**: confermare **quale contatto è NO e quale NC**. È
+   un fatto di sicurezza travestito da dettaglio di catalogo: il progetto
+   fallisce in sicurezza solo se sono quelli giusti (ADR-012).
 
-### Cosa fare
+### Cosa L6 e L7 hanno imparato, e che vale per questo lotto
 
-1. **Leggere I_DSS e V_P dal datasheet congelato**
-   (`vendor/jfet/linear_systems/LSK489/LSK489DSRevA38.pdf`, 7 pagine, la
-   tabella sta **oltre la prima**). `sips` e `qlmanage` vedono solo la
-   prima pagina: per questo L6 ha installato poppler —
-   `/opt/homebrew/bin/pdftotext`, 26.09.0, arm64. Conta il **suffisso di
-   selezione**: la parte è divisa in **due** gruppi, **A** (ΔIDSS = 6 mA) e
-   **B** (ΔIDSS = 7 mA), con finestre diverse. Il modello si chiama
-   `LSK489A`, quindi il confronto va fatto con la finestra **A**, non con
-   l'intervallo complessivo.
-2. **Ricavare le stesse due grandezze dal modello trascritto**, con
-   ngspice e non a mano: I_DSS come I_D a `Vgs = 0` in saturazione, V_P
-   dal `Vto` e da uno sweep che lo confermi. Il numero già misurato in L6
-   è **2,500 mA** a `Vgs = 0`, `Vds = 5 V` — riverificalo, non fidartene.
-3. **Confrontare, e scrivere il verdetto** in un report datato sotto
-   `docs/preamp/reports/`. Un verdetto è "dentro la finestra" oppure
-   "fuori, di tanto": non "plausibile".
-4. **Rafforzare la ricetta in `scripts/validate_models.py`** se e solo se
-   il confronto torna: `tb_lsk489()` oggi è **fumo dichiarato** (conduce a
-   `Vgs = 0`, interdetto a `Vgs = -3 V`) e può diventare un controllo con
-   la finestra del datasheet dentro. Se lo fai, il conteggio dei check
-   **non** cambia (26/26): cambia cosa asserisce.
+Sono le due trappole in cui il giro componenti cade per prime, e sono
+costate due lotti.
 
-### Le due cose che L6 ti ha lasciato scritte
+- **Il nome di un file non è la sua revisione.** L7 ha trovato che il PDF
+  congelato come «RevA38» è in realtà la **RevA40**: l'unico posto dove
+  compariva «A38» era il nome del file, che è quello che il server manda
+  nel `content-disposition`, e nessuno l'aveva aperto per controllare. Se
+  congeli un PDF vendor, la revisione si legge **dal footer del
+  documento**. `/opt/homebrew/bin/pdftotext -layout <pdf> - | grep 'Rev#'`.
+- **Le condizioni di prova sono metà del numero.** L6 aveva misurato
+  I_DSS a `V_DS = 5 V` perché così faceva la ricetta accanto; il
+  datasheet prescrive `V_DG = 15 V`, ed è specificato a **25 °C** mentre
+  ngspice gira a **27 °C**. Nessuno dei due scarti dà errore. Un limite
+  di datasheet senza le sue condizioni non è un limite.
 
-- **La revisione del datasheet.** Il costruttore serve **RevA38**; Mouser
-  serve **RevA40 (04/12/2022)**. È congelata quella del costruttore, che
-  è la fonte autorevole. **Conferma che i limiti I_DSS/V_P non siano
-  cambiati fra le due revisioni prima di usarli.** Se sono cambiati, è la
-  RevA40 a essere vera per una parte comprata oggi, e va congelata anche
-  quella — `vendor/` è di sola lettura ma non è chiuso.
-- **Il numero da spiegare, se non torna.** Se i 2,500 mA cadono fuori
-  dalla finestra I_DSS del gruppo A, la risposta **non è ritoccare il
-  modello**: è rileggere la trascrizione. Le tre letture di L6 sono
-  rieseguibili — `scripts/pdf_glyphs.py` non ha dipendenze.
+Per congelare: `scripts/freeze_vendor.sh`. Per rileggere un PDF senza
+dipendenze: `scripts/pdf_glyphs.py`. Entrambi hanno `ROOT`/`VENDOR_DIR`
+già derivati dalla propria posizione (corretti in L6).
 
-  **Un fatto visto di striscio in L6, che non è un verdetto.** Aprendo il
-  datasheet solo per confermare che i gruppi fossero due, la riga del
-  gruppo A si è vista: I_DSS **2,5 / 5,5 / 8,5 mA** (min/tip/max). I
-  2,500 mA di L6 stanno sul **bordo inferiore** — ma **il confronto così
-  com'è non è valido**, perché L6 ha misurato a `Vds = 5 V` senza
-  guardare le condizioni di prova che il datasheet prescrive per I_DSS.
-  È precisamente il lavoro di L7: rimisurare **alle condizioni del
-  datasheet** e poi confrontare. Non ereditare questo numero come se
-  fosse già un esito.
+### Cosa vale come "verificato"
 
-### Attenzione a `docs/limitations.md` #13
+- una disponibilità è verificata se **hai visto la pagina**, non se è
+  plausibile;
+- un modello SPICE è verificato se **ngspice lo carica**, non se il link
+  esiste;
+- un limite di datasheet è verificato se hai letto **la tabella con le
+  sue condizioni**, non l'intestazione della pagina prodotto;
+- se congeli un PDF, va in `vendor/` con sha256, URL e
+  `PROVENANCE.json` — e la revisione letta dal footer.
 
-`"1M"` in KiCad è 1 MΩ, in SPICE è 1 mΩ: sei ordini di grandezza senza
-alcun errore da nessuna delle due parti. Sul modello LSK489 **non morde**
-— L6 ha controllato suffisso per suffisso: `2.2m`/`4.3m`/`-2.5m` sono
-milli in entrambe le convenzioni, `3f`/`0.0009f` femto, `3.19p`/`2.92p`
-pico, `30u` micro. È scritto proprio perché è il punto in cui qualcuno,
-avendo letto #13, «correggerebbe» un valore giusto. **Non correggerlo.**
+## NON fa parte di L8
 
-## NON fa parte di L7
-
-**Correggere le non conformità.** Hanno i loro lotti — L11-L19 nella
+**Correggere le non conformità.** Hanno i loro lotti — L11-L20 nella
 tabella di `STATE.md`. Le tre bloccanti:
 
 - **NC-001**, il mute che porta lo stadio d'uscita fuori dalla Classe A
   (L11);
-- **NC-004**, rumore e distorsione senza evidenza. **L7 è metà del suo
-  rimedio, non la sua chiusura**: dopo L7 serve ancora una riesecuzione di
+- **NC-004**, rumore e distorsione senza evidenza. L6 e L7 ne erano metà
+  del rimedio ed è **fatta**: resta la riesecuzione di
   `spice/preamp/tb/tb_noise_breakdown.cir` coi modelli veri e i dati
-  versionati sotto `docs/preamp/data/<data>/`;
+  versionati sotto `docs/preamp/data/<data>/`, da leggere insieme a
+  **NC-013**;
 - **NC-010**, le uscite fisse non isolate che portano il Blocco A in
   Classe B se un apparecchio a valle si spegne (L17). Stessa fisica di
   NC-001 ma **rimedio diverso**: chi chiude una non chiude l'altra.
 
-**Non toccare `circuits/` né `spice/preamp/`**: il segnaposto `LSK489X`
-resta dov'è, la sostituzione nella topologia è **Fase 4**. Nessun numero
-del dossier deve cambiare, ed è una proprietà da verificare
-(`git diff --stat` non deve nominare `circuits/` né `docs/preamp/data/`).
+**Non toccare `circuits/` né `spice/preamp/`**: la sostituzione dei
+segnaposto nella topologia è **Fase 4**. Nessun numero del dossier deve
+cambiare, ed è una proprietà da verificare (`git diff --stat` non deve
+nominare `circuits/` né `docs/preamp/data/`).
 
-**Non toccare i file in `vendor/`**: sono di sola lettura (0444) e sono
-la traccia di controllo. Se serve una revisione nuova del datasheet, si
-**aggiunge** accanto, non si sostituisce.
+**Non toccare i file già in `vendor/`**: sono la traccia di controllo. Se
+serve correggere un `PROVENANCE.json` congelato, si **aggiunge accanto**
+un addendum — è quello che ha fatto L7 con
+`PROVENANCE-L7-addendum.json` — non si riscrive l'originale.
+
+**Non riaprire ADR-013.** L7 ha chiuso il suo passo 4 con un verdetto
+misto e ha aperto NC-013 invece di riaprire la ADR. Se pensi che vada
+riaperta, è una decisione dell'utente, non un lavoro da fare di tua
+iniziativa.
 
 ## COME LAVORIAMO
 
@@ -123,6 +115,9 @@ la traccia di controllo. Se serve una revisione nuova del datasheet, si
   - **Cerca se qualcuno ha già deciso, prima di aprire una voce.** In L5e
     NC-009 stava per essere aperta come «serve una decisione di progetto»:
     ADR-015 l'aveva presa il giorno prima.
+  - **Verifica alla fonte anche ciò che il lotto precedente ti ha
+    scritto.** L6 ha lasciato a L7 due affermazioni plausibili e nessuna
+    delle due era vera. Un compito ereditato è un'ipotesi, non un dato.
   - Niente cifre non eseguite. Una simulazione descritta e non lanciata
     non è evidenza.
   - **Diffida degli script che dichiarano di aver verificato qualcosa.**
@@ -137,13 +132,13 @@ la traccia di controllo. Se serve una revisione nuova del datasheet, si
     `.claude/worktrees/` spariscono col worktree, ed è già successo.
   - CHIUSURA. Non è una lista da ricordare, è uno script che rifiuta.
     Nell'ordine:
-      1. aggiorna `docs/preamp/STATE.md` segnando **L7 fatto** e il lotto
+      1. aggiorna `docs/preamp/STATE.md` segnando **L8 fatto** e il lotto
          successivo come prossimo (la tabella deve dire `**fatto**`)
       2. riscrivi QUESTO file per il lotto successivo — se il titolo
-         nomina ancora L7, lo script rifiuta, ed è il controllo che
+         nomina ancora L8, lo script rifiuta, ed è il controllo che
          esiste apposta
       3. committa, pusha, apri la PR
-      4. `/bin/zsh scripts/chunk_close.sh L7`
+      4. `/bin/zsh scripts/chunk_close.sh L8`
          Verifica tutto, merghia, riallinea il checkout dell'utente e
          **rilegge da lì** per provare il riallineo. Se rifiuta, ha
          ragione: sistema e rilancia.

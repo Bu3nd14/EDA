@@ -65,15 +65,59 @@
 * number. Do not. The transcription is verified against the vendor PDF.
 *
 * ------------------------------------------------------------------
-* NOT YET CROSS-CHECKED AGAINST THE DATASHEET
+* CROSS-CHECKED AGAINST THE DATASHEET IN L7 - THE VERDICT IS MIXED
 * ------------------------------------------------------------------
 *
-* Step 4 of ADR-013 - comparing the transcribed I_DSS and V_P against
-* the datasheet limits - is L7 and HAS NOT BEEN DONE. The electrical
-* test in scripts/validate_models.py is a SMOKE test (it conducts at
-* Vgs=0, it is pinched off at Vgs=-3V), not a datasheet check. Until L7
-* closes, this model is transcribed and syntactically verified, not
-* validated against the part's published limits.
+* Step 4 of ADR-013 was done on 2026-09-09. Full record, with every
+* deck and all three independent legs, in
+* docs/preamp/reports/2026-09-09-L7-controllo-incrociato-lsk489.md.
+*
+* Measured AT THE DATASHEET'S OWN TEST CONDITIONS - which is half the
+* check, and the half L6 had explicitly left open - against LSK489A
+* window, datasheet RevA40 page 2, all at 25 C:
+*
+*   I_DSS      2.59283 mA  (VDG = 15 V, VGS = 0)
+*              window 2.5 / 5.5 / 8.5 mA
+*              -> INSIDE, but 3.7% above the minimum and 52.9% below
+*                 typical.
+*
+*   V_GS(off)  -1.124355 V (VDS = 15 V, I_D = 1 nA)
+*              window -1.5 V min, -3.5 V max
+*              -> OUTSIDE. 0.376 V short of the minimum magnitude, 25%.
+*
+*   V_GS       -0.650211 V (VDS = 15 V, I_D = 500 uA)
+*              window -0.5 / -3.5 V
+*              -> INSIDE.
+*
+* THIS IS NOT A TRANSCRIPTION ERROR, and that was measured rather than
+* argued. Inside the model I_DSS and V_P are not independent - Beta ties
+* them together. Holding the transcribed Beta = 2.2m and moving only
+* Vto: -1.13 V gives 2.593 mA, -1.50 V (the datasheet's own V_GS(off)
+* minimum) gives 4.392 mA, comfortably inside the A window. So the two
+* datasheet windows are mutually consistent and this model sits below
+* BOTH, coherently: ONE corner offset, not two independent errors. A
+* mis-transcribed Vto would have moved I_DSS and V_P in uncorrelated
+* directions. The discrepancy is between the vendor's SPICE model and
+* the vendor's own datasheet - not between the PDF and this file.
+*
+* WHAT IT MEANS: this model describes a LOW-I_DSS CORNER part, not a
+* typical one. Bias points computed with it in Fase 4 are a corner case;
+* real parts will show higher transconductance. Recorded as NC-013 in
+* docs/preamp/NONCOMPLIANCE.md (major, not blocking), closed by L20.
+* ADR-013 was NOT reopened: its "reopen if the cross-check does not
+* return" clause is about a wrong part or a wrong transcription, and
+* neither is the case here.
+*
+* THE DATASHEET REVISION QUESTION IS CLOSED, by dissolution: there is
+* only one revision and it is RevA40. The frozen PDF is NAMED
+* LSK489DSRevA38.pdf because that is the filename the manufacturer's
+* server sends, but its own footer says "Rev# A40, 04/12/2022" on all 7
+* pages. See vendor/jfet/linear_systems/LSK489/PROVENANCE-L7-addendum.json.
+*
+* The recipe in scripts/validate_models.py is no longer a smoke test: it
+* now measures all three at the datasheet's conditions and LOCKS them to
+* the values above. It does not claim datasheet conformance, because for
+* V_GS(off) there is none.
 
 .model LSK489A NJF(Beta=2.2m Betatce=-.5 Rd=11 Rs=30 Lambda=4.3m Vto=-1.13
 + Vtotc=-2.5m Is=3f Isr=0 N=1 Xti=0 Alpha=30u VK=120 Cgd=3.19p Mj=0.32 Pb=0.8 Fc=0.5
