@@ -9,9 +9,21 @@ tb_dc_headroom.cir - large-signal transfer, both gain modes, both rails
 * up as a curve, not as a guess.
 * Models are PLACEHOLDERS. Clipping levels depend on Vce(sat) and Vbe, which
 * a placeholder gets roughly right; the numbers are indicative, not verified.
+*
+* Path convention: see the comment in tb_op.cir (settled in L2). Reads use
+* @REPO@/<path-from-repo-root>; writes use a bare wrdata name.
+*
+* This deck is the ONE that writes TWO wrdata files, so the bare names
+* cannot both be <basename>_wrdata.txt. The mapping is not guessable from
+* the names, so it is stated here and on each mode below:
+*   tb_dc_headroom_wrdata.txt -> 0 dB mode   (relay open,   RRG = 1 Gohm)
+*   tb_dc_headroom_10db.txt   -> +10 dB mode (relay closed, RRG = 0.1 ohm)
+* run_simulation.sh converts the first via its primary path (that name is
+* what it looks for first) and the second via its second pass, which
+* converts every wrdata file the run produced.
 
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/placeholder_devices.lib
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
 
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15
@@ -30,11 +42,11 @@ RLOAD JACK 0 100k
 * ---------- 0 dB mode: relay open (RRG = 1 Gohm) ----------
 alter rrg = 1G
 dc VIN -14 14 0.05
-wrdata /Users/roberto/EDA/.claude/worktrees/preamp-fase1/results/preamp/dc_0db.txt v(OUT) v(D1N)-v(S1) v(D2N)-v(S2) v(NX) v(NY)
+wrdata tb_dc_headroom_wrdata.txt v(OUT) v(D1N)-v(S1) v(D2N)-v(S2) v(NX) v(NY)
 * ---------- +10 dB mode: relay closed (RRG = 0.1 ohm) ----------
 alter rrg = 0.1
 dc VIN -14 14 0.05
-wrdata /Users/roberto/EDA/.claude/worktrees/preamp-fase1/results/preamp/dc_10db.txt v(OUT) v(D1N)-v(S1) v(D2N)-v(S2) v(NX) v(NY)
+wrdata tb_dc_headroom_10db.txt v(OUT) v(D1N)-v(S1) v(D2N)-v(S2) v(NX) v(NY)
 .endc
 
 .end

@@ -107,30 +107,11 @@ else
     echo "   deck had no .control block; wrapped with .op + wrdata -> $RUN_DECK"
 fi
 
-cd "$OUTDIR"
-"$NGSPICE" -b "$RUN_DECK" > "$LOG" 2>&1
-rc=$?
-echo "   ngspice exit code: $rc (log: $LOG, $(wc -l < "$LOG" | tr -d ' ') lines)"
-
-# Convert whatever wrdata file was produced (deck's own path, or ours)
-# into CSV + JSON. Prefer an explicit wrdata target if the deck names
-# one under $OUTDIR; else fall back to $WRDATA.
-SRC_WRDATA=""
-if [ -f "$WRDATA" ] && [ -s "$WRDATA" ]; then
-    SRC_WRDATA="$WRDATA"
-else
-    # look for any *_out.txt / *wrdata* the deck's own .control may have written
-    cand=$(grep -io 'wrdata[[:space:]]\+[^[:space:]]\+' "$RUN_DECK" 2>/dev/null | awk '{print $2}' | head -1)
-    if [ -n "$cand" ] && [ -f "$cand" ]; then
-        SRC_WRDATA="$cand"
-    elif [ -n "$cand" ] && [ -f "$OUTDIR/$cand" ]; then
-        SRC_WRDATA="$OUTDIR/$cand"
-    fi
-fi
-
-if [ -n "$SRC_WRDATA" ] && [ -s "$SRC_WRDATA" ]; then
-    echo "   found wrdata output: $SRC_WRDATA"
-    /usr/bin/python3 - "$SRC_WRDATA" "$CSV" "$JSON" "$NETLIST_ABS" "$rc" <<'PYEOF'
+# One converter, used by both the primary path and the second pass below.
+# Same logic as before it was a function - only the call sites changed.
+convert_wrdata() {
+    local src="$1" out_csv="$2" out_json="$3"
+    /usr/bin/python3 - "$src" "$out_csv" "$out_json" "$NETLIST_ABS" "$rc" <<'PYEOF'
 import sys, csv, json
 
 wrdata_path, csv_path, json_path, netlist, rc = sys.argv[1:6]
@@ -164,6 +145,41 @@ with open(json_path, "w") as f:
 print(f"   wrote {csv_path} ({len(rows)} rows)")
 print(f"   wrote {json_path}")
 PYEOF
+}
+
+# Marker, dropped before ngspice runs: the second pass converts only the
+# files THIS run produced, never .txt debris an earlier run left in
+# $OUTDIR. Timestamps and not a before/after file list, because a re-run
+# overwrites its own output and a list-based check would then skip it.
+# Verified, not assumed: mtimes are nanosecond on APFS and `find -newer`
+# separated two files created 126 us apart.
+MARKER="$OUTDIR/.run_marker"
+: > "$MARKER"
+
+cd "$OUTDIR"
+"$NGSPICE" -b "$RUN_DECK" > "$LOG" 2>&1
+rc=$?
+echo "   ngspice exit code: $rc (log: $LOG, $(wc -l < "$LOG" | tr -d ' ') lines)"
+
+# Convert whatever wrdata file was produced (deck's own path, or ours)
+# into CSV + JSON. Prefer an explicit wrdata target if the deck names
+# one under $OUTDIR; else fall back to $WRDATA.
+SRC_WRDATA=""
+if [ -f "$WRDATA" ] && [ -s "$WRDATA" ]; then
+    SRC_WRDATA="$WRDATA"
+else
+    # look for any *_out.txt / *wrdata* the deck's own .control may have written
+    cand=$(grep -io 'wrdata[[:space:]]\+[^[:space:]]\+' "$RUN_DECK" 2>/dev/null | awk '{print $2}' | head -1)
+    if [ -n "$cand" ] && [ -f "$cand" ]; then
+        SRC_WRDATA="$cand"
+    elif [ -n "$cand" ] && [ -f "$OUTDIR/$cand" ]; then
+        SRC_WRDATA="$OUTDIR/$cand"
+    fi
+fi
+
+if [ -n "$SRC_WRDATA" ] && [ -s "$SRC_WRDATA" ]; then
+    echo "   found wrdata output: $SRC_WRDATA"
+    convert_wrdata "$SRC_WRDATA" "$CSV" "$JSON"
 else
     echo "   WARNING: no wrdata output found/produced; writing rc-only JSON" >&2
     /usr/bin/python3 -c "
@@ -171,6 +187,33 @@ import json
 json.dump({'netlist': '$NETLIST_ABS', 'returncode': $rc, 'rows': 0, 'columns': [], 'data': [], 'warning': 'no wrdata output found'}, open('$JSON', 'w'), indent=2)
 "
 fi
+
+# Second pass: every OTHER wrdata file this run produced, written as
+# <stem>.csv / <stem>.json. The primary above only ever converts ONE file,
+# because the fallback does `grep ... | head -1` - so a deck with two
+# wrdata lines (tb_dc_headroom.cir) silently lost the second one.
+#
+# Why this looks at produced FILES and not at the deck text: a wrdata name
+# written inside a `foreach` is parameterised, so the deck holds the
+# UNEXPANDED name and no grep can recover the real one. tb_ac.cir will
+# write 8 curves out of one loop (L5).
+extra=0
+for f in $(find "$OUTDIR" -maxdepth 1 -type f -name '*.txt' -newer "$MARKER" 2>/dev/null | sort); do
+    [ -s "$f" ] || continue
+    # skip the primary, whichever path form it was found under
+    if [ -n "$SRC_WRDATA" ] && [ "${f:t}" = "${SRC_WRDATA:t}" ]; then
+        continue
+    fi
+    stem="${f:t:r}"
+    echo "   additional wrdata output: $f"
+    convert_wrdata "$f" "$OUTDIR/${stem}.csv" "$OUTDIR/${stem}.json"
+    extra=$((extra + 1))
+done
+if [ "$extra" -gt 0 ]; then
+    echo "   second pass converted $extra additional wrdata file(s)"
+fi
+
+rm -f "$MARKER"
 
 echo "== run_simulation.sh done (ngspice rc=$rc) =="
 exit $rc

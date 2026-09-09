@@ -16,8 +16,8 @@ tb_loop.cir - loop gain and phase margin, V1 matrix (gain mode x capacitive load
 * magnitude, not fitted to a datasheet. This deck exists so the design is not
 * flying blind; measurement-analyst must re-run it against vendor models.
 
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/placeholder_devices.lib
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
 
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15

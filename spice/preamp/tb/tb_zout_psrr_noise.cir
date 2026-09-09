@@ -13,8 +13,8 @@ tb_zout_psrr_noise.cir - E4 (Zout), PSRR, and E5 (output noise)
 * mirror/VAS flicker noise are missing. Treat the result as "the thermal and
 * shot noise alone are already this far below target", nothing more.
 
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/placeholder_devices.lib
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
 
 VPP VPLUS NPP DC 0 AC 0
 VPRAIL NPP 0 DC 15

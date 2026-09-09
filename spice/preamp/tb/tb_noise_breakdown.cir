@@ -5,8 +5,8 @@ tb_noise_breakdown.cir - which devices actually make the noise (E5)
 * REMINDER: placeholder_devices.lib has KF = 0 everywhere. There is NO 1/f
 * noise in any of this. These are thermal + shot noise only, i.e. a FLOOR.
 
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/placeholder_devices.lib
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
 
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15

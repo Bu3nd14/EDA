@@ -9,8 +9,8 @@ tb_loop_blockA.cir - loop gain of BLOCK A, loaded exactly as ADR-008 wires it
 * Gain relay not fitted (ADR-006): unity gain, RG left open.
 * PROVISIONAL - placeholder device models, see tb_loop.cir header.
 
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/placeholder_devices.lib
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
 
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15

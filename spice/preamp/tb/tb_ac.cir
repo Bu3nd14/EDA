@@ -9,8 +9,8 @@ tb_ac.cir - closed-loop response over the V1 source/load/mode matrix
 * Also covers: phono cathode follower (430 ohm), K11 (1.5 ohm), and the
 * low-frequency corner set by the 4.7 uF output cap (E8/ADR-007).
 
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/placeholder_devices.lib
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
 
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15

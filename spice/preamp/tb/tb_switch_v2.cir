@@ -15,8 +15,8 @@ tb_switch_v2.cir - V2: the feedback loop must never open during gain switching
 * tb_switch_v2_counterfactual.cir - run both, they are only meaningful
 * together.
 
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/placeholder_devices.lib
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
 
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15
@@ -39,7 +39,7 @@ RLOAD  JACK 0 100k
 
 .control
 tran 2u 40m 0 2u
-wrdata /Users/roberto/EDA/.claude/worktrees/preamp-fase1/results/preamp/switch_v2.txt v(OUT) v(JACK) v(NX) v(NY) v(CTRL) v(FB)
+wrdata tb_switch_v2_wrdata.txt v(OUT) v(JACK) v(NX) v(NY) v(CTRL) v(FB)
 let vmax = maximum(v(OUT))
 let vmin = minimum(v(OUT))
 let nxmax = maximum(v(NX))
