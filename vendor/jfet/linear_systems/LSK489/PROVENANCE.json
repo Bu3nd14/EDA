@@ -1,0 +1,41 @@
+{
+  "part_name": "LSK489 / LSK489A (dual monolithic N-channel JFET)",
+  "vendor_name": "Linear Systems (Linear Integrated Systems, Inc.)",
+  "device_class": "jfet",
+  "product_page": "https://www.linearsystems.com/jfet-amplifiers-duals/lsk489-series",
+  "date_obtained": "2026-09-09",
+  "obtained_by": "AI agent (Claude Opus 5, session https://claude.ai/code/session_01BagWDrjzEL25bQ6eLmx9pG) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from the manufacturer's own product page (linearsystems.com), not from a distributor mirror. Both files are byte-for-byte as served; nothing was converted, re-saved or edited.",
+  "license_notes": "Manufacturer datasheet and manufacturer-published SPICE model, redistributed here unmodified for engineering traceability only. Copyright remains Linear Integrated Systems, Inc.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "LSK489DSRevA38.pdf",
+      "role": "datasheet",
+      "url": "https://www.linearsystems.com/_files/ugd/7e8069_0e97881584d2424baa3f3ad67a624446.pdf",
+      "served_content_disposition": "inline; filename=\"LSK489DSRevA38.pdf\"",
+      "served_content_type": "application/pdf",
+      "bytes": 530957,
+      "pages": 7,
+      "sha256": "f5c359ba70088bb70f3aa75d89f67d0b69db0c49694547173f63edc3eab0096b",
+      "local_filename": "LSK489DSRevA38.pdf",
+      "renamed": false
+    },
+    {
+      "original_filename": "Copy_LSK489A NJF.pdf",
+      "role": "spice_model",
+      "url": "https://www.linearsystems.com/_files/ugd/7e8069_668879111342422cbdbc172d1d2d9d75.pdf",
+      "served_content_disposition": "inline; filename=\"Copy_LSK489A%20NJF.pdf\"",
+      "served_content_type": "application/pdf",
+      "bytes": 27178,
+      "pages": 1,
+      "sha256": "27c209bf0b8d6344092e2e83c02f13853884231ba736cc3f916f9269fa3d7778",
+      "local_filename": "Copy_LSK489A_NJF.pdf",
+      "renamed": true,
+      "rename_note": "The space in the served filename was replaced with an underscore for the local copy. The FILE CONTENT is unmodified - the sha256 above is the hash of exactly what the server sent."
+    }
+  ],
+  "revision_note": "The manufacturer's own product page serves datasheet revision RevA38. Mouser serves a NEWER revision of the same datasheet (RevA40, dated 04/12/2022). This repo froze the manufacturer's copy, which is the authoritative source. L7 (step 4 of ADR-013) MUST confirm that the I_DSS / V_P limits did not change between RevA38 and RevA40 before cross-checking the transcribed model against them.",
+  "why_a_pdf_and_not_a_lib": "Linear Systems distributes the SPICE model as a PDF containing the .MODEL text, not as a .lib file. ADR-013 accepted the resulting manual-transcription burden explicitly; the transcription and its two independent readings are recorded in docs/preamp/reports/2026-09-09-L6-trascrizione-lsk489.md and the derived model lives at models/jfet/lsk489.lib."
+}

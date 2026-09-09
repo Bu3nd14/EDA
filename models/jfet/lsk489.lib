@@ -1,0 +1,80 @@
+* lsk489.lib - Linear Systems LSK489, dual monolithic N-channel JFET.
+* VENDOR MODEL, TRANSCRIBED BY HAND FROM A VENDOR PDF (ADR-013).
+*
+* USAGE:
+*   .include models/jfet/lsk489.lib
+*   J1 drain gate source LSK489A
+*
+* The LSK489 is a DUAL: one package holds two matched devices on the
+* same die. This file provides the model for ONE device - instantiate it
+* twice for a pair. There is no KiCad symbol for the dual yet (L10).
+*
+* ------------------------------------------------------------------
+* PROVENANCE - the short version. The full story is in
+* models/jfet/lsk489.provenance.json and in
+* docs/preamp/reports/2026-09-09-L6-trascrizione-lsk489.md
+* ------------------------------------------------------------------
+*
+* Linear Systems publishes this model as a PDF containing the .MODEL
+* text, not as a .lib. ADR-013 accepted that transcription burden
+* knowingly and made the method binding: TWO INDEPENDENT READINGS THAT
+* MUST AGREE. Both were done on the frozen copy at
+* vendor/jfet/linear_systems/LSK489/Copy_LSK489A_NJF.pdf and came out
+* byte-identical (a third, pdftotext, agreed too).
+*
+* The vendor line, VERBATIM, is:
+*
+*   .model LSK489A NJF(Beta=2.2m Betatce=-.5 Rd=11 Rs=30 Lambda=4.3m Vto=-1.13
+*   Vtotc=-2.5m Is=3f Isr=0 N=1 Xti=0 Alpha=30u VK=120 Cgd=3.19p Mj=0.32 Pb=0.8 Fc=0.5
+*   Cgs=2.92p Kf=0.0009f Af=1 Gdsnoi=2.15 Nlev=3 Mfg=Linear_Systems)
+*
+* ONE thing was removed, and only one: Mfg=Linear_Systems. ngspice does
+* not know that parameter, evaluates the value as an expression, and
+* dies - "Undefined parameter [linear_systems]", "ERROR: fatal error in
+* ngspice". That failure is LOUD, not silent. Nothing else was changed:
+* no value was rounded, reordered or "corrected".
+*
+* FOUR parameters below are accepted by ngspice and then IGNORED, with a
+* warning on every run: isr, alpha, vk, mj. They are PSpice/LTspice
+* refinements of the gate junction and the saturation current. They are
+* kept deliberately - the diff from the vendor text stays minimal, and a
+* simulator that does support them gets the vendor's own values. The
+* warnings are expected output, not a defect to chase.
+*
+* The parameters that matter for NC-004 - Kf, Af, Nlev, Gdsnoi - ARE
+* accepted. That is the whole point of this file: the placeholder models
+* in spice/preamp/placeholder_devices.lib have KF = 0, so they have no
+* 1/f noise at all and every noise figure taken from them is a floor,
+* not a prediction.
+*
+* ------------------------------------------------------------------
+* SUFFIXES: docs/limitations.md #13 does NOT bite here - checked
+* ------------------------------------------------------------------
+*
+* #13 is that "1M" means 1 megohm in KiCad and 1 milliohm in SPICE, six
+* orders of magnitude with no error from either tool. Every suffix in
+* this model was checked against it and every one is unambiguous:
+*
+*   2.2m  4.3m  -2.5m   -> milli in both conventions
+*   3f    0.0009f       -> femto
+*   3.19p 2.92p         -> pico
+*   30u                 -> micro
+*
+* This is written down precisely BECAUSE the values are right: this is
+* the spot where a later reader, remembering #13, would "fix" a correct
+* number. Do not. The transcription is verified against the vendor PDF.
+*
+* ------------------------------------------------------------------
+* NOT YET CROSS-CHECKED AGAINST THE DATASHEET
+* ------------------------------------------------------------------
+*
+* Step 4 of ADR-013 - comparing the transcribed I_DSS and V_P against
+* the datasheet limits - is L7 and HAS NOT BEEN DONE. The electrical
+* test in scripts/validate_models.py is a SMOKE test (it conducts at
+* Vgs=0, it is pinched off at Vgs=-3V), not a datasheet check. Until L7
+* closes, this model is transcribed and syntactically verified, not
+* validated against the part's published limits.
+
+.model LSK489A NJF(Beta=2.2m Betatce=-.5 Rd=11 Rs=30 Lambda=4.3m Vto=-1.13
++ Vtotc=-2.5m Is=3f Isr=0 N=1 Xti=0 Alpha=30u VK=120 Cgd=3.19p Mj=0.32 Pb=0.8 Fc=0.5
++ Cgs=2.92p Kf=0.0009f Af=1 Gdsnoi=2.15 Nlev=3)

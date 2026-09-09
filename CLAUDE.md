@@ -104,6 +104,7 @@ memoria o dedotto dal `PATH`.
 | Footprint KiCad | `/Users/roberto/Applications/KiCad.app/Contents/SharedSupport/footprints` |
 | Freerouting | `/Users/roberto/EDA/scripts/tools/freerouting.jar` |
 | java (per Freerouting) | `/opt/homebrew/opt/openjdk/bin/java` |
+| pdftotext (poppler 26.09.0) | `/opt/homebrew/bin/pdftotext` |
 
 **I due interpreti non sono intercambiabili.** SKiDL gira solo sul venv
 3.13; `pcbnew` e `kinet2pcb` girano solo sul Python 3.9 interno a KiCad.
@@ -121,7 +122,7 @@ espliciti (vedi `smoke/run_pipeline.sh`).
 # + una run_simulation reale + verifica presenza artefatti smoke.
 /bin/zsh /Users/roberto/EDA/scripts/run_tests.sh
 
-# Libreria modelli: 24/24 check, ngspice reale + re-hash della provenance.
+# Libreria modelli: 26/26 check, ngspice reale + re-hash della provenance.
 /usr/bin/python3 /Users/roberto/EDA/scripts/validate_models.py
 /usr/bin/python3 /Users/roberto/EDA/scripts/validate_models.py --check-provenance
 

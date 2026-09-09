@@ -21,6 +21,7 @@ evidence.
 | Python (KiCad bundled) | 3.9.13 | `/Users/roberto/Applications/KiCad.app/Contents/Frameworks/Python.framework/Versions/3.9/bin/python3.9` | The **only** interpreter where `import pcbnew` works. `pcbnew` is not pip-installable. |
 | kinet2pcb | (per bundled install) | installed into the bundled python3.9 via `--user pip install` | Not installed in the venv. |
 | Freerouting | 2.4.1 | `/Users/roberto/EDA/scripts/tools/freerouting.jar` | External autorouter. Needs a JRE (`brew install openjdk`). |
+| poppler (`pdftotext`) | 26.09.0 | `/opt/homebrew/bin/pdftotext` | Native arm64 (`file` → "Mach-O 64-bit executable arm64"). Installed via `brew install poppler` in L6. Reads vendor datasheet PDFs past page 1, which `sips`/`qlmanage` cannot. **No script requires it**, so `verify_env.sh` does not check for it: `scripts/pdf_glyphs.py` is the stdlib-only fallback. |
 
 ## Installation procedure (as actually done)
 
@@ -40,6 +41,10 @@ evidence.
 5. **Freerouting**: `freerouting.jar` placed at `scripts/tools/freerouting.jar`.
    Requires a JRE: `brew install openjdk`, then invoke with
    `PATH="/opt/homebrew/opt/openjdk/bin:$PATH" java -jar scripts/tools/freerouting.jar ...`.
+6. **poppler**: `brew install poppler` (added in L6). Only needed to read
+   vendor datasheet PDFs beyond the first page — macOS ships `sips` and
+   `qlmanage`, which render page 1 only. No script in this repo depends on
+   it; `scripts/pdf_glyphs.py` covers the text case with the stdlib alone.
 
 ## Architecture: selected stack and rejected alternatives
 
@@ -137,7 +142,7 @@ fc = 1587.62 Hz, error 0.25%.
 **Model library**: `models/` contains curated device models (resistor,
 capacitor, inductor, diode, BJT NPN/PNP, MOSFET N/P, JFET, opamp macro-model,
 generic transformer subckt), each validated by
-`scripts/validate_models.py` against a real ngspice testbench (24/24 checks
+`scripts/validate_models.py` against a real ngspice testbench (26/26 checks
 passing at last verification). The R/C/L/transformer/opamp checks are exact
 analytic cross-checks; the BJT/MOSFET/JFET checks are order-of-magnitude
 sanity checks only, not exact — see Limitations #11. The validator was
@@ -223,6 +228,8 @@ documentation, so their internals are not described here beyond intent:
 | `scripts/run_drc.sh <pcb> [outjson]` | Run `kicad-cli pcb drc` and emit JSON. |
 | `scripts/export_fab.sh <pcb> [outdir]` | Export gerbers/drill; **refuses to export if DRC fails.** |
 | `scripts/check_schematic.py <manifest.json> <netlist.cir>` | Verify a hand-laid-out schematic drawing against the netlist, in both directions. Exit 1 on any mismatch. |
+| `scripts/pdf_glyphs.py <file.pdf> [--offset N\|--scan\|--raw]` | Extract text from a PDF with the stdlib only (zlib + the text operators). The mechanical half of the two-independent-readings rule ADR-013 imposes on hand-transcribed vendor models. Not a general-purpose extractor — see its header. |
+| `scripts/freeze_vendor.sh` | Set every file under `vendor/` to mode 0444. Idempotent. |
 
 `TODO: unverified` — confirm the final invocation syntax/flags of the above
 against the actual script contents once they land; this table reflects the
@@ -295,7 +302,7 @@ See `docs/smoke-test.md` for per-stage evidence (exact JSON/CSV values).
 ## Reproducing the tests
 
 ```sh
-# Model library validation (24/24 checks)
+# Model library validation (26/26 checks)
 /usr/bin/python3 /Users/roberto/EDA/scripts/validate_models.py
 
 # Individual SPICE testbenches

@@ -33,7 +33,13 @@ import os
 import subprocess
 import sys
 
-ROOT = "/Users/roberto/EDA"
+# Derived from this file's own location, never hard-coded. Hard-coded it
+# was, and run from an isolated copy of the repo it silently validated
+# the MAIN checkout's models/ instead of the branch's: a green suite that
+# had not looked at the work under test. Found in L6 by adding a model
+# and watching it fail to appear in the report. Same family as ROOT in
+# run_tests.sh, run_simulation.sh and freeze_vendor.sh.
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODELS_DIR = os.path.join(ROOT, "models")
 VENDOR_DIR = os.path.join(ROOT, "vendor")
 SCRATCH_DIR = os.path.join(ROOT, "results", "model_validation")
@@ -364,6 +370,53 @@ wrdata {csv} i(Vdd) i(Vdd2)
     return cir, csv, 2, check
 
 
+def tb_lsk489(model_file):
+    """SMOKE test for the transcribed LSK489 vendor model - NOT a
+    datasheet check.
+
+    Level is deliberate. Comparing the transcribed I_DSS / V_P against
+    the datasheet limits is step 4 of ADR-013, i.e. L7, and it is the
+    step at which the transcription can turn out to be WRONG. Folding it
+    in here would erase the reason the two lotti are separate: if the
+    cross-check fails, the work is to go back to the transcription, not
+    to carry on.
+
+    So this asks the same question tb_jfet() asks of the generic part:
+    does it conduct at Vgs = 0 and is it pinched off well below Vto
+    (-1.13 V here, so -3 V is comfortably off)?
+
+    ngspice emits four "unrecognized parameter ... ignored" warnings for
+    isr/alpha/vk/mj on every run. They are expected - see the header of
+    models/jfet/lsk489.lib - and do not affect the exit code.
+    """
+    csv = os.path.join(SCRATCH_DIR, "jfet_lsk489.csv")
+    cir = f"""* validate lsk489.lib (vendor LSK489A, JFET on/off SMOKE test)
+.include {model_file}
+Vdd d1 0 DC 5
+Vgs1 g1 0 DC 0
+J1 d1 g1 0 LSK489A
+Vdd2 d2 0 DC 5
+Vgs2 g2 0 DC -3
+J2 d2 g2 0 LSK489A
+.control
+op
+wrdata {csv} i(Vdd) i(Vdd2)
+.endc
+.end
+"""
+    def check(rows):
+        if len(rows) != 1:
+            return False, f"expected 1 op-point row, got {len(rows)}"
+        i_on = abs(rows[0]["y0"])   # Vgs=0, above pinch-off (Vto=-1.13) -> on
+        i_off = abs(rows[0]["y1"])  # Vgs=-3, below pinch-off -> off
+        ok = i_off < 1e-6 and i_on > 1e-4 and i_on > 100 * i_off
+        if ok:
+            return True, (f"I(Vgs=0, on)={i_on:.3e}A, I(Vgs=-3V, pinched off)="
+                          f"{i_off:.3e}A [smoke only - datasheet cross-check is L7]")
+        return False, f"I_on={i_on:.3e}A, I_off={i_off:.3e}A - LSK489A pinch-off behavior not as expected"
+    return cir, csv, 2, check
+
+
 def tb_opamp(model_file):
     csv = os.path.join(SCRATCH_DIR, "opamp_generic.csv")
     cir = f"""* validate generic_opamp.lib (unity-gain buffer)
@@ -434,6 +487,7 @@ def build_registry():
     reg["mosfet_n/generic_nmos.lib"] = lambda p: tb_mosfet(p, "generic_nmos", "MNGEN", "n")
     reg["mosfet_p/generic_pmos.lib"] = lambda p: tb_mosfet(p, "generic_pmos", "MPGEN", "p")
     reg["jfet/generic_njf.lib"] = lambda p: tb_jfet(p)
+    reg["jfet/lsk489.lib"] = lambda p: tb_lsk489(p)
     reg["opamp/generic_opamp.lib"] = lambda p: tb_opamp(p)
     reg["subckt_generic/generic_transformer.lib"] = lambda p: tb_transformer(p)
     return reg
