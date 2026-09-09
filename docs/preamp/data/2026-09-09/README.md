@@ -2,7 +2,8 @@
 
 Questa directory raccoglie i dati **curati** prodotti il 2026-09-09 da due
 lotti: il controfattuale del relè di guadagno (**L4**) e le risposte in
-frequenza, il guadagno d'anello, il PSRR e la Z_out (**L5**).
+frequenza, il guadagno d'anello, il PSRR e la Z_out (**L5**). **L5e** ha
+poi aggiunto i carichi del Blocco A, l'evidenza di NC-010.
 
 Tutti i numeri vengono da **modelli segnaposto**
 (`spice/preamp/placeholder_devices.lib`). Cosa si può citare e cosa no è
@@ -19,6 +20,7 @@ detto in fondo, sezione *Provenienza e limite*.
 | PSRR dei due rail | `tb_zout_psrr_noise_psrr*` | L5 · **rifatto in L5b** |
 | Punti di lavoro | `tb_op.*` | L5b |
 | Escursione in continua e saturazione | `tb_dc_headroom*` | L5b |
+| **Carichi del Blocco A** (NC-010) | `tb_blockA_carichi*` | **L5e** |
 
 **Il rumore non è qui, di proposito.** I deck lo producono (L5 ne scrive gli
 spettri in `results/`), ma `KF = 0` su ogni dispositivo segnaposto: non c'è
@@ -333,3 +335,90 @@ arriva a **+13,2 V**. Il ramo negativo è invece limitato dallo stadio
 d'uscita e coincide quasi nelle due modalità. È una proprietà della
 topologia; i valori esatti dipendono dal modello del JFET, che è
 segnaposto.
+
+---
+
+## Carichi del Blocco A — `tb_blockA_carichi*`
+
+Evidenza di **NC-010**, prodotta in **L5e** da
+`spice/preamp/tb/tb_blockA_carichi.cir`.
+
+**La domanda.** Il Blocco A pilota **tre carichi in parallelo** senza
+isolamento reciproco (ADR-008): l'attenuatore da 10 kΩ e le due uscite
+fisse, ciascuna 47 Ω + 4,7 µF + 470 kΩ di scarico. Se un apparecchio a
+valle di una fissa si spegne e la sua impedenza d'ingresso crolla, cosa
+succede al Blocco A? Non è una domanda ipotetica: **V1 elenca il Singxer
+con «Zin ignota»** fra i carichi da coprire, e nessuna misura lo copriva.
+
+Livello 2,7 V RMS a 1 kHz (E6, cioè 3,818 V di picco), Blocco A a
+guadagno unitario. `RJ1` — l'impedenza a valle della fissa 1 — è spazzata
+su sei valori; il nome del file porta il valore in ohm.
+
+| File | Colonne |
+|---|---|
+| `tb_blockA_carichi_<RJ1>.csv` | col0 tempo [s] · col1 `I_C(Q134)` [A] · col3 `I_C(Q135)` [A] · col5 `v(OUT)` [V] |
+| `tb_blockA_carichi_ac_<RJ1>.csv` | col0 frequenza [Hz] · col1 `vdb(OUT)` · col3 `vdb(J1)` |
+
+Le colonne pari sono lo scale ripetuto. `Q134` è l'NPN d'uscita, `Q135` il
+PNP: la sua I_C **esce**, quindi ha segno negativo. **Classe A ⟺
+`I_C(Q134)` resta > 0 e `I_C(Q135)` resta < 0 per tutto il periodo**: se
+uno dei due tocca lo zero, quel dispositivo si è interdetto e lo stadio
+sta lavorando in Classe B.
+
+### Il risultato, e c'è una soglia
+
+| RJ1 | I_C(Q134) max | I_C(Q134) **min** | I_C(Q135) **max** | Regime |
+|---|---|---|---|---|
+| 470 kΩ (normale) | 14,759 mA | **14,352 mA** | −14,376 mA | **Classe A** |
+| 10 kΩ | 14,943 mA | 14,167 mA | −14,194 mA | Classe A |
+| 1 kΩ | 16,552 mA | 12,524 mA | −12,621 mA | Classe A |
+| 100 Ω | 27,956 mA | **2,396 mA** | −2,569 mA | Classe A, ma il margine è quasi finito |
+| 10 Ω | 57,258 mA | **−0,23 µA** | +0,26 µA | **Classe B** |
+| 0,01 Ω | 65,456 mA | **−0,34 µA** | +0,42 µA | **Classe B** |
+
+La soglia sta **fra 100 Ω e 10 Ω** di impedenza a valle. Il carico che lo
+stadio vede è `RSEP + RJ1` in serie (47 Ω più l'impedenza a valle), quindi
+il numero che conta per un vincolo di progetto è la **serie**: a ~147 Ω lo
+stadio è ancora in Classe A col 16% della corrente di riposo come margine,
+a ~57 Ω non lo è più.
+
+Il picco a `RJ1 = 0,01 Ω` — **65,46 mA** — è lo stesso ordine dei
+**65,07 mA** che NC-001 misura per il mute a 0 dB. Stessa causa fisica (un
+carico da qualche decina di ohm sul nodo d'uscita), due vie
+d'ingresso diverse: **il rimedio pensato per NC-001 non copre questa.**
+
+### La metà che la misura NON conferma
+
+L'osservazione da cui nasce questa voce aveva una seconda parte: che il
+carico di un ramo **modula il segnale** che entra nell'attenuatore del
+volume. I file `_ac_` la misurano, ed è **trascurabile**:
+
+| Frequenza | Scarto di livello su `v(OUT)`, fissa 470 kΩ → in corto |
+|---|---|
+| 20 Hz | 0,000 dB |
+| 1 kHz | **−0,0034 dB** |
+| 20 kHz | −0,0056 dB |
+| 100 kHz | −0,0166 dB |
+
+L'anello chiuso del Blocco A tiene il nodo: il livello praticamente non si
+muove. Va detto per intero, perché è la parte dell'osservazione che i dati
+**non** sostengono.
+
+Ma «il livello non si muove» non vuol dire «il ramo è innocuo», e la
+distinzione è il punto: il danno non è sul livello, è sul **regime di
+lavoro**. Una spazzata AC di piccolo segnale non può vedere la Classe B,
+e la distorsione che ne deriva non è calcolabile da questa libreria di
+modelli segnaposto. Quel numero arriverà coi modelli vendor (L6-L7).
+
+### Come è stato verificato
+
+Passo del transitorio **5 µs** su una finestra di 2 ms, dopo 3 ms di
+assestamento: 401 righe per file. Confrontato con una run a 2 µs, i valori
+coincidono fino alla quinta-sesta cifra (`q134max` 1,475863e-02 contro
+1,475864e-02; nel caso estremo 6,545587e-02 contro 6,545345e-02, cioè la
+quarta cifra).
+
+Ogni numero della tabella qui sopra è stato **ricalcolato dal CSV
+versionato** e confrontato con il `meas` che ngspice ha stampato da sé nel
+`.log`: coincidono su tutte le cifre stampate. Sono le due strade
+indipendenti verso lo stesso numero che il generatore del dossier pretende.

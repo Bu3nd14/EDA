@@ -5,8 +5,9 @@ chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
 Ultimo aggiornamento: **2026-09-09** (creato in L3c; **G0 eseguito in
-L5d**: 8 voci aperte, 2 bloccanti. **L'accesso a G1 non è concesso**
-finché NC-001 e NC-004 restano aperte)
+L5d**; **revisione umana del dossier in L5e**: 12 voci aperte, 3
+bloccanti. **L'accesso a G1 non è concesso** finché NC-001, NC-004 e
+NC-010 restano aperte)
 
 ---
 
@@ -43,8 +44,11 @@ ADR e **i disegni che rappresentano il circuito**. Non i banchi di prova,
 non gli script, non la toolchain: se il revisore ci inciampa lo annota
 sotto «osservazioni fuori scope» e non apre una non conformità.
 
-Le sei domande, il perché della sesta e cosa blocca una voce bloccante
-stanno in `../../AGENTS.md`, sezione **G0**. Qui sta solo l'effetto: una
+Le sette domande, il perché della sesta e della settima, e cosa blocca una
+voce bloccante stanno in `../../AGENTS.md`, sezione **G0**. La settima è
+stata aggiunta in L5e: la prima esecuzione di G0 ha dimostrato che le
+domande di confronto trovano le affermazioni **false** e non le
+**omissioni di giudizio** — vedi NC-010. Qui sta solo l'effetto: una
 voce **bloccante** aperta a G0 impedisce l'accesso a **G1**, e si chiude o
 con una modifica del circuito o con una ADR che accetti lo scostamento
 consapevolmente e per iscritto.
@@ -80,13 +84,26 @@ apribile non è una non conformità, è un'opinione.
 
 ## Voci aperte
 
-Aperte tutte da `reports/2026-09-09-gate-G0.md`, il primo gate eseguito
-(L5d, 2026-09-09). Otto voci: **2 bloccanti, 1 maggiore, 5 minori**.
-**L'accesso a G1 non è concesso** finché NC-001 e NC-004 restano aperte.
+Dodici voci, da **due** revisioni distinte:
 
-I numeri riportati qui sono stati **rieseguiti dall'orchestratore** prima
-di essere trascritti: la riesecuzione sta in fondo a quel report, sezione
-«Verifica dell'orchestratore».
+- **NC-001 … NC-008** da `reports/2026-09-09-gate-G0.md`, il primo gate
+  eseguito (L5d): 2 bloccanti, 1 maggiore, 5 minori.
+- **NC-009 … NC-012** da `reports/2026-09-09-revisione-utente-dossier.md`,
+  la revisione umana del dossier (L5e): 1 bloccante, 3 maggiori.
+
+In tutto: **3 bloccanti, 4 maggiori, 5 minori**. **L'accesso a G1 non è
+concesso** finché NC-001, NC-004 e NC-010 restano aperte.
+
+Le due revisioni non si sovrappongono per caso: G0 giudica incrociando
+affermazioni con sorgenti e trova le **affermazioni false**; la revisione
+umana vede ciò che il progetto **presenta come normale** e che nessuna
+sorgente del repo contraddice. NC-010 è della seconda specie, ed è il
+motivo per cui il controllo cieco su G0 era stato allestito.
+
+I numeri riportati qui sono stati **rieseguiti** prima di essere
+trascritti: per NC-001…NC-008 la riesecuzione sta in fondo al report di
+G0, sezione «Verifica dell'orchestratore»; per NC-009…NC-012 sta nel
+report di L5e, che riporta ogni misura col file da cui viene.
 
 ### NC-001 — Il mute in derivazione porta lo stadio d'uscita fuori dalla Classe A
 
@@ -174,6 +191,69 @@ coi 10 µV di E5 nel caso peggiore (blocco B a +10 dB, sorgente 2,5 kΩ), e
 la provenienza di ogni modello dichiarata accanto alla cifra, come V4
 richiede.
 
+### NC-010 — Le uscite fisse non sono isolate: un apparecchio spento a valle porta il Blocco A in Classe B
+
+| | |
+|---|---|
+| Requisito | **T1**/ADR-003 (Classe A pura) · **V1** (carico «Singxer (Zin ignota)») · F3/ADR-008 |
+| Severità | **bloccante** |
+| Aperta da | `reports/2026-09-09-revisione-utente-dossier.md` |
+| Stato | aperta |
+
+**Evidenza.** Il Blocco A pilota **tre carichi in parallelo** senza
+isolamento reciproco: l'attenuatore da 10 kΩ e le due uscite a livello
+fisso, ciascuna 47 Ω + 4,7 µF + 470 kΩ di scarico
+(`circuits/preamp/preamp_audio.py`, righe 123-140). Il suo nodo di
+controreazione **è** il nodo che li pilota tutti.
+
+Se l'apparecchio a valle di una fissa si spegne e la sua impedenza
+d'ingresso crolla, quel ramo diventa un carico da qualche decina di ohm
+sul nodo d'uscita. Da
+`docs/preamp/data/2026-09-09/tb_blockA_carichi_*.csv`, Blocco A a guadagno
+unitario con 2,7 V RMS a 1 kHz (E6):
+
+| Impedenza a valle | I_C(Q134) max | I_C(Q134) **min** | Regime |
+|---|---|---|---|
+| 470 kΩ (normale) | 14,759 mA | **14,352 mA** | **Classe A** |
+| 1 kΩ | 16,552 mA | 12,524 mA | Classe A |
+| 100 Ω | 27,956 mA | **2,396 mA** | Classe A, margine quasi finito |
+| 10 Ω | 57,258 mA | **−0,23 µA** | **Classe B** |
+| 0,01 Ω | 65,456 mA | **−0,34 µA** | **Classe B** |
+
+I due dispositivi d'uscita si interdicono a turno: lo stadio esce dalla
+Classe A pura, che è **T1**. La soglia sta fra 100 Ω e 10 Ω di impedenza a
+valle — fra ~147 Ω e ~57 Ω di carico totale, contando i 47 Ω di
+separazione. Il picco a impedenza nulla, **65,46 mA**, è lo stesso ordine
+dei 65,07 mA che **NC-001** misura per il mute: stessa fisica, via
+d'ingresso diversa.
+
+**È il caso che V1 chiedeva già di coprire** — elenca «Singxer (Zin
+ignota)» fra i carichi — e che nessuna misura copriva. L'impedenza
+d'ingresso del Singxer non è nota, e da spento può andare a zero.
+
+**Ciò che l'evidenza NON sostiene**, e va detto: la modulazione reciproca
+del livello. Fra fissa carica e fissa in corto, il livello sul nodo che
+alimenta l'attenuatore si muove di **0,0034 dB a 1 kHz** e 0,0056 dB a
+20 kHz (`tb_blockA_carichi_ac_*.csv`): l'anello chiuso tiene il nodo. Il
+danno è sul **regime di lavoro**, non sul livello — e una spazzata AC di
+piccolo segnale non può vederlo.
+
+**Cosa serve per chiuderla.** Una delle due, per iscritto:
+
+1. **Disaccoppiare le uscite fisse** con buffer inseguitori dedicati,
+   lasciando il Blocco A a pilotare il solo attenuatore, più la
+   riesecuzione di `spice/preamp/tb/tb_blockA_carichi.cir` sulla topologia
+   nuova, coi dati versionati; oppure
+2. una **ADR** che accetti il regime, col calcolo termico dei dispositivi
+   d'uscita nella condizione e — questa è la parte che il progetto non ha
+   — il **vincolo scritto sull'impedenza minima ammessa a valle**, che dai
+   dati qui sopra sta intorno ai 150 Ω di carico totale.
+
+**Nota sul rimedio di NC-001.** Le due voci hanno la stessa fisica ma non
+lo stesso rimedio: una resistenza in serie al contatto del relè di mute
+non fa niente contro un apparecchio spento, perché su questa via non c'è
+nessun relè. Chi chiuderà NC-001 deve saperlo, o chiuderà una via sola.
+
 ### NC-002 — Il blocco A non ha evidenza di stabilità valida
 
 | | |
@@ -198,12 +278,151 @@ deck: il circuito reale è più esposto di quello simulato, non meno.
 56,945° che il dossier pubblica come caso peggiore**, e nessuno di questi
 numeri esiste nel repo.
 
+**Riesecuzione indipendente, la seconda** (L5e, 2026-09-09): 69,83° a
+vuoto, 64,05° a 1 nF, 56,59° a 2,2 nF, **41,85° a 4,7 nF**. Coincide entro
+qualche centesimo di grado. L'utente ha segnalato lo stesso difetto per
+conto proprio rileggendo il dossier — vedi
+`reports/2026-09-09-revisione-utente-dossier.md`.
+
 **Cosa serve per chiuderla.** Aggiornare `tb_loop_blockA.cir` ai valori
 di `preamp_audio.py` (47 Ω, 4,7 µF, scarico 470 kΩ, attenuatore 10 kΩ),
 spazzare la capacità sia sul nodo OUT sia sui due jack, versionare i CSV
 sotto `docs/preamp/data/<data>/` e riportarli nel dossier accanto ai
 quattro del blocco B. Se il caso peggiore del blocco A resta sotto quello
 del blocco B, il KPI va corretto di conseguenza (NC-003).
+
+### NC-009 — Il margine di headroom poggia su un trim che non esiste nel progetto, e la sua cifra circola in tre versioni
+
+| | |
+|---|---|
+| Requisito | **E6** × **E2** · **ADR-015** (che decide di accettarlo) · ADR-011 · F2 |
+| Severità | **maggiore** |
+| Aperta da | `reports/2026-09-09-revisione-utente-dossier.md` |
+| Stato | aperta |
+
+**Il margine in sé non è una non conformità**, ed è importante dirlo:
+**ADR-015 lo ha accettato consapevolmente e per iscritto** il 2026-09-08,
+scegliendo di restare a ±15 V e indicando il trim di ADR-011 come rimedio.
+È esattamente la forma con cui la tabella delle severità dice che uno
+scostamento si chiude. Quello che segue riguarda due cose che quella
+decisione ha lasciato scoperte.
+
+**Evidenza 1 — tre cifre per la stessa quantità.** Da
+`docs/preamp/data/2026-09-09/tb_dc_headroom_10db.csv`, rieseguito in L5e:
+
+| Cifra | Metrica | Dove circola |
+|---|---|---|
+| **0,75 dB** | clipping vero (9,31 V RMS) contro il richiesto **nominale** (8,538) | ADR-015 |
+| **0,55 dB** | limite allo **scostamento dell'1%** (9,0930 V RMS) contro il richiesto nominale | dossier, KPI |
+| **0,59 dB** | limite all'1% contro il richiesto col guadagno **misurato** (8,4943; il guadagno reale è +9,9553 dB, non +10,000) | questa riesecuzione |
+
+Nessuna delle tre è sbagliata: misurano cose diverse. Ma il dossier ne
+pubblica una e la ADR un'altra, senza dire quale sia quale, e la differenza
+fra la più ottimista e la più conservativa è il **36%** del margine. È la
+stessa famiglia di NC-007: un numero pubblicato che non dice cosa misura.
+
+**Evidenza 2 — il rimedio non esiste nel progetto.** ADR-015 poggia
+interamente sul trim di ADR-011 («l'unica cosa che separa quella modalità
+dal clipping»). Quel trim **non è in `circuits/`**:
+`circuits/preamp/preamp_audio.py` lo dichiara esplicitamente fuori dal
+proprio perimetro, non ha dimensionamento, e niente nel repo verifica che
+esista. Porta ora **due vincoli portanti e non ne ha soddisfatto nessuno**:
+
+1. attenuare abbastanza da riportare il margine dove ADR-015 lo vuole
+   (con K11 a −6 dB l'uscita richiesta scende a 4,27 V RMS);
+2. lasciare la Zin ≥ 100 kΩ in **ogni** posizione — che è **NC-005**.
+
+I due vincoli tirano in direzioni opposte: un partitore che attenua di
+6 dB con resistenze basse viola E3, uno con resistenze alte carica la
+sorgente e alza il rumore. Nessuno ha ancora verificato che esista un
+punto che li soddisfi entrambi.
+
+E la parte di ADR-015 che dice «va scritto sul pannello o nella
+documentazione d'uso» non è stata eseguita: **non esiste né un pannello né
+una documentazione d'uso**, quindi la mitigazione dipende oggi dal fatto
+che l'utente si ricordi.
+
+**Cosa serve per chiuderla.**
+
+1. Il trim entra in `circuits/preamp/` con **entrambi** i vincoli
+   verificati — attenuazione e Zin — e una misura AC che lo dimostri;
+   chiude anche NC-005.
+2. Il dossier pubblica **una** cifra di margine dicendo quale metrica usa,
+   e le altre due o spariscono o vengono etichettate. Va allineata anche
+   la riconciliazione già segnalata in `STATE.md`.
+3. La conseguenza operativa di ADR-015 finisce dove verrà letta, non solo
+   dentro la ADR.
+
+Se invece si decide che il +10 dB con sorgenti a fondo scala va
+**impedito** e non mitigato (per esempio bloccando la commutazione), serve
+una ADR nuova che superi ADR-015: non si fa modificandola.
+
+### NC-011 — Il PSRR del rail positivo non vincola nessuno
+
+| | |
+|---|---|
+| Requisito | **E5** (rumore in uscita) · alimentatore, non ancora progettato |
+| Severità | **maggiore** |
+| Aperta da | `reports/2026-09-09-revisione-utente-dossier.md` |
+| Stato | aperta |
+
+**Evidenza.** Da `docs/preamp/data/2026-09-09/tb_zout_psrr_noise_psrr*.csv`:
+
+| Configurazione | 100 Hz | 1 kHz | 10 kHz | 100 kHz |
+|---|---|---|---|---|
+| rail **+**, +10 dB | 62,07 | 49,56 | **29,76** | **10,15** |
+| rail **+**, 0 dB | 72,02 | 59,51 | 39,72 | 19,72 |
+| rail **−**, +10 dB | 79,02 | 90,54 | 86,93 | 61,44 |
+
+Il divario fra i due rail a 10 kHz è di **57 dB**: la topologia non è
+simmetrica rispetto all'alimentazione, e il rail positivo è l'anello
+debole. Il numero **è già pubblicato** nel dossier; quello che non esiste
+è la sua **conseguenza**. L'alimentatore non è ancora progettato e nessun
+documento gli dice quanto ripple può lasciare sul rail positivo alle
+frequenze in cui la reiezione vale 30 dB o 10 dB — che è precisamente la
+banda in cui uno switching o un raddrizzatore lavorano.
+
+È la stessa forma di NC-005: un vincolo che esiste nei fatti e non è
+scritto dove verrà letto.
+
+**Cosa serve per chiuderla.** Il vincolo scritto in `REQUIREMENTS.md` o
+nella ADR dell'alimentatore, nella forma «il ripple residuo ammesso sul
+rail positivo, alle frequenze in cui il PSRR vale X dB, deve stare sotto
+Y», ricavato da E5; più la scelta del rimedio (regolatore a bassissimo
+rumore, oppure cella locale a moltiplicatore di capacità dedicata agli
+stadi d'ingresso). La verifica finale è una misura sul prototipo, non una
+simulazione.
+
+### NC-012 — V1 non dichiara la soglia di accettazione del margine di fase
+
+| | |
+|---|---|
+| Requisito | **V1** |
+| Severità | **maggiore** |
+| Aperta da | `reports/2026-09-09-revisione-utente-dossier.md` |
+| Stato | aperta |
+
+**Evidenza.** `docs/preamp/REQUIREMENTS.md`, sezione V1, enumera con cura
+le combinazioni su cui il margine di fase va misurato — blocco, posizione
+dell'attenuatore, carico, sorgente — e **non dice quale valore sia
+accettabile**. Cercata anche nelle quattordici ADR e in `AGENTS.md`:
+nessuna soglia.
+
+Conseguenza: **nessuna misura di margine di fase può passare o fallire.**
+I 56,945° che il dossier pubblica come caso peggiore e i 41,85° del blocco
+A col carico canonico (NC-002) non sono né conformi né non conformi. La
+convenzione di progetto è 60°, ma una convenzione non scritta non è un
+requisito, e senza soglia il KPI del dossier è un numero senza verdetto.
+
+Una soglia senza il **carico a cui si riferisce** non è però un requisito
+migliore: 56,945° è misurato con una sonda da 4,7 nF, che il banco stesso
+dichiara «margine di prova, non un valore realistico». La soglia e la
+capacità di prova vanno scritte insieme.
+
+**Cosa serve per chiuderla.** La soglia in `REQUIREMENTS.md` sotto V1, col
+carico di prova dichiarato accanto, e i KPI del dossier riferiti a quella.
+È la voce che rende decidibili **NC-002** e **NC-003**: finché non c'è, le
+altre due discutono di un confine che nessuno ha tracciato.
 
 ### NC-003 — Il KPI «margine di fase, peggiore» non è il peggiore del prodotto
 

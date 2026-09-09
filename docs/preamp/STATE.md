@@ -6,7 +6,7 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-09** (L5d chiuso: **G0 eseguito**. 8 non conformità aperte, 2 bloccanti — **l'accesso a G1 non è concesso**. Prossimo lotto **L6**, che non è bloccato)
+Ultimo aggiornamento: **2026-09-09** (L5e chiuso: **la revisione umana del dossier è nel registro**. 12 non conformità aperte, 3 bloccanti — **l'accesso a G1 non è concesso**. Prossimo lotto **L6**, che non è bloccato)
 
 ---
 
@@ -73,23 +73,29 @@ manciata di file, **M** = riempie una sessione da solo.
 | L5b | Prima bozza del dossier, generata dai dati + correzione di `za100k`/`p100k` | S/M | **fatto** |
 | L5c | Definire **G0**, la prima revisione del prodotto | XS/S | **fatto** |
 | L5d | **Eseguire G0**: report datato + non conformità | S | **fatto** |
+| L5e | La revisione umana del dossier diventa registro: 4 voci nuove | S | **fatto** |
 | L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | **prossimo** |
 | L7 | LSK489: passo 4, il controllo incrociato | S | da fare |
 | L8 | Fase 3a — le parti nuove, fatti verificabili | M | da fare |
 | L9 | Fase 3b — la rosa dei componenti di segnale | M | da fare |
 | L10 | Simbolo KiCad dell'LSK489 | S | da fare |
 
-**I lotti che G0 ha generato.** È il meccanismo per cui una non conformità
-produce lavoro invece di fermarlo: ogni voce aperta in `NONCOMPLIANCE.md`
-arriva qui con il proprio lotto.
+**I lotti che le revisioni hanno generato.** È il meccanismo per cui una
+non conformità produce lavoro invece di fermarlo: ogni voce aperta in
+`NONCOMPLIANCE.md` arriva qui con il proprio lotto. I primi cinque vengono
+da G0 (L5d), gli ultimi quattro dalla revisione umana del dossier (L5e).
 
 | # | Lotto | Dim. | Chiude | Stato |
 |---|---|---|---|---|
 | L11 | **Mute: misurare e rimediare.** Deck che misura I_C dei due dispositivi d'uscita a mute inserito + il transitorio di inserzione/rilascio; poi o la modifica di topologia o la ADR che accetta il regime | M | **NC-001** (bloccante) | da fare |
-| L12 | **Blocco A: stabilità coi valori veri.** `tb_loop_blockA.cir` ai 47 Ω / 4,7 µF / 470 kΩ, capacità sul nodo OUT **e** sui jack, CSV versionati | S | **NC-002** | da fare |
+| L12 | **Blocco A: stabilità coi valori veri.** `tb_loop_blockA.cir` ai 47 Ω / 4,7 µF / 470 kΩ, capacità sul nodo OUT **e** sui jack, CSV versionati. Da fare insieme allo sweep d'impedenza di `tb_blockA_carichi.cir`: stesso blocco, stessi carichi | S | **NC-002** | da fare |
 | L13 | **E4 sulle tre uscite e a manopola che gira.** Estendere `tb_zout_psrr_noise.cir` alle due uscite fisse e a tre posizioni dell'attenuatore | S | NC-008 | da fare |
 | L14 | **Le tre correzioni di testo.** KPI del margine di fase qualificato, i due commenti di cascode allineati, lo scarto ADR-014 riferito a 1 kHz | XS | NC-003, NC-006, NC-007 | da fare |
 | L15 | **Il vincolo su E3 scritto dove verrà letto** (nota di dimensionamento in ADR-011 o `REQUIREMENTS.md`) | XS | NC-005 | da fare |
+| L16 | **Il trim entra nel progetto.** Dimensionarlo in `circuits/preamp/` coi due vincoli insieme — attenuazione richiesta da ADR-015 e Zin ≥ 100 kΩ — e misurarlo. Chiude anche NC-005. Più la riconciliazione delle tre cifre di margine nel dossier | S/M | **NC-009**, NC-005 | da fare |
+| L17 | **Buffer sulle uscite fisse.** Modifica di topologia in `preamp_audio.py` che disaccoppia le due fisse dal nodo del Blocco A, più la riesecuzione di `tb_blockA_carichi.cir` sulla topologia nuova | M | **NC-010** (bloccante) | da fare |
+| L18 | **Il vincolo PSRR scritto dove verrà letto**: quanto ripple può lasciare l'alimentatore sul rail positivo, ricavato da E5 | XS/S | **NC-011** | da fare |
+| L19 | **La soglia di margine di fase in V1**, col carico di prova dichiarato accanto; poi i KPI del dossier riferiti a quella | XS | **NC-012** | da fare |
 
 **NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
 riesecuzione di `tb_noise_breakdown.cir` coi modelli veri. È il caso
@@ -765,15 +771,103 @@ sorgente**: un'etichetta numerica contro un `.log`, una connessione contro
 la netlist. L'errore che l'utente ha visto è sopravvissuto a un confronto
 riga per riga col codice, quindi delle due l'una: o sta in qualcosa che il
 revisore ha verificato e ha giudicato corrispondente, o sta in una classe di
-proprietà che nessuna sorgente del repo può falsificare — e in quel caso
-`AGENTS.md` aveva ragione a chiamare il diagramma a blocchi «il punto del
-progetto in cui un errore può sopravvivere più a lungo», ma la sesta domanda
-di G0 non basta da sola a coprirlo.
+proprietà che nessuna sorgente del repo può falsificare.
 
-**Resta aperto**: l'utente sa qual è l'errore, il progetto no. Finché non lo
-dice, non c'è una non conformità da aprire — nessuno può scrivere l'evidenza
-di un difetto che non ha individuato, e «una non conformità senza evidenza
-apribile è un'opinione». È la prima domanda da porre alla ripresa.
+**CHIUSO IN L5e: era la seconda.** L'utente ha detto qual è l'errore, ed è
+che il diagramma mostra il **Blocco A che pilota tre carichi in parallelo**
+— le due uscite fisse e l'attenuatore — senza isolamento reciproco, e
+niente nel disegno o nel codice dice che quel parallelo è un problema.
+Nessuna etichetta è falsa, nessuna connessione è sbagliata: il disegno è
+**fedele** a `preamp_audio.py`. Non c'era niente da falsificare, ed è per
+questo che il metodo di G0 non poteva arrivarci.
+
+Il controllo cieco ha quindi misurato quello che doveva misurare: **G0 vede
+le affermazioni false, non le omissioni di giudizio.** Da qui due cose
+concrete, non due propositi: `AGENTS.md` ha ora una **settima domanda** che
+chiede cosa il progetto presenta come normale e nessuna sorgente
+contraddice; e l'omissione è diventata **NC-010**, bloccante, con la sua
+evidenza misurata (vedi sotto).
+
+## L5e — la revisione umana del dossier. FATTO.
+
+Poche ore dopo G0 l'utente ha riletto il dossier per conto proprio e ha
+prodotto **quattro osservazioni**. L5e le ha trasformate da messaggio in
+registro: report datato
+(`reports/2026-09-09-revisione-utente-dossier.md`), quattro voci in
+`NONCOMPLIANCE.md`, quattro lotti qui sopra, e — per la sola che non aveva
+evidenza — un banco nuovo coi suoi dati versionati.
+
+**È l'altra metà della revisione, e ora si sa perché serve.** G0 confronta
+affermazioni con sorgenti; la revisione umana vede ciò che il progetto
+presenta come normale. Le due non si sovrappongono: G0 aveva prodotto otto
+voci e nessuna di queste quattro.
+
+**NC-010, la voce che vale il lotto.** Il Blocco A pilota tre carichi in
+parallelo senza isolamento reciproco. Se l'apparecchio a valle di una
+uscita fissa si spegne e la sua impedenza d'ingresso crolla — il caso che
+**V1 elencava già** come «Singxer (Zin ignota)» e che nessuna misura
+copriva — quel ramo diventa un carico da qualche decina di ohm sul nodo
+d'uscita. Misurato con `spice/preamp/tb/tb_blockA_carichi.cir`, a 2,7 V RMS
+e guadagno unitario:
+
+| Impedenza a valle | I_C(Q134) max | I_C(Q134) **min** | Regime |
+|---|---|---|---|
+| 470 kΩ (normale) | 14,759 mA | **14,352 mA** | **Classe A** |
+| 1 kΩ | 16,552 mA | 12,524 mA | Classe A |
+| 100 Ω | 27,956 mA | **2,396 mA** | Classe A, margine quasi finito |
+| 10 Ω | 57,258 mA | **−0,23 µA** | **Classe B** |
+| 0,01 Ω | 65,456 mA | **−0,34 µA** | **Classe B** |
+
+I due dispositivi si interdicono a turno: fuori dalla Classe A, che è T1.
+**La soglia sta fra 100 Ω e 10 Ω** di impedenza a valle — fra ~147 Ω e
+~57 Ω di carico totale contando i 47 Ω di separazione — ed è il numero che
+dimensiona la decisione fra buffer dedicati e vincolo scritto.
+
+Il picco a impedenza nulla, **65,46 mA**, è lo stesso ordine dei 65,07 mA
+che NC-001 misura per il mute. Stessa fisica, **vie d'ingresso diverse**, e
+questo decide il rimedio: una resistenza in serie al contatto del mute non
+fa niente contro un apparecchio spento. Chi chiuderà NC-001 deve saperlo.
+
+**Una metà dell'osservazione non è stata confermata, ed è scritta com'è.**
+La modulazione reciproca del livello fra i rami vale **0,0034 dB a 1 kHz**
+e 0,0056 dB a 20 kHz: l'anello chiuso tiene il nodo. Il danno non è sul
+livello, è sul regime di lavoro — e una spazzata AC di piccolo segnale non
+può vederlo. Registrare solo la metà che torna sarebbe la forma più comoda
+di errore.
+
+**Le altre tre voci non hanno richiesto misure nuove**, solo di rileggere i
+dati già versionati con la domanda giusta:
+
+- **NC-009**, headroom — ed è la voce che ha cambiato forma cercando prima
+  se qualcuno avesse già deciso. **ADR-015 l'aveva deciso il 2026-09-08**:
+  si resta a ±15 V e il margine si recupera col trim di ADR-011. Quindi il
+  margine in sé **non è** una non conformità. Restano scoperte due cose:
+  circolano **tre cifre** per la stessa quantità (0,75 dB clipping in
+  ADR-015, 0,55 dB al limite dell'1% nel dossier, 0,59 dB con il guadagno
+  misurato invece che nominale — 36% di differenza fra gli estremi), e
+  soprattutto **il rimedio non esiste nel progetto**: il trim non è in
+  `circuits/`, non è dimensionato, e porta ora due vincoli portanti che
+  tirano in direzioni opposte — attenuare abbastanza (ADR-015) e lasciare
+  la Zin ≥ 100 kΩ (NC-005).
+- **NC-011**, PSRR: il rail positivo dà 29,76 dB a 10 kHz contro gli
+  86,93 dB del negativo, **57 dB di divario**. Il numero era già
+  pubblicato; quello che manca è che **non vincola nessuno**, e
+  l'alimentatore non è ancora progettato.
+- **NC-012**, margine di fase: cercata una soglia di accettazione in
+  `REQUIREMENTS.md`, nelle quattordici ADR e in `AGENTS.md`. **Non
+  esiste.** V1 enumera i casi da coprire e non dice quale valore sia
+  accettabile: finché è così, nessuna misura di margine può passare o
+  fallire, e NC-002 e NC-003 discutono di un confine che nessuno ha
+  tracciato.
+
+**Verifica del banco nuovo, perché è la parte che conta.** Ogni numero
+della tabella è stato **ricalcolato dal CSV versionato** e confrontato col
+`meas` che ngspice ha stampato da sé nel `.log`: coincidono su tutte le
+cifre stampate. Il passo del transitorio è 5 µs, e il confronto con una run
+a 2 µs dà differenze in quinta-sesta cifra. Inoltre l'osservazione
+d'apertura dell'utente — il banco `tb_loop_blockA.cir` coi valori superati
+— è stata **rieseguita per la seconda volta in modo indipendente**: 69,83°
+/ 64,05° / 56,59° / **41,85°**, che coincide con NC-002.
 
 ## Dove siamo
 
@@ -880,7 +974,8 @@ dinamica lamentata.
 | 5 | Misure (stabilità per prima) | `measurement-analyst` | da fare |
 | 6 | Alimentatore + **sicurezza rete** — parte in parallelo dalla Fase 2 | `psu-engineer` | da fare |
 | **G0** | Prima revisione del prodotto | `design-reviewer` | **fatto** — 8 voci, 2 bloccanti |
-| **G1** | Congelamento topologia | `design-reviewer` | **non accessibile** finché NC-001 e NC-004 sono aperte |
+| **G0b** | Revisione umana del dossier | **utente** | **fatto** (L5e) — 4 voci, 1 bloccante |
+| **G1** | Congelamento topologia | `design-reviewer` | **non accessibile** finché NC-001, NC-004 e NC-010 sono aperte |
 | — | Layout → **G2** → fabbricazione → **G3** | | da fare |
 
 **Perché la Fase 1 viene prima della bozza**: se i JFET complementari non
@@ -893,19 +988,21 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**Prima di tutto, una domanda all'utente**: qual è l'errore che ha visto nel
-diagramma a blocchi? G0 non l'ha trovato (vedi la sezione L5d qui sopra), e
-finché resta noto solo a lui non c'è evidenza da scrivere, quindi non c'è
-una voce da aprire. Non blocca L6 — è una domanda, non una dipendenza.
-
 **L6 — LSK489: i passi 1-3 di ADR-013 (congela il datasheet, trascrivi
 il modello, registra la provenance).**
 
-**Non è bloccato da G0**, ed è deliberato: `AGENTS.md` scrive che una voce
-bloccante a G0 non ferma i lotti che procurano i modelli vendor, perché
-quelli sono il **rimedio** a NC-004, non un avanzamento di fase. Ciò che G0
-blocca è l'accesso a **G1**, cioè il congelamento della topologia — che
-comunque non si vuole più congelare finché NC-001 non è risolta.
+**Non è bloccato dalle voci aperte**, ed è deliberato: `AGENTS.md` scrive
+che una voce bloccante a G0 non ferma i lotti che procurano i modelli
+vendor, perché quelli sono il **rimedio** a NC-004, non un avanzamento di
+fase. Ciò che le bloccanti fermano è l'accesso a **G1**, cioè il
+congelamento della topologia — che comunque non si vuole più congelare
+finché NC-001 e NC-010 non sono risolte, e NC-010 è **una modifica di
+topologia**.
+
+`docs/preamp/NEXT-SESSION.md` porta i fatti che L5e ha già accertato su
+questo lotto — i due URL vendor, la riga `.model`, il comportamento di
+ngspice e la ricetta da aggiungere a `validate_models.py` — così L6 non li
+riscopre.
 
 È il lotto che rende credibili le cifre che oggi non lo sono. Stato di
 partenza, verificato e non assunto: `vendor/` non contiene **nessun** PDF
@@ -970,7 +1067,7 @@ buone è dell'utente, all'ascolto. È la ragione per cui esiste P6.
 |---|---|---|
 | Condensatore verso il Singxer: 2,2 o 4,7 µF | utente | No |
 | Trascrizione del modello LSK489 da PDF | Fase 2 | No, ma **la credibilità della distorsione ci poggia sopra** |
-| Impedenza d'ingresso Singxer SA-1 V2 | — | **Non pubblicata**, verificato sul manuale ufficiale |
+| Impedenza d'ingresso Singxer SA-1 V2 | — | **Non pubblicata**, verificato sul manuale ufficiale. Da L5e **non è più solo una curiosità**: è l'ipotesi su cui poggia NC-010, perché da spento può andare a zero |
 | Valore del cap d'uscita del phono a valvole | utente | **Rinviata** — non ha accesso agli schematici né può aprire agevolmente il telaio |
 | ~~Quale JFET d'ingresso~~ | — | **CHIUSA**: LSK489 (ADR-013) |
 | ~~Conferma specifiche cj EV250~~ | — | **CHIUSA**: email costruttore + manuale MV50 |
