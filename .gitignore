@@ -72,3 +72,12 @@ circuits/**/__pycache__/
 
 # --- Worktree Claude (creati/rimossi dal tool, mai da committare) ---
 .claude/worktrees/
+
+# --- Dati del dossier: versionati DI PROPOSITO (AGENTS.md regola 8) ---
+# Un gate gira offline su main e deve poter aprire i numeri; `results/` e'
+# scratch e gitignorato, quindi non puo' servire a questo. Qui vanno i dati
+# CURATI che il dossier impagina, datati, non l'output grezzo di ogni run.
+# La negazione e' necessaria perche' le regole globali qui sopra (*.log,
+# *_out.txt, *.raw) altrimenti mangerebbero in silenzio proprio i file di
+# evidenza.
+!docs/preamp/data/**

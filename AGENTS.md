@@ -44,7 +44,37 @@ The roster above is the *environment* team — the agents that built and validat
 - **G2 — Pre-layout**: schematic/netlist complete, before placement and routing.
 - **G3 — Pre-fabrication**: before any fabrication export is treated as final.
 
-A gate returns **PASS** or **BLOCK**. On a mains-connected design, a missing safety analysis is an automatic BLOCK.
+**A gate is triggered by test results, not by a pull request** (decided
+2026-09-09). A diff is the wrong artefact to judge an analog design on: the
+changed lines of `gain_block.py` say nothing about phase margin, and at the
+moment a PR is open the measurements that would answer the gate's question do
+not exist yet. Tying the two coupled every chunk to gate-weight it had no data
+for, and kept the repository disaligned while it waited.
+
+So a gate runs **offline, after the merge**, on `main`, against the dossier and
+the measured data. `design-reviewer` re-runs the verification itself rather than
+trusting reports - it already has that mandate - which is why the decks and
+`scripts/run_simulation.sh` must be reproducible from a clean checkout.
+
+**What a gate produces is non-compliances, not a merge veto.** A dated report in
+`docs/preamp/reports/` opens them; each one names the requirement it is against
+(E-number / V-number), the evidence behind it (which data file, which
+measurement), a severity, and a status. The living register is
+`docs/preamp/NONCOMPLIANCE.md`, and open items feed the lotti table in
+`docs/preamp/STATE.md` - so a gate produces work rather than stopping it.
+
+**BLOCK has not gone away, it has moved.** A non-compliance of **blocking**
+severity does not block a merge; it blocks **phase advancement** - no layout, no
+fabrication - which is what that rule always meant. On a mains-connected design,
+a missing safety analysis is an automatic blocking non-compliance at G3.
+
+Severities:
+
+| Severità | Significato | Effetto |
+|---|---|---|
+| **bloccante** | un requisito non è soddisfatto, o manca l'evidenza per dirlo | la fase successiva non si apre |
+| **maggiore** | scostamento reale, con margine residuo o rimedio noto | va chiusa prima del gate successivo |
+| **minore** | osservazione da registrare, nessun rimedio richiesto ora | resta aperta e visibile |
 
 **A human-reviewable schematic is a precondition for G1 and G2.** A design
 nobody can look at has not been reviewed, however many numbers agree. Simulation
@@ -114,7 +144,12 @@ Preamplifier first, then a phono stage, then a power amplifier. A DAC is possibl
    than implying it is automatable.
 8. **Keep scratch separate from canonical.** `smoke/` and `results/` are
    scratch/experimental; `circuits/`, `models/`, `vendor/` are canonical
-   sources of truth.
+   sources of truth. **Dossier data is neither**: measurements the dossier
+   cites are versioned under `docs/preamp/data/<YYYY-MM-DD>/`, because a
+   gate that runs offline on `main` needs numbers it can actually open, and
+   `results/` is gitignored. Curated, not raw - what the dossier plots, not
+   every run. A measurement is true of one version of the circuit, so the
+   date is part of the path, exactly as for `reports/`.
 9. **Two-interpreter split.** Always use absolute interpreter paths when
    touching both SKiDL (venv Python 3.13) and `pcbnew`/`kinet2pcb` (KiCad's
    bundled Python 3.9) — they are not interchangeable and there is no

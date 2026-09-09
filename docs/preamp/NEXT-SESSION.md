@@ -30,9 +30,11 @@ richiesta) è la causa misurabile della mancanza di dinamica lamentata.
 La topologia canonica è in circuits/preamp/, i banchi di prova in
 spice/preamp/tb/ (12 deck).
 
-ATTENZIONE AL RAMO. L3 sta su `worktree-preamp-l3`, pushato su origin. Se
-la PR verso `main` è già stata mergiata, riparti da `main` aggiornato;
-altrimenti riusa quel ramo. `main` da solo NON contiene L3.
+IL RAMO NON È PIÙ UN PROBLEMA. Da L3c ogni lotto si chiude mergiando e
+riallineando il checkout principale, quindi **`main` è corrente e si
+riparte sempre da lì**. Se `git -C /Users/roberto/EDA log --oneline -1`
+non mostra l'ultimo lotto, qualcosa è andato storto nella chiusura
+precedente: risolvi quello prima di iniziare L4.
 
 ------------------------------------------------------------------
 IL LOTTO: L4 — `wrdata` sui deck muti SENZA cicli
@@ -90,6 +92,27 @@ contenere ciò che il grafico dovrà mostrare. Guarda cosa il deck già
     dichiararlo utile — se non è utile, dillo e non aggiungerlo: è un
     esito legittimo di L4, non un fallimento.
 
+DOVE FINISCONO I DATI (deciso in L3c)
+
+`results/` resta scratch e gitignorato: è dove atterrano tutte le run.
+Ma **i dati del dossier sono versionati**, perché il gate gira offline su
+`main` e deve poter aprire i numeri. Se un CSV prodotto in L4 è materiale
+da dossier — cioè qualcosa che verrà impaginato o citato da una non
+conformità — copialo in
+
+```
+docs/preamp/data/<YYYY-MM-DD>/<nome>.csv   (+ .json, + il .log come evidenza)
+```
+
+Curati, non grezzi: ciò che serve, non l'output di ogni esecuzione. La
+convenzione per esteso è in `docs/preamp/data/README.md`. Attenzione: il
+`.gitignore` ha regole globali `*.log`/`*_out.txt`/`*.raw` neutralizzate
+lì dentro da una negazione — se aggiungi estensioni nuove, controlla con
+`git status` che sopravvivano.
+
+Se in L4 non esce niente di degno del dossier, va benissimo non copiare
+nulla: dirlo è un esito, riempire la directory per abitudine no.
+
 DUE TRAPPOLE
 
   1. Un `wrdata` di un `.op` può produrre un file con una riga sola o
@@ -126,7 +149,16 @@ COME LAVORIAMO
     che consuma.
   - Lavora in un worktree. I commit non pushati dentro
     .claude/worktrees/ spariscono col worktree, ed è già successo.
-  - CHIUSURA, nell'ordine: git push PRIMO (verifica con
-    git log --oneline origin/<branch>..HEAD, che deve essere VUOTO),
-    poi aggiorna docs/preamp/STATE.md segnando L4 fatto e L5 prossimo,
-    poi riscrivi questo file per L5, poi fermati.
+  - CHIUSURA. Non è più una lista da ricordare, è uno script che
+    rifiuta. Nell'ordine:
+      1. aggiorna `docs/preamp/STATE.md` segnando **L4 fatto** e L5
+         prossimo (la tabella dei lotti deve dire `**fatto**`)
+      2. riscrivi QUESTO file per **L5** — se il titolo nomina ancora L4,
+         lo script rifiuta, ed è il controllo che esiste apposta
+      3. committa, pusha, apri la PR
+      4. `/bin/zsh scripts/chunk_close.sh L4`
+         Verifica tutto, merghia, riallinea il checkout dell'utente e
+         **rilegge da lì** per provare il riallineo. Se rifiuta, ha
+         ragione: sistema e rilancia.
+      5. rimuovi il worktree con i due comandi che lo script stampa
+      6. fermati. Non iniziare L5.

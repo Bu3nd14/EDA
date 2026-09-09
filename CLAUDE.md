@@ -38,7 +38,38 @@ assumerlo:
 git log --oneline origin/<branch>..HEAD    # deve essere vuoto
 ```
 
-L'ordine, quando il tempo stringe, è: **push → stato → tutto il resto.**
+**E dopo il push, il merge.** Un push rende il lavoro **durevole**; non
+lo rende **raggiungibile**. Sono due cose diverse e per un po' ne è stata
+soddisfatta una sola. Alla chiusura di L3 il lavoro era pushato,
+committato e in PR — e il checkout che l'utente apre, `/Users/roberto/EDA`,
+conteneva ancora il prompt di ripresa del lotto **precedente**: il passo
+successivo documentato gli consegnava il file sbagliato, e niente lo
+segnalava.
+
+Quindi **un lotto non è chiuso quando la sua PR è aperta. È chiuso quando
+`main` contiene il lavoro e il checkout dell'utente nomina il lotto
+successivo.** L'ordine è:
+
+**push → stato → merge e riallineo → tutto il resto.**
+
+Non si fa a mano, si fa con lo script che rifiuta:
+
+```sh
+/bin/zsh /Users/roberto/EDA/scripts/chunk_close.sh <lotto>
+```
+
+Verifica il tree pulito, il push, che il ramo abbia aggiornato `STATE.md`,
+che la tabella dei lotti segni il lotto come **fatto**, che
+`NEXT-SESSION.md` **non nomini più il lotto appena finito**, e che
+`run_tests.sh` passi. Poi merghia la PR, fa `pull --ff-only` sul checkout
+principale, e **rilegge da lì** per provare il riallineo invece di
+dichiararlo. Non ha flag di bypass, come `export_fab.sh`.
+
+**Mergiare la propria PR è autorizzato dall'utente** (deciso il
+2026-09-09) e vale per ogni lotto: sempre `gh pr merge --squash
+--delete-branch`, mai un `git merge` locale su `main`, mai `--force`. La
+PR resta comunque — non è cerimonia, è la traccia: URL stabile, un commit
+per lotto su `main`, e un corpo che il gate potrà citare.
 
 **Tracciabilità**: ogni valore non ovvio in `circuits/preamp/*.py` porta
 un commento che punta alla ADR che l'ha prodotto. È il collegamento
@@ -222,9 +253,25 @@ non li copre.
 
 Dettaglio in `AGENTS.md`. In sintesi: `design-reviewer` interviene solo a
 tre gate — **G1** congelamento topologia, **G2** pre-layout, **G3**
-pre-fabbricazione — e restituisce **PASS** o **BLOCK**. Su un progetto
-collegato alla rete elettrica, l'assenza di un'analisi di sicurezza è un
-BLOCK automatico.
+pre-fabbricazione.
+
+**Il gate non è attaccato alla PR: è attaccato ai risultati dei test**
+(deciso il 2026-09-09). Un diff è l'artefatto sbagliato su cui giudicare
+un progetto analogico — le righe modificate di `gain_block.py` non dicono
+niente sul margine di fase. Il gate gira quindi **offline, dopo il
+merge**, su `main`, sul dossier e sui dati misurati, e `design-reviewer`
+riesegue le verifiche da sé invece di fidarsi dei resoconti.
+
+Il suo prodotto non è un veto su un merge: è un **report datato** in
+`docs/preamp/reports/` che apre delle **non conformità**, ognuna con il
+requisito a cui si riferisce, l'evidenza, la severità e lo stato. Il
+registro vivo è `docs/preamp/NONCOMPLIANCE.md`.
+
+**Il BLOCK non è sparito, si è spostato**: una non conformità di severità
+**bloccante** non impedisce un merge, impedisce l'**avanzamento di fase**
+— niente layout, niente fabbricazione. Su un progetto collegato alla rete
+elettrica, l'assenza di un'analisi di sicurezza resta una non conformità
+bloccante automatica a G3.
 
 Le regole che vengono violate più facilmente: la topologia sta solo in
 `circuits/*.py` (mai modificare a mano schematici o netlist generati); i

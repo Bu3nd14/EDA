@@ -6,7 +6,7 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-09** (L3 chiuso: tutti e 12 i deck sono sulla convenzione e nessuno legge più dal worktree vecchio; prossimo lotto L4)
+Ultimo aggiornamento: **2026-09-09** (L3c chiuso: la chiusura di lotto è uno script che rifiuta, e il gate è agganciato ai dati e non alla PR; prossimo lotto L4)
 
 ---
 
@@ -22,9 +22,20 @@ importanza.
 
 1. **Un lotto per volta.** Mai due agenti in parallelo: i loro resoconti
    tornano insieme, e il ritorno è la parte che consuma.
-2. **Ogni lotto finisce con un commit pushato**, nell'ordine di
-   `CLAUDE.md`: `git push` → `STATE.md` → il resto. Verificato con
-   `git log --oneline origin/<branch>..HEAD`, mai assunto.
+2. **Ogni lotto finisce con `main` aggiornato e il checkout dell'utente
+   riallineato.** Non basta il push: un push rende il lavoro *durevole*,
+   non *raggiungibile*. L'ordine di `CLAUDE.md` è
+   `push → STATE.md → merge e riallineo → il resto`, e non si fa a mano:
+
+   ```sh
+   /bin/zsh scripts/chunk_close.sh <lotto>
+   ```
+
+   Rifiuta se il tree è sporco, se ci sono commit non pushati, se il ramo
+   non ha toccato `STATE.md`, se la tabella non segna il lotto **fatto**,
+   se `NEXT-SESSION.md` **nomina ancora il lotto appena finito**, o se
+   `run_tests.sh` fallisce. Poi merghia, riallinea, e **rilegge dal
+   checkout dell'utente** per provarlo invece di dichiararlo.
 3. **Questo file nomina sempre il lotto successivo.** È ciò che rende
    economica una ripartenza a freddo: la sessione dopo non ricostruisce
    il contesto, lo legge.
@@ -55,6 +66,7 @@ manciata di file, **M** = riempie una sessione da solo.
 | L2 | Collaudare la convenzione di percorso su un deck solo (`.include` **e** `wrdata`) | S | **fatto** |
 | L3 | Applicare la convenzione agli altri 11 deck (26 righe cablate rimaste) | S | **fatto** |
 | L3b | `REPO` cablato in `circuits/preamp/gain_block.py` — **obbligatorio prima della Fase 4** | XS/S | da fare |
+| L3c | Chiusura di lotto che rifiuta, gate agganciato ai dati, dati del dossier versionati | S | **fatto** |
 | L4 | `wrdata` sui deck muti **senza** cicli | S | **prossimo** |
 | L5 | `wrdata` sui deck muti **con** cicli annidati | S/M | da fare |
 | L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | da fare |
@@ -247,6 +259,64 @@ con `destroy all`, quindi il `wrdata` va **dentro il ciclo, prima del
 
 Serve al dossier **e** a `design-reviewer` per rieseguire le misure a G1:
 non è lavoro anticipato.
+
+**L3c — la consegna diventa affidabile. FATTO.**
+Nasce da una cosa che l'utente ha dovuto far notare: alla chiusura di L3
+il lavoro era pushato, committato e in PR, e il suo checkout conteneva
+ancora il prompt di ripresa di L3 — cioè il passo successivo documentato
+gli consegnava **il file sbagliato**, senza che niente lo segnalasse. Il
+difetto era strutturale e non un caso isolato: L2 aveva lo stesso buco, e
+non ha morso solo perché la PR era stata mergiata subito.
+
+La diagnosi in una riga: **un push rende il lavoro durevole, non
+raggiungibile.** Sono due requisiti diversi e ne era soddisfatto uno solo.
+
+Da qui **un lotto non è chiuso quando la sua PR è aperta: è chiuso quando
+`main` contiene il lavoro e il checkout dell'utente nomina il lotto
+successivo.** `scripts/chunk_close.sh` lo verifica invece di ricordarlo, e
+rifiuta come fa `export_fab.sh` sulla DRC — senza flag di bypass, perché
+i controlli che contiene sono esattamente quelli che erano "da ricordare"
+e sono stati dimenticati. Mergiare la propria PR è **autorizzato
+dall'utente**, sempre via `gh pr merge --squash --delete-branch`.
+
+**Il gate si stacca dalla PR e si attacca ai dati.** Un diff è
+l'artefatto sbagliato su cui giudicare un progetto analogico: le righe
+modificate di `gain_block.py` non dicono niente sul margine di fase, e
+quando la PR è aperta le misure che risponderebbero non esistono ancora.
+Il gate gira quindi **offline, dopo il merge, su `main`**, e produce
+**non conformità** — requisito, evidenza, severità, stato — invece di un
+veto. Registro vivo in `NONCOMPLIANCE.md`, report datati in `reports/`.
+Il **BLOCK non è sparito, si è spostato**: una non conformità bloccante
+non ferma un merge, ferma l'**avanzamento di fase**, e l'assenza di
+analisi di sicurezza su un progetto collegato alla rete resta bloccante
+automatica a G3.
+
+Il vantaggio non è solo di processo: una non conformità **genera lavoro**
+invece di fermarlo, perché le voci aperte alimentano da sole la tabella
+dei lotti qui sopra.
+
+**I dati del dossier sono versionati** (deciso dall'utente il
+2026-09-09). Conseguenza diretta: un gate che gira offline su `main`
+deve poter *aprire* i numeri, e `results/` è scratch e gitignorato,
+quindi su un checkout fresco è vuoto. I dati curati vanno in
+`data/<YYYY-MM-DD>/` — datati come i report, perché una misura è vera di
+una versione specifica del circuito. Curati e non grezzi: ciò che il
+dossier impagina e ciò che una non conformità cita, non l'output di ogni
+run.
+
+Una trappola trovata mentre lo si faceva, e verificata in entrambe le
+direzioni: `.gitignore` ha regole **globali** `*.log`, `*_out.txt`,
+`*.raw`, che avrebbero mangiato in silenzio proprio i file di evidenza.
+Serve la negazione `!docs/preamp/data/**`, che ora c'è — controllato con
+`git check-ignore` sia dentro la directory (non ignorato) sia fuori
+(ignorato).
+
+**Nota di onestà su cosa questo costa a me.** Con il merge non
+condizionato l'utente perde il momento "guardo il diff prima che atterri".
+È il prezzo giusto — la revisione che conta è quella sui dati — ma sposta
+il peso: la disciplina di verifica per lotto (baseline prima della
+modifica, confronto byte a byte, `run_tests.sh`) smette di essere buona
+pratica e diventa **l'unica rete** fra un errore e `main`.
 
 **L6-L7 — i modelli veri.** `vendor/` non contiene **nessun** PDF (13
 sottodirectory, zero datasheet congelati) e `models/jfet/` ha solo
@@ -523,8 +593,8 @@ matrice, si verifica solo il caso in cui il circuito passa.
 
 Tre cicli di vita, tenuti separati di proposito:
 
-- **Vivi** — `STATE.md`, `REQUIREMENTS.md`. Riscritti, sempre veri al
-  presente.
+- **Vivi** — `STATE.md`, `REQUIREMENTS.md`, `NONCOMPLIANCE.md`.
+  Riscritti, sempre veri al presente.
 - **Immutabili** — `decisions/ADR-*.md`, i verdetti dei gate. Scritti una
   volta, mai corretti, solo superati da documenti nuovi.
 - **Datati** — `reports/`. Output di un'esecuzione. Una misura è vera di
