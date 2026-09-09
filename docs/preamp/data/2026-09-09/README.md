@@ -15,8 +15,10 @@ detto in fondo, sezione *Provenienza e limite*.
 | Controfattuale del relè (ADR-004) | `tb_switch_v2_counterfactual*` | L4 |
 | Risposta in frequenza (ADR-014) | `tb_ac*` | L5 |
 | Guadagno d'anello e margine di fase | `tb_loop_*` | L5 |
-| Z_out al jack (E4) | `tb_zout_psrr_noise_zout_*` | L5 |
-| PSRR dei due rail | `tb_zout_psrr_noise_psrr*` | L5 |
+| Z_out al jack (E4) | `tb_zout_psrr_noise_zout_*` | L5 · **rifatto in L5b** |
+| PSRR dei due rail | `tb_zout_psrr_noise_psrr*` | L5 · **rifatto in L5b** |
+| Punti di lavoro | `tb_op.*` | L5b |
+| Escursione in continua e saturazione | `tb_dc_headroom*` | L5b |
 
 **Il rumore non è qui, di proposito.** I deck lo producono (L5 ne scrive gli
 spettri in `results/`), ma `KF = 0` su ogni dispositivo segnaposto: non c'è
@@ -188,7 +190,7 @@ un datasheet. Vanno rifatti sui modelli vendor prima di poter essere citati.
 Due file, uno per modalità. 1 A AC iniettato al jack, ingresso a massa,
 carico rimosso; il bleeder da 220 kΩ resta perché il circuito vero ce l'ha.
 
-Colonne (74 righe, 20 Hz – 100 kHz, 20 punti/decade):
+Colonne (81 righe, 20 Hz – 200 kHz, 20 punti/decade):
 
 | Colonna | Vettore |
 |---|---|
@@ -197,10 +199,10 @@ Colonne (74 righe, 20 Hz – 100 kHz, 20 punti/decade):
 | col2 | frequenza [Hz] |
 | col3 | `ZA` = \|v(OUT)\| = ohm al nodo OUT, **prima** di R_iso |
 
-| | 20 Hz | 1 kHz | 20 kHz |
-|---|---|---|---|
-| 0 dB | 1693 Ω | 58,8 Ω | 48,0 Ω |
-| +10 dB | 1693 Ω | 60,7 Ω | 50,3 Ω |
+| | 20 Hz | 1 kHz | 20 kHz | 100 kHz |
+|---|---|---|---|---|
+| 0 dB | 1693 Ω | 58,76 Ω | 48,05 Ω | 48,06 Ω |
+| +10 dB | 1693 Ω | 60,58 Ω | 50,30 Ω | 51,07 Ω |
 
 I 1693 Ω a 20 Hz **sono la reattanza del condensatore d'uscita da 4,7 µF**,
 non l'impedenza dello stadio: al nodo OUT (col3) la Z vale 1,04 Ω in
@@ -213,19 +215,19 @@ condensatore d'uscita.
 Quattro file: `psrrp` = rail **+**, `psrrm` = rail **−**, per le due
 modalità. 1 V AC in serie al rail, sorgente d'ingresso silenziata.
 
-Colonne (74 righe, 20 Hz – 100 kHz):
+Colonne (81 righe, 20 Hz – 200 kHz):
 
 | Colonna | Vettore |
 |---|---|
 | col0 | frequenza [Hz] |
 | col1 | `P` = −db(v(JACK)) in **dB** — **più grande è meglio** |
 
-| | 100 Hz | 1 kHz | 10 kHz |
-|---|---|---|---|
-| PSRR+ 0 dB | 72,0 dB | 59,5 dB | 39,7 dB |
-| PSRR+ +10 dB | 62,1 dB | 49,6 dB | 29,8 dB |
-| PSRR− 0 dB | 88,9 dB | 100,5 dB | 96,9 dB |
-| PSRR− +10 dB | 79,0 dB | 90,5 dB | 86,9 dB |
+| | 100 Hz | 1 kHz | 10 kHz | 100 kHz |
+|---|---|---|---|---|
+| PSRR+ 0 dB | 72,0 dB | 59,5 dB | 39,7 dB | 19,7 dB |
+| PSRR+ +10 dB | 62,1 dB | 49,6 dB | 29,8 dB | **10,2 dB** |
+| PSRR− 0 dB | 88,9 dB | 100,5 dB | 96,9 dB | 71,0 dB |
+| PSRR− +10 dB | 79,0 dB | 90,5 dB | 86,9 dB | 61,4 dB |
 
 Il rail **positivo** è il lato debole, e in modalità +10 dB perde i 10 dB di
 guadagno: 29,8 dB a 10 kHz è il numero da tenere d'occhio quando arriverà
@@ -238,3 +240,96 @@ Modelli **segnaposto**, non vendor. Di questi dati sono credibili la
 e i risultati in continua. **Non** lo sono le cifre di distorsione (assenti
 di proposito) né quelle di rumore (escluse da questa directory), e i margini
 di fase sono provvisori come detto sopra.
+
+
+---
+
+# L5b — punti di lavoro, escursione in continua, e la spazzata estesa
+
+## Perché i file di Z_out e PSRR sono stati rifatti
+
+Costruendo il dossier è emerso che **sei misure non venivano prodotte**:
+`za100k` e `p100k` chiedono `find … at=100000` su una spazzata che
+*finiva* a 100 kHz. `meas … find at=` interpola fra due punti, quindi sul
+bordo ngspice rispondeva
+
+```
+Error: measure  za100k  find(AT) : out of interval
+```
+
+e il `print` che segue falliva a sua volta — trascinandosi dietro anche i
+valori che erano stati calcolati bene. Il deck proseguiva e usciva 0,
+quindi **dal codice di uscita il buco non si vedeva**.
+
+La spazzata arriva ora a **200 kHz**, e i file qui sono stati rigenerati.
+
+**Effetto collaterale, misurato e non assunto.** Con `dec 20 20 100k` la
+spazzata copre 3,699 decadi: ngspice non usa un passo di 1/20 di decade e
+poi si ferma, distribuisce 74 punti fra gli estremi, quindi il passo reale
+era 0,0507 decadi. Con 200 kHz le decadi sono 4 esatte, i punti diventano
+81 e il passo è esattamente 0,05. Quello che si è mosso:
+
+| | prima | dopo | scarto |
+|---|---|---|---|
+| `z20` | 1693,41 Ω | 1693,41 Ω | identico (è il primo punto) |
+| `z1k` | 58,8414 Ω | 58,7602 Ω | **−0,14%** |
+| `z20k` | 48,0490 Ω | 48,0488 Ω | −4e-6 |
+| `za20k` | 1,06873 Ω | 1,06866 Ω | −7e-5 |
+| PSRR+ +10 dB a 10 kHz | 29,7747 dB | 29,7645 dB | −3e-4 |
+
+Solo `z1k` si muove in modo visibile, e **non perché il circuito sia
+cambiato**: 1 kHz non cade su un punto della griglia in nessuno dei due
+casi, quindi `meas find at=1000` interpola, e i due vicini fra cui
+interpola sono diversi. È la misura dell'errore di interpolazione di
+`find at=` su una griglia da 20 punti/decade: circa 0,1%. Il valore nuovo
+è il migliore dei due, perché la griglia è ora regolare.
+
+Nessuna cifra già scritta altrove diventa falsa: tutte le altre variazioni
+sono in quarta cifra significativa.
+
+## Punti di lavoro — `tb_op.*`
+
+Il CSV ha una riga sola e sei coppie `(scale, valore)`; lo *scale* di un
+plot `op` non significa niente, i dati sono le colonne **dispari**:
+
+| Colonna | Vettore |
+|---|---|
+| col1 | `v(OUT)` |
+| col3 | `v(JACK)` |
+| col5 | `v(FB)` |
+| col7 | `v(SRC)` |
+| col9 | `i(VPP)` |
+| col11 | `i(VMM)` |
+
+**La tabella dei punti di lavoro del dossier non viene però dal CSV**, ma
+da `tb_op.log`: le correnti e le tensioni di ogni dispositivo sono
+parametri di dispositivo (`@q106[ic]`, `@jq110[vgs]`) che il deck stampa e
+che nel CSV non ci sono. Il log è versionato proprio per questo.
+
+## Escursione in continua — `tb_dc_headroom*`
+
+Due file, uno per modalità: `tb_dc_headroom.csv` è **0 dB** (relè aperto,
+RRG = 1 GΩ), `tb_dc_headroom_10db.csv` è **+10 dB** (relè chiuso,
+RRG = 0,1 Ω). Spazzata in continua di VIN da −14 a +14 V a passo 0,05 V,
+561 punti.
+
+| Colonna | Vettore |
+|---|---|
+| col0 | `v(IN)` [V] |
+| col1 | `v(OUT)` |
+| col3 | `v(D1N) − v(S1)` — V_DS del JFET non invertente |
+| col5 | `v(D2N) − v(S2)` — V_DS del JFET invertente |
+| col7 | `v(NX)` |
+| col9 | `v(NY)` |
+
+Le colonne pari sono `v(IN)` ripetuto.
+
+**Cosa dicono, ed è un risultato di topologia.** Le due modalità **non
+saturano allo stesso livello**: a guadagno unitario v(FB) insegue v(OUT),
+quindi il modo comune visto dalla coppia d'ingresso sale insieme
+all'uscita ed è lui a fermarsi per primo (uscita a **+9,37 V**); a +10 dB
+v(FB) vale un terzo di v(OUT), il modo comune resta basso, e l'uscita
+arriva a **+13,2 V**. Il ramo negativo è invece limitato dallo stadio
+d'uscita e coincide quasi nelle due modalità. È una proprietà della
+topologia; i valori esatti dipendono dal modello del JFET, che è
+segnaposto.

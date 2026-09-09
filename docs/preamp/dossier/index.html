@@ -1,0 +1,316 @@
+<title>Dossier del preamp di linea</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+:root{
+  --paper:#f6f7f9; --surface:#ffffff; --ink:#161a1f; --muted:#5b6472;
+  --rule:#d8dde4; --rule-soft:#e9edf2; --accent:#1f5c99; --accent2:#a8452a;
+  --ok:#1c6b3c; --warn-ink:#7a4a12; --warn-bg:#fdf4e6; --warn-rule:#c98b2e;
+  --chip:#eef1f5; --plate:#ffffff;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#101317; --surface:#181c22; --ink:#e6e9ed; --muted:#98a2b0;
+  --rule:#2a3038; --rule-soft:#22272e; --accent:#7fb3e0; --accent2:#e09880;
+  --ok:#5fbb85; --warn-ink:#e6b878; --warn-bg:#23200f; --warn-rule:#8a6a28;
+  --chip:#20252c; --plate:#ffffff;
+}}
+:root[data-theme="dark"]{
+  --paper:#101317; --surface:#181c22; --ink:#e6e9ed; --muted:#98a2b0;
+  --rule:#2a3038; --rule-soft:#22272e; --accent:#7fb3e0; --accent2:#e09880;
+  --ok:#5fbb85; --warn-ink:#e6b878; --warn-bg:#23200f; --warn-rule:#8a6a28;
+  --chip:#20252c; --plate:#ffffff;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size:16px; line-height:1.62; font-weight:400;
+}
+.wrap{max-width:1000px;margin:0 auto;padding:40px 24px 96px}
+.col{max-width:68ch}
+
+.eyebrow{
+  font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:11.5px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted); margin:0 0 10px;
+}
+h1{
+  font-size:clamp(28px,4.2vw,40px); line-height:1.12; letter-spacing:-.021em;
+  font-weight:600; margin:0 0 10px; text-wrap:balance;
+}
+.lede{font-size:18px; color:var(--muted); margin:0 0 4px; max-width:60ch}
+
+h2{
+  font-size:22px; font-weight:600; letter-spacing:-.012em; line-height:1.25;
+  margin:64px 0 14px; padding-top:20px; border-top:1px solid var(--rule);
+  display:flex; gap:14px; align-items:baseline; text-wrap:balance;
+}
+h2 .secno{
+  font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  font-size:13px; font-weight:500; color:var(--accent);
+  letter-spacing:.04em; flex:none; padding-top:2px;
+}
+h3{font-size:16.5px;font-weight:600;margin:30px 0 8px;letter-spacing:-.008em}
+p{margin:12px 0;max-width:68ch}
+ul{margin:12px 0;padding-left:20px;max-width:68ch}
+li{margin:9px 0}
+strong{font-weight:600}
+em{font-style:italic}
+
+code,.mono{
+  font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:.86em;
+}
+code{background:var(--chip); padding:1.5px 5px; border-radius:3px;
+  border:1px solid var(--rule-soft);}
+
+/* Tavole grafiche: lastre su bianco, come in un datasheet. Gli SVG sono
+   file versionati a parte e non possono leggere i token del tema, quindi
+   stanno su fondo bianco in entrambi i temi - scelta, non svista. */
+.plate{
+  background:var(--plate); border:1px solid var(--rule); border-radius:3px;
+  padding:8px; margin:20px 0; overflow-x:auto;
+}
+.plate img,.plate svg{display:block;max-width:100%;height:auto;margin:0 auto}
+
+.tablewrap{overflow-x:auto;margin:18px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+caption{
+  caption-side:top; text-align:left; color:var(--muted); padding-bottom:8px;
+  font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  font-size:11.5px; letter-spacing:.08em; text-transform:uppercase;
+}
+th,td{
+  border-bottom:1px solid var(--rule-soft); padding:8px 14px 8px 0;
+  text-align:left; white-space:nowrap; vertical-align:baseline;
+}
+th{
+  font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  font-size:11.5px; letter-spacing:.06em; text-transform:uppercase;
+  font-weight:500; color:var(--muted); border-bottom:1px solid var(--rule);
+}
+tbody tr:last-child td{border-bottom:1px solid var(--rule)}
+td.num{
+  text-align:right; font-variant-numeric:tabular-nums;
+  font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace; font-size:13px;
+}
+th.num{text-align:right}
+
+/* Quadro sinottico: i numeri di testa, non tessere giganti. */
+.synopsis{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr));
+  gap:0; margin:26px 0 6px; border-top:1px solid var(--rule);
+  border-bottom:1px solid var(--rule);
+}
+.synopsis div{padding:14px 18px 14px 0}
+.synopsis dt{
+  font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted); margin:0 0 5px;
+}
+.synopsis dd{
+  margin:0; font-size:21px; font-weight:600; letter-spacing:-.015em;
+  font-variant-numeric:tabular-nums;
+}
+.synopsis dd .u{font-size:13px;font-weight:400;color:var(--muted);margin-left:3px}
+
+.note{
+  background:var(--warn-bg); border-left:3px solid var(--warn-rule);
+  padding:14px 18px; margin:22px 0; max-width:68ch;
+}
+.note strong{color:var(--warn-ink)}
+
+nav.toc{margin:26px 0 0;border-top:1px solid var(--rule);padding-top:16px}
+nav.toc ol{
+  list-style:none; margin:0; padding:0; max-width:none;
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:2px 26px; counter-reset:toc;
+}
+nav.toc li{margin:0;counter-increment:toc}
+nav.toc a{
+  color:var(--ink); text-decoration:none; display:block; padding:4px 0;
+  border-bottom:1px solid transparent; font-size:14.5px;
+}
+nav.toc a::before{
+  content:counter(toc,decimal-leading-zero) "  ";
+  font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color:var(--accent); font-size:12px;
+}
+nav.toc a:hover{border-bottom-color:var(--rule)}
+a{color:var(--accent)}
+a:focus-visible,nav.toc a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.ok{color:var(--ok);font-weight:600}
+.no{color:var(--accent2);font-weight:600}
+.na{color:var(--muted)}
+.meta{color:var(--muted);font-size:13.5px;max-width:68ch}
+hr.end{border:0;border-top:1px solid var(--rule);margin:56px 0 0}
+@media (max-width:640px){
+  .wrap{padding:28px 16px 72px}
+  h2{flex-direction:column;gap:2px}
+}
+</style>
+<div class="wrap">
+<p class="eyebrow">Bozza &middot; dati del 2026-09-09 &middot; modelli segnaposto</p>
+<h1>Dossier di misura del preamplificatore di linea</h1>
+<p class="lede">Guadagno unitario, Classe A pura a componenti discreti, senza operazionali.</p>
+<dl class="synopsis">
+<div><dt>Guadagno 0 dB</dt><dd>-0,00849<span class="u">dB @ 1 kHz</span></dd></div>
+<div><dt>Guadagno +10 dB</dt><dd>9,9491<span class="u">dB @ 1 kHz</span></dd></div>
+<div><dt>Scarto ADR-014</dt><dd>0,022<span class="u">dB @ 20 kHz</span></dd></div>
+<div><dt>Margine di fase, peggiore</dt><dd>56,945<span class="u">gradi</span></dd></div>
+<div><dt>PSRR, peggiore</dt><dd>29,765<span class="u">dB @ 10 kHz</span></dd></div>
+<div><dt>Z<sub>out</sub> al jack</dt><dd>58,7602<span class="u">&Omega; @ 1 kHz</span></dd></div>
+</dl>
+<div class="note"><strong>Leggere prima questo.</strong> Tutti i numeri qui dentro vengono da <em>modelli SPICE segnaposto scritti a mano</em>, non da modelli del costruttore. Sono credibili la forma delle risposte in frequenza, i rapporti di guadagno, le impedenze e i risultati in continua. <strong>Non</strong> lo sono le cifre di distorsione (qui assenti di proposito) e quelle di rumore (escluse: <code>KF&nbsp;=&nbsp;0</code> su ogni dispositivo, quindi non esiste rumore 1/f in nessuna di queste simulazioni). I margini di fase sono provvisori: dipendono da capacità e tempi di transito scelti a mano.</div>
+<p>Il progetto sostituisce un Technics SU-9070 la cui struttura di guadagno richiede <strong>46 dB di attenuazione</strong>, causa misurabile della mancanza di dinamica lamentata. La topologia canonica è in <code>circuits/preamp/</code>; i banchi di prova in <code>spice/preamp/tb/</code>; i dati in <code>docs/preamp/data/2026-09-09/</code>.</p>
+<nav class="toc" aria-label="Indice"><ol>
+<li><a href="#s1">Il blocco di guadagno</a></li>
+<li><a href="#s2">Il preamplificatore intero</a></li>
+<li><a href="#s3">Punti di lavoro</a></li>
+<li><a href="#s4">Escursione in continua</a></li>
+<li><a href="#s5">Risposta in frequenza</a></li>
+<li><a href="#s6">Guadagno d&rsquo;anello</a></li>
+<li><a href="#s7">Reiezione dell&rsquo;alimentazione</a></li>
+<li><a href="#s8">Impedenza d&rsquo;uscita</a></li>
+<li><a href="#s9">Controfattuale del rel&egrave;</a></li>
+<li><a href="#s10">Requisiti a fronte del misurato</a></li>
+<li><a href="#s11">Cosa questo dossier non dice</a></li>
+<li><a href="#s12">Provenienza</a></li>
+</ol></nav>
+<p class="meta">Nessuna cifra di questa pagina è scritta a mano: sono tutte lette dai CSV versionati e ricontrollate contro i <code>print</code> che ngspice ha stampato nei log versionati accanto. Se le due strade divergono, il generatore rifiuta di produrre la pagina.</p>
+<h2 id="s1"><span class="secno">1</span><span>Il blocco di guadagno</span></h2>
+<p>Il blocco è uno solo (ADR-006) ed è usato quattro volte: due canali × blocco A (buffer d'ingresso) e blocco B (uscita principale). Quarantaquattro componenti. È l'oggetto da giudicare.</p>
+<div class="plate"><img src="../schematic/gain_block.svg" alt="Schema del blocco di guadagno" loading="lazy"></div>
+<h2 id="s2"><span class="secno">2</span><span>Il preamplificatore intero</span></h2>
+<div class="plate"><img src="../schematic/preamp_blocks.svg" alt="Diagramma a blocchi del preamplificatore" loading="lazy"></div>
+<h2 id="s3"><span class="secno">3</span><span>Punti di lavoro</span></h2>
+<p>Corrente assorbita dai rail e punto di lavoro di ogni dispositivo attivo, a ingresso a massa. È la parte che il progetto dichiara credibile anche coi modelli segnaposto.</p>
+<div class="tablewrap"><table><tr><th>Grandezza</th><th>Valore</th></tr>
+<tr><td>Corrente dal rail +15 V</td><td class="num">26,3624 mA</td></tr>
+<tr><td>Corrente dal rail −15 V</td><td class="num">27,3855 mA</td></tr>
+</table></div>
+<div class="tablewrap"><table><tr><th>Dispositivo</th><th>I<sub>C</sub> / I<sub>D</sub> [mA]</th><th>V<sub>BE</sub> / V<sub>GS</sub> [V]</th><th>V<sub>BC</sub> [V]</th></tr>
+<tr><td>JQ110</td><td class="num">2,2043</td><td class="num">-0,493</td><td class="num">&mdash;</td></tr>
+<tr><td>JQ111</td><td class="num">2,1695</td><td class="num">-0,501</td><td class="num">&mdash;</td></tr>
+<tr><td>Q106</td><td class="num">4,3739</td><td class="num">0,6911</td><td class="num">-13,9295</td></tr>
+<tr><td>Q118</td><td class="num">2,1861</td><td class="num">0,6753</td><td class="num">-3,802</td></tr>
+<tr><td>Q119</td><td class="num">2,1517</td><td class="num">0,6748</td><td class="num">-4,2613</td></tr>
+<tr><td>Q122</td><td class="num">-2,1252</td><td class="num">0,7363</td><td class="num">0,0207</td></tr>
+<tr><td>Q123</td><td class="num">-2,1288</td><td class="num">0,7361</td><td class="num">-0,4383</td></tr>
+<tr><td>Q124</td><td class="num">-6,4425</td><td class="num">0,7016</td><td class="num">-12,6905</td></tr>
+<tr><td>Q127</td><td class="num">6,4426</td><td class="num">0,7017</td><td class="num">-12,6675</td></tr>
+<tr><td>Q129</td><td class="num">5,5332</td><td class="num">0,7006</td><td class="num">-1,2454</td></tr>
+<tr><td>Q134</td><td class="num">14,5573</td><td class="num">0,6621</td><td class="num">-14,0173</td></tr>
+<tr><td>Q135</td><td class="num">-14,5573</td><td class="num">0,6621</td><td class="num">-13,9936</td></tr>
+<tr><td>R107</td><td class="num">&mdash;</td><td class="num">&mdash;</td><td class="num">&mdash;</td></tr>
+<tr><td>R125</td><td class="num">&mdash;</td><td class="num">&mdash;</td><td class="num">&mdash;</td></tr>
+<tr><td>R128</td><td class="num">&mdash;</td><td class="num">&mdash;</td><td class="num">&mdash;</td></tr>
+<tr><td>R136</td><td class="num">&mdash;</td><td class="num">&mdash;</td><td class="num">&mdash;</td></tr>
+<tr><td>R137</td><td class="num">&mdash;</td><td class="num">&mdash;</td><td class="num">&mdash;</td></tr>
+<tr><td>R138</td><td class="num">&mdash;</td><td class="num">&mdash;</td><td class="num">&mdash;</td></tr>
+<tr><td>RISO</td><td class="num">&mdash;</td><td class="num">&mdash;</td><td class="num">&mdash;</td></tr>
+</table></div>
+<h2 id="s4"><span class="secno">4</span><span>Escursione in continua e saturazione</span></h2>
+<div class="plate"><img src="fig_headroom.svg" alt="Escursione in continua" loading="lazy"></div>
+<p>La <em>finestra lineare</em> qui sotto è definita, perché non è una grandezza universale: è il più grande intervallo attorno a 0 V in cui il guadagno locale resta entro l'1% del suo valore a 0 V.</p>
+<div class="tablewrap"><table><tr><th>Modalità</th><th>Guadagno a 0 V</th><th>Finestra lineare in ingresso</th><th>v(OUT) al limite</th><th>Saturazione v(OUT)</th></tr>
+<tr><td>0 dB</td><td class="num">0,9997 ×</td><td class="num">-13,3 … 7,7 V</td><td class="num">-13,308 … 7,686 V</td><td class="num">-14,507 … 9,367 V</td></tr>
+<tr><td>+10 dB</td><td class="num">3,146 ×</td><td class="num">-4,15 … 4,1 V</td><td class="num">-13,095 … 12,86 V</td><td class="num">-14,016 … 13,218 V</td></tr>
+</table></div>
+<p>Le due modalità <strong>non saturano allo stesso livello, e la differenza non è nello stadio d'uscita</strong>. A guadagno unitario v(FB) insegue v(OUT), quindi il modo comune visto dalla coppia d'ingresso sale <em>insieme</em> all'uscita ed è lui a fermarsi per primo: l'uscita si appoggia a 9,3667 V. A +10 dB v(FB) vale un terzo di v(OUT), il modo comune resta basso, e l'uscita arriva a 13,2176 V. È una proprietà della topologia, non dei modelli; i valori esatti dipendono invece dal modello del JFET, che è segnaposto. Il ramo negativo è limitato prima dallo stadio d'uscita, e infatti coincide quasi nelle due modalità.</p>
+<p>Con rail a ±15 V (ADR-015) il limite lineare in +10 dB corrisponde a <strong>9,093 V RMS</strong> in uscita. Il caso che preoccupa è E6 × E2: il FiiO K11 a fondo scala dà 2,7 V RMS, che a +10 dB vorrebbero 8,538 V RMS. Il margine è quindi di circa <strong>0,55 dB</strong>, ed è la ragione per cui il trim di ADR-011 non è più opzionale.</p>
+<p class="meta">Questo margine è più stretto di quello registrato in STATE.md (0,75 dB, da 9,31 V RMS) perché <strong>la metrica è diversa</strong>, non perché il circuito sia cambiato: qui il limite è il punto in cui il guadagno si scosta dell'1%, che arriva prima del punto in cui la forma d'onda visibilmente tosa. È la lettura conservativa delle due, e le due cifre vanno riconciliate quando arriveranno i modelli vendor.</p>
+<h2 id="s5"><span class="secno">5</span><span>Risposta in frequenza</span></h2>
+<div class="plate"><img src="fig_response.svg" alt="Risposta in frequenza" loading="lazy"></div>
+<div class="tablewrap"><table><tr><th>Curva</th><th>20 Hz</th><th>1 kHz</th><th>20 kHz</th><th>100 kHz</th></tr>
+<tr><td>0 dB · sorgente 1,5 Ω</td><td class="num">-0,0111 dB</td><td class="num">-0,008491 dB</td><td class="num">-0,008303 dB</td><td class="num">-0,003849 dB</td></tr>
+<tr><td>0 dB · sorgente 2500 Ω</td><td class="num">-0,0328 dB</td><td class="num">-0,0302 dB</td><td class="num">-0,0299 dB</td><td class="num">-0,0244 dB</td></tr>
+<tr><td>+10 dB · sorgente 1,5 Ω</td><td class="num">9,9465 dB</td><td class="num">9,9491 dB</td><td class="num">9,9331 dB</td><td class="num">9,5655 dB</td></tr>
+<tr><td>+10 dB · sorgente 2500 Ω</td><td class="num">9,9248 dB</td><td class="num">9,9274 dB</td><td class="num">9,9116 dB</td><td class="num">9,547 dB</td></tr>
+</table></div>
+<h3>La claim falsificabile di ADR-014</h3>
+<p>L'attenuatore a gradini ha impedenza d'uscita che va da ~0 a 2,5 kΩ e ritorno mentre si ruota la manopola. Se il cascode d'ingresso fa il suo lavoro, <strong>la risposta a 20 kHz non deve muoversi</strong>. Se si muove, ADR-014 non è stata implementata, qualunque cosa dica lo schema.</p>
+<div class="plate"><img src="fig_response_adr014.svg" alt="ADR-014: risposta contro impedenza di sorgente" loading="lazy"></div>
+<div class="tablewrap"><table><tr><th>Modalità</th><th>20 kHz, sorgente 1,5 Ω</th><th>20 kHz, sorgente 2500 Ω</th><th>scarto</th></tr>
+<tr><td>0 dB</td><td class="num">-0,008303 dB</td><td class="num">-0,0299 dB</td><td class="num"><strong>0,022 dB</strong></td></tr>
+<tr><td>+10 dB</td><td class="num">9,9331 dB</td><td class="num">9,9116 dB</td><td class="num"><strong>0,022 dB</strong></td></tr>
+</table></div>
+<h3>Il taglio in bassa, col carico da 50 kΩ</h3>
+<p>Con il carico Stax-like da 50 kΩ invece dei 100 kΩ del finale: -0,0163 dB a 1 kHz, -0,0238 dB a 20 Hz, -0,1344 dB a 5 Hz. Il polo è quello del condensatore d'uscita da 4,7 µF (E8 / ADR-007).</p>
+<h2 id="s6"><span class="secno">6</span><span>Guadagno d'anello e margine di fase</span></h2>
+<p>Iniezione di tensione al gate del JFET invertente. Quel nodo non assorbe corrente e la rete di controreazione lo pilota da ~470 Ω, quindi l'iniezione semplice è esatta e non serve la correzione di Middlebrook. <strong>Il relè commuta la rete di controreazione, quindi il margine è diverso nelle due modalità</strong> — è la ragione per cui REQUIREMENTS.md chiede tutta la matrice V1 e non un caso solo.</p>
+<div class="plate"><img src="fig_loop.svg" alt="Guadagno d'anello" loading="lazy"></div>
+<div class="tablewrap"><table><tr><th>Configurazione</th><th>|T| a 10 Hz</th><th>frequenza d'incrocio</th><th>margine di fase</th></tr>
+<tr><td>0 dB · cavo ~0</td><td class="num">72,3128 dB</td><td class="num">953,6851 kHz</td><td class="num"><strong>63,5433°</strong></td></tr>
+<tr><td>0 dB · cavo 4,7 nF</td><td class="num">72,3128 dB</td><td class="num">837,9289 kHz</td><td class="num"><strong>56,9452°</strong></td></tr>
+<tr><td>+10 dB · cavo ~0</td><td class="num">61,7638 dB</td><td class="num">306,4352 kHz</td><td class="num"><strong>86,1603°</strong></td></tr>
+<tr><td>+10 dB · cavo 4,7 nF</td><td class="num">61,7638 dB</td><td class="num">295,6557 kHz</td><td class="num"><strong>80,632°</strong></td></tr>
+</table></div>
+<p>Il caso peggiore fra questi quattro è <strong>56,945°</strong>. Il carico capacitivo da 4,7 nF è molto più di quanto un cablaggio da 20 cm possa presentare: è una sonda di margine, non un valore realistico.</p>
+<h2 id="s7"><span class="secno">7</span><span>Reiezione dell'alimentazione</span></h2>
+<div class="plate"><img src="fig_psrr.svg" alt="PSRR" loading="lazy"></div>
+<div class="tablewrap"><table><tr><th>Rail e modalità</th><th>100 Hz</th><th>1 kHz</th><th>10 kHz</th><th>100 kHz</th></tr>
+<tr><td>rail + · 0 dB</td><td class="num">72,0191 dB</td><td class="num">59,5127 dB</td><td class="num">39,718 dB</td><td class="num">19,7195 dB</td></tr>
+<tr><td>rail + · +10 dB</td><td class="num">62,0662 dB</td><td class="num">49,5555 dB</td><td class="num">29,7645 dB</td><td class="num">10,1515 dB</td></tr>
+<tr><td>rail − · 0 dB</td><td class="num">88,9697 dB</td><td class="num">100,5035 dB</td><td class="num">96,9063 dB</td><td class="num">71,02 dB</td></tr>
+<tr><td>rail − · +10 dB</td><td class="num">79,0151 dB</td><td class="num">90,5411 dB</td><td class="num">86,9307 dB</td><td class="num">61,4378 dB</td></tr>
+</table></div>
+<p>Il rail <strong>positivo</strong> è il lato debole, e in modalità +10 dB perde i 10 dB di guadagno: <strong>29,765 dB a 10 kHz</strong>. È il numero da avere in mano quando si progetta l'alimentatore (Fase 6).</p>
+<h2 id="s8"><span class="secno">8</span><span>Impedenza d'uscita</span></h2>
+<div class="plate"><img src="fig_zout.svg" alt="Impedenza d'uscita" loading="lazy"></div>
+<div class="tablewrap"><table><tr><th>Punto di misura</th><th>20 Hz</th><th>1 kHz</th><th>20 kHz</th><th>100 kHz</th></tr>
+<tr><td>al jack · 0 dB</td><td class="num">1693 Ω</td><td class="num">58,7602 Ω</td><td class="num">48,0489 Ω</td><td class="num">48,0554 Ω</td></tr>
+<tr><td>al jack · +10 dB</td><td class="num">1693 Ω</td><td class="num">60,5821 Ω</td><td class="num">50,2959 Ω</td><td class="num">51,0726 Ω</td></tr>
+<tr><td>al nodo OUT · 0 dB</td><td class="num">1,0368 Ω</td><td class="num">1,0369 Ω</td><td class="num">1,0687 Ω</td><td class="num">1,6595 Ω</td></tr>
+<tr><td>al nodo OUT · +10 dB</td><td class="num">3,2628 Ω</td><td class="num">3,263 Ω</td><td class="num">3,3567 Ω</td><td class="num">4,9945 Ω</td></tr>
+</table></div>
+<div class="note"><strong>Tensione fra E4 ed E8, segnalata e non aggirata.</strong> E4 chiede &lt; 100 Ω in banda passante. Al jack a 20 Hz la misura dà 1693 Ω, ma quella <em>è la reattanza del condensatore d'uscita da 4,7 µF</em>, non l'impedenza dello stadio: al nodo OUT, prima del condensatore, la stessa frequenza dà 1,037 Ω. <strong>E4 letta alla lettera non è soddisfacibile a 20 Hz da nessun circuito con condensatore d'uscita</strong>, ed è per questo che il requisito dice «misurata escludendo la reattanza del condensatore d'accoppiamento».</div>
+<h2 id="s9"><span class="secno">9</span><span>Il controfattuale del relè di guadagno</span></h2>
+<p>ADR-004 ha <strong>scartato</strong> l'idea di mettere il contatto del relè in serie a R<sub>f</sub>, cioè nel ramo dell'anello. Una decisione di progetto porta informazione solo se la disposizione scartata è mostrata <em>fallire</em>: questo è il mezzo falsificabile della verifica V2.</p>
+<p>Con R<sub>f</sub> aperto non esiste più alcun percorso di controreazione: la coppia d'ingresso vede solo il proprio offset moltiplicato per tutto il guadagno ad anello aperto, e l'uscita se ne va a <strong>-13,676851 V</strong>. Per essere precisi non sbatte contro il rail né contro il proprio limite di saturazione (-14,50664 V, misurato nella sezione 4): si ferma poco prima, dove il guadagno ad anello aperto moltiplicato per l'offset residuo trova equilibrio. Il punto della verifica non cambia — a quel livello lo stadio non amplifica più niente.</p>
+<div class="plate"><img src="fig_counterfactual.svg" alt="Controfattuale del relè di guadagno" loading="lazy"></div>
+<div class="tablewrap"><table><tr><th>Stato</th><th>Configurazione</th><th>v(OUT)</th><th>v(FB)</th></tr>
+<tr><td><strong>A</strong></td><td>contatto CHIUSO, R_f = 1,50 kΩ</td><td class="num"><strong>-0,037229 V</strong></td><td class="num">-0,011824 V</td></tr>
+<tr><td><strong>B</strong></td><td>contatto APERTO, R_f = 1e12 Ω</td><td class="num"><strong>-13,676851 V</strong></td><td class="num">-2,64253e-09 V</td></tr>
+<tr><td><strong>C</strong></td><td>richiuso, controprova di B</td><td class="num"><strong>-0,037229 V</strong></td><td class="num">-0,011824 V</td></tr>
+</table></div>
+<p>C esiste per escludere che B sia un artefatto del solutore: A e C coincidono a tutte le cifre. La disposizione scelta da ADR-004 commuta invece R<sub>g</sub> verso massa, quindi a contatti aperti il guadagno è 1 e <strong>l'anello non si apre mai</strong>.</p>
+<p class="meta">Manca ancora il transitorio del relè da affiancare a questi tre punti: i suoi dati grezzi sono 2,8 MB e non sono stati versionati. È una decisione aperta, non una dimenticanza.</p>
+<h2 id="s10"><span class="secno">10</span><span>Requisiti a fronte del misurato</span></h2>
+<p>Solo i requisiti che queste misure toccano. Il resto non è qui perché non è ancora stato misurato, non perché sia soddisfatto.</p>
+<div class="tablewrap"><table><tr><th>Req.</th><th>Chiede</th><th>Misurato</th><th>Esito</th></tr>
+<tr><td>E1</td><td>guadagno nominale 0 dB</td><td class="num">-0,008491 dB a 1 kHz</td><td class="ok">soddisfatto</td></tr>
+<tr><td>E2</td><td>guadagno alternativo +10 dB</td><td class="num">9,9491 dB a 1 kHz</td><td class="ok">soddisfatto</td></tr>
+<tr><td>E4</td><td>Z<sub>out</sub> &lt; 100 Ω in banda passante, esclusa la reattanza del cap</td><td class="num">58,7602 Ω a 1 kHz al jack · 1,037 Ω al nodo OUT</td><td class="ok">soddisfatto in banda; vedi la nota su 20 Hz</td></tr>
+<tr><td>E5</td><td>rumore in uscita &lt; 10 µV RMS</td><td class="na">non riportato</td><td class="na">senza evidenza — modelli con KF = 0</td></tr>
+<tr><td>E6×E2</td><td>2,7 V RMS d'ingresso a +10 dB</td><td class="num">limite lineare 9,093 V RMS</td><td class="ok">margine 0,55 dB — il trim di ADR-011 non è opzionale</td></tr>
+<tr><td>V1</td><td>margine di fase in tutta la matrice</td><td class="num">peggiore fra i 4 casi: 56,945°</td><td class="na">parziale — 4 casi su una matrice molto più grande</td></tr>
+<tr><td>V2</td><td>l'anello non si apre mai commutando</td><td>controfattuale a −13,68 V, disposizione scelta stabile</td><td class="na">metà falsificabile fatta; manca il transitorio</td></tr>
+<tr><td>V4</td><td>THD/THD+N</td><td class="na">assente</td><td class="na">nessun modello vendor: una cifra sarebbe priva di significato</td></tr>
+</table></div>
+<h2 id="s11"><span class="secno">11</span><span>Cosa questo dossier non dice</span></h2>
+<ul>
+<li><strong>Niente distorsione.</strong> I modelli sono segnaposto e il macro-modello dichiara nella propria intestazione di non avere clipping del segnale, né slew rate, né assorbimento dalle alimentazioni. Una cifra di THD da questa libreria sarebbe priva di significato.</li>
+<li><strong>Niente rumore.</strong> <code>KF = 0</code> su ogni dispositivo: nessuna di queste simulazioni ha rumore 1/f. I deck lo calcolano, ma la cifra è un pavimento termico+shot, non una previsione, e per questo non è stata versionata.</li>
+<li><strong>Un difetto trovato costruendo questa pagina, e corretto prima di pubblicarla.</strong> <code>za100k</code> e <code>p100k</code> chiedevano <code>find … at=100000</code> su una spazzata che <em>finiva</em> a 100 kHz: <code>meas … find at=</code> interpola fra due punti, quindi sul bordo ngspice rispondeva «out of interval» e sei misure su sei sezioni non venivano prodotte — con il deck che proseguiva e usciva 0, quindi il buco non si vedeva dal codice di uscita. La spazzata ora arriva a 200 kHz e le colonne a 100 kHz qui sopra esistono. Effetto collaterale misurato: la griglia si è fatta regolare e il valore interpolato a 1 kHz si è spostato dello 0,14% (58,84 → 58,76 Ω). Non è il circuito che è cambiato: è la misura dell&rsquo;errore di interpolazione di <code>find at=</code> su una griglia da 20 punti/decade.</li>
+<li><strong>La matrice V1 è coperta in minima parte.</strong> Quattro combinazioni su blocco × posizione dell'attenuatore × carico × sorgente. Il blocco A ha un suo deck, non impaginato qui.</li>
+<li><strong>Mancano i transitori</strong>: commutazione del relè e recupero dalla saturazione (V3). I deck girano, ma i dati grezzi sono 2,8 e 1,9 MB e non è stato deciso come versionarli.</li>
+<li><strong>Nessuno qui giudica come suona.</strong> La simulazione copre stabilità, risposta, PSRR e impedenze; non copre l'ascolto.</li>
+</ul>
+<h2 id="s12"><span class="secno">12</span><span>Provenienza</span></h2>
+<p>Ogni figura e ogni tabella dichiara il file da cui viene. I file stanno in <code>docs/preamp/data/2026-09-09/</code>, versionati, con accanto il <code>.log</code> di ngspice come evidenza e un <code>README.md</code> con la legenda delle colonne.</p>
+<div class="tablewrap"><table><tr><th>Sezione</th><th>Deck</th><th>Dati</th></tr>
+<tr><td>Punti di lavoro</td><td><code>tb_op.cir</code></td><td><code>tb_op.log</code></td></tr>
+<tr><td>Escursione in continua</td><td><code>tb_dc_headroom.cir</code></td><td><code>tb_dc_headroom*.csv</code></td></tr>
+<tr><td>Risposta in frequenza</td><td><code>tb_ac.cir</code></td><td><code>tb_ac*.csv</code></td></tr>
+<tr><td>Guadagno d'anello</td><td><code>tb_loop.cir</code></td><td><code>tb_loop_*.csv</code></td></tr>
+<tr><td>PSRR</td><td><code>tb_zout_psrr_noise.cir</code></td><td><code>tb_zout_psrr_noise_psrr*.csv</code></td></tr>
+<tr><td>Impedenza d'uscita</td><td><code>tb_zout_psrr_noise.cir</code></td><td><code>tb_zout_psrr_noise_zout_*.csv</code></td></tr>
+<tr><td>Controfattuale del relè</td><td><code>tb_switch_v2_counterfactual.cir</code></td><td><code>tb_switch_v2_counterfactual*.csv</code></td></tr>
+</table></div>
+<p class="meta">Rigenerare questa pagina: <code>/usr/bin/python3 docs/preamp/dossier/build_dossier.py</code>. Rieseguire una misura: <code>/bin/zsh scripts/run_simulation.sh spice/preamp/tb/&lt;deck&gt;.cir results/preamp/&lt;deck&gt;</code>.</p>
+<hr class="end">
+</div>

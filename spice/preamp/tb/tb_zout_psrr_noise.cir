@@ -58,10 +58,10 @@ IOUT   0 JACK DC 0 AC 0
 *
 * COLONNE. Per ogni vettore una COPPIA (frequenza, valore): le PARI sono
 * la frequenza ripetuta, i dati sono le DISPARI.
-*   sezione Zout  (75 righe, 20 Hz - 100 kHz, 20 punti/decade)
+*   sezione Zout  (81 righe, 20 Hz - 200 kHz, 20 punti/decade)
 *     col0 = f [Hz]  col1 = Z  = |v(JACK)| = ohm AL JACK (1 A iniettato)
 *     col2 = f [Hz]  col3 = ZA = |v(OUT)|  = ohm al nodo OUT, prima di RISO
-*   sezioni PSRR  (75 righe)
+*   sezioni PSRR  (81 righe)
 *     col0 = f [Hz]  col1 = P = -db(v(JACK)) in dB, PIU' GRANDE E' MEGLIO
 *   sezioni rumore (151 righe, 20 Hz - 20 kHz, 50 punti/decade, plot noise1)
 *     col0 = f [Hz]  col1 = onoise_spectrum [V/sqrt(Hz)]
@@ -79,6 +79,35 @@ IOUT   0 JACK DC 0 AC 0
 * Controprova indipendente: tb_noise_breakdown.cir misura la stessa
 * configurazione (D) e da' 5.696897e-06.
 * ---------------------------------------------------------------------
+* *** LA SPAZZATA ARRIVA A 200 kHz, NON A 100 kHz (L5b) ***
+* `meas ... find <vec> at=100000` interpola FRA due punti, quindi vuole che
+* 100 kHz sia INTERNO alla spazzata. Con `ac dec 20 20 100k` cadeva
+* sull'ultimo punto e ngspice rispondeva
+*     Error: measure  za100k  find(AT) : out of interval
+* lasciando za100k e p100k inesistenti: sei misure su sei sezioni non
+* venivano prodotte, e il `print` che segue stampava solo un warning. Il
+* deck proseguiva e usciva 0, quindi il buco non si vedeva dal codice di
+* uscita.
+*
+* IL RIMEDIO SPOSTA LA GRIGLIA, e va detto perche' l'ipotesi contraria e'
+* stata falsificata confrontando i log. Con `dec 20 20 100k` la spazzata
+* copre 3,699 decadi: ngspice NON usa un passo di 1/20 di decade e poi si
+* ferma, distribuisce 74 punti fra gli estremi, quindi il passo reale era
+* 0,0507 decadi. Con 200k le decadi sono 4 esatte, i punti diventano 81 e
+* il passo e' esattamente 0,05. Conseguenza misurata:
+*
+*   z20   1.69341e+03 -> 1.69341e+03   identico (e' il primo punto)
+*   z1k   5.88414e+01 -> 5.87602e+01   -0,14%
+*   z20k  4.80490e+01 -> 4.80488e+01   -4e-6
+*   za*   identici a cinque cifre tranne za20k, -7e-5
+*
+* Solo z1k si muove in modo visibile, e NON perche' il circuito sia
+* cambiato: 1 kHz non cade su un punto della griglia in nessuno dei due
+* casi, quindi `meas find at=1000` interpola, e i due vicini fra cui
+* interpola sono diversi. E' la misura dell'errore di interpolazione di
+* `meas find at=` su una griglia da 20 punti/decade: circa 0,1%. Il valore
+* nuovo e' il migliore dei due, perche' la griglia e' ora regolare.
+*
 set t = .txt
 set units = degrees
 
@@ -93,7 +122,7 @@ foreach mode 1G 0.1
   if $mode = 0.1
     set gm = "10db"
   end
-  ac dec 20 20 100k
+  ac dec 20 20 200k
   let Z = mag(v(JACK))
   meas ac z20   find Z at=20
   meas ac z1k   find Z at=1000
@@ -122,7 +151,7 @@ foreach mode 1G 0.1
   if $mode = 0.1
     set gm = "10db"
   end
-  ac dec 20 20 100k
+  ac dec 20 20 200k
   let P = -db(v(JACK))
   meas ac p100  find P at=100
   meas ac p1k   find P at=1000
@@ -145,7 +174,7 @@ foreach mode 1G 0.1
   if $mode = 0.1
     set gm = "10db"
   end
-  ac dec 20 20 100k
+  ac dec 20 20 200k
   let P = -db(v(JACK))
   meas ac p100  find P at=100
   meas ac p1k   find P at=1000

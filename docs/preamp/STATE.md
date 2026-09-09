@@ -6,7 +6,7 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-09** (L5 chiuso: tutti e 12 i deck scrivono dati, e il rumore di caso peggiore e' corretto; prossimo lotto L6)
+Ultimo aggiornamento: **2026-09-09** (L5b chiuso: prima bozza del dossier, generata dai dati; prossimo lotto L6)
 
 ---
 
@@ -70,6 +70,7 @@ manciata di file, **M** = riempie una sessione da solo.
 | L3d | Annotare il difetto `setplot`/plot stale di `tb_zout_psrr_noise.cir` (warning per L5) | XS | **fatto** |
 | L4 | `wrdata` sui deck muti **senza** cicli | S | **fatto** |
 | L5 | `wrdata` sui deck muti **con** cicli + correzione del caso peggiore | S/M | **fatto** |
+| L5b | Prima bozza del dossier, generata dai dati + correzione di `za100k`/`p100k` | S/M | **fatto** |
 | L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | **prossimo** |
 | L7 | LSK489: passo 4, il controllo incrociato | S | da fare |
 | L8 | Fase 3a — le parti nuove, fatti verificabili | M | da fare |
@@ -570,7 +571,7 @@ avanti.
 rosa è un giudizio aperto: se il cap arriva, è meglio che tagli la
 seconda.
 
-## Il dossier: formato deciso, non ancora iniziato
+## Il dossier: prima bozza consegnata in L5b
 
 **Il dossier non è negoziabile, e non si taglia per arrivare prima a G1.**
 Detto dall'utente il 2026-09-08 («il dossier per me è estremamente
@@ -601,7 +602,74 @@ punti di lavoro e le previsioni dichiarate.
 
 La pagina ha senso **dopo** che ci sono grafici veri da impaginare: viene
 dopo le misure, non prima. Il lavoro preliminare che la rende possibile è
-L2-L5.
+L2-L5, ed è finito: **la prima bozza esiste da L5b.**
+
+**L5b — la bozza del dossier. FATTO.** Sta in `dossier/`, si rigenera con
+
+```sh
+/usr/bin/python3 docs/preamp/dossier/build_dossier.py
+```
+
+e produce sei tavole SVG più `index.html`, che le impagina insieme allo
+schema del blocco di guadagno e al diagramma a blocchi di L1. Dodici
+sezioni numerate perché il revisore possa citarle.
+
+**La regola che governa il generatore è quella di L1, più una rete in
+più.** Nessuna cifra della pagina è scritta a mano: sono tutte lette dai
+CSV versionati. E ogni quantità calcolata dal CSV viene **confrontata con
+quella che ngspice ha stampato da sé** nel `.log` versionato accanto — due
+strade indipendenti verso lo stesso numero, la mia interpolazione sui
+campioni e il `meas`/`print` del simulatore. Se divergono oltre la
+tolleranza dichiarata lo script **rifiuta e non scrive niente**, come
+`export_fab.sh` sulla DRC, e non ha flag di bypass. Collaudato facendolo
+fallire di proposito: spostando di 0,5 dB un punto vicino a 1 kHz dentro
+`tb_ac_0db_1.5.csv`, il generatore rifiuta e nomina lo scarto.
+
+**Il difetto trovato costruendola, ed è il motivo per cui costruirla
+serviva.** `za100k` e `p100k` chiedevano `find … at=100000` su una
+spazzata che *finiva* a 100 kHz: `meas … find at=` interpola fra due
+punti, quindi sul bordo ngspice rispondeva «out of interval», il `print`
+che segue falliva a sua volta, e **sei misure su sei sezioni non venivano
+prodotte** — con il deck che proseguiva e usciva 0, quindi dal codice di
+uscita il buco non si vedeva. Non era stato notato in L5 perché L5
+guardava i file prodotti e il numero di righe, non il contenuto delle
+tabelle. La spazzata arriva ora a **200 kHz**.
+
+Effetto collaterale **misurato, non assunto**: con `dec 20 20 100k` la
+spazzata copre 3,699 decadi e ngspice distribuisce 74 punti fra gli
+estremi, quindi il passo reale era 0,0507 decadi, non 1/20. Con 200 kHz le
+decadi sono 4 esatte, i punti 81, il passo esattamente 0,05. Si è mosso
+solo `z1k` (58,84 → 58,76 Ω, −0,14%), e **non perché il circuito sia
+cambiato**: 1 kHz non cade su un punto della griglia in nessuno dei due
+casi, quindi `find at=1000` interpola fra vicini diversi. È la misura
+dell'errore di interpolazione di `find at=` su 20 punti/decade: circa
+0,1%. Tutto il resto varia in quarta cifra, quindi **nessuna cifra già
+scritta altrove diventa falsa**.
+
+**Un risultato di topologia che prima non era stato letto.** Le due
+modalità non saturano allo stesso livello: a guadagno unitario v(FB)
+insegue v(OUT), quindi il modo comune della coppia d'ingresso sale
+*insieme* all'uscita ed è lui a fermarsi per primo, a **+9,37 V**; a
++10 dB v(FB) vale un terzo di v(OUT), il modo comune resta basso e
+l'uscita arriva a **+13,2 V**. Il ramo negativo è invece limitato dallo
+stadio d'uscita e coincide quasi nelle due modalità. È una proprietà della
+topologia; i valori esatti dipendono dal modello del JFET, che è
+segnaposto.
+
+Nota di riconciliazione, perché due cifre diverse circolano: il dossier
+riporta un margine E6×E2 di **0,55 dB** contro gli 0,75 dB registrati più
+sotto. Non è il circuito che è cambiato, è la **metrica**: il dossier
+prende il punto in cui il guadagno si scosta dell'1%, che arriva prima del
+punto in cui la forma d'onda visibilmente tosa. È la lettura conservativa
+delle due, e vanno riconciliate quando arriveranno i modelli vendor.
+
+**Cosa manca ancora alla bozza**, scritto dentro la pagina stessa nella
+sezione «Cosa questo dossier non dice»: i due transitori (commutazione del
+relè e recupero da sovraccarico), perché i dati grezzi sono 2,8 e 1,9 MB e
+non è deciso come versionarli; la distorsione, che senza modelli vendor
+sarebbe priva di significato; il rumore, escluso per la stessa ragione di
+L4; e la matrice V1, coperta in quattro casi su una matrice molto più
+grande.
 
 **Nota di scoping dell'utente**: non serve un disegno da 205 componenti.
 Servono **il blocco di guadagno** (44 componenti, l'oggetto da giudicare,

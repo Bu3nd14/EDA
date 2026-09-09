@@ -96,11 +96,28 @@ FATTO QUANDO
   - `/bin/zsh scripts/run_tests.sh` resta 5 passed, 0 failed
 
 UNA COSA CHE ORA È VERA E PRIMA NO: dopo L5 tutti e 12 i deck scrivono
-CSV/JSON, e in `docs/preamp/data/2026-09-09/` ci sono i numeri di oggi coi
-modelli segnaposto. Quindi il giorno in cui i modelli veri entrano nel
-repo **basta rieseguire i deck** per avere numeri nuovi confrontabili con
-quelli di oggi, senza toccare nessun banco di prova. Non farlo in L6 —
-è Fase 5 — ma sappi che il confronto esiste già.
+CSV/JSON, e dopo L5b esiste **la prima bozza del dossier**, in
+`docs/preamp/dossier/` — si rigenera con
+
+```sh
+/usr/bin/python3 docs/preamp/dossier/build_dossier.py
+```
+
+e ogni cifra che stampa è letta dai dati versionati e **ricontrollata
+contro i `print` di ngspice**; se le due strade divergono, rifiuta di
+scrivere. Quindi il giorno in cui i modelli veri entrano nel repo basta
+rieseguire i deck e rigenerare la pagina per avere numeri nuovi
+confrontabili con quelli di oggi, senza toccare nessun banco di prova.
+Non farlo in L6 — è Fase 5 — ma sappi che il confronto esiste già.
+
+DECISIONE APERTA, non tecnica: l'utente ha chiesto che la bozza venga
+rivista da un **«Revisore Avversariale»**. Nel repo non esiste: il roster
+ha 12 agenti e l'unico revisore è `design-reviewer`, che è legato ai gate
+G1/G2/G3. Va deciso con lui se (a) usare `design-reviewer` fuori dal
+contesto di gate per una revisione avversariale delle misure, (b) definire
+un agente nuovo con un mandato diverso, o (c) chiedergli il verdetto G1
+vero e proprio sapendo che darà non conformità bloccanti automatiche
+(Fasi 3-4 non fatte, modelli segnaposto). **Non decidere da solo.**
 
 COME LAVORIAMO
 
