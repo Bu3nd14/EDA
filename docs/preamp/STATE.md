@@ -6,7 +6,7 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-08** (L2 chiuso: la convenzione di percorso è collaudata su `tb_op.cir`; prossimo lotto L3)
+Ultimo aggiornamento: **2026-09-09** (L3 chiuso: tutti e 12 i deck sono sulla convenzione e nessuno legge più dal worktree vecchio; prossimo lotto L4)
 
 ---
 
@@ -53,8 +53,9 @@ manciata di file, **M** = riempie una sessione da solo.
 | L0 | Riallineare questo file e depositarci il piano | XS | **fatto** |
 | L1 | Diagramma a blocchi del preamp intero | S/M | **fatto** |
 | L2 | Collaudare la convenzione di percorso su un deck solo (`.include` **e** `wrdata`) | S | **fatto** |
-| L3 | Applicare la convenzione agli altri 11 deck (26 righe cablate rimaste) | S | **prossimo** |
-| L4 | `wrdata` sui deck muti **senza** cicli | S | da fare |
+| L3 | Applicare la convenzione agli altri 11 deck (26 righe cablate rimaste) | S | **fatto** |
+| L3b | `REPO` cablato in `circuits/preamp/gain_block.py` — **obbligatorio prima della Fase 4** | XS/S | da fare |
+| L4 | `wrdata` sui deck muti **senza** cicli | S | **prossimo** |
 | L5 | `wrdata` sui deck muti **con** cicli annidati | S/M | da fare |
 | L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | da fare |
 | L7 | LSK489: passo 4, il controllo incrociato | S | da fare |
@@ -89,26 +90,55 @@ tutti e tre i casi.
 Il valore reale è +9,96 dB (R_f 1,50 kΩ / R_g 698 Ω): dentro tolleranza,
 ma vale saperlo prima che qualcuno lo scopra misurando.
 
-**L2-L5 — i testbench diventano artefatti.** Oggi solo 3 dei 12 deck in
-`spice/preamp/tb/` scrivono file dati. Ma aprendo i deck per L2 è emerso
-un problema **più grande di quello registrato**, e va detto per intero.
+**L2-L5 — i testbench diventano artefatti.** Oggi scrivono file dati
+**4 deck su 12** (`tb_op`, `tb_dc_headroom` con due file, `tb_switch_v2`,
+`tb_v3_overload`): 5 file in tutto. Gli 8 muti sono L4 e L5. Ma aprendo i
+deck per L2 è emerso un problema **più grande di quello registrato**, e
+va detto per intero — anche ora che è chiuso, perché è il ragionamento
+che ha prodotto la convenzione.
 
-**Tutti e 12 i deck leggono il circuito dal worktree vecchio.** Non sono
-4 righe `wrdata`: sono **28 righe** con un percorso assoluto cablato
-dentro `.claude/worktrees/preamp-fase1/`, e **24 di quelle sono
+**RISOLTO IN L3 — quello che segue è la diagnosi, non lo stato attuale.**
+Tutti e 12 i deck leggevano il circuito dal worktree vecchio. Non erano
+4 righe `wrdata`: erano **28 righe** con un percorso assoluto cablato
+dentro `.claude/worktrees/preamp-fase1/`, e **24 di quelle erano
 `.include`**:
 
 ```
 .include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
 ```
 
-La metà pericolosa è la lettura, non la scrittura. Una modifica al
-circuito su `main` **non raggiungerebbe le simulazioni**: continuerebbero
-a includere la copia di settembre, senza errore da nessuna parte. Oggi le
-due copie sono identiche — verificato con `diff` su
-`gain_block_flat.inc` e `placeholder_devices.lib` — quindi **nessun
-risultato prodotto finora è sbagliato**. Ma il meccanismo è armato, e
-cancellare quel worktree rompe di colpo tutti e 12 i deck.
+La metà pericolosa era la lettura, non la scrittura. Una modifica al
+circuito su `main` **non avrebbe raggiunto le simulazioni**: avrebbero
+continuato a includere la copia di settembre, senza errore da nessuna
+parte. Le due copie erano identiche — verificato con `diff` su
+`gain_block_flat.inc` e `placeholder_devices.lib`, e riverificato in L3 —
+quindi **nessun risultato prodotto è sbagliato**. Ma il meccanismo era
+armato, e cancellare quel worktree avrebbe rotto di colpo tutti e 12 i
+deck.
+
+**Ma quel worktree NON è ancora cancellabile, e la ragione è peggiore.**
+Cercato su tutto il repo con `git grep preamp-fase1` invece di fidarsi
+dei soli deck: `circuits/preamp/gain_block.py:63` contiene
+
+```python
+REPO = "/Users/roberto/EDA/.claude/worktrees/preamp-fase1"
+```
+
+e `REPO` lì non è un percorso di lettura, è quello di **scrittura**:
+`gain_block.py` ci scrive `spice/preamp/gain_block_flat.inc` (riga 497) e
+`circuits/preamp/gain_block.net` (riga 505), e `preamp_audio.py` lo usa
+per `preamp_audio.net` (riga 258). È lo stesso guasto silenzioso di
+prima, **riarmato dall'altro lato**: rigenerare il circuito oggi
+depositerebbe l'`.inc` nuovo nel worktree vecchio, e i deck — ora
+corretti — continuerebbero a leggere la copia non aggiornata del checkout
+corrente, senza errore da nessuna parte.
+
+Non è stato corretto in L3 perché sta in `circuits/preamp/`, che L3 aveva
+il mandato esplicito di non toccare, e perché verificare la correzione
+vuol dire **rieseguire `gain_block.py`** sul venv SKiDL e confrontare gli
+artefatti rigenerati: è un lotto suo, non una riga in coda a questo. La
+correzione è una riga (`REPO` derivato da `__file__`, come
+`ROOT=${0:A:h:h}` negli script), la **verifica** non lo è.
 
 **Due vincoli scoperti leggendo `scripts/run_simulation.sh`**, che
 decidono quale forma può avere il rimedio:
@@ -146,18 +176,74 @@ puntare nel nulla dopo il `cd` — **trovato eseguendolo, non leggendolo**;
 e un `.include` relativo ora emette un avviso, perché si risolve contro
 `$OUTDIR` e può pescare in silenzio un file omonimo di passaggio.
 
-**E `run_simulation.sh` ha lo stesso difetto dei deck**: `ROOT=/Users/roberto/EDA`
-cablato alla riga 26. `run_tests.sh` è stato corretto a suo tempo
-(`ROOT=${0:A:h:h}`), gli altri no — restano cablati anche
-`export_fab.sh` e `setup.sh`. Eseguito da un worktree, `run_simulation.sh`
-scrive i risultati nel checkout principale.
+**`ROOT` cablato: due script corretti, due ancora no.** `run_tests.sh` e
+`run_simulation.sh` derivano ora `ROOT` dalla propria posizione
+(`ROOT=${0:A:h:h}`); **`export_fab.sh` e `setup.sh` restano cablati** su
+`/Users/roberto/EDA` (righe 28 e 24, riverificate il 2026-09-09).
+Eseguiti da un worktree leggono e scrivono nel checkout principale, in
+silenzio. Non è un lotto assegnato: è il prossimo esemplare della stessa
+famiglia di difetti, da sistemare quando uno dei due verrà toccato.
 
-Solo dopo aver sistemato i percorsi ha senso aggiungere `wrdata` ai 9
-deck muti. I deck con `foreach` sono l'ultimo lotto perché non sono
-meccanici: `tb_ac.cir` ha un doppio ciclo (2 modalità × 4 impedenze di
-sorgente = 8 curve) e chiude ogni iterazione con `destroy all`, quindi il
-`wrdata` va **dentro il ciclo, prima del `destroy all`**, col nome file
-parametrizzato.
+**L3 ha applicato la convenzione a tutti i deck rimanenti. FATTO.**
+22 `.include` diventati `@REPO@/<percorso-dalla-radice>` e 4 `wrdata`
+diventati nomi nudi. `grep -c '\.claude/worktrees' spice/preamp/tb/*.cir`
+dà **0 su tutti e 12**: il meccanismo armato è disinnescato **dal lato
+della lettura**. Non su tutto il repo: `circuits/preamp/gain_block.py`
+scrive ancora nel worktree vecchio — vedi il riquadro sopra.
+
+I nomi dei `wrdata` seguono la precedenza di `tb_op`, cioè
+`<basename>_wrdata.txt`, che è il nome che `run_simulation.sh` cerca per
+**primo**. Il deck che ne scrive due non può usarlo per entrambi, quindi:
+
+| File | Modalità |
+|---|---|
+| `tb_dc_headroom_wrdata.txt` | 0 dB (relè aperto, RRG = 1 GΩ) |
+| `tb_dc_headroom_10db.txt` | +10 dB (relè chiuso, RRG = 0,1 Ω) |
+
+La corrispondenza è scritta **dentro il deck**, perché i nomi nudi non la
+dicono più da soli.
+
+**La trappola dei due `wrdata` è stata corretta, non subita.**
+`run_simulation.sh` ha ora un **secondo passaggio** che converte in
+CSV/JSON *ogni* file `wrdata` prodotto da una run, non solo il primo: il
+fallback precedente faceva `grep … | head -1` e il secondo file di
+`tb_dc_headroom` non diventava mai un CSV. Il passaggio guarda i file
+**prodotti** e non il testo del deck, ed è questa la parte che conta per
+L5: un `wrdata` dentro un `foreach` ha il nome **parametrizzato**, quindi
+nel deck c'è la stringa non espansa e nessun grep può ricavare il nome
+vero. Quando `tb_ac.cir` scriverà le sue 8 curve, saranno 8 CSV.
+
+Lo scoping è un file marker depositato prima di lanciare ngspice, così i
+detriti `.txt` di una run precedente non vengono mai riconvertiti.
+Misurato e non assunto: gli mtime su APFS sono in nanosecondi e
+`find -newer` ha separato due file creati a **126 µs** di distanza.
+Il comportamento vecchio è intatto — `<basename>.csv`/`.json` esistono
+come prima, e `run_tests.sh` blocco 2b passa senza modifiche.
+
+**I numeri non sono cambiati, ed è stato verificato con una baseline.**
+Prima di toccare i deck sono state eseguite tutte e 11 le versioni
+committate (il worktree vecchio esisteva ancora) e conservati i log.
+L'output `wrdata` è **byte-identico** attraverso la modifica: entrambe le
+modalità di `tb_dc_headroom`, `tb_switch_v2` (3,9 MB) e `tb_v3_overload`
+(2,6 MB). 9 log su 11 sono identici riga per riga. Le due differenze sono
+state inseguite e nessuna è un numero:
+
+- `tb_noise_vectors` — solo i timestamp che ngspice stampa nelle
+  intestazioni dei grafici.
+- `tb_v3_overload` — **il `Reference value` della `fourier` di ngspice non
+  è riproducibile fra run.** Quattro esecuzioni dello *stesso* file hanno
+  dato 1,82433e-02 / 1,97093e-02 / 1,89413e-02 / 1,95823e-02. Tutto il
+  resto di quel log — tabella delle armoniche, ampiezze, fasi e la cifra
+  di THD — è identico fra le run, e il transitorio è byte-identico. È una
+  proprietà di ngspice, non della modifica, ed è **una ragione in più,
+  indipendente dai modelli segnaposto, per non fidarsi di un THD preso da
+  quel deck**.
+
+Restano da aggiungere `wrdata` ai 9 deck muti. I deck con `foreach` sono
+l'ultimo lotto perché non sono meccanici: `tb_ac.cir` ha un doppio ciclo
+(2 modalità × 4 impedenze di sorgente = 8 curve) e chiude ogni iterazione
+con `destroy all`, quindi il `wrdata` va **dentro il ciclo, prima del
+`destroy all`**, col nome file parametrizzato.
 
 Serve al dossier **e** a `design-reviewer` per rieseguire le misure a G1:
 non è lavoro anticipato.
@@ -330,25 +416,44 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L3 — applicare agli altri 11 deck la convenzione collaudata in L2.**
-Non c'è niente da riprogettare: la convenzione e la sua motivazione
-stanno in un commento dentro `spice/preamp/tb/tb_op.cir`. Restano **26
-righe** cablate su `.claude/worktrees/preamp-fase1/` (22 `.include` +
-4 `wrdata`), che `grep -rn '\.claude/worktrees' spice/preamp/tb/` elenca.
+**L4 — aggiungere `wrdata` ai deck muti *senza* cicli.**
+L'infrastruttura c'è tutta: la convenzione è su tutti e 12 i deck, e
+`run_simulation.sh` converte ogni file prodotto. L4 è quindi additivo e
+non tocca né il circuito né i percorsi.
 
-Due cose che L3 non deve ereditare per distrazione:
+Oggi scrivono dati **4 deck su 12** (`tb_op`, `tb_dc_headroom` con due
+file, `tb_switch_v2`, `tb_v3_overload`). Gli **8 muti** si dividono in
+due gruppi, e solo il primo è L4:
 
-- `tb_dc_headroom.cir` ha **due** `wrdata` e `tb_switch_v2.cir`/
-  `tb_v3_overload.cir` uno ciascuno. Il nome
-  `<basename>_wrdata.txt` è quello che `run_simulation.sh` cerca per
-  primo; con più di un `wrdata` per deck gli altri cadono sul fallback
-  `grep ... | head -1`, che ne vede **uno solo**.
-- I 4 `wrdata` cablati scrivono oggi in `results/preamp/` del worktree
-  vecchio. Con il nome nudo finiscono nella directory dei risultati
-  passata a `run_simulation.sh`: è un cambio di percorso, non di dato.
+| Deck muto | `foreach`? | Lotto |
+|---|---|---|
+| `tb_noise_vectors` | no | **L4** |
+| `tb_switch_v2_counterfactual` | no (tre `op` in sequenza) | **L4** |
+| `tb_bias_sweep` | sì, un ciclo con `op` | L4 o L5, da decidere aprendolo |
+| `tb_noise_breakdown` | sì, con `destroy all` | L5 |
+| `tb_ac` | sì, doppio, con `destroy all` | L5 |
+| `tb_loop` | sì, doppio, con `destroy all` | L5 |
+| `tb_loop_blockA` | sì, con `destroy all` | L5 |
+| `tb_zout_psrr_noise` | sì, quattro sezioni con `destroy all` | L5 |
 
-Verifica di L3, la stessa di L2: `grep -c '\.claude/worktrees'` a zero su
-tutti e 12, ogni deck eseguito davvero, e `run_tests.sh` a 5 passed.
+La regola che separa i due lotti: dove c'è `destroy all` dentro il ciclo
+il `wrdata` va **dentro il ciclo, prima del `destroy all`**, con il nome
+parametrizzato — e quello è L5. `tb_bias_sweep` è il caso di confine: ha
+un `foreach` ma **nessun `destroy all`**, quindi va guardato prima di
+decidere in quale dei due cade.
+
+Nome del file: `<basename>_wrdata.txt`, come tutti gli altri. Verifica:
+deck eseguito davvero, CSV/JSON non vuoti con il numero di righe atteso,
+e `run_tests.sh` a 5 passed.
+
+**Perché L4 e non L3b, che è più piccolo.** L3b (il `REPO` cablato in
+`gain_block.py`) fa danno solo nel momento in cui il circuito viene
+**rigenerato**, cioè in Fase 4 — mentre L4/L5 sono l'infrastruttura del
+dossier e stanno sul percorso verso G1. Quindi L4 resta il prossimo, ma
+**L3b è obbligatorio prima di toccare la topologia**: se si rigenera con
+il `REPO` cablato, l'`.inc` nuovo va nel worktree vecchio e le
+simulazioni continuano sulla copia vecchia in silenzio. Chi apre la Fase 4
+la apre da L3b.
 
 ### Materiale già raccolto per L8-L10 (il giro componenti)
 

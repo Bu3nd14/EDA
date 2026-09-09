@@ -1,6 +1,6 @@
 tb_noise_vectors.cir - list the per-device noise vectors ngspice keeps
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/placeholder_devices.lib
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15
 VSRC SRCN 0 DC 0 AC 1

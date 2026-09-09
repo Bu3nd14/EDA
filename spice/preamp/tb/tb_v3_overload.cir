@@ -14,8 +14,8 @@ tb_v3_overload.cir - V3 overload recovery, and a Fourier run that proves nothing
 * rather than something pathological, and to give measurement-analyst a
 * deck that is ready to re-run the moment vendor models exist.
 
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/placeholder_devices.lib
-.include /Users/roberto/EDA/.claude/worktrees/preamp-fase1/spice/preamp/gain_block_flat.inc
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
 
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15
@@ -36,7 +36,7 @@ RLOAD  JACK 0 100k
 
 .control
 tran 1u 20m 0 1u
-wrdata /Users/roberto/EDA/.claude/worktrees/preamp-fase1/results/preamp/v3_overload.txt v(SRCN) v(OUT) v(JACK) v(NX)
+wrdata tb_v3_overload_wrdata.txt v(SRCN) v(OUT) v(JACK) v(NX)
 echo "PART 2 - Fourier at 1 kHz. THE THD NUMBER BELOW IS MEANINGLESS."
 alter @vgate[pwl] = [ 0 0.5 20m 0.5 ]
 tran 1u 20m 10m 1u
