@@ -1,0 +1,24 @@
+{
+  "addendum_to": "PROVENANCE.json",
+  "written_by_lotto": "L7",
+  "date": "2026-09-09",
+  "author": "AI agent (Claude Opus 5) on behalf of roberto.carmeli@gmail.com",
+  "why_an_addendum_and_not_an_edit": "PROVENANCE.json was frozen read-only by scripts/freeze_vendor.sh and is the audit trail of what L6 believed at the time. A statement in it turned out to be wrong. The repo's rule for a new datasheet revision is to ADD alongside, never to substitute, and the same rule is applied here to the record itself: the original stays intact and this file records the correction. Decided with the user on 2026-09-09.",
+  "corrects_field": "revision_note",
+  "original_text_of_that_field": "The manufacturer's own product page serves datasheet revision RevA38. Mouser serves a NEWER revision of the same datasheet (RevA40, dated 04/12/2022). This repo froze the manufacturer's copy, which is the authoritative source. L7 (step 4 of ADR-013) MUST confirm that the I_DSS / V_P limits did not change between RevA38 and RevA40 before cross-checking the transcribed model against them.",
+  "what_is_actually_true": "There is only ONE revision, and it is RevA40. The frozen file is NAMED LSK489DSRevA38.pdf because that is the name the manufacturer's server sends in its Content-Disposition header, but the DOCUMENT ITSELF declares 'Doc 201151 04/12/2022 Rev# A40 ECN# LSK489' in the footer of all 7 pages - the same revision and the same date L6 attributed to the Mouser copy. L6 inferred the revision from the FILENAME, which is the only place 'A38' appears anywhere. The stale filename is at the source, not an error made when saving.",
+  "how_it_was_verified": [
+    "Footer of every page: /opt/homebrew/bin/pdftotext -layout LSK489DSRevA38.pdf - | grep 'Rev#'  -> 7 of 7 pages say Rev# A40, 04/12/2022.",
+    "Re-requested the URL recorded in PROVENANCE.json on 2026-09-09: the manufacturer's server answered HTTP/2 200 with content-disposition: inline; filename=\"LSK489DSRevA38.pdf\" and delivered 530957 bytes whose sha256 is f5c359ba70088bb70f3aa75d89f67d0b69db0c49694547173f63edc3eab0096b - BYTE-IDENTICAL to the frozen copy. So the name/content mismatch is served by the manufacturer itself.",
+    "The independent Mouser leg is not available: https://www.mouser.com/datasheet/2/676/LSK489-1370055.pdf answers HTTP 200 with an HTML page titled 'Access to this page has been denied', not a PDF. It is not needed - the open question presupposed two documents and there is one."
+  ],
+  "consequence": "Nothing needs to be added to vendor/. The repo has already frozen RevA40, and the I_DSS / V_GS(off) limits used by the L7 cross-check are RevA40's, read from page 2 of this very file. The open question L6 left for L7 is closed by dissolution, not by comparison.",
+  "vendor_files_unchanged": true,
+  "vendor_files_verified_on": "2026-09-09",
+  "vendor_file_hashes_still_matching": {
+    "LSK489DSRevA38.pdf": "f5c359ba70088bb70f3aa75d89f67d0b69db0c49694547173f63edc3eab0096b",
+    "Copy_LSK489A_NJF.pdf": "27c209bf0b8d6344092e2e83c02f13853884231ba736cc3f916f9269fa3d7778"
+  },
+  "note_on_the_freeze_itself": "The 0444 mode set by scripts/freeze_vendor.sh does NOT survive a checkout: git does not version the read-only bit, so these files arrive 0644 in a fresh worktree. The freeze protects the filesystem the script ran on, not the content inside the repository. The protection that does travel is the sha256 recorded here and in the .sha256 sidecars, and it verified clean.",
+  "full_record": "docs/preamp/reports/2026-09-09-L7-controllo-incrociato-lsk489.md"
+}

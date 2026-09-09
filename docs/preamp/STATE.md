@@ -6,7 +6,7 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-09** (L6 chiuso: **il primo modello SPICE vendor è nel repo**, trascritto e con provenance; la libreria passa a 26/26. 12 non conformità aperte, 3 bloccanti — **l'accesso a G1 non è concesso**. Prossimo lotto **L7**, il controllo incrociato)
+Ultimo aggiornamento: **2026-09-09** (L7 chiuso: **il modello LSK489 è validato contro il datasheet**, e il verdetto è misto — I_DSS dentro la finestra, V_GS(off) **fuori di 0,376 V**, e non per un errore di trascrizione. Aperta **NC-013**. 13 non conformità aperte, 3 bloccanti — **l'accesso a G1 non è concesso**. Prossimo lotto **L8**, le parti nuove)
 
 ---
 
@@ -75,15 +75,17 @@ manciata di file, **M** = riempie una sessione da solo.
 | L5d | **Eseguire G0**: report datato + non conformità | S | **fatto** |
 | L5e | La revisione umana del dossier diventa registro: 4 voci nuove | S | **fatto** |
 | L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | **fatto** |
-| L7 | LSK489: passo 4, il controllo incrociato | S | **prossimo** |
-| L8 | Fase 3a — le parti nuove, fatti verificabili | M | da fare |
+| L7 | LSK489: passo 4, il controllo incrociato | S | **fatto** |
+| L8 | Fase 3a — le parti nuove, fatti verificabili | M | **prossimo** |
 | L9 | Fase 3b — la rosa dei componenti di segnale | M | da fare |
 | L10 | Simbolo KiCad dell'LSK489 | S | da fare |
 
 **I lotti che le revisioni hanno generato.** È il meccanismo per cui una
 non conformità produce lavoro invece di fermarlo: ogni voce aperta in
 `NONCOMPLIANCE.md` arriva qui con il proprio lotto. I primi cinque vengono
-da G0 (L5d), gli ultimi quattro dalla revisione umana del dossier (L5e).
+da G0 (L5d), i quattro seguenti dalla revisione umana del dossier (L5e), e
+l'ultimo — **L20** — dal controllo incrociato di L7, che è la prima voce a
+nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 
 | # | Lotto | Dim. | Chiude | Stato |
 |---|---|---|---|---|
@@ -96,12 +98,18 @@ da G0 (L5d), gli ultimi quattro dalla revisione umana del dossier (L5e).
 | L17 | **Buffer sulle uscite fisse.** Modifica di topologia in `preamp_audio.py` che disaccoppia le due fisse dal nodo del Blocco A, più la riesecuzione di `tb_blockA_carichi.cir` sulla topologia nuova | M | **NC-010** (bloccante) | da fare |
 | L18 | **Il vincolo PSRR scritto dove verrà letto**: quanto ripple può lasciare l'alimentatore sul rail positivo, ricavato da E5 | XS/S | **NC-011** | da fare |
 | L19 | **La soglia di margine di fase in V1**, col carico di prova dichiarato accanto; poi i KPI del dossier riferiti a quella | XS | **NC-012** | da fare |
+| L20 | **Quanto il progetto dipende da I_DSS.** Rieseguire punto di lavoro e rumore del blocco di guadagno con `Vto` ai due estremi compatibili con la finestra A — il modello vendor com'è (2,59 mA) e un `Vto` che porti I_DSS al tipico (5,5 mA) — e scrivere in `REQUIREMENTS.md` o in una ADR quale dispersione il progetto tollera | S | **NC-013** | da fare |
 
 **NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
 riesecuzione di `tb_noise_breakdown.cir` coi modelli veri. È il caso
 previsto da `AGENTS.md` — una voce bloccante a G0 **non** blocca i lotti che
 procurano i modelli vendor, perché quelli sono il rimedio, non un
-avanzamento di fase.
+avanzamento di fase. **L6 e L7 sono chiusi**, quindi di NC-004 resta solo
+la riesecuzione con i dati versionati sotto `docs/preamp/data/<data>/` —
+che ora però va letta insieme a **NC-013**: il modello vendor descrive un
+esemplare d'angolo, quindi le cifre di rumore che ne usciranno saranno
+conservative sul contributo del JFET, e questo va scritto accanto ai
+numeri e non sottinteso.
 
 Dopo, non pianificati in dettaglio perché dipendono dall'esito:
 **alimentatore + sicurezza rete**, **Fase 4** (revisione topologia coi
@@ -588,9 +596,13 @@ pratica e diventa **l'unica rete** fra un errore e `main`.
 `reports/2026-09-09-L6-trascrizione-lsk489.md`. Fino a ieri `vendor/` non
 conteneva **nessun** PDF e `models/jfet/` aveva solo `generic_njf.lib`:
 il passo 1 di ADR-013 non era iniziato. Ora
-`vendor/jfet/linear_systems/LSK489/` porta il datasheet (RevA38, 530 957
-byte) e il PDF del modello (27 178 byte), congelati a 0444 con sha256 e
-URL registrati, e `models/jfet/lsk489.lib` esiste con la sua provenance.
+`vendor/jfet/linear_systems/LSK489/` porta il datasheet (530 957 byte) e
+il PDF del modello (27 178 byte), congelati a 0444 con sha256 e URL
+registrati, e `models/jfet/lsk489.lib` esiste con la sua provenance.
+*(L6 aveva registrato il datasheet come «RevA38», dal nome del file. **È
+la RevA40**: L7 ha letto il footer di tutte e 7 le pagine. Il nome è
+obsoleto alla sorgente — vedi la sezione L7 e
+`PROVENANCE-L7-addendum.json`.)*
 
 **Il metodo è la parte che conta**, perché è ciò che ADR-013 compra con
 la trascrizione a mano: **due letture indipendenti che devono
@@ -633,15 +645,82 @@ Corretto nello stesso lotto `scripts/freeze_vendor.sh`, che aveva
 e non i file nuovi. **Restano** `export_fab.sh` (riga 28) e `setup.sh`
 (riga 24): non toccati da L6, quindi non corretti.
 
-**L7 — il controllo incrociato.** È separato perché il passo 4 è il punto
-in cui la trascrizione può risultare sbagliata: in quel caso il lavoro è
-tornare su L6, non andare avanti. Porta con sé una questione aperta da
-L6: il costruttore serve **RevA38**, Mouser serve **RevA40 (04/12/2022)**,
-e L7 deve confermare che i limiti I_DSS/V_P non siano cambiati fra le due.
-Il datasheet ha 7 pagine e la tabella sta oltre la prima, quindi
-`sips`/`qlmanage` non bastano: **poppler è stato installato in L6**
-apposta (`/opt/homebrew/bin/pdftotext`, 26.09.0, arm64). Nessuno script
-lo richiede, quindi `verify_env.sh` non lo verifica.
+**L7 — il controllo incrociato. FATTO.** Report:
+`reports/2026-09-09-L7-controllo-incrociato-lsk489.md`. Il passo 4 di
+ADR-013 è eseguito, e **il verdetto è misto**.
+
+Prima di tutto: **la trascrizione regge**, rieseguita e non ereditata.
+`pdf_glyphs.py` riproduce gli stessi 223 byte e lo stesso sha256 di L6, i
+due PDF hanno gli hash congelati intatti, e il `diff` fra la riga del
+`.lib` e il testo vendor meno `Mfg` è **vuoto**.
+
+Misurato **alle condizioni del datasheet** — che è la metà del controllo
+che L6 aveva lasciato aperta — RevA40 pagina 2, gruppo **A**, **25 °C**:
+
+| Grandezza | Misurata | Finestra LSK489A | Verdetto |
+|---|---|---|---|
+| I_DSS (V_DG = 15 V, V_GS = 0) | **2,59283 mA** | 2,5 … 8,5 mA | **dentro** — 3,7% sopra il minimo, 52,9% sotto il tipico |
+| V_GS(off) (V_DS = 15 V, I_D = 1 nA) | **−1,124355 V** | −1,5 … −3,5 V | **FUORI**, 0,376 V sotto il minimo in modulo |
+| V_GS (V_DS = 15 V, I_D = 500 µA) | −0,650211 V | −0,5 … −3,5 V | dentro |
+
+**Tre condizioni che decidono la validità della misura**, e due erano
+sbagliate nel modo in cui il compito era stato scritto: `V_DG = 15 V` con
+`V_GS = 0` significa `V_DS = 15 V` **ai terminali** (`Rd` e `Rs` sono
+interni al modello), non i 5 V arbitrari di L6; e il datasheet è
+specificato **@ 25 °C** mentre ngspice gira a 27 °C, il che con
+`Vtotc=-2.5m` vale esattamente 5,0 mV su V_P. Il numero di L6 è comunque
+riprodotto — **2,50019 mA** a V_DS = 5 V — quindi la differenza viene
+dalle condizioni e non da altro.
+
+V_P è misurato su **tre strade indipendenti** concordi entro 1,0 mV:
+soglia a 1 nA, estrapolazione di √I_D → 0 su 6315 campioni, e
+`Vto + Vtotc·(T − Tnom)` letto dal modello.
+
+**Il numero fuori finestra NON è un errore di trascrizione, ed è
+misurato.** Dentro il modello I_DSS e V_P sono legati da `Beta`: tenendo
+`Beta = 2.2m` e portando `Vto` al minimo V_GS(off) del datasheet
+(−1,50 V), I_DSS sale a **4,392 mA**, dentro la finestra A. Le due
+finestre del datasheet sono compatibili fra loro e il modello sta sotto
+**entrambe in modo coerente** — **uno scarto solo, non due**. Un `Vto`
+sbagliato avrebbe mosso le due grandezze in direzioni scorrelate. La
+discrepanza è fra il modello SPICE del costruttore e il **datasheet dello
+stesso costruttore**.
+
+Quindi **il lavoro non è tornare su L6**, e **ADR-013 non è stata
+riaperta**: la sua clausola vale per una parte sbagliata o una
+trascrizione sbagliata, e qui non è né l'una né l'altra. È aperta
+**NC-013** (maggiore, non bloccante), che il lotto **L20** chiude
+quantificando quanto il progetto dipenda da I_DSS.
+
+**La questione della revisione non si è risolta: si è dissolta.** Non
+esistono due revisioni. Il PDF congelato si *chiama*
+`LSK489DSRevA38.pdf` perché è il nome che il server manda nel
+`content-disposition`, ma il suo footer dichiara **`Rev# A40,
+04/12/2022`** su tutte e 7 le pagine — la stessa revisione che L6 aveva
+attribuito alla copia Mouser. Rieseguita la richiesta all'URL registrato,
+il costruttore serve **oggi** un file byte-identico sotto lo stesso nome
+obsoleto: la discrepanza è **alla sorgente**. Mouser risponde 403, ma non
+serve. Il `PROVENANCE.json` congelato **non è stato riscritto**: la
+correzione sta accanto, in `PROVENANCE-L7-addendum.json`.
+
+**`tb_lsk489()` non è più fumo dichiarato.** Misura alle condizioni del
+datasheet e **blocca** i tre numeri, senza dichiarare una conformità che
+per V_GS(off) non c'è. Conteggio invariato — **26/26** — cambia cosa
+asserisce. Collaudato facendolo fallire: spostando `Vto` di soli 70 mV la
+I_DSS resta **dentro** la finestra del datasheet, quindi la finestra da
+sola non l'avrebbe visto; il lucchetto sì, con exit 1.
+
+**Una cosa notata sul congelamento.** I file di `vendor/` sono 0444 nel
+checkout principale ma arrivano **0644** in un worktree: git non versiona
+il bit di sola lettura, quindi `freeze_vendor.sh` protegge il filesystem
+su cui è girato, non il contenuto dentro il repo. La protezione che
+attraversa un clone è l'**sha256**, e tiene.
+
+Nota d'ambiente che resta vera: il datasheet ha 7 pagine e la tabella sta
+oltre la prima, quindi `sips`/`qlmanage` non bastano — **poppler è stato
+installato in L6** apposta (`/opt/homebrew/bin/pdftotext`, 26.09.0,
+arm64). Nessuno script lo richiede, quindi `verify_env.sh` non lo
+verifica.
 
 **L8 prima di L9** perché le parti nuove sono fatti chiudibili mentre la
 rosa è un giudizio aperto: se il cap arriva, è meglio che tagli la
@@ -1038,58 +1117,79 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L7 — LSK489: il passo 4 di ADR-013, il controllo incrociato.**
+**L8 — Fase 3a: le parti nuove, fatti verificabili.**
 
-I parametri trascritti in L6 vanno confrontati con i limiti pubblicati dal
-datasheet — **I_DSS e V_P** — che è ciò che rende accettabile il passo 2.
-ADR-013 lo dice senza ammorbidire: «Il punto 4 non è un di più: è ciò che
-rende accettabile il punto 2.» Finché L7 non chiude,
-`models/jfet/lsk489.lib` è **trascritto e verificato sintatticamente, non
-validato contro i limiti della parte**.
+È il primo dei tre lotti del giro componenti, e viene **prima di L9**
+perché le parti nuove sono fatti chiudibili mentre la rosa dei componenti
+di segnale è un giudizio aperto: se il cap arriva, è meglio che tagli la
+seconda.
 
-**Non è bloccato dalle voci aperte**, per la stessa ragione di L6:
+Il materiale già raccolto è qui sotto, nella sezione «Materiale già
+raccolto per L8-L10»: **non va ricercato di nuovo**. In breve, cosa L8
+deve rendere verificabile:
+
+- **2N5401** (VAS) e **2N5551** (cascode, generatori di corrente,
+  moltiplicatore di Vbe): parti nuove, mai verificate in Fase 1.
+  Disponibilità, prezzo, e soprattutto **provenienza del modello SPICE**.
+- **THAT320**: stock non ancora fissato, e va confermata la **BVceo ≥ 35 V**
+  contro il datasheet, non contro una scheda di distributore.
+- **Omron G6K-2F-Y**: confermare **quale contatto è NO e quale NC**. Il
+  progetto fallisce in sicurezza solo se sono quelli giusti, quindi è un
+  fatto di sicurezza travestito da dettaglio di catalogo.
+
+**La lezione di L6 e L7 vale per tutti**, ed è la cosa più utile che i due
+lotti lasciano a L8: un dato di catalogo non è un dato di datasheet, e il
+**nome di un file non è la sua revisione**. L7 ha trovato che il PDF
+congelato come «RevA38» è in realtà la RevA40 — l'unico posto dove
+compariva «A38» era il nome del file, e nessuno l'aveva aperto per
+controllare. Se L8 congela altri PDF vendor, la revisione si legge **dal
+footer del documento**, mai dal nome.
+
+E la seconda: **le condizioni di prova sono metà del numero.** L6 aveva
+misurato I_DSS a `V_DS = 5 V` perché così faceva la ricetta accanto; il
+datasheet prescrive `V_DG = 15 V`, e il datasheet è specificato a 25 °C
+mentre ngspice gira a 27 °C. Nessuno dei due scarti dava errore.
+
+**Non è bloccato dalle voci aperte**, per la stessa ragione di L6-L7:
 `AGENTS.md` scrive che una voce bloccante a G0 non ferma i lotti che
-procurano i modelli vendor, perché quelli sono il **rimedio** a NC-004,
-non un avanzamento di fase. Ciò che le bloccanti fermano è l'accesso a
-**G1**, il congelamento della topologia — che comunque non si vuole più
-congelare finché NC-001 e NC-010 sono aperte, e NC-010 è **una modifica di
-topologia**.
+procurano le parti e i modelli, perché quelli sono il **rimedio** a
+NC-004, non un avanzamento di fase. Ciò che le bloccanti fermano è
+l'accesso a **G1**, il congelamento della topologia — che comunque non si
+vuole più congelare finché NC-001 e NC-010 sono aperte, e NC-010 è **una
+modifica di topologia**.
 
-Stato di partenza, verificato in L6 e non assunto:
+Stato di partenza, verificato in L6-L7 e non assunto:
 
 | Cosa | Dove |
 |---|---|
-| Datasheet congelato, RevA38, 7 pagine | `vendor/jfet/linear_systems/LSK489/LSK489DSRevA38.pdf` |
-| Modello congelato, 1 pagina | `.../Copy_LSK489A_NJF.pdf` |
-| Modello trascritto + provenance | `models/jfet/lsk489.lib` |
-| Il metodo, gli hash, i tre confronti | `reports/2026-09-09-L6-trascrizione-lsk489.md` |
-| Come rileggere il PDF senza dipendenze | `scripts/pdf_glyphs.py` |
-| `pdftotext` (poppler 26.09.0, arm64) | `/opt/homebrew/bin/pdftotext` |
+| Datasheet congelato — **contenuto RevA40**, 7 pagine, nome del file obsoleto | `vendor/jfet/linear_systems/LSK489/LSK489DSRevA38.pdf` |
+| Modello vendor congelato, 1 pagina | `.../Copy_LSK489A_NJF.pdf` |
+| La correzione sulla revisione, **accanto** al provenance congelato | `.../PROVENANCE-L7-addendum.json` |
+| Modello trascritto, **validato contro il datasheet** con verdetto misto | `models/jfet/lsk489.lib` |
+| Il metodo di trascrizione, gli hash, i tre confronti | `reports/2026-09-09-L6-trascrizione-lsk489.md` |
+| Il controllo incrociato, i deck e le tre strade su V_P | `reports/2026-09-09-L7-controllo-incrociato-lsk489.md` |
+| Come rileggere un PDF vendor senza dipendenze | `scripts/pdf_glyphs.py` |
+| Come congelare un PDF vendor | `scripts/freeze_vendor.sh` |
+| `pdftotext` (poppler 26.09.0, arm64) — legge oltre la prima pagina | `/opt/homebrew/bin/pdftotext` |
 
-**Le due cose che L7 deve fare e che L6 gli ha lasciato scritte:**
+**Cosa resta di NC-004 dopo L7**: la riesecuzione di
+`spice/preamp/tb/tb_noise_breakdown.cir` coi modelli veri e i dati
+versionati sotto `docs/preamp/data/<data>/`. Da leggere insieme a
+**NC-013**: i numeri che ne escono sono conservativi sul contributo del
+JFET d'ingresso, perché il modello vendor descrive un esemplare
+d'angolo. Va scritto accanto ai numeri, non sottinteso.
 
-1. **La revisione.** Il costruttore serve **RevA38**, Mouser serve una
-   revisione più recente, **RevA40 (04/12/2022)**. È congelata quella del
-   costruttore, che è la fonte autorevole. L7 conferma che i limiti
-   I_DSS/V_P non siano cambiati fra le due **prima** di usarli.
-2. **Il numero da spiegare, se non torna.** Il modello dà **2,500 mA** a
-   `Vgs = 0`, `Vds = 5 V` (misurato in L6, ricetta di fumo). Se cade fuori
-   dalla finestra I_DSS del datasheet, la risposta **non** è ritoccare il
-   modello: è rileggere la trascrizione. È esattamente il caso per cui i
-   due lotti sono separati — il lavoro è tornare su L6, non andare avanti.
+Attenzione a `docs/limitations.md` #13 leggendo i valori da un datasheet:
+`"1M"` in KiCad è 1 MΩ, in SPICE è 1 mΩ. Sul modello LSK489 **non morde**
+— controllato suffisso per suffisso in L6 — ed è scritto proprio perché è
+il punto in cui qualcuno «correggerebbe» un valore giusto. Da L7 quel
+valore è anche **bloccato dalla suite**: `tb_lsk489()` fallisce se `Vto`
+si muove di più di 1 mV.
 
-La tabella I_DSS/V_P sta **oltre la prima pagina**, che `sips` e
-`qlmanage` non raggiungono: per questo poppler è stato installato in L6.
-
-Attenzione a `docs/limitations.md` #13 leggendo i valori: `"1M"` in KiCad
-è 1 MΩ, in SPICE è 1 mΩ. Su questo modello **non morde** — controllato
-suffisso per suffisso in L6 — ed è scritto proprio perché è il punto in
-cui qualcuno «correggerebbe» un valore giusto.
-
-Perché i modelli veri vengono ora: l'infrastruttura di misura è finita.
-Dopo L5 tutti e 12 i deck scrivono dati, quindi **basta rieseguire i
-deck** per avere numeri nuovi confrontabili con quelli di oggi, senza
-toccare nessun banco di prova.
+Perché i modelli veri sono venuti prima del resto: l'infrastruttura di
+misura è finita. Dopo L5 tutti e 12 i deck scrivono dati, quindi **basta
+rieseguire i deck** per avere numeri nuovi confrontabili con quelli di
+oggi, senza toccare nessun banco di prova.
 
 **La Fase 4 non ha più il preliminare che aveva.** L3b è chiusa: il
 circuito si rigenera nel checkout corrente, verificato rieseguendo
@@ -1135,7 +1235,7 @@ buone è dell'utente, all'ascolto. È la ragione per cui esiste P6.
 | Cosa | Chi risponde | Blocca? |
 |---|---|---|
 | Condensatore verso il Singxer: 2,2 o 4,7 µF | utente | No |
-| Trascrizione del modello LSK489 da PDF | — | **Fatta in L6** (due letture byte-identiche). Resta il **controllo incrociato** contro il datasheet, che è L7: finché non chiude, il modello non è validato contro i limiti della parte |
+| ~~Trascrizione e validazione del modello LSK489~~ | — | **CHIUSA**: trascritta in L6 (due letture byte-identiche), **validata contro il datasheet in L7** — I_DSS dentro la finestra, V_GS(off) **fuori di 0,376 V**, e non per un errore di trascrizione. Aperta NC-013; ADR-013 non riaperta |
 | Impedenza d'ingresso Singxer SA-1 V2 | — | **Non pubblicata**, verificato sul manuale ufficiale. Da L5e **non è più solo una curiosità**: è l'ipotesi su cui poggia NC-010, perché da spento può andare a zero |
 | Valore del cap d'uscita del phono a valvole | utente | **Rinviata** — non ha accesso agli schematici né può aprire agevolmente il telaio |
 | ~~Quale JFET d'ingresso~~ | — | **CHIUSA**: LSK489 (ADR-013) |

@@ -371,50 +371,114 @@ wrdata {csv} i(Vdd) i(Vdd2)
 
 
 def tb_lsk489(model_file):
-    """SMOKE test for the transcribed LSK489 vendor model - NOT a
-    datasheet check.
+    """REGRESSION LOCK on the L7 datasheet cross-check (ADR-013 step 4).
 
-    Level is deliberate. Comparing the transcribed I_DSS / V_P against
-    the datasheet limits is step 4 of ADR-013, i.e. L7, and it is the
-    step at which the transcription can turn out to be WRONG. Folding it
-    in here would erase the reason the two lotti are separate: if the
-    cross-check fails, the work is to go back to the transcription, not
-    to carry on.
+    Until L7 this was a declared SMOKE test: it asked only whether the
+    part conducts at Vgs = 0 and is pinched off at -3 V, and it said so.
+    L7 measured the transcribed model against the datasheet's own limits
+    AT THE DATASHEET'S OWN TEST CONDITIONS, and the verdict was MIXED.
+    This recipe asserts exactly that verdict and nothing more:
 
-    So this asks the same question tb_jfet() asks of the generic part:
-    does it conduct at Vgs = 0 and is it pinched off well below Vto
-    (-1.13 V here, so -3 V is comfortably off)?
+      I_DSS      2.593 mA  at VDG = 15 V, VGS = 0, 25 C
+                 -> INSIDE the LSK489A window 2.5 / 5.5 / 8.5 mA, but
+                    3.7% above the minimum and 53% below typical.
+
+      V_GS(off)  -1.1244 V at VDS = 15 V, I_D = 1 nA, 25 C
+                 -> OUTSIDE the published window (min -1.5 V, max -3.5 V),
+                    0.376 V short of the minimum magnitude.
+
+      V_GS       -0.6502 V at VDS = 15 V, I_D = 500 uA, 25 C
+                 -> INSIDE the window -0.5 / -3.5 V.
+
+    So this check does NOT claim datasheet conformance, because for
+    V_GS(off) there is none. What it does is LOCK the numbers L7
+    measured, so that a silent edit of models/jfet/lsk489.lib - exactly
+    the "correction" a later reader might make after reading
+    docs/limitations.md #13 - turns the suite red instead of passing
+    unnoticed. The deviation itself is NC-013 in
+    docs/preamp/NONCOMPLIANCE.md; the measurement, its three independent
+    legs and the reasoning are in
+    docs/preamp/reports/2026-09-09-L7-controllo-incrociato-lsk489.md.
+
+    The conditions are the datasheet's, not ngspice's defaults, and that
+    is not cosmetic: the datasheet is specified @ 25 C while ngspice runs
+    at 27 C, and this model carries Vtotc = -2.5m, so the two differ by
+    exactly 5.0 mV on V_P. And VDG = 15 V with VGS = 0 means VDS = 15 V
+    AT THE TERMINALS - Rd=11 and Rs=30 are internal to the model.
+
+    One sweep answers all three: I_DSS is its last point (VGS = 0) and
+    the two voltages are threshold crossings on the way there.
 
     ngspice emits four "unrecognized parameter ... ignored" warnings for
     isr/alpha/vk/mj on every run. They are expected - see the header of
     models/jfet/lsk489.lib - and do not affect the exit code.
     """
     csv = os.path.join(SCRATCH_DIR, "jfet_lsk489.csv")
-    cir = f"""* validate lsk489.lib (vendor LSK489A, JFET on/off SMOKE test)
+    cir = f"""* validate lsk489.lib - LSK489A at the datasheet's own test conditions
 .include {model_file}
-Vdd d1 0 DC 5
-Vgs1 g1 0 DC 0
-J1 d1 g1 0 LSK489A
-Vdd2 d2 0 DC 5
-Vgs2 g2 0 DC -3
-J2 d2 g2 0 LSK489A
+Vdd d 0 DC 15
+Vgg g 0 DC 0
+J1 d g 0 LSK489A
 .control
-op
-wrdata {csv} i(Vdd) i(Vdd2)
+set temp = 25
+dc Vgg -1.30 0 50u
+wrdata {csv} i(Vdd)
 .endc
 .end
 """
+    # Datasheet LSK489A, RevA40 page 2 (Electrical Characteristics), and
+    # the values L7 measured against it.
+    IDSS_MIN, IDSS_MAX = 2.5e-3, 8.5e-3
+    VGS_OP_MIN, VGS_OP_MAX = -3.5, -0.5
+    VP_DATASHEET_MIN = -1.5
+    VP_MEASURED = -1.124355   # V, at I_D = 1 nA, VDS = 15 V, 25 C
+    VP_TOL = 1e-3
+
     def check(rows):
-        if len(rows) != 1:
-            return False, f"expected 1 op-point row, got {len(rows)}"
-        i_on = abs(rows[0]["y0"])   # Vgs=0, above pinch-off (Vto=-1.13) -> on
-        i_off = abs(rows[0]["y1"])  # Vgs=-3, below pinch-off -> off
-        ok = i_off < 1e-6 and i_on > 1e-4 and i_on > 100 * i_off
-        if ok:
-            return True, (f"I(Vgs=0, on)={i_on:.3e}A, I(Vgs=-3V, pinched off)="
-                          f"{i_off:.3e}A [smoke only - datasheet cross-check is L7]")
-        return False, f"I_on={i_on:.3e}A, I_off={i_off:.3e}A - LSK489A pinch-off behavior not as expected"
-    return cir, csv, 2, check
+        if len(rows) < 20000:
+            return False, f"expected the full Vgs sweep, got {len(rows)} rows"
+        pts = [(r["x"], abs(r["y0"])) for r in rows]
+        idss = pts[-1][1]   # the sweep ends at VGS = 0, which is the I_DSS point
+
+        def crossing(target):
+            prev = None
+            for v, i in pts:
+                if prev is not None and prev[1] < target <= i:
+                    v0, i0 = prev
+                    return v0 + (target - i0) / (i - i0) * (v - v0)
+                prev = (v, i)
+            return None
+
+        vp = crossing(1e-9)          # datasheet definition of V_GS(off)
+        vgs_op = crossing(500e-6)    # datasheet definition of V_GS
+        if vp is None or vgs_op is None:
+            return False, ("I_D never crossed 1 nA and/or 500 uA in the swept "
+                           "range - the model's threshold has moved")
+
+        problems = []
+        if not (IDSS_MIN <= idss <= IDSS_MAX):
+            problems.append(
+                f"I_DSS={idss:.4e}A is outside the LSK489A window "
+                f"[{IDSS_MIN:.1e}, {IDSS_MAX:.1e}]A")
+        if abs(vp - VP_MEASURED) > VP_TOL:
+            problems.append(
+                f"V_P={vp:.6f}V has moved from the value L7 measured "
+                f"({VP_MEASURED:.6f}V) by more than {VP_TOL * 1e3:.1f}mV - "
+                f"the model line changed")
+        if not (VGS_OP_MIN <= vgs_op <= VGS_OP_MAX):
+            problems.append(
+                f"V_GS@500uA={vgs_op:.6f}V is outside the window "
+                f"[{VGS_OP_MIN}, {VGS_OP_MAX}]V")
+        if problems:
+            return False, "; ".join(problems)
+
+        short_by = abs(VP_DATASHEET_MIN) - abs(vp)
+        return True, (
+            f"I_DSS={idss * 1e3:.3f}mA in [2.5, 8.5]mA; "
+            f"V_GS@500uA={vgs_op:.4f}V in [-0.5, -3.5]V; "
+            f"V_P={vp:.4f}V locked to L7 - still {short_by:.3f}V short of the "
+            f"datasheet -1.5V minimum, which is NC-013, not a regression")
+    return cir, csv, 1, check
 
 
 def tb_opamp(model_file):
