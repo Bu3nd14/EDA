@@ -32,18 +32,44 @@ RLOAD  JACK 0 100k
 .control
 * In the REJECTED topology the relay sits in the R_f leg, so R_g is
 * permanently strapped to ground: RRG = 0.1 ohm in both states below.
+*
+* --- wrdata (L4): tre stati, tre file --------------------------------
+* Il nome nudo non dice a quale stato appartiene, quindi la mappatura sta
+* QUI dentro, come per tb_dc_headroom (L3):
+*
+*   tb_switch_v2_counterfactual_wrdata.txt    A - contatto CHIUSO, R_f = 1.50k
+*   tb_switch_v2_counterfactual_open.txt      B - contatto APERTO, R_f = 1e12
+*   tb_switch_v2_counterfactual_reclosed.txt  C - richiuso, controprova di B
+*
+* COLONNE, identiche nei tre file. E' l'unica traccia dell'identita' delle
+* colonne: run_simulation.sh intesta il CSV col0..colN e basta.
+*   Un `wrdata` da .op scrive UNA riga e, per ogni vettore richiesto, una
+*   COPPIA di colonne (scale, valore). Lo scale di un plot `op` e' un
+*   vettore arbitrario del plot e NON significa niente - in tb_op.csv e'
+*   -13.7002041 ripetuto sei volte mentre v(out) vale -0.0118. I dati sono
+*   quindi le colonne DISPARI, in quest'ordine:
+*     col1 = v(OUT)   col3 = v(FB)   col5 = v(NX)   col7 = v(NY)
+*
+* Ogni `wrdata` sta SUBITO DOPO il proprio `op`, quindi scrive il plot
+* appena creato. Qui non c'e' `setplot`, quindi non c'e' il caso di
+* docs/limitations.md #10 (plot vecchio letto in silenzio); e il deck lo
+* prova da se', perche' i tre stati stampano numeri diversi.
+* ---------------------------------------------------------------------
 alter rrg = 0.1
 echo "--- A: contact CLOSED (R_f = 1.50k), R_g strapped: the +10 dB state ---"
 op
 print v(OUT) v(FB) v(NX) v(NY)
+wrdata tb_switch_v2_counterfactual_wrdata.txt v(OUT) v(FB) v(NX) v(NY)
 echo "--- B: contact OPEN (R_f = 1e12), R_g still strapped: loop is BROKEN ---"
 alter r138 = 1e12
 op
 print v(OUT) v(FB) v(NX) v(NY)
+wrdata tb_switch_v2_counterfactual_open.txt v(OUT) v(FB) v(NX) v(NY)
 echo "--- C: closed again, to prove B was not a solver artefact ---"
 alter r138 = 1.50k
 op
 print v(OUT) v(FB)
+wrdata tb_switch_v2_counterfactual_reclosed.txt v(OUT) v(FB) v(NX) v(NY)
 .endc
 
 .end

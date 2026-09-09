@@ -6,7 +6,7 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-09** (L3d chiuso: annotato un difetto misurato in `tb_zout_psrr_noise.cir` come warning per L5; prossimo lotto L4)
+Ultimo aggiornamento: **2026-09-09** (L4 chiuso: `wrdata` sui due deck muti senza cicli, `tb_bias_sweep` assegnato a L5; prossimo lotto L5)
 
 ---
 
@@ -68,8 +68,8 @@ manciata di file, **M** = riempie una sessione da solo.
 | L3b | `REPO` cablato in `circuits/preamp/gain_block.py` — **obbligatorio prima della Fase 4** | XS/S | da fare |
 | L3c | Chiusura di lotto che rifiuta, gate agganciato ai dati, dati del dossier versionati | S | **fatto** |
 | L3d | Annotare il difetto `setplot`/plot stale di `tb_zout_psrr_noise.cir` (warning per L5) | XS | **fatto** |
-| L4 | `wrdata` sui deck muti **senza** cicli | S | **prossimo** |
-| L5 | `wrdata` sui deck muti **con** cicli annidati | S/M | da fare |
+| L4 | `wrdata` sui deck muti **senza** cicli | S | **fatto** |
+| L5 | `wrdata` sui deck muti **con** cicli (`tb_bias_sweep` incluso) | S/M | **prossimo** |
 | L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | da fare |
 | L7 | LSK489: passo 4, il controllo incrociato | S | da fare |
 | L8 | Fase 3a — le parti nuove, fatti verificabili | M | da fare |
@@ -103,9 +103,10 @@ tutti e tre i casi.
 Il valore reale è +9,96 dB (R_f 1,50 kΩ / R_g 698 Ω): dentro tolleranza,
 ma vale saperlo prima che qualcuno lo scopra misurando.
 
-**L2-L5 — i testbench diventano artefatti.** Oggi scrivono file dati
-**4 deck su 12** (`tb_op`, `tb_dc_headroom` con due file, `tb_switch_v2`,
-`tb_v3_overload`): 5 file in tutto. Gli 8 muti sono L4 e L5. Ma aprendo i
+**L2-L5 — i testbench diventano artefatti.** Dopo L4 scrivono file dati
+**6 deck su 12** (`tb_op`, `tb_dc_headroom` con due file, `tb_switch_v2`,
+`tb_v3_overload`, e i due di L4): 9 file in tutto. I **6 muti rimasti**
+sono tutti L5, perche' hanno tutti un `foreach`. Ma aprendo i
 deck per L2 è emerso un problema **più grande di quello registrato**, e
 va detto per intero — anche ora che è chiuso, perché è il ragionamento
 che ha prodotto la convenzione.
@@ -284,8 +285,64 @@ al caso generale: ogni `wrdata` piazzato dopo un'analisi ripetuta senza
 `destroy all` scriverà i dati del plot **sbagliato** — che è lo stesso
 guasto, ma dentro un file che poi finisce nel dossier.
 
-Restano da aggiungere `wrdata` ai 9 deck muti. I deck con `foreach` sono
-l'ultimo lotto perché non sono meccanici: `tb_ac.cir` ha un doppio ciclo
+**L4 — i due deck muti senza cicli. FATTO.** Additivo per costruzione:
+solo righe `wrdata` e commenti, nessun `.include`, nessuna analisi,
+nessun valore toccato. Verificato eseguendo i due deck **prima** della
+modifica e confrontando i log: identici riga per riga a timestamp
+normalizzati, quindi nessun numero è cambiato.
+
+| Deck | File scritti |
+|---|---|
+| `tb_switch_v2_counterfactual` | 3 — uno per stato del contatto (A chiuso, B aperto, C richiuso) |
+| `tb_noise_vectors` | 1 — 2 righe (1000 e 1001 Hz) × 10 vettori scelti |
+
+I tre file del controfattuale hanno una **verifica incorporata**: i loro
+`v(OUT)` devono coincidere con quelli che il deck già stampa, e
+coincidono — A e C a −0,0372229 V, B a **−13,676851 V**. Se leggessero il
+plot sbagliato, A, B e C non sarebbero diversi in quel modo.
+
+**Prima decisione di L4: `tb_bias_sweep` cade in L5, non in L4.** Ha un
+`foreach` su 7 valori di R130 con un `op` per iterazione e **nessun
+`destroy all`**, quindi sembrava di confine. Non lo è: ogni `op` crea un
+plot nuovo (`op1…op7`), quindi un `wrdata` fuori dal ciclo scriverebbe
+solo la settima iterazione e la curva Iq(R130) — il senso del deck —
+andrebbe persa. Serve un file per iterazione col nome parametrizzato
+dentro il ciclo, cioè la forma di L5, più uno snapshot `let iq = @r136[i]`
+perché un parametro di dispositivo non è un vettore del plot. Ragione
+decisiva: **la convenzione di nome per gli output parametrizzati va
+decisa una volta sola** per tutti e 6 i deck con ciclo.
+
+**Due cose imparate, che valgono come regola per L5:**
+
+1. **Un `wrdata` da un `.op` è utile ma non ovvio.** Scrive **una riga**
+   e, per ogni vettore richiesto, una **coppia** di colonne
+   `(scale, valore)`. Lo *scale* di un plot `op` è un vettore arbitrario
+   del plot e **non significa niente**: in `tb_op.csv` vale −13,7002041
+   ripetuto sei volte mentre `v(out)` è −0,0118. I dati sono le colonne
+   **dispari**, nell'ordine richiesto.
+2. **L'identità delle colonne esiste solo nel deck.**
+   `run_simulation.sh` intesta i CSV `col0…colN`. Quindi ogni `wrdata`
+   non banale vuole sopra di sé un commento con l'ordine delle colonne —
+   ed è anche la ragione per cui `tb_noise_vectors` scrive 10 vettori
+   scelti e non i **172** che `print all` elenca: 344 colonne intestate
+   `colN` sono un file che nessuno può più interpretare. Si scrivono i due
+   totali più i contributori dominanti, e **solo i totali per
+   dispositivo** — mettere `onoise_q123_rb` accanto a `onoise_q123`
+   conterebbe due volte. (I dominanti sommano in quadratura a
+   `onoise_spectrum`: √Σ = 1,16e-08 contro 1,215e-08.)
+
+**Nel dossier versionato è finito solo il controfattuale**, in
+`data/2026-09-09/` con un `README.md` che porta la legenda delle colonne.
+Il −13,68 V è già fra i contenuti previsti del dossier ed è un risultato
+**in continua**, la parte che il progetto dichiara credibile anche con i
+segnaposto. **`tb_noise_vectors` no, deliberatamente**: due punti a 1 kHz
+non disegnano un grafico rumore-vs-frequenza, e i contributi per
+dispositivo escono da modelli segnaposto, quindi non sono una cifra di
+rumore credibile — lo diventeranno dopo L6-L7. Non riempire la directory
+per abitudine è un esito, non una mancanza.
+
+Restano da aggiungere `wrdata` ai **6 deck muti rimasti**, tutti con
+`foreach`, e sono L5. Non sono meccanici: `tb_ac.cir` ha un doppio ciclo
 (2 modalità × 4 impedenze di sorgente = 8 curve) e chiude ogni iterazione
 con `destroy all`, quindi il `wrdata` va **dentro il ciclo, prima del
 `destroy all`**, col nome file parametrizzato.
@@ -519,44 +576,43 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L4 — aggiungere `wrdata` ai deck muti *senza* cicli.**
-L'infrastruttura c'è tutta: la convenzione è su tutti e 12 i deck, e
-`run_simulation.sh` converte ogni file prodotto. L4 è quindi additivo e
-non tocca né il circuito né i percorsi.
+**L5 — aggiungere `wrdata` ai 6 deck muti *con* cicli, e correggere la
+coda di `tb_zout_psrr_noise.cir`.**
 
-Oggi scrivono dati **4 deck su 12** (`tb_op`, `tb_dc_headroom` con due
-file, `tb_switch_v2`, `tb_v3_overload`). Gli **8 muti** si dividono in
-due gruppi, e solo il primo è L4:
+Sono i deck che restano dopo L4, e non sono meccanici: dove c'è un
+`destroy all` dentro il ciclo, il `wrdata` va **dentro il ciclo, prima
+del `destroy all`**, col nome file parametrizzato. Un `wrdata` piazzato
+dopo un'analisi ripetuta **senza** `destroy all` scrive i dati del plot
+sbagliato — che è lo stesso guasto del riquadro qui sopra, ma dentro un
+file che poi finisce nel dossier.
 
-| Deck muto | `foreach`? | Lotto |
+| Deck muto | Forma | Nota |
 |---|---|---|
-| `tb_noise_vectors` | no | **L4** |
-| `tb_switch_v2_counterfactual` | no (tre `op` in sequenza) | **L4** |
-| `tb_bias_sweep` | sì, un ciclo con `op` | L4 o L5, da decidere aprendolo |
-| `tb_noise_breakdown` | sì, con `destroy all` | L5 |
-| `tb_ac` | sì, doppio, con `destroy all` | L5 |
-| `tb_loop` | sì, doppio, con `destroy all` | L5 |
-| `tb_loop_blockA` | sì, con `destroy all` | L5 |
-| `tb_zout_psrr_noise` | sì, quattro sezioni con `destroy all` | L5 |
+| `tb_bias_sweep` | `foreach` (7 × `op`), **nessun** `destroy all` | assegnato a L5 in L4: serve un file per iterazione |
+| `tb_noise_breakdown` | `foreach` + `destroy all` | |
+| `tb_ac` | `foreach` doppio + `destroy all` | 2 modalità × 4 Z sorgente = 8 curve |
+| `tb_loop` | `foreach` doppio + `destroy all` | |
+| `tb_loop_blockA` | `foreach` + `destroy all` | |
+| `tb_zout_psrr_noise` | quattro sezioni + `destroy all` | **porta anche la correzione del riquadro ⚠ qui sopra** |
 
-La regola che separa i due lotti: dove c'è `destroy all` dentro il ciclo
-il `wrdata` va **dentro il ciclo, prima del `destroy all`**, con il nome
-parametrizzato — e quello è L5. `tb_bias_sweep` è il caso di confine: ha
-un `foreach` ma **nessun `destroy all`**, quindi va guardato prima di
-decidere in quale dei due cade.
+La prima decisione di L5 è **la convenzione di nome per gli output
+parametrizzati**, e va presa una volta sola per tutti e sei. Il secondo
+passaggio di `run_simulation.sh` guarda i file **prodotti** e non il testo
+del deck, proprio perché un nome dentro un `foreach` non è ricavabile con
+un grep: quando `tb_ac.cir` scriverà le sue 8 curve, saranno 8 CSV.
 
-Nome del file: `<basename>_wrdata.txt`, come tutti gli altri. Verifica:
-deck eseguito davvero, CSV/JSON non vuoti con il numero di righe atteso,
-e `run_tests.sh` a 5 passed.
+Due regole ereditate da L4: ogni `wrdata` non banale porta sopra di sé un
+commento con **l'ordine delle colonne** (i CSV sono intestati
+`col0…colN`), e si scrivono i vettori **scelti**, non `all`.
 
-**Perché L4 e non L3b, che è più piccolo.** L3b (il `REPO` cablato in
-`gain_block.py`) fa danno solo nel momento in cui il circuito viene
-**rigenerato**, cioè in Fase 4 — mentre L4/L5 sono l'infrastruttura del
-dossier e stanno sul percorso verso G1. Quindi L4 resta il prossimo, ma
-**L3b è obbligatorio prima di toccare la topologia**: se si rigenera con
-il `REPO` cablato, l'`.inc` nuovo va nel worktree vecchio e le
-simulazioni continuano sulla copia vecchia in silenzio. Chi apre la Fase 4
-la apre da L3b.
+Verifica: deck eseguito davvero, CSV/JSON non vuoti col numero di righe
+atteso dal tipo di analisi, numeri dei deck esistenti invariati rispetto a
+una baseline presa prima della modifica, e `run_tests.sh` a 5 passed.
+
+**L3b resta obbligatorio prima della Fase 4** (il `REPO` cablato in
+`gain_block.py`): se si rigenera il circuito con quel percorso, l'`.inc`
+nuovo va nel worktree vecchio e le simulazioni continuano sulla copia
+vecchia in silenzio. Chi apre la Fase 4 la apre da L3b.
 
 ### Materiale già raccolto per L8-L10 (il giro componenti)
 
