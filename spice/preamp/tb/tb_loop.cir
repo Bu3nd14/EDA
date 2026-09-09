@@ -38,10 +38,52 @@ RLOAD  JACK 0 100k
 CCABLE JACK 0 1f
 
 .control
+* --- wrdata (L5): una curva di anello PER ITERAZIONE, 12 file ---------
+* NOMI PARAMETRIZZATI: un `$var` in un nome di file non si chiude da solo
+* - ngspice fa entrare nel nome della variabile anche `.`, `-` e `_`,
+* quindi `wrdata tb_loop_$cab.txt` cercherebbe la variabile "cab.txt". Un
+* `$` invece TERMINA il nome: la forma che funziona e' `$cab$t` con
+* t = ".txt" e u = "_". Misurato con una sonda in L5, non dedotto.
+*
+* ETICHETTE: 0db/10db nel nome invece del valore di RRG. Il `foreach`
+* resta pero' quello di prima e l'etichetta si ricava con un `if`, cosi'
+* `alter` e l'echo usano ancora i valori originali e il log resta
+* confrontabile riga per riga con quello di prima della modifica.
+*
+* DOVE: dentro il ciclo interno, PRIMA del `destroy all`. Senza quel
+* destroy ogni `ac` creerebbe ac2, ac3, ... e un `wrdata` fuori dal ciclo
+* leggerebbe il plot sbagliato in silenzio (docs/limitations.md #10).
+*
+* I 12 FILE: tb_loop_{0db,10db}_{1f,100p,470p,1n,2.2n,4.7n}.txt
+* Nessuno si chiama tb_loop_wrdata.txt - il deck non ha una sezione fuori
+* ciclo - quindi run_simulation.sh avvisa e scrive un tb_loop.json con
+* rows: 0, e i 12 file veri li converte il SECONDO passaggio. E' atteso.
+*
+* COLONNE (~801 righe, 1 Hz - 100 MHz, 100 punti/decade). Per ogni vettore
+* una COPPIA (frequenza, valore): le PARI sono la frequenza ripetuta, i
+* dati sono le DISPARI.
+*   col0 = frequenza [Hz]   col1 = Tdb = |T| in dB
+*   col2 = frequenza [Hz]   col3 = Tph = fase di T in GRADI
+* T = v(FB)/v(G2), e G2 e' l'ingresso INVERTENTE: T e' negativo reale in
+* continua, quindi la sua fase li' vale 180 gradi e il margine di fase si
+* legge come |Tph| dove Tdb attraversa lo zero. Non e' 180 - |Tph|.
+*
+* PROVVISORIO: le capacita' dei modelli segnaposto sono scelte a mano, non
+* fittate su datasheet. Il margine di fase che esce di qui va rifatto sui
+* modelli vendor (L6-L7) prima di poter essere citato.
+* ---------------------------------------------------------------------
+set t = .txt
+set u = "_"
 alter r109 = 1G
 set units = degrees
 foreach mode 1G 0.1
   alter rrg = $mode
+  if $mode = 1G
+    set gm = "0db"
+  end
+  if $mode = 0.1
+    set gm = "10db"
+  end
   foreach cab 1f 100p 470p 1n 2.2n 4.7n
     alter ccable = $cab
     ac dec 100 1 100meg
@@ -53,6 +95,7 @@ foreach mode 1G 0.1
     meas ac tdc find Tdb at=10
     echo "mode(RRG)=$mode  Ccable=$cab"
     print fcross pmarg tdc
+    wrdata tb_loop_$gm$u$cab$t Tdb Tph
     destroy all
   end
 end

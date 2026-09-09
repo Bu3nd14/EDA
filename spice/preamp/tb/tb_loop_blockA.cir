@@ -33,6 +33,37 @@ CFIX2  FIX2 J2 2.2u
 RJ2    J2 0 50k
 
 .control
+* --- wrdata (L5): una curva di anello PER ITERAZIONE, 6 file ----------
+* NOMI PARAMETRIZZATI: un `$var` in un nome di file non si chiude da solo
+* - ngspice fa entrare nel nome della variabile anche `.`, `-` e `_`,
+* quindi `wrdata tb_loop_blockA_$cw.txt` cercherebbe la variabile
+* "cw.txt". Un `$` invece TERMINA il nome: la forma che funziona e'
+* `$cw$t` con t = ".txt". Misurato con una sonda in L5, non dedotto.
+*
+* Qui il ciclo e' uno solo (BLOCK A non ha il relais di guadagno,
+* ADR-006), quindi non serve l'etichetta di modalita': il nome porta
+* direttamente la capacita' di cablaggio.
+*   tb_loop_blockA_{1f,47p,100p,220p,470p,1n}.txt
+*
+* DOVE: dentro il ciclo, PRIMA del `destroy all` - senza quel destroy le
+* `ac` successive creerebbero ac2, ac3, ... e un `wrdata` fuori dal ciclo
+* leggerebbe il plot sbagliato in silenzio (docs/limitations.md #10).
+*
+* Nessun file si chiama tb_loop_blockA_wrdata.txt, quindi run_simulation.sh
+* avvisa e scrive un tb_loop_blockA.json con rows: 0; i 6 file veri li
+* converte il SECONDO passaggio. E' atteso, non un guasto.
+*
+* COLONNE (~801 righe, 1 Hz - 100 MHz, 100 punti/decade). Coppie
+* (frequenza, valore): le PARI sono la frequenza ripetuta, i dati le
+* DISPARI.
+*   col0 = frequenza [Hz]   col1 = Tdb = |T| in dB
+*   col2 = frequenza [Hz]   col3 = Tph = fase di T in GRADI
+* Margine di fase = |Tph| dove Tdb attraversa lo zero (vedi tb_loop.cir).
+*
+* PROVVISORIO: modelli segnaposto, capacita' scelte a mano. Da rifare sui
+* modelli vendor (L6-L7).
+* ---------------------------------------------------------------------
+set t = .txt
 alter r109 = 1G
 set units = degrees
 foreach cw 1f 47p 100p 220p 470p 1n
@@ -46,6 +77,7 @@ foreach cw 1f 47p 100p 220p 470p 1n
   meas ac tdc find Tdb at=10
   echo "BLOCK A  Cwire=$cw"
   print fcross pmarg tdc
+  wrdata tb_loop_blockA_$cw$t Tdb Tph
   destroy all
 end
 .endc

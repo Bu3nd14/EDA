@@ -22,11 +22,44 @@ RBLEED JACK 0 220k
 RLOAD JACK 0 100k
 
 .control
+* --- wrdata (L5): un file PER ITERAZIONE ------------------------------
+* CONVENZIONE DEI NOMI PARAMETRIZZATI (decisa in L5, vale per tutti e 6 i
+* deck con ciclo). Un `$var` in un nome di file NON si chiude da solo:
+* ngspice fa entrare nel nome della variabile anche `.`, `-` e `_`, quindi
+* `wrdata x_$rval.txt` cerca la variabile "rval.txt", non la trova, e
+* scrive un file chiamato "x_". Misurato, non dedotto (sonda in L5).
+* Un `$` invece TERMINA il nome, quindi la forma che funziona e' quella
+* di due variabili adiacenti: `$rval$t` con `t` = ".txt".
+*
+* PERCHE' DENTRO IL CICLO: ogni `op` crea un plot nuovo (op1...op7). Un
+* `wrdata` fuori dal ciclo scriverebbe solo la settima iterazione e la
+* curva Iq(R130) - il senso di questo deck - andrebbe persa.
+*
+* PERCHE' I `let`: `@r136[i]` e `@q134[ic]` sono parametri di DISPOSITIVO,
+* non vettori del plot, e `wrdata` vuole vettori. Il `let` ne prende uno
+* snapshot nel plot corrente.
+*
+* COLONNE: un `wrdata` da `.op` scrive UNA riga e, per ogni vettore, una
+* COPPIA (scale, valore). Lo scale di un plot `op` non significa niente:
+* i dati sono le colonne DISPARI, in quest'ordine:
+*   col1 = iq (A, corrente in R136)   col3 = ic134 (A)
+*   col5 = v(NX)                      col7 = v(NY)
+* Il valore di R130 non e' una colonna: e' nel NOME del file.
+*
+* NOTA: nessun file si chiama tb_bias_sweep_wrdata.txt, quindi il percorso
+* primario di run_simulation.sh non trova nulla, avvisa, e scrive un
+* tb_bias_sweep.json con rows: 0. E' atteso: i 7 file veri li converte il
+* SECONDO passaggio, che guarda i file prodotti e non il testo del deck.
+* ---------------------------------------------------------------------
+set t = .txt
 foreach rval 1500 1600 1650 1690 1740 1780 1870
   alter r130 = $rval
   op
   echo "R130 = $rval ohm"
   print @r136[i] @q134[ic] v(nx) v(ny)
+  let iq = @r136[i]
+  let ic134 = @q134[ic]
+  wrdata tb_bias_sweep_$rval$t iq ic134 v(nx) v(ny)
 end
 .endc
 

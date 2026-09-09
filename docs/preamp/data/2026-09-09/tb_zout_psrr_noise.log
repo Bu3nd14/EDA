@@ -1,0 +1,141 @@
+
+Error: measure  za100k  find(AT) : out of interval
+ meas ac za100k find za at=100000 failed!
+
+Warning from checkvalid: vector za100k is not available or has zero length.
+
+Error: measure  za100k  find(AT) : out of interval
+ meas ac za100k find za at=100000 failed!
+
+Warning from checkvalid: vector za100k is not available or has zero length.
+
+Error: measure  p100k  find(AT) : out of interval
+ meas ac p100k find p at=100000 failed!
+
+Warning from checkvalid: vector p100k is not available or has zero length.
+
+Error: measure  p100k  find(AT) : out of interval
+ meas ac p100k find p at=100000 failed!
+
+Warning from checkvalid: vector p100k is not available or has zero length.
+
+Error: measure  p100k  find(AT) : out of interval
+ meas ac p100k find p at=100000 failed!
+
+Warning from checkvalid: vector p100k is not available or has zero length.
+
+Error: measure  p100k  find(AT) : out of interval
+ meas ac p100k find p at=100000 failed!
+
+Warning from checkvalid: vector p100k is not available or has zero length.
+
+Note: No compatibility mode selected!
+
+
+Circuit: tb_zout_psrr_noise.cir - e4 (zout), psrr, and e5 (output noise)
+
+########## Zout at the jack, load removed, both gain modes ##########
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 74
+z20                 =  1.69341e+03
+z1k                 =  5.88414e+01
+z20k                =  4.80490e+01
+za20                =  1.03684e+00
+za1k                =  1.03692e+00
+za20k               =  1.06873e+00
+RRG=1g
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 74
+z20                 =  1.69347e+03
+z1k                 =  6.06615e+01
+z20k                =  5.02961e+01
+za20                =  3.26277e+00
+za1k                =  3.26301e+00
+za20k               =  3.35692e+00
+RRG=0.1
+########## PSRR (input source silenced) ##########
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 74
+p100                =  7.20182e+01
+p1k                 =  5.95244e+01
+p10k                =  3.97282e+01
+PSRR+ RRG=1g (dB, bigger is better)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 74
+p100                =  6.20652e+01
+p1k                 =  4.95672e+01
+p10k                =  2.97747e+01
+PSRR+ RRG=0.1 (dB, bigger is better)
+########## PSRR from V- ##########
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 74
+p100                =  8.89630e+01
+p1k                 =  1.00498e+02
+p10k                =  9.69073e+01
+PSRR- RRG=1g (dB, bigger is better)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 74
+p100                =  7.90084e+01
+p1k                 =  9.05354e+01
+p10k                =  8.69318e+01
+PSRR- RRG=0.1 (dB, bigger is better)
+########## output noise 20 Hz - 20 kHz ##########
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+RRG=1g  RSRC=430 (phono cathode follower)
+onoise_total = 1.717990e-06
+inoise_total = 1.720359e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+RRG=0.1  RSRC=430 (phono cathode follower)
+onoise_total = 5.070149e-06
+inoise_total = 1.614443e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+RRG=1G  RSRC=1 ohm (intrinsic)
+onoise_total = 1.676227e-06
+inoise_total = 1.677820e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+RRG=0.1  RSRC=2500 (attenuator at mid-rotation, +10 dB) - WORST CASE
+onoise_total = 5.696896e-06
+inoise_total = 1.817758e-06
+Note: Simulation executed from .control section 

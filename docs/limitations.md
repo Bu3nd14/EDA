@@ -108,6 +108,39 @@ coordinate unit scale) fails silently with no diagnostic.
   copia di scratch dello stesso deck la riga diventa 5,696896e-06, cioè
   coincide a sette cifre. Il rimedio è quindi verificato, non ipotizzato.
 
+  **Corretto in L5** (2026-09-09): i due `destroy all` sono ora in coda al
+  deck e la riga stampa 5,696896e-06. La correzione è stata misurata
+  rieseguendo il deck contro una baseline presa prima della modifica: il
+  diff dei due log tocca **esattamente due righe**, ed è la coppia
+  `onoise_total`/`inoise_total` del caso peggiore.
+
+- **Un `$var` dentro un nome di file `wrdata` non si chiude da solo, e il
+  fallimento è SILENZIOSO.** ngspice fa entrare nel nome della variabile
+  anche `.`, `-` e `_`, quindi `wrdata out_$rs.txt v(A)` cerca una
+  variabile chiamata `rs.txt`, non la trova, la sostituisce con la stringa
+  vuota e scrive un file chiamato **`out_`** — senza errore, senza
+  warning, e con exit code 0. Le graffe **non** sono supportate: `${rs}`
+  finisce nel nome letteralmente.
+
+  Terminano il nome `"`, `+`, `%`, `:`, `!` — ma restano dentro il nome del
+  file. La forma pulita è **due variabili adiacenti**, perché anche `$`
+  termina il nome:
+
+  ```
+  set t = .txt
+  foreach rs 1.5 430 2500
+    wrdata out_$rs$t v(A)      -> out_1.5.txt, out_430.txt, ...
+  end
+  ```
+
+  E `set` converte in numero ciò che sembra un numero: `set gm = 0db`
+  memorizza `0`, `set mode = 1G` memorizza `1000000000`. Per tenere una
+  stringa **va quotata**: `set gm = "0db"`.
+
+  Misurato con una sonda in L5 su ngspice 47, non dedotto: la prima sonda
+  ha prodotto `probe_` e `probe_0db_`, entrambi vuoti, prima che la forma
+  `$rs$t` producesse i nomi giusti.
+
 ## 11. Model-validation coverage is uneven
 
 `scripts/validate_models.py`'s R/C/L/transformer/opamp checks are exact
