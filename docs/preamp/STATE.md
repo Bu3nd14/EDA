@@ -6,7 +6,7 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-09** (L5c chiuso: **G0 definito**, la prima revisione del prodotto; prossimo lotto **L5d**, che lo esegue)
+Ultimo aggiornamento: **2026-09-09** (L5d chiuso: **G0 eseguito**. 8 non conformità aperte, 2 bloccanti — **l'accesso a G1 non è concesso**. Prossimo lotto **L6**, che non è bloccato)
 
 ---
 
@@ -72,12 +72,30 @@ manciata di file, **M** = riempie una sessione da solo.
 | L5 | `wrdata` sui deck muti **con** cicli + correzione del caso peggiore | S/M | **fatto** |
 | L5b | Prima bozza del dossier, generata dai dati + correzione di `za100k`/`p100k` | S/M | **fatto** |
 | L5c | Definire **G0**, la prima revisione del prodotto | XS/S | **fatto** |
-| L5d | **Eseguire G0**: report datato + non conformità | S | **prossimo** |
-| L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | da fare |
+| L5d | **Eseguire G0**: report datato + non conformità | S | **fatto** |
+| L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | **prossimo** |
 | L7 | LSK489: passo 4, il controllo incrociato | S | da fare |
 | L8 | Fase 3a — le parti nuove, fatti verificabili | M | da fare |
 | L9 | Fase 3b — la rosa dei componenti di segnale | M | da fare |
 | L10 | Simbolo KiCad dell'LSK489 | S | da fare |
+
+**I lotti che G0 ha generato.** È il meccanismo per cui una non conformità
+produce lavoro invece di fermarlo: ogni voce aperta in `NONCOMPLIANCE.md`
+arriva qui con il proprio lotto.
+
+| # | Lotto | Dim. | Chiude | Stato |
+|---|---|---|---|---|
+| L11 | **Mute: misurare e rimediare.** Deck che misura I_C dei due dispositivi d'uscita a mute inserito + il transitorio di inserzione/rilascio; poi o la modifica di topologia o la ADR che accetta il regime | M | **NC-001** (bloccante) | da fare |
+| L12 | **Blocco A: stabilità coi valori veri.** `tb_loop_blockA.cir` ai 47 Ω / 4,7 µF / 470 kΩ, capacità sul nodo OUT **e** sui jack, CSV versionati | S | **NC-002** | da fare |
+| L13 | **E4 sulle tre uscite e a manopola che gira.** Estendere `tb_zout_psrr_noise.cir` alle due uscite fisse e a tre posizioni dell'attenuatore | S | NC-008 | da fare |
+| L14 | **Le tre correzioni di testo.** KPI del margine di fase qualificato, i due commenti di cascode allineati, lo scarto ADR-014 riferito a 1 kHz | XS | NC-003, NC-006, NC-007 | da fare |
+| L15 | **Il vincolo su E3 scritto dove verrà letto** (nota di dimensionamento in ADR-011 o `REQUIREMENTS.md`) | XS | NC-005 | da fare |
+
+**NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
+riesecuzione di `tb_noise_breakdown.cir` coi modelli veri. È il caso
+previsto da `AGENTS.md` — una voce bloccante a G0 **non** blocca i lotti che
+procurano i modelli vendor, perché quelli sono il rimedio, non un
+avanzamento di fase.
 
 Dopo, non pianificati in dettaglio perché dipendono dall'esito:
 **alimentatore + sicurezza rete**, **Fase 4** (revisione topologia coi
@@ -678,6 +696,85 @@ Servono **il blocco di guadagno** (44 componenti, l'oggetto da giudicare,
 usato quattro volte) — che esiste — e un **diagramma a blocchi** del
 preamp intero, che è L1.
 
+## L5d — G0 eseguito. FATTO.
+
+Il primo gate del progetto è stato eseguito il 2026-09-09. Report in
+`reports/2026-09-09-gate-G0.md` (830 righe), voci in `NONCOMPLIANCE.md`.
+`design-reviewer` è partito **a freddo**, come agente nuovo e non come fork
+dell'orchestratore, offline su `main` al commit `54ba2ae`.
+
+**Esito: accesso a G1 non concesso.** Otto voci aperte — 2 bloccanti, 1
+maggiore, 5 minori.
+
+**La voce che vale il gate è NC-001**, e non era nota a nessuno prima. I
+contatti NC dei relè di mute cortocircuitano a massa il nodo **jack**, cioè
+a valle dei 47 Ω e del 4,7 µF. A mute inserito lo stadio d'uscita non vede
+i 100 kΩ del carico ma **58,6 Ω**, e con i 2,7 V RMS di E6 la corrente nel
+dispositivo d'uscita sale a **65,07 mA a 0 dB** e **203,2 mA a +10 dB**,
+contro 14,56 mA di riposo: i due dispositivi si interdicono a turno e lo
+stadio **esce dalla Classe A**, che è T1. E F6 impone il mute proprio
+durante la commutazione del guadagno, cioè col segnale presente. La frase
+in rosso su `gain_block.svg` — «14,71 mA di riposo: Classe A garantita» —
+è falsa in quella condizione.
+
+È il tipo di errore per cui G0 è stato inventato: il rimedio plausibile è
+una **modifica di topologia**, e trovarlo dopo G1 sarebbe costato molto di
+più.
+
+**La seconda bloccante, NC-004**, è il rumore senza evidenza — attesa, ed è
+il meccanismo che funziona come previsto: non blocca L6-L7, che sono il suo
+rimedio.
+
+**Tutti i numeri del revisore sono stati rieseguiti dall'orchestratore**
+prima di essere riferiti: NC-001 riprodotta con un deck indipendente
+(65,0677 / 203,210 mA), NC-002 riprodotta (41,982° contro 41,98°), NC-007
+ricalcolata, il margine E6×E2 (+0,547 dB) reimplementato dalla definizione,
+e tutte le tabelle del dossier riverificate contro i `meas` che ngspice ha
+stampato da sé. La sezione «Verifica dell'orchestratore» in coda al report
+la documenta. Nessuna divergenza sostanziale.
+
+### La calibrazione: G0 **non** ha trovato l'errore del diagramma a blocchi
+
+Va scritto per intero, perché è un risultato su G0 e non un incidente da
+nascondere.
+
+Il lotto conteneva un **controllo cieco**. L'utente aveva trovato un errore
+nel diagramma a blocchi guardando il dossier e aveva chiesto esplicitamente
+che non fosse l'orchestratore a cercarlo: doveva trovarlo il revisore, a
+freddo. Con l'utente che conosce l'errore, l'orchestratore che non l'ha
+visto e il revisore che parte senza contesto, quella voce era una misura
+della **sensibilità reale** del gate.
+
+**Il revisore non l'ha trovato.** Alla domanda 6 ha risposto «il diagramma a
+blocchi non mente», dopo aver confrontato il disegno riga per riga con
+`preamp_audio.py` e aver trovato corrispondenti tutti gli elementi che ha
+elencato. Ha registrato un solo scostamento, sotto soglia (+9,96 dB sul
+diagramma contro +9,97 dB nel codice, troncamento).
+
+**E non è per non aver guardato.** Ha rasterizzato entrambi gli SVG con
+`qlmanage`, e trovando che le miniature sono quadrate e tagliano il lato
+lungo si è ritagliato il `viewBox` in copie temporanee per vedere i disegni
+per intero. Sull'altro disegno la stessa procedura ha funzionato: ha
+confrontato sette annotazioni numeriche di `gain_block.svg` con `tb_op.log`
+una per una, e ha trovato **falsa** l'affermazione in rosso sulla Classe A,
+che è diventata NC-001. Quindi il metodo trova errori nei disegni; su questo
+disegno non ha trovato *quello*.
+
+**Cosa impariamo.** G0 è sensibile a ciò che può **incrociare con una
+sorgente**: un'etichetta numerica contro un `.log`, una connessione contro
+la netlist. L'errore che l'utente ha visto è sopravvissuto a un confronto
+riga per riga col codice, quindi delle due l'una: o sta in qualcosa che il
+revisore ha verificato e ha giudicato corrispondente, o sta in una classe di
+proprietà che nessuna sorgente del repo può falsificare — e in quel caso
+`AGENTS.md` aveva ragione a chiamare il diagramma a blocchi «il punto del
+progetto in cui un errore può sopravvivere più a lungo», ma la sesta domanda
+di G0 non basta da sola a coprirlo.
+
+**Resta aperto**: l'utente sa qual è l'errore, il progetto no. Finché non lo
+dice, non c'è una non conformità da aprire — nessuno può scrivere l'evidenza
+di un difetto che non ha individuato, e «una non conformità senza evidenza
+apribile è un'opinione». È la prima domanda da porre alla ripresa.
+
 ## Dove siamo
 
 **Fase 2 consegnata, e la pausa è finita.** Il progetto si era fermato —
@@ -782,7 +879,8 @@ dinamica lamentata.
 | 4 | Revisione della topologia alla luce dei componenti | `analog-topology-designer` | da fare |
 | 5 | Misure (stabilità per prima) | `measurement-analyst` | da fare |
 | 6 | Alimentatore + **sicurezza rete** — parte in parallelo dalla Fase 2 | `psu-engineer` | da fare |
-| **G1** | Congelamento topologia | `design-reviewer` | da fare |
+| **G0** | Prima revisione del prodotto | `design-reviewer` | **fatto** — 8 voci, 2 bloccanti |
+| **G1** | Congelamento topologia | `design-reviewer` | **non accessibile** finché NC-001 e NC-004 sono aperte |
 | — | Layout → **G2** → fabbricazione → **G3** | | da fare |
 
 **Perché la Fase 1 viene prima della bozza**: se i JFET complementari non
@@ -795,39 +893,19 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L5d — eseguire G0.**
+**Prima di tutto, una domanda all'utente**: qual è l'errore che ha visto nel
+diagramma a blocchi? G0 non l'ha trovato (vedi la sezione L5d qui sopra), e
+finché resta noto solo a lui non c'è evidenza da scrivere, quindi non c'è
+una voce da aprire. Non blocca L6 — è una domanda, non una dipendenza.
 
-`design-reviewer` gira **a freddo**, offline su `main`, sul dossier e sui
-dati versionati, con il mandato scritto in `../../AGENTS.md` sezione **G0**.
-Produce un report datato in `reports/` e apre le non conformità in
-`NONCOMPLIANCE.md`.
-
-**C'è un controllo cieco dentro questo gate, ed è la ragione per cui va
-eseguito così.** L'utente ha trovato un errore **nel diagramma a blocchi**
-guardando il dossier, e ha chiesto esplicitamente che **non sia
-l'orchestratore a cercarlo**: lo deve trovare il revisore. Quindi
-l'orchestratore non ha aperto il corpo di `preamp_blocks_draw.py` né le
-etichette del disegno, e non deve farlo. Con l'utente che conosce l'errore,
-l'orchestratore che non l'ha visto e il revisore che parte a freddo, quella
-voce diventa una **calibrazione del gate**: se il revisore la trova, G0 ha
-dimostrato sensibilità invece che dichiararla; se non la trova, sappiamo che
-il gate è più debole di quanto avremmo assunto, ed è un'informazione che
-vale quanto la voce stessa.
-
-**Ostacolo pratico già risolto**: i due SVG sotto `schematic/` hanno il
-testo convertito in tracciati da matplotlib, quindi leggere il file non
-mostra nessuna etichetta. Si rasterizzano con
-
-```sh
-qlmanage -t -s 2400 -o <outdir> docs/preamp/schematic/preamp_blocks.svg
-```
-
-oppure si legge lo script che li genera, che è la loro vera fonte. Sta in
-`AGENTS.md` perché un revisore che si limitasse a `cat` sull'SVG
-concluderebbe di non poter giudicare il disegno, e sbaglierebbe.
-
-**Poi L6 — LSK489: i passi 1-3 di ADR-013 (congela il datasheet, trascrivi
+**L6 — LSK489: i passi 1-3 di ADR-013 (congela il datasheet, trascrivi
 il modello, registra la provenance).**
+
+**Non è bloccato da G0**, ed è deliberato: `AGENTS.md` scrive che una voce
+bloccante a G0 non ferma i lotti che procurano i modelli vendor, perché
+quelli sono il **rimedio** a NC-004, non un avanzamento di fase. Ciò che G0
+blocca è l'accesso a **G1**, cioè il congelamento della topologia — che
+comunque non si vuole più congelare finché NC-001 non è risolta.
 
 È il lotto che rende credibili le cifre che oggi non lo sono. Stato di
 partenza, verificato e non assunto: `vendor/` non contiene **nessun** PDF
