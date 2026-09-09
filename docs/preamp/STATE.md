@@ -6,7 +6,7 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-09** (L5e chiuso: **la revisione umana del dossier è nel registro**. 12 non conformità aperte, 3 bloccanti — **l'accesso a G1 non è concesso**. Prossimo lotto **L6**, che non è bloccato)
+Ultimo aggiornamento: **2026-09-09** (L6 chiuso: **il primo modello SPICE vendor è nel repo**, trascritto e con provenance; la libreria passa a 26/26. 12 non conformità aperte, 3 bloccanti — **l'accesso a G1 non è concesso**. Prossimo lotto **L7**, il controllo incrociato)
 
 ---
 
@@ -74,8 +74,8 @@ manciata di file, **M** = riempie una sessione da solo.
 | L5c | Definire **G0**, la prima revisione del prodotto | XS/S | **fatto** |
 | L5d | **Eseguire G0**: report datato + non conformità | S | **fatto** |
 | L5e | La revisione umana del dossier diventa registro: 4 voci nuove | S | **fatto** |
-| L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | **prossimo** |
-| L7 | LSK489: passo 4, il controllo incrociato | S | da fare |
+| L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | **fatto** |
+| L7 | LSK489: passo 4, il controllo incrociato | S | **prossimo** |
 | L8 | Fase 3a — le parti nuove, fatti verificabili | M | da fare |
 | L9 | Fase 3b — la rosa dei componenti di segnale | M | da fare |
 | L10 | Simbolo KiCad dell'LSK489 | S | da fare |
@@ -584,14 +584,64 @@ il peso: la disciplina di verifica per lotto (baseline prima della
 modifica, confronto byte a byte, `run_tests.sh`) smette di essere buona
 pratica e diventa **l'unica rete** fra un errore e `main`.
 
-**L6-L7 — i modelli veri.** `vendor/` non contiene **nessun** PDF (13
-sottodirectory, zero datasheet congelati) e `models/jfet/` ha solo
-`generic_njf.lib`: il passo 1 di ADR-013 non è iniziato. Finché i modelli
-sono segnaposto, **ogni cifra di distorsione è priva di significato** —
-ed è l'intera ragione per cui si è andati a discreti. I due lotti sono
-separati perché il passo 4 è il punto in cui la trascrizione può
-risultare sbagliata: in quel caso il lavoro è tornare su L6, non andare
-avanti.
+**L6 — il primo modello vendor del repo. FATTO.** Report:
+`reports/2026-09-09-L6-trascrizione-lsk489.md`. Fino a ieri `vendor/` non
+conteneva **nessun** PDF e `models/jfet/` aveva solo `generic_njf.lib`:
+il passo 1 di ADR-013 non era iniziato. Ora
+`vendor/jfet/linear_systems/LSK489/` porta il datasheet (RevA38, 530 957
+byte) e il PDF del modello (27 178 byte), congelati a 0444 con sha256 e
+URL registrati, e `models/jfet/lsk489.lib` esiste con la sua provenance.
+
+**Il metodo è la parte che conta**, perché è ciò che ADR-013 compra con
+la trascrizione a mano: **due letture indipendenti che devono
+coincidere**, una visiva (`qlmanage`) e una meccanica
+(`scripts/pdf_glyphs.py`, solo stdlib). Sono uscite **byte-identiche**,
+stesso sha256; una terza con `pdftotext` concorda a meno del form-feed di
+pagina. Il confronto l'ha fatto `diff`, non l'occhio.
+
+Una cosa imparata sul PDF: è un font CID con stringhe esadecimali, quindi
+i codici nel content stream **non sono codici di carattere** (scarto
+`+0x1D`). Lo scarto **non è indovinato** — il PDF porta la propria
+`/ToUnicode` CMap, 52 voci, e lo script la legge; che si riduca a una
+costante è un risultato verificato, non un'ipotesi.
+
+**Una differenza sola dal testo vendor**: tolto `Mfg=Linear_Systems`, che
+rende ngspice fatale (`Undefined parameter [linear_systems]`, exit 1 —
+rumoroso, quindi innocuo). I quattro parametri che ngspice accetta e
+ignora (`isr`, `alpha`, `vk`, `mj`) **restano nella riga** per scelta
+dell'utente: diff minimo, e i loro warning sono output atteso. **`Kf`,
+`Af`, `Nlev`, `Gdsnoi` sono accettati**, ed è il punto — questo modello
+ha il 1/f che i segnaposto non hanno.
+
+Libreria da **24 a 26 check** (`tb_lsk489()`, **fumo dichiarato**: 2,500 mA
+a `Vgs = 0`, 8,0e-12 A a `Vgs = −3 V`). Il confronto coi limiti I_DSS/V_P
+è L7: mescolarlo qui cancellerebbe la ragione per cui i due lotti sono
+separati. Finché L7 non chiude, il modello è **trascritto e verificato
+sintatticamente, non validato contro i limiti pubblicati della parte**.
+
+**Il difetto trovato eseguendo.** `scripts/validate_models.py` aveva
+`ROOT` **cablato** su `/Users/roberto/EDA` (riga 36): eseguito da un
+worktree validava i modelli del **checkout principale**, non quelli del
+ramo. Non è stato dedotto — la prima `--check-provenance` da qui ha
+stampato 12 PASS e `lsk489.lib` **non compariva**, pur essendo sul disco.
+È peggio dei fratelli già noti: `chunk_close.sh` esegue `run_tests.sh`
+dal ramo, quindi la suite poteva passare **verde su un ramo di cui non
+aveva guardato i modelli**. Corretto derivando `ROOT` da `__file__`.
+
+Corretto nello stesso lotto `scripts/freeze_vendor.sh`, che aveva
+`VENDOR_DIR` cablato allo stesso modo — congelava il checkout principale
+e non i file nuovi. **Restano** `export_fab.sh` (riga 28) e `setup.sh`
+(riga 24): non toccati da L6, quindi non corretti.
+
+**L7 — il controllo incrociato.** È separato perché il passo 4 è il punto
+in cui la trascrizione può risultare sbagliata: in quel caso il lavoro è
+tornare su L6, non andare avanti. Porta con sé una questione aperta da
+L6: il costruttore serve **RevA38**, Mouser serve **RevA40 (04/12/2022)**,
+e L7 deve confermare che i limiti I_DSS/V_P non siano cambiati fra le due.
+Il datasheet ha 7 pagine e la tabella sta oltre la prima, quindi
+`sips`/`qlmanage` non bastano: **poppler è stato installato in L6**
+apposta (`/opt/homebrew/bin/pdftotext`, 26.09.0, arm64). Nessuno script
+lo richiede, quindi `verify_env.sh` non lo verifica.
 
 **L8 prima di L9** perché le parti nuove sono fatti chiudibili mentre la
 rosa è un giudizio aperto: se il cap arriva, è meglio che tagli la
@@ -988,39 +1038,58 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L6 — LSK489: i passi 1-3 di ADR-013 (congela il datasheet, trascrivi
-il modello, registra la provenance).**
+**L7 — LSK489: il passo 4 di ADR-013, il controllo incrociato.**
 
-**Non è bloccato dalle voci aperte**, ed è deliberato: `AGENTS.md` scrive
-che una voce bloccante a G0 non ferma i lotti che procurano i modelli
-vendor, perché quelli sono il **rimedio** a NC-004, non un avanzamento di
-fase. Ciò che le bloccanti fermano è l'accesso a **G1**, cioè il
-congelamento della topologia — che comunque non si vuole più congelare
-finché NC-001 e NC-010 non sono risolte, e NC-010 è **una modifica di
+I parametri trascritti in L6 vanno confrontati con i limiti pubblicati dal
+datasheet — **I_DSS e V_P** — che è ciò che rende accettabile il passo 2.
+ADR-013 lo dice senza ammorbidire: «Il punto 4 non è un di più: è ciò che
+rende accettabile il punto 2.» Finché L7 non chiude,
+`models/jfet/lsk489.lib` è **trascritto e verificato sintatticamente, non
+validato contro i limiti della parte**.
+
+**Non è bloccato dalle voci aperte**, per la stessa ragione di L6:
+`AGENTS.md` scrive che una voce bloccante a G0 non ferma i lotti che
+procurano i modelli vendor, perché quelli sono il **rimedio** a NC-004,
+non un avanzamento di fase. Ciò che le bloccanti fermano è l'accesso a
+**G1**, il congelamento della topologia — che comunque non si vuole più
+congelare finché NC-001 e NC-010 sono aperte, e NC-010 è **una modifica di
 topologia**.
 
-`docs/preamp/NEXT-SESSION.md` porta i fatti che L5e ha già accertato su
-questo lotto — i due URL vendor, la riga `.model`, il comportamento di
-ngspice e la ricetta da aggiungere a `validate_models.py` — così L6 non li
-riscopre.
+Stato di partenza, verificato in L6 e non assunto:
 
-È il lotto che rende credibili le cifre che oggi non lo sono. Stato di
-partenza, verificato e non assunto: `vendor/` non contiene **nessun** PDF
-(13 sottodirectory, zero datasheet congelati) e `models/jfet/` ha solo
-`generic_njf.lib`. Il passo 1 di ADR-013 non è iniziato.
+| Cosa | Dove |
+|---|---|
+| Datasheet congelato, RevA38, 7 pagine | `vendor/jfet/linear_systems/LSK489/LSK489DSRevA38.pdf` |
+| Modello congelato, 1 pagina | `.../Copy_LSK489A_NJF.pdf` |
+| Modello trascritto + provenance | `models/jfet/lsk489.lib` |
+| Il metodo, gli hash, i tre confronti | `reports/2026-09-09-L6-trascrizione-lsk489.md` |
+| Come rileggere il PDF senza dipendenze | `scripts/pdf_glyphs.py` |
+| `pdftotext` (poppler 26.09.0, arm64) | `/opt/homebrew/bin/pdftotext` |
 
-Perché viene ora: l'infrastruttura di misura è finita. Dopo L5 tutti e 12 i
-deck scrivono dati, quindi il giorno in cui i modelli veri entrano nel repo
-**basta rieseguire i deck** per avere numeri nuovi e confrontabili con
-quelli di oggi, senza toccare nessun banco di prova.
+**Le due cose che L7 deve fare e che L6 gli ha lasciato scritte:**
 
-**L7 è separato di proposito**: il passo 4 di ADR-013 è il controllo
-incrociato, ed è il punto in cui la trascrizione può risultare sbagliata. Se
-succede, il lavoro è tornare su L6, non andare avanti.
+1. **La revisione.** Il costruttore serve **RevA38**, Mouser serve una
+   revisione più recente, **RevA40 (04/12/2022)**. È congelata quella del
+   costruttore, che è la fonte autorevole. L7 conferma che i limiti
+   I_DSS/V_P non siano cambiati fra le due **prima** di usarli.
+2. **Il numero da spiegare, se non torna.** Il modello dà **2,500 mA** a
+   `Vgs = 0`, `Vds = 5 V` (misurato in L6, ricetta di fumo). Se cade fuori
+   dalla finestra I_DSS del datasheet, la risposta **non** è ritoccare il
+   modello: è rileggere la trascrizione. È esattamente il caso per cui i
+   due lotti sono separati — il lavoro è tornare su L6, non andare avanti.
 
-Attenzione a `docs/limitations.md` #13 mentre si trascrive: `"1M"` in KiCad
-è 1 MΩ, in SPICE è 1 mΩ. Sei ordini di grandezza senza alcun errore da
-nessuna delle due parti.
+La tabella I_DSS/V_P sta **oltre la prima pagina**, che `sips` e
+`qlmanage` non raggiungono: per questo poppler è stato installato in L6.
+
+Attenzione a `docs/limitations.md` #13 leggendo i valori: `"1M"` in KiCad
+è 1 MΩ, in SPICE è 1 mΩ. Su questo modello **non morde** — controllato
+suffisso per suffisso in L6 — ed è scritto proprio perché è il punto in
+cui qualcuno «correggerebbe» un valore giusto.
+
+Perché i modelli veri vengono ora: l'infrastruttura di misura è finita.
+Dopo L5 tutti e 12 i deck scrivono dati, quindi **basta rieseguire i
+deck** per avere numeri nuovi confrontabili con quelli di oggi, senza
+toccare nessun banco di prova.
 
 **La Fase 4 non ha più il preliminare che aveva.** L3b è chiusa: il
 circuito si rigenera nel checkout corrente, verificato rieseguendo
@@ -1066,7 +1135,7 @@ buone è dell'utente, all'ascolto. È la ragione per cui esiste P6.
 | Cosa | Chi risponde | Blocca? |
 |---|---|---|
 | Condensatore verso il Singxer: 2,2 o 4,7 µF | utente | No |
-| Trascrizione del modello LSK489 da PDF | Fase 2 | No, ma **la credibilità della distorsione ci poggia sopra** |
+| Trascrizione del modello LSK489 da PDF | — | **Fatta in L6** (due letture byte-identiche). Resta il **controllo incrociato** contro il datasheet, che è L7: finché non chiude, il modello non è validato contro i limiti della parte |
 | Impedenza d'ingresso Singxer SA-1 V2 | — | **Non pubblicata**, verificato sul manuale ufficiale. Da L5e **non è più solo una curiosità**: è l'ipotesi su cui poggia NC-010, perché da spento può andare a zero |
 | Valore del cap d'uscita del phono a valvole | utente | **Rinviata** — non ha accesso agli schematici né può aprire agevolmente il telaio |
 | ~~Quale JFET d'ingresso~~ | — | **CHIUSA**: LSK489 (ADR-013) |
