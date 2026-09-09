@@ -64,7 +64,7 @@ qualità dell'ambiente EDA, ed è un'altra conversazione. Se il revisore
 inciampa in un difetto della catena lo annota a parte, sotto «osservazioni
 fuori scope», e non apre una non conformità di prodotto.
 
-**Le sei domande di G0.** Sono queste e vanno chiuse una per una, ognuna
+**Le sette domande di G0.** Sono queste e vanno chiuse una per una, ognuna
 con l'evidenza aperta o con l'ammissione che l'evidenza manca:
 
 1. **La struttura di guadagno fa quello che ADR-001 promette?** È la
@@ -93,6 +93,33 @@ con l'evidenza aperta o con l'ammissione che l'evidenza manca:
    G1 e G2 — viene esercitata. Un disegno che mente fa prendere decisioni
    sbagliate a chi lo guarda, ed è una non conformità di prodotto a tutti
    gli effetti.
+
+7. **Che cosa il progetto presenta come normale, e nessuna sorgente del
+   repo contraddice?** È la domanda che le prime sei non fanno. Le altre
+   confrontano un'affermazione con una sorgente — un'etichetta contro un
+   `.log`, una connessione contro la netlist — e trovano ciò che è
+   **falso**. Questa cerca ciò che è **taciuto**: una condizione di lavoro
+   che nessun banco esercita, un carico che nessuna misura copre, una
+   scelta disegnata correttamente e mai giudicata. Il revisore deve
+   nominare almeno un candidato, o dire esplicitamente di non averne
+   trovati.
+
+**Perché la settima esiste, e non è teoria.** A G0 era stato allestito un
+**controllo cieco**: l'utente aveva trovato un errore nel diagramma a
+blocchi e aveva chiesto che non fosse l'orchestratore a cercarlo. G0 non
+l'ha trovato, pur avendo rasterizzato il disegno e confrontato riga per riga
+con `preamp_audio.py`, e pur avendo trovato con lo stesso metodo
+un'affermazione falsa sull'altro disegno (è diventata NC-001). L'errore era
+che il Blocco A pilota **tre carichi in parallelo** senza isolamento
+reciproco: il disegno lo mostra correttamente, nessuna etichetta è falsa,
+e non c'era quindi niente da falsificare. Misurato e registrato in
+`docs/preamp/reports/2026-09-09-revisione-utente-dossier.md`; l'omissione
+è diventata NC-010, bloccante.
+
+Conseguenza da tenere: **G0 vede le affermazioni false, non le omissioni di
+giudizio.** La settima domanda è il rimedio parziale, e resta parziale — è
+il motivo per cui la revisione umana dello schematico è una precondizione
+di G1 e G2 e non un di più.
 
 **Perché la sesta domanda ha un peso diverso.** `scripts/check_schematic.py`
 confronta un disegno con la netlist nelle due direzioni, ma **copre solo i

@@ -1,0 +1,116 @@
+tb_blockA_carichi.cir - BLOCCO A: cosa vede quando un apparecchio a valle si spegne
+* Evidenza di NC-010. Il Blocco A pilota TRE carichi in parallelo (ADR-008):
+* l'attenuatore da 10 kohm piu' le due uscite fisse, ciascuna 47 ohm + 4.7 uF
+* + 470 kohm di scarico. Non c'e' nessun isolamento reciproco fra i tre rami:
+* il nodo di controreazione del Blocco A E' il nodo che li pilota tutti.
+*
+* La domanda che questo banco risponde: se un apparecchio a valle di una
+* uscita fissa si spegne e la sua impedenza d'ingresso crolla, cosa succede
+* al Blocco A? L'impedenza d'ingresso del Singxer non e' nota e da spento
+* potrebbe andare a zero, quindi la condizione non e' ipotetica.
+*
+* Due meta':
+*   1. TRANSITORIO - I_C dei due dispositivi d'uscita (Q134 NPN, Q135 PNP)
+*      al variare di RJ1, l'impedenza a valle della fissa 1. La Classe A
+*      esiste finche' ENTRAMBI conducono per tutto il periodo: se uno dei
+*      due tocca lo zero, lo stadio e' in Classe B. Il livello e' 2.7 V RMS
+*      (E6), cioe' 3.818 V di picco, e il Blocco A e' a guadagno unitario.
+*   2. AC - di quanto si muove il LIVELLO sul nodo OUT, che e' l'ingresso
+*      dell'attenuatore, fra fissa carica e fissa in corto. E' la meta'
+*      "modulazione reciproca" dell'osservazione: il carico di un ramo
+*      cambia il segnale che entra nel ramo del volume.
+*
+* NON e' un banco di stabilita': il margine di fase del Blocco A e' NC-002
+* e sta in tb_loop_blockA.cir, da aggiornare ai valori canonici in L12.
+*
+* Relay di guadagno non montato (ADR-006): RRG aperto, guadagno unitario.
+* PROVVISORIO - modelli segnaposto, vedi l'intestazione di tb_loop.cir.
+* Nessuna cifra di distorsione va ricavata da qui.
+
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+
+* 3.818 V di picco = 2.700 V RMS = E6 a fondo scala.
+VIN IN 0 SIN(0 3.818 1k) AC 1
+
+* R_g / relay non montati sul blocco A
+RRG RG 0 1G
+
+* --- carico canonico, esattamente come preamp_audio.py lo cabla ----------
+* (righe 123-140: 47 ohm, 4.7 uF, 470 kohm di scarico su ogni fissa)
+RATT   OUT 0  10k
+RSEP1  OUT FIX1 47
+CFIX1  FIX1 J1 4.7u
+RJ1    J1 0 470k
+RSEP2  OUT FIX2 47
+CFIX2  FIX2 J2 4.7u
+RJ2    J2 0 470k
+
+.control
+* --- wrdata: nomi parametrizzati, convenzione di L5 --------------------
+* Un `$var` in un nome di file NON si chiude da solo: ngspice fa entrare
+* nel nome della variabile anche `.`, `-` e `_`, quindi `..._$rj.txt`
+* cercherebbe una variabile "rj.txt". La forma che funziona e' `$rj$t`
+* con t = ".txt" - docs/limitations.md #10, misurata in L5.
+*
+* Nessun file si chiama tb_blockA_carichi_wrdata.txt, quindi
+* run_simulation.sh avvisa e scrive un tb_blockA_carichi.json con
+* rows: 0; i file veri li converte il SECONDO passaggio. E' atteso.
+* ---------------------------------------------------------------------
+set t = .txt
+save @q134[ic] @q135[ic] v(out) v(j1)
+
+* === 1. TRANSITORIO: la soglia oltre la quale la Classe A si perde =====
+* Si versiona la FORMA D'ONDA, non i soli estremi: da lei min e max sono
+* ricalcolabili, e il confronto con i `meas` che ngspice stampa nel .log
+* sono le due strade indipendenti verso lo stesso numero che il dossier
+* pretende. Un wrdata dei soli `meas` avrebbe scritto 1001 righe identiche,
+* perche' in un plot di transitorio gli scalari finiscono sulla scala dei
+* tempi.
+*   col0 = tempo [s]  col1 = I_C(Q134) [A]   (NPN, la semionda positiva)
+*   col2 = tempo [s]  col3 = I_C(Q135) [A]   (PNP, la sua I_C esce: segno -)
+*   col4 = tempo [s]  col5 = v(OUT) [V]
+* CLASSE A <=> q134min > 0 E q135max < 0: entrambi conducono per tutto il
+* periodo. Se uno dei due tocca lo zero, lo stadio e' in Classe B.
+*
+* Passo 5 us su 2 ms: 401 righe per file. A 1 kHz l'errore di
+* campionamento sul picco vale (2*pi*1k*2.5u)^2/2 = 1.2e-4, cioe' la
+* quarta cifra - verificato contro una run a 2 us, vedi il report.
+foreach rj 470k 10k 1k 100 10 0.01
+  alter rj1 = $rj
+  * 2 ms di finestra dopo 3 ms di assestamento: due periodi interi a 1 kHz
+  tran 5u 5m 3m
+  meas tran q134max MAX @q134[ic]
+  meas tran q134min MIN @q134[ic]
+  meas tran q135max MAX @q135[ic]
+  meas tran q135min MIN @q135[ic]
+  meas tran voutmax MAX v(out)
+  meas tran voutmin MIN v(out)
+  echo "BLOCCO A  RJ1=$rj"
+  print q134max q134min q135max q135min voutmax voutmin
+  wrdata tb_blockA_carichi_$rj$t @q134[ic] @q135[ic] v(out)
+  destroy all
+end
+
+* === 2. AC: il livello all'ingresso dell'attenuatore ===================
+* v(OUT) e' cio' che entra nell'attenuatore del volume. Se il carico di
+* un ramo fisso lo sposta, il ramo del volume sente il ramo fisso.
+*   col0 = frequenza [Hz]  col1 = vdb(OUT) [dB]
+*   col2 = frequenza [Hz]  col3 = vdb(J1) [dB]  (il jack della fissa 1)
+foreach rj 470k 0.01
+  alter rj1 = $rj
+  ac dec 100 10 100k
+  meas ac lvl1k find vdb(out) at=1000
+  meas ac lvl20 find vdb(out) at=20
+  meas ac lvl20k find vdb(out) at=20000
+  echo "BLOCCO A  AC  RJ1=$rj"
+  print lvl20 lvl1k lvl20k
+  wrdata tb_blockA_carichi_ac_$rj$t vdb(out) vdb(j1)
+  destroy all
+end
+.endc
+
+.end
