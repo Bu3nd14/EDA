@@ -177,8 +177,17 @@ FATTO QUANDO
     e confrontarli dopo ignorando i timestamp
   - `/bin/zsh scripts/run_tests.sh` resta 5 passed, 0 failed
 
-NON FA PARTE DI L5: il `REPO` cablato in `circuits/preamp/gain_block.py`
-(è L3b, e va fatto prima della Fase 4, non ora), e toccare il circuito.
+NON FA PARTE DI L5: toccare il circuito. La topologia sta solo in
+`circuits/preamp/*.py` e L5 non la sfiora.
+
+(Il `REPO` cablato in `gain_block.py` non è più un problema: quella era
+L3b, chiusa il 2026-09-09 subito prima di L5. Il circuito ora si rigenera
+nel checkout corrente, verificato rieseguendo davvero i due generatori.
+Una cosa da sapere se ti capita di guardare quegli artefatti: **un `.net`
+di SKiDL non è riproducibile byte a byte** — data, tag casuali e UUID
+cambiano a ogni esecuzione — quindi un diff grezzo su un `.net`
+rigenerato non dice se la topologia è cambiata. Il dettaglio è nella
+sezione L3b di `STATE.md`.)
 
 COME LAVORIAMO
 
