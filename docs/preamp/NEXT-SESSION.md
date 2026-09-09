@@ -1,27 +1,29 @@
-# Prompt per la sessione successiva — L4
+# Prompt per la sessione successiva — L5
 
 Copiare da qui in giù.
 
 ---
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository.
-Il lavoro è organizzato in LOTTI PICCOLI: questa sessione ne fa UNO, L4,
+Il lavoro è organizzato in LOTTI PICCOLI: questa sessione ne fa UNO, L5,
 e si ferma. Non iniziarne un secondo.
 
 Leggi PRIMA, in quest'ordine, e non saltare:
   1. CLAUDE.md — ambiente, percorsi assoluti, trappole che falliscono in
      silenzio, e la regola di fine sessione (push PRIMA di tutto)
   2. docs/preamp/STATE.md — la sezione "Come si lavora da qui", la
-     tabella dei lotti, e il paragrafo "L2-L5 — i testbench diventano
-     artefatti". Contiene la convenzione già decisa e misurata, la
-     tabella che dice quale deck muto è L4 e quale è L5, e il riquadro su
-     `gain_block.py` (L3b) che NON è di questa sessione
-  3. spice/preamp/tb/tb_op.cir — il commento in testa al file È la
-     convenzione. Non va riprogettata: va replicata
-  4. docs/limitations.md — #10 (trappole di ngspice batch) e #13
-     (i suffissi di valore che falliscono in silenzio)
+     tabella dei lotti, il paragrafo "L2-L5 — i testbench diventano
+     artefatti" **compreso il riquadro L4**, e soprattutto il riquadro
+     "⚠ WARNING PER L5", che è il cuore di questo lotto
+  3. spice/preamp/tb/tb_op.cir — il commento in testa È la convenzione di
+     percorso. Non va riprogettata: va replicata
+  4. spice/preamp/tb/tb_switch_v2_counterfactual.cir — il commento dentro
+     il `.control` è il modello di come si documenta un `wrdata`:
+     mappatura file→stato e **ordine delle colonne**
+  5. docs/limitations.md — #10 (trappole di ngspice batch, incluso il
+     plot vecchio letto in silenzio) e #13 (suffissi di valore)
 
-Non serve rileggere le ADR: L4 non tocca il circuito.
+Non serve rileggere le ADR: L5 non tocca il circuito.
 
 Contesto in due righe: preamplificatore di linea a guadagno unitario,
 Classe A pura a discreti senza operazionali, per sostituire un Technics
@@ -33,92 +35,130 @@ spice/preamp/tb/ (12 deck).
 IL RAMO NON È PIÙ UN PROBLEMA. Da L3c ogni lotto si chiude mergiando e
 riallineando il checkout principale, quindi **`main` è corrente e si
 riparte sempre da lì**. Se `git -C /Users/roberto/EDA log --oneline -1`
-non mostra l'ultimo lotto, qualcosa è andato storto nella chiusura
-precedente: risolvi quello prima di iniziare L4.
+non mostra L4, qualcosa è andato storto nella chiusura precedente:
+risolvi quello prima di iniziare L5.
 
 ------------------------------------------------------------------
-IL LOTTO: L4 — `wrdata` sui deck muti SENZA cicli
+IL LOTTO: L5 — `wrdata` dentro i cicli, e un numero sbagliato da correggere
 ------------------------------------------------------------------
 
 L'infrastruttura c'è tutta e non va ridiscussa:
 
   lettura   `.include @REPO@/<percorso-dalla-radice-del-repo>`
-  scrittura `wrdata <nome-nudo>`, cioè `<basename>_wrdata.txt`
+  scrittura `wrdata <nome-nudo>`, cioè un file dentro la directory dei
+            risultati, senza percorso
 
 `run_simulation.sh` sostituisce `@REPO@`, fa `cd "$OUTDIR"`, e da L3
-converte in CSV/JSON **ogni** file wrdata prodotto da una run, non solo
-il primo. Quindi un deck può scriverne più di uno senza perderne nessuno.
+converte in CSV/JSON **ogni** file wrdata prodotto da una run. Quel
+secondo passaggio guarda i file **prodotti** e non il testo del deck,
+proprio perché un nome dentro un `foreach` è parametrizzato e nessun grep
+può ricavarlo: è la parte costruita apposta per questo lotto.
 
-STATO DI PARTENZA: scrivono dati **4 deck su 12** (`tb_op`,
-`tb_dc_headroom` con due file, `tb_switch_v2`, `tb_v3_overload`).
-Restano **8 deck muti**, e solo i primi sono L4:
+STATO DI PARTENZA: dopo L4 scrivono dati **6 deck su 12**. Restano **6
+deck muti, tutti con `foreach`**, e sono tutti L5:
 
-| Deck muto | `foreach`? | `destroy all`? | Lotto |
-|---|---|---|---|
-| `tb_noise_vectors` | no | no | **L4** |
-| `tb_switch_v2_counterfactual` | no (tre `op` in sequenza) | no | **L4** |
-| `tb_bias_sweep` | sì (un ciclo con `op`) | **no** | **da decidere aprendolo** |
-| `tb_noise_breakdown` | sì | sì | L5 |
-| `tb_ac` | sì, doppio | sì | L5 |
-| `tb_loop` | sì, doppio | sì | L5 |
-| `tb_loop_blockA` | sì | sì | L5 |
-| `tb_zout_psrr_noise` | sì, quattro sezioni | sì | L5 |
+| Deck | Forma | Nota |
+|---|---|---|
+| `tb_bias_sweep` | `foreach` (7 × `op`), **nessun** `destroy all` | assegnato a L5 in L4, vedi sotto |
+| `tb_noise_breakdown` | `foreach` + `destroy all` | |
+| `tb_ac` | `foreach` doppio + `destroy all` | 2 modalità × 4 Z sorgente = 8 curve |
+| `tb_loop` | `foreach` doppio + `destroy all` | |
+| `tb_loop_blockA` | `foreach` + `destroy all` | |
+| `tb_zout_psrr_noise` | quattro sezioni + `destroy all` | **porta anche la correzione qui sotto** |
 
-LA REGOLA CHE SEPARA I DUE LOTTI: dove c'è `destroy all` dentro il ciclo,
-il `wrdata` va **dentro il ciclo, prima del `destroy all`**, con il nome
-parametrizzato — e quello è L5, perché non è meccanico.
+LA REGOLA: dove c'è `destroy all` dentro il ciclo, il `wrdata` va
+**dentro il ciclo, prima del `destroy all`**, con il nome parametrizzato.
 
-`tb_bias_sweep` è il caso di confine e la prima decisione della sessione:
-ha un `foreach` su 7 valori di R130 con un `op` per iterazione, ma
-**nessun `destroy all`**. Aprilo, guarda se un `wrdata` fuori dal ciclo
-cattura qualcosa di utile o se serve un file per iterazione, e decidi in
-quale lotto cade. Se cade in L5, L4 sono due deck e finisce presto: va
-benissimo, un lotto piccolo che chiude è meglio di uno grande che no.
+`tb_bias_sweep` è finito qui, e non per prudenza: ogni `op` crea un plot
+nuovo (`op1…op7`), quindi un `wrdata` **fuori** dal ciclo scriverebbe solo
+la settima iterazione e la curva Iq(R130) — il senso del deck — andrebbe
+persa. Serve un file per iterazione, più uno snapshot `let iq = @r136[i]`
+perché un parametro di dispositivo non è un vettore del plot.
 
-COSA SCRIVERE, DECK PER DECK
+LA PRIMA DECISIONE DELLA SESSIONE: **la convenzione di nome per gli
+output parametrizzati**, presa una volta sola per tutti e sei i deck. È
+stata rimandata a qui apposta, per non deciderla su un deck solo.
 
-Non copiare vettori a caso: il `wrdata` serve al dossier, quindi deve
-contenere ciò che il grafico dovrà mostrare. Guarda cosa il deck già
-`print`a — è la lista di ciò che l'autore considerava interessante.
+------------------------------------------------------------------
+⚠ WARNING PER L5 — un numero già stampato oggi è sbagliato
+------------------------------------------------------------------
 
-  - `tb_noise_vectors` fa un `noise` a 1 kHz e stampa il plot `noise1`
-    per intero. Il candidato è la densità spettrale, cioè le colonne che
-    servono a disegnare un grafico rumore-vs-frequenza. Attenzione: un
-    `noise` produce DUE plot (`noise1` spettrale, `noise2` integrato) e
-    il `setplot` conta.
-  - `tb_switch_v2_counterfactual` fa tre `op` in sequenza alterando
-    `r138` fra l'uno e l'altro. Un `.op` non ha un asse: un `wrdata` di
-    un punto operativo è una riga. Verifica cosa ne esce davvero prima di
-    dichiararlo utile — se non è utile, dillo e non aggiungerlo: è un
-    esito legittimo di L4, non un fallimento.
+Copiato da STATE.md, dove sta per esteso. **`tb_zout_psrr_noise.cir`
+riporta un rumore di caso peggiore sbagliato di un fattore 3,4, e lo fa
+in silenzio.** Trovato il 2026-09-09 rispondendo a una domanda sullo
+stato delle misure, non cercandolo.
+
+La riga finale del deck, `RRG=0.1 RSRC=2500 ... WORST CASE`, stampa
+**1,676 µV** — che è *identico* al valore "intrinsic" della riga
+precedente — invece di **5,697 µV**.
+
+**Causa**: in coda a quel deck mancano i `destroy all` che invece ci sono
+dentro i `foreach`. Ogni analisi crea plot numerati, quindi la seconda
+`noise` produce `noise3`/`noise4` e il `setplot noise2` continua a
+selezionare il plot della **prima**. Vedi `docs/limitations.md` #10.
+
+**Provato su tre gambe, non dedotto:**
+
+1. `alter` funziona in quel deck — il `foreach` sopra dà 1,718 µV e
+   5,070 µV per le due modalità, quindi non è `alter` a non avere effetto;
+2. `tb_noise_breakdown.cir` misura la **stessa** configurazione con
+   `destroy all` e dà **5,696897e-06**;
+3. aggiungendo `destroy all` a una copia di scratch dello stesso deck la
+   riga diventa **5,696896e-06** — coincide a sette cifre. Il rimedio è
+   verificato.
+
+**Cosa deve fare L5**: oltre ad aggiungere i `wrdata`, **correggere quella
+coda** e ricontrollare che le due righe finali tornino diverse. E stare
+attento al caso generale: ogni `wrdata` piazzato dopo un'analisi ripetuta
+senza `destroy all` scriverà i dati del plot **sbagliato** — lo stesso
+guasto, ma dentro un file che poi finisce nel dossier.
+
+------------------------------------------------------------------
+DUE REGOLE EREDITATE DA L4, non da riscoprire
+------------------------------------------------------------------
+
+1. **L'identità delle colonne esiste solo nel deck.**
+   `run_simulation.sh` intesta i CSV `col0…colN`, punto. Quindi ogni riga
+   `wrdata` non banale vuole sopra di sé un commento con l'ordine delle
+   colonne. Il modello è dentro `tb_switch_v2_counterfactual.cir`.
+2. **Si scrivono i vettori scelti, non `all`.** In `tb_noise_vectors`
+   `print all` elencava **172** vettori: scriverli tutti dà 344 colonne
+   intestate `colN`, cioè un file che nessuno può più interpretare. Si
+   scrivono i totali più i contributori dominanti, e **solo i totali per
+   dispositivo** — `onoise_q123_rb` accanto a `onoise_q123` conta due
+   volte.
+
+E una forma da conoscere: un `wrdata` da un `.op` scrive **una riga** e,
+per ogni vettore, una **coppia** di colonne `(scale, valore)`. Lo *scale*
+di un plot `op` è un vettore arbitrario e **non significa niente**: i dati
+sono le colonne **dispari**. Per un `ac`/`noise`/`tran` la colonna pari è
+invece l'asse vero (frequenza o tempo) ripetuto.
 
 DOVE FINISCONO I DATI (deciso in L3c)
 
-`results/` resta scratch e gitignorato: è dove atterrano tutte le run.
-Ma **i dati del dossier sono versionati**, perché il gate gira offline su
-`main` e deve poter aprire i numeri. Se un CSV prodotto in L4 è materiale
-da dossier — cioè qualcosa che verrà impaginato o citato da una non
-conformità — copialo in
+`results/` resta scratch e gitignorato. Ma **i dati del dossier sono
+versionati**, perché il gate gira offline su `main` e deve poter aprire i
+numeri. Se un CSV prodotto in L5 è materiale da dossier — e in L5 lo sarà,
+perché qui escono risposta in frequenza, guadagno d'anello, PSRR e Z_out,
+cioè i grafici che il dossier deve impaginare — copialo in
 
 ```
 docs/preamp/data/<YYYY-MM-DD>/<nome>.csv   (+ .json, + il .log come evidenza)
 ```
 
-Curati, non grezzi: ciò che serve, non l'output di ogni esecuzione. La
-convenzione per esteso è in `docs/preamp/data/README.md`. Attenzione: il
-`.gitignore` ha regole globali `*.log`/`*_out.txt`/`*.raw` neutralizzate
-lì dentro da una negazione — se aggiungi estensioni nuove, controlla con
-`git status` che sopravvivano.
+con un `README.md` accanto che porti **la legenda delle colonne**: senza,
+un CSV intestato `colN` non è interpretabile da chi apre il dossier. Il
+modello è `docs/preamp/data/2026-09-09/README.md`, scritto in L4. La
+convenzione per esteso è in `docs/preamp/data/README.md`.
 
-Se in L4 non esce niente di degno del dossier, va benissimo non copiare
-nulla: dirlo è un esito, riempire la directory per abitudine no.
+Attenzione: il `.gitignore` ha regole globali `*.log`/`*_out.txt`/`*.raw`
+neutralizzate lì dentro da una negazione — dopo la copia metti i file in
+staging e guarda lo stato del repo per **vedere** che siano sopravvissuti.
 
-DUE TRAPPOLE
-
-  1. Un `wrdata` di un `.op` può produrre un file con una riga sola o
-    nessuna. Non dare per scontato che il CSV sia sensato: aprilo.
-  2. `run_simulation.sh` avvisa su un `.include` relativo. Se vedi
-    quell'avviso hai sbagliato la metà lettura della convenzione.
+Cautela di merito, non di forma: i modelli sono **segnaposto**. Il rumore
+e la distorsione che escono da questi deck non sono cifre credibili e non
+vanno presentate come tali; lo diventeranno dopo L6-L7. I risultati in
+continua e la **forma** delle risposte in frequenza sì.
 
 FATTO QUANDO
 
@@ -126,17 +166,19 @@ FATTO QUANDO
     `/bin/zsh scripts/run_simulation.sh <deck> results/preamp/<nome>`,
     exit code 0, nessun "could not find include" nel log — verificato con
     ls e grep, non dedotto
-  - il CSV e il JSON esistono, NON sono vuoti, e il numero di righe è
-    quello che ti aspetti dal tipo di analisi. Se non lo è, capisci
-    perché prima di andare avanti
+  - il numero di file prodotti è quello che il ciclo promette (8 curve da
+    `tb_ac`, 7 punti da `tb_bias_sweep`, …), i CSV non sono vuoti e il
+    numero di righe è quello atteso dal tipo di analisi
+  - la riga WORST CASE di `tb_zout_psrr_noise.cir` stampa **5,697 µV** e
+    non più 1,676 µV, e le due righe finali sono diverse fra loro
   - i numeri dei deck già esistenti non cambiano: `wrdata` è additivo,
     quindi qualunque scostamento è un errore tuo. Il modo di controllarlo
-    è quello di L3: eseguire prima della modifica e confrontare i log
+    è quello di L3/L4: eseguire PRIMA della modifica, conservare i log,
+    e confrontarli dopo ignorando i timestamp
   - `/bin/zsh scripts/run_tests.sh` resta 5 passed, 0 failed
 
-NON FA PARTE DI L4: i 5-6 deck con `destroy all` (è L5), il `REPO`
-cablato in `circuits/preamp/gain_block.py` (è L3b, e va fatto prima della
-Fase 4, non ora), e toccare il circuito.
+NON FA PARTE DI L5: il `REPO` cablato in `circuits/preamp/gain_block.py`
+(è L3b, e va fatto prima della Fase 4, non ora), e toccare il circuito.
 
 COME LAVORIAMO
 
@@ -149,19 +191,17 @@ COME LAVORIAMO
     che consuma.
   - Lavora in un worktree. I commit non pushati dentro
     .claude/worktrees/ spariscono col worktree, ed è già successo.
-  - CHIUSURA. Non è più una lista da ricordare, è uno script che
-    rifiuta. Nell'ordine:
-      1. aggiorna `docs/preamp/STATE.md` segnando **L4 fatto** e L5
-         prossimo (la tabella dei lotti deve dire `**fatto**`)
-      2. riscrivi QUESTO file per **L5** — se il titolo nomina ancora L4,
-         lo script rifiuta, ed è il controllo che esiste apposta.
-         **Riporta nel prompt di L5 il riquadro "⚠ WARNING PER L5" che sta
-         in `STATE.md`**: è un numero già misurato e sbagliato di 3,4x in
-         `tb_zout_psrr_noise.cir`, e L5 è il lotto che apre quel deck
+  - CHIUSURA. Non è una lista da ricordare, è uno script che rifiuta.
+    Nell'ordine:
+      1. aggiorna `docs/preamp/STATE.md` segnando **L5 fatto** e il lotto
+         successivo come prossimo (la tabella deve dire `**fatto**`)
+      2. riscrivi QUESTO file per il lotto successivo — se il titolo
+         nomina ancora L5, lo script rifiuta, ed è il controllo che
+         esiste apposta
       3. committa, pusha, apri la PR
-      4. `/bin/zsh scripts/chunk_close.sh L4`
+      4. `/bin/zsh scripts/chunk_close.sh L5`
          Verifica tutto, merghia, riallinea il checkout dell'utente e
          **rilegge da lì** per provare il riallineo. Se rifiuta, ha
          ragione: sistema e rilancia.
       5. rimuovi il worktree con i due comandi che lo script stampa
-      6. fermati. Non iniziare L5.
+      6. fermati. Non iniziare il lotto dopo.

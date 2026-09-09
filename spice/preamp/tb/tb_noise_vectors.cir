@@ -15,5 +15,36 @@ RLOAD  JACK 0 100k
 noise v(JACK) VSRC lin 2 1000 1001 1
 setplot noise1
 print all
+* --- wrdata (L4) -----------------------------------------------------
+* DOVE: plot `noise1`. Un'analisi `noise` ne produce DUE - noise1
+* (densita' spettrale) e noise2 (integrato) - e il `setplot` qui sopra
+* decide quale si scrive. Vale docs/limitations.md #10.
+*
+* PERCHE' noise2 NON viene scritto: la banda di questo deck e' larga 1 Hz
+* per costruzione (lin 2 1000 1001), quindi il rumore integrato che ne
+* esce non significa niente. La cifra integrata e' di
+* tb_noise_breakdown.cir, non di questo deck.
+*
+* PERCHE' NON `wrdata ... all`: `print all` qui elenca 172 vettori, cioe'
+* 344 colonne intestate col0..col343 - un file che nessuno puo' piu'
+* interpretare. Si scrivono i due totali piu' i contributori dominanti,
+* e SOLO i totali per dispositivo (mai onoise_q123_rb accanto a
+* onoise_q123: sarebbe contato due volte). Sommano in quadratura a
+* onoise_spectrum - verificato sul log: sqrt(somma dei quadrati) = 1.16e-08
+* contro 1.215e-08.
+*
+* COLONNE: 2 righe (1000 e 1001 Hz) e, per ogni vettore, una COPPIA
+* (frequenza, valore). Le colonne PARI sono la frequenza ripetuta; i dati
+* sono le DISPARI, in quest'ordine:
+*   col1 onoise_spectrum   col3 inoise_spectrum   col5 onoise_q123
+*   col7 onoise_q122       col9 onoise_r138      col11 onoise_r121
+*  col13 onoise_r120      col15 onoise_rsrc      col17 onoise_jq110
+*  col19 onoise_jq111
+*
+* ATTENZIONE: sono numeri da MODELLI SEGNAPOSTO. Non sono una cifra di
+* rumore credibile e non vanno nel dossier finche' non ci sono i modelli
+* vendor (ADR-013, lotti L6-L7).
+* ---------------------------------------------------------------------
+wrdata tb_noise_vectors_wrdata.txt onoise_spectrum inoise_spectrum onoise_q123 onoise_q122 onoise_r138 onoise_r121 onoise_r120 onoise_rsrc onoise_jq110 onoise_jq111
 .endc
 .end
