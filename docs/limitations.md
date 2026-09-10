@@ -291,3 +291,96 @@ link esiste» — spinta un passo più indietro, fino al trasporto.
 Un secondo effetto, indipendente: **falsificare lo user-agent peggiora le
 cose**. Con un UA Safari plausibile onsemi risponde **403** agli stessi
 URL che serve senza problemi allo user-agent di default di curl.
+
+## 19. Il prefisso **micro** non sopravvive all'estrazione dai PDF di onsemi: un limite letto meccanicamente è sbagliato di **1000×**
+
+Scoperto in L24 leggendo il datasheet del 1N4148
+(`vendor/diodes/onsemi/1N4148/1n914-d.pdf`).
+
+`pdftotext` rende il glifo **µ** di questi documenti come la lettera
+**m**. Non emette alcun avviso, esce 0, e il testo risultante è
+perfettamente plausibile: `IC = 100 mA` invece di `IC = 100 µA`.
+
+**Provato con le due letture indipendenti di ADR-013, non dedotto.** Il
+render della pagina mostra «Pulse Width = 1.0 **μ**s»; l'estrazione
+meccanica della stessa riga restituisce «Pulse Width = 1.0 **m**s».
+
+```sh
+/opt/homebrew/bin/pdftocairo -png -r 200 -f 2 -l 2 1n914-d.pdf pag2   # guardala
+/opt/homebrew/bin/pdftotext  -layout 1n914-d.pdf - | grep 'Pulse Width'
+```
+
+**È una proprietà della toolchain documentale di onsemi, non di poppler.**
+Contando il glifo estratto su documenti già nel repo:
+
+| Documento | occorrenze di «µ» |
+|---|---|
+| `1n914-d.pdf` (onsemi) | **0** |
+| `mje15032-d.pdf` (onsemi) | **0** |
+| `2n5551t-d.pdf` (onsemi) | **0** |
+| `LSK489DSRevA38.pdf` (Linear Systems) | **11** |
+| `MMBT5401.pdf` / `MMBT5551.pdf` (Diodes) | 4 / 8 |
+
+**Il dettaglio che lo rende pericoloso: il prefisso *nano* sopravvive.**
+Nel 2N5551 le righe `50 nA` escono corrette e le righe in microampere no,
+quindi un controllo a campione su una riga qualsiasi può concludere che
+l'estrazione è a posto.
+
+Le tre righe colpite in quel documento, già congelato in L8:
+
+| Riga | Il PDF | `pdftotext -layout` |
+|---|---|---|
+| V(BR)CBO | I_C = **100 μA** | `IC = 100 mA` |
+| V(BR)EBO | I_E = **10 μA** | `IE = 10 mA` |
+| I_CBO @ 100 °C | 50 **μA** | `50 mA` |
+
+Nessuna di queste è fra le cifre che L8 aveva registrato, e la riga che L8
+*ha* registrato — V(BR)CEO a **I_C = 1,0 mA** — è **corretta**, verificata
+sul render. Il `PROVENANCE.json` congelato non è stato riscritto.
+
+**Regola operativa**: da un PDF onsemi, qualunque limite di corrente
+sotto il milliampere va **guardato**, non estratto. È la stessa disciplina
+di ADR-013 — due letture indipendenti che devono coincidere — applicata a
+un caso in cui basta guardarne una.
+
+## 20. Un costruttore può servire, sotto il nome della tua parte, il modello di **un'altra parte**
+
+Scoperto in L24 sul 1N4148.
+
+```sh
+curl -sSL -o - https://www.onsemi.com/download/models/lib/1n4148.lib | grep SUBCKT
+# .SUBCKT 1N4148WT 2 1
+```
+
+L'URL porta il nome della parte, risponde `200 application/octet-stream`,
+restituisce un file **vero** di 1189 byte — e dentro c'è il **1N4148WT**,
+la variante **SOD-323**, non il DO-35 che il progetto usa. Lo stesso file
+è servito byte-identico anche come `1n4148wt.lib`, il che conferma che è
+un alias e non un errore di battitura del server.
+
+ngspice lo carica **senza una parola** e simula un altro dispositivo.
+
+Il modello giusto sta in un file che porta il nome di **un'altra parte
+ancora**, e lo dichiara nella propria intestazione:
+
+```
+** Product: 1N/FDLL914/A/B / 916/A/B / 4148 / 4448
+** Package: DO-35 / LL-34
+```
+
+**Come si risolve, e la risposta era sul sito del costruttore**: la pagina
+prodotto del 1N4148 di onsemi linka **un solo** datasheet, ed è
+`1n914-d.pdf`. È onsemi stessa a schedare il 1N4148 sotto il documento
+1N914.
+
+```sh
+grep -o '/download/data-sheet/pdf/[a-z0-9-]*\.pdf' <pagina-prodotto-salvata> | sort -u
+```
+
+**Regola operativa**: un modello scaricato si apre e si legge
+l'intestazione **prima** di congelarlo, e il nome del dispositivo dentro
+il file deve corrispondere alla parte — package compreso. È la lezione di **L7**
+(`docs/preamp/reports/2026-09-09-L7-controllo-incrociato-lsk489.md`: il
+nome di un file non è la sua **revisione**) spostata di un livello — qui
+il nome di un file non è la sua **parte** — e fallisce nello stesso modo,
+cioè in silenzio.
