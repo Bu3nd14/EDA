@@ -28,6 +28,11 @@ tb_blockA_carichi.cir - BLOCCO A: cosa vede quando un apparecchio a valle si spe
 * Nessuna cifra di distorsione va ricavata da qui.
 
 .include @REPO@/spice/preamp/placeholder_devices.lib
+* L22: the input current mirror is no longer a placeholder. It is an
+* LS352 (ADR-018) and this is its VENDOR model - the only real device
+* model in this deck besides the LSK489. Every OTHER device here is
+* still a hand-written placeholder.
+.include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block_flat.inc
 
 VPP VPLUS 0 DC 15
@@ -61,7 +66,7 @@ RJ2    J2 0 470k
 * rows: 0; i file veri li converte il SECONDO passaggio. E' atteso.
 * ---------------------------------------------------------------------
 set t = .txt
-save @q134[ic] @q135[ic] v(out) v(j1)
+save @q133[ic] @q134[ic] v(out) v(j1)
 
 * === 1. TRANSITORIO: la soglia oltre la quale la Classe A si perde =====
 * Si versiona la FORMA D'ONDA, non i soli estremi: da lei min e max sono
@@ -83,15 +88,15 @@ foreach rj 470k 10k 1k 100 10 0.01
   alter rj1 = $rj
   * 2 ms di finestra dopo 3 ms di assestamento: due periodi interi a 1 kHz
   tran 5u 5m 3m
-  meas tran q134max MAX @q134[ic]
-  meas tran q134min MIN @q134[ic]
-  meas tran q135max MAX @q135[ic]
-  meas tran q135min MIN @q135[ic]
+  meas tran q134max MAX @q133[ic]
+  meas tran q134min MIN @q133[ic]
+  meas tran q135max MAX @q134[ic]
+  meas tran q135min MIN @q134[ic]
   meas tran voutmax MAX v(out)
   meas tran voutmin MIN v(out)
   echo "BLOCCO A  RJ1=$rj"
   print q134max q134min q135max q135min voutmax voutmin
-  wrdata tb_blockA_carichi_$rj$t @q134[ic] @q135[ic] v(out)
+  wrdata tb_blockA_carichi_$rj$t @q133[ic] @q134[ic] v(out)
   destroy all
 end
 

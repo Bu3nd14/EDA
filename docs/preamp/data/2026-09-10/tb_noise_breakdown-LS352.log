@@ -1,0 +1,60 @@
+warning, model type mismatch in line
+    q122a nmiri nmiri nme1 ls350
+warning, model type mismatch in line
+    q122b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: tb_noise_breakdown.cir - which devices actually make the noise (e5)
+
+===== per-device noise contributions at 1 kHz, 0 dB mode, Rsrc=430 =====
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 2
+
+No. of Data Rows : 1
+===== integrated totals, 20 Hz - 20 kHz =====
+A) 0 dB, source 1 ohm      (block A intrinsic)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.156687e-06
+inoise_total = 1.157803e-06
+B) 0 dB, source 430 ohm    (block A on the tube phono)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.216418e-06
+inoise_total = 1.218113e-06
+C) 0 dB, source 2500 ohm   (block B, attenuator mid-rotation)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.470348e-06
+inoise_total = 1.475441e-06
+D) +10 dB, source 2500 ohm (block B worst case)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 4.230583e-06
+inoise_total = 1.349864e-06
+Note: Simulation executed from .control section 

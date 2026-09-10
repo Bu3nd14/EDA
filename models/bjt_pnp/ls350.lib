@@ -1,0 +1,144 @@
+* ls350.lib - Linear Systems LS350/LS351/LS352, monolithic dual PNP.
+* VENDOR MODEL, TRANSCRIBED BY HAND FROM A VENDOR PDF (ADR-013 procedure).
+*
+* USAGE:
+*   .include models/bjt_pnp/ls350.lib
+*   Q1 collector base emitter LS350
+*
+* The LS350 series is a DUAL: one package holds two matched PNP devices on
+* the same die. This file provides the model for ONE device - instantiate
+* it twice for a pair, as circuits/preamp/gain_block.py does for the input
+* current mirror.
+*
+* ------------------------------------------------------------------
+* THE PART THE PROJECT BUYS IS THE LS352. THE MODEL IS NAMED LS350.
+* ------------------------------------------------------------------
+*
+* Linear Systems publishes ONE SPICE model for the whole series, and it
+* carries the series name LS350. LS350, LS351 and LS352 are the same die
+* under three test grades - they differ in tested VBE matching, in BVCEO
+* (25 / 45 / 60 V min) and in minimum hFE, not in construction.
+*
+* ADR-018 selects the LS352 grade: 60 V BVCEO against a 30 V rail-to-rail
+* worst case, and |VBE1-VBE2| = 0.2 mV typ / 0.5 mV max.
+*
+* CONSEQUENCE, stated rather than left implicit: this model describes the
+* die, not the grade. It cannot tell you whether a given sample meets the
+* LS352 matching window - only measurement on the part can. Every mirror
+* figure computed from it is therefore a TYPICAL-DIE figure, and the
+* matching guarantee comes from the datasheet grade, not from here.
+*
+* ------------------------------------------------------------------
+* PROVENANCE - the short version. Full record in
+* models/bjt_pnp/ls350.provenance.json and in
+* docs/preamp/reports/2026-09-10-L22-L23-specchio-ingresso.md
+* ------------------------------------------------------------------
+*
+* Linear Systems publishes this model as a PDF containing the .model text,
+* exactly as it does for the LSK489. ADR-013 made the transcription method
+* binding: TWO INDEPENDENT READINGS THAT MUST AGREE. Both were done on the
+* frozen copy at vendor/bjt_pnp/linear_systems/LS350/LS350-SPICE-Model-Rev2.pdf
+* and came out BYTE-IDENTICAL (same sha256); a third, visual reading of the
+* rendered page agreed character for character.
+*
+* The vendor line, VERBATIM, is:
+*
+*   .model LS350 (PNP IS=3.82645e-15 XTI=3 EG=1.17 VAF=37.2934 BF=500
+*   NE=1.45387 ISE=1.4506e-15 NR=1 IKF=0.03 XTB=1.5 BR=0.637555
+*   IKR=0.000489083 VAR=20 IsC=1e-18 NC=1.9 RB=200 RE=0.909091 RC=231.405
+*   CJC=2.5286e-12 CJE=1.9932e-12 MJC=0.1795208 MJE=0.2174719 VJC=0.4
+*   VJE=0.6034061 TF=7.255581E-10 TR=1e-08 VTF=5 XTF=2.04 RBM=10 IRB=1e-05
+*   PTF=20 FC=0.5 ITF=0.018 mfg=Linear_Systems)
+*
+* ONE thing was removed, and only one: mfg=Linear_Systems. ngspice does not
+* know that parameter, evaluates the value as an expression and dies -
+* "Undefined parameter [linear_systems]", "ERROR: fatal error in ngspice",
+* exit 1. That failure is LOUD, not silent. Re-verified in L22 on this
+* file rather than inherited from L6. Nothing else was changed: no value
+* was rounded, reordered or "corrected".
+*
+* THE VENDOR'S PARENTHESIS PLACEMENT IS KEPT, AND IT EMITS A WARNING.
+* The vendor writes ".model LS350 (PNP ..." - device type inside the
+* parentheses - where the canonical form is ".model LS350 PNP (...".
+* ngspice accepts the vendor form but prints "warning, model type mismatch
+* in line". That warning is EXPECTED OUTPUT, not a defect: the same deck
+* run against the canonical form produces IDENTICAL numbers to seven
+* significant figures (hFE at 1 mA / 100 uA / 10 uA all bit-identical).
+* Measured in L22, not assumed. The vendor text is kept for the same
+* reason L6 kept the four parameters ngspice ignores on the LSK489: the
+* diff from what the manufacturer published stays minimal.
+*
+* ------------------------------------------------------------------
+* CROSS-CHECKED AGAINST THE DATASHEET IN L22 - VERDICT IS MIXED
+* ------------------------------------------------------------------
+*
+* Datasheet LS350SeriesDSRevA5.pdf, Rev#A5 10/14/2020, read from the
+* footer. Measured at the datasheet's own conditions, ngspice 47,
+* set temp = 25 (the datasheet is @ 25 C; ngspice defaults to 27):
+*
+*   hFE  @ IC = 10 uA,  VCE = 5 V    441.2   window 200 .. 600   INSIDE
+*   hFE  @ IC = 100 uA, VCE = 5 V    483.2   window 200 .. 600   INSIDE
+*   hFE  @ IC = 1 mA,   VCE = 5 V    490.6   200 MIN.            INSIDE
+*   COBO @ VCB = 5 V, 1 MHz          1.584 pF   2 pF MAX.        INSIDE
+*   NF   @ IC = 100 uA, RG = 10 k,
+*        VCE = 5 V, f = 1 kHz        0.325 dB   3 dB MAX.        INSIDE
+*
+*   fT   @ IC = 1 mA, VCE = 5 V      129.5 MHz  200 MHz MIN.     OUTSIDE
+*
+* fT is 35% below the datasheet's own minimum. It is not a transcription
+* error - nothing was transcribed twice differently - and it was checked
+* on three independent legs that agree: |hfe| = 1 crossing gives 129.5
+* MHz; the gain-bandwidth product at 1 MHz gives 124.5 MHz; at 10 MHz it
+* gives 128.8 MHz.
+*
+* WHICH DIRECTION IT ERRS, because that is what decides whether it is
+* safe: the model is SLOWER than the part the datasheet guarantees, so a
+* phase-margin or loop-gain figure computed with it is PESSIMISTIC. That
+* is the safe direction - but it is not "conservative in a known amount",
+* and any HF figure that leans on this device must say which way it errs.
+* Recorded as NC-020 in docs/preamp/NONCOMPLIANCE.md (major, not blocking).
+*
+* ------------------------------------------------------------------
+* NOISE - THE NUMBER THAT COSTS SOMETHING, AND IT IS NOT FLATTERING
+* ------------------------------------------------------------------
+*
+* Measured input-referred, common emitter, IC = 1 mA, VCB = 10 V, 1 kHz,
+* 25 C, source impedance ~0 - the THAT320's own datasheet test condition -
+* with the SAME deck run against both models, so the comparison is
+* measured rather than quoted:
+*
+*   THAT320 QPNP_THAT_NS   0.758 nV/rtHz     (reproduces the 0.768 nV/rtHz
+*                                              recorded in limitations #17,
+*                                              which validates the deck)
+*   LS350                  1.685 nV/rtHz     2.22x worse, +6.9 dB
+*
+* The cause is visible in the model: RB = 200, RBM = 10, IRB = 1e-05. With
+* BF = 500 the base current at 1 mA is ~2 uA, well below IRB, so the base
+* resistance sits near RB and not near RBM. The THAT320 carried RB = 25,
+* and that 25 ohm is precisely what made it a low-noise part.
+*
+* AND THE DATASHEET DOES NOT PROMISE OTHERWISE. The LS350 series specifies
+* noise as NF <= 3 dB at RG = 10 k, which permits an equivalent input
+* noise of up to ~12.8 nV/rtHz. It is a general-purpose matched pair, not
+* a low-noise one. The 1.685 nV/rtHz above is what the model says; the
+* datasheet guarantees far less. Do not quote it as a part guarantee.
+*
+* NO FLICKER NOISE: no KF, no AF. The simulated spectrum is flat from
+* 100 Hz to 100 kHz. Same gap as the THAT320 vendor models, the two MJE
+* models, the Diodes models and the hand-written placeholders - in this
+* repo ONLY the LSK489 has 1/f. NC-004 stays open for this reason.
+*
+* ------------------------------------------------------------------
+* SUFFIXES: docs/limitations.md #13 does NOT bite here - checked
+* ------------------------------------------------------------------
+*
+* Every numeric value in the vendor line is written in exponent form
+* (3.82645e-15, 2.5286e-12, 1e-05) or as a plain decimal. There is not a
+* single SPICE magnitude suffix in the model, so the "1M means megohm in
+* KiCad and milliohm in SPICE" trap has nothing to bite on. Written down
+* because this is the spot where a later reader would go looking.
+
+.model LS350 (PNP IS=3.82645e-15 XTI=3 EG=1.17 VAF=37.2934 BF=500 NE=1.45387 ISE=1.4506e-15 NR=1
++ IKF=0.03 XTB=1.5 BR=0.637555 IKR=0.000489083 VAR=20 IsC=1e-18 NC=1.9 RB=200 RE=0.909091 RC=231.405
++ CJC=2.5286e-12 CJE=1.9932e-12 MJC=0.1795208 MJE=0.2174719 VJC=0.4 VJE=0.6034061 TF=7.255581E-10
++ TR=1e-08 VTF=5 XTF=2.04 RBM=10 IRB=1e-05 PTF=20 FC=0.5 ITF=0.018)
