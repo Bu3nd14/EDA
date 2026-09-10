@@ -6,33 +6,26 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-10** (**L22 + L23 chiusi**: lo specchio
-d'ingresso non è più un THAT320. La parte è un **Linear Systems LS352**, dual
-PNP monolitico in SOIC-8, |V_BE1−V_BE2| 0,2 mV tip — modello del costruttore
-pubblicato come PDF e **Rev. 2 del 27/07/2026**, trascritto con le due letture
-di ADR-013 (byte-identiche), congelato con provenienza e **bloccato da una
-ricetta di regressione**: la libreria passa a **28/28 check**. Deciso in
-**ADR-018**. Il risultato che conta: **il dispositivo è più rumoroso e lo
-stadio non lo è** — da solo fa 1,685 nV/√Hz contro gli 0,758 del THAT320 sullo
-stesso deck, ma portando la degenerazione da 47 a **220 Ω** (valore
-**spazzato**, non argomentato: il minimo di rumore è lì e a 330 Ω risale) lo
-stadio finisce **25,7% più silenzioso** di quando montava la parte uscita di
-produzione, caso peggiore da 5,697 a **4,231 µV**, dentro E5. Il duale è ora
-**UNA parte, non due**: `library/preamp.kicad_sym` è la **prima libreria di
-simboli del repo**, i componenti su SOIC-8 scendono da 4 a 3, e **NC-016 si
-chiude**. Margine di fase mosso di mezzo grado, clipping di 15 mV. Verdetto
-misto sul modello: cinque grandezze su sei dentro le finestre del datasheet,
-**f_T il 35% sotto il minimo** su tre gambe concordi → **NC-020**. Due
-candidati scartati alla fonte: **DMMT5401** appaiato su h_FE e non su V_BE
-(più NF 8 dB contro 3), e **SSM2220** perché `analog.com` non risponde a un
-client automatico — dichiarato non verificato, non risolto. Trappola nuova:
-`limitations.md` **#21** — su diodes.com il nome del file nell'URL di un
-modello è **ignorato**, decide solo l'id. **18 voci di non conformità, 5
-bloccanti**: una bloccante in meno per la prima volta da G0. Prossimo lotto
-**L25**. — Prima: **L24** aveva eseguito T7 su tutti e sette i dispositivi
-attivi; lo stadio d'uscita regge (MJE15032/33 e 1N4148 hanno un modello
-onsemi) e 2N5401/2N5551 non si sostituiscono ma cambiano costruttore e
-package, **MMBT5401/MMBT5551** di Diodes in SOT-23, deciso in **ADR-017**)
+Ultimo aggiornamento: **2026-09-10** (**L26 chiuso**: tre requisiti nuovi
+dell'utente, registrati in **ADR-019**. **1)** il **margine di fase minimo è
+60°**, e vale su **ogni** combinazione della matrice V1 — blocco A compreso,
+caso peggiore capacitivo da 4,7 nF compreso. Chiude **NC-012**, che quella
+soglia la chiedeva, e rende **decidibili in negativo** due misure che
+esistevano già: **NC-002 sale a bloccante** (blocco A a 41,98°, mancano 18°) e
+nasce **NC-021** (blocco B a 0 dB con cavo, 56,46°, mancano 3,5°). Nessuno dei
+due è instabile: 60° è un margine di progetto. **2)** il **trim funziona solo
+a mute inserito**, con interlock **elettrico** sui suoi relè — l'unica delle
+tre forme proposte che un banco possa provare a fallire → **NC-023**, che va
+con **L16**. **3)** i guadagni diventano **tre — 0 / +3 / +10 dB** — con
+**riposo a 0 dB**, così nessun guasto di bobina alza il guadagno; il principio
+di ADR-004 (si commuta R_g, mai R_f) si conserva → **NC-022**, lotto **L27**,
+che deve estendere anche i dodici deck da due modalità a tre. **20 voci, 7
+bloccanti.** Nessuna riga di topologia scritta: questo lotto registra e apre
+lavoro. Prossimo lotto **L25**, che i requisiti nuovi non invalidano. —
+Prima: **L22 + L23** avevano sostituito il THAT320 fine-vita con un **Linear
+Systems LS352**, dual PNP monolitico in SOIC-8 (**ADR-018**), portando la
+degenerazione da 47 a **220 Ω** e lasciando lo stadio d'ingresso **25,7% più
+silenzioso** di prima; NC-015 e NC-016 chiuse, NC-020 aperta)
 
 ---
 
@@ -117,20 +110,22 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | # | Lotto | Dim. | Chiude | Stato |
 |---|---|---|---|---|
 | L11 | **Mute: misurare e rimediare.** Deck che misura I_C dei due dispositivi d'uscita a mute inserito + il transitorio di inserzione/rilascio; poi o la modifica di topologia o la ADR che accetta il regime | M | **NC-001** (bloccante) | da fare |
-| L12 | **Blocco A: stabilità coi valori veri.** `tb_loop_blockA.cir` ai 47 Ω / 4,7 µF / 470 kΩ, capacità sul nodo OUT **e** sui jack, CSV versionati. Da fare insieme allo sweep d'impedenza di `tb_blockA_carichi.cir`: stesso blocco, stessi carichi | S | **NC-002** | da fare |
+| L12 | **Portare blocco A e blocco B sopra i 60°.** Cambia natura con **ADR-019**: non più solo «misura coi valori veri», ma **rimedio** — il blocco A sta a 41,98° e il blocco B a 0 dB con cavo a 56,46°, contro una soglia di 60°. Le strade (più compensazione, meno guadagno d'anello, rete d'isolamento diversa) costano tutte a un altro requisito e vanno confrontate coi numeri | M | **NC-002**, **NC-021** (bloccanti) | da fare |
 | L13 | **E4 sulle tre uscite e a manopola che gira.** Estendere `tb_zout_psrr_noise.cir` alle due uscite fisse e a tre posizioni dell'attenuatore | S | NC-008 | da fare |
 | L14 | **Le tre correzioni di testo.** KPI del margine di fase qualificato, i due commenti di cascode allineati, lo scarto ADR-014 riferito a 1 kHz | XS | NC-003, NC-006, NC-007 | da fare |
 | L15 | **Il vincolo su E3 scritto dove verrà letto** (nota di dimensionamento in ADR-011 o `REQUIREMENTS.md`) | XS | NC-005 | da fare |
-| L16 | **Il trim entra nel progetto.** Dimensionarlo in `circuits/preamp/` coi due vincoli insieme — attenuazione richiesta da ADR-015 e Zin ≥ 100 kΩ — e misurarlo. Chiude anche NC-005. Più la riconciliazione delle tre cifre di margine nel dossier | S/M | **NC-009**, NC-005 | da fare |
+| L16 | **Il trim entra nel progetto.** Dimensionarlo in `circuits/preamp/` coi due vincoli insieme — attenuazione richiesta da ADR-015 e Zin ≥ 100 kΩ — e misurarlo. Chiude anche NC-005. Più la riconciliazione delle tre cifre di margine nel dossier | S/M | **NC-009**, NC-005, **NC-023** | da fare |
 | L17 | **Buffer sulle uscite fisse.** Modifica di topologia in `preamp_audio.py` che disaccoppia le due fisse dal nodo del Blocco A, più la riesecuzione di `tb_blockA_carichi.cir` sulla topologia nuova | M | **NC-010** (bloccante) | da fare |
 | L18 | **Il vincolo PSRR scritto dove verrà letto**: quanto ripple può lasciare l'alimentatore sul rail positivo, ricavato da E5 | XS/S | **NC-011** | da fare |
-| L19 | **La soglia di margine di fase in V1**, col carico di prova dichiarato accanto; poi i KPI del dossier riferiti a quella | XS | **NC-012** | da fare |
+| L19 | ~~**La soglia di margine di fase in V1**~~ — **ASSORBITA da L26**: la soglia l'ha data l'utente (60° ovunque, ADR-019) e NC-012 è chiusa. Resta solo la parte «KPI del dossier riferiti a quella», che va con la rigenerazione del dossier | XS | ~~NC-012~~ | **superata** |
 | L20 | **Quanto il progetto dipende da I_DSS.** Rieseguire punto di lavoro e rumore del blocco di guadagno con `Vto` ai due estremi compatibili con la finestra A — il modello vendor com'è (2,59 mA) e un `Vto` che porti I_DSS al tipico (5,5 mA) — e scrivere in `REQUIREMENTS.md` o in una ADR quale dispersione il progetto tollera | S | **NC-013** | da fare |
 | L21 | **Il polo 2 del relè, corretto e riverificato.** Riga 79 di `preamp_audio.py` in `"6", "5", "7"`, rigenerazione, e verifica **sulla netlist** che il contatto verso massa di ogni mute cada su 2 e 7 e il ramo `R_g` su 4 e 5 | XS/S | **NC-014** (bloccante) | da fare |
 | L22 | **Lo specchio d'ingresso senza THAT320.** Trovare e verificare una coppia PNP appaiata che soddisfi **T7 e T8 insieme**, poi rifare punto di lavoro e rumore dello stadio d'ingresso. La decisione *se* sostituire è presa (ADR-016): resta *con cosa* | M | **NC-015** (bloccante) | **fatto** |
 | L23 | **Package e simbolo della parte che sostituisce il THAT320**, col pinout letto dal suo datasheet. Va fatto **insieme a L22**, non dopo: il footprint arriva con la parte. Copre anche il residuo `SOIC-8` che oggi non corrisponde a nessuna parte esistente | S | NC-016 | **fatto** |
 | L24 | **T7 su tutti i dispositivi attivi.** Prima **verificare** MJE15032/33 e 1N4148 — è il passo che dice quanto è grande il resto — poi trovare i sostituti di 2N5401/2N5551, congelarli e promuoverli in `models/` col controllo incrociato di L6+L7 | M | **NC-017** (bloccante), **NC-004** | **fatto** |
 | L25 | **Promuovere in `models/` i cinque modelli congelati in L24** (MMBT5401, MMBT5551, MJE15032, MJE15033, 1N4148), ognuno con la sua `.provenance.json` e una ricetta di regressione in `validate_models.py` sul modello di `tb_lsk489()`. Il controllo incrociato contro i datasheet **è già fatto** in L24: qui si tratta di bloccarne i numeri | S/M | **NC-017** (bloccante) | da fare |
+| L26 | **I tre requisiti nuovi dell'utente diventano ADR-019**: margine di fase minimo **60° ovunque**, trim abilitato dal mute con **interlock elettrico**, guadagni **0 / +3 / +10 dB** con riposo a 0 dB | XS/S | **NC-012** (chiude), apre NC-021…NC-023 | **fatto** |
+| L27 | **Il terzo livello di guadagno entra nel progetto.** Dimensionare il secondo ramo commutato verso massa (ADR-004 conservata: si commuta R_g, mai R_f; a relè diseccitati **0 dB**), decidere relè e poli col budget di corrente delle bobine, estendere i dodici deck da due modalità a tre e l'asserzione del diagramma a blocchi | M | **NC-022** | da fare |
 
 **NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
 riesecuzione di `tb_noise_breakdown.cir` coi modelli veri. È il caso
@@ -1252,6 +1247,90 @@ rumore domina.
 dove andare, il meccanismo multi-unit collaudato e il `suffix` di `spice_dev`
 già pronto. I due LSK489 restano le ultime due Part che dichiarano un package
 ciascuna per un solo dispositivo.
+
+## L26 — I tre requisiti nuovi dell'utente. FATTO.
+
+Report: `reports/2026-09-10-L26-requisiti-utente.md`. Decisione: **ADR-019**.
+Chiude **NC-012**, apre **NC-021** (bloccante), **NC-022**, **NC-023**, e alza
+**NC-002** a bloccante.
+
+**Perché è un lotto e non una nota.** I tre requisiti sono arrivati in
+conversazione, e un requisito che vive solo in una chat non fa fallire niente:
+è il modo in cui un progetto scopre a valle di aver misurato la cosa sbagliata.
+Il precedente è **L8b**, dove due regole dell'utente diventarono ADR-016 e i
+requisiti T7/T8.
+
+**1. Margine di fase minimo 60°, ovunque.** Chiude NC-012 — che quella soglia
+la chiedeva — e con essa **due voci diventano decidibili, in negativo**:
+
+| Configurazione | Margine | Contro 60° |
+|---|---|---|
+| Blocco B, 0 dB, a vuoto | 63,02° | conforme |
+| Blocco B, +10 dB, a vuoto | 86,09° | conforme |
+| **Blocco B, 0 dB, 4,7 nF** | **56,46°** | **−3,5°** → NC-021 |
+| **Blocco A, carico canonico** | **41,98°** | **−18°** → NC-002, ora bloccante |
+
+I due numeri **esistevano già** (L22 il primo, il gate G0 il secondo): il
+requisito non ha scoperto niente, ha dato un confine a ciò che era sul tavolo.
+Ed è ciò che NC-012 aveva previsto scrivendo che senza soglia «nessuna misura
+di margine di fase può passare o fallire».
+
+**La domanda è stata posta prima di scrivere**, perché NC-012 avvertiva che
+una soglia senza il carico a cui si riferisce non sarebbe stata un requisito
+migliore: fra «al carico reale» (oggi conforme), «anche a 4,7 nF» e «ovunque»,
+la risposta è stata la più severa, scelta sapendo cosa comporta.
+
+**Diciotto gradi non sono un ritocco.** Più compensazione costa banda e slew
+rate; meno guadagno d'anello costa distorsione, che è metà della ragione per
+cui ADR-003 ha scelto i discreti; una rete d'isolamento diversa dai 47 Ω tocca
+E4 e ADR-008. **L12 cambia natura**: non più «misura coi valori veri» ma
+«porta sopra soglia», e conviene farlo una volta sola per entrambi i blocchi.
+
+Da leggere insieme a **NC-020**: il modello LS352 è più *lento* della parte
+garantita, quindi questi margini sono pessimistici — ma di quantità ignota,
+quindi non se ne può concludere che la parte reale passi.
+
+**2. Il trim funziona solo a mute inserito, con interlock elettrico.** Due
+comandi distinti, il mute abilita il trim; fuori mute agire sul trim non
+cambia nulla, e il valore impostato resta applicato all'uscita dal mute.
+Diventa il requisito **F8**.
+
+Delle tre forme proposte è l'unica **falsificabile**: si applica il comando a
+mute rilasciato e si verifica che non succeda nulla. Un vincolo di pannello
+non si può provare, e un mute automatico avrebbe voluto temporizzazione, che
+ADR-009 rende sgradevole.
+
+Il trim di ADR-011 **non esiste ancora** — è **L16** — quindi l'interlock è
+tutto da fare, ed è **NC-023**. Il punto delicato non è il permissivo: è
+**quale contatto**. I relè di mute sono a riposo in mute (ADR-012), quindi
+l'alimentazione delle bobine del trim va presa dal contatto chiuso **in** mute.
+È lo stesso tipo di errore che **NC-014** ha già prodotto sullo stesso relè,
+per questo NC-023 prescrive la verifica **sulla netlist**.
+
+**3. Tre livelli di guadagno: 0 / +3 / +10 dB, riposo a 0 dB.** Il salto
+0 → +10 dB è grosso e il gradino intermedio serve. **Il principio di ADR-004
+non cambia**: si commuta R_g verso massa, mai R_f, quindi l'anello non passa
+per il relè e non si apre mai; con due rami verso massa il principio si
+conserva per costruzione, e «riposo = 0 dB» lo rende esplicito — nessun guasto
+di bobina può alzare il guadagno.
+
+**Cosa costa, ed è la parte che non si vede dalla riga di requisito**: la
+matrice V1 passa da tre a quattro configurazioni di blocco; **i dodici deck
+spazzano due modalità e ne vogliono tre**, con la trappola di
+`limitations.md` #10 che aspetta chi tocca i nomi `wrdata`; servono più relè o
+più poli, quindi cambia il budget di corrente delle bobine per `psu-engineer`
+e cambia il pannello; il diagramma a blocchi **calcola** il guadagno da
+R_f/R_g e lo asserisce, quindi `check_schematic.py` va esteso. Le cifre
+pubblicate a +10 dB restano valide — quel livello non cambia — ma nessuna
+copre il livello nuovo. È **NC-022**, lotto **L27**.
+
+**4. Cosa questo lotto NON ha fatto.** Nessuna riga di topologia:
+`circuits/preamp/` non è stata toccata, ed è una proprietà del diff. Nessuna
+misura nuova: ogni numero citato viene da misure già nel repo. Non ha deciso
+come si recuperano i 18°, non ha dimensionato il gradino intermedio, non ha
+scelto i relè. E **non ha toccato il dossier**, che pubblica ancora 56,945°
+come caso peggiore — un numero della topologia col THAT320. Il dossier si
+rigenera **una volta**, dopo la Fase 4.
 
 ## Il dossier: prima bozza consegnata in L5b
 

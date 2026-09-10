@@ -27,16 +27,17 @@ report `reports/2026-09-08-analisi-catena.md`.
 | F2 | **Trim di livello per ingresso**: 0 / −6 / −12 dB a ponticello | ADR-011 |
 | F3 | **3 uscite**: principale (attenuata) + 2 a livello fisso | ADR-008 |
 | F4 | **Attenuatore a scatti**, commutatore rotativo, 10 kΩ, resistenze 0,1% | ADR-009 |
-| F5 | **Guadagno commutabile 0 / +10 dB**, relè sulla rete di controreazione | ADR-004 |
+| F5 | **Guadagno commutabile 0 / +3 / +10 dB**, relè sulla rete di controreazione. **A relè diseccitati il guadagno è 0 dB**: nessun guasto di bobina e nessuno stato di accensione può portare a un guadagno più alto | ADR-004, **ADR-019** |
 | F6 | **Relè di mute** su tutte le uscite: accensione e commutazione guadagno | ADR-012 |
 | F7 | **Nessun telecomando, nessun microcontrollore** | ADR-009 |
+| F8 | **Il trim d'ingresso funziona solo a mute inserito**, con interlock **elettrico**: il comando del trim raggiunge i propri relè solo se il mute è attivo. Due comandi distinti, il mute abilita il trim. Fuori mute agire sul trim non cambia nulla; il valore impostato resta applicato all'uscita dal mute | ADR-011, **ADR-019** |
 
 ## Requisiti elettrici
 
 | # | Parametro | Valore | Origine |
 |---|---|---|---|
 | E1 | Guadagno nominale | **0 dB** | ADR-001 |
-| E2 | Guadagno alternativo | **+10 dB** commutabile | ADR-004 |
+| E2 | Guadagni alternativi | **+3 dB** e **+10 dB**, commutabili. Valore esatto del gradino intermedio dal dimensionamento (ADR-019) | ADR-004, **ADR-019** |
 | E3 | Impedenza d'ingresso | **≥ 100 kΩ** | Cap di accoppiamento del phono — vedi report |
 | E3b | Attenuazione tipica all'ascolto | ~29–31 dB con il nuovo preamp | Guadagno finale 20,7×–25,3× |
 | E4 | Impedenza d'uscita | **< 100 Ω in banda passante** (misurata escludendo la reattanza del condensatore d'accoppiamento), costante con la posizione del volume | ADR-002 |
@@ -109,7 +110,7 @@ Il margine di fase va misurato per **ogni combinazione** di:
 
 | Variabile | Valori da coprire |
 |---|---|
-| Blocco | A (buffer, guadagno 1) · B a 0 dB · B a **+10 dB** |
+| Blocco | A (buffer, guadagno 1) · B a 0 dB · B a **+3 dB** · B a **+10 dB** |
 | Posizione dell'attenuatore | minimo · **metà corsa (Zout massima, 2,5 kΩ)** · massimo |
 | Carico d'uscita | cj 100 kΩ · Stax ~50 kΩ · Singxer (Zin ignota) · **carico capacitivo** (cavo, spazzata di lunghezza) |
 | Sorgente a monte | phono 430 Ω · K11 <1,5 Ω · le tre posizioni del trim |
@@ -118,11 +119,29 @@ La posizione dell'attenuatore **non è un dettaglio**: la sua impedenza
 d'uscita varia da ~0 a 2,5 kΩ e ritorno, quindi **il margine di fase
 varia con la manopola del volume**.
 
+**SOGLIA DI ACCETTAZIONE: margine di fase ≥ 60°**, deciso dall'utente il
+2026-09-10 e registrato in **ADR-019**. Vale su **ogni** combinazione della
+matrice qui sopra — blocco A compreso, e **caso peggiore capacitivo
+compreso**, cioè la sonda da 4,7 nF che i banchi usano come margine di prova.
+
+È la lettura più severa fra quelle proposte, ed è stata scelta esplicitamente.
+Chiude **NC-012**, che chiedeva questa soglia e faceva notare che una soglia
+senza il carico a cui si riferisce non sarebbe stata un requisito migliore.
+
+**Il progetto oggi NON la soddisfa in due punti misurati**: 56,46° sul blocco
+B a 0 dB con 4,7 nF (rimisurato in L22) e 41,98° sul blocco A col carico
+canonico (evidenza di NC-002). Sono NC-021 e NC-002, e vanno risolte prima
+dell'avanzamento di fase.
+
+Nessuno dei due è un circuito instabile: 60° è un **margine di progetto** —
+copre la dispersione dei componenti, la capacità di cavi che nessuno ha
+misurato e i modelli che non sono ancora tutti veri.
+
 ### V2 — Stabilità ai transienti di commutazione
 
 Comportamento dinamico durante e dopo ogni commutazione:
 
-- **Relè del guadagno (0 ↔ +10 dB).** Vincolo di progetto: la rete va
+- **Relè del guadagno (0 ↔ +3 ↔ +10 dB, ADR-019).** Vincolo di progetto: la rete va
   disposta in modo che **l'anello di controreazione non si apra mai**
   durante la transizione. Concretamente: il relè commuta la resistenza
   verso massa (R_g), mentre R_g mai in serie all'anello — così a

@@ -6,14 +6,15 @@ l'ha aperta, in `reports/`, che non si riscrive mai.
 
 Ultimo aggiornamento: **2026-09-10** (creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
-**L8** ha aperto NC-014…NC-017; **L8b** ha registrato le due decisioni di
-**ADR-016**; **L24** ha eseguito T7 su tutti e sette i dispositivi attivi e
-aperto NC-018 e NC-019; **L22 + L23** hanno **CHIUSO NC-015 e NC-016** —
-lo specchio d'ingresso è un **LS352** (ADR-018), congelato con provenienza,
-controllato contro il proprio datasheet, montato nella topologia e
-rimisurato — e aperto **NC-020**. **18 voci aperte, 5 bloccanti**, una
-bloccante in meno per la prima volta da G0. L'accesso a G1 non è concesso
-finché NC-001, NC-004, NC-010, NC-014 e NC-017 restano aperte)
+**L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
+ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
+**L22 + L23** hanno **chiuso NC-015 e NC-016** e aperto NC-020; **L26** ha
+registrato i **tre requisiti nuovi dell'utente** (**ADR-019**), che
+**chiudono NC-012** dandole la soglia che chiedeva e **aprono NC-021…NC-023**.
+La soglia di margine di fase a **60° ovunque** rende **NC-002 decidibile**, e
+il verdetto è **negativo**: quella voce sale a **bloccante**. **20 voci
+aperte, 7 bloccanti.** L'accesso a G1 non è concesso finché NC-001, NC-002,
+NC-004, NC-010, NC-014, NC-017 e NC-021 restano aperte)
 
 ---
 
@@ -296,12 +297,12 @@ lo stesso rimedio: una resistenza in serie al contatto del relè di mute
 non fa niente contro un apparecchio spento, perché su questa via non c'è
 nessun relè. Chi chiuderà NC-001 deve saperlo, o chiuderà una via sola.
 
-### NC-002 — Il blocco A non ha evidenza di stabilità valida
+### NC-002 — Il blocco A non ha evidenza di stabilità valida, e col nuovo requisito è sotto soglia
 
 | | |
 |---|---|
-| Requisito | **V1** · ADR-008 addendum (47 Ω) · ADR-007 addendum (4,7 µF) |
-| Severità | **maggiore** |
+| Requisito | **V1** (soglia **60°**, ADR-019) · ADR-008 addendum (47 Ω) · ADR-007 addendum (4,7 µF) |
+| Severità | **bloccante** — alzata il 2026-09-10 da **maggiore** |
 | Aperta da | `reports/2026-09-09-gate-G0.md` |
 | Stato | aperta |
 
@@ -319,6 +320,19 @@ deck: il circuito reale è più esposto di quello simulato, non meno.
 41,98° resta un margine stabile — non è un oscillatore — ma è **sotto il
 56,945° che il dossier pubblica come caso peggiore**, e nessuno di questi
 numeri esiste nel repo.
+
+**AGGIORNATA IL 2026-09-10 (L26): questa voce era indecidibile e ora non lo
+è più.** V1 non aveva una soglia di accettazione — era esattamente il
+contenuto di NC-012 — quindi i 41,98° non erano né conformi né non conformi.
+**ADR-019 fissa il minimo a 60° su ogni combinazione della matrice V1, blocco
+A e caso peggiore capacitivo compresi**, e il verdetto diventa negativo:
+**41,98° contro 60°, mancano 18°**. Per questo la severità sale a bloccante.
+
+Diciotto gradi non si recuperano con un ritocco. Le strade — più
+compensazione, meno guadagno d'anello, una rete d'isolamento d'uscita diversa
+dai 47 Ω — costano tutte qualcosa a un altro requisito, e la scelta va fatta
+coi numeri di ciascuna. È il lotto **L12**, che cambia natura: non più «misura
+il blocco A coi valori veri» ma «portalo sopra soglia».
 
 **Riesecuzione indipendente, la seconda** (L5e, 2026-09-09): 69,83° a
 vuoto, 64,05° a 1 nF, 56,59° a 2,2 nF, **41,85° a 4,7 nF**. Coincide entro
@@ -442,7 +456,7 @@ simulazione.
 | Requisito | **V1** |
 | Severità | **maggiore** |
 | Aperta da | `reports/2026-09-09-revisione-utente-dossier.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-10 (L26)** — la soglia c'è: **60°**, decisa dall'utente e registrata in **ADR-019**. Vedi «Voci chiuse» in fondo |
 
 **Evidenza.** `docs/preamp/REQUIREMENTS.md`, sezione V1, enumera con cura
 le combinazioni su cui il margine di fase va misurato — blocco, posizione
@@ -1083,7 +1097,115 @@ stabilità del progetto dipende dalla f_T di questo dispositivo entro il
 margine di errore. Non si chiude "correggendo" il modello: quello che il
 costruttore pubblica è ciò che si congela.
 
+### NC-021 — Il blocco B a 0 dB sta sotto i 60° nel caso peggiore capacitivo
+
+| | |
+|---|---|
+| Requisito | **V1**, soglia 60° (**ADR-019**) |
+| Severità | **bloccante** |
+| Aperta da | `reports/2026-09-10-L26-requisiti-utente.md` |
+| Stato | aperta |
+
+**Evidenza.** Margine di fase del blocco B rimisurato in L22 con lo specchio
+LS352:
+
+| Configurazione | Misurato | Contro 60° |
+|---|---|---|
+| 0 dB, a vuoto | 63,02° | conforme |
+| **0 dB, 4,7 nF di cavo** | **56,46°** | **−3,5°** |
+| +10 dB, a vuoto | 86,09° | conforme |
+| +10 dB, 4,7 nF | 80,6° | conforme |
+
+Il lato debole è la **modalità 0 dB**, ed è coerente col fatto che è la
+modalità con più guadagno d'anello: il relè è aperto, R_g non è in circuito e
+la controreazione è totale.
+
+**Perché è bloccante.** Non perché 56,46° sia instabile — non lo è — ma perché
+è **sotto un requisito**, e l'effetto standard di una bloccante è fermare
+l'avanzamento di fase, non un merge. Si congela una topologia sopra un
+requisito soddisfatto, non sopra uno mancato di tre gradi e mezzo.
+
+**Va letta insieme a NC-002**, che è lo stesso problema più grave sul blocco A
+(41,98°), e a **NC-020**: il modello LS352 è più *lento* della parte
+garantita, quindi questi margini sono pessimistici — ma di quantità ignota,
+quindi non si può dedurne che la parte reale passi.
+
+**Cosa serve per chiuderla.** La stessa scelta di NC-002, e conviene farla una
+volta sola per entrambi i blocchi: più compensazione, meno guadagno d'anello,
+o una rete d'isolamento d'uscita diversa. Lotto **L12**.
+
+### NC-022 — La topologia ha due livelli di guadagno, il requisito ne chiede tre
+
+| | |
+|---|---|
+| Requisito | **E2**, **F5** (**ADR-019**) |
+| Severità | **maggiore** |
+| Aperta da | `reports/2026-09-10-L26-requisiti-utente.md` |
+| Stato | aperta |
+
+**Evidenza.** `circuits/preamp/gain_block.py` implementa **un solo** ramo
+commutato: `R_G = "698"` verso massa attraverso un relè, quindi due stati —
+1 e 1 + R_f/R_g = 3,149 (+9,96 dB). Il livello **+3 dB non esiste**, né nel
+codice né nella netlist né nel diagramma a blocchi.
+
+**Cosa serve per chiuderla**, e non è una riga:
+
+1. **il dimensionamento** del secondo ramo verso massa, col principio di
+   ADR-004 conservato — si commuta R_g, mai R_f — e con lo stato a relè
+   diseccitati che deve restare **0 dB** (ADR-019);
+2. **i relè**: quanti, con quanti poli, e il budget di corrente delle bobine
+   che ne esce, che è un dato per `psu-engineer`;
+3. **i dodici deck**: ogni `foreach` che oggi spazza `0db / 10db` ne vuole
+   tre, con la trappola di `limitations.md` #10 sui `$var` nei nomi `wrdata`;
+4. **il diagramma a blocchi**, che calcola il guadagno da R_f/R_g e lo
+   asserisce: `scripts/check_schematic.py` va esteso, non aggirato;
+5. **la matrice V1**, che passa da tre a quattro configurazioni di blocco.
+
+Lotto **L27**.
+
+### NC-023 — Il trim non ha interlock col mute, e il trim non esiste ancora
+
+| | |
+|---|---|
+| Requisito | **F8** (**ADR-019**) · ADR-011 |
+| Severità | **maggiore** |
+| Aperta da | `reports/2026-09-10-L26-requisiti-utente.md` |
+| Stato | aperta |
+
+**Evidenza.** Il trim d'ingresso di ADR-011 **non è ancora nel progetto**: è
+il lotto **L16**, che deve dimensionarlo coi due vincoli insieme
+(attenuazione richiesta da ADR-015 e Zin ≥ 100 kΩ). Non esistendo il trim,
+non esiste nemmeno il suo comando, quindi l'interlock elettrico che **F8**
+richiede è interamente da fare.
+
+**Cosa serve per chiuderla.** Che L16, quando dimensiona il trim, includa il
+**permissivo**: l'alimentazione delle bobine dei relè del trim passa per un
+contatto del relè di mute. Il dettaglio da non sbagliare è **quale** contatto:
+i relè di mute sono a riposo in mute (ADR-012), quindi il permissivo si prende
+dal contatto che è chiuso **in** mute, non da quello che lo è a riposo — ed è
+precisamente il tipo di errore che **NC-014** ha già prodotto una volta sul
+polo 2 dello stesso relè.
+
+E va verificato **sulla netlist**, come L21 farà per NC-014: applicare il
+comando del trim a mute rilasciato e provare che non succede nulla. Un
+interlock che non è stato provato a fallire non è un interlock.
+
 ## Voci chiuse
+
+**NC-012 — V1 non dichiara la soglia di accettazione del margine di fase**
+(maggiore). **CHIUSA il 2026-09-10 da L26.** La soglia è **60°**, decisa
+dall'utente e registrata in **ADR-019**, e vale su **ogni** combinazione della
+matrice V1 — blocco A compreso, caso peggiore capacitivo da 4,7 nF compreso.
+La voce chiedeva anche che la soglia arrivasse **col carico a cui si
+riferisce**, e su quello la domanda è stata posta esplicitamente prima di
+scrivere: fra «al carico reale», «anche a 4,7 nF» e «ovunque», la risposta è
+stata la più severa.
+
+Chiudendosi ha reso decidibili le due voci che dipendevano da lei, e in
+entrambi i casi il verdetto è negativo: **NC-002** (blocco A, 41,98°) sale a
+bloccante, e nasce **NC-021** (blocco B a 0 dB, 56,46°). Era esattamente ciò
+che la voce prevedeva scrivendo che senza soglia «nessuna misura di margine di
+fase può passare o fallire».
 
 **NC-015 — Il THAT320 è fine vita** (bloccante). **CHIUSA il 2026-09-10 da
 L22 + L23.** Il sostituto è scelto, verificato e montato: **Linear Systems

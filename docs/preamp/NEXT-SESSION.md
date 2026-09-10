@@ -6,7 +6,28 @@ e si ferma. Non iniziarne un secondo.
 
 ## Cosa è cambiato, e perché il prossimo lotto è la promozione dei modelli
 
-Il lotto precedente, **L22 + L23**, ha chiuso lo specchio d'ingresso. Tre
+**Il lotto precedente è L26, e non ha scritto topologia: ha registrato tre
+requisiti nuovi dell'utente** (**ADR-019**). Li devi conoscere prima di
+toccare qualsiasi cosa, perché due di essi rendono **non conforme** la
+topologia attuale:
+
+1. **Il margine di fase minimo è 60°**, su **ogni** combinazione della matrice
+   V1 — blocco A compreso, caso peggiore capacitivo da 4,7 nF compreso. Chiude
+   NC-012 e rende decidibili in negativo due misure che esistevano già:
+   **NC-002 sale a bloccante** (blocco A, 41,98°, mancano 18°) e nasce
+   **NC-021** (blocco B a 0 dB con cavo, 56,46°). Nessuno dei due è instabile:
+   60° è un margine di progetto. Rimedio: **L12**, che cambia natura.
+2. **Il trim funziona solo a mute inserito**, con interlock **elettrico** sui
+   suoi relè (requisito **F8**) → **NC-023**, che va con **L16**.
+3. **I guadagni diventano tre: 0 / +3 / +10 dB**, con **riposo a 0 dB** →
+   **NC-022**, lotto **L27**, che dovrà estendere anche i dodici deck da due
+   modalità a tre.
+
+**Nessuno dei tre invalida L25**, che resta il prossimo lotto: promuovere i
+modelli in `models/` non dipende né dai livelli di guadagno né dal margine di
+fase, e chiude una bloccante.
+
+Prima ancora, **L22 + L23** avevano chiuso lo specchio d'ingresso. Tre
 risultati cambiano il quadro:
 
 - **il THAT320 è uscito dal progetto.** Al suo posto c'è un **Linear Systems
