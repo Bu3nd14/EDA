@@ -229,3 +229,65 @@ d'occhio. Nessuna di queste informazioni è deducibile dalle connessioni.
 silenzio dal circuito — è **meccanizzato** da
 `scripts/check_schematic.py`. Non si può piazzare in automatico, ma si
 può verificare in automatico. Vedi `docs/architecture.md`.
+
+## 17. Un costruttore può pubblicare **due modelli della stessa parte**, e sceglierne uno sbagliato non dà errore
+
+Scoperto in L8 sul THAT320 (`vendor/bjt_array/that/THAT320/300_Series_Macro_01.lib`).
+
+THAT Corporation spedisce, nello stesso file, **due modelli SPICE dello
+stesso dispositivo**:
+
+| Modello | `RB` | Etichetta del costruttore |
+|---|---|---|
+| `QPNP_THAT_NS` | 25 | *Noise performance optimized* |
+| `QPNP_THAT_HF` | 103,345 | *High frequency performance optimized* |
+
+Ogni altro parametro è **identico**. Non c'è niente nel nome del file, né
+nell'atto di fare `.include`, che costringa a scegliere consapevolmente:
+si prende quello che capita, e ngspice non ha nulla da segnalare.
+
+**Quanto costa sbagliare**, misurato alle condizioni di prova del
+datasheet (V_CB = −10 V, I_C = −1 mA, 1 kHz, 25 °C):
+
+| Modello | rumore riferito all'ingresso a 1 kHz | contro il datasheet (0,75 nV/√Hz tip.) |
+|---|---|---|
+| `QPNP_THAT_NS` | **0,768 nV/√Hz** | +2,4% |
+| `QPNP_THAT_HF` | **1,314 nV/√Hz** | **+75%** |
+
+**Regola operativa**: una cifra di rumore e una di stabilità prese dallo
+**stesso** modello non possono essere entrambe giuste. Quale modello è
+stato usato va scritto **accanto al numero**, non lasciato al file.
+
+**E il corollario che morde di più**: nessuno dei due porta `KF`/`AF`,
+quindi **non c'è rumore 1/f**, come nei segnaposto. Provato empiricamente
+e non con un `grep`: lo spettro simulato è piatto alla **nona cifra
+significativa** da 100 Hz a 100 kHz. È lo stesso pavimento senza flicker
+già annotato per `spice/preamp/placeholder_devices.lib`, e stavolta cade
+proprio dove l'analisi dice che il rumore è dominante — lo specchio di
+corrente.
+
+## 18. Su alcuni siti di costruttori **HTTP 200 non significa che il file esista**
+
+Scoperto in L8 su `www.onsemi.com`.
+
+Quel sito risponde **200 con la stessa pagina HTML da 303 722 byte** per
+*qualunque* percorso inesistente. Verificato su tre URL inventati diversi:
+identico conteggio di byte, identico `Content-Type: text/html;charset=UTF-8`.
+La prima richiesta di un datasheet in L8 è caduta esattamente lì —
+`.../2N5551-D.PDF` è tornato 200 e conteneva HTML.
+
+```sh
+curl -sS -L -o /dev/null -w '%{http_code} %{content_type} %{size_download}\n' \
+  https://www.onsemi.com/pub/Collateral/2N5551.LIB
+# 200 text/html;charset=UTF-8 303722   <- il file NON esiste
+```
+
+**Regola operativa**: un codice di stato non è una verifica. Si controlla
+il `Content-Type` **e** la dimensione, e per un PDF si apre il file
+(`file`, `pdfinfo`). È la stessa regola che il repo applica già ai
+modelli — «un modello SPICE è verificato se ngspice lo carica, non se il
+link esiste» — spinta un passo più indietro, fino al trasporto.
+
+Un secondo effetto, indipendente: **falsificare lo user-agent peggiora le
+cose**. Con un UA Safari plausibile onsemi risponde **403** agli stessi
+URL che serve senza problemi allo user-agent di default di curl.

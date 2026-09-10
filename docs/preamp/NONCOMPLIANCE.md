@@ -4,10 +4,12 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-09-09** (creato in L3c; **G0 eseguito in
-L5d**; **revisione umana del dossier in L5e**: 12 voci aperte, 3
-bloccanti. **L'accesso a G1 non è concesso** finché NC-001, NC-004 e
-NC-010 restano aperte)
+Ultimo aggiornamento: **2026-09-10** (creato in L3c; **G0 eseguito in
+L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
+**L8** ha aperto NC-014…NC-017: **17 voci aperte, 5 bloccanti**.
+**L'accesso a G1 non è concesso** finché NC-001, NC-004, NC-010, NC-014 e
+NC-015 restano aperte. **NC-015 ha una scadenza reale: il last-time buy
+del THAT320 chiude il 2026-09-30.**)
 
 ---
 
@@ -84,7 +86,7 @@ apribile non è una non conformità, è un'opinione.
 
 ## Voci aperte
 
-Tredici voci, da **tre** origini distinte:
+Diciassette voci, da **quattro** origini distinte:
 
 - **NC-001 … NC-008** da `reports/2026-09-09-gate-G0.md`, il primo gate
   eseguito (L5d): 2 bloccanti, 1 maggiore, 5 minori.
@@ -95,8 +97,17 @@ Tredici voci, da **tre** origini distinte:
   voce che non nasce da una revisione ma da un **controllo prescritto da
   una ADR** — ADR-013 passo 4.
 
-In tutto: **3 bloccanti, 5 maggiori, 5 minori**. **L'accesso a G1 non è
-concesso** finché NC-001, NC-004 e NC-010 restano aperte.
+- **NC-014 … NC-017** da `reports/2026-09-10-L8-parti-nuove.md`, il primo
+  lotto del giro componenti (L8): **2 bloccanti**, 2 maggiori. Come NC-013,
+  non nascono da una revisione: nascono dall'aver **letto le fonti dei
+  costruttori** invece di fidarsi di quello che il progetto assumeva.
+
+In tutto: **5 bloccanti, 7 maggiori, 5 minori**. **L'accesso a G1 non è
+concesso** finché NC-001, NC-004, NC-010, NC-014 e NC-015 restano aperte.
+
+**Una sola voce ha una scadenza esterna al progetto**: NC-015, perché il
+last-time buy del THAT320 chiude il **2026-09-30**. Passata quella data la
+prima delle due strade per chiuderla non esiste più.
 
 Le due revisioni non si sovrappongono per caso: G0 giudica incrociando
 affermazioni con sorgenti e trova le **affermazioni false**; la revisione
@@ -626,6 +637,198 @@ la clausola ce l'ha scritta.
 `spice/preamp/tb/tb_zout_psrr_noise.cir` alle due uscite fisse e ad
 almeno tre posizioni dell'attenuatore (minimo, metà corsa, massimo), e
 versionare i CSV sotto `docs/preamp/data/<data>/`.
+
+### NC-014 — Il polo 2 del G6K-2F-Y è cablato con NO e NC invertiti: sul canale destro il mute fallisce nel verso sbagliato
+
+| | |
+|---|---|
+| Requisito | **ADR-012** (mute su tutte le uscite, con guasto verso il silenzio) · **ADR-004** (il relè di guadagno diseccitato deve lasciare il blocco a guadagno unitario) · F6 |
+| Severità | **bloccante** |
+| Aperta da | `reports/2026-09-10-L8-parti-nuove.md` |
+| Stato | aperta |
+
+**Evidenza.** Il datasheet Omron congelato in
+`vendor/relays/omron/G6K/en-g6k.pdf` (Cat. No. K106-E1-11, revisione letta
+dal footer), pagina 6 del PDF, riga `G6K-2F-Y`, blocco «Terminal
+Arrangement / Internal Connections (TOP VIEW)», dà:
+
+| Polo | COM | **NC** | **NO** |
+|---|---|---|---|
+| 1 (riga bassa) | 3 | **2** | **4** |
+| 2 (riga alta) | 6 | **7** | **5** |
+
+`circuits/preamp/preamp_audio.py:79` dichiara invece
+`K_COM2, K_NO2, K_NC2 = "6", "7", "5"`: **NO e NC del polo 2 sono
+scambiati**. Il polo 1 (riga 78) è corretto.
+
+Il diagramma è grafica vettoriale, quindi è stato letto **tre volte in
+modo indipendente** e le tre coincidono: raster a 2400 dpi; coordinate
+vettoriali via `pdftocairo -svg`, dove alla quota delle punte l'asse della
+lama dista **0,445 pt** dal contatto di sinistra (si toccano) contro
+**3,387 pt** da quello di destra, rapporto **7,6:1**; e le polilinee del
+simbolo KiCad `G6K-2`, che danno lo stesso verso con rapporto **19:1**. Il
+dettaglio sta al §1 del report.
+
+**Perché l'errore è entrato, e non è sciatteria.** Le due lame pendono
+dalla stessa parte, ma la riga alta è numerata 8-7-6-5 da sinistra a
+destra e quella bassa 1-2-3-4. La regola implicita «NO = COM+1» è quindi
+**giusta per il polo 1 e sbagliata per il polo 2**. Il codice lo dichiarava
+apertamente come non confermato (righe 70-76).
+
+**Cosa rompe.** `preamp_audio.py` assegna il polo 1 al canale L e il polo 2
+al canale R. Con i pin veri, sul **canale destro**:
+
+- **relè di mute, bobina diseccitata** — cioè all'accensione e ad
+  alimentazione assente: il pin 7 non è collegato, quindi l'uscita **non è
+  messa a massa** e il transitorio d'accensione passa. È il guasto
+  silenzioso, ed è esattamente quello contro cui ADR-012 è stata scritta,
+  con il ramo cuffie che finisce in un paio di elettrostatiche;
+- **relè di mute, bobina eccitata** — ascolto normale: il pin 5 va a
+  massa, quindi il **canale destro è cortocircuitato**. Guasto rumoroso,
+  si trova al primo collaudo;
+- **relè di guadagno, bobina diseccitata**: `R_g` va a massa attraverso
+  quello che è in realtà l'NC, quindi il canale destro parte a **+10 dB**
+  mentre il sinistro parte a 0 dB. ADR-004 vuole il contrario.
+
+**Cosa serve per chiuderla.** Correggere la riga 79 di
+`circuits/preamp/preamp_audio.py` in `K_COM2, K_NO2, K_NC2 = "6", "5", "7"`,
+rigenerare `preamp_audio.net` e verificare sulla netlist rigenerata che il
+contatto verso massa di ogni relè di mute cada su **2 e 7** e che il ramo
+`R_g` del relè di guadagno cada su **4 e 5**. Non è stato fatto in L8: la
+topologia è Fase 4, e L8 aveva il mandato esplicito di non toccare
+`circuits/`.
+
+### NC-015 — Il THAT320 è fine vita, e la finestra di acquisto chiude il 2026-09-30
+
+| | |
+|---|---|
+| Requisito | **ADR-013** (lo specchio di corrente d'ingresso è un THAT320) · T2 (il progetto deve essere riproducibile) |
+| Severità | **bloccante** |
+| Aperta da | `reports/2026-09-10-L8-parti-nuove.md` |
+| Stato | aperta — **richiede una decisione dell'utente, con scadenza** |
+
+**Evidenza.** `vendor/bjt_array/that/THAT320/THAT-EOL-Memo.pdf`
+(sha256 `1e777dd3ac23…`), memo di **Les Tyler, President, THAT
+Corporation**, datato **1 settembre 2026**:
+
+> Effective immediately, the following products are on EOL status:
+> … **300-series transistor arrays**
+
+e, nello stesso memo:
+
+> until **September 30, 2026**, we are offering a last-time buy (LTB)
+> opportunity … contact our IC sales folks at sales@thatcorp.com
+
+Motivo dichiarato: il processo Dielectric Isolation su wafer da 4 pollici
+con cui THAT fabbrica la serie 300 è diventato insostenibile.
+
+Il quadro distributivo è coerente con l'EOL, e quello che si è visto è
+scritto per intero al §2.2 del report: **DigiKey non tratta THAT
+Corporation** (zero risultati su `THAT320` e su `320P14-U`, e il
+costruttore non compare fra i fornitori); Mouser, Farnell/Newark e TME
+rifiutano le richieste automatiche, quindi **non sono verificati**; l'unica
+pagina di vendita realmente letta, un negozio tedesco, dà **€ 8,50** ed è
+**esaurito**.
+
+**Il memo è del 1° settembre; ADR-013 è dell'8.** Era già pubblico quando
+la topologia è stata disegnata e quando la Fase 1 scrisse «Stock esatto non
+verificato». Non era assente: è stato mancato.
+
+**Perché è bloccante.** Non si congela una topologia sopra una parte che
+non si può più comprare. Vale l'effetto standard: niente avanzamento di
+fase, quindi niente layout e niente fabbricazione, non un veto su un merge.
+
+**Cosa serve per chiuderla.** Una decisione dell'utente, e ha una
+scadenza reale — restano venti giorni dal 2026-09-10. Le due strade:
+
+1. **Last-time buy** entro il 2026-09-30 via `sales@thatcorp.com`, con una
+   quantità che copra prototipi e ricambi, e una ADR che registri che il
+   progetto dipende da uno stock finito e non riacquistabile;
+2. **Riprogettare lo specchio** su una coppia PNP appaiata ancora in
+   produzione. ADR-013 nomina già questa alternativa nel proprio testo
+   («lo specchio si fa meglio con PNP appaiati o con l'array THAT320»),
+   quindi non è una strada nuova. Comporta rifare il punto di lavoro dello
+   stadio d'ingresso e le cifre di rumore.
+
+In entrambi i casi serve una ADR nuova: ADR-013 non si riscrive.
+
+### NC-016 — Il footprint del THAT320 nel codice è a 8 pin, ma la parte esiste solo a 14
+
+| | |
+|---|---|
+| Requisito | ADR-013 · precondizione di **G2** (il layout deve poter piazzare le parti vere) |
+| Severità | **maggiore** |
+| Aperta da | `reports/2026-09-10-L8-parti-nuove.md` |
+| Stato | aperta |
+
+**Evidenza.** Datasheet `THAT_300-Series_Datasheet.pdf`, Document 600041
+Rev 04, Tabella 1 «Ordering Information»: le varianti THAT320 ordinabili
+sono **esattamente due**, `320P14-U` (**DIP14**) e `320S14-U` (**SO14**).
+Non esiste una versione a 8 pin. La sezione «Package Characteristics»
+conferma: «14 Pin PDIP» e «14 Pin SOP».
+
+`circuits/preamp/gain_block.py:303-304` assegna a entrambi i dispositivi
+dello specchio `FP_SOIC8 = "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"`.
+
+**Cosa serve per chiuderla.** Dipende da come si chiude NC-015: se il
+THAT320 resta, sostituire il footprint con quello a 14 pin corrispondente
+alla variante scelta e dare un simbolo con il pinout letto dalla Figura 2
+del datasheet — che **L8 non ha letto**, perché non era nel mandato. Due
+vincoli che il layout dovrà rispettare comunque, entrambi dal datasheet:
+l'appaiamento è specificato **a coppie** (`|VBE1−VBE2|` e `|VBE3−VBE4|`),
+quindi lo specchio usa 1&2 oppure 3&4 e mai uno per coppia; e «the
+substrate should be ac-grounded», mentre la topologia attuale non collega
+alcun pin di substrato.
+
+### NC-017 — Nessun modello SPICE del costruttore per 2N5401 e 2N5551: NC-004 non può chiudersi
+
+| | |
+|---|---|
+| Requisito | **E5 / V4** via **NC-004** · ADR-013 (la regola di provenienza dei modelli) |
+| Severità | **maggiore** |
+| Aperta da | `reports/2026-09-10-L8-parti-nuove.md` |
+| Stato | aperta |
+
+**Evidenza.** Le due parti sono usate **cinque volte** nel blocco di
+guadagno: il 2N5401 è il VAS (`gain_block.py:316`), il 2N5551 è pozzo di
+coda (262), i due cascode di ADR-014 (291-292), il carico del VAS (328) e
+il moltiplicatore di Vbe (350). Restano segnaposto scritti a mano.
+
+Cercato, e non trovato in forma macchina dal costruttore (§3.4 del
+report): la pagina modelli di onsemi carica l'elenco via JavaScript e
+risponde «Loading…» a un client non-browser; l'indice modelli di Central
+Semiconductor — che *è* autore di modelli per la serie 2N — è anch'esso
+solo-JavaScript; Diodes Incorporated risponde 403. **Non è nemmeno un caso
+da trascrizione come l'LSK489**: non è stato trovato alcun PDF del
+costruttore contenente il testo `.MODEL`.
+
+Mirror di terze parti esistono e **non sono stati usati**: un mirror non è
+provenienza vendor, ed è precisamente la regola che ADR-013 impone.
+
+**Perché conta più di quanto sembri.** I segnaposto sbagliano in
+**direzioni opposte**, quindi un margine di fase calcolato con essi non è
+conservativo in modo noto:
+
+| Dispositivo | Segnaposto | Realtà letta dal datasheet |
+|---|---|---|
+| `NSS2N5551` | `TF = 0,5 ns` («f_T ~ 300 MHz») | f_T **100 MHz min**, e misurata a **10 mA** mentre il circuito lavora a 2-6 mA, dove è più bassa ancora |
+| `PTHAT320` | `TF = 1,5 ns` («f_T ~ 100 MHz») | f_T **325 MHz** tip. — il segnaposto è ~3× **lento** |
+
+**Nota che vale per la Fase 4.** Le varianti del 2N5551 **selezionate per
+beta** sono state dismesse: il datasheet Rev. 7 elenca come DISCONTINUED
+`2N5551CTA`, `2N5551YTA` e `2N5551YBU`, e la Nota 5 dice che il suffisso
+`-Y` significa h_FE 180~240. Resta disponibile solo la dispersione piena
+**50…250**, il che riguarda la coerenza di beta nella coppia di cascode e
+nei generatori di corrente.
+
+**Cosa serve per chiuderla.** Procurare i modelli vendor delle due parti —
+per via che regga la regola di provenienza: una sessione browser sulle
+pagine modelli di onsemi o Central Semiconductor, oppure una richiesta al
+costruttore — congelarli in `vendor/` con hash e URL, e poi promuoverli in
+`models/` col controllo incrociato contro il datasheet, come L6+L7 hanno
+fatto per l'LSK489. Se per una delle due non esiste alcun modello del
+costruttore, la scelta fra tenere un modello generico dichiarato tale e
+cambiare parte è dell'utente.
 
 ## Voci chiuse
 

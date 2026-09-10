@@ -1,0 +1,48 @@
+{
+  "part_name": "2N5551 (high-voltage NPN small-signal transistor, TO-92)",
+  "vendor_name": "onsemi (Semiconductor Components Industries, LLC)",
+  "device_class": "bjt_npn",
+  "product_page": "https://www.onsemi.com/products/discrete-power-modules/general-purpose-and-low-vcesat-transistors/2n5551",
+  "date_obtained": "2026-09-10",
+  "lotto": "L8",
+  "obtained_by": "AI agent (Claude Opus 5, session https://claude.ai/code/session_018wouW3NREMhoiftCjfSCRS) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from onsemi's own site, not from a distributor mirror. Byte-for-byte as served.",
+  "license_notes": "Manufacturer datasheet, redistributed here unmodified for engineering traceability only. Copyright remains Semiconductor Components Industries, LLC.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "2N5551 is used FOUR times in circuits/preamp/gain_block.py: the tail current sink (line 262), the two cascode transistors of ADR-014 (291-292), the VAS load current sink (328) and the Vbe multiplier / bias spreader (350). It was never verified in Fase 1 - the Fase 2 hand-off listed it as a new part for bom-component-manager.",
+  "files": [
+    {
+      "original_filename": "2n5551t-d.pdf",
+      "role": "datasheet",
+      "url": "https://www.onsemi.com/pdf/datasheet/2n5551t-d.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 293870,
+      "pages": 9,
+      "sha256": "4260af8721d615a60ea6116d7c2e1b70eec4b9030a014cc82a37dd3d3821c9d0",
+      "local_filename": "2n5551t-d.pdf",
+      "renamed": false
+    }
+  ],
+  "revision_note": "Read from the DOCUMENT FOOTER, not the filename: 'January, 2026 - Rev. 7', publication order number 2N5551T/D. The '/D' is onsemi's publication-order suffix, NOT a different part: the ordering table's Top Mark is '5551' and the page headers say '2N5551'. Checking that was deliberate - mistaking a document identifier for a part identifier is the same class of error L7 found in the LSK489 filename. The datasheet's own REVISION HISTORY says Rev 7 exists because '2N5551YBU OPN Marked as Discontinued', dated 1/14/2026. Falsifiable with:  /opt/homebrew/bin/pdftotext -layout 2n5551t-d.pdf - | grep -i 'Rev. 7'",
+  "limits_read_with_their_conditions": {
+    "V_BR_CEO": "160 V minimum, at IC = 1.0 mA, IB = 0. Against +/-15 V rails this is not a constraint - it is 5x the 30 V rail-to-rail worst case.",
+    "fT": "100 MHz MINIMUM, at IC = 10 mA, VCE = 10 V, f = 100 MHz. NOTE THE CURRENT: 10 mA. In this design these devices run at roughly 2-6 mA, where fT is LOWER, so 100 MHz is an optimistic reading of the part in its actual operating point.",
+    "Cobo": "6.0 pF MAXIMUM, at VCB = 10 V, IE = 0, f = 1.0 MHz.",
+    "hFE": "50 to 250 (spread), per the datasheet's DC current gain table."
+  },
+  "lifecycle": {
+    "status": "ACTIVE, but with discontinued variants - read the table, not the headline.",
+    "active_opns": ["2N5551TA (TO-92-3, ammo, 2000)", "2N5551TFR (tape and reel, 2000)", "2N5551TF (tape and reel, 2000)", "2N5551BU (bulk bag, 10000)"],
+    "discontinued_opns": ["2N5551CTA", "2N5551YTA", "2N5551YBU"],
+    "what_the_Y_means": "Datasheet Note 5: the '-Y' suffix means hFE 180~240 (tested at IC = 10 mA, VCE = 5.0 V), i.e. the BETA-GRADED parts. Those are exactly the ones discontinued. Anyone reaching for a graded 2N5551 to get consistent beta in the cascode pair or the current sinks will find it gone, and will get the ungraded 50-250 spread instead. That is a design-relevant fact, not a catalogue detail.",
+    "source": "The frozen datasheet's own ORDERING INFORMATION table, page 5, plus its Note 6: 'DISCONTINUED: These devices are not available.'"
+  },
+  "spice_model": {
+    "status": "NOT FOUND in machine-readable form from the manufacturer.",
+    "what_was_tried": "onsemi's per-part model page (https://www.onsemi.com/design/resources/design-resources/models?rpn=2N5551) renders its document list with JavaScript and returns 'Loading...' to a non-browser client. Guessed file paths under /pub/Collateral/ and /download/models/ do not work - see the soft_404_trap note below. Central Semiconductor, which does author 2N-series SPICE models, serves its model listing (https://my.centralsemi.com/content/engineering/spicemodels/index.php) the same JavaScript-only way. Diodes Incorporated returns HTTP 403 to automated requests.",
+    "third_party_mirrors_exist_and_were_not_used": "Copies of a Central Semiconductor-authored 2N5551.lib circulate on GitHub. A third-party mirror is NOT vendor provenance, which is the entire point of the procedure ADR-013 imposed for the LSK489: freeze what the MANUFACTURER served, with its URL and hash. Recording the mirror as if it were the vendor file would defeat that.",
+    "conclusion": "The model for this part must still be procured. It is NOT a transcription job like the LSK489 - no manufacturer PDF containing .MODEL text was found either. Getting it needs either a browser session on onsemi's or Central's model page, or an email to the manufacturer. That is a lotto of its own; L8's mandate was to establish WHERE the model comes from, and the honest answer is: not from a URL reachable without a browser.",
+    "soft_404_trap": "onsemi's site answers HTTP 200 with a 303722-byte HTML page for ANY nonexistent path under www.onsemi.com - verified on three different made-up URLs, all returning the identical byte count. So on this vendor's site a 200 does not mean the file exists, and 'the link resolves' is worth nothing. Check the Content-Type and the bytes, or better, open the file. This generalises the L8 rule 'a model is verified when ngspice loads it' one step further back: even the HTTP status can lie."
+  }
+}
