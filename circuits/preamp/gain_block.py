@@ -56,6 +56,7 @@ for _ver in ("6", "7", "8", "9", "10"):
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import skidl  # noqa: E402
 from skidl import Part, Net, generate_netlist, POWER, ERC  # noqa: E402
 
 import spice_export as sx  # noqa: E402
@@ -76,6 +77,19 @@ import spice_export as sx  # noqa: E402
 REPO = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
+
+# The project's OWN symbol library, searched in addition to KiCad's (L22).
+# It exists because some parts this design needs have no KiCad symbol at
+# all: the LS352 dual PNP of the input mirror is the first, and the LSK489
+# dual JFET (L10) is the next. Derived from REPO, never hard-coded, for the
+# same reason REPO itself is derived.
+#
+# It is appended to EVERY tool's search path, not just KICAD10's: SKiDL's
+# default tool constant is version-numbered (limitations.md #6), and a list
+# that happens to be keyed on the wrong version fails with a
+# FileNotFoundError that says nothing about search paths.
+for _tool in list(skidl.lib_search_paths):
+    skidl.lib_search_paths[_tool].append(os.path.join(REPO, "library"))
 
 # --- Footprints -------------------------------------------------------------
 # P6: everything through-hole on generous pitch so the user can swap signal
@@ -291,17 +305,74 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     Q("npn", "2N5551", "NSS2N5551", NHI, NCASC, D1N)     # -> mirror output
     Q("npn", "2N5551", "NSS2N5551", NMIRI, NCASC, D2N)   # -> mirror diode
 
-    # Current-mirror load, matched monolithic PNP pair (ADR-013: "lo specchio
-    # si fa meglio con PNP appaiati o con l'array THAT320, che ha la migliore
-    # provenienza SPICE di tutto il giro"). 47 Ohm emitter degeneration:
-    # enough to make the mirror ratio depend on resistors rather than on Vbe
-    # matching alone, small enough not to eat the ~1.1 V of Vce these two
-    # transistors have to live in.
+    # Current-mirror load, matched monolithic PNP pair.
+    #
+    # THE PART IS AN LS352 (ADR-018), NOT THE THAT320 THIS USED TO BE.
+    # The THAT320 went end-of-life on 2026-09-01 and ADR-016 discarded the
+    # last-time buy, so it had to go (NC-015). What it brought was
+    # MONOLITHIC MATCHING - two devices on one die - and that is the
+    # property the replacement had to reproduce, not the part number:
+    # LS352 is |Vbe1-Vbe2| = 0.2 mV typ / 0.5 mV max, against the 5 mV of
+    # a hand-matched discrete pair.
+    #
+    # IT IS ONE PART, NOT TWO. A dual is one package with two units, and
+    # instantiating it as two Parts is what put a phantom second SOIC-8 on
+    # this board (NC-016). Pin numbers below are the SOIC-8 pinout READ OFF
+    # THE DATASHEET drawing, LS350SeriesDSRevA5.pdf page 2:
+    #     1=C1  2=B1  3=E1  4=N/C  5=N/C  6=E2  7=B2  8=C2
+    # The datasheet also lists PDIP-8 and DFN-8 on the product page but
+    # DRAWS neither pinout, so neither was used - an unpublished pinout is
+    # how the THAT320's phantom SOIC-8 happened in the first place.
+    #
+    # THE DEVICE IS NOISIER AND THE STAGE IS NOT. That is the whole result
+    # of the re-design, and both halves are measured (L22 report).
+    # Alone, on one deck run against both models at IC = 1 mA, VCB = 10 V:
+    # this device is 1.685 nV/rtHz against the THAT320's 0.758, 2.22x worse,
+    # because the vendor model carries RB = 200 where the THAT320 carried
+    # RB = 25. But the mirror's contribution to the STAGE is set by its
+    # transconductance, and degeneration buys that back faster than rbb
+    # costs it.
+    #
+    # 220 OHM, NOT THE 47 OHM THIS USED TO BE, AND THE VALUE WAS SWEPT
+    # RATHER THAN ARGUED. tb_noise_breakdown.cir worst case (config D) and
+    # the mirror output transistor's own internal Vbc, which is what says
+    # how close it is to saturating:
+    #
+    #     Re      noise (config D)     Vbc of the output half
+    #      22       (not run)           -53.1 mV   saturating
+    #      47        6.988 uV            -0.4 mV   on the knee
+    #     100        5.149 uV          +112.5 mV
+    #     150        4.580 uV          +219.4 mV
+    #     220        4.231 uV  <-- min +369.1 mV   CHOSEN
+    #     330        4.515 uV          +590.8 mV   noise rises again, and
+    #                                              negative clipping loses
+    #                                              0.77 V (-13.85 -> -13.08)
+    #
+    # For reference the THAT320 at 47 Ohm measured 5.697 uV on the same
+    # deck, so the stage ends up 25.7% QUIETER than it was with the part
+    # that went end-of-life - with a device whose own noise is 2.2x worse.
+    # Phase margin is unchanged (63.5 -> 63.0 deg at 0 dB, no load) and
+    # positive clipping moves by 15 mV, i.e. 0.01 dB.
+    #
+    # WHY THE KNEE EXISTS AT ALL: the vendor model carries RC = 231.4 ohm,
+    # against the THAT320's 18. At 2.1 mA that eats 0.49 V of the ~1.2 V of
+    # Vce this transistor has, so the junction sits far closer to the knee
+    # than the terminal voltage suggests. It is not a model artefact - the
+    # datasheet's own VCE(sat) <= 0.5 V at 1 mA implies exactly such an RC.
     NME1, NME2 = n("NME1"), n("NME2")
-    R("47", VP, NME1)
-    R("47", VP, NME2)
-    Q("pnp", "THAT320", "PTHAT320", NMIRI, NMIRI, NME1, fp=FP_SOIC8)
-    Q("pnp", "THAT320", "PTHAT320", NHI, NMIRI, NME2, fp=FP_SOIC8)
+    R("220", VP, NME1)
+    R("220", VP, NME2)
+    i[0] += 1
+    qm = Part("preamp", "LS352", value="LS352", footprint=FP_SOIC8,
+              ref=f"Q{i[0]}")
+    qm["1"] += NMIRI      # C1 -> mirror diode side (collector to its base)
+    qm["2"] += NMIRI      # B1 -> common base node
+    qm["3"] += NME1       # E1 -> its own 47 Ohm degeneration
+    qm["8"] += NHI        # C2 -> mirror output, into the VAS
+    qm["7"] += NMIRI      # B2 -> common base node
+    qm["6"] += NME2       # E2 -> its own 47 Ohm degeneration
+    sx.spice_dev(qm, "Q", ["1", "2", "3"], "LS350", suffix="A")
+    sx.spice_dev(qm, "Q", ["8", "7", "6"], "LS350", suffix="B")
 
     # ========================================================================
     # 3. VOLTAGE AMPLIFIER STAGE (VAS)
@@ -426,16 +497,20 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 # Provenance of the device models: spice/preamp/placeholder_devices.lib,
 # HAND-AUTHORED PLACEHOLDERS. See the caveats in each testbench header.
 #
-#   OPERATING POINT (tb_op.cir)
-#     LSK489 halves     2.204 / 2.170 mA, Vds 8.75 V, Vgs -0.493 V, gm 4.38 mS
-#     tail sink          4.406 mA
-#     cascode NPNs       2.186 / 2.152 mA, Vce ~4.5 V
-#     THAT320 mirror     2.125 / 2.129 mA, Vce 0.72 / 1.17 V
-#     VAS (2N5401)       6.443 mA, Vce 13.4 V
+#   OPERATING POINT (tb_op.cir) - RE-MEASURED IN L22 with the LS352 mirror
+#   in place of the THAT320. Every OTHER device here is still a placeholder,
+#   so these are still provisional - but the mirror line is not.
+#     LSK489 halves     2.211 / 2.163 mA, gm 4.39 / 4.34 mS
+#     tail sink          4.374 mA
+#     cascode NPNs       2.193 / 2.145 mA
+#     LS352 mirror       2.134 / 2.136 mA, Vbe 0.7028 / 0.7026 V,
+#                        internal Vbc +0.493 / +0.369 V (the second is the
+#                        output half, and it is the number that says how far
+#                        from the knee it sits - see the mirror section)
+#     VAS (2N5401)       6.443 mA
 #     VAS load sink      6.443 mA
-#     output pair        14.71 mA, Vce 14.7 V, 214 mW each
-#     rails              26.36 mA from V+, 27.39 mA from V-, per block
-#     output DC offset  -11.8 mV
+#     output pair       14.56 mA
+#     output DC offset  -16.6 mV   (was -11.8 mV with the THAT320)
 #
 #   HEADROOM (tb_dc_headroom.cir)
 #     +10 dB clipping   +13.16 / -14.00 V  => 13.16 V pk = 9.31 V RMS usable

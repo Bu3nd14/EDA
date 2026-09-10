@@ -111,26 +111,26 @@ DEVICES = {
     # ---- panel 2: current mirror + VAS --------------------------------------
     "R120":  {"1": "VPLUS",  "2": "NME1"},
     "R121":  {"1": "VPLUS",  "2": "NME2"},
-    "Q122":  {"C": "NMIRI",  "B": "NMIRI", "E": "NME1"},
-    "Q123":  {"C": "NHI",    "B": "NMIRI", "E": "NME2"},
-    "R125":  {"1": "VPLUS",  "2": "NVE"},
-    "Q124":  {"C": "NX",     "B": "NHI",   "E": "NVE"},
-    "C126":  {"1": "NX",     "2": "NHI"},
-    "Q127":  {"C": "NY",     "B": "NREF",  "E": "NVLE"},
-    "R128":  {"1": "NVLE",   "2": "VMINUS"},
+    "Q122A":  {"C": "NMIRI",  "B": "NMIRI", "E": "NME1"},
+    "Q122B":  {"C": "NHI",    "B": "NMIRI", "E": "NME2"},
+    "R124":  {"1": "VPLUS",  "2": "NVE"},
+    "Q123":  {"C": "NX",     "B": "NHI",   "E": "NVE"},
+    "C125":  {"1": "NX",     "2": "NHI"},
+    "Q126":  {"C": "NY",     "B": "NREF",  "E": "NVLE"},
+    "R127":  {"1": "NVLE",   "2": "VMINUS"},
     # ---- panel 3: Class A complementary follower + feedback -----------------
-    "Q129":  {"C": "NX",     "B": "NBB",   "E": "NY"},
-    "R130":  {"1": "NX",     "2": "NBB"},
-    "R131":  {"1": "NBB",    "2": "NY"},
-    "R132":  {"1": "NX",     "2": "NBN"},
-    "R133":  {"1": "NY",     "2": "NBP"},
-    "Q134":  {"C": "VPLUS",  "B": "NBN",   "E": "NEN"},
-    "Q135":  {"C": "VMINUS", "B": "NBP",   "E": "NEP"},
-    "R136":  {"1": "NEN",    "2": "OUT"},
-    "R137":  {"1": "NEP",    "2": "OUT"},
-    "R138":  {"1": "OUT",    "2": "FB"},
-    "C139":  {"1": "OUT",    "2": "FB"},
-    "R140":  {"1": "FB",     "2": "RG"},
+    "Q128":  {"C": "NX",     "B": "NBB",   "E": "NY"},
+    "R129":  {"1": "NX",     "2": "NBB"},
+    "R130":  {"1": "NBB",    "2": "NY"},
+    "R131":  {"1": "NX",     "2": "NBN"},
+    "R132":  {"1": "NY",     "2": "NBP"},
+    "Q133":  {"C": "VPLUS",  "B": "NBN",   "E": "NEN"},
+    "Q134":  {"C": "VMINUS", "B": "NBP",   "E": "NEP"},
+    "R135":  {"1": "NEN",    "2": "OUT"},
+    "R136":  {"1": "NEP",    "2": "OUT"},
+    "R137":  {"1": "OUT",    "2": "FB"},
+    "C138":  {"1": "OUT",    "2": "FB"},
+    "R139":  {"1": "FB",     "2": "RG"},
     # ---- panel 4: bias references and rail decoupling -----------------------
     "R101":  {"1": "0",      "2": "NREF"},
     "D102":  {"A": "NREF",   "K": "NREFM"},
@@ -140,10 +140,10 @@ DEVICES = {
     "R115":  {"1": "VPLUS",  "2": "NCASC"},
     "R116":  {"1": "NCASC",  "2": "0"},
     "C117":  {"1": "NCASC",  "2": "0"},
-    "C141":  {"1": "VPLUS",  "2": "0"},
-    "C142":  {"1": "VMINUS", "2": "0"},
-    "C143":  {"1": "VPLUS",  "2": "0"},
-    "C144":  {"1": "VMINUS", "2": "0"},
+    "C140":  {"1": "VPLUS",  "2": "0"},
+    "C141":  {"1": "VMINUS", "2": "0"},
+    "C142":  {"1": "VPLUS",  "2": "0"},
+    "C143":  {"1": "VMINUS", "2": "0"},
 }
 
 # =============================================================================
@@ -382,87 +382,87 @@ txt((9.0, -5.3), "V_ds = 8,75 V su entrambi i JFET      g_m = 4,38 mS",
 # =============================================================================
 frame(21.0, -6.0, 42.0, 17.0,
       "2.   SPECCHIO DI CORRENTE  +  VAS",
-      "carico attivo THAT320 appaiato; VAS PNP compensato a Miller")
+      "carico attivo LS352 appaiato; VAS PNP compensato a Miller")
 rail(22.0, 41.0, 13.6, "V+", RED)
 rail(22.0, 41.0, -3.4, "V-", BLUE)
 
-# --- the mirror. rev=True mirrors Q122's base so the two bases face each -----
+# --- the mirror. rev=True mirrors Q122A's base so the two bases face each -----
 # --- other across the gap: that is what makes it READ as a mirror. -----------
-res("R120", (26.0, 13.6), (26.0, 10.6), value="47",
+res("R120", (26.0, 13.6), (26.0, 10.6), value="220",
     lbl=((25.52, 12.35), "right"))
-res("R121", (31.0, 13.6), (31.0, 10.6), value="47",
+res("R121", (31.0, 13.6), (31.0, 10.6), value="220",
     lbl=((31.48, 12.35), "left"))
 d.add(elm.Dot().at(NODE_XY["R120.1"]))
 d.add(elm.Dot().at(NODE_XY["R121.1"]))
 TOUCHED.update({"R120.1", "R121.1"})
 
-pnp("Q122", "emitter", (26.0, 10.6), rev=True)
-pnp("Q123", "emitter", (31.0, 10.6))
-wire("R120.2", "Q122.E")
-wire("R121.2", "Q123.E")
-wire("Q122.B", "Q123.B")                       # the mirror's base bus
-txt((25.52, 10.8), "Q122", size=8.5, halign="right")
-txt((25.52, 10.34), "THAT320", size=8, color=DIM, halign="right")
-txt((31.48, 10.8), "Q123", size=8.5, halign="left")
-txt((31.48, 10.34), "THAT320", size=8, color=DIM, halign="left")
+pnp("Q122A", "emitter", (26.0, 10.6), rev=True)
+pnp("Q122B", "emitter", (31.0, 10.6))
+wire("R120.2", "Q122A.E")
+wire("R121.2", "Q122B.E")
+wire("Q122A.B", "Q122B.B")                       # the mirror's base bus
+txt((25.52, 10.8), "Q122A", size=8.5, halign="right")
+txt((25.52, 10.34), "LS352 1/2", size=8, color=DIM, halign="right")
+txt((31.48, 10.8), "Q122B", size=8.5, halign="left")
+txt((31.48, 10.34), "LS352 2/2", size=8, color=DIM, halign="left")
 txt((28.5, 12.75), "2,13 mA specchiati", size=8, color=RED)
 
 # diode connection, drawn as a visible loop back onto the base bus
-node("P2.diode", "NMIRI", (28.5, NODE_XY["Q122.B"][1]))
-wire("Q122.C", "P2.diode", via=[(26.0, 8.35), (28.5, 8.35)],
+node("P2.diode", "NMIRI", (28.5, NODE_XY["Q122A.B"][1]))
+wire("Q122A.C", "P2.diode", via=[(26.0, 8.35), (28.5, 8.35)],
      dots=[NODE_XY["P2.diode"], (26.0, 8.35)])
 txt((28.5, 7.9), "connessione a diodo", size=7.5, color=DIM)
 
 node("P2.nmiri_in", "NMIRI", (26.0, 6.5))
-wire("Q122.C", "P2.nmiri_in")
+wire("Q122A.C", "P2.nmiri_in")
 flag("P2.nmiri_in", "NMIRI", direction="down", length=0.8)
 txt((26.0, 5.05), "dal cascode Q119", size=7.5, color=NETCOL)
 
 node("P2.nhi_vas", "NHI", (31.0, 8.3))
 node("P2.nhi_c126", "NHI", (31.0, 7.4))
 node("P2.nhi_in", "NHI", (31.0, 6.5))
-wire("Q123.C", "P2.nhi_in",
+wire("Q122B.C", "P2.nhi_in",
      dots=[NODE_XY["P2.nhi_vas"], NODE_XY["P2.nhi_c126"]])
 flag("P2.nhi_in", "NHI", direction="down", length=0.8)
 txt((31.0, 5.05), "dal cascode Q118", size=7.5, color=NETCOL)
 
 # --- VAS --------------------------------------------------------------------
-res("R125", (36.5, 13.6), (36.5, 10.6), value="91",
+res("R124", (36.5, 13.6), (36.5, 10.6), value="91",
     lbl=((36.98, 12.35), "left"))
-d.add(elm.Dot().at(NODE_XY["R125.1"]))
-TOUCHED.add("R125.1")
-pnp("Q124", "emitter", (36.5, 9.0))
-wire("R125.2", "Q124.E")
-wire("P2.nhi_vas", "Q124.B", first="h")
-txt((37.65, 9.2), "Q124   2N5401", size=8.5, halign="left")
+d.add(elm.Dot().at(NODE_XY["R124.1"]))
+TOUCHED.add("R124.1")
+pnp("Q123", "emitter", (36.5, 9.0))
+wire("R124.2", "Q123.E")
+wire("P2.nhi_vas", "Q123.B", first="h")
+txt((37.65, 9.2), "Q123   2N5401", size=8.5, halign="left")
 txt((37.65, 8.74), "VAS,  6,44 mA", size=8, color=RED, halign="left")
 
 node("P2.nx_c126", "NX", (36.5, 5.6))
 node("P2.nx_out", "NX", (39.8, 4.2))
-wire("Q124.C", "P2.nx_out", via=[(36.5, 4.2)], dots=[NODE_XY["P2.nx_c126"]])
+wire("Q123.C", "P2.nx_out", via=[(36.5, 4.2)], dots=[NODE_XY["P2.nx_c126"]])
 flag("P2.nx_out", "NX", direction="right", length=0.9)
 
-# Miller compensation: bridges collector back to base, routed clear of R125
+# Miller compensation: bridges collector back to base, routed clear of R124
 node("P2.c126_bot", "NX", (33.4, 5.6))
 wire("P2.nx_c126", "P2.c126_bot", first="h")
-cap("C126", NODE_XY["P2.c126_bot"], (33.4, 7.4), value="470p C0G",
+cap("C125", NODE_XY["P2.c126_bot"], (33.4, 7.4), value="470p C0G",
     lbl=((32.92, 6.8), "right"))
-wire("C126.2", "P2.nhi_c126", first="h")
+wire("C125.2", "P2.nhi_c126", first="h")
 txt((33.0, 3.5), "compensazione Miller: il polo dominante", size=7.5,
     color=DIM, halign="left")
 
 # --- VAS load current sink --------------------------------------------------
-npn("Q127", "collector", (31.0, 1.6))
+npn("Q126", "collector", (31.0, 1.6))
 node("P2.ny_out", "NY", (39.8, 2.6))
-wire("Q127.C", "P2.ny_out", via=[(31.0, 2.6)])
+wire("Q126.C", "P2.ny_out", via=[(31.0, 2.6)])
 flag("P2.ny_out", "NY", direction="right", length=0.9)
-flag("Q127.B", "NREF", direction="left", length=1.6)
-txt((32.05, 1.5), "Q127   2N5551", size=8.5, halign="left")
+flag("Q126.B", "NREF", direction="left", length=1.6)
+txt((32.05, 1.5), "Q126   2N5551", size=8.5, halign="left")
 txt((32.05, 1.04), "carico VAS,  6,44 mA", size=8, color=RED, halign="left")
-res("R128", NODE_XY["Q127.E"], (31.0, -3.4), value="91",
+res("R127", NODE_XY["Q126.E"], (31.0, -3.4), value="91",
     lbl=((31.48, -1.65), "left"))
-d.add(elm.Dot().at(NODE_XY["R128.2"]))
-TOUCHED.add("R128.2")
+d.add(elm.Dot().at(NODE_XY["R127.2"]))
+TOUCHED.add("R127.2")
 
 txt((31.5, -4.7),
     "V+ e' il rail debole per il PSRR (59,5 dB a 1 kHz):", size=8, color=DIM)
@@ -491,52 +491,52 @@ flag("P3.ny_in", "NY", direction="left", length=0.9)
 
 # --- Vbe multiplier. rev=True puts the base on the right, facing the ---------
 # --- divider it taps: the textbook shape. -----------------------------------
-npn("Q129", "collector", (50.0, 6.9), rev=True)
+npn("Q128", "collector", (50.0, 6.9), rev=True)
 wire("P3.nx_in", "P3.nx_q129")
-wire("P3.nx_q129", "Q129.C", dots=[NODE_XY["P3.nx_q129"]])
-wire("Q129.E", "P3.ny_q129", dots=[NODE_XY["P3.ny_q129"]])
+wire("P3.nx_q129", "Q128.C", dots=[NODE_XY["P3.nx_q129"]])
+wire("Q128.E", "P3.ny_q129", dots=[NODE_XY["P3.ny_q129"]])
 wire("P3.ny_in", "P3.ny_q129")
-txt((48.85, 6.65), "Q129", size=8.5, halign="right")
+txt((48.85, 6.65), "Q128", size=8.5, halign="right")
 txt((48.85, 6.19), "2N5551", size=8, color=DIM, halign="right")
 txt((48.85, 5.58), "moltiplicatore", size=7.5, color=DIM, halign="right")
 txt((48.85, 5.12), "di V_be:  1,96 V", size=7.5, color=DIM, halign="right")
 
-res("R130", NODE_XY["P3.nx_r130"], (53.0, 7.4), value="1.69k",
+res("R129", NODE_XY["P3.nx_r130"], (53.0, 7.4), value="1.69k",
     lbl=((53.48, 9.3), "left"))
-res("R131", NODE_XY["R130.2"], (53.0, 4.3), value="1.00k",
+res("R130", NODE_XY["R129.2"], (53.0, 4.3), value="1.00k",
     lbl=((53.48, 6.2), "left"))
 wire("P3.nx_q129", "P3.nx_r130", dots=[NODE_XY["P3.nx_r130"]])
-wire("R130.2", "R131.1")
-wire("R131.2", "P3.ny_r131", dots=[NODE_XY["P3.ny_r131"]])
+wire("R129.2", "R130.1")
+wire("R130.2", "P3.ny_r131", dots=[NODE_XY["P3.ny_r131"]])
 wire("P3.ny_q129", "P3.ny_r131")
-wire("Q129.B", "R130.2", dots=[NODE_XY["R130.2"]])
+wire("Q128.B", "R129.2", dots=[NODE_XY["R129.2"]])
 
 # --- output devices ---------------------------------------------------------
 wire("P3.nx_r130", "P3.nx_r132")
 wire("P3.ny_r131", "P3.ny_r133")
-res("R132", NODE_XY["P3.nx_r132"], (59.5, 10.5), value="10",
+res("R131", NODE_XY["P3.nx_r132"], (59.5, 10.5), value="10",
     lbl=((57.75, 11.65), "center"))
-npn("Q134", "base", (59.5, 10.5))
-wire("R132.2", "Q134.B")
-node("P3.vp", "VPLUS", (NODE_XY["Q134.C"][0], 13.6))
-wire("Q134.C", "P3.vp", dots=[NODE_XY["P3.vp"]])
-txt((61.25, 11.6), "Q134   MJE15032", size=8.5, halign="left")
+npn("Q133", "base", (59.5, 10.5))
+wire("R131.2", "Q133.B")
+node("P3.vp", "VPLUS", (NODE_XY["Q133.C"][0], 13.6))
+wire("Q133.C", "P3.vp", dots=[NODE_XY["P3.vp"]])
+txt((61.25, 11.6), "Q133   MJE15032", size=8.5, halign="left")
 
-res("R133", NODE_XY["P3.ny_r133"], (59.5, 0.5), value="10",
+res("R132", NODE_XY["P3.ny_r133"], (59.5, 0.5), value="10",
     lbl=((57.75, 1.65), "center"))
-pnp("Q135", "base", (59.5, 0.5))
-wire("R133.2", "Q135.B")
-node("P3.vm", "VMINUS", (NODE_XY["Q135.C"][0], -3.4))
-wire("Q135.C", "P3.vm", dots=[NODE_XY["P3.vm"]])
-txt((61.25, -0.6), "Q135   MJE15033", size=8.5, halign="left")
+pnp("Q134", "base", (59.5, 0.5))
+wire("R132.2", "Q134.B")
+node("P3.vm", "VMINUS", (NODE_XY["Q134.C"][0], -3.4))
+wire("Q134.C", "P3.vm", dots=[NODE_XY["P3.vm"]])
+txt((61.25, -0.6), "Q134   MJE15033", size=8.5, halign="left")
 
-res("R136", NODE_XY["Q134.E"], (NODE_XY["Q134.E"][0], 6.8), value="22",
+res("R135", NODE_XY["Q133.E"], (NODE_XY["Q133.E"][0], 6.8), value="22",
     lbl=((60.75, 8.4), "left"))
-res("R137", NODE_XY["Q135.E"], (NODE_XY["Q135.E"][0], 4.2), value="22",
+res("R136", NODE_XY["Q134.E"], (NODE_XY["Q134.E"][0], 4.2), value="22",
     lbl=((60.75, 2.8), "left"))
-node("P3.out", "OUT", (NODE_XY["R136.2"][0], 5.5))
-wire("R136.2", "P3.out")
-wire("P3.out", "R137.2", dots=[NODE_XY["P3.out"]])
+node("P3.out", "OUT", (NODE_XY["R135.2"][0], 5.5))
+wire("R135.2", "P3.out")
+wire("P3.out", "R136.2", dots=[NODE_XY["P3.out"]])
 txt((44.4, 4.0), "14,71 mA di riposo:", size=8, color=RED, halign="left")
 txt((44.4, 3.5), "Classe A garantita -", size=8, color=RED, halign="left")
 txt((44.4, 3.0), "il carico piu' pesante", size=8, color=RED,
@@ -545,25 +545,25 @@ txt((44.4, 2.5), "chiede 3,9 mA di picco", size=8, color=RED,
     halign="left")
 
 # --- feedback network: the point of the whole design ------------------------
-res("R138", (64.0, 5.5), (64.0, 2.0), value="1.50k",
+res("R137", (64.0, 5.5), (64.0, 2.0), value="1.50k",
     lbl=((63.52, 4.1), "right"), color=GREEN)
-cap("C139", (66.8, 5.5), (66.8, 2.0), value="22p",
+cap("C138", (66.8, 5.5), (66.8, 2.0), value="22p",
     lbl=((67.28, 4.1), "left"))
 node("P3.out_end", "OUT", (68.5, 5.5))
-wire("P3.out", "R138.1")
-wire("R138.1", "C139.1", dots=[NODE_XY["R138.1"]])
-wire("C139.1", "P3.out_end", dots=[NODE_XY["C139.1"]])
+wire("P3.out", "R137.1")
+wire("R137.1", "C138.1", dots=[NODE_XY["R137.1"]])
+wire("C138.1", "P3.out_end", dots=[NODE_XY["C138.1"]])
 flag("P3.out_end", "OUT", direction="right", length=0.8)
-wire("R138.2", "C139.2", dots=[NODE_XY["C139.2"]])
+wire("R137.2", "C138.2", dots=[NODE_XY["C138.2"]])
 node("P3.fb_tag", "FB", (62.4, 2.0))
-wire("R138.2", "P3.fb_tag", dots=[NODE_XY["R138.2"]])
+wire("R137.2", "P3.fb_tag", dots=[NODE_XY["R137.2"]])
 flag("P3.fb_tag", "FB", direction="left", length=0.5)
 txt((65.4, 1.3), "FB  ->  gate di JQ111 (riq. 1)", size=7.5, color=NETCOL,
     halign="left")
 
-res("R140", NODE_XY["R138.2"], (64.0, -1.0), value="698",
+res("R139", NODE_XY["R137.2"], (64.0, -1.0), value="698",
     lbl=((63.52, 0.65), "right"), color=GREEN)
-flag("R140.2", "RG", direction="down", length=0.8)
+flag("R139.2", "RG", direction="down", length=0.8)
 
 # The relay contact is NOT a device of this netlist - it lives in
 # preamp_audio.py. Drawn grey and dashed so it cannot be mistaken for one.
@@ -610,7 +610,7 @@ node("P4.nref_tag", "NREF", (13.6, -12.4))
 wire("R101.2", "C104.1", dots=[NODE_XY["R101.2"]])
 wire("C104.1", "C105.1", dots=[NODE_XY["C104.1"]])
 wire("C105.1", "P4.nref_tag", dots=[NODE_XY["C105.1"]])
-flag("P4.nref_tag", "NREF   ->  basi di Q106 e Q127", direction="right",
+flag("P4.nref_tag", "NREF   ->  basi di Q106 e Q126", direction="right",
      length=0.7)
 wire("D103.K", "C104.2", dots=[NODE_XY["D103.K"]])
 wire("C104.2", "C105.2", dots=[NODE_XY["C104.2"]])
@@ -651,10 +651,10 @@ rail(33.0, 40.5, -16.0, "V-", BLUE)
 node("P4.dg", "0", (39.8, -12.85))
 d.add(elm.Line().at((34.0, -12.85)).to(NODE_XY["P4.dg"]))
 gnd(NODE_XY["P4.dg"])
-for ref, x, val, top in (("C141", 35.0, "100n", True),
-                         ("C143", 37.5, "100u", True),
-                         ("C142", 35.0, "100n", False),
-                         ("C144", 37.5, "100u", False)):
+for ref, x, val, top in (("C140", 35.0, "100n", True),
+                         ("C142", 37.5, "100u", True),
+                         ("C141", 35.0, "100n", False),
+                         ("C143", 37.5, "100u", False)):
     if top:
         cap(ref, (x, -9.7), (x, -12.85), value=val,
             lbl=((x - 0.48, -11.0), "right"))
@@ -674,9 +674,9 @@ txt((57.0, -8.35),
     "PERCHE' L'ANELLO NON SI APRE MAI   (ADR-004 / requisito V2)",
     size=11.5, color=GREEN)
 _callout = [
-    ("R138 (1.50k) e' CABLATA FISSA fra OUT e FB: l'anello di controreazione "
+    ("R137 (1.50k) e' CABLATA FISSA fra OUT e FB: l'anello di controreazione "
      "passa sempre di li'.", GREEN),
-    ("Il rele' commuta soltanto R140 (698) verso massa - una resistenza verso "
+    ("Il rele' commuta soltanto R139 (698) verso massa - una resistenza verso "
      "il nodo comune, mai in serie all'anello.", GREEN),
     ("", GREEN),
     ("contatti APERTI       ->   guadagno = 1                 "
@@ -692,7 +692,7 @@ _callout = [
      "+10 dB. Non esce mai da quella banda.", "#333333"),
     ("", "#333333"),
     ("CONTROFATTUALE - la disposizione che ADR-004 ha scartato, rele' in "
-     "serie a R138:  uscita a -13,68 V,", "#333333"),
+     "serie a R137:  uscita a -13,68 V,", "#333333"),
     ("1,3 V dal rail. E' il numero contro cui ADR-004 stava proteggendo.",
      "#333333"),
 ]
@@ -710,7 +710,7 @@ txt((34.0, 19.65),
     "continua (ADR-003, ADR-007).     Rail +/-15 V.",
     size=9.5, color="#333333")
 txt((34.0, 18.75),
-    "BLOCCO A (buffer d'ingresso): R140 e il rele' NON montati, guadagno 1 "
+    "BLOCCO A (buffer d'ingresso): R139 e il rele' NON montati, guadagno 1 "
     "fisso.          BLOCCO B (stadio d'uscita): come disegnato, "
     "0 / +10 dB commutabile.", size=9.5, color="#333333")
 txt((34.0, -20.5),

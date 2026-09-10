@@ -1,0 +1,97 @@
+{
+  "part_name": "LS350 / LS351 / LS352 - monolithic dual PNP transistors, tight VBE matching. The project buys the LS352 grade (ADR-018).",
+  "vendor_name": "Linear Integrated Systems (Linear Systems), Fremont CA",
+  "device_class": "bjt_pnp",
+  "product_page": "https://www.linearsystems.com/bipolartransistors/ls350-series",
+  "date_obtained": "2026-09-10",
+  "lotto": "L22 + L23",
+  "obtained_by": "AI agent (Claude Opus 5, session https://claude.ai/code/session_011DtsEktyUvx6DicuhMCmDW) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from the manufacturer's own host (www.linearsystems.com), not from a distributor and not from a mirror. Byte-for-byte as served. Same host and same route the repo already used for the LSK489 in L6.",
+  "license_notes": "Manufacturer datasheet and manufacturer-published SPICE model, redistributed here unmodified for engineering traceability only. Copyright remains Linear Integrated Systems.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "It replaces the THAT320 in the input current mirror of circuits/preamp/gain_block.py. The THAT320 went end-of-life on 2026-09-01 (NC-015, blocking) and ADR-016 discarded the last-time buy, so the mirror had to be re-designed rather than re-sourced. What the THAT320 brought was MONOLITHIC MATCHING, and that is the property this part had to reproduce: LS352 is a monolithic dual on one die with |VBE1-VBE2| = 0.2 mV typ / 0.5 mV max. See ADR-018.",
+  "files": [
+    {
+      "original_filename": "LS350SeriesDSRevA5.pdf",
+      "role": "datasheet",
+      "url": "https://www.linearsystems.com/_files/ugd/7e8069_0775e202786d48dc98c0f2a967dba7d0.pdf",
+      "served_content_type": "application/pdf",
+      "served_content_disposition": "inline; filename=\"LS350SeriesDSRevA5.pdf\"",
+      "bytes": 121765,
+      "pages": 2,
+      "sha256": "c437209643cb4e6e366b428c6f25bd097f738b8104d27afe10e281d2559cb914",
+      "local_filename": "LS350SeriesDSRevA5.pdf",
+      "renamed": false
+    },
+    {
+      "original_filename": "(none - the server sends no content-disposition for this file)",
+      "role": "spice_model",
+      "url": "https://www.linearsystems.com/_files/ugd/4be30b_61af5495c5de4af18cb777fe94ca0ece.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 196573,
+      "pages": 1,
+      "sha256": "e548adc95bdb615d75e99792e191bfba33b0fc10d89382092a9d91b09ad315dd",
+      "local_filename": "LS350-SPICE-Model-Rev2.pdf",
+      "renamed": true,
+      "rename_note": "The URL is an opaque CMS hash and the server sends no filename for this one, so the local name is OURS, not the vendor's. It was built from the document's own footer - 'LS350 SPICE Model, Rev. 2, Released 07/27/2026' - and not from the URL. Read the footer, not this filename."
+    }
+  ],
+  "revision_note": "READ FROM THE DOCUMENT FOOTER, not the filename - the L7 lesson. Datasheet: '10/14/2020 Rev#A5 ECN# LS350 LS351 LS352', on both pages. SPICE model: 'LS350 SPICE Model, Rev. 2, Released 07/27/2026'. UNLIKE the LSK489, here the served filename and the footer AGREE (LS350SeriesDSRevA5.pdf vs Rev#A5) - the check was still run rather than skipped. Falsifiable with: /opt/homebrew/bin/pdftotext -layout LS350SeriesDSRevA5.pdf - | grep -i 'Rev#'",
+  "a_metadata_trap_that_does_NOT_affect_the_content": "The datasheet PDF's internal metadata Title/Subject/Keywords read 'ID100 ID101 PICO AMPERE DIODES' - a leftover from the vendor's Word template for a different product. The document CONTENT is the LS350 series throughout, verified on the rendered pages. Recorded because it is a third variant of a trap the repo has already paid for twice: a filename is not a revision (L7), a filename is not a part (L24, limitations #20), and here PDF metadata is not the part either. Falsifiable with: /opt/homebrew/bin/pdfinfo LS350SeriesDSRevA5.pdf | head -3",
+  "limits_read_with_their_conditions": {
+    "grades": "One die, three tested grades. LS350: BVCBO/BVCEO 25 V min, hFE 100 min. LS351: 45 V, hFE 150 min. LS352: 60 V, hFE 200 min. From the ELECTRICAL CHARACTERISTICS table @ 25 C.",
+    "VBE_matching": "|VBE1-VBE2| at IC = 10 uA, VCE = 5 V: LS352 0.2 mV TYP / 0.5 mV MAX; LS351 0.4 / 1.0; LS350 in SOT-23 1 / 5. From the MATCHING CHARACTERISTICS table.",
+    "VBE_drift_matching": "|d(VBE1-VBE2)|/dC at IC = 10 uA: LS352 0.5 uV/C TYP, 2 uV/C MAX over -55 to +125 C.",
+    "hFE": "LS352: 200 MIN at IC = 10 uA, 100 uA and 1 mA, all at VCE = 5 V; 600 MAX at 10 uA and 100 uA.",
+    "fT": "200 MHz MINIMUM at IC = 1 mA, VCE = 5 V; 275 MHz TYP quoted in the FEATURES box.",
+    "COBO": "2 pF MAXIMUM at IE = 0, VCB = 5 V.",
+    "NF": "3 dB MAXIMUM at IC = 100 uA, VCE = 5 V, RG = 10 k, BW = 200 Hz, f = 1 kHz. This is a weak noise specification: it permits an equivalent input noise around 12.8 nV/rtHz. This is a general-purpose matched pair, NOT a low-noise one.",
+    "IC_absolute_max": "10 mA. This is an ABSOLUTE MAXIMUM RATING, i.e. a stress threshold, not a characteristic - the L8 distinction. The project's mirror runs at about 2.1 mA per side.",
+    "P_D": "250 mW one side, 500 mW both sides, free air @ 25 C; derating 2.3 mW/C one side.",
+    "BVEBO": "6.0 V MIN, and NOTE 2 warns the reverse base-emitter current must never exceed 10 uA.",
+    "packages_with_a_PUBLISHED_pinout": "TO-71 6L and TO-78 6L (top view), SOT-23 6L (1=B1 2=E2 3=B2 4=C2 5=E1 6=C1), and SOIC 8L (1=C1 2=B1 3=E1 4=N/C 5=N/C 6=E2 7=B2 8=C2). The product page also lists PDIP 8L and DFN 8L, but the DATASHEET DOES NOT DRAW THEIR PINOUT - so those two were not used. This is the NC-016 lesson applied forward: a footprint whose pinout is not published is a footprint that does not correspond to a verified part."
+  },
+  "lifecycle": {
+    "status": "ACTIVE - by the manufacturer's own evidence, with the honest limit stated below.",
+    "how_it_was_read": "Linear Systems publishes no lifecycle status string and no obsolete-parts list, so the JSON-LD route used for onsemi parts in L24 does not exist here. The manufacturer evidence used is: (1) a live product page listing the full package line-up, (2) a datasheet carrying no discontinuation marking, and (3) decisively, a SPICE model that the manufacturer RELEASED ON 2026-07-27 - two months before this lotto. A vendor does not issue a new simulation model, Rev. 2, for a part it is retiring.",
+    "honest_limit": "This is weaker than an explicit 'Active' status string, and weaker than what T8 could check for the onsemi parts. It is recorded as such rather than upgraded. The control that made Diodes' silence meaningful in L24 - finding a known-dead part from the same vendor stamped OBSOLETE - has no equivalent here: no obsolete list from this vendor was found to test the silence against.",
+    "what_was_NOT_verified": "No distributor stock was checked, for any distributor - same as L8 and L24. And the T8 check must be re-run at every gate, as ADR-016 requires; that is not a one-off."
+  },
+  "spice_model": {
+    "status": "FOUND, published by the manufacturer as a PDF, transcribed under the ADR-013 two-reading procedure, and PROVEN to load and run in ngspice.",
+    "model_name": "LS350",
+    "model_count_for_this_part": "ONE. Linear Systems publishes a single model for the whole LS350/LS351/LS352 series. Checked deliberately because limitations.md #17 records THAT shipping two different models of one part with a 71% noise difference - here there is no such fork, and that is a verified result rather than an assumption.",
+    "published_as_PDF_which_ADR_013_accepts": "The model text lives inside a PDF, exactly as for the LSK489. ADR-013 accepted that transcription burden knowingly and made the method binding.",
+    "transcription_evidence": "Two independent readings of the frozen PDF came out BYTE-IDENTICAL, sha256 7639b915b64b9254190f6ec8ce7843aa33fe6245dcdec77be2defaa36e774410 for both: (A) the mechanical, stdlib-only reading via scripts/pdf_glyphs.py, (B) poppler pdftotext -layout. A third, visual reading of the rendered page agreed character for character.",
+    "the_one_removal": "mfg=Linear_Systems, which is FATAL in ngspice (exit 1, 'Undefined parameter [linear_systems]'). Re-verified in this lotto by actually running it, not inherited from L6.",
+    "a_warning_that_is_expected_output": "The vendor writes '.model LS350 (PNP ...' with the device type inside the parentheses. ngspice accepts it and prints 'warning, model type mismatch in line'. The canonical form '.model LS350 PNP (...' was run side by side and gives IDENTICAL numbers to seven significant figures, so the vendor form is kept and the warning documented.",
+    "no_flicker_noise": "No KF, no AF. Simulated spectrum flat from 100 Hz to 100 kHz. Same gap as the THAT320 models, the MJE models, the Diodes models and the placeholders. In this repo only the LSK489 has 1/f. Relevant to NC-004."
+  },
+  "datasheet_cross_check_L22": {
+    "method": "The L6+L7+L24 procedure: measure the vendor model at the vendor datasheet's own test conditions, at 25 C (ngspice defaults to 27), and compare against the vendor's own published window for the LS352 grade.",
+    "hFE_at_10uA_100uA_1mA_VCE_5V": "MEASURED 441.2 / 483.2 / 490.6 against a 200 MIN and 600 MAX window. INSIDE at all three.",
+    "COBO_at_VCB_5V_1MHz": "MEASURED 1.584 pF against a 2 pF MAXIMUM. INSIDE.",
+    "NF_at_IC_100uA_RG_10k_1kHz": "MEASURED 0.325 dB against a 3 dB MAXIMUM. INSIDE with room to spare.",
+    "fT_at_IC_1mA_VCE_5V": "MEASURED 129.5 MHz against a 200 MHz MINIMUM. OUTSIDE, 35% below. Checked on three agreeing legs: |hfe|=1 crossing 129.5 MHz, gain-bandwidth product 124.5 MHz at 1 MHz and 128.8 MHz at 10 MHz. The model is slower than the guaranteed part, so HF figures from it are pessimistic - the safe direction, but not a known amount. NC-020.",
+    "verdict": "MIXED - five of six inside, fT outside. That is the same shape of result as the LSK489 (NC-013) and the MJE15032, and unlike the clean six-of-six of MMBT5401/MMBT5551."
+  },
+  "noise_against_the_part_it_replaces": {
+    "method": "One deck, two models, same operating point: common emitter, IC = 1 mA, VCB = 10 V, source impedance ~0, 1 kHz, 25 C. These are the THAT320 datasheet's own noise test conditions, which is what makes the two numbers comparable.",
+    "THAT320_QPNP_THAT_NS": "0.758 nV/rtHz. This reproduces the 0.768 nV/rtHz that limitations.md #17 records for the same model at the same conditions, which is what validates the deck rather than the deck validating itself.",
+    "LS350": "1.685 nV/rtHz. 2.22x worse, +6.9 dB.",
+    "why": "RB = 200, RBM = 10, IRB = 1e-05 with BF = 500. At 1 mA the base current is about 2 uA, well below IRB, so base resistance sits near RB = 200 and not near RBM = 10. The THAT320 carried a flat RB = 25 - that 25 ohm is what made it a low-noise part, and it is precisely what is lost.",
+    "what_this_number_is_NOT": "It is not a manufacturer guarantee. The LS350 datasheet promises only NF <= 3 dB at RG = 10 k, which permits roughly 12.8 nV/rtHz. The 1.685 nV/rtHz is what the model says at a source impedance the datasheet never tests."
+  },
+  "alternatives_examined_and_why_they_lost": {
+    "DMMT5401_Diodes": "Dual PNP in SOT-26, and attractive because it is the SAME DIE as the MMBT5401 that ADR-017 already chose for the VAS, from a vendor whose model route the repo has already proven. REJECTED on the datasheet: it is matched on hFE/VCE(sat)/VBE(sat) to 2% typical, NOT on VBE - note 1 calls it 'intrinsically matched as this is built with adjacent die from the same wafer' - and its Noise Figure limit is 8 dB MAX against the LS350's 3 dB. A mirror's matching is a VBE matching, so the one specification that mattered is the one it does not carry.",
+    "SSM2220_Analog_Devices": "The natural like-for-like replacement for a THAT320 by function and by noise (0.7 nV/rtHz typ). NOT VERIFIABLE FROM HERE: www.analog.com and its media CDN answer nothing to an automated client - three attempts, HTTP/2 INTERNAL_ERROR and two 60/90 s timeouts, over both HTTP/2 and HTTP/1.1, on both the product page and the datasheet PDF. A web search reported the part as Obsolete, and per ADR-016 a search result is not manufacturer evidence, so this is recorded as UNVERIFIED rather than resolved either way. If ADI becomes reachable, this is the first alternative to re-examine.",
+    "onsemi_dual_PNP": "The onsemi model route that worked in L24 - /download/models/lib/<part>.lib - returns the 303722-byte HTML soft 404 for the dual PNP candidates tried (e.g. bc857bs.lib). Verified again in this lotto rather than assumed from L24.",
+    "a_discrete_matched_pair": "Two selected MMBT5401 would satisfy T7 and T8 with models already frozen in this repo, but they are two dice in two packages: no monolithic matching and no thermal coupling, which is exactly what the mirror needs. It was the declared fallback and was not needed."
+  },
+  "a_url_trap_found_in_this_lotto": {
+    "what": "On www.diodes.com the /spice/download/<id>/<NAME>.spice.txt route is keyed ONLY by the numeric id. The filename in the path is ignored.",
+    "evidence": "https://www.diodes.com/spice/download/2587/DMMT5401.spice.txt answers 200 and serves the MMBT5401 model - 1609 bytes, and the response's own Content-Type carries name=\"MMBT5401.spice.txt\". The id 2587 is MMBT5401's, recorded in this repo by L24. The real DMMT5401 model is at id 3323.",
+    "why_it_matters": "It is limitations.md #20 one step further back: there the vendor served the wrong part under a right-looking filename; here the requester can put ANY filename in the URL and the server will still hand back the file the id points at, with a 200 and a plausible size. The truth is in the response's Content-Type/Content-Disposition, not in the URL you typed. Recorded as limitations.md #21."
+  }
+}

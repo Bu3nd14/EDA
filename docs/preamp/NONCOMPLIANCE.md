@@ -7,14 +7,13 @@ l'ha aperta, in `reports/`, che non si riscrive mai.
 Ultimo aggiornamento: **2026-09-10** (creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato le due decisioni di
-**ADR-016** — niente parti a fine vita, niente dispositivi attivi senza
-modello vendor — che **chiudono la scadenza del THAT320 scartando il
-last-time buy** e **alzano NC-017 a bloccante** estendendola a tutti i
-dispositivi attivi; **L24** ha eseguito T7 su tutti e sette i dispositivi
-attivi, ridotto NC-017 a ciò che resta da *eseguire* invece che da
-*scoprire*, e aperto NC-018 e NC-019. **19 voci aperte, 6 bloccanti.**
-L'accesso a G1 non è concesso finché NC-001, NC-004, NC-010, NC-014,
-NC-015 e NC-017 restano aperte)
+**ADR-016**; **L24** ha eseguito T7 su tutti e sette i dispositivi attivi e
+aperto NC-018 e NC-019; **L22 + L23** hanno **CHIUSO NC-015 e NC-016** —
+lo specchio d'ingresso è un **LS352** (ADR-018), congelato con provenienza,
+controllato contro il proprio datasheet, montato nella topologia e
+rimisurato — e aperto **NC-020**. **18 voci aperte, 5 bloccanti**, una
+bloccante in meno per la prima volta da G0. L'accesso a G1 non è concesso
+finché NC-001, NC-004, NC-010, NC-014 e NC-017 restano aperte)
 
 ---
 
@@ -108,7 +107,7 @@ Diciassette voci, da **quattro** origini distinte:
   costruttori** invece di fidarsi di quello che il progetto assumeva.
 
 In tutto: **6 bloccanti, 6 maggiori, 5 minori**. **L'accesso a G1 non è
-concesso** finché NC-001, NC-004, NC-010, NC-014, NC-015 e NC-017 restano
+concesso** finché NC-001, NC-004, NC-010, NC-014 e NC-017 restano
 aperte.
 
 **La scadenza esterna non c'è più, ed è stato per decisione.** NC-015
@@ -733,7 +732,7 @@ topologia è Fase 4, e L8 aveva il mandato esplicito di non toccare
 | Requisito | **ADR-013** (lo specchio di corrente d'ingresso è un THAT320) · T2 (il progetto deve essere riproducibile) |
 | Severità | **bloccante** |
 | Aperta da | `reports/2026-09-10-L8-parti-nuove.md` |
-| Stato | aperta — **decisa il 2026-09-10 (ADR-016): si sostituisce.** Resta aperta finché la parte sostitutiva non è scelta e verificata |
+| Stato | **CHIUSA il 2026-09-10 (L22 + L23)** — la parte sostitutiva è scelta, verificata e montata: **LS352**, ADR-018. Vedi «Voci chiuse» in fondo |
 
 **Evidenza.** `vendor/bjt_array/that/THAT320/THAT-EOL-Memo.pdf`
 (sha256 `1e777dd3ac23…`), memo di **Les Tyler, President, THAT
@@ -793,7 +792,7 @@ il THAT320 portava appaiamento monolitico e rbb = 25 Ω. Lotto **L22**.
 | Requisito | ADR-013 · precondizione di **G2** (il layout deve poter piazzare le parti vere) |
 | Severità | **maggiore** |
 | Aperta da | `reports/2026-09-10-L8-parti-nuove.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-10 (L22 + L23)** — la parte sostitutiva porta il proprio footprint e il proprio simbolo, e il duale è ora UNA Part a due unità. Vedi «Voci chiuse» in fondo |
 
 **Evidenza.** Datasheet `THAT_300-Series_Datasheet.pdf`, Document 600041
 Rev 04, Tabella 1 «Ordering Information»: le varianti THAT320 ordinabili
@@ -1035,6 +1034,81 @@ quel singolo dispositivo in un package a foro passante, con la lacuna T7
 dichiarata accanto ai numeri che ne dipendono, secondo la clausola «Da
 riaprire se» di ADR-016. Va risolta **prima del G2**.
 
+### NC-020 — La f_T del modello LS352 sta il 35% sotto il minimo del suo datasheet
+
+| | |
+|---|---|
+| Requisito | **T7** (ADR-016) · **ADR-018** · la disciplina di controllo incrociato di **ADR-013** |
+| Severità | **maggiore** |
+| Aperta da | `reports/2026-09-10-L22-L23-specchio-ingresso.md` |
+| Stato | aperta |
+
+**Evidenza.** Modello vendor `models/bjt_pnp/ls350.lib`, misurato alle
+condizioni del datasheet (I_C = 1 mA, V_CE = 5 V, 25 °C):
+
+| Grandezza | Misurata | Finestra LS352 | Esito |
+|---|---|---|---|
+| f_T | **129,5 MHz** | **200 MHz min** (275 tip) | **FUORI**, −35% |
+
+Verificata su **tre gambe concordi**, perché una sola misura non basta a
+dichiarare fuori norma il modello di un costruttore: attraversamento
+|h_fe| = 1 a 129,5 MHz; prodotto guadagno-banda 124,5 MHz a 1 MHz; 128,8 MHz
+a 10 MHz.
+
+Le altre cinque grandezze controllate sono **dentro** (h_FE a tre correnti,
+C_OBO, NF), quindi il verdetto è **misto** e non un rigetto della parte.
+
+**Non è un errore di trascrizione**: le due letture indipendenti del PDF
+vendor sono byte-identiche (stesso sha256) e una terza, visiva, concorda.
+La discrepanza è fra il modello SPICE del costruttore e il datasheet **dello
+stesso costruttore** — la stessa forma di NC-013 sull'LSK489.
+
+**Perché è maggiore e non bloccante.** La direzione è quella sicura: il
+modello è **più lento** della parte garantita, quindi margine di fase e
+guadagno d'anello calcolati con esso sono **pessimistici**. Ma non di una
+quantità nota, ed è esattamente il difetto che NC-002 e NC-012 già
+descrivono per i segnaposto: *non conservativo in modo noto*.
+
+**Quanto pesa oggi, misurato.** Sostituendo il THAT320 con questo modello il
+margine di fase si muove di **mezzo grado** (63,54° → 63,02° a 0 dB senza
+carico) e il guadagno d'anello DC di **0,06 dB**. Nello specchio il
+dispositivo è un carico attivo a 2,1 mA, non un elemento del percorso di
+segnale in alta frequenza, quindi la sua f_T conta poco — ma questo va
+riverificato in Fase 4, quando anche il VAS e lo stadio d'uscita avranno
+modelli veri.
+
+**Cosa serve per chiuderla.** O una misura su un esemplare reale, o la
+constatazione — in Fase 4, coi modelli veri ovunque — che nessuna cifra di
+stabilità del progetto dipende dalla f_T di questo dispositivo entro il
+margine di errore. Non si chiude "correggendo" il modello: quello che il
+costruttore pubblica è ciò che si congela.
+
 ## Voci chiuse
 
-*Nessuna.*
+**NC-015 — Il THAT320 è fine vita** (bloccante). **CHIUSA il 2026-09-10 da
+L22 + L23.** Il sostituto è scelto, verificato e montato: **Linear Systems
+LS352**, dual PNP monolitico, |V_BE1−V_BE2| 0,2 mV tip / 0,5 max, con modello
+del costruttore congelato in `vendor/bjt_pnp/linear_systems/LS350/`,
+trascritto sotto la procedura a due letture di ADR-013 (byte-identiche),
+controllato contro il proprio datasheet (cinque grandezze su sei dentro; la
+sesta è NC-020) e bloccato da una ricetta di regressione in
+`validate_models.py`. Lo specchio è stato **riprogettato** come ADR-016
+richiedeva e non solo ri-approvvigionato: la degenerazione sale da 47 a
+220 Ω, spazzata e non argomentata, e lo stadio d'ingresso finisce **25,7% più
+silenzioso** di quando montava il THAT320 (caso peggiore 5,697 → 4,231 µV).
+Decisione: **ADR-018**. Report:
+`reports/2026-09-10-L22-L23-specchio-ingresso.md`.
+
+**NC-016 — Il footprint del THAT320 è a 8 pin ma la parte esiste solo a 14**
+(maggiore). **CHIUSA il 2026-09-10 da L22 + L23.** Si è chiusa come la voce
+stessa prescriveva — non correggendo il footprint della parte uscente, ma
+perché la parte entrante porta il proprio. Il `SOIC-8` che il codice
+dichiarava ora **corrisponde a una parte che esiste davvero in SOIC-8**, col
+pinout letto dal disegno del datasheet (1=C1 2=B1 3=E1 4=N/C 5=N/C 6=E2 7=B2
+8=C2). E il residuo peggiore è sparito: il duale era istanziato come **due**
+Part, cioè due package sul PCB per un dispositivo solo, ed è ora **una** Part
+a due unità — verificato sulla netlist, dove i componenti su SOIC-8 passano da
+quattro a tre (l'LS352 più i due LSK489, che restano il gap noto di **L10**).
+PDIP-8 e DFN-8 sono elencati dal costruttore ma il datasheet **non ne disegna
+il pinout**, quindi non sono stati usati: un pinout non pubblicato è
+esattamente come il SOIC-8 fantasma è nato.

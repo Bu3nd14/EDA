@@ -72,16 +72,26 @@ def reset():
     _REGISTRY.clear()
 
 
-def spice_dev(part, prefix, pin_order, tail=""):
+def spice_dev(part, prefix, pin_order, tail="", suffix=""):
     """Register `part` for SPICE emission.
 
     prefix     - SPICE element letter ('R', 'C', 'Q', 'J', 'D', ...)
     pin_order  - pin numbers/names of the KiCad symbol, in SPICE node order
     tail       - everything after the nodes (value, model name, params)
+    suffix     - appended to the SPICE element name.
+
+    WHY `suffix` EXISTS (L22). A MULTI-UNIT part is one physical package
+    holding several devices: the LS352 dual PNP of the input current mirror
+    is one SOIC-8 with two transistors on one die. It is therefore ONE
+    SKiDL Part with ONE reference - which is the whole point, because two
+    Parts would place two packages on the board (that was NC-016) - but it
+    must emit TWO SPICE elements. Without a suffix both lines would be
+    named after the same ref, and a SPICE netlist with two elements called
+    Q7 is not a netlist. The suffix makes them Q7A and Q7B.
     """
     if tail and prefix in ("R", "C", "L"):
         tail = spice_value(tail)
-    _REGISTRY.append((part, prefix, list(pin_order), tail))
+    _REGISTRY.append((part, prefix, list(pin_order), tail, suffix))
     return part
 
 
@@ -96,12 +106,13 @@ def _node(part, pin_id, gnd_names):
 
 def _lines(gnd_names):
     out = []
-    for part, prefix, pin_order, tail in _REGISTRY:
+    for part, prefix, pin_order, tail, suffix in _REGISTRY:
         ref = part.ref
         # SKiDL ref already starts with the symbol's reference prefix (R1, C3,
         # Q7...). Use the SPICE prefix + the numeric/unique part of the ref so
         # e.g. a Device:Q_NPN with ref "Q7" becomes "QQ7" -> normalise to "Q7".
         name = ref if ref[0].upper() == prefix.upper() else prefix + ref
+        name += suffix
         nodes = " ".join(_node(part, p, gnd_names) for p in pin_order)
         out.append(f"{name} {nodes} {tail}".rstrip())
     return sorted(out)

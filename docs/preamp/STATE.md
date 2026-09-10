@@ -6,23 +6,33 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-10** (**L24 chiuso**: T7 eseguito su tutti
-e sette i dispositivi attivi. **Lo stadio d'uscita regge** — MJE15032,
-MJE15033 e 1N4148 hanno un modello del costruttore, quindi la modifica di
-topologia che ADR-016 temeva non serve. Per 2N5401/2N5551 **non si
-sostituisce il dispositivo**: Diodes Incorporated pubblica il modello dello
-stesso die come **MMBT5401/MMBT5551**, in SOT-23 — la conclusione di L8 era
-giusta sui percorsi provati e sbagliata come affermazione generale. Deciso
-in **ADR-017**. Cinque modelli congelati in `vendor/`, sei controlli
-incrociati su sei dentro le finestre Diodes. La rosa alternativa è stata
-cercata prima e **T8 l'ha quasi azzerata**: KSA992/KSC1845, la coppia audio
-classica, è in *last-time buy*, e 2N3904/2N3906 sono interamente fuori
-catalogo presso onsemi. Due trappole nuove: `limitations.md` **#19** (il
-prefisso micro non sopravvive all'estrazione dai PDF onsemi — errore ×1000,
-exit 0) e **#20** (onsemi serve `1n4148.lib` col modello di **un'altra
-parte**). NC-017 resta bloccante ma ora è lavoro da *eseguire* e non da
-*scoprire*; aperte NC-018 e NC-019. **19 voci, 6 bloccanti.** Prossimo lotto
-**L22 + L23**, lo specchio senza THAT320. — Prima: L8 e **L8b** chiusi. L8: le quattro parti nuove verificate alla fonte, **tre su quattro con una sorpresa** — THAT320 **fine vita**, polo 2 del relè Omron **invertito nel codice**, e nessun modello SPICE vendor per 2N5401/2N5551. L8b: l'utente ha risposto con **due regole di progetto**, registrate in **ADR-016** e come requisiti **T7** e **T8** — *niente parti a fine vita, niente dispositivi attivi senza modello del costruttore*. Il last-time buy del THAT320 è **scartato**: si sostituisce. NC-017 sale a **bloccante** e copre tutti e sette i dispositivi attivi, di cui **uno solo è conforme oggi**. 17 non conformità, **6 bloccanti** — l'accesso a G1 non è concesso. Prossimo lotto **L24**, T7 su tutti i dispositivi attivi; **L9 è rinviata** perché non sblocca niente)
+Ultimo aggiornamento: **2026-09-10** (**L22 + L23 chiusi**: lo specchio
+d'ingresso non è più un THAT320. La parte è un **Linear Systems LS352**, dual
+PNP monolitico in SOIC-8, |V_BE1−V_BE2| 0,2 mV tip — modello del costruttore
+pubblicato come PDF e **Rev. 2 del 27/07/2026**, trascritto con le due letture
+di ADR-013 (byte-identiche), congelato con provenienza e **bloccato da una
+ricetta di regressione**: la libreria passa a **28/28 check**. Deciso in
+**ADR-018**. Il risultato che conta: **il dispositivo è più rumoroso e lo
+stadio non lo è** — da solo fa 1,685 nV/√Hz contro gli 0,758 del THAT320 sullo
+stesso deck, ma portando la degenerazione da 47 a **220 Ω** (valore
+**spazzato**, non argomentato: il minimo di rumore è lì e a 330 Ω risale) lo
+stadio finisce **25,7% più silenzioso** di quando montava la parte uscita di
+produzione, caso peggiore da 5,697 a **4,231 µV**, dentro E5. Il duale è ora
+**UNA parte, non due**: `library/preamp.kicad_sym` è la **prima libreria di
+simboli del repo**, i componenti su SOIC-8 scendono da 4 a 3, e **NC-016 si
+chiude**. Margine di fase mosso di mezzo grado, clipping di 15 mV. Verdetto
+misto sul modello: cinque grandezze su sei dentro le finestre del datasheet,
+**f_T il 35% sotto il minimo** su tre gambe concordi → **NC-020**. Due
+candidati scartati alla fonte: **DMMT5401** appaiato su h_FE e non su V_BE
+(più NF 8 dB contro 3), e **SSM2220** perché `analog.com` non risponde a un
+client automatico — dichiarato non verificato, non risolto. Trappola nuova:
+`limitations.md` **#21** — su diodes.com il nome del file nell'URL di un
+modello è **ignorato**, decide solo l'id. **18 voci di non conformità, 5
+bloccanti**: una bloccante in meno per la prima volta da G0. Prossimo lotto
+**L25**. — Prima: **L24** aveva eseguito T7 su tutti e sette i dispositivi
+attivi; lo stadio d'uscita regge (MJE15032/33 e 1N4148 hanno un modello
+onsemi) e 2N5401/2N5551 non si sostituiscono ma cambiano costruttore e
+package, **MMBT5401/MMBT5551** di Diodes in SOT-23, deciso in **ADR-017**)
 
 ---
 
@@ -117,8 +127,8 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L19 | **La soglia di margine di fase in V1**, col carico di prova dichiarato accanto; poi i KPI del dossier riferiti a quella | XS | **NC-012** | da fare |
 | L20 | **Quanto il progetto dipende da I_DSS.** Rieseguire punto di lavoro e rumore del blocco di guadagno con `Vto` ai due estremi compatibili con la finestra A — il modello vendor com'è (2,59 mA) e un `Vto` che porti I_DSS al tipico (5,5 mA) — e scrivere in `REQUIREMENTS.md` o in una ADR quale dispersione il progetto tollera | S | **NC-013** | da fare |
 | L21 | **Il polo 2 del relè, corretto e riverificato.** Riga 79 di `preamp_audio.py` in `"6", "5", "7"`, rigenerazione, e verifica **sulla netlist** che il contatto verso massa di ogni mute cada su 2 e 7 e il ramo `R_g` su 4 e 5 | XS/S | **NC-014** (bloccante) | da fare |
-| L22 | **Lo specchio d'ingresso senza THAT320.** Trovare e verificare una coppia PNP appaiata che soddisfi **T7 e T8 insieme**, poi rifare punto di lavoro e rumore dello stadio d'ingresso. La decisione *se* sostituire è presa (ADR-016): resta *con cosa* | M | **NC-015** (bloccante) | da fare |
-| L23 | **Package e simbolo della parte che sostituisce il THAT320**, col pinout letto dal suo datasheet. Va fatto **insieme a L22**, non dopo: il footprint arriva con la parte. Copre anche il residuo `SOIC-8` che oggi non corrisponde a nessuna parte esistente | S | NC-016 | da fare |
+| L22 | **Lo specchio d'ingresso senza THAT320.** Trovare e verificare una coppia PNP appaiata che soddisfi **T7 e T8 insieme**, poi rifare punto di lavoro e rumore dello stadio d'ingresso. La decisione *se* sostituire è presa (ADR-016): resta *con cosa* | M | **NC-015** (bloccante) | **fatto** |
+| L23 | **Package e simbolo della parte che sostituisce il THAT320**, col pinout letto dal suo datasheet. Va fatto **insieme a L22**, non dopo: il footprint arriva con la parte. Copre anche il residuo `SOIC-8` che oggi non corrisponde a nessuna parte esistente | S | NC-016 | **fatto** |
 | L24 | **T7 su tutti i dispositivi attivi.** Prima **verificare** MJE15032/33 e 1N4148 — è il passo che dice quanto è grande il resto — poi trovare i sostituti di 2N5401/2N5551, congelarli e promuoverli in `models/` col controllo incrociato di L6+L7 | M | **NC-017** (bloccante), **NC-004** | **fatto** |
 | L25 | **Promuovere in `models/` i cinque modelli congelati in L24** (MMBT5401, MMBT5551, MJE15032, MJE15033, 1N4148), ognuno con la sua `.provenance.json` e una ricetta di regressione in `validate_models.py` sul modello di `tb_lsk489()`. Il controllo incrociato contro i datasheet **è già fatto** in L24: qui si tratta di bloccarne i numeri | S/M | **NC-017** (bloccante) | da fare |
 
@@ -1105,6 +1115,144 @@ formato `<hash>  <nome>`, che `shasum -c` legge, e **3 in formato hash nudo**
 come falliti**. Non è corruzione — verificano per confronto diretto — ma una
 verifica ingenua dell'intero albero produce tre falsi allarmi.
 
+## L22 + L23 — Lo specchio d'ingresso senza THAT320. FATTO.
+
+Report: `reports/2026-09-10-L22-L23-specchio-ingresso.md`. Decisione:
+**ADR-018**. Chiudono **NC-015** (bloccante) e **NC-016**, aprono **NC-020**.
+
+**1. La parte è un Linear Systems LS352**, dual PNP monolitico in SOIC-8,
+|V_BE1−V_BE2| **0,2 mV tip / 0,5 max**, BV_CEO 60 V. Stesso costruttore
+dell'LSK489, e come per l'LSK489 il modello è pubblicato **come PDF**: vale la
+procedura vincolante di ADR-013, e le due letture indipendenti sono uscite
+**byte-identiche** (stesso sha256; una terza, visiva, concorda). Una sola
+rimozione, `mfg=Linear_Systems`, fatale in ngspice — **riverificata
+eseguendola**, non ereditata da L6.
+
+**2. Il risultato che ha deciso la ADR: il dispositivo è più rumoroso e lo
+stadio non lo è.** Un deck, due modelli, stesso punto di lavoro:
+
+| Modello | rumore riferito all'ingresso |
+|---|---|
+| THAT320 `QPNP_THAT_NS` | **0,758 nV/√Hz** |
+| LS350 | **1,685 nV/√Hz** — 2,22× peggio |
+
+Il deck non valida sé stesso: il numero del THAT riproduce lo 0,768 nV/√Hz
+già registrato in `limitations.md` #17. La causa è nel modello — `RB = 200`
+con `IRB = 1e-05` e `BF = 500`, quindi a 1 mA la resistenza di base sta vicino
+a RB e non a `RBM = 10`; il THAT320 portava `RB = 25` piatto, ed erano quei
+25 Ω a farne una parte a basso rumore.
+
+**Ma il contributo di uno specchio è fissato dalla sua transconduttanza**, e
+la degenerazione la compra indietro più in fretta di quanto rbb la costi.
+ADR-016 chiedeva di **riprogettare** lo specchio: il riprogetto è uno sweep,
+non un ragionamento.
+
+| R_deg | rumore, caso peggiore | V_BC interno della metà d'uscita |
+|---|---|---|
+| 22 Ω | — | −53,1 mV — **satura** |
+| 47 Ω (ereditato) | 6,988 µV | −0,4 mV — sul ginocchio |
+| 100 Ω | 5,149 µV | +112,5 mV |
+| 150 Ω | 4,580 µV | +219,4 mV |
+| **220 Ω** | **4,231 µV** ← minimo | **+369,1 mV** ← scelto |
+| 330 Ω | 4,515 µV — **risale** | +590,8 mV, ma il clipping negativo perde 0,77 V |
+
+Il minimo esiste davvero e a 330 Ω il degrado si vede su **due assi
+indipendenti**. Contro il THAT320 a 47 Ω (5,697 µV), lo stadio finisce
+**25,7% più silenzioso** — con un dispositivo il cui rumore proprio è 2,2×
+peggiore. Dentro **E5** con più margine di prima.
+
+**Il ginocchio esiste per via di `RC = 231,4`** nel modello, contro i 18 Ω del
+THAT320: a 2,1 mA sono **0,49 V persi dentro il dispositivo** su ~1,2 V di
+V_CE che la topologia concede. Non è un artefatto — il datasheet dichiara
+V_CE(sat) ≤ 0,5 V a 1 mA, che implica esattamente quello. E il rimedio è
+**controintuitivo**: aumentare la degenerazione *aumenta* il margine invece
+di consumarlo. La prima intuizione è stata provata a 22 Ω e **falsificata**.
+
+**3. Il duale è UNA parte, non due, e NC-016 si chiude così.** Era il residuo
+peggiore: due Part con un footprint SOIC-8 ciascuna, cioè **due package sul
+PCB per un dispositivo solo**. `library/preamp.kicad_sym` è la **prima
+libreria di simboli del repo** — verificata con `kicad-cli sym upgrade` e
+`sym export svg`, che disegna tutte e tre le unità, e caricata da SKiDL.
+
+| | prima | dopo |
+|---|---|---|
+| componenti totali | 44 | **43** |
+| componenti su SOIC-8 | 4 | **3** (LS352 + i due LSK489) |
+
+Il pinout è **guardato, non estratto** (è grafica): SOIC-8 = 1=C1 2=B1 3=E1
+4=N/C 5=N/C 6=E2 7=B2 8=C2. PDIP-8 e DFN-8 sono elencati dal costruttore ma
+il datasheet **non ne disegna il pinout**, quindi non sono stati usati — un
+pinout non pubblicato è esattamente come il SOIC-8 fantasma è nato.
+
+Una modifica di infrastruttura è servita: `spice_export.spice_dev()` ha ora un
+parametro **`suffix`**, senza il quale le due metà emetterebbero due righe
+SPICE con lo **stesso nome**. Diventano `Q122A` e `Q122B`.
+
+**Fondere due componenti in uno slitta tutti i riferimenti successivi di −1.**
+La mappa vecchio→nuovo è stata **ricavata confrontando i nodi** fra il `.inc`
+vecchio e quello nuovo, non dedotta a mano, e applicata in una sola passata ai
+tre deck che citano riferimenti espliciti e al disegno. **Il controllo dello
+schematico ha fatto il suo mestiere**: alla prima esecuzione
+`check_schematic.py` ha rifiutato con 15 discordanze.
+
+**4. Verdetto misto sul modello, come per l'LSK489.** Alle condizioni del
+datasheet, 25 °C: h_FE 441,2 / 483,2 / 490,6 a 10 µA / 100 µA / 1 mA (finestra
+200…600, **dentro**), C_OBO 1,584 pF (≤ 2, dentro), NF 0,325 dB (≤ 3, dentro)
+— ma **f_T 129,5 MHz contro un minimo di 200 MHz**, il 35% sotto, verificata
+su tre gambe concordi. È **NC-020**, maggiore: il modello è più *lento* della
+parte garantita, quindi le cifre in alta frequenza sono pessimistiche — la
+direzione sicura, ma non di quantità nota.
+
+I numeri sono **bloccati** da `tb_ls350()` in `validate_models.py`: la
+libreria passa da 26 a **28 check**. La ricetta ha trovato subito un difetto,
+ed era **nel controllo e non nel modello**: leggendo il campione che
+attraversa la soglia invece di interpolare come fa `meas`, l'h_FE a 10 µA
+usciva 438,2 invece di 441,2 — 0,7%, cioè il passo dello sweep.
+
+**5. Due candidati scartati alla fonte.** **DMMT5401** (Diodes) partiva
+avanti — stesso die del MMBT5401 già scelto in ADR-017, percorso del modello
+già noto — e cade su due righe del suo datasheet: appaiato su **h_FE al 2% e
+non su V_BE**, e NF **8 dB** contro 3. L'appaiamento di uno specchio *è* un
+appaiamento di V_BE. **SSM2220** (Analog Devices), il sostituto naturale per
+funzione e rumore, è **non verificabile da qui**: `analog.com` e la sua CDN
+non rispondono a un client automatico (HTTP/2 INTERNAL_ERROR e timeout a 60 e
+90 s, su due protocolli e due URL). Una ricerca lo dava *Obsolete* e **non è
+stata usata** — è la stessa regola che in L24 ha impedito di credere a quattro
+aggregatori sul 1N4148. Resta **dichiarato non verificato**.
+
+**6. Trappola nuova, `limitations.md` #21.** Su `diodes.com` il percorso di un
+modello è deciso **solo dall'id**: il nome del file nell'URL non è controllato.
+`/spice/download/2587/DMMT5401.spice.txt` risponde 200 e serve **MMBT5401** —
+la verità sta nel `name=` del `Content-Type`, non nell'URL che hai scritto. È
+la #20 spostata di un passo indietro: là il costruttore serviva la parte
+sbagliata sotto un nome giusto, qui è il richiedente a poter scrivere un nome
+che nessuno verifica.
+
+**7. Cosa NON è stato verificato, dichiarato e non riempito.** Lo stato di
+ciclo di vita esplicito dell'LS352 (Linear Systems non ne pubblica: l'evidenza
+è pagina viva, datasheet senza timbro e un modello **rilasciato il
+2026-07-27**, due mesi fa — più debole di una stringa di stato, e senza il
+controllo di silenzio che L24 poté fare su Diodes); l'SSM2220; le scorte
+presso i distributori; se la parte reale rispetti la finestra di appaiamento
+(il modello descrive il die, non il grado). E **PSRR, Z_out e risposta non
+sono state rimisurate**: i dati in `data/2026-09-09/` descrivono la topologia
+**col THAT320**, quelli nuovi stanno in `data/2026-09-10/`.
+
+**8. Cosa non si è mosso, misurato.** Margine di fase 63,54° → 63,02° (0 dB, a
+vuoto) e 56,94° → 56,46° (4,7 nF); guadagno d'anello DC 72,32 → 72,38 dB;
+clipping +13,017 → +13,002 V, cioè **0,01 dB**; guadagno a piccolo segnale
+invariato a 3,1460. Offset d'uscita −11,8 → −16,6 mV.
+
+**9. NC-004 non si muove**, e la ragione è la stessa di L24: **l'LS350 non ha
+`KF`/`AF`**. Nel repo solo l'LSK489 ha rumore 1/f, quindi le cifre qui sopra
+restano un **pavimento senza flicker** proprio dove l'analisi dice che il
+rumore domina.
+
+**10. L10 costa molto meno adesso.** Il simbolo dell'LSK489 ha ora la libreria
+dove andare, il meccanismo multi-unit collaudato e il `suffix` di `spice_dev`
+già pronto. I due LSK489 restano le ultime due Part che dichiarano un package
+ciascuna per un solo dispositivo.
+
 ## Il dossier: prima bozza consegnata in L5b
 
 **Il dossier non è negoziabile, e non si taglia per arrivare prima a G1.**
@@ -1496,59 +1644,45 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L22 + L23 — lo specchio d'ingresso senza THAT320, con il suo package e
-il suo simbolo.**
+**L25 — promuovere in `models/` i cinque modelli che L24 ha congelato.**
 
-Vanno **insieme**, non in sequenza: il footprint arriva con la parte, non
-dopo. Chiudono **NC-015** (bloccante) e **NC-016**.
+MMBT5401, MMBT5551, MJE15032, MJE15033, 1N4148: ognuno con la propria
+`.provenance.json` e una **ricetta di regressione** in
+`scripts/validate_models.py`.
 
-**Perché adesso.** Dopo L24 il THAT320 è **l'unico dei sette dispositivi
-attivi senza una risposta**. Tutti gli altri hanno un modello del
-costruttore e una parte in produzione; per lo specchio d'ingresso non c'è
-né l'una né l'altra, perché ADR-016 ha scartato il last-time buy.
+**Perché adesso.** È l'unico lotto che resta di NC-017 (bloccante), e il
+lavoro è di *esecuzione* e non di *scoperta*: il controllo incrociato contro
+i datasheet **è già fatto** in L24, con sei verifiche su sei dentro le
+finestre per i due Diodes e il caso noto del MJE15032 sotto il proprio minimo
+di h_FE (66,4 contro 70). Qui si tratta di **bloccarne i numeri**, così che
+una modifica silenziosa di un modello faccia diventare rossa la suite invece
+di passare inosservata.
 
-**Cosa L24 consegna a L22, e va usato invece di riscoprirlo.**
+**Il precedente è a due passi**, e vale la pena copiarlo invece di
+reinventarlo: `tb_lsk489()` (L7) e **`tb_ls350()` (L22)**, che è il più
+recente e il più simile — stesso device class per due dei cinque.
 
-1. **Il pattern dei modelli onsemi**:
-   `https://www.onsemi.com/download/models/lib/<parte minuscola>.lib`, e
-   il fatto che l'**unico** test onesto su quell'host è il conteggio di
-   byte — 303 722 byte di HTML è il soft 404 (#18).
-2. **I modelli Diodes stanno su `/spice/download/<id>/<PARTE>.spice.txt`**
-   e rispondono `200 text/plain` a un `curl` nudo, mentre `/design/` e
-   `/part/` danno 403. È la scoperta che ha sbloccato L24.
-3. **Il ciclo di vita si legge dal JSON-LD della pagina prodotto onsemi**,
-   nel blocco `offers/itemProductList`, che dà OPN → `itemCondition` →
-   `availability` verbatim. È il modo in cui L24 ha trovato che KSA992 è in
-   *Last Shipments* e che 2N3904/2N3906 sono interamente Obsolete.
-4. **T8 azzera la rosa molto più di quanto sembri.** Di sedici candidati
-   piccoli segnale, uno solo è risultato attivo con modello. Aspettarsi lo
-   stesso per una coppia PNP appaiata.
+**Tre cose che L22 consegna a L25**, tutte verificate qui:
 
-**Cosa deve trovare L22.** Una coppia PNP **appaiata** che soddisfi T7 e T8
-insieme, per lo specchio di corrente dello stadio d'ingresso. Il THAT320
-portava **appaiamento monolitico e rbb = 25 Ω**, ed è quest'ultimo che il
-modello NS riproduceva al 2,4% della cifra di rumore dichiarata. Le
-alternative note sono altri array monolitici (con lo stesso rischio di
-catalogo) oppure una coppia discreta appaiata, che costa rumore e deriva.
+1. **La ricetta deve interpolare come fa `meas`, non leggere il campione che
+   attraversa la soglia.** In L22 la differenza valeva lo 0,7% sull'h_FE, cioè
+   il passo dello sweep, e avrebbe fatto fallire il controllo per la ragione
+   sbagliata. È annotato dentro `tb_ls350()`.
+2. **Le condizioni sono quelle del datasheet, `set temp = 25`**, non i 27 °C
+   di ngspice — e con `XTB` nel modello la differenza si vede su ogni h_FE.
+3. **Uno SKIP fa uscire `validate_models.py` con 1**, quindi aggiungere un
+   file a `models/` senza la sua ricetta rende rossa la suite: i cinque
+   modelli e le cinque ricette vanno nello stesso lotto.
 
-**Attenzione, ed è il punto che decide la dimensione del lotto**: ADR-016
-dichiara che lo specchio va **riprogettato e non ri-approvvigionato**,
-perché cambiano punto di lavoro e cifre di rumore dello stadio d'ingresso.
-Se nessun candidato soddisfa T7 e T8, si applica la clausola «Da riaprire
-se» di ADR-016 — o si rilassa T7 per quella funzione con la lacuna
-dichiarata accanto a ogni numero che ne dipende, o **si cambia topologia
-per non aver bisogno di quel dispositivo**.
+**Attenzione al conteggio dei check.** Erano 26, L22 li ha portati a **28**
+(provenienza + elettrico dell'LS350). Cinque modelli nuovi ne aggiungono
+dieci: la documentazione che cita «26/26» va aggiornata dove compare.
 
-**L23, che viaggia insieme**: package e simbolo della parte scelta, col
-pinout letto dal suo datasheet. Copre anche il residuo reale che
-`gain_block.py:303-304` dichiara oggi un `SOIC-8` che non corrisponde a
-**nessuna** parte esistente. Da fare con la stessa procedura di **L10**
-(simbolo KiCad dell'LSK489), che ha lo stesso problema su un'altra parte.
+**Poi**, nell'ordine: **L21** (il polo 2 del relè, quasi gratis, chiude una
+bloccante), **L10 + il resto del simbolo LSK489** — che ora costa molto meno,
+perché `library/preamp.kicad_sym` esiste, il meccanismo multi-unit è
+collaudato e `spice_dev(..., suffix=)` è già lì — e il resto della tabella.
 
-**Poi**, nell'ordine: **L25** (promuovere in `models/` i cinque modelli che
-L24 ha congelato — il controllo incrociato è già fatto, resta bloccarne i
-numeri con una ricetta di `validate_models.py` ciascuno), **L21** (il polo 2
-del relè, quasi gratis), e il resto.
 
 ### Cosa cercare, e cosa NON accettare
 
@@ -1585,7 +1719,9 @@ Ognuna è costata una scoperta:
    una caratteristica garantita (L8). E attenzione a *quale corrente*: L24
    ha misurato f_T **88,8 MHz a 2 mA** su una parte il cui datasheet
    dichiara 100 MHz minimi — a 10 mA.
-5. **Un codice di stato non è una verifica** (#18).
+5. **Un codice di stato non è una verifica** (#18). E su diodes.com **il nome
+   del file nell'URL di un modello non è verificato dal server**: decide solo
+   l'id, e la verità sta nel `name=` del `Content-Type` (L22, #21).
 6. **Un costruttore può pubblicare due modelli della stessa parte** (#17).
    Quale si è usato va scritto accanto a ogni numero.
 7. **Guarda cosa il repo ha già in casa prima di andare fuori** (L8): la
@@ -1626,13 +1762,17 @@ Da non ricercare di nuovo.
   **sotto il minimo hFE del proprio datasheet** (66,4 contro 70).
 - ~~**Modello SPICE LSK489**~~ — **CHIUSA in L6-L7**: verdetto misto,
   **NC-013** → L20.
-- ~~**THAT320**: stock e BVceo~~ — **CHIUSA in L8, con una sorpresa**: fine
-  vita dal 2026-09-01 → **NC-015**, lotto **L22**.
+- ~~**THAT320**: stock e BVceo~~ — **CHIUSA in L8, con una sorpresa** (fine
+  vita dal 2026-09-01 → NC-015), e **RISOLTA in L22**: sostituito da un
+  **Linear Systems LS352**, dual PNP monolitico in SOIC-8, con la
+  degenerazione portata a 220 Ω. **ADR-018.**
 - ~~**Omron G6K-2F-Y**~~ — **CHIUSA in L8**: polo 2 invertito nel codice →
   **NC-014**, lotto **L21**.
-- **Simbolo KiCad dell'LSK489** (L10): **ancora aperta**. Non esiste, e
-  oggi il duale è disegnato come due JFET separati. Da fare **insieme a
-  L23**: stessa procedura, due parti.
+- **Simbolo KiCad dell'LSK489** (L10): **ancora aperta, ma ora economica**.
+  L22 ha creato `library/preamp.kicad_sym`, la prima libreria di simboli del
+  repo, e ci ha messo dentro un duale multi-unit collaudato end-to-end
+  (kicad-cli + SKiDL + netlist). Restano i due LSK489 come ultime due Part che
+  dichiarano un package ciascuna per un solo dispositivo.
 - **La rosa dei componenti di segnale** (L9): **rinviata**, non restituisce
   un vincitore — restringe su basi misurabili e la scelta finale fra parti
   tutte buone è dell'utente, all'ascolto. È la ragione per cui esiste P6.

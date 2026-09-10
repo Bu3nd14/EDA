@@ -34,6 +34,11 @@ tb_op.cir - gain block operating point, BLOCK B wired as the output stage
 * ---------------------------------------------------------------------
 
 .include @REPO@/spice/preamp/placeholder_devices.lib
+* L22: the input current mirror is no longer a placeholder. It is an
+* LS352 (ADR-018) and this is its VENDOR model - the only real device
+* model in this deck besides the LSK489. Every OTHER device here is
+* still a hand-written placeholder.
+.include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block_flat.inc
 
 VPP VPLUS 0 DC 15
@@ -72,15 +77,15 @@ echo "=== BJT OPERATING POINTS: ic / vce ==="
 print @q106[ic] @q106[ib] @q106[vbe] @q106[vbc]
 print @q118[ic] @q118[ib] @q118[vbe] @q118[vbc]
 print @q119[ic] @q119[ib] @q119[vbe] @q119[vbc]
-print @q122[ic] @q122[ib] @q122[vbe] @q122[vbc]
+print @q122A[ic] @q122A[ib] @q122A[vbe] @q122A[vbc]
+print @q122B[ic] @q122B[ib] @q122B[vbe] @q122B[vbc]
 print @q123[ic] @q123[ib] @q123[vbe] @q123[vbc]
-print @q124[ic] @q124[ib] @q124[vbe] @q124[vbc]
-print @q127[ic] @q127[ib] @q127[vbe] @q127[vbc]
-print @q129[ic] @q129[ib] @q129[vbe] @q129[vbc]
+print @q126[ic] @q126[ib] @q126[vbe] @q126[vbc]
+print @q128[ic] @q128[ib] @q128[vbe] @q128[vbc]
+print @q133[ic] @q133[ib] @q133[vbe] @q133[vbc]
 print @q134[ic] @q134[ib] @q134[vbe] @q134[vbc]
-print @q135[ic] @q135[ib] @q135[vbe] @q135[vbc]
 echo "=== KEY BRANCH CURRENTS ==="
-print @riso[i] @r138[i] @r136[i] @r137[i] @r107[i] @r125[i] @r128[i]
+print @riso[i] @r137[i] @r135[i] @r136[i] @r107[i] @r124[i] @r127[i]
 .endc
 
 .end

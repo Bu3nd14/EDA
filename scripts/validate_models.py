@@ -481,6 +481,96 @@ wrdata {csv} i(Vdd)
     return cir, csv, 1, check
 
 
+def tb_ls350(model_file):
+    """REGRESSION LOCK on the L22 datasheet cross-check of the LS352.
+
+    Same shape as tb_lsk489, and for the same reason: the model is a HAND
+    TRANSCRIPTION from a vendor PDF, so the failure mode to guard against
+    is a silent edit of a digit. What this asserts is the verdict L22
+    measured at the datasheet's own conditions, 25 C, no more:
+
+      hFE @ IC = 1 mA, VCE = 5 V     490.6   -> INSIDE the LS352 window
+                                                (200 MIN), and locked
+      hFE @ IC = 100 uA              483.2   -> INSIDE [200, 600]
+      hFE @ IC = 10 uA               441.2   -> INSIDE [200, 600]
+
+    It does NOT assert datasheet conformance overall, because for fT
+    there is none: the model gives 129.5 MHz at IC = 1 mA against a
+    200 MHz MINIMUM, 35% low. That deviation is NC-020, not a regression,
+    and it is deliberately NOT re-measured here - an fT sweep costs an .ac
+    run per point and the suite is a lock, not a lab. The measurement and
+    its three agreeing legs are in the L22 report.
+
+    The conditions are the datasheet's and not ngspice's: the datasheet is
+    @ 25 C, ngspice defaults to 27, and XTB = 1.5 makes hFE temperature
+    dependent, so running at the default would shift every number here.
+
+    ngspice prints "warning, model type mismatch in line" on every run,
+    because the vendor writes the device type inside the parentheses. It
+    is expected output - see the header of models/bjt_pnp/ls350.lib, where
+    it is shown to change no number - and does not affect the exit code.
+    """
+    csv = os.path.join(SCRATCH_DIR, "bjt_pnp_ls350.csv")
+    cir = f"""* validate ls350.lib - LS352 grade at the datasheet's own conditions
+.include {model_file}
+Q1 c b 0 LS350
+Vb b 0 DC -0.6
+Vc c 0 DC -5
+.control
+set temp = 25
+save @q1[ic] @q1[ib]
+dc Vb -0.45 -0.95 -0.0002
+wrdata {csv} @q1[ic] @q1[ib]
+.endc
+.end
+"""
+    # Datasheet LS350SeriesDSRevA5.pdf, ELECTRICAL CHARACTERISTICS @ 25 C,
+    # LS352 column, and the values L22 measured against it.
+    HFE_MIN, HFE_MAX = 200.0, 600.0
+    MEASURED = {1e-3: 490.6, 100e-6: 483.2, 10e-6: 441.2}
+    TOL_PCT = 0.5   # a transcription slip moves these by far more than 0.5%
+
+    def check(rows):
+        if len(rows) < 2000:
+            return False, f"expected the full Vb sweep, got {len(rows)} rows"
+        pts = [(abs(r["y0"]), abs(r["y1"])) for r in rows]   # (|ic|, |ib|)
+        problems, report = [], []
+        for target, expected in sorted(MEASURED.items(), reverse=True):
+            prev = None
+            hfe = None
+            for ic, ib in pts:
+                if prev is not None and prev[0] < target <= ic and ib > 0:
+                    # Interpolate IB at the crossing, the way ngspice's own
+                    # `meas ... when` does. Taking the bracketing sample
+                    # instead reads 438.2 where meas reads 441.2 - a 0.7%
+                    # error that is the sweep step, not the model, and it
+                    # would make this lock fail for the wrong reason.
+                    ic0, ib0 = prev
+                    f = (target - ic0) / (ic - ic0)
+                    hfe = target / (ib0 + f * (ib - ib0))
+                    break
+                prev = (ic, ib)
+            if hfe is None:
+                problems.append(f"IC never crossed {target:g} A in the sweep")
+                continue
+            if not (HFE_MIN <= hfe <= HFE_MAX):
+                problems.append(
+                    f"hFE={hfe:.1f} at IC={target:g}A is outside the LS352 "
+                    f"window [{HFE_MIN:.0f}, {HFE_MAX:.0f}]")
+            if abs(hfe - expected) / expected * 100 > TOL_PCT:
+                problems.append(
+                    f"hFE={hfe:.1f} at IC={target:g}A has moved from the "
+                    f"value L22 measured ({expected}) by more than "
+                    f"{TOL_PCT}% - the model line changed")
+            report.append(f"hFE@{target:g}A={hfe:.1f}")
+        if problems:
+            return False, "; ".join(problems)
+        return True, (", ".join(report) + " - all inside [200, 600]; fT is "
+                      "35% below the datasheet minimum, which is NC-020, "
+                      "not a regression")
+    return cir, csv, 2, check
+
+
 def tb_opamp(model_file):
     csv = os.path.join(SCRATCH_DIR, "opamp_generic.csv")
     cir = f"""* validate generic_opamp.lib (unity-gain buffer)
@@ -552,6 +642,7 @@ def build_registry():
     reg["mosfet_p/generic_pmos.lib"] = lambda p: tb_mosfet(p, "generic_pmos", "MPGEN", "p")
     reg["jfet/generic_njf.lib"] = lambda p: tb_jfet(p)
     reg["jfet/lsk489.lib"] = lambda p: tb_lsk489(p)
+    reg["bjt_pnp/ls350.lib"] = lambda p: tb_ls350(p)
     reg["opamp/generic_opamp.lib"] = lambda p: tb_opamp(p)
     reg["subckt_generic/generic_transformer.lib"] = lambda p: tb_transformer(p)
     return reg

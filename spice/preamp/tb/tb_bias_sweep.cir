@@ -7,6 +7,11 @@ tb_bias_sweep.cir - find the Vbe-multiplier resistor that centres Iq on 15 mA
 * circuits/preamp/gain_block.py - that file, not this deck, is the topology.
 
 .include @REPO@/spice/preamp/placeholder_devices.lib
+* L22: the input current mirror is no longer a placeholder. It is an
+* LS352 (ADR-018) and this is its VENDOR model - the only real device
+* model in this deck besides the LSK489. Every OTHER device here is
+* still a hand-written placeholder.
+.include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block_flat.inc
 
 VPP VPLUS 0 DC 15
@@ -35,7 +40,7 @@ RLOAD JACK 0 100k
 * `wrdata` fuori dal ciclo scriverebbe solo la settima iterazione e la
 * curva Iq(R130) - il senso di questo deck - andrebbe persa.
 *
-* PERCHE' I `let`: `@r136[i]` e `@q134[ic]` sono parametri di DISPOSITIVO,
+* PERCHE' I `let`: `@r135[i]` e `@q133[ic]` sono parametri di DISPOSITIVO,
 * non vettori del plot, e `wrdata` vuole vettori. Il `let` ne prende uno
 * snapshot nel plot corrente.
 *
@@ -56,9 +61,9 @@ foreach rval 1500 1600 1650 1690 1740 1780 1870
   alter r130 = $rval
   op
   echo "R130 = $rval ohm"
-  print @r136[i] @q134[ic] v(nx) v(ny)
-  let iq = @r136[i]
-  let ic134 = @q134[ic]
+  print @r135[i] @q133[ic] v(nx) v(ny)
+  let iq = @r135[i]
+  let ic134 = @q133[ic]
   wrdata tb_bias_sweep_$rval$t iq ic134 v(nx) v(ny)
 end
 .endc

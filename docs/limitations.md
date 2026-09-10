@@ -384,3 +384,38 @@ il file deve corrispondere alla parte — package compreso. È la lezione di **L
 nome di un file non è la sua **revisione**) spostata di un livello — qui
 il nome di un file non è la sua **parte** — e fallisce nello stesso modo,
 cioè in silenzio.
+
+## 21. Su `diodes.com` il percorso di un modello SPICE è deciso **solo dall'id**: il nome del file nell'URL è ignorato
+
+Scoperto in L22 cercando il modello del DMMT5401.
+
+I modelli SPICE di Diodes stanno su
+`https://www.diodes.com/spice/download/<id>/<PARTE>.spice.txt` (scoperta di
+L24). Il segmento `<PARTE>` **non viene controllato**: si può scriverci
+qualunque nome e il server restituisce comunque il file a cui punta l'id,
+con `200` e una dimensione plausibile.
+
+```sh
+curl -sS -L -D - -o /dev/null \
+  https://www.diodes.com/spice/download/2587/DMMT5401.spice.txt
+# 200 ... content-type: text/plain; name="MMBT5401.spice.txt"
+```
+
+L'id 2587 è quello del **MMBT5401**, registrato in questo repo da L24. La
+richiesta chiede `DMMT5401` e riceve `MMBT5401` — 1609 byte, un file vero,
+nessun errore. Il modello del DMMT5401 sta all'id **3323**.
+
+**Dove sta la verità**: nel `Content-Type` della risposta, che porta
+`name="..."` con il nome vero, e nel `Content-Disposition` quando c'è. Non
+nell'URL che hai scritto tu.
+
+È la limitazione **#20** spostata di un passo indietro. Là il costruttore
+serviva la parte sbagliata sotto un nome giusto (`1n4148.lib` conteneva
+`1N4148WT`); qui è **chi richiede** a poter mettere nell'URL un nome che il
+server non verifica — e il fallimento ha la stessa forma, cioè un file vero
+di un'altra parte, senza un errore da nessuna parte.
+
+**Regola operativa**: dopo ogni download da un percorso con un id, si
+confronta il nome dichiarato dalla risposta con la parte cercata, **e** si
+apre il file per leggerne l'intestazione (#20). Due controlli, perché
+falliscono in modo diverso.
