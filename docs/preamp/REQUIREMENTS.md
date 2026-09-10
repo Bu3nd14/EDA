@@ -63,6 +63,17 @@ quindi il target va rispettato, non trattato come formalità.
 | T4 | Coppia JFET d'ingresso: **LSK489 duale monolitico** — appaiamento intrinseco, supera il "stesso lotto" di ADR-005 | ADR-013 |
 | T5 | Buffer d'ingresso **unico**, uscite fisse via resistenze di isolamento **47 Ω** | ADR-008 |
 | T6 | **Coppia d'ingresso cascodata** in entrambi i blocchi | ADR-014 |
+| T7 | **Ogni dispositivo attivo del percorso di segnale ha un modello SPICE del costruttore.** Un modello pubblicato come PDF conta (è il caso dell'LSK489, ADR-013); un mirror di terze parti **no** — la provenienza è ciò che si verifica | ADR-016 |
+| T8 | **Nessun componente a fine vita entra nel progetto.** Un annuncio di EOL già pubblicato squalifica la parte anche se esiste una finestra di last-time buy. **Il controllo si rifà a ogni gate**, non una volta sola | ADR-016 |
+
+**Nota su T7 e T8, perché sono più giovani degli altri** (2026-09-10, dopo
+L8). Non sono preferenze di rigore: T7 è la condizione perché **NC-004**
+possa chiudersi — oggi sei dispositivi attivi su sette sono segnaposto
+scritti a mano con `KF = 0`, e due di essi sbagliano la f_T in direzioni
+**opposte**, quindi i margini di fase attuali non sono conservativi in
+modo noto. T8 nasce dal THAT320, che era fine vita da una settimana quando
+la topologia lo ha scelto: ADR-013 aveva già la clausola giusta, ma solo
+per il JFET, e all'array non l'aveva applicata nessuno.
 
 ## Requisiti fisici e di sicurezza
 

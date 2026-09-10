@@ -6,10 +6,13 @@ l'ha aperta, in `reports/`, che non si riscrive mai.
 
 Ultimo aggiornamento: **2026-09-10** (creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
-**L8** ha aperto NC-014…NC-017: **17 voci aperte, 5 bloccanti**.
-**L'accesso a G1 non è concesso** finché NC-001, NC-004, NC-010, NC-014 e
-NC-015 restano aperte. **NC-015 ha una scadenza reale: il last-time buy
-del THAT320 chiude il 2026-09-30.**)
+**L8** ha aperto NC-014…NC-017; **L8b** ha registrato le due decisioni di
+**ADR-016** — niente parti a fine vita, niente dispositivi attivi senza
+modello vendor — che **chiudono la scadenza del THAT320 scartando il
+last-time buy** e **alzano NC-017 a bloccante** estendendola a tutti i
+dispositivi attivi. **17 voci aperte, 6 bloccanti.** L'accesso a G1 non è
+concesso finché NC-001, NC-004, NC-010, NC-014, NC-015 e NC-017 restano
+aperte)
 
 ---
 
@@ -102,12 +105,23 @@ Diciassette voci, da **quattro** origini distinte:
   non nascono da una revisione: nascono dall'aver **letto le fonti dei
   costruttori** invece di fidarsi di quello che il progetto assumeva.
 
-In tutto: **5 bloccanti, 7 maggiori, 5 minori**. **L'accesso a G1 non è
-concesso** finché NC-001, NC-004, NC-010, NC-014 e NC-015 restano aperte.
+In tutto: **6 bloccanti, 6 maggiori, 5 minori**. **L'accesso a G1 non è
+concesso** finché NC-001, NC-004, NC-010, NC-014, NC-015 e NC-017 restano
+aperte.
 
-**Una sola voce ha una scadenza esterna al progetto**: NC-015, perché il
-last-time buy del THAT320 chiude il **2026-09-30**. Passata quella data la
-prima delle due strade per chiuderla non esiste più.
+**La scadenza esterna non c'è più, ed è stato per decisione.** NC-015
+aveva il last-time buy del THAT320 al 2026-09-30; il 2026-09-10 l'utente
+l'ha **scartato** — l'approvvigionamento non era praticabile e un
+componente a fine vita non entra in un progetto nuovo. Da lì **ADR-016**
+e i requisiti **T7** e **T8**, che è il motivo per cui NC-017 è passata da
+maggiore a bloccante: misura la distanza da un requisito, non da una
+preferenza.
+
+**Quattro voci sono ora la stessa storia** e conviene leggerle insieme:
+NC-004 (rumore e distorsione senza evidenza) è bloccata da NC-017 (sei
+dispositivi su sette senza modello vendor), che a sua volta trascina
+NC-015 (il THAT320 esce) e NC-016 (il suo footprint, che se ne va con
+lui).
 
 Le due revisioni non si sovrappongono per caso: G0 giudica incrociando
 affermazioni con sorgenti e trova le **affermazioni false**; la revisione
@@ -705,7 +719,7 @@ topologia è Fase 4, e L8 aveva il mandato esplicito di non toccare
 | Requisito | **ADR-013** (lo specchio di corrente d'ingresso è un THAT320) · T2 (il progetto deve essere riproducibile) |
 | Severità | **bloccante** |
 | Aperta da | `reports/2026-09-10-L8-parti-nuove.md` |
-| Stato | aperta — **richiede una decisione dell'utente, con scadenza** |
+| Stato | aperta — **decisa il 2026-09-10 (ADR-016): si sostituisce.** Resta aperta finché la parte sostitutiva non è scelta e verificata |
 
 **Evidenza.** `vendor/bjt_array/that/THAT320/THAT-EOL-Memo.pdf`
 (sha256 `1e777dd3ac23…`), memo di **Les Tyler, President, THAT
@@ -738,19 +752,25 @@ verificato». Non era assente: è stato mancato.
 non si può più comprare. Vale l'effetto standard: niente avanzamento di
 fase, quindi niente layout e niente fabbricazione, non un veto su un merge.
 
-**Cosa serve per chiuderla.** Una decisione dell'utente, e ha una
-scadenza reale — restano venti giorni dal 2026-09-10. Le due strade:
+**DECISA IL 2026-09-10.** L'utente ha risposto che l'approvvigionamento
+entro il 30 settembre non è praticabile e che **un componente a fine vita
+non entra in un progetto nuovo**. Il last-time buy è quindi **scartato**, e
+la strada è la **sostituzione**. Registrata in **ADR-016**, che ne ricava
+anche la regola generale — requisito **T8**.
 
-1. **Last-time buy** entro il 2026-09-30 via `sales@thatcorp.com`, con una
-   quantità che copra prototipi e ricambi, e una ADR che registri che il
-   progetto dipende da uno stock finito e non riacquistabile;
-2. **Riprogettare lo specchio** su una coppia PNP appaiata ancora in
-   produzione. ADR-013 nomina già questa alternativa nel proprio testo
-   («lo specchio si fa meglio con PNP appaiati o con l'array THAT320»),
-   quindi non è una strada nuova. Comporta rifare il punto di lavoro dello
-   stadio d'ingresso e le cifre di rumore.
+Nota che ADR-013 non è stata riaperta e non doveva esserlo: **il THAT320
+non era oggetto di una decisione.** ADR-013 lo nomina una volta sola, di
+passaggio, dentro la discussione di un'alternativa scartata; è entrato
+nella topologia come scelta implementativa in `gain_block.py` che citava
+quella parentesi. Una parte entrata così **non ha mai avuto
+un'istruttoria**, ed è il motivo per cui il suo stato di ciclo di vita non
+era stato controllato da nessuno.
 
-In entrambi i casi serve una ADR nuova: ADR-013 non si riscrive.
+**Cosa serve ora per chiuderla.** Scegliere e verificare una coppia PNP
+appaiata — o un'altra forma di specchio — che soddisfi **T7 e T8
+insieme**: in produzione e con un modello SPICE del costruttore. Poi
+rifare punto di lavoro e cifre di rumore dello stadio d'ingresso, perché
+il THAT320 portava appaiamento monolitico e rbb = 25 Ω. Lotto **L22**.
 
 ### NC-016 — Il footprint del THAT320 nel codice è a 8 pin, ma la parte esiste solo a 14
 
@@ -770,24 +790,55 @@ conferma: «14 Pin PDIP» e «14 Pin SOP».
 `circuits/preamp/gain_block.py:303-304` assegna a entrambi i dispositivi
 dello specchio `FP_SOIC8 = "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"`.
 
-**Cosa serve per chiuderla.** Dipende da come si chiude NC-015: se il
-THAT320 resta, sostituire il footprint con quello a 14 pin corrispondente
-alla variante scelta e dare un simbolo con il pinout letto dalla Figura 2
-del datasheet — che **L8 non ha letto**, perché non era nel mandato. Due
+**Cosa serve per chiuderla — chiarito il 2026-09-10.** NC-015 è stata
+decisa: **il THAT320 esce dal progetto** (ADR-016). Quindi questa voce
+**non si chiude correggendo il footprint del THAT320**: si chiude quando
+la parte sostitutiva è scelta e porta con sé il proprio footprint e il
+proprio simbolo, col pinout letto dal datasheet di *quella* parte.
+
+Resta però un residuo reale, e per questo la voce non si chiude da sola:
+finché `gain_block.py:303-304` dichiara `SOIC-8` per un dispositivo a 14
+pin, **il codice contiene un footprint che non corrisponde a nessuna parte
+esistente**, e chiunque generasse un PCB oggi lo piazzerebbe. Va corretto
+insieme alla sostituzione, non dopo. Due
 vincoli che il layout dovrà rispettare comunque, entrambi dal datasheet:
 l'appaiamento è specificato **a coppie** (`|VBE1−VBE2|` e `|VBE3−VBE4|`),
 quindi lo specchio usa 1&2 oppure 3&4 e mai uno per coppia; e «the
 substrate should be ac-grounded», mentre la topologia attuale non collega
 alcun pin di substrato.
 
-### NC-017 — Nessun modello SPICE del costruttore per 2N5401 e 2N5551: NC-004 non può chiudersi
+### NC-017 — Sei dispositivi attivi su sette non hanno un modello SPICE del costruttore
 
 | | |
 |---|---|
-| Requisito | **E5 / V4** via **NC-004** · ADR-013 (la regola di provenienza dei modelli) |
-| Severità | **maggiore** |
+| Requisito | **T7** (ADR-016) · **E5 / V4** via **NC-004** · ADR-013 (la regola di provenienza dei modelli) |
+| Severità | **bloccante** — alzata il 2026-09-10 |
 | Aperta da | `reports/2026-09-10-L8-parti-nuove.md` |
-| Stato | aperta |
+| Stato | aperta — **estesa il 2026-09-10** da 2N5401/2N5551 a **tutti** i dispositivi attivi |
+
+**AGGIORNATA IL 2026-09-10, e la voce ha cambiato dimensione.** Nasceva
+come «mancano i modelli di due parti». Con **ADR-016** l'utente ha posto la
+regola generale — **T7: ogni dispositivo attivo del percorso di segnale ha
+un modello SPICE del costruttore** — e la voce ora misura la distanza da
+quel requisito, non da una preferenza. Per questo la severità sale a
+**bloccante**: la tabella di severità qui sopra dice che un requisito non
+soddisfatto, o senza evidenza per dire se lo sia, è bloccante.
+
+Lo stato dei sette dispositivi attivi, da L8 e dalla Fase 1:
+
+| Dispositivo | Modello vendor | Sotto T7 |
+|---|---|---|
+| LSK489 | **sì** — PDF vendor, trascritto in L6, validato in L7 | **conforme** |
+| THAT320 | sì, nativo — ma la parte è fine vita | **fuori per T8**, vedi NC-015 |
+| 2N5551 | **no**, in nessuna forma | **non conforme** → sostituire |
+| 2N5401 | **no**, in nessuna forma | **non conforme** → sostituire |
+| MJE15032 | **non confermato** (Fase 1: «pagina models esiste, file finale non confermato») | **da verificare** |
+| MJE15033 | **non confermato**, idem | **da verificare** |
+| 1N4148 | mai verificato | **da verificare** |
+
+Uno solo su sette è conforme oggi. I due MJE sono i **dispositivi
+d'uscita**: se cadono, la sostituzione non è un cambio di package, è una
+**modifica di topologia** dello stadio d'uscita.
 
 **Evidenza.** Le due parti sono usate **cinque volte** nel blocco di
 guadagno: il 2N5401 è il VAS (`gain_block.py:316`), il 2N5551 è pozzo di
@@ -821,14 +872,31 @@ beta** sono state dismesse: il datasheet Rev. 7 elenca come DISCONTINUED
 **50…250**, il che riguarda la coerenza di beta nella coppia di cascode e
 nei generatori di corrente.
 
-**Cosa serve per chiuderla.** Procurare i modelli vendor delle due parti —
-per via che regga la regola di provenienza: una sessione browser sulle
-pagine modelli di onsemi o Central Semiconductor, oppure una richiesta al
-costruttore — congelarli in `vendor/` con hash e URL, e poi promuoverli in
-`models/` col controllo incrociato contro il datasheet, come L6+L7 hanno
-fatto per l'LSK489. Se per una delle due non esiste alcun modello del
-costruttore, la scelta fra tenere un modello generico dichiarato tale e
-cambiare parte è dell'utente.
+**Cosa serve per chiuderla — riscritto il 2026-09-10 dopo ADR-016.** Non è
+più «procurare due modelli»: è portare **tutti** i dispositivi attivi a
+soddisfare T7.
+
+1. **Verificare** MJE15032, MJE15033 e 1N4148: esiste un modello del
+   costruttore, e in quale forma? È il passo che decide quanto è grande il
+   resto del lavoro, perché i due MJE stanno nello stadio d'uscita.
+2. **Sostituire** 2N5401 e 2N5551 — e i MJE, se il modello manca — con
+   parti che soddisfino **T7 e T8 insieme**: in produzione, e con un
+   modello del costruttore. La sostituzione del 2N5401 tocca il VAS, che
+   con il Miller da 470 pF fissa il polo dominante di tutto
+   l'amplificatore: le cifre di margine di fase andranno rifatte.
+3. **Congelare** ogni modello in `vendor/` con hash e URL, e poi
+   **promuoverlo in `models/`** col controllo incrociato contro il
+   datasheet, come L6+L7 hanno fatto per l'LSK489.
+
+**Un mirror di terze parti non chiude questa voce.** ADR-016 lo scarta
+esplicitamente: la provenienza è ciò che si verifica, e accettare un
+mirror qui svuoterebbe la procedura di ADR-013.
+
+Se per una funzione necessaria non esistesse **alcuna** parte in
+produzione con modello del costruttore, si applica la clausola «Da
+riaprire se» di ADR-016: o si rilassa T7 per quella funzione **con la
+lacuna dichiarata accanto a ogni numero che ne dipende**, o si cambia
+topologia per non aver bisogno di quel dispositivo.
 
 ## Voci chiuse
 
