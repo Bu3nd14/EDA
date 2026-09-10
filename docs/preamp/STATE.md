@@ -6,7 +6,24 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-10** (**L26 chiuso**: tre requisiti nuovi
+Ultimo aggiornamento: **2026-09-10** (**L25 chiuso**: i cinque modelli
+congelati da L24 sono in `models/`, ognuno con la propria `.provenance.json` e
+una ricetta che lo **rimisura** alle condizioni del suo datasheet — libreria
+da 28 a **38 check**, tutti verdi, e i lucchetti **provati a fallire** sei
+volte su sei. Il testo `.MODEL` promosso è **byte per byte** quello del
+costruttore: nessuno dei cinque portava `mfg=`, quindi zero rimozioni.
+**Tutti e sette i dispositivi attivi hanno ora un modello del costruttore in
+`models/`** — prima volta da G0 — e di **NC-017** resta il solo passo di
+Fase 4, la sostituzione in `circuits/preamp/`, quindi la voce **resta
+bloccante**. Rimisurando sono cadute **due cifre di L24**: la f_T del MMBT5401
+era presa a I_C = 12,68 mA invece dei 10 mA del datasheet (169,5 →
+**160,1 MHz**, verdetto invariato), e le f_T dei due MJE erano lette come
+attraversamento a guadagno unitario invece che come la **Nota 2** del
+datasheet le definisce (`fT = hfe · ftest`, ftest = 1 MHz) — e letta così
+**nessuno dei due raggiunge il proprio minimo di 30 MHz**: 27,667 e
+29,286 MHz → **NC-025**. Più **NC-024**, l'h_FE del MJE15032 sotto il proprio
+minimo, che L24 aveva misurato ma mai messo a registro. **22 voci, 7
+bloccanti.** Prossimo lotto **L21**. — Prima: **L26**: tre requisiti nuovi
 dell'utente, registrati in **ADR-019**. **1)** il **margine di fase minimo è
 60°**, e vale su **ogni** combinazione della matrice V1 — blocco A compreso,
 caso peggiore capacitivo da 4,7 nF compreso. Chiude **NC-012**, che quella
@@ -19,9 +36,8 @@ tre forme proposte che un banco possa provare a fallire → **NC-023**, che va
 con **L16**. **3)** i guadagni diventano **tre — 0 / +3 / +10 dB** — con
 **riposo a 0 dB**, così nessun guasto di bobina alza il guadagno; il principio
 di ADR-004 (si commuta R_g, mai R_f) si conserva → **NC-022**, lotto **L27**,
-che deve estendere anche i dodici deck da due modalità a tre. **20 voci, 7
-bloccanti.** Nessuna riga di topologia scritta: questo lotto registra e apre
-lavoro. Prossimo lotto **L25**, che i requisiti nuovi non invalidano. —
+che deve estendere anche i dodici deck da due modalità a tre. Nessuna riga di
+topologia scritta: quel lotto registrava e apriva lavoro. —
 Prima: **L22 + L23** avevano sostituito il THAT320 fine-vita con un **Linear
 Systems LS352**, dual PNP monolitico in SOIC-8 (**ADR-018**), portando la
 degenerazione da 47 a **220 Ω** e lasciando lo stadio d'ingresso **25,7% più
@@ -123,7 +139,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L22 | **Lo specchio d'ingresso senza THAT320.** Trovare e verificare una coppia PNP appaiata che soddisfi **T7 e T8 insieme**, poi rifare punto di lavoro e rumore dello stadio d'ingresso. La decisione *se* sostituire è presa (ADR-016): resta *con cosa* | M | **NC-015** (bloccante) | **fatto** |
 | L23 | **Package e simbolo della parte che sostituisce il THAT320**, col pinout letto dal suo datasheet. Va fatto **insieme a L22**, non dopo: il footprint arriva con la parte. Copre anche il residuo `SOIC-8` che oggi non corrisponde a nessuna parte esistente | S | NC-016 | **fatto** |
 | L24 | **T7 su tutti i dispositivi attivi.** Prima **verificare** MJE15032/33 e 1N4148 — è il passo che dice quanto è grande il resto — poi trovare i sostituti di 2N5401/2N5551, congelarli e promuoverli in `models/` col controllo incrociato di L6+L7 | M | **NC-017** (bloccante), **NC-004** | **fatto** |
-| L25 | **Promuovere in `models/` i cinque modelli congelati in L24** (MMBT5401, MMBT5551, MJE15032, MJE15033, 1N4148), ognuno con la sua `.provenance.json` e una ricetta di regressione in `validate_models.py` sul modello di `tb_lsk489()`. Il controllo incrociato contro i datasheet **è già fatto** in L24: qui si tratta di bloccarne i numeri | S/M | **NC-017** (bloccante) | da fare |
+| L25 | **Promuovere in `models/` i cinque modelli congelati in L24** (MMBT5401, MMBT5551, MJE15032, MJE15033, 1N4148), ognuno con la sua `.provenance.json` e una ricetta di regressione in `validate_models.py` sul modello di `tb_lsk489()`. Il controllo incrociato contro i datasheet **è già fatto** in L24: qui si tratta di bloccarne i numeri | S/M | **NC-017** (1° dei 3 passi), apre **NC-024** e **NC-025** | **fatto** |
 | L26 | **I tre requisiti nuovi dell'utente diventano ADR-019**: margine di fase minimo **60° ovunque**, trim abilitato dal mute con **interlock elettrico**, guadagni **0 / +3 / +10 dB** con riposo a 0 dB | XS/S | **NC-012** (chiude), apre NC-021…NC-023 | **fatto** |
 | L27 | **Il terzo livello di guadagno entra nel progetto.** Dimensionare il secondo ramo commutato verso massa (ADR-004 conservata: si commuta R_g, mai R_f; a relè diseccitati **0 dB**), decidere relè e poli col budget di corrente delle bobine, estendere i dodici deck da due modalità a tre e l'asserzione del diagramma a blocchi | M | **NC-022** | da fare |
 
@@ -1332,6 +1348,122 @@ scelto i relè. E **non ha toccato il dossier**, che pubblica ancora 56,945°
 come caso peggiore — un numero della topologia col THAT320. Il dossier si
 rigenera **una volta**, dopo la Fase 4.
 
+## L25 — I cinque modelli entrano in `models/`. FATTO.
+
+Report: `reports/2026-09-10-L25-promozione-modelli.md`. Chiude il **primo dei
+tre passi di NC-017** (bloccante) e apre **NC-024** e **NC-025** (maggiori).
+
+**1. La libreria passa da 28 a 38 check, e i lucchetti sono stati provati a
+fallire.** MMBT5401, MMBT5551, MJE15032, MJE15033 e 1N4148 sono in `models/`
+con la propria `.provenance.json`; cinque ricette nuove in
+`validate_models.py` li **rimisurano** alle condizioni dei rispettivi
+datasheet. 38 PASS, 0 FAIL, 0 SKIP; `run_tests.sh` 5/5.
+
+La prova che conta non è il verde: è il **rosso ottenuto apposta**. Sei
+falsificazioni su copie di scratch — `TF` +1,5%, `CJC` +3,3%, `BF` +1,3%,
+`TF` +1,4%, `CJO` +2,5% e `BF` +23% — danno **sei FAIL su sei**, ognuno col
+messaggio giusto. Un lucchetto mai fatto fallire non è un lucchetto.
+
+**2. Promozione a rimozioni zero, che è più stretto di L6 e L22.** L'LSK489 e
+l'LS350 erano trascrizioni a mano da PDF e avevano richiesto di togliere
+`mfg=`. **Nessuno di questi cinque contiene `mfg=`**: il testo `.MODEL` è
+byte per byte quello del costruttore, blocchi di commento e disclaimer di
+licenza compresi. Verificato con `diff` sulle righe non-commento, cinque
+file su cinque vuoto.
+
+**3. La trappola nuova, e ha morso dentro il lotto: il tool di editing
+normalizza CRLF → LF.** I cinque file vendor usano CRLF. Tre modifiche di
+*sola prosa* alle intestazioni hanno riscritto ogni file per intero e tolto il
+CR da **ogni riga del testo vendor**. ngspice non se ne accorge, `git diff`
+mostra righe che a occhio coincidono, e l'unica cosa che l'ha detto è stato il
+`diff` — `1,7c1,7` con sette righe apparentemente identiche.
+
+Rimedio: le intestazioni si modificano **fuori** dal file e l'artefatto si
+ricompone sempre con `cat intestazione vendor > modello`. Sta scritto in
+ognuna delle cinque intestazioni, perché il file ha davvero due convenzioni di
+fine riga dentro ed è deliberato. È la famiglia del `Reference value` di
+`fourier` (L3) e dei tag casuali di SKiDL (L3b) — un campo che si muove dentro
+un artefatto per il resto deterministico — con la differenza che qui **non è
+il generatore a non essere riproducibile, è lo strumento con cui lo si edita**.
+
+**4. L'armatura ha imparato a leggere più di un file per modello.** f_T, C_obo
+e C_T sono grandezze in alternata, h_FE e V_F in continua, e `wrdata` scrive
+un plot per volta. Un builder può ora restituire una **lista** di output; le
+quattordici ricette vecchie non sono state toccate e il conteggio resta di un
+check elettrico per modello. Più una correzione indipendente: **gli output si
+cancellano prima di lanciare ngspice**, altrimenti un deck che non scrive un
+file lascia in piedi quello della run precedente — un verde per una run che
+non è avvenuta.
+
+E una guardia che nessuna ricetta precedente aveva: **la polarizzazione della
+f_T si autoverifica**. La corrente di base è fissa, quindi smette di produrre
+la corrente di collettore giusta appena un parametro cambia; ogni ricetta
+scrive perciò la I_C che l'`op` produce davvero e **rifiuta** se non è quella
+del datasheet. Non è cerimonia — è esattamente ciò che è andato storto in L24.
+
+**5. Due cifre di L24 non riproducono, e la causa è il metodo.** Delle sedici
+cifre rimisurate, undici tornano; quattro f_T no, e un «non raggiunto» si
+raggiunge.
+
+**La f_T del MMBT5401 era presa alla corrente sbagliata.** L24 e ADR-017 danno
+169,5 MHz; con I_C **verificata** a 10,000 mA la risposta è **160,1 MHz** su
+tre gambe concordi. Il numero di L24 si riproduce *esattamente* pilotando una
+corrente di base tonda di 100 µA — che questo modello trasforma in I_C =
+12,68 mA, il **27% sopra** la corrente del datasheet. Verdetto invariato
+(minimo 100 MHz), numero spostato del 5,5% — ed è il numero su cui poggia la
+discussione del polo dominante, perché il MMBT5401 è il VAS.
+
+**6. La f_T dei due MJE cambia verdetto, non decimale → NC-025.** La **Nota 2**
+del datasheet MJE15032/D dice `fT = hfe · ftest` e la riga di prova dà
+**ftest = 1,0 MHz**: la f_T garantita è il prodotto guadagno-banda misurato a
+1 MHz, non l'attraversamento a |hfe| = 1. A 1 MHz questi dispositivi stanno
+solo ~2,6 ottave sopra il proprio polo di beta, quindi le due letture non
+coincidono:
+
+| | a ftest = 1 MHz (il datasheet) | attraversamento \|hfe\| = 1 |
+|---|---|---|
+| MJE15032 | **27,667 MHz** — 7,8% sotto i 30 min | 30,713 MHz — dentro |
+| MJE15033 | **29,286 MHz** — 2,4% sotto i 30 min | 30,719 MHz — dentro |
+
+Letta come il costruttore la definisce, **nessuno dei due raggiunge il proprio
+minimo**. L24 aveva registrato 31,04 e 31,38 MHz e li aveva letti come dentro.
+Direzione **pessimistica** — il modello è più lento della parte garantita —
+quindi le cifre in alta frequenza sono conservative, ma di quantità non nota.
+Da leggere insieme a NC-020: **tre dispositivi su sette** portano ora un
+modello più lento del proprio minimo pubblicato.
+
+Le due correzioni insieme dicono una cosa sola: **le condizioni di prova sono
+metà del numero, e la definizione della grandezza è l'altra metà.**
+
+**7. NC-024 — l'h_FE del MJE15032, che era misurato ma non a registro.**
+66,389 a I_C = 0,5 A contro un minimo di 70, fuori del 5,1%. È di L24, e
+riprodotto qui alla terza cifra; quello che mancava era la **voce nel
+registro**, cioè il posto in cui una discrepanza genera lavoro invece di
+restare in una ADR. NC-013 e NC-020 sono la stessa forma e ce l'hanno.
+
+Con la voce va una correzione: l'h_FE a **2,0 A**, che L24 dichiarava «non
+raggiunto», si raggiunge — era l'estensione del suo sweep di base, non una
+proprietà del modello, che spazzato fino a V_b = 1,6 V arriva a I_C = 6,8 A in
+modo liscio. Vale **53,488** contro un minimo di 10: dentro.
+
+**8. NC-004 non si muove, e il perché è ora esatto.** Nessuno dei cinque ha
+`KF`/`AF` — i due MJE lo scrivono esplicitamente (`KF=0 AF=1`), gli altri tre
+non li nominano. **Nel repo solo `models/jfet/lsk489.lib` ha rumore 1/f**,
+cioè sei modelli vendor su sette non ce l'hanno.
+
+**9. Il punto raggiunto, e non è lusinghiero.** Tutti e sette i dispositivi
+attivi del percorso di segnale hanno ora un modello del costruttore in
+`models/` — prima volta da G0. Ma su sette modelli, **quattro portano una
+deviazione dal proprio datasheet** (LSK489/NC-013, LS352/NC-020,
+MJE15032/NC-024 e NC-025, MJE15033/NC-025) e i tre puliti sono MMBT5401,
+MMBT5551 e 1N4148. Le deviazioni vanno tutte nella direzione sicura, di
+quantità non nota.
+
+**10. Cosa il lotto non ha toccato, verificato sul diff.** Niente
+`circuits/`, niente `spice/preamp/`, niente `docs/preamp/data/`; nessun file
+di `vendor/` modificato. La sostituzione in topologia è **Fase 4**, ed è
+l'unico passo che tiene aperta NC-017.
+
 ## Il dossier: prima bozza consegnata in L5b
 
 **Il dossier non è negoziabile, e non si taglia per arrivare prima a G1.**
@@ -1723,45 +1855,52 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L25 — promuovere in `models/` i cinque modelli che L24 ha congelato.**
+**L21 — il polo 2 del relè Omron, corretto e riverificato.**
 
-MMBT5401, MMBT5551, MJE15032, MJE15033, 1N4148: ognuno con la propria
-`.provenance.json` e una **ricetta di regressione** in
-`scripts/validate_models.py`.
+Chiude **NC-014**, che è **bloccante**, ed è la voce più economica del
+registro: una riga di `circuits/preamp/preamp_audio.py`, la rigenerazione, e
+una verifica che va fatta **sulla netlist** e non sul sorgente.
 
-**Perché adesso.** È l'unico lotto che resta di NC-017 (bloccante), e il
-lavoro è di *esecuzione* e non di *scoperta*: il controllo incrociato contro
-i datasheet **è già fatto** in L24, con sei verifiche su sei dentro le
-finestre per i due Diodes e il caso noto del MJE15032 sotto il proprio minimo
-di h_FE (66,4 contro 70). Qui si tratta di **bloccarne i numeri**, così che
-una modifica silenziosa di un modello faccia diventare rossa la suite invece
-di passare inosservata.
+**Il difetto, da L8.** Il datasheet del G6K dà **polo 1: COM 3, NC 2, NO 4** e
+**polo 2: COM 6, NC 7, NO 5**. La riga 79 di `preamp_audio.py` dichiara
+`K_NO2="7", K_NC2="5"`: **scambiati**. Il polo 1 è corretto.
 
-**Il precedente è a due passi**, e vale la pena copiarlo invece di
-reinventarlo: `tb_lsk489()` (L7) e **`tb_ls350()` (L22)**, che è il più
-recente e il più simile — stesso device class per due dei cinque.
+La trappola è che le due lame pendono dalla stessa parte del package ma la
+riga alta è numerata 8-7-6-5 e quella bassa 1-2-3-4, quindi la regola
+implicita «NO = COM+1» è giusta per un polo e sbagliata per l'altro.
 
-**Tre cose che L22 consegna a L25**, tutte verificate qui:
+**Perché è bloccante, e non è una svista cosmetica.** Il polo 2 serve il
+**canale destro**. A bobina diseccitata — cioè **all'accensione** — quel
+canale **non viene messo a massa** e il transitorio passa: è esattamente il
+guasto silenzioso contro cui ADR-012 è stata scritta, col ramo cuffie che
+finisce in un paio di elettrostatiche. (A bobina eccitata il canale destro
+sarebbe invece cortocircuitato — rumoroso, e lo si troverebbe al primo
+collaudo. È il caso *fortunato*.)
 
-1. **La ricetta deve interpolare come fa `meas`, non leggere il campione che
-   attraversa la soglia.** In L22 la differenza valeva lo 0,7% sull'h_FE, cioè
-   il passo dello sweep, e avrebbe fatto fallire il controllo per la ragione
-   sbagliata. È annotato dentro `tb_ls350()`.
-2. **Le condizioni sono quelle del datasheet, `set temp = 25`**, non i 27 °C
-   di ngspice — e con `XTB` nel modello la differenza si vede su ogni h_FE.
-3. **Uno SKIP fa uscire `validate_models.py` con 1**, quindi aggiungere un
-   file a `models/` senza la sua ricetta rende rossa la suite: i cinque
-   modelli e le cinque ricette vanno nello stesso lotto.
+**Cosa fare**, ed è tutto:
 
-**Attenzione al conteggio dei check.** Erano 26, L22 li ha portati a **28**
-(provenienza + elettrico dell'LS350). Cinque modelli nuovi ne aggiungono
-dieci: la documentazione che cita «26/26» va aggiornata dove compare.
+1. riga 79 in `K_NO2="5", K_NC2="7"`, cioè NO 5 e NC 7 come il datasheet;
+2. rigenerare gli artefatti col venv SKiDL, ricordando che **un `.net` non è
+   riproducibile byte a byte** (L3b): il confronto è quello normalizzato,
+   tolti `(date`, `SKiDL Tag`, `SKiDL Line` e `(tstamps`;
+3. **verificare sulla netlist**, non sul sorgente: il contatto verso massa di
+   ogni mute deve cadere su **2 e 7** e il ramo di `R_g` su **4 e 5**. È la
+   forma di verifica che L22 ha collaudato ricavando la mappa dei riferimenti
+   **confrontando i nodi** invece di dedurla;
+4. `check_schematic.py` deve continuare a passare — in L22 ha rifiutato alla
+   prima esecuzione con 15 discordanze, e ha fatto il suo mestiere.
 
-**Poi**, nell'ordine: **L21** (il polo 2 del relè, quasi gratis, chiude una
-bloccante), **L10 + il resto del simbolo LSK489** — che ora costa molto meno,
-perché `library/preamp.kicad_sym` esiste, il meccanismo multi-unit è
-collaudato e `spice_dev(..., suffix=)` è già lì — e il resto della tabella.
+**Attenzione a una cosa che L25 ha imparato e che qui vale doppio**: il tool
+di editing **normalizza le fini riga**. Non tocca `.py` e `.net`, che sono già
+LF, ma se il lotto dovesse toccare un file con CRLF, l'artefatto va ricomposto
+con `cat` e non modificato sul posto.
 
+**Poi**, nell'ordine: **L10 + il resto del simbolo LSK489** — che ora costa
+molto meno, perché `library/preamp.kicad_sym` esiste, il meccanismo multi-unit
+è collaudato e `spice_dev(..., suffix=)` è già lì — e il resto della tabella.
+Le due bloccanti che restano dopo L21 sono **L11** (mute) e **L17** (buffer
+sulle uscite fisse), più **L12**, che ADR-019 ha trasformato da misura in
+**rimedio**.
 
 ### Cosa cercare, e cosa NON accettare
 

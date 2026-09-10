@@ -12,7 +12,12 @@ ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
 registrato i **tre requisiti nuovi dell'utente** (**ADR-019**), che
 **chiudono NC-012** dandole la soglia che chiedeva e **aprono NC-021…NC-023**.
 La soglia di margine di fase a **60° ovunque** rende **NC-002 decidibile**, e
-il verdetto è **negativo**: quella voce sale a **bloccante**. **20 voci
+il verdetto è **negativo**: quella voce sale a **bloccante**. **L25** ha
+promosso i cinque modelli in `models/` — primo dei tre passi di **NC-017**,
+che resta bloccante per la sola sostituzione in Fase 4 — e rimisurandoli alle
+condizioni dei loro datasheet ha aperto **NC-024** e **NC-025**: il MJE15032
+manca il proprio minimo di h_FE, ed **entrambi** i MJE mancano il proprio
+minimo di f_T quando la si legge come il datasheet la definisce. **22 voci
 aperte, 7 bloccanti.** L'accesso a G1 non è concesso finché NC-001, NC-002,
 NC-004, NC-010, NC-014, NC-017 e NC-021 restano aperte)
 
@@ -932,17 +937,34 @@ dare il soft 404: quella metà della conclusione di L8 tiene.
 soddisfatto *nel repo* finché `models/` non porta i modelli e la topologia
 non li usa. La distanza da percorrere però è ora nota e limitata.
 
-**Cosa serve per chiuderla — riscritto il 2026-09-10 dopo L24.**
+**AGGIORNATA IL 2026-09-10 da L25 — il primo dei tre passi è fatto.** Report:
+`reports/2026-09-10-L25-promozione-modelli.md`. I cinque modelli sono in
+`models/`, ognuno con la propria `.provenance.json` (il cui hash del sorgente
+vendor `validate_models.py --check-provenance` **ri-calcola** a ogni run) e
+una ricetta di regressione che lo rimisura alle condizioni del suo datasheet.
+La libreria passa da **28 a 38 check**, tutti verdi.
 
-1. **Promuovere** i cinque modelli congelati in `models/`, ognuno con la
-   propria `.provenance.json` e una ricetta di regressione in
-   `scripts/validate_models.py` sul modello di `tb_lsk489()`. Il controllo
-   incrociato contro i datasheet **è già fatto** e sta nelle
-   `PROVENANCE.json` e nel report di L24.
+**Ora tutti e sette i dispositivi attivi hanno un modello del costruttore in
+`models/`.** È la prima volta da G0, e vale la pena dirlo per intero: T7 è
+soddisfatto sul piano dei modelli. Non lo è ancora sul piano della topologia,
+che è la ragione per cui questa voce resta bloccante.
+
+**Cosa serve per chiuderla — riscritto il 2026-09-10 dopo L25.**
+
+1. ~~**Promuovere** i cinque modelli congelati in `models/`~~ — **FATTO in
+   L25.** Il testo `.MODEL` promosso è **byte per byte** quello del
+   costruttore (nessuno dei cinque portava `mfg=`, quindi non c'è stata
+   nemmeno la rimozione che LSK489 e LS350 avevano richiesto), e la proprietà
+   è verificata con `diff` e non dichiarata. La promozione ha però aperto
+   **NC-024** e **NC-025**: rimisurando alle condizioni dei datasheet, il
+   MJE15032 manca il proprio minimo di h_FE e **entrambi** i MJE mancano il
+   proprio minimo di f_T quando la si legge come il datasheet la definisce.
 2. **Sostituire** in `circuits/preamp/` (Fase 4), rigenerare gli artefatti
    e rifare le misure. ADR-017 dichiara di quanto ci si muove: i
    segnaposto sono 1,9× e 3,6× **veloci** sulla f_T al punto di lavoro.
-3. **L22** per il THAT320, l'unico dispositivo ancora senza risposta.
+   **È l'unico passo rimasto**, ed è ciò che tiene aperta questa voce.
+3. ~~**L22** per il THAT320~~ — **FATTO**, chiusa come NC-015 con l'LS352
+   (ADR-018).
 
 **Il testo che segue è la formulazione precedente**, di ADR-016, tenuta
 perché è ciò che il lotto ha eseguito:
@@ -1189,6 +1211,125 @@ polo 2 dello stesso relè.
 E va verificato **sulla netlist**, come L21 farà per NC-014: applicare il
 comando del trim a mute rilasciato e provare che non succede nulla. Un
 interlock che non è stato provato a fallire non è un interlock.
+
+### NC-024 — L'h_FE del modello MJE15032 sta sotto il minimo del suo datasheet
+
+| | |
+|---|---|
+| Requisito | **T7** (ADR-016) · **ADR-017** · la disciplina di controllo incrociato di **ADR-013** |
+| Severità | **maggiore** |
+| Aperta da | `reports/2026-09-10-L25-promozione-modelli.md` |
+| Stato | aperta |
+
+**Evidenza.** Modello vendor `models/bjt_npn/mje15032.lib`, misurato alle
+condizioni del proprio datasheet (MJE15032/D, dicembre 2024 Rev. 7),
+ngspice 47, `set temp = 25`:
+
+| Grandezza | Misurata | Finestra | Esito |
+|---|---|---|---|
+| h_FE @ I_C = 0,5 A, V_CE = 5 V | **66,389** | **70 min** | **FUORI**, 5,1% sotto |
+| h_FE @ I_C = 1,0 A | 61,335 | 50 min | dentro |
+| h_FE @ I_C = 2,0 A | 53,488 | 10 min | dentro |
+
+**Non è un errore di trascrizione, perché non si è trascritto niente**: il
+file è byte per byte come il costruttore lo serve — proprietà verificata con
+`diff` fra le righe non-commento del file promosso e dell'originale
+congelato. È **il modello del costruttore che non rispetta il minimo del
+datasheet dello stesso costruttore**, esattamente la forma di **NC-013**
+sull'LSK489 e di **NC-020** sull'LS352.
+
+**Perché è aperta ora e non in L24.** Il numero è di L24, che lo aveva
+misurato e registrato in ADR-017 e nel proprio report — ma non nel registro.
+Il registro è il posto in cui una discrepanza genera lavoro invece di restare
+sepolta in una ADR, e le altre due voci della stessa famiglia ci sono. L25 la
+apre promuovendo il modello, e la **blocca**: `tb_mje15032()` in
+`validate_models.py` asserisce 66,389 *dichiarandolo sotto il minimo*, senza
+proclamare una conformità che non c'è.
+
+**Direzione dell'errore**, che è ciò che decide se è sicura: il modello ha
+**meno guadagno** della parte garantita, quindi le cifre di corrente di
+pilotaggio e di carico visto dal driver che ne escono sono **pessimistiche**.
+È la direzione sicura — ma non è «conservativa di una quantità nota», e il
+modello non descrive una parte conforme.
+
+**Una correzione a L24 che va con questa voce**: l'h_FE a 2,0 A, che L24
+dichiarava «non raggiunto», si raggiunge. Era l'estensione del suo sweep di
+base, non una proprietà del modello, che spazzato fino a V_b = 1,6 V arriva a
+I_C = 6,8 A in modo liscio e monotòno. A 2,0 A vale 53,5 contro un minimo di
+10: **dentro**.
+
+**Cosa serve per chiuderla.** La stessa cosa che serve a NC-013: quantificare
+in **Fase 4** quanto il progetto dipenda dall'h_FE dei dispositivi d'uscita a
+questa corrente, sapendo che il punto di lavoro reale è **14,71 mA** —
+34 volte sotto il punto specificato più basso — dove il datasheet non dice
+nulla e il modello dice 75,73. Oppure accettare lo scarto con una ADR che ne
+dichiari l'effetto.
+
+### NC-025 — La f_T di entrambi i modelli MJE sta sotto il minimo del datasheet, letta come il datasheet la definisce
+
+| | |
+|---|---|
+| Requisito | **T7** (ADR-016) · **ADR-017** · la disciplina di controllo incrociato di **ADR-013** |
+| Severità | **maggiore** |
+| Aperta da | `reports/2026-09-10-L25-promozione-modelli.md` |
+| Stato | aperta |
+
+**Evidenza.** `models/bjt_npn/mje15032.lib` e `models/bjt_pnp/mje15033.lib`,
+alle condizioni del datasheet MJE15032/D — I_C = 500 mA, |V_CE| = 10 V,
+25 °C — con la corrente di collettore **verificata** dall'`op`
+(`5,000000e-01` e `−5,00000e-01`):
+
+| Modello | f_T misurata | Minimo | Esito |
+|---|---|---|---|
+| MJE15032 (NPN) | **27,667 MHz** | 30 MHz | **FUORI**, 7,8% sotto |
+| MJE15033 (PNP) | **29,286 MHz** | 30 MHz | **FUORI**, 2,4% sotto |
+
+**La voce nasce da una definizione, non da una misura nuova, ed è la parte
+che conta.** La **Nota 2** del datasheet dice `fT = hfe · ftest` e la riga di
+prova dà **ftest = 1,0 MHz**: la f_T che il costruttore garantisce è il
+**prodotto guadagno-banda misurato a 1 MHz**, non l'attraversamento a
+|hfe| = 1. A 1 MHz questi dispositivi stanno solo ~2,6 ottave sopra il proprio
+polo di beta, quindi la lettura a 1 MHz è **materialmente più bassa**
+dell'asintoto — e lo è anche sulla parte vera, che è precisamente perché il
+costruttore specifica la frequenza di prova.
+
+Le due letture, sullo stesso modello e allo stesso punto di lavoro:
+
+| | a ftest = 1 MHz (definizione del datasheet) | attraversamento \|hfe\| = 1 |
+|---|---|---|
+| MJE15032 | **27,667 MHz** — fuori | 30,713 MHz — dentro |
+| MJE15033 | **29,286 MHz** — fuori | 30,719 MHz — dentro |
+
+**Il confronto che vuol dire qualcosa è quello fatto come il datasheet lo
+definisce**, perché è contro quella prova che il minimo di 30 MHz è scritto.
+Fatto così, **nessuno dei due modelli raggiunge il minimo del proprio
+costruttore**.
+
+**Cosa questo corregge.** L24 aveva registrato **31,04** e **31,38 MHz** e
+li aveva letti come dentro. La differenza non è un disaccordo sul modello: è
+il metodo. È la stessa famiglia dell'altra correzione di L25 — la f_T del
+MMBT5401, dove L24 aveva misurato a una **corrente** diversa da quella del
+datasheet — e insieme dicono una cosa sola: **le condizioni di prova sono
+metà del numero, e la definizione della grandezza è l'altra metà.**
+
+**Direzione dell'errore**: il modello è **più lento** della parte garantita,
+quindi margine di fase e guadagno d'anello calcolati con esso sono
+**pessimistici**. Direzione sicura, quantità non nota — la stessa forma di
+NC-020 sull'LS352, e da leggere insieme a essa, perché **tre dispositivi su
+sette** del percorso di segnale portano ora un modello più lento del proprio
+minimo pubblicato.
+
+**Perché non è bloccante.** Non manca l'evidenza e non è violato un requisito
+di prodotto: T7 chiede un modello del costruttore e il modello c'è. È lo
+scarto fra modello e datasheet a essere registrato, e il suo effetto va
+quantificato dove conta.
+
+**Cosa serve per chiuderla.** Rifare in **Fase 4** margine di fase e guadagno
+d'anello dello stadio d'uscita con questi modelli e dichiarare, accanto a ogni
+cifra in alta frequenza, che poggia su dispositivi che il modello descrive
+**più lenti** del garantito. Se il polo dominante si sposta abbastanza da
+mettere in discussione il Miller da 470 pF, ADR-017 prevede già che il valore
+di compensazione si ridecida con una ADR propria.
 
 ## Voci chiuse
 
