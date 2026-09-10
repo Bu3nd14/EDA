@@ -1,0 +1,77 @@
+{
+  "part_name": "MJE15032 (NPN complementary silicon plastic power transistor, TO-220, 250 V / 8.0 A / 50 W)",
+  "vendor_name": "onsemi (Semiconductor Components Industries, LLC)",
+  "device_class": "bjt_npn",
+  "product_page": "https://www.onsemi.com/products/discrete-power-modules/audio-transistors/mje15032",
+  "date_obtained": "2026-09-10",
+  "lotto": "L24",
+  "obtained_by": "AI agent (Claude Opus 5, session https://claude.ai/code/session_01EQyqDiEXRu19EcvTFHYMW7) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from onsemi's own host, not from a distributor and not from a mirror. Byte-for-byte as served.",
+  "license_notes": "Manufacturer datasheet and manufacturer-distributed SPICE model, redistributed here unmodified for engineering traceability only. Copyright of the datasheet remains Semiconductor Components Industries, LLC; the model file carries its own Symmetry Design Systems copyright notice, reproduced unaltered.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "MJE15032 is the NPN half of the complementary Class A emitter follower that forms the output stage of the gain block (circuits/preamp/gain_block.py:367, FP_TO220). ADR-016 requirement T7 demands a manufacturer SPICE model for every active device in the signal path, and T8 demands the part not be end-of-life. Fase 1 had recorded only 'models page exists, final file not confirmed' - an inherited hypothesis, not a datum. L24 settled it at the source.",
+  "files": [
+    {
+      "original_filename": "mje15032.lib",
+      "role": "spice_model",
+      "url": "https://www.onsemi.com/download/models/lib/mje15032.lib",
+      "served_content_type": "application/octet-stream",
+      "bytes": 978,
+      "sha256": "9b18bc38828c9f8d7f53af75e1f9d4009640d767bb9b3ba17dfa761f6660152d",
+      "local_filename": "mje15032.lib",
+      "renamed": false
+    },
+    {
+      "original_filename": "mje15032-d.pdf",
+      "role": "datasheet",
+      "url": "https://www.onsemi.com/download/data-sheet/pdf/mje15032-d.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 294007,
+      "pages": 7,
+      "sha256": "85f7b36ebb750cf3c7b3012c6d4e401b7f9ab4e1456291a1cdf81df4e66e6372",
+      "local_filename": "mje15032-d.pdf",
+      "renamed": false,
+      "covers_both_parts": "This ONE document is the datasheet for BOTH MJE15032 (NPN) and MJE15033 (PNP) - its title line is 'MJE15032 (NPN), MJE15033 (PNP)' and its ordering table lists MJE15032G and MJE15033G together. It is frozen once, here, because its own publication order number is MJE15032/D. vendor/bjt_pnp/onsemi/MJE15033/PROVENANCE.json points at this path rather than duplicating the bytes."
+    }
+  ],
+  "how_the_model_url_was_found": "This is the part L8 could not do, and the reason it failed is recorded in docs/limitations.md #18: onsemi's per-part models page (design/resources/design-resources/models?rpn=...) renders its document list with JavaScript, and every guessed path under /pub/Collateral/ or /download/models/spice/ answers HTTP 200 with a 303722-byte HTML error page. L24 found the real pattern from a search result that exposed a working example (2n7002), then probed it: 'https://www.onsemi.com/download/models/lib/<lowercase part>.lib'. The ONLY honest test on this host is the byte count and Content-Type - a real model comes back application/octet-stream. The pattern with the '(spice model)' suffix seen on some parts does NOT work for this one; the bare name does.",
+  "revision_note": "Read from the DOCUMENT FOOTER, not the filename (the L7 lesson): 'December, 2024 - Rev. 7', publication order number MJE15032/D. The document has no REVISION HISTORY section - unlike the frozen 2N5551 datasheet, which does - so what changed at Rev. 7 is not stated. Falsifiable with: /opt/homebrew/bin/pdftotext -layout mje15032-d.pdf - | grep -i 'Rev. 7'",
+  "limits_read_with_their_conditions": {
+    "V_CEO_sus": "250 V MINIMUM at IC = 10 mA, IB = 0, from the ELECTRICAL CHARACTERISTICS table - not from Absolute Maximum Ratings, which happens to give the same 250 V as a stress threshold. Against +/-15 V rails this is 8.3x the 30 V rail-to-rail worst case; it is not a design constraint.",
+    "hFE": "70 min at IC = 0.5 A, VCE = 5.0 V; 50 min at IC = 1.0 A; 10 min at IC = 2.0 A. NOTE THE CURRENTS. The design runs this device at 14.71 mA (gain_block.py:434), which is 34x BELOW the datasheet's lowest specified point. The datasheet specifies NOTHING at the operating point of this circuit.",
+    "fT": "30 MHz MINIMUM at IC = 500 mAdc, VCE = 10 Vdc, ftest = 1.0 MHz (Note 2: fT = hfe x ftest). Same trap as hFE and the same trap already recorded for the 2N5551: specified at 500 mA, operated at 14.71 mA.",
+    "P_D": "50 W at TC = 25 C, derate 0.40 W/C. The design dissipates 214 mW per output device (gain_block.py:434) - deliberately oversized, per the comment at gain_block.py:357.",
+    "R_theta_JC": "2.5 C/W maximum."
+  },
+  "lifecycle": {
+    "status": "ACTIVE for the Pb-free OPN; OBSOLETE for the leaded one. Read the table, not the headline - and read it from the MANUFACTURER, which is what T8 requires.",
+    "verbatim_from_manufacturer": "onsemi's own product page embeds a JSON-LD offers/itemProductList block. Read verbatim from it on 2026-09-10: MJE15032 -> itemCondition 'Obsolete', availability 'unavailable', price 0.0; MJE15032G -> itemCondition 'Active', availability 'available', price 0.6.",
+    "consequence_for_this_project": "circuits/preamp/gain_block.py:367 currently names the part 'MJE15032', which is precisely the OPN onsemi marks Obsolete. The orderable device is MJE15032G. This is a string change in Fase 4, not a topology change, but under T8 it is a real finding: the BOM as written today names a discontinued part number.",
+    "cross_check_that_makes_the_reading_falsifiable": "The datasheet's ORDERING INFORMATION lists ONLY MJE15032G and MJE15033G, both TO-220 (Pb-Free), 50 Units/Rail, and contains ZERO occurrences of the string 'DISCONTINUED'. That absence is meaningful because onsemi's convention for marking a dead OPN is known from a document already frozen in this repo: vendor/bjt_npn/onsemi/2N5551/2n5551t-d.pdf carries a page-1 banner ('Some of the devices on this data sheet have been DISCONTINUED') plus a 'DISCONTINUED (Note 6)' block in its ordering table. The MJE datasheet has neither.",
+    "source": "https://www.onsemi.com/products/discrete-power-modules/audio-transistors/mje15032 (JSON-LD), plus the frozen datasheet's own ORDERING INFORMATION table."
+  },
+  "spice_model": {
+    "status": "FOUND, served by the manufacturer, and PROVEN to load and run in ngspice.",
+    "model_name": "Qmje15032",
+    "model_count_in_file": 1,
+    "authorship_declared_in_the_file": "The file's own header says 'Model Generated by MODPEX / Copyright(c) Symmetry Design Systems / Modeling services provided by Interface Technologies www.i-t.com', and 'Model generated on Feb 1, 2004 / Model format: PSpice'. So the model was authored by a modelling contractor, not by onsemi's own silicon team. It is nevertheless VENDOR PROVENANCE under ADR-016, whose rule is that what gets frozen is what the MANUFACTURER served, with its URL and its hash - and onsemi serves this file from its own host as the model for this part. Recording the contractor authorship is not a caveat that weakens the provenance; it is part of what the provenance IS.",
+    "no_flicker_noise": "KF=0 and AF=1. This model has NO 1/f noise, exactly like the THAT320 vendor models (docs/limitations.md #17) and like spice/preamp/placeholder_devices.lib. Any noise figure that leans on this device is a floor without flicker, and that must be written next to the number rather than left implicit. Relevant to NC-004.",
+    "ngspice_verification": "ngspice 47, exit 0, zero warnings, 'Doing analysis at TEMP = 25.000000'. Two measurements were made AT THE DATASHEET'S OWN CONDITIONS (25 C, not ngspice's default 27 C - the L6 lesson): (1) hFE from a DC sweep of IB at VCE = 5.0 V; (2) fT from an AC sweep with the collector AC-shorted by its DC source, fT taken as the frequency where |Ic/Ib| = 1."
+  },
+  "datasheet_cross_check_L24": {
+    "method": "The L6+L7 procedure applied to this part: measure the vendor model at the vendor datasheet's own test conditions and compare against the vendor's own published window. Decks and raw output are described in docs/preamp/reports/2026-09-10-L24-t7-dispositivi-attivi.md.",
+    "hFE_at_IC_0.5A_VCE_5V_25C": "MEASURED 66.4 against a datasheet MINIMUM of 70. OUTSIDE, by 5.1%.",
+    "hFE_at_IC_1.0A_VCE_5V_25C": "MEASURED 61.3 against a datasheet minimum of 50. Inside.",
+    "hFE_at_IC_2.0A": "NOT MEASURED - the model does not reach 2.0 A within the swept base current (IC tops out at 1.193 A at IB = 20 mA). Declared, not filled in.",
+    "hFE_at_the_design_point_15mA": "MEASURED 75.7 at IC = 15 mA, VCE = 5.0 V. The datasheet specifies nothing here, so this is a model reading with no published window to check it against.",
+    "fT_at_IC_500mA_VCE_10V_25C": "MEASURED 31.04 MHz against a datasheet MINIMUM of 30 MHz. Inside, with 3.5% of margin.",
+    "fT_at_the_design_point_15mA": "MEASURED 11.24 MHz - 2.8x lower than at the datasheet's test current. The placeholder NMJE15032 used TF = 5.3 ns, i.e. the 30 MHz figure, and its own header already admitted this was 'OPTIMISTIC for the actual operating point'. L24 puts a number on it: the placeholder is about 2.8x fast where the circuit actually runs.",
+    "verdict": "MIXED, and the mixed half is the manufacturer's own model failing the manufacturer's own datasheet minimum for hFE at 0.5 A. This is the same shape of finding as NC-013 on the LSK489 and it is NOT a transcription error: nothing here was transcribed, the file is byte-for-byte as served. Direction of the error: the model is PESSIMISTIC on gain relative to a conforming device, which is the safer direction, but it means the model does not represent a part that meets its own spec."
+  },
+  "what_was_NOT_verified": {
+    "stock_quantities": "Not read, for any distributor. Same outcome as L8 and declared for the same reason: DigiKey does not serve quantities to a non-browser client. onsemi's own page gives a price ($0.6 for MJE15032G) and 'available', and that is the manufacturer datum T8 asks for; it is not a stock figure.",
+    "hFE_at_2A": "See above - outside the swept range.",
+    "the_model_against_the_datasheet_capacitances": "The datasheet publishes no Cob/Cib table for this part, so there is nothing to check the model's CJC = 300 pF against."
+  }
+}

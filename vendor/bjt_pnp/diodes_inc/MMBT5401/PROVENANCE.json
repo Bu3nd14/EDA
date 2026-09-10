@@ -1,0 +1,90 @@
+{
+  "part_name": "MMBT5401 (high-voltage PNP small-signal transistor, SOT-23) - the 2N5401 die in a surface-mount package",
+  "vendor_name": "Diodes Incorporated",
+  "device_class": "bjt_pnp",
+  "product_page": "https://www.diodes.com/part/view/MMBT5401 (returns HTTP 403 to automated clients; the manufacturer evidence used here is the datasheet, which the same host serves normally)",
+  "date_obtained": "2026-09-10",
+  "lotto": "L24",
+  "obtained_by": "AI agent (Claude Opus 5, session https://claude.ai/code/session_01EQyqDiEXRu19EcvTFHYMW7) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from Diodes Incorporated's own host (www.diodes.com), not from a distributor and not from a GitHub mirror. Byte-for-byte as served.",
+  "license_notes": "Manufacturer datasheet and manufacturer-published SPICE model, redistributed here unmodified for engineering traceability only. Copyright remains Diodes Incorporated. The model file carries the vendor's own AS-IS warranty disclaimer, reproduced unaltered.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "This is the T7/T8-compliant answer for the VAS transistor (circuits/preamp/gain_block.py:316), which the topology currently instantiates as a 2N5401 with a hand-written placeholder. It is NOT a different device: MMBT5401 is the same 2N5401 die that the design was built around, in SOT-23 instead of TO-92. Keeping the die keeps every dynamic assumption the topology rests on - the VAS with its 470 pF Miller capacitor sets the dominant pole of the whole amplifier, so substituting a genuinely different transistor there would move a figure the design is built on. See ADR-017.",
+  "files": [
+    {
+      "original_filename": "MMBT5401.spice.txt",
+      "role": "spice_model",
+      "url": "https://www.diodes.com/spice/download/2587/MMBT5401.spice.txt",
+      "served_content_type": "text/plain; name=\"MMBT5401.spice.txt\"",
+      "bytes": 1609,
+      "sha256": "6c56762cb7a91a530c9d9cf92160b1a6e774c34d79c3016249bba2e2e6b080d5",
+      "local_filename": "MMBT5401.spice.txt",
+      "renamed": false
+    },
+    {
+      "original_filename": "MMBT5401.pdf",
+      "role": "datasheet",
+      "url": "https://www.diodes.com/assets/Datasheets/MMBT5401.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 395677,
+      "pages": 7,
+      "sha256": "1515e425149f78c5e350f8c09aa98ab5ed6b1745420c8f7ef40811d783f71ab2",
+      "local_filename": "MMBT5401.pdf",
+      "renamed": false
+    }
+  ],
+  "how_this_was_found_after_L8_concluded_it_did_not_exist": {
+    "what_L8_recorded": "NC-017 and reports/2026-09-10-L8-parti-nuove.md concluded that no manufacturer SPICE model for the 2N5401/2N5551 dies was reachable: onsemi's model page is JavaScript-only, Central Semiconductor's index likewise, and 'Diodes Incorporated returns HTTP 403 to automated requests'.",
+    "what_was_wrong_with_it": "The 403 is real but it is scoped to the HTML pages under /design/ and /part/. The model FILES sit on a different path that answers a plain curl with 200 text/plain: https://www.diodes.com/spice/download/<id>/<PART>.spice.txt. L8's conclusion was correct about the routes it tried and wrong as a general statement, which is exactly why L24 re-verified an inherited finding instead of building on it.",
+    "the_ONsemi_route_was_also_re_tried_and_still_fails": "https://www.onsemi.com/download/models/lib/2n5401.lib - the URL pattern that DID produce models for MJE15032, MJE15033 and the 1N4148 in this same lotto - answers with the 303722-byte soft 404 for both 2n5401 and 2n5551. So L8's finding holds for onsemi even against a pattern L8 never tried.",
+    "third_party_mirrors": "Copies of 2N5401 models circulate on GitHub and were NOT used. ADR-016 discards them explicitly: what gets frozen is what the MANUFACTURER served, with its URL and hash."
+  },
+  "revision_note": "Read from the DOCUMENT FOOTER, not the filename: 'Document number: DS30057 Rev. 12 - 2', (c) 2024 Copyright Diodes Incorporated. Falsifiable with: /opt/homebrew/bin/pdftotext -layout MMBT5401.pdf - | grep -i 'DS30057'",
+  "limits_read_with_their_conditions": {
+    "BV_CEO": "-150 V MINIMUM at IC = -1 mA, IB = 0, from the ELECTRICAL CHARACTERISTICS table. Note this is LOWER than the -160 V that onsemi's 2N5401 datasheet gives for the same type number - two second sources of one industry part do not carry identical windows, and the design must stand on the one it names. Against +/-15 V rails, -150 V is still 5x the 30 V rail-to-rail worst case.",
+    "V_CBO_absolute_max": "-160 V. This is an Absolute Maximum Rating, i.e. a stress threshold, NOT a guaranteed characteristic - the distinction L8 had to make on the THAT320.",
+    "hFE": "60 to 240 at IC = -10 mA, VCE = -5 V.",
+    "fT": "100 MHz MINIMUM, 300 MHz typical.",
+    "C_obo": "6 pF MAXIMUM at VCB = -10 V, f = 1 MHz, IE = 0.",
+    "I_C_absolute_max": "-600 mA.",
+    "P_D": "310 mW on the minimum recommended pad layout, 1 oz copper, single-sided FR-4, still air (Note 5); 350 mW on the larger layout (Note 6). THIS IS THE NUMBER THE PACKAGE CHANGE TURNS ON - see the package block below.",
+    "package": "SOT-23."
+  },
+  "power_dissipation_against_the_design_s_own_operating_point": {
+    "the_design_point": "circuits/preamp/gain_block.py:434 records, from tb_op.cir: 'VAS (2N5401) 6.443 mA, Vce 13.4 V'. That is 86.3 mW.",
+    "margin": "86.3 mW against 310 mW on the minimum recommended pad = 3.6x. Comfortable, but worth stating plainly that the TO-92 it replaces is rated 625 mW, so the headroom drops by about half.",
+    "the_other_five_instances": "The NPN instances (MMBT5551) are the tail sink at 4.406 mA, the two cascodes at ~2.17 mA and Vce ~4.5 V (about 10 mW each), the VAS load sink at 6.443 mA, and the Vbe multiplier. The worst of them is the VAS load sink at roughly 87 mW, the same order as the VAS. No instance approaches the SOT-23 limit.",
+    "not_estimated": "These currents come from the repo's own tb_op.cir results recorded in the source, not from a hand calculation."
+  },
+  "lifecycle": {
+    "status": "ACTIVE - by the manufacturer's own datasheet, which carries no discontinuation marking.",
+    "how_it_was_read": "Diodes' product pages answer 403 to both curl and WebFetch, so the JSON-LD route used for the onsemi parts is not available. The manufacturer statement used instead is the datasheet itself: DS30057 Rev. 12-2, (c) 2024, with NO 'OBSOLETE', 'DISCONTINUED' or 'NRND' text anywhere in it.",
+    "the_control_that_makes_that_absence_meaningful": "Diodes DOES stamp its datasheets when a part is dead. Verified in this lotto on a known-discontinued part from the same vendor: https://www.diodes.com/datasheet/download/1N5401.pdf contains 'PART OBSOLETE' and two occurrences of 'OBSOLETE - PART DISCONTINUED'. So the absence of that stamp on a 2024-revision document is evidence, not just silence.",
+    "honest_limit": "This is weaker evidence than an explicit 'Active' status string. It is recorded as such rather than upgraded."
+  },
+  "spice_model": {
+    "status": "FOUND, published by the manufacturer, and PROVEN to load and run in ngspice.",
+    "model_name": "MMBT5401",
+    "model_count_in_file": 1,
+    "declared_metadata": "*DIODES_INC_SPICE_MODEL / *ORIGIN=DZSL_DPG_GM / *SIMULATOR=PSPICE / *DATE=08FEB2011 / *VERSION=2",
+    "two_copies_were_compared_deliberately": "Diodes serves this model twice: standalone at /spice/download/2587/MMBT5401.spice.txt, and inside the collection file 'Transistors > 100V.spice.txt' (65810 bytes) - where it appears TWICE, at two places in the file. All three copies are IDENTICAL, same DATE and VERSION. This check was made on purpose because docs/limitations.md #17 records a vendor (THAT) shipping two DIFFERENT models of one part with a 71% noise difference. Here there is no such divergence, and that is a verified result rather than an assumption.",
+    "a_neighbouring_model_that_is_NOT_this_one": "The same collection file also carries '.MODEL 5401', with identical parameters, under the header 'Diodes MMDT5451 Spice Model v1.1 Last Revised 30/10/25'. That is the same die as it appears inside the MMDT5451 DUAL transistor, not a standalone part. Naming it here so nobody later mistakes it for a second model of this device.",
+    "no_flicker_noise": "No KF or AF in the model, so NO 1/f noise - the same gap as the THAT320 vendor models, the MJE models and the hand-written placeholders. Only the LSK489 in this repo has flicker. Any noise figure that leans on this device is a floor without flicker and must say so. Relevant to NC-004.",
+    "pspice_quasi_saturation_parameters_were_the_risk_and_they_are_accepted": "The model carries QUASIMOD=1, RCO=14, GAMMA=1.5E-8 - PSpice quasi-saturation parameters. ngspice 47 accepted the file with ZERO warnings, which is the meaningful comparison: on models/jfet/lsk489.lib ngspice emits four 'unrecognized parameter ... ignored' warnings, so it does complain when it does not know a parameter. Silence here means every parameter was recognised."
+  },
+  "datasheet_cross_check_L24": {
+    "method": "The L6+L7 procedure: measure the vendor model at the vendor datasheet's own test conditions, 25 C (not ngspice's default 27 C), and compare against the vendor's own published window.",
+    "hFE_at_IC_-10mA_VCE_-5V_25C": "MEASURED 124.9 against the datasheet window 60..240. INSIDE.",
+    "fT_at_IC_-10mA_VCE_-10V_25C": "MEASURED 169.5 MHz against 100 MHz minimum / 300 MHz typical. INSIDE - above the guaranteed minimum, below typical.",
+    "C_obo_at_VCB_-10V_1MHz_25C": "MEASURED 3.706 pF against a datasheet MAXIMUM of 6 pF. INSIDE.",
+    "verdict": "CONFORMING on all three published limits. No mixed verdict - unlike the LSK489 (NC-013) and unlike MJE15032, both of which fall outside one of their own vendor's windows.",
+    "fT_at_the_VAS_s_actual_current": "MEASURED 137.0 MHz at IC = 6 mA, VCE = 10 V - 19% below the value at the datasheet's 10 mA test current. Only the current was changed from the datasheet condition, so the difference isolates the current dependence. This is the trap the repo already recorded for the 2N5551 and it is now quantified for the part that actually sets the dominant pole.",
+    "against_the_placeholder_it_replaces": "spice/preamp/placeholder_devices.lib PSS2N5401 has TF = 0.6 ns (about 265 MHz) and CJC = 6 pF. Measured reality at the VAS operating point: 137 MHz and 3.71 pF. So the placeholder is roughly 1.9x FAST on transit frequency and 1.6x HIGH on collector capacitance - two errors in OPPOSING directions on the Miller pole. That is precisely the 'not conservative in a known direction' problem ADR-016 cites for NC-002 and NC-012, and it is now measured rather than argued."
+  },
+  "what_was_NOT_verified": {
+    "product_page_status_string": "Diodes answers 403 to automated clients on /part/view/. Declared; the datasheet was used instead.",
+    "stock_quantities": "Not read, for any distributor. Same as L8.",
+    "a_TO-92_version_from_this_vendor": "Diodes offers this die in SOT-23 (MMBT), SOT-323 (MMST), SOT-89 (DXT), SOT-223 (DZT) and as a dual (MMDT) - all surface mount. No TO-92 version was found. This is the reason the package changes; see ADR-017."
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "part_name": "MJE15033 (PNP complementary silicon plastic power transistor, TO-220, 250 V / 8.0 A / 50 W)",
+  "vendor_name": "onsemi (Semiconductor Components Industries, LLC)",
+  "device_class": "bjt_pnp",
+  "product_page": "NONE. onsemi has no product page for this part - see the lifecycle block below. This is a declared gap, not an omission.",
+  "date_obtained": "2026-09-10",
+  "lotto": "L24",
+  "obtained_by": "AI agent (Claude Opus 5, session https://claude.ai/code/session_01EQyqDiEXRu19EcvTFHYMW7) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from onsemi's own host, not from a distributor and not from a mirror. Byte-for-byte as served.",
+  "license_notes": "Manufacturer-distributed SPICE model, redistributed here unmodified for engineering traceability only. The file carries its own Symmetry Design Systems copyright notice, reproduced unaltered.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "MJE15033 is the PNP half of the complementary Class A emitter follower that forms the output stage of the gain block (circuits/preamp/gain_block.py:368, FP_TO220). Same T7/T8 mandate as its NPN complement.",
+  "files": [
+    {
+      "original_filename": "mje15033.lib",
+      "role": "spice_model",
+      "url": "https://www.onsemi.com/download/models/lib/mje15033.lib",
+      "served_content_type": "application/octet-stream",
+      "bytes": 976,
+      "sha256": "0b17869b05c7a4d004753960c4d4eecb21501f674ec80ceb72bc52935491d56c",
+      "local_filename": "mje15033.lib",
+      "renamed": false
+    }
+  ],
+  "datasheet_is_frozen_elsewhere": {
+    "path": "vendor/bjt_npn/onsemi/MJE15032/mje15032-d.pdf",
+    "sha256": "85f7b36ebb750cf3c7b3012c6d4e401b7f9ab4e1456291a1cdf81df4e66e6372",
+    "url": "https://www.onsemi.com/download/data-sheet/pdf/mje15032-d.pdf",
+    "why": "onsemi publishes ONE datasheet for the complementary pair: its title line is 'MJE15032 (NPN), MJE15033 (PNP)' and its ordering table lists MJE15032G and MJE15033G together. December 2024 - Rev. 7, publication order number MJE15032/D. It is frozen once, under the part whose number the document bears, rather than as two byte-identical copies. There is no separate MJE15033 datasheet: https://www.onsemi.com/download/data-sheet/pdf/mje15033-d.pdf answers with the 303722-byte soft 404 (docs/limitations.md #18)."
+  },
+  "limits_read_with_their_conditions": {
+    "note": "Identical table to the NPN, since it is the same document. See vendor/bjt_npn/onsemi/MJE15032/PROVENANCE.json. The conditions that matter here are the same two traps: hFE is specified at 0.5/1.0/2.0 A and fT at 500 mA, while the design runs this device at 14.71 mA."
+  },
+  "lifecycle": {
+    "status": "NOT CONFIRMED BY A PRODUCT PAGE. Orderable according to the manufacturer's own current datasheet. This gap is DECLARED rather than filled in.",
+    "what_was_tried_and_failed": "onsemi has no product page for MJE15033. https://www.onsemi.com/products/discrete-power-modules/audio-transistors/mje15033 redirects to the category page (final URL '.../audio-transistors', 4238073 bytes); the slug with the G suffix and the bipolar-transistors category slug both redirect to category pages too; https://www.onsemi.com/api/search/products?q=MJE15033 answers 502; and https://www.onsemi.com/search/site/MJE15033 returns the homepage, not a result list. So the JSON-LD itemProductList reading that settled MJE15032 cannot be repeated here.",
+    "the_absence_is_specific_and_was_measured": "The audio-transistors category page lists 49 parts by slug, including mje15028, mje15029, mje15030, mje15031, mje15032, mje15034 and mje15035 - but NOT mje15033. PNP siblings (15031, 15035) ARE listed, so the gap is not 'onsemi omits PNPs'.",
+    "evidence_that_it_is_nevertheless_orderable": "Two independent manufacturer sources. (1) The current datasheet, December 2024 - Rev. 7, lists MJE15033G in ORDERING INFORMATION as TO-220 (Pb-Free), 50 Units/Rail, and the document contains ZERO occurrences of 'DISCONTINUED'; onsemi's convention for marking a dead OPN is known from the frozen 2N5551 datasheet, which carries both a page-1 banner and a 'DISCONTINUED (Note 6)' block. (2) The MJE15032 product page's own parametric comparison query names 'MJE15033G' alongside MJE15032G, MJE15030G, MJE15031G and MJE15029G.",
+    "honest_reading": "A December-2024 datasheet that lists the OPN and does not mark it discontinued is strong evidence of an active part, and the vendor's marking convention makes the absence of a mark falsifiable. It is NOT the same class of evidence as the JSON-LD 'Active' that MJE15032G carries. The distinction is recorded because T8 says the lifecycle is read from the manufacturer, and here the manufacturer says it in a weaker way for this half of the pair than for the other."
+  },
+  "spice_model": {
+    "status": "FOUND, served by the manufacturer, and PROVEN to load and run in ngspice.",
+    "model_name": "Qmje15033",
+    "model_count_in_file": 1,
+    "authorship_declared_in_the_file": "Same MODPEX / Symmetry Design Systems / Interface Technologies header as the NPN, 'Model generated on Feb 1, 2004', 'Model format: PSpice'. Authored by a modelling contractor, distributed by the manufacturer - which is what ADR-016 freezes.",
+    "no_flicker_noise": "KF=0 and AF=1. No 1/f noise, same as its NPN complement. Relevant to NC-004.",
+    "ngspice_verification": "ngspice 47, exit 0, zero warnings, TEMP = 25."
+  },
+  "datasheet_cross_check_L24": {
+    "hFE_at_IC_0.5A_VCE_-5V_25C": "MEASURED 88.2 against a datasheet minimum of 70. Inside.",
+    "hFE_at_IC_1.0A_25C": "MEASURED 66.9 against a datasheet minimum of 50. Inside.",
+    "hFE_at_IC_2.0A_25C": "MEASURED 42.8 against a datasheet minimum of 10. Inside.",
+    "hFE_at_the_design_point_15mA": "MEASURED 129.3. No published window at this current.",
+    "fT_at_IC_500mA_VCE_-10V_25C": "MEASURED 31.38 MHz against a datasheet MINIMUM of 30 MHz. Inside.",
+    "fT_at_the_design_point_15mA": "MEASURED 12.58 MHz - 2.5x lower than at the datasheet's test current.",
+    "verdict": "CONFORMING at all three published hFE points and at the published fT point. Unlike its NPN complement, which falls 5.1% short of the hFE minimum at 0.5 A.",
+    "the_asymmetry_is_the_design_relevant_part": "At the design's own 15 mA the two models give hFE 75.7 (NPN) and 129.3 (PNP) - a 1.7x mismatch inside a COMPLEMENTARY emitter follower. Base-current demand therefore differs by 1.7x between the two halves, which the placeholder pair (BF = 100 for both) could not show because it was symmetric by construction. This belongs to Fase 4, not to this lotto."
+  },
+  "what_was_NOT_verified": {
+    "product_page_lifecycle": "See above - no product page exists. Declared.",
+    "stock_quantities": "Not read, for any distributor. Same as L8."
+  }
+}
