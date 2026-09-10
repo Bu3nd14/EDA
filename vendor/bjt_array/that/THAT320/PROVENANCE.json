@@ -1,0 +1,94 @@
+{
+  "part_name": "THAT320 (monolithic array of 4 matched PNP transistors; 300-series). Orderable as 320P14-U (DIP14) and 320S14-U (SO14).",
+  "vendor_name": "THAT Corporation",
+  "device_class": "bjt_array",
+  "product_page": "https://thatcorp.com/that-300-series-low-noise-matched-transistor-arrays/",
+  "date_obtained": "2026-09-10",
+  "lotto": "L8",
+  "obtained_by": "AI agent (Claude Opus 5, session https://claude.ai/code/session_018wouW3NREMhoiftCjfSCRS) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from THAT Corporation's own site (thatcorp.com), not from a distributor mirror. Every file is byte-for-byte as served except where 'renamed' says otherwise.",
+  "license_notes": "Manufacturer datasheet, manufacturer-published SPICE macromodel archive, and a manufacturer product-lifecycle memo, redistributed here unmodified for engineering traceability only. Copyright remains THAT Corporation. The macromodel file carries THAT's own licence text in its header, which grants verbatim redistribution provided the copyright notice and disclaimer are kept - they are, the file is unmodified.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "THAT_300-Series_Datasheet.pdf",
+      "role": "datasheet",
+      "url": "https://thatcorp.com/datashts/THAT_300-Series_Datasheet.pdf",
+      "served_content_type": "application/pdf",
+      "served_last_modified": "Tue, 27 Feb 2024 01:08:32 GMT",
+      "bytes": 107680,
+      "pages": 8,
+      "sha256": "721a07f1fccfca770224174f1c91e5b76f19fa6306dcf413d7960ec3733f4f5c",
+      "local_filename": "THAT_300-Series_Datasheet.pdf",
+      "renamed": false,
+      "refetched_same_day": "Requested twice on 2026-09-10; both responses hashed identically."
+    },
+    {
+      "original_filename": "THATMacroModels-Rev05.zip",
+      "role": "spice_model_archive",
+      "url": "https://thatcorp.com/wp-content/uploads/2020/11/THATMacroModels-Rev05.zip",
+      "served_content_type": "application/zip",
+      "bytes": 55641,
+      "sha256": "a5699cf253cbe2b063a03b2dd8cc2927fe1ab03903ed2f1bb9ae23a0e867733b",
+      "local_filename": "THATMacroModels-Rev05.zip",
+      "renamed": false,
+      "note": "This is the archive THAT's own Device Models page (https://thatcorp.com/device-models/) links as 'Download Macro Models'. It holds 26 files; only the 300-series one is relevant here. It is kept whole so the hash is of exactly what the server sent."
+    },
+    {
+      "original_filename": "300 Series_Macro_01.lib",
+      "role": "spice_model",
+      "url": "extracted from THATMacroModels-Rev05.zip (see above)",
+      "bytes": 5366,
+      "sha256": "399e1417f83cd95117b3b538e2c44bd507407f97f719d3eb593f1bc97ed71c32",
+      "local_filename": "300_Series_Macro_01.lib",
+      "renamed": true,
+      "rename_note": "The SPACE in the archive member's name was replaced with an underscore, because a SPICE .include cannot carry a bare space in a path. The FILE CONTENT is unmodified - the sha256 above is the hash of exactly what the archive contained. Same treatment, and same reason, as Copy_LSK489A_NJF.pdf in L6.",
+      "size_note": "5366 bytes matches exactly the file the Fase 1 report (2026-09-08) said it had downloaded and inspected, so that finding is confirmed rather than merely repeated."
+    },
+    {
+      "original_filename": "THAT-EOL-Memo.pdf",
+      "role": "lifecycle_notice",
+      "url": "https://thatcorp.com/wp-content/uploads/2026/09/THAT-EOL-Memo.pdf",
+      "served_content_type": "application/pdf",
+      "served_last_modified": "Sun, 06 Sep 2026 23:13:10 GMT",
+      "bytes": 98430,
+      "pages": 1,
+      "sha256": "1e777dd3ac23a44ee4cdb56f44d21958cc37b03e75678506c5153cc228473539",
+      "local_filename": "THAT-EOL-Memo.pdf",
+      "renamed": false,
+      "why_frozen": "THIS IS THE MOST IMPORTANT FILE IN THIS DIRECTORY. See end_of_life below."
+    }
+  ],
+  "revision_note": "Datasheet revision read from the DOCUMENT FOOTER, not the filename - the lesson L7 paid for. The footer of all 8 pages says 'Document 600041 Rev 04'. Falsifiable with:  /opt/homebrew/bin/pdftotext -layout THAT_300-Series_Datasheet.pdf - | grep -i 'Rev 0'",
+  "end_of_life": {
+    "status": "END OF LIFE, EFFECTIVE IMMEDIATELY",
+    "announced": "2026-09-01",
+    "found_on": "2026-09-10 (L8)",
+    "source": "THAT-EOL-Memo.pdf, frozen alongside this file. Memo from Les Tyler, President, THAT Corporation, dated September 1, 2026, subject 'End of Life for several THAT ICs'.",
+    "quoted": "'Effective immediately, the following products are on EOL status: ... 300-series transistor arrays'",
+    "reason_given": "The 300-series is made on THAT's own older Dielectric Isolation 4-inch wafer process, which the memo says has become too costly to maintain against declining demand.",
+    "last_time_buy": "The memo offers a last-time-buy window that CLOSES 2026-09-30, via sales@thatcorp.com. That is 20 days after this file was written.",
+    "why_it_matters_here": "ADR-013 put the THAT320 in the input current mirror partly because it had 'la provenienza SPICE piu pulita di tutto il giro'. That is still true - the model is native, machine-readable, and reproduces the datasheet's own noise figure to 2.4% (see spice_model_verification below). What changed is that the part is now discontinued, and the window to buy it closes in 20 days. The memo predates ADR-013 (2026-09-08) by a week, so this was already public when the topology was drafted and Fase 1 reported 'Stock esatto non verificato' - it was missed, not absent.",
+    "not_decided_here": "Whether to place a last-time buy or to respec the mirror is the user's decision, not this lotto's. ADR-013 already names the alternative in its own text ('lo specchio si fa meglio con PNP appaiati o con l'array THAT320'). Recorded as a non-conformity in docs/preamp/NONCOMPLIANCE.md."
+  },
+  "what_was_read_from_the_datasheet": {
+    "BVCEO_PNP": "Electrical Characteristics, page 4: min -36 V, typ -40 V, at the stated conditions IC = -10 uAdc, IB = 0. The Absolute Maximum Ratings table separately lists -36 V, but that is a stress rating, not a guaranteed characteristic - the two are different things and only the second is a limit you may design to. The Fase 2 hand-off asked for BVceo >= 35 V: 36 V CLEARS IT, by 1 V on the guaranteed minimum.",
+    "eN_PNP": "0.75 nV/rtHz typ at VCB = -10 V, IC = -1 mA, 1 kHz (page 4).",
+    "fT_PNP": "325 MHz typ at IC = -1 mA, VCB = -10 V.",
+    "COB_PNP": "3 pF typ at VCB = -10 V, IE = 0 mA, 100 kHz.",
+    "rbb_PNP": "25 ohm typ at VCB = -10 V, IC = -1 mA.",
+    "package": "14-PIN ONLY. Table 1 Ordering Information lists exactly two THAT320 variants: 320P14-U (DIP14) and 320S14-U (SO14). There is NO 8-pin variant. circuits/preamp/gain_block.py:303-304 assigns FP_SOIC8 (SOIC-8_3.9x4.9mm) to both THAT320 devices - that footprint is wrong. Recorded as a non-conformity; not fixed here, because circuits/ is Fase 4.",
+    "matching_is_pairwise": "The datasheet specifies matching for the THAT320 as |VBE1-VBE2| and |VBE3-VBE4|, i.e. the array is TWO matched pairs, not four mutually matched devices. The mirror must therefore use 1&2 or 3&4, never one from each pair. A placement rule for the layout.",
+    "substrate": "'Substrate biasing is not required for normal operation, though the substrate should be ac-grounded to optimize speed and minimize crosstalk.' The 14-pin package has a substrate pin; the current topology does not connect one."
+  },
+  "spice_model_verification": {
+    "bar": "The L8 bar for a SPICE model is 'ngspice loads it', not 'the link exists'.",
+    "result": "PASSES. ngspice 47 loads 300_Series_Macro_01.lib and runs a .op plus two .noise analyses, exit code 0, and - unlike the LSK489 in L6 - emits NO unrecognized-parameter warnings at all: QCO, RCO, VO, GAMMA, PTF, XTF, ITF and VTF are all accepted silently.",
+    "deck": "A scratch deck, kept out of the versioned tree, run through scripts/run_simulation.sh. Reproduced in docs/preamp/reports/2026-09-10-L8-parti-nuove.md.",
+    "bias": "The DATASHEET'S OWN noise test condition, not one chosen to match some other recipe: VCB = -10 V, IC = -1 mA, 1 kHz, and temperature forced to 25 C because ngspice defaults to 27 C. Achieved -10.0136 V and -986.4 uA.",
+    "TWO_MODELS_OF_THE_SAME_PART": "THAT ships QPNP_THAT_NS ('Noise performance optimized', RB = 25) and QPNP_THAT_HF ('High frequency performance optimized', RB = 103.345). They are otherwise IDENTICAL. Measured input-referred noise at 1 kHz: NS 0.768 nV/rtHz, HF 1.314 nV/rtHz - 71% apart. The datasheet's own typical is 0.75 nV/rtHz, so the NS model reproduces the published figure to 2.4% and the HF model does not. Consequence: a noise result and a stability result taken from the SAME model cannot both be right, and which model was used must be stated next to any number.",
+    "NO_FLICKER_NOISE": "Neither model carries KF or AF. Proved empirically rather than by grepping: the simulated input-referred noise spectrum is FLAT to the ninth significant figure from 100 Hz to 100 kHz (7.68279563e-10 at both 100 Hz and 1 kHz). So the remaining half of NC-004 will still have NO 1/f noise for the current mirror, which is where the placeholder analysis said the dominant noise contributors sit. Only the LSK489 model has Kf. This must be written next to the noise figures, not left implied.",
+    "against_the_placeholder": "spice/preamp/placeholder_devices.lib models PTHAT320 with RB = 40 (vendor NS says 25, 1.6x apart), CJC = 3P (vendor 3.375p, close) and TF = 1.5N declared as 'fT ~ 100 MHz' (vendor TF = 241.7 ps, datasheet fT typ 325 MHz - the placeholder is about 3x slow). The placeholder is therefore pessimistic on the mirror's pole, which matters for the phase-margin numbers of NC-002 and NC-012."
+  }
+}

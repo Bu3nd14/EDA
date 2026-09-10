@@ -1,0 +1,43 @@
+{
+  "part_name": "2N5401 (high-voltage PNP small-signal transistor, TO-92)",
+  "vendor_name": "onsemi (Semiconductor Components Industries, LLC)",
+  "device_class": "bjt_pnp",
+  "product_page": "https://www.onsemi.com/products/discrete-power-modules/general-purpose-transistors/2n5401",
+  "date_obtained": "2026-09-10",
+  "lotto": "L8",
+  "obtained_by": "AI agent (Claude Opus 5, session https://claude.ai/code/session_018wouW3NREMhoiftCjfSCRS) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from onsemi's own site, not from a distributor mirror. Byte-for-byte as served.",
+  "license_notes": "Manufacturer datasheet, redistributed here unmodified for engineering traceability only. Copyright remains Semiconductor Components Industries, LLC.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "2N5401 is the voltage-amplifier stage (VAS) of the gain block - circuits/preamp/gain_block.py:316, one per block, four per channel pair. It sets the dominant pole together with the 470 pF Miller capacitor, so its Cob and fT are load-bearing for every phase-margin number the project has. Never verified in Fase 1.",
+  "files": [
+    {
+      "original_filename": "2n5401-d.pdf",
+      "role": "datasheet",
+      "url": "https://www.onsemi.com/pdf/datasheet/2n5401-d.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 281224,
+      "pages": 7,
+      "sha256": "db64ccde8c1b1c7626a06605c20194834ab2b5fa721dbbd63b9813b469794622",
+      "local_filename": "2n5401-d.pdf",
+      "renamed": false,
+      "second_url_same_bytes": "The same document is also served at https://www.onsemi.com/pub/Collateral/2N5401-D.PDF. Both were fetched on 2026-09-10 and hashed IDENTICALLY, so the two paths are the same file and either may be cited."
+    }
+  ],
+  "revision_note": "Read from the DOCUMENT FOOTER, not the filename: '2N5401 Rev. 2.1', printed on every page. The document is in the Fairchild house style that onsemi inherited, unlike the 2N5551 sheet, which is in onsemi's own - worth knowing before comparing the two sheets' conventions. Falsifiable with:  /opt/homebrew/bin/pdftotext -layout 2n5401-d.pdf - | grep -i 'Rev. 2.1'",
+  "limits_read_with_their_conditions": {
+    "BV_CEO": "-150 V minimum, at IC = -1 mA, IB = 0. Not a constraint at +/-15 V.",
+    "fT": "100 MHz MINIMUM, 400 MHz TYPICAL, at IC = -10 mA, VCE = -10 V, f = 100 MHz. Note the 4:1 gap between minimum and typical, and note the test current of 10 mA: the VAS in this design runs at 6.443 mA (gain_block.py:434), below the test point.",
+    "Cob": "6 pF MAXIMUM, at VCB = -10 V, IE = 0, f = 1 MHz.",
+    "NF": "8 dB maximum, at IC = -250 uA, VCE = -5 V, RS = 1 kohm, f = 10 Hz to 15.7 kHz. A noise figure at 250 uA and 1 kohm source is not directly usable for this circuit's VAS operating point, but it is the only noise number the sheet gives."
+  },
+  "lifecycle": {
+    "status": "ACTIVE. No discontinued-variant table on this datasheet, unlike the 2N5551 sheet.",
+    "orderable_opns": ["2N5401YBU (TO-92 3L, bulk, 10000)", "2N5401YTA (TO-92 3L, ammo, 2000)"],
+    "note": "Both listed OPNs carry a 'Y', but the Top Mark for both is plainly '2N5401' and this sheet defines no hFE grade suffix - so unlike the 2N5551, the 'Y' here does not mark a graded part. Stated because assuming the two sheets share a convention would be wrong."
+  },
+  "spice_model": {
+    "status": "NOT FOUND in machine-readable form from the manufacturer. Same situation, and the same investigation, as the 2N5551 - see vendor/bjt_npn/onsemi/2N5551/PROVENANCE.json, whose spice_model section documents what was tried, why third-party mirrors were not used, and the onsemi soft-404 trap (HTTP 200 with a 303722-byte HTML page for any nonexistent path)."
+  }
+}

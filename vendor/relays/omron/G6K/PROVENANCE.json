@@ -1,0 +1,36 @@
+{
+  "part_name": "G6K-2F-Y (surface-mount signal relay, 2 poles, Form C / DPDT)",
+  "vendor_name": "OMRON Corporation, Electronic and Mechanical Components Company",
+  "device_class": "relay",
+  "product_page": "https://components.omron.com/us-en/products/relays/G6K",
+  "date_obtained": "2026-09-10",
+  "lotto": "L8",
+  "obtained_by": "AI agent (Claude Opus 5, session https://claude.ai/code/session_018wouW3NREMhoiftCjfSCRS) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from OMRON's own document host (omronfs.omron.com), not from a distributor mirror. The file is byte-for-byte as served; nothing was converted, re-saved or edited. components.omron.com/us-en/datasheet_pdf/G6K.pdf answers HTTP 403 to a non-browser request, the same way Mouser did in L7; omronfs.omron.com answers 200 and is OMRON's own host.",
+  "license_notes": "Manufacturer datasheet, redistributed here unmodified for engineering traceability only. Copyright remains OMRON Corporation.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "en-g6k.pdf",
+      "role": "datasheet",
+      "url": "https://omronfs.omron.com/en_US/ecb/products/pdf/en-g6k.pdf",
+      "served_content_type": "application/pdf",
+      "served_last_modified": "Thu, 01 Mar 2018 08:52:00 GMT",
+      "bytes": 1893025,
+      "pages": 10,
+      "sha256": "25d2046127b3ffa7e7a2047b7467c67587559e8e05111347260d5a892c0bec57",
+      "local_filename": "en-g6k.pdf",
+      "renamed": false,
+      "refetched_same_day": "The URL was requested twice on 2026-09-10 and both responses hashed identically, so the recorded sha256 is what the server actually serves and not a one-off."
+    }
+  ],
+  "revision_note": "THE REVISION IS READ FROM THE DOCUMENT, NOT FROM THE FILENAME - the lesson L7 paid for. This filename ('en-g6k.pdf') carries no revision at all, so the filename could not even have misled here; the document's own page footer says 'Cat. No. K106-E1-11' and its PDF Keywords field says 'K106-E1-11 0118(0207)(O)': catalogue K106, English, edition 1, revision 11, printed 01/2018. Falsifiable with:  /opt/homebrew/bin/pdftotext -layout en-g6k.pdf - | grep -i 'Cat. No.'  and  /opt/homebrew/bin/pdfinfo en-g6k.pdf | grep Keywords",
+  "why_this_file": "circuits/preamp/preamp_audio.py:70-76 declared in a comment that WHICH THROW IS NORMALLY OPEN was 'NOT yet confirmed against the Omron datasheet', and ADR-012 makes that a safety fact rather than a catalogue detail: the mute must short the outputs to ground with the coil DE-energised, and the gain relay must leave R_g floating with the coil de-energised. The KiCad symbol 'G6K-2' in Relay.kicad_sym carries EIGHT UNNAMED PINS, so its pin list cannot answer the question. This datasheet can: PDF page 6 (printed page 5), row 'G6K-2F-Y', block 'Terminal Arrangement/Internal Connections (TOP VIEW)'.",
+  "what_was_read": {
+    "page": "PDF page 6, printed page 5, row labelled G6K-2F-Y, TOP VIEW",
+    "result": "pole 1: COM = pin 3, NC = pin 2, NO = pin 4. pole 2: COM = pin 6, NC = pin 7, NO = pin 5. Both movable blades lean the SAME way (towards the lower-numbered-position neighbour on the drawing), they are NOT mirror images of each other - which is the trap, because in the top row the pin numbers run 8-7-6-5 left to right while in the bottom row they run 1-2-3-4.",
+    "note": "The internal-connection diagram is VECTOR GRAPHICS, not text: pdftotext recovers the pin numbers but not which line touches which. It was therefore read TWICE, independently - a raster reading at 2400 dpi and a mechanical reading of the vector coordinates via pdftocairo -svg - and the two agree. A third, fully independent leg comes from the KiCad symbol's own polylines. Full record: docs/preamp/reports/2026-09-10-L8-parti-nuove.md.",
+    "consequence": "The assignment hard-coded at circuits/preamp/preamp_audio.py:79 is INVERTED on pole 2. Opened as a non-conformity in docs/preamp/NONCOMPLIANCE.md. NOT fixed here: circuits/ is Fase 4, and L8 does not touch it."
+  }
+}

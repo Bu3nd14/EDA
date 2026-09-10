@@ -6,7 +6,7 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-09** (L7 chiuso: **il modello LSK489 è validato contro il datasheet**, e il verdetto è misto — I_DSS dentro la finestra, V_GS(off) **fuori di 0,376 V**, e non per un errore di trascrizione. Aperta **NC-013**. 13 non conformità aperte, 3 bloccanti — **l'accesso a G1 non è concesso**. Prossimo lotto **L8**, le parti nuove)
+Ultimo aggiornamento: **2026-09-10** (L8 chiuso: le quattro parti nuove sono verificate alla fonte, e **tre su quattro portano una sorpresa**. La più urgente: **il THAT320 è fine vita dal 2026-09-01 e il last-time buy chiude il 2026-09-30** — venti giorni. In più l'assegnazione **NO/NC del polo 2 del relè Omron nel codice è invertita**, e per 2N5401/2N5551 **non esiste un modello SPICE del costruttore raggiungibile**. Aperte **NC-014…NC-017**: 17 non conformità, **5 bloccanti** — l'accesso a G1 non è concesso. Prossimo lotto **L9**, la rosa dei componenti di segnale — ma vedi la nota sulla scadenza qui sotto)
 
 ---
 
@@ -76,8 +76,8 @@ manciata di file, **M** = riempie una sessione da solo.
 | L5e | La revisione umana del dossier diventa registro: 4 voci nuove | S | **fatto** |
 | L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | **fatto** |
 | L7 | LSK489: passo 4, il controllo incrociato | S | **fatto** |
-| L8 | Fase 3a — le parti nuove, fatti verificabili | M | **prossimo** |
-| L9 | Fase 3b — la rosa dei componenti di segnale | M | da fare |
+| L8 | Fase 3a — le parti nuove, fatti verificabili | M | **fatto** |
+| L9 | Fase 3b — la rosa dei componenti di segnale | M | **prossimo** |
 | L10 | Simbolo KiCad dell'LSK489 | S | da fare |
 
 **I lotti che le revisioni hanno generato.** È il meccanismo per cui una
@@ -99,6 +99,10 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L18 | **Il vincolo PSRR scritto dove verrà letto**: quanto ripple può lasciare l'alimentatore sul rail positivo, ricavato da E5 | XS/S | **NC-011** | da fare |
 | L19 | **La soglia di margine di fase in V1**, col carico di prova dichiarato accanto; poi i KPI del dossier riferiti a quella | XS | **NC-012** | da fare |
 | L20 | **Quanto il progetto dipende da I_DSS.** Rieseguire punto di lavoro e rumore del blocco di guadagno con `Vto` ai due estremi compatibili con la finestra A — il modello vendor com'è (2,59 mA) e un `Vto` che porti I_DSS al tipico (5,5 mA) — e scrivere in `REQUIREMENTS.md` o in una ADR quale dispersione il progetto tollera | S | **NC-013** | da fare |
+| L21 | **Il polo 2 del relè, corretto e riverificato.** Riga 79 di `preamp_audio.py` in `"6", "5", "7"`, rigenerazione, e verifica **sulla netlist** che il contatto verso massa di ogni mute cada su 2 e 7 e il ramo `R_g` su 4 e 5 | XS/S | **NC-014** (bloccante) | da fare |
+| L22 | **La decisione sul THAT320**, e la ADR che la registra: last-time buy entro il **2026-09-30** oppure specchio riprogettato su una coppia PNP ancora in produzione. **Ha una scadenza esterna** | S | **NC-015** (bloccante) | **da fare, con scadenza** |
+| L23 | **Package e simbolo del THAT320**: footprint a 14 pin, pinout dalla Figura 2 del datasheet, coppie 1&2 / 3&4, substrato in alternata a massa. Dipende dall'esito di L22 | S | NC-016 | da fare |
+| L24 | **I modelli vendor di 2N5401 e 2N5551**: procurarli per una via che regga la regola di provenienza, congelarli, poi promuoverli in `models/` col controllo incrociato di L6+L7. Chiude anche la metà di NC-004 che riguarda VAS e cascode | M | NC-017, **NC-004** | da fare |
 
 **NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
 riesecuzione di `tb_noise_breakdown.cir` coi modelli veri. È il caso
@@ -724,7 +728,147 @@ verifica.
 
 **L8 prima di L9** perché le parti nuove sono fatti chiudibili mentre la
 rosa è un giudizio aperto: se il cap arriva, è meglio che tagli la
-seconda.
+seconda. **È stata la scelta giusta per una ragione che non era quella**:
+L8 ha trovato una scadenza esterna a venti giorni. Se l'ordine fosse stato
+invertito, la si sarebbe scoperta dopo.
+
+**L8 — le parti nuove come fatti verificabili. FATTO.** Report:
+`reports/2026-09-10-L8-parti-nuove.md`. Quattro parti verificate alla
+fonte, e **tre portano una sorpresa**. Cinque documenti nuovi congelati in
+`vendor/` con sha256, URL e provenance; **nessun file già presente in
+`vendor/` è stato toccato** e tutti e 10 gli hash del repo verificano,
+compresi i due dell'LSK489.
+
+**1. Il THAT320 è fine vita, e c'è una scadenza.** È la cosa più urgente
+che il progetto abbia adesso. Memo di THAT Corporation firmato dal
+presidente, **1 settembre 2026**, congelato in `vendor/`: «Effective
+immediately, the following products are on EOL status: … **300-series
+transistor arrays**». Con **last-time buy fino al 2026-09-30**, via
+`sales@thatcorp.com`.
+
+Il memo è del 1° settembre e **ADR-013 è dell'8**: era già pubblico quando
+la topologia è stata disegnata e quando la Fase 1 scrisse «Stock esatto non
+verificato». Non era assente, è stato mancato — la lezione di L6-L7
+spostata di un passo: **un dato di ciclo di vita non è un dato di
+datasheet, e nessuno dei due è un dato di catalogo**.
+
+Il quadro distributivo è coerente: **DigiKey non tratta THAT Corporation**
+(zero risultati, il costruttore non compare fra i fornitori); Mouser,
+Farnell/Newark e TME rifiutano le richieste automatiche e restano **non
+verificati**; l'unica pagina di vendita davvero letta, un negozio tedesco,
+dà €8,50 ed è **esaurito**. Aperta **NC-015**, bloccante, e chiude L22 —
+la sola voce del registro con una scadenza esterna al progetto.
+
+**2. Il polo 2 del relè Omron è invertito nel codice.** Il datasheet dà
+**polo 1: COM 3, NC 2, NO 4** e **polo 2: COM 6, NC 7, NO 5**.
+`preamp_audio.py:79` dichiara `K_NO2="7", K_NC2="5"`: scambiati. Il polo 1
+è corretto.
+
+La trappola è che le due lame **pendono dalla stessa parte**, ma la riga
+alta è numerata 8-7-6-5 e quella bassa 1-2-3-4: la regola implicita
+«NO = COM+1» è giusta per un polo e sbagliata per l'altro.
+
+Poiché il polo 2 serve il **canale destro**: a bobina diseccitata — cioè
+all'accensione — quel canale **non viene messo a massa**, e il transitorio
+passa. È il guasto silenzioso, ed è esattamente quello contro cui ADR-012
+è stata scritta, col ramo cuffie che finisce in un paio di
+elettrostatiche. (A bobina eccitata il canale destro è invece
+cortocircuitato: quello è rumoroso e si troverebbe al primo collaudo.) Il
+relè di guadagno ha lo stesso difetto: canale destro a **+10 dB** da
+diseccitato, il contrario di ADR-004. Aperta **NC-014**, bloccante → L21.
+
+Il diagramma è grafica vettoriale, quindi è stato letto **tre volte in modo
+indipendente** e le tre coincidono: raster a 2400 dpi; coordinate
+vettoriali via `pdftocairo -svg` (la lama tocca il contatto di sinistra a
+0,445 pt e dista 3,387 pt da quello di destra, **7,6:1**); e le polilinee
+del simbolo KiCad, **19:1**. Quest'ultima è la parte che vale la pena
+ricordare: **l'informazione era già nel repo**, disegnata nel simbolo. Ciò
+che era stato letto erano solo le posizioni dei pin, non il disegno.
+
+**3. Per 2N5401 e 2N5551 non esiste un modello SPICE del costruttore
+raggiungibile.** La pagina modelli di onsemi carica l'elenco via
+JavaScript; l'indice di Central Semiconductor pure; Diodes risponde 403.
+Non è nemmeno un caso da trascrizione come l'LSK489: **nessun PDF del
+costruttore contiene il testo `.MODEL`**. Mirror GitHub esistono e **non
+sono stati usati** — un mirror non è provenienza vendor, che è la regola di
+ADR-013. Aperta **NC-017**, maggiore → L24, che chiude anche la metà di
+NC-004 riguardante VAS e cascode.
+
+**4. BVceo ≥ 35 V: confermata**, e il bar stesso è stato controllato. Il
+datasheet ha **due** tabelle e contano in modo diverso: gli *Absolute
+Maximum Ratings* danno −36 V come soglia di **stress**, le *Electrical
+Characteristics* danno **min −36 V, tip −40 V a I_C = −10 µA, I_B = 0** —
+ed è il secondo il limite a cui si progetta. I 35 V venivano dalla consegna
+della Fase 2, non da un requisito; la V_CE reale dei due THAT320 è
+**0,72 / 1,17 V** a riposo, con limite strutturale 30 V. Margine ≈30× al
+punto di lavoro.
+
+**5. Il footprint del THAT320 nel codice è sbagliato.** Le uniche varianti
+ordinabili sono `320P14-U` (DIP14) e `320S14-U` (SO14): **non esiste una
+versione a 8 pin**, e `gain_block.py:303-304` assegna `SOIC-8`. Aperta
+**NC-016**, maggiore → L23.
+
+**Il modello SPICE del THAT320 invece c'è, è nativo, e ngspice lo carica.**
+`300 Series_Macro_01.lib`, **5 366 byte** — esattamente la dimensione che
+la Fase 1 aveva riportato, quindi quel dato è **confermato** e non
+ripetuto. Provato alle condizioni del datasheet (V_CB = −10 V, I_C = −1 mA,
+1 kHz, `set temp = 25`): **exit 0 e nemmeno un warning**, a differenza
+dell'LSK489 che ne dava quattro.
+
+**E qui la scoperta che vale oltre questo lotto: THAT pubblica DUE modelli
+della stessa parte.** `QPNP_THAT_NS` (`RB = 25`, ottimizzato per il rumore)
+e `QPNP_THAT_HF` (`RB = 103,345`, ottimizzato per l'alta frequenza), per il
+resto identici. Rumore riferito all'ingresso a 1 kHz: **0,768 nV/√Hz**
+contro **1,314 nV/√Hz**, il **71%** di distanza. Il datasheet dichiara
+0,75 nV/√Hz tipici, quindi **il modello NS riproduce la cifra del
+costruttore al 2,4%** e l'altro no. Verificato anche a mano — termico di
+25 Ω più shot di collettore danno 0,791 nV/√Hz, entro il 3% del simulato.
+
+Conseguenza: **una cifra di rumore e una di stabilità prese dallo stesso
+modello non possono essere entrambe giuste**, e quale modello si è usato va
+scritto accanto al numero. Finita in `docs/limitations.md` **#17**.
+
+**Nessuno dei due ha `KF`/`AF`.** Provato empiricamente e non con un
+`grep`: lo spettro simulato è **piatto alla nona cifra significativa** da
+100 Hz a 100 kHz. Vincola NC-004: l'analisi coi segnaposto dice che i
+contributori dominanti stanno **nello specchio**, e il modello vendor dello
+specchio non ha 1/f, esattamente come i segnaposto. Solo l'LSK489 ce l'ha.
+
+**Due segnaposto che sbagliano in direzioni opposte**, il che significa che
+i margini di fase attuali non sono conservativi in modo noto: `PTHAT320` ha
+`TF = 1,5 ns` («~100 MHz») contro **325 MHz** tipici del vero — **3×
+lento**; `NSS2N5551` ha `TF = 0,5 ns` («~300 MHz») contro un minimo di
+datasheet di **100 MHz**, per giunta misurato a 10 mA mentre il circuito
+lavora a 2-6 mA dove f_T è più bassa — **3× veloce**.
+
+**Una nota per la Fase 4**: le varianti del 2N5551 **selezionate per beta**
+sono state dismesse (`2N5551YTA`, `2N5551YBU`, `2N5551CTA`; il suffisso -Y
+significa h_FE 180~240). Resta la dispersione piena **50…250**, il che
+riguarda la coerenza di beta nella coppia di cascode e nei generatori.
+
+**Seconda trappola registrata, `docs/limitations.md` #18**: su
+`www.onsemi.com` **HTTP 200 non prova che il file esista** — risponde 200
+con la stessa pagina HTML da 303 722 byte per qualunque percorso
+inesistente, e la prima richiesta di datasheet del lotto è caduta proprio
+lì. È la regola «un modello è verificato se ngspice lo carica» spinta fino
+al trasporto. Effetto collaterale: **falsificare lo user-agent peggiora le
+cose**, onsemi risponde 403 a un UA Safari plausibile e 200 a quello di
+curl.
+
+**Cosa L8 non ha toccato, verificato e non dichiarato**: il diff del ramo
+non nomina `circuits/`, `spice/preamp/` né `docs/preamp/data/`;
+`validate_models.py` dà **26/26** e `--check-provenance` **13/13**,
+conteggio invariato, che è la prova che `models/` è intatto. La promozione
+dei modelli vendor dentro `models/` è **fuori da L8 per decisione
+dell'utente**: porta con sé il controllo incrociato contro il datasheet,
+cioè il lavoro di L7 moltiplicato per parte, ed è un lotto suo (L24).
+
+**Cosa L8 non ha verificato, dichiarato e non riempito**: le **quantità di
+stock**, per nessuna parte — DigiKey non le rende a un client non-browser e
+gli altri distributori rifiutano; se un modello di 2N5401/2N5551 esista
+dietro una sessione browser o un account; il modello THAT320 contro il
+datasheet oltre alla sola cifra di rumore; il **pinout** del THAT320, che
+servirà a L23; e MJE15032/33, fuori mandato.
 
 ## Il dossier: prima bozza consegnata in L5b
 
@@ -1117,102 +1261,101 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L8 — Fase 3a: le parti nuove, fatti verificabili.**
+**Prima di tutto, una cosa che non è un lotto e ha una scadenza.**
 
-È il primo dei tre lotti del giro componenti, e viene **prima di L9**
-perché le parti nuove sono fatti chiudibili mentre la rosa dei componenti
-di segnale è un giudizio aperto: se il cap arriva, è meglio che tagli la
-seconda.
+Il **THAT320 è fine vita dal 2026-09-01** e il **last-time buy chiude il
+2026-09-30**. È **NC-015**, bloccante, e la decisione è dell'utente:
+comprare adesso una scorta che copra prototipi e ricambi, oppure
+riprogettare lo specchio di corrente d'ingresso su una coppia PNP ancora
+in produzione — strada che ADR-013 nomina già nel proprio testo. Il
+contatto è `sales@thatcorp.com`; l'evidenza è congelata in
+`vendor/bjt_array/that/THAT320/THAT-EOL-Memo.pdf`. Il lotto che registra
+la decisione è **L22**, ma la decisione non aspetta il lotto.
 
-Il materiale già raccolto è qui sotto, nella sezione «Materiale già
-raccolto per L8-L10»: **non va ricercato di nuovo**. In breve, cosa L8
-deve rendere verificabile:
+**Poi: L9 — Fase 3b: la rosa dei componenti di segnale.**
 
-- **2N5401** (VAS) e **2N5551** (cascode, generatori di corrente,
-  moltiplicatore di Vbe): parti nuove, mai verificate in Fase 1.
-  Disponibilità, prezzo, e soprattutto **provenienza del modello SPICE**.
-- **THAT320**: stock non ancora fissato, e va confermata la **BVceo ≥ 35 V**
-  contro il datasheet, non contro una scheda di distributore.
-- **Omron G6K-2F-Y**: confermare **quale contatto è NO e quale NC**. Il
-  progetto fallisce in sicurezza solo se sono quelli giusti, quindi è un
-  fatto di sicurezza travestito da dettaglio di catalogo.
+È il secondo dei tre lotti del giro componenti, e cambia natura rispetto a
+L8: L8 verificava **fatti chiudibili**, L9 restringe un **giudizio
+aperto**. Non restituisce un vincitore — restringe su basi misurabili
+(assorbimento dielettrico, rumore in eccesso, coefficiente di tensione) e
+la scelta finale fra parti tutte buone è dell'utente, all'ascolto. È la
+ragione per cui esiste **P6**.
 
-**La lezione di L6 e L7 vale per tutti**, ed è la cosa più utile che i due
-lotti lasciano a L8: un dato di catalogo non è un dato di datasheet, e il
-**nome di un file non è la sua revisione**. L7 ha trovato che il PDF
-congelato come «RevA38» è in realtà la RevA40 — l'unico posto dove
-compariva «A38» era il nome del file, e nessuno l'aveva aperto per
-controllare. Se L8 congela altri PDF vendor, la revisione si legge **dal
-footer del documento**, mai dal nome.
+Cosa L9 deve coprire, dai vincoli che il progetto ha già scritto:
 
-E la seconda: **le condizioni di prova sono metà del numero.** L6 aveva
-misurato I_DSS a `V_DS = 5 V` perché così faceva la ricetta accanto; il
-datasheet prescrive `V_DG = 15 V`, e il datasheet è specificato a 25 °C
-mentre ngspice gira a 27 °C. Nessuno dei due scarti dava errore.
+- **il Miller da 470 pF deve essere C0G/NP0** — vincolo dichiarato in
+  `gain_block.py`: vede ~13 V di continua e porta l'intero segnale di
+  correzione, e un X7R lì modulerebbe la compensazione col segnale;
+- **i sei condensatori d'accoppiamento da 4,7 µF** (ADR-007 addendum, uno
+  per uscita per canale): polipropilene, e la loro dimensione fisica è
+  già un vincolo di layout su un telaio unico (ADR-010);
+- **i resistori del percorso di segnale**, in particolare R_f/R_g che
+  fissano il +9,96 dB e i 47 Ω di isolamento di ADR-008;
+- **l'attenuatore a scatti da 10 kΩ**, che è fuori scheda (F4/ADR-009) ma
+  la cui impedenza culmina a 2,5 kΩ a metà corsa ed è la ragione per cui
+  ADR-014 esiste.
 
-**Non è bloccato dalle voci aperte**, per la stessa ragione di L6-L7:
-`AGENTS.md` scrive che una voce bloccante a G0 non ferma i lotti che
-procurano le parti e i modelli, perché quelli sono il **rimedio** a
-NC-004, non un avanzamento di fase. Ciò che le bloccanti fermano è
-l'accesso a **G1**, il congelamento della topologia — che comunque non si
-vuole più congelare finché NC-001 e NC-010 sono aperte, e NC-010 è **una
-modifica di topologia**.
+**Le due lezioni di L8 valgono per L9**, e sono la cosa più utile che
+questo lotto lascia al prossimo:
 
-Stato di partenza, verificato in L6-L7 e non assunto:
+1. **Un dato di ciclo di vita non è un dato di datasheet, e nessuno dei
+   due è un dato di catalogo.** Il THAT320 era EOL da una settimana
+   quando la topologia lo ha scelto, e nessuno l'aveva guardato. Per ogni
+   parte che L9 mette in rosa, lo stato di ciclo di vita si legge dal
+   costruttore, non dal distributore.
+2. **Un codice di stato non è una verifica** (`docs/limitations.md` #18).
+   Su onsemi un `200` è arrivato con dentro una pagina HTML. Si controlla
+   `Content-Type` e dimensione, e per un PDF si apre il file.
 
-| Cosa | Dove |
-|---|---|
-| Datasheet congelato — **contenuto RevA40**, 7 pagine, nome del file obsoleto | `vendor/jfet/linear_systems/LSK489/LSK489DSRevA38.pdf` |
-| Modello vendor congelato, 1 pagina | `.../Copy_LSK489A_NJF.pdf` |
-| La correzione sulla revisione, **accanto** al provenance congelato | `.../PROVENANCE-L7-addendum.json` |
-| Modello trascritto, **validato contro il datasheet** con verdetto misto | `models/jfet/lsk489.lib` |
-| Il metodo di trascrizione, gli hash, i tre confronti | `reports/2026-09-09-L6-trascrizione-lsk489.md` |
-| Il controllo incrociato, i deck e le tre strade su V_P | `reports/2026-09-09-L7-controllo-incrociato-lsk489.md` |
-| Come rileggere un PDF vendor senza dipendenze | `scripts/pdf_glyphs.py` |
-| Come congelare un PDF vendor | `scripts/freeze_vendor.sh` |
-| `pdftotext` (poppler 26.09.0, arm64) — legge oltre la prima pagina | `/opt/homebrew/bin/pdftotext` |
+E una terza, che riguarda i modelli e non le parti: **un costruttore può
+pubblicare due modelli della stessa parte** (`docs/limitations.md` #17).
+Se L9 tocca un componente con un modello SPICE, va scritto **quale**
+modello è stato usato accanto a ogni numero che ne esce.
 
-**Cosa resta di NC-004 dopo L7**: la riesecuzione di
-`spice/preamp/tb/tb_noise_breakdown.cir` coi modelli veri e i dati
-versionati sotto `docs/preamp/data/<data>/`. Da leggere insieme a
-**NC-013**: i numeri che ne escono sono conservativi sul contributo del
-JFET d'ingresso, perché il modello vendor descrive un esemplare
-d'angolo. Va scritto accanto ai numeri, non sottinteso.
+**Non è bloccato dalle voci aperte**, per la stessa ragione di L6-L8:
+`AGENTS.md` scrive che una voce bloccante non ferma i lotti che procurano
+le parti e i modelli, perché quelli sono il rimedio. Ciò che le bloccanti
+fermano è l'accesso a **G1**.
 
-Attenzione a `docs/limitations.md` #13 leggendo i valori da un datasheet:
-`"1M"` in KiCad è 1 MΩ, in SPICE è 1 mΩ. Sul modello LSK489 **non morde**
-— controllato suffisso per suffisso in L6 — ed è scritto proprio perché è
-il punto in cui qualcuno «correggerebbe» un valore giusto. Da L7 quel
-valore è anche **bloccato dalla suite**: `tb_lsk489()` fallisce se `Vto`
-si muove di più di 1 mV.
-
-Perché i modelli veri sono venuti prima del resto: l'infrastruttura di
-misura è finita. Dopo L5 tutti e 12 i deck scrivono dati, quindi **basta
-rieseguire i deck** per avere numeri nuovi confrontabili con quelli di
-oggi, senza toccare nessun banco di prova.
-
-**La Fase 4 non ha più il preliminare che aveva.** L3b è chiusa: il
-circuito si rigenera nel checkout corrente, verificato rieseguendo
-davvero i due generatori. Chi apre la Fase 4 la apre dalla topologia, non
-da una correzione di percorso.
+**Materiale già raccolto**: la sezione «Materiale già raccolto per
+L8-L10» più sotto. Di quella lista, dopo L8 restano aperti solo il
+**simbolo KiCad dell'LSK489** (L10) e la rosa di segnale (L9) — con
+l'aggiunta che il **package e il simbolo del THAT320** sono ora un lotto
+loro (**L23**), perché il footprint nel codice è sbagliato e il pinout non
+è ancora stato letto.
 
 ### Materiale già raccolto per L8-L10 (il giro componenti)
 
 Da non ricercare di nuovo: sono le domande che la Fase 1 non copriva e
-che la bozza di Fase 2 ha lasciato aperte.
+che la bozza di Fase 2 ha lasciato aperte. **Quattro delle cinque sono
+chiuse**, e vanno lette per quello che hanno restituito, non riaperte.
 
-- **2N5401** (VAS) e **2N5551** (cascode, generatori, moltiplicatore di
-  Vbe): parti nuove, non verificate in Fase 1.
-- **Modello SPICE LSK489**: procedura obbligatoria di ADR-013 — è L6-L7,
-  precede il resto perché la credibilità della distorsione ci poggia
-  sopra.
-- **THAT320**: stock non ancora fissato, e va confermata la BVceo ≥ 35 V.
-- **Omron G6K-2F-Y**: confermare quale contatto è NO e quale NC. Il
-  progetto fallisce in sicurezza solo se sono quelli giusti.
-- **Simbolo KiCad dell'LSK489** (L10): non esiste. Oggi il duale è
-  disegnato come due JFET separati. Serve un simbolo a 2 unità col
-  pinout letto dal datasheet **prima del G2**, o il PCB piazzerà due
-  package.
+- ~~**2N5401** (VAS) e **2N5551** (cascode, generatori, moltiplicatore di
+  Vbe)~~ — **CHIUSA in L8.** Disponibili e a tre centesimi da sei
+  costruttori su DigiKey; datasheet onsemi congelati con i limiti letti
+  con le loro condizioni. Ma **nessun modello SPICE del costruttore è
+  raggiungibile** → **NC-017**, lotto **L24**. Le varianti selezionate per
+  beta del 2N5551 sono state dismesse: resta la dispersione 50…250.
+- ~~**Modello SPICE LSK489**~~ — **CHIUSA in L6-L7**: trascritto,
+  validato contro il datasheet, verdetto misto, **NC-013** → L20.
+- ~~**THAT320**: stock e BVceo~~ — **CHIUSA in L8, con una sorpresa.**
+  BVceo confermata (min −36 V a I_C = −10 µA, contro un bar di 35 V). Ma
+  **la parte è fine vita dal 2026-09-01, con last-time buy che chiude il
+  2026-09-30** → **NC-015**, bloccante, lotto **L22**. Lo stock non è
+  fissato e non lo sarà: DigiKey non tratta il costruttore. In più il
+  **footprint nel codice è a 8 pin e la parte esiste solo a 14** →
+  **NC-016**, lotto **L23**. Il modello SPICE invece c'è, è nativo e
+  ngspice lo carica — ma sono **due modelli della stessa parte**, vedi
+  `docs/limitations.md` #17.
+- ~~**Omron G6K-2F-Y**: quale contatto è NO e quale NC~~ — **CHIUSA in
+  L8**, con tre letture indipendenti concordi: **polo 1 COM 3 / NC 2 /
+  NO 4**, **polo 2 COM 6 / NC 7 / NO 5**. Il codice ha il **polo 2
+  invertito** → **NC-014**, bloccante, lotto **L21**.
+- **Simbolo KiCad dell'LSK489** (L10): **ancora aperta**. Non esiste.
+  Oggi il duale è disegnato come due JFET separati. Serve un simbolo a 2
+  unità col pinout letto dal datasheet **prima del G2**, o il PCB
+  piazzerà due package. Da fare **insieme a L23**, che ha lo stesso
+  problema sul THAT320: stessa procedura, due parti.
 
 La rosa dei componenti di segnale (L9) **non restituisce un vincitore**:
 restringe su basi misurabili — assorbimento dielettrico, rumore in
@@ -1249,7 +1392,17 @@ buone è dell'utente, all'ascolto. È la ragione per cui esiste P6.
 | Condensatore verso il Singxer | **4,7 µF su tutte e tre le uscite** — ADR-007 addendum. Chiude la domanda sull'impedenza ignota del Singxer |
 | Resistenze di isolamento ADR-008 | **47 Ω** invece di ~100 Ω — soddisfa E4 con margine |
 
-Nessuna decisione dell'utente è pendente.
+**Una decisione dell'utente è pendente, ed è l'unica del progetto ad avere
+una scadenza esterna.** Aperta da L8 il 2026-09-10:
+
+| Cosa | Scadenza | Dove sta l'evidenza |
+|---|---|---|
+| **THAT320 fine vita**: comprare last-time buy, o riprogettare lo specchio su una coppia PNP ancora in produzione | **2026-09-30**, poi la prima strada non esiste più | `vendor/bjt_array/that/THAT320/THAT-EOL-Memo.pdf`, **NC-015**, lotto L22 |
+
+Contatto per il last-time buy: `sales@thatcorp.com`. ADR-013 nomina già
+l'alternativa nel proprio testo, quindi la seconda strada non è nuova — ma
+comporta rifare punto di lavoro e cifre di rumore dello stadio d'ingresso.
+In entrambi i casi serve una ADR nuova: ADR-013 non si riscrive.
 
 ## Attenzione per chi riprende
 
