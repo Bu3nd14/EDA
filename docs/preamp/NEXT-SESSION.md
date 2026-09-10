@@ -1,163 +1,142 @@
-# Prompt per la sessione successiva — L25
+# Prompt per la sessione successiva — L21
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il
-lavoro è organizzato in LOTTI PICCOLI: questa sessione ne fa **UNO — L25** —
-e si ferma. Non iniziarne un secondo.
+lavoro è organizzato in LOTTI PICCOLI: questa sessione ne fa **UNO — L21** — e
+si ferma. Non iniziarne un secondo.
 
-## Cosa è cambiato, e perché il prossimo lotto è la promozione dei modelli
+## Cosa è cambiato, e perché il prossimo lotto è il polo del relè
 
-**Il lotto precedente è L26, e non ha scritto topologia: ha registrato tre
-requisiti nuovi dell'utente** (**ADR-019**). Li devi conoscere prima di
-toccare qualsiasi cosa, perché due di essi rendono **non conforme** la
-topologia attuale:
+Il lotto precedente è **L25**, che ha promosso in `models/` i cinque modelli
+vendor congelati da L24. Tre cose di quel lotto ti riguardano prima di toccare
+qualsiasi cosa:
 
-1. **Il margine di fase minimo è 60°**, su **ogni** combinazione della matrice
-   V1 — blocco A compreso, caso peggiore capacitivo da 4,7 nF compreso. Chiude
-   NC-012 e rende decidibili in negativo due misure che esistevano già:
-   **NC-002 sale a bloccante** (blocco A, 41,98°, mancano 18°) e nasce
-   **NC-021** (blocco B a 0 dB con cavo, 56,46°). Nessuno dei due è instabile:
-   60° è un margine di progetto. Rimedio: **L12**, che cambia natura.
-2. **Il trim funziona solo a mute inserito**, con interlock **elettrico** sui
-   suoi relè (requisito **F8**) → **NC-023**, che va con **L16**.
-3. **I guadagni diventano tre: 0 / +3 / +10 dB**, con **riposo a 0 dB** →
-   **NC-022**, lotto **L27**, che dovrà estendere anche i dodici deck da due
-   modalità a tre.
+1. **Tutti e sette i dispositivi attivi hanno ora un modello del costruttore
+   in `models/`** — prima volta da G0. La libreria passa da 28 a **38 check**,
+   tutti verdi. Di **NC-017** (bloccante) resta il solo passo di **Fase 4**: la
+   sostituzione in `circuits/preamp/`. **Non è questo lotto.**
+2. **Rimisurando sono cadute due cifre di L24**, e la seconda ha cambiato un
+   verdetto. La f_T del MMBT5401 era presa a I_C = 12,68 mA invece dei 10 mA
+   del datasheet (169,5 → **160,1 MHz**); le f_T dei due MJE erano lette come
+   attraversamento a guadagno unitario invece che come la **Nota 2** del
+   datasheet le definisce (`fT = hfe · ftest`, ftest = 1 MHz) — e letta così
+   **nessuno dei due raggiunge il minimo di 30 MHz**. È **NC-025**. Più
+   **NC-024**, l'h_FE del MJE15032 sotto il proprio minimo, che L24 aveva
+   misurato ma mai messo a registro. **22 voci, 7 bloccanti.**
+3. **Una trappola nuova che vale per chiunque tocchi un file con CRLF**: il
+   tool di editing **normalizza le fini riga in silenzio**. In L25 tre
+   modifiche di sola prosa hanno tolto il CR da ogni riga di testo vendor;
+   ngspice non se ne accorge e `git diff` mostra righe che a occhio
+   coincidono. L'unica cosa che l'ha detto è stato un `diff` esplicito.
 
-**Nessuno dei tre invalida L25**, che resta il prossimo lotto: promuovere i
-modelli in `models/` non dipende né dai livelli di guadagno né dal margine di
-fase, e chiude una bloccante.
-
-Prima ancora, **L22 + L23** avevano chiuso lo specchio d'ingresso. Tre
-risultati cambiano il quadro:
-
-- **il THAT320 è uscito dal progetto.** Al suo posto c'è un **Linear Systems
-  LS352**, dual PNP monolitico in SOIC-8, congelato con provenienza,
-  controllato contro il proprio datasheet e montato nella topologia. Deciso in
-  **ADR-018**;
-- **una bloccante in meno per la prima volta da G0.** NC-015 e NC-016 sono
-  chiuse: **18 voci, 5 bloccanti**;
-- **lo stadio d'ingresso è più silenzioso di prima** — caso peggiore da 5,697
-  a **4,231 µV** — nonostante il dispositivo nuovo sia 2,2× più rumoroso di
-  quello vecchio. La differenza l'ha fatta la degenerazione portata da 47 a
-  **220 Ω**, spazzata e non argomentata.
-
-Conseguenza: di **NC-017** (bloccante) resta solo la promozione in `models/`
-dei cinque modelli che L24 ha congelato. È lavoro da **eseguire**, non da
-scoprire — il controllo incrociato contro i datasheet è già fatto.
+Nessuno dei tre invalida L21, che non tocca né modelli né misure.
 
 ## Leggi PRIMA, in quest'ordine, e non saltare
 
-1. `CLAUDE.md` — ambiente, percorsi assoluti, trappole che falliscono in
+1. **`CLAUDE.md`** — ambiente, percorsi assoluti, trappole che falliscono in
    silenzio, e la regola di fine sessione (push prima di tutto)
-2. `docs/preamp/STATE.md` — la sezione «Come si lavora da qui», la tabella dei
-   lotti, la sezione **L22 + L23**, e «Prossimo passo concreto», che contiene
+2. **`docs/preamp/STATE.md`** — la sezione «Come si lavora da qui», la tabella
+   dei lotti, la sezione **L25**, e **«Prossimo passo concreto»**, che contiene
    il mandato di questo lotto per esteso
-3. `docs/preamp/decisions/ADR-016-modello-vendor-e-ciclo-di-vita.md` — le due
-   regole T7 e T8, il perché coi numeri, e cosa costano
-4. `docs/preamp/decisions/ADR-017-dispositivi-attivi-conformi-a-t7.md` — le
-   cinque parti da promuovere, con i loro verdetti già misurati
-5. `docs/preamp/reports/2026-09-10-L22-L23-specchio-ingresso.md` — non per la
-   parte, che è chiusa, ma per il **metodo**: la ricetta di regressione, il
-   difetto che ha trovato in sé stessa, e la trappola nuova
-6. `docs/limitations.md` — prima di scrivere codice, in particolare **#17,
-   #18, #19, #20 e #21**
+3. **`docs/preamp/NONCOMPLIANCE.md`**, voce **NC-014** — il difetto, la sua
+   evidenza e cosa serve per chiuderla
+4. **`docs/preamp/decisions/ADR-012-*.md`** — la decisione sul mute che questo
+   difetto rende inefficace su un canale
+5. **`docs/preamp/reports/2026-09-10-L8-parti-nuove.md`**, la sezione sul relè
+   Omron — è dove il pinout è stato letto dal datasheet
+6. **`docs/limitations.md`** — prima di scrivere codice, in particolare #13,
+   #14 e #16
 
-## IL LOTTO: L25 — i cinque modelli entrano in `models/`
+## IL LOTTO: L21 — il polo 2 del relè, corretto e riverificato
 
-Chiude quel che resta di **NC-017** (bloccante).
+Chiude **NC-014**, che è **bloccante**. È la voce più economica del registro.
 
-MMBT5401, MMBT5551, MJE15032, MJE15033, 1N4148. Per ciascuno:
+**Il difetto.** Il datasheet del G6K dà **polo 1: COM 3, NC 2, NO 4** e
+**polo 2: COM 6, NC 7, NO 5**. La riga **79** di
+`circuits/preamp/preamp_audio.py` dichiara `K_NO2="7", K_NC2="5"`:
+**scambiati**. Il polo 1 è corretto.
 
-1. **il file `.lib` in `models/<classe>/`**, derivato dal file già congelato in
-   `vendor/`, con l'intestazione che racconta provenienza, differenze dal testo
-   vendor e verdetto — il modello è `models/bjt_pnp/ls350.lib` (L22) o
-   `models/jfet/lsk489.lib` (L6);
-2. **la sua `.provenance.json`**, con `origin: "vendor_derived"`,
-   `vendor_source_path` e `vendor_source_sha256` che devono corrispondere
-   all'hash congelato — `validate_models.py --check-provenance` li ri-hasha
-   davvero;
-3. **una ricetta in `scripts/validate_models.py`** che **blocca i numeri** già
-   misurati in L24, così che una modifica silenziosa faccia diventare rossa la
-   suite.
+La trappola è che le due lame pendono dalla stessa parte del package, ma la
+riga alta è numerata 8-7-6-5 e quella bassa 1-2-3-4: la regola implicita
+«NO = COM+1» è giusta per un polo e sbagliata per l'altro.
 
-## Cosa L22 ti consegna — usalo invece di riscoprirlo
+**Perché è bloccante.** Il polo 2 serve il **canale destro**. A bobina
+diseccitata — cioè **all'accensione** — quel canale **non viene messo a massa**
+e il transitorio passa. È esattamente il guasto silenzioso contro cui ADR-012
+è stata scritta, col ramo cuffie che finisce in un paio di elettrostatiche. (A
+bobina eccitata il canale destro sarebbe cortocircuitato: rumoroso, e lo si
+troverebbe al primo collaudo. È il caso *fortunato*.)
 
-Sono fatti verificati, ognuno col comando che lo falsifica.
+**Cosa fare, ed è tutto:**
 
-- **Il precedente da copiare è `tb_ls350()`**, in `scripts/validate_models.py`.
-  È il più recente e copre due dei cinque per device class.
-- **La ricetta deve interpolare come fa `meas`**, non prendere il campione che
-  attraversa la soglia. In L22 la differenza valeva lo 0,7% sull'h_FE — cioè il
-  passo dello sweep, non il modello — e avrebbe fatto fallire il controllo per
-  la ragione sbagliata. È annotato nel codice.
-- **Le condizioni sono quelle del datasheet, con `set temp = 25`.** ngspice
-  gira a 27, e con `XTB` nel modello la differenza si vede su ogni h_FE.
-- **Uno SKIP fa uscire `validate_models.py` con 1.** Un file in `models/`
-  senza la sua ricetta rende rossa la suite: i cinque modelli e le cinque
-  ricette vanno nello stesso lotto.
-- **Il conteggio dei check è ora 28**, non 26 (L22 ha aggiunto provenienza +
-  elettrico dell'LS350). Cinque modelli ne aggiungono dieci, e la
-  documentazione che cita «26/26» va aggiornata dove compare.
+1. riga 79 in `K_NO2="5", K_NC2="7"` — NO 5 e NC 7, come il datasheet;
+2. **rigenerare** gli artefatti col venv SKiDL
+   (`/Users/roberto/EDA/env/venv/bin/python3`);
+3. **verificare sulla netlist, non sul sorgente**: il contatto verso massa di
+   ogni mute deve cadere su **2 e 7**, e il ramo di `R_g` su **4 e 5**;
+4. `check_schematic.py` deve continuare a passare, e `run_tests.sh` restare
+   5/5.
 
-## I verdetti già misurati che vanno bloccati, non ri-derivati
+### Quello che il repo ti consegna già — usalo invece di riscoprirlo
 
-Da ADR-017 e dal report di L24, alle condizioni dei rispettivi datasheet,
-25 °C:
-
-| Parte | Misure |
-|---|---|
-| MMBT5401 | hFE 124,9 @ 10 mA · f_T 169,5 MHz · C_obo 3,706 pF — **sei su sei dentro** con l'altro |
-| MMBT5551 | hFE 107,2 @ 10 mA · f_T 173,1 MHz · C_obo 2,221 pF |
-| MJE15032 | hFE **66,4** a I_C = 0,5 A contro un **minimo di 70** — **fuori del 5,1%**, direzione pessimistica |
-| MJE15033 | dentro a tutti e tre i punti |
-| 1N4148 | V_F 0,766 V @ 10 mA (max 1,0) · C_T 0,869 pF (max 4,0) |
-
-**Il MJE15032 fuori finestra va bloccato come tale**, non pareggiato: è la
-stessa forma di NC-013 sull'LSK489 e di NC-020 sull'LS352. Una ricetta che
-dichiarasse conformità dove non c'è sarebbe peggio di nessuna ricetta.
+- **Un `.net` di SKiDL non è riproducibile byte a byte** (L3b). Il campo
+  `(date)`, i tag casuali, gli UUID `(tstamps)` e i riferimenti `SKiDL Line`
+  cambiano a ogni rigenerazione. **Il confronto è quello normalizzato**: si
+  tolgono `(date`, `SKiDL Tag`, `SKiDL Line` e `(tstamps`, e si confronta il
+  resto. Con quel filtro il diff di una rigenerazione a sorgente invariato è
+  **vuoto** — provato in L3b su entrambi i file.
+- **Fondere o spostare componenti slitta i riferimenti** (L22). Non dovrebbe
+  succedere qui, ma se succede: la mappa vecchio→nuovo si **ricava
+  confrontando i nodi** fra il `.inc` vecchio e quello nuovo, non si deduce a
+  mano.
+- **`check_schematic.py` fa il suo mestiere**: in L22 ha rifiutato alla prima
+  esecuzione con 15 discordanze. Se rifiuta, ha ragione.
+- **La verifica «sulla netlist» è la forma che conta.** Il sorgente dice cosa
+  volevi, la netlist dice cosa hai fatto. NC-014 esiste proprio perché una
+  regola implicita sembrava giusta guardando il sorgente.
 
 ## Cosa NON accettare
 
-- **un mirror di terze parti non conta.** ADR-016 lo scarta esplicitamente:
-  si congela e si deriva da ciò che il **costruttore** ha servito;
-- **il nome di un file non è la sua parte** (#20): onsemi serve `1n4148.lib`
-  contenente `.SUBCKT 1N4148WT`, un'altra variante in un altro package. Il
-  modello giusto è in `1n914.lib`. È già congelato correttamente — non
-  "correggerlo";
-- **`mfg=` è fatale in ngspice** e va tolto, ma **solo quello**: nessun valore
-  va arrotondato, riordinato o "corretto";
-- **una cifra non eseguita non è evidenza.** Se una ricetta dichiara un
-  numero, quel numero deve uscire da una run.
+- **Una correzione dedotta dalla simmetria.** Il pinout va letto dal datasheet
+  congelato, non ricavato dalla regola «NO = COM+1» — è la regola che ha
+  prodotto il difetto.
+- **Una verifica fatta sul sorgente.** Se la prova non passa dalla netlist
+  generata, non è una prova.
+- **Un `git diff` su un `.net` letto come prova che la topologia è cambiata (o
+  non è cambiata).** Vedi sopra: serve il confronto normalizzato.
+- **Una cifra non eseguita.** Se il lotto dichiara un numero, quel numero deve
+  uscire da una run.
 
 ## NON fa parte di questo lotto
 
-- **Sostituire le parti nella topologia.** MMBT5401/MMBT5551 in
-  `circuits/preamp/` è **Fase 4**. Questo lotto tocca `models/` e
-  `scripts/validate_models.py`, non `circuits/`.
-- **Rifare le misure del blocco.** PSRR, Z_out e risposta restano da rifare in
-  Fase 4; i dati in `data/2026-09-09/` descrivono la topologia col THAT320,
-  quelli in `data/2026-09-10/` lo stadio d'ingresso con l'LS352.
-- **Le altre non conformità.** Hanno i loro lotti. Le cinque bloccanti:
-  NC-001 (L11), NC-004, NC-010 (L17), NC-014 (**L21**, quasi gratis), NC-017
-  (questo lotto + Fase 4).
+- **Sostituire i modelli nella topologia.** MMBT5401/MMBT5551 in
+  `circuits/preamp/` è **Fase 4**, ed è l'unico passo che tiene aperta
+  NC-017.
+- **Rifare le misure del blocco.** PSRR, Z_out, risposta e margine di fase
+  restano da rifare in Fase 4. I dati in `data/2026-09-09/` descrivono la
+  topologia col THAT320, quelli in `data/2026-09-10/` lo stadio d'ingresso con
+  l'LS352.
+- **Le altre non conformità.** Hanno i loro lotti. Le bloccanti che restano
+  dopo L21: NC-001 (L11), NC-002 e NC-021 (L12), NC-004, NC-010 (L17),
+  NC-017 (Fase 4).
 - **Non toccare i file già in `vendor/`**: sono la traccia di controllo. Una
   correzione si aggiunge accanto come addendum — è quello che ha fatto L7 —
   non si riscrive l'originale.
 
 ## Come lavoriamo
 
-- Verifica invece di fidarti. Se un subagente riporta dei numeri, rieseguili
-  tu prima di riferirmeli.
+- **Verifica invece di fidarti.** Se un subagente riporta dei numeri,
+  rieseguili tu prima di riferirmeli.
 - **Verifica alla fonte anche ciò che il lotto precedente ti ha scritto.** Un
   compito ereditato è un'ipotesi, non un dato — L24 lo ha dimostrato sulla
-  conclusione di L8 riguardo a Diodes, e L22 lo ha rifatto su `mfg=`.
-- Cerca se qualcuno ha già deciso, prima di aprire una voce.
-- Niente cifre non eseguite.
-- Diffida degli script che dichiarano di aver verificato qualcosa.
+  conclusione di L8, L22 su `mfg=`, e **L25 su quattro cifre di f_T di L24**,
+  una delle quali cambiava un verdetto.
+- **Cerca se qualcuno ha già deciso, prima di aprire una voce.**
+- **Niente cifre non eseguite.**
+- **Diffida degli script che dichiarano di aver verificato qualcosa.**
   `export_fab.sh` (riga 28) e `setup.sh` (riga 24) hanno ancora `ROOT` cablato
   su `/Users/roberto/EDA`: eseguiti da un worktree leggono e scrivono nel
   checkout principale, in silenzio. Se il tuo lotto ne tocca uno, correggilo lì.
-- Un lotto per volta, mai due agenti in parallelo: il vincolo è il cap di
+- **Un lotto per volta, mai due agenti in parallelo**: il vincolo è il cap di
   token del piano.
 - **Lavora in un worktree.** I commit non pushati dentro `.claude/worktrees/`
   spariscono col worktree, ed è già successo.
@@ -166,13 +145,13 @@ dichiarasse conformità dove non c'è sarebbe peggio di nessuna ricetta.
 
 Non è una lista da ricordare, è uno script che rifiuta. Nell'ordine:
 
-1. aggiorna `docs/preamp/STATE.md` segnando il lotto fatto e il successivo
+1. aggiorna `docs/preamp/STATE.md` segnando il lotto **fatto** e il successivo
    come prossimo (la tabella deve dire **fatto**)
-2. riscrivi QUESTO file per il lotto successivo — se il titolo nomina ancora
-   L25, lo script rifiuta, ed è il controllo che esiste apposta
+2. **riscrivi QUESTO file per il lotto successivo** — se il titolo nomina
+   ancora L21, lo script rifiuta, ed è il controllo che esiste apposta
 3. committa, pusha, apri la PR
-4. `/bin/zsh scripts/chunk_close.sh L25` — verifica tutto, merghia, riallinea
-   il checkout dell'utente e **rilegge da lì** per provare il riallineo. Se
+4. `/bin/zsh scripts/chunk_close.sh L21` — verifica tutto, merghia, riallinea
+   il checkout dell'utente e rilegge da lì per provare il riallineo. Se
    rifiuta, ha ragione: sistema e rilancia
 5. rimuovi il worktree con i due comandi che lo script stampa
 6. **fermati.** Non iniziare il lotto dopo.

@@ -122,7 +122,7 @@ espliciti (vedi `smoke/run_pipeline.sh`).
 # + una run_simulation reale + verifica presenza artefatti smoke.
 /bin/zsh /Users/roberto/EDA/scripts/run_tests.sh
 
-# Libreria modelli: 26/26 check, ngspice reale + re-hash della provenance.
+# Libreria modelli: 38/38 check, ngspice reale + re-hash della provenance.
 /usr/bin/python3 /Users/roberto/EDA/scripts/validate_models.py
 /usr/bin/python3 /Users/roberto/EDA/scripts/validate_models.py --check-provenance
 

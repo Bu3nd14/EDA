@@ -1,0 +1,143 @@
+* 1n4148.lib - onsemi 1N4148, small-signal switching diode, DO-204AH
+* (DO-35).
+* VENDOR MODEL, COPIED VERBATIM FROM THE MANUFACTURER'S OWN FILE.
+*
+* USAGE:
+*   .include models/diodes/1n4148.lib
+*   D1 anode cathode D1N914
+*
+* Role in this project: TWO instances form the negative-rail bias
+* reference of the gain block (circuits/preamp/gain_block.py:252-253),
+* footprint FP_DO35. It is the only diode in the signal-path bias chain,
+* and before L24 nobody had ever verified it - ADR-016 lists it as "mai
+* verificato".
+*
+* ======================================================================
+* READ THIS BEFORE YOU "FIX" ANY OF THE THREE NAMES
+* ======================================================================
+*
+* THE PART IS THE 1N4148. THE FILE THIS IS DERIVED FROM IS CALLED
+* 1n914.lib. THE MODEL INSIDE IS CALLED D1N914. All three are correct.
+*
+* onsemi files the 1N4148 under the 1N914 document: its product page for
+* the 1N4148 links exactly one datasheet, and that datasheet is
+* 1n914-d.pdf. The model file says so itself, in its own header:
+*
+*   ** Product: 1N/FDLL914/A/B / 916/A/B / 4148 / 4448
+*   ** Package: DO-35 / LL-34
+*
+* AND THE FILE THAT LOOKS RIGHT IS THE WRONG ONE.
+* https://www.onsemi.com/download/models/lib/1n4148.lib returns HTTP 200,
+* application/octet-stream, a REAL 1189-byte file - containing
+* .SUBCKT 1N4148WT, which is the SOD-323 variant, not the DO-35 this
+* project uses. ngspice loads it without a word and simulates a different
+* device. The same bytes are served as 1n4148wt.lib, which is what proves
+* it is an alias rather than a server typo.
+*
+* That is docs/limitations.md #20, and it is the reason this file's name
+* was chosen for the PART (1n4148.lib, what circuits/ instantiates)
+* while the model name inside was left exactly as the vendor wrote it.
+* Do not "correct" either one. The full record is in
+* models/diodes/1n4148.provenance.json.
+*
+* ------------------------------------------------------------------
+* PROVENANCE - the short version. Freeze in
+* vendor/diodes/onsemi/1N4148/PROVENANCE.json, reasoning in ADR-017 and
+* docs/preamp/reports/2026-09-10-L24-t7-dispositivi-attivi.md
+* ------------------------------------------------------------------
+*
+* THE PART WAS NOT SUBSTITUTED, IT WAS ATTRIBUTED. 1N4148 is a generic
+* industry type number, not one manufacturer's part, so T7 (ADR-016) is
+* satisfied not by replacing the device but by naming the manufacturer
+* whose model and lifecycle statement the project stands on. That
+* manufacturer is onsemi: it publishes both a reachable SPICE model and
+* an explicit Active status (six OPN, all Active, read from the product
+* page's own JSON-LD). Vishay serves a more recent datasheet but no SPICE
+* model to a non-browser client.
+*
+* Frozen byte-for-byte at vendor/diodes/onsemi/1N4148/1n914.lib and
+* copied here unchanged - nothing removed, no value rounded, reordered or
+* "corrected". The Fairchild Semiconductor attribution line at the bottom
+* is the vendor's own and is reproduced unaltered.
+*
+*   diff <(grep -v '^\*' vendor/diodes/onsemi/1N4148/1n914.lib) \
+*        <(grep -v '^\*' models/diodes/1n4148.lib)      # empty
+*
+* Note the model's own creation stamp: Jul-24-2007, Rev 1.0. Like the two
+* MJE models, this is old, and it is the newest thing the manufacturer
+* publishes.
+*
+* ------------------------------------------------------------------
+* CROSS-CHECKED AGAINST THE DATASHEET - BOTH PUBLISHED LIMITS INSIDE
+* ------------------------------------------------------------------
+*
+* Datasheet 1N914/D, September 2024 Rev. 6, frozen at
+* vendor/diodes/onsemi/1N4148/1n914-d.pdf. The 1N4148 row, not the 914B
+* row - they differ. ngspice 47, set temp = 25:
+*
+*   V_F @ I_F = 10 mA         0.766187 V   1.0 V MAX.   INSIDE (23% margin)
+*   C_T @ V_R = 0, 1 MHz      0.8687 pF    4.0 pF MAX.  INSIDE
+*
+* Both re-measured in L25 and both reproduce L24 to the digit.
+*
+* WORTH KNOWING RATHER THAN COMFORTING: C_T sits 4.6x BELOW the
+* guaranteed ceiling. The model therefore describes a typical or better
+* specimen, not the worst case the datasheet permits. For a bias diode at
+* 1 mA that does not matter; in a signal path it would.
+*
+* At the actual working point the model gives V_F = 0.631952 V at 1 mA,
+* where the datasheet specifies nothing.
+*
+* ------------------------------------------------------------------
+* A LIVE EXAMPLE OF limitations.md #19, IN THIS VERY DATASHEET
+* ------------------------------------------------------------------
+*
+* onsemi's document toolchain renders the micro prefix in a way that
+* pdftotext extracts as the letter m, silently and with exit 0. In
+* 1n914-d.pdf the reverse-current row at VR = 20 V, TA = 150 C reads
+* "50 mA" in the extracted text and 50 uA on the rendered page - wrong by
+* a factor of 1000, and perfectly plausible either way.
+*
+* Neither of the two limits locked above is affected (10 mA and 4.0 pF
+* are both above the milliamp boundary and were read on the render), but
+* any current limit below a milliamp in this document must be LOOKED AT,
+* not extracted.
+*
+* ------------------------------------------------------------------
+* WHAT THIS MODEL DOES NOT HAVE
+* ------------------------------------------------------------------
+*
+* NO FLICKER NOISE: no KF, no AF. In this repo only models/jfet/lsk489.lib
+* has 1/f noise (NC-004). It also carries no temperature coefficients
+* beyond EG and the built-in defaults, and no reverse-recovery beyond
+* TT = 1.012e-8.
+*
+* No SPICE magnitude suffix appears anywhere in the model, so
+* docs/limitations.md #13 has nothing to bite on here.
+*
+* ------------------------------------------------------------------
+* BELOW THIS LINE: THE VENDOR FILE, BYTE FOR BYTE
+* ------------------------------------------------------------------
+****** Power Discrete Diode Electrical Parameters ******
+** Product: 1N/FDLL914/A/B / 916/A/B / 4148 / 4448
+** Package: DO-35 / LL-34
+**------------------------------------------------------
+.MODEL D1N914 D
++ IS=3.45e-09
++ RS=0.452422
++ IKF=0.0528
++ N=1.94
++ ISR=1.01e-09
++ NR=2.0
++ CJO=8.68e-13
++ M=0.02504
++ VJ=0.90906
++ FC=0.5
++ TT=1.012e-8
++ BV=100 
++ IBV=1e-05
++ EG=0.92
+**------------------------------------------------------
+** Creation: Jul-24-2007   Rev: 1.0
+** Fairchild Semiconductor
+

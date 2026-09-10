@@ -142,7 +142,7 @@ fc = 1587.62 Hz, error 0.25%.
 **Model library**: `models/` contains curated device models (resistor,
 capacitor, inductor, diode, BJT NPN/PNP, MOSFET N/P, JFET, opamp macro-model,
 generic transformer subckt), each validated by
-`scripts/validate_models.py` against a real ngspice testbench (26/26 checks
+`scripts/validate_models.py` against a real ngspice testbench (38/38 checks
 passing at last verification). The R/C/L/transformer/opamp checks are exact
 analytic cross-checks; the BJT/MOSFET/JFET checks are order-of-magnitude
 sanity checks only, not exact — see Limitations #11. The validator was
@@ -302,7 +302,7 @@ See `docs/smoke-test.md` for per-stage evidence (exact JSON/CSV values).
 ## Reproducing the tests
 
 ```sh
-# Model library validation (26/26 checks)
+# Model library validation (38/38 checks)
 /usr/bin/python3 /Users/roberto/EDA/scripts/validate_models.py
 
 # Individual SPICE testbenches

@@ -1,0 +1,135 @@
+* mmbt5551.lib - Diodes Incorporated MMBT5551, high-voltage NPN, SOT-23.
+* VENDOR MODEL, COPIED VERBATIM FROM THE MANUFACTURER'S OWN FILE.
+*
+* USAGE:
+*   .include models/bjt_npn/mmbt5551.lib
+*   Q1 collector base emitter MMBT5551
+*
+* Role in this project: FIVE instances per gain block - the tail current
+* sink (circuits/preamp/gain_block.py:262), the two ADR-014 cascodes
+* (291-292), the VAS load (328) and the Vbe multiplier (350). It is the
+* most-instantiated active device in the design, which is why its beta
+* spread matters: the datasheet window is 80..250 and whether the two
+* cascodes tolerate that spread is a Fase 4 question of the same family
+* as NC-013.
+*
+* ------------------------------------------------------------------
+* THE PART THE PROJECT BUYS IS THE MMBT5551, NOT THE 2N5551
+* ------------------------------------------------------------------
+*
+* Same die, SOT-23 instead of TO-92 - see the header of
+* models/bjt_pnp/mmbt5401.lib, its PNP complement, for the full
+* reasoning and what the package change costs (ADR-017). One consequence
+* is specific to this device: the Vbe multiplier at gain_block.py:350
+* carries an explicit placement rule - "MUST be thermally coupled to the
+* NPN output device's tab (thermal compound + cable tie)" - and A SOT-23
+* CANNOT BE CABLE-TIED TO A TO-220 TAB. That is NC-019, to be resolved
+* before G2.
+*
+* ------------------------------------------------------------------
+* PROVENANCE - the short version. Full record in
+* models/bjt_npn/mmbt5551.provenance.json, the freeze in
+* vendor/bjt_npn/diodes_inc/MMBT5551/PROVENANCE.json, and the reasoning
+* in docs/preamp/reports/2026-09-10-L24-t7-dispositivi-attivi.md
+* ------------------------------------------------------------------
+*
+* Diodes serves this model as a text file, so it was frozen byte-for-byte
+* at vendor/bjt_npn/diodes_inc/MMBT5551/MMBT5551.spice.txt and copied
+* here unchanged. NOTHING WAS REMOVED - there is no mfg= to strip, unlike
+* the two Linear Systems models. No value was rounded, reordered or
+* "corrected"; note in particular that the vendor writes "RB =0.26" and
+* "RE =0.23" with a space before the equals sign, and THAT SPACE IS KEPT.
+* ngspice parses it without complaint. The vendor's AS-IS warranty
+* disclaimer is reproduced below unaltered.
+*
+* Checkable, not asserted:
+*
+*   diff <(grep -v '^\*' vendor/bjt_npn/diodes_inc/MMBT5551/MMBT5551.spice.txt) \
+*        <(grep -v '^\*' models/bjt_npn/mmbt5551.lib)      # empty
+*
+* ------------------------------------------------------------------
+* PSPICE QUASI-SATURATION PARAMETERS: ngspice ACCEPTS THEM SILENTLY
+* ------------------------------------------------------------------
+*
+* QUASIMOD=1, RCO=170, VO=35 and GAMMA=2.2E-7 are PSpice quasi-saturation
+* parameters and ngspice 47 emits ZERO warnings on this file - verified
+* by running it in L25. The silence is evidence only because the
+* comparison exists: on models/jfet/lsk489.lib the same ngspice prints
+* four "unrecognized parameter ... ignored" lines.
+*
+* ------------------------------------------------------------------
+* CROSS-CHECKED AGAINST THE DATASHEET - THREE OF THREE INSIDE
+* ------------------------------------------------------------------
+*
+* Datasheet DS30061 Rev. 15-2 (c) 2025, revision read from the footer,
+* frozen at vendor/bjt_npn/diodes_inc/MMBT5551/MMBT5551.pdf. ngspice 47,
+* set temp = 25 (the datasheet is @ 25 C, ngspice defaults to 27, and
+* XTB = 1.4 makes hFE temperature dependent):
+*
+*   hFE   @ IC = 10 mA, VCE = 5 V      107.218    window 80 .. 250   INSIDE
+*   fT    @ IC = 10 mA, VCE = 10 V,
+*         ftest = 100 MHz              175.683 MHz   100 MHz MIN.    INSIDE
+*   C_obo @ VCB = 10 V, 1 MHz          2.2207 pF     6 pF MAX.       INSIDE
+*
+* ------------------------------------------------------------------
+* TWO NOTES ON THE fT NUMBER
+* ------------------------------------------------------------------
+*
+* FIRST: it was measured with the collector current VERIFIED at the
+* datasheet's IC = 10.000 mA (op prints 1.000000e-02), not at a round
+* base current - which is what moved the MMBT5401's figure by 5.5%; see
+* that file's header. L24 records 173.1 MHz for this device.
+*
+* SECOND, and this is a property of the model rather than of the method:
+* on this device THE DEFINITION MATTERS, where on the MMBT5401 it did
+* not. The datasheet specifies fT as the gain-bandwidth product measured
+* at ftest = 100 MHz, and that gives 175.683 MHz - the value locked here,
+* because it is what the 100 MHz minimum refers to. The |hfe| = 1
+* crossing gives 172.579 MHz instead, 1.8% lower, because the roll-off is
+* not a clean -20 dB/dec all the way to unity: GBW peaks at 176.9 MHz
+* near 30 MHz and then falls, reaching 105 MHz by 1 GHz. Anyone quoting
+* an fT for this device should say which definition they used.
+*
+* ------------------------------------------------------------------
+* WHAT THIS MODEL DOES NOT HAVE
+* ------------------------------------------------------------------
+*
+* NO FLICKER NOISE: no KF, no AF. In this repo only models/jfet/lsk489.lib
+* has 1/f noise, so every noise figure that leans on this device is a
+* floor without flicker (NC-004), and that belongs next to the number.
+*
+* No SPICE magnitude suffix appears in the model line, so
+* docs/limitations.md #13 has nothing to bite on here.
+*
+* ------------------------------------------------------------------
+* BELOW THIS LINE: THE VENDOR FILE, BYTE FOR BYTE
+* ------------------------------------------------------------------
+* DIODES INCORPORATED AND ITS AFFILIATED COMPANIES AND SUBSIDIARIES (COLLECTIVELY, "DIODES") 
+* PROVIDE THESE SPICE MODELS AND DATA (COLLECTIVELY, THE "SM DATA") "AS IS" AND WITHOUT ANY 
+* REPRESENTATIONS OR WARRANTIES, EXPRESS OR IMPLIED, INCLUDING ANY WARRANTY OF MERCHANTABILITY 
+* OR FITNESS FOR A PARTICULAR PURPOSE, ANY WARRANTY ARISING FROM COURSE OF DEALING OR COURSE OF 
+* PERFORMANCE, OR ANY WARRANTY THAT ACCESS TO OR OPERATION OF THE SM DATA WILL BE UNINTERRUPTED, 
+* OR THAT THE SM DATA OR ANY SIMULATION USING THE SM DATA WILL BE ERROR FREE. TO THE MAXIMUM 
+* EXTENT PERMITTED BY LAW, IN NO EVENT WILL DIODES BE LIABLE FOR ANY DIRECT OR INDIRECT, 
+* SPECIAL, INCIDENTAL, PUNITIVE OR CONSEQUENTIAL DAMAGES ARISING OUT OF OR IN CONNECTION WITH 
+* THE PRODUCTION OR USE OF SM DATA, HOWEVER CAUSED AND UNDER WHATEVER CAUSE OF ACTION OR THEORY 
+* OF LIABILITY BROUGHT (INCLUDING, WITHOUT LIMITATION, UNDER ANY CONTRACT, NEGLIGENCE OR OTHER 
+* TORT THEORY OF LIABILITY), EVEN IF DIODES HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES, 
+* AND DIODES' TOTAL LIABILITY (WHETHER IN CONTRACT, TORT OR OTHERWISE) WITH REGARD TO THE SM 
+* DATA WILL NOT, IN THE AGGREGATE, EXCEED ANY SUMS PAID BY YOU TO DIODES FOR THE SM DATA.
+
+
+
+*
+*DIODES_INC_SPICE_MODEL
+*ORIGIN=DZSL_DPG_GM
+*SIMULATOR=PSPICE
+*DATE=08FEB2011
+*VERSION=2
+*
+.MODEL MMBT5551 NPN IS=6.5E-15 NF=1 BF=110 VAF=288 ISE=1.0E-14
++ NE=1.5 NR=1 BR=4.5 VAR=70 ISC=3E-12 NC=1.35 RC=0.5 RB =0.26 RE =0.23
++ CJC=6.1E-12 MJC=0.31 VJC=0.4 CJE=57E-12 MJE=0.35 VJE=0.8 TF=0.2E-9
++ TR=1.5E-6 XTB=1.4 QUASIMOD=1 RCO=170 VO=35 GAMMA=2.2E-7
+*
+*$

@@ -571,6 +571,510 @@ wrdata {csv} @q1[ic] @q1[ib]
     return cir, csv, 2, check
 
 
+# ---------------------------------------------------------------------
+# L25: the five vendor models promoted out of vendor/ into models/.
+#
+# These are the first recipes that need MORE THAN ONE output file, and
+# the reason is physical, not stylistic: fT and C_obo (and the diode's
+# C_T) are AC quantities, the hFE and V_F points are DC, and `wrdata`
+# writes one plot at a time. So a builder here returns a LIST of output
+# paths and a LIST of column counts, and its check_fn receives the list
+# of row-sets in the same order. main() handles both shapes; the fourteen
+# single-output recipes above were not touched.
+#
+# Two things that every one of these decks does, and that are worth
+# copying rather than rediscovering:
+#
+#   * `destroy all` between analyses. Each analysis makes a NEW numbered
+#     plot, and without this the next wrdata can silently write the
+#     previous one - docs/limitations.md #10, the defect that was worth a
+#     factor of 3.4 in L5.
+#   * `save` lists the internal device vectors AND the branch currents.
+#     @q1[ic] is not recorded unless it is saved, and once there is an
+#     explicit save list, i(Vc) has to be on it too.
+# ---------------------------------------------------------------------
+
+def _interp_hfe(rows, target):
+    """hFE at a target IC, interpolating IB the way ngspice's own
+    `meas ... when` does. Reading the bracketing sample instead is worth
+    the sweep step - 0.7% on the LS350 in L22 - which would fail these
+    locks for the wrong reason. Returns None if IC never reaches target."""
+    prev = None
+    for r in rows:
+        ic, ib = abs(r["y0"]), abs(r["y1"])
+        if prev is not None and prev[0] < target <= ic and ib > 0:
+            ic0, ib0 = prev
+            f = (target - ic0) / (ic - ic0)
+            return target / (ib0 + f * (ib - ib0))
+        prev = (ic, ib)
+    return None
+
+
+def _row_at(rows, freq):
+    """The AC row nearest a frequency. The sweeps below are chosen so that
+    the datasheet's own test frequency is hit exactly."""
+    return min(rows, key=lambda r: abs(r["x"] - freq))
+
+
+def _cap_from(row, re_key, im_key):
+    """Capacitance from the current a 1 V AC source pushes into a reverse
+    biased junction: C = |Im(I)| / (2 pi f). The real part is returned too,
+    because it is what says whether the reading is capacitive at all."""
+    import math
+    c = abs(row[im_key]) / (2.0 * math.pi * row["x"])
+    return c, abs(row[re_key] / row[im_key])
+
+
+def _tb_diodes_bjt(model_file, model_name, csv_base, sign, ib_ft,
+                   hfe_window, hfe_locked, ft_locked, cobo_locked, cobo_max):
+    """Shared body of tb_mmbt5401() and tb_mmbt5551() - the two Diodes
+    Incorporated models are the same die polarity-mirrored, are specified
+    at mirrored conditions, and differ only in numbers. `sign` is +1 for
+    the NPN and -1 for the PNP.
+
+    Three devices in one deck, because the datasheet specifies the three
+    quantities at three DIFFERENT operating points and one instance cannot
+    be at all of them:
+
+      Q1  hFE   at |VCE| = 5 V,  swept base voltage
+      Q2  fT    at |VCE| = 10 V, FIXED base current
+      Q3  C_obo at |VCB| = 10 V, EMITTER OPEN (1 T-ohm to ground, which is
+          the DC path the solver needs and 5 orders below the junction's
+          own admittance at 1 MHz)
+
+    THE fT BIAS IS A HARD-CODED BASE CURRENT, and the first output file
+    exists to keep that honest: it records Q2's collector current from an
+    op, and the check refuses if it is not the datasheet's 10 mA. That is
+    not ceremony - it is the exact thing that went wrong in L24, whose
+    169.5 MHz for the MMBT5401 came from a round IB = 100 uA that this
+    model turns into IC = 12.68 mA, 27% above the specified test current.
+
+    fT IS THE DATASHEET'S DEFINITION, NOT THE UNITY-GAIN CROSSING: the
+    Diodes tables specify fT at "f = 100MHz", i.e. the gain-bandwidth
+    product measured there, and the 100 MHz minimum is written against
+    that. On the MMBT5401 the two definitions agree to 0.02%; on the
+    MMBT5551 they differ by 1.8%, so the choice is not cosmetic. The AC
+    sweep is `dec 2` from 1 MHz to 100 MHz, which lands exactly on both
+    the C_obo test frequency and the fT test frequency.
+
+    Conditions are the datasheet's and not ngspice's: set temp = 25,
+    because the tables are @ 25 C, ngspice defaults to 27, and XTB makes
+    hFE temperature dependent.
+    """
+    op_csv = os.path.join(SCRATCH_DIR, csv_base + "_op.csv")
+    hfe_csv = os.path.join(SCRATCH_DIR, csv_base + "_hfe.csv")
+    ac_csv = os.path.join(SCRATCH_DIR, csv_base + "_ac.csv")
+    v5, v10 = 5.0 * sign, 10.0 * sign
+    vb_start, vb_stop, vb_step = 0.45 * sign, 1.05 * sign, 0.0002 * sign
+    # PNP base current leaves the base, NPN base current enters it.
+    ib_nodes = "b2 0" if sign < 0 else "0 b2"
+    cir = f"""* validate {csv_base}.lib - {model_name} at the datasheet's own conditions
+.include {model_file}
+Q1 c1 b1 0 {model_name}
+Vc1 c1 0 DC {v5}
+Vb1 b1 0 DC {0.6 * sign}
+Q2 c2 b2 0 {model_name}
+Vc2 c2 0 DC {v10}
+Ib2 {ib_nodes} DC {ib_ft:.9g} AC 1
+Q3 c3 0 e3 {model_name}
+Re3 e3 0 1T
+Vc3 c3 0 DC {v10} AC 1
+.control
+set temp = 25
+save @q1[ic] @q1[ib] @q2[ic] i(Vc2) i(Vc3)
+op
+wrdata {op_csv} @q2[ic]
+destroy all
+dc Vb1 {vb_start} {vb_stop} {vb_step}
+wrdata {hfe_csv} @q1[ic] @q1[ib]
+destroy all
+ac dec 2 1meg 100meg
+let hfe = mag(i(Vc2))
+let cre = real(i(Vc3))
+let cim = imag(i(Vc3))
+wrdata {ac_csv} hfe cre cim
+destroy all
+.endc
+.end
+"""
+    HFE_MIN, HFE_MAX = hfe_window
+    FT_MIN = 100e6
+    TOL_PCT = 0.5   # a changed digit moves these by far more than 0.5%
+
+    def check(sets):
+        op_rows, hfe_rows, ac_rows = sets
+        problems, report = [], []
+
+        if len(op_rows) != 1:
+            return False, f"expected one op row, got {len(op_rows)}"
+        ic_ft = abs(op_rows[0]["y0"])
+        if abs(ic_ft - 10e-3) / 10e-3 > 0.001:
+            problems.append(
+                f"the fT bias is off: IC = {ic_ft * 1e3:.4f} mA where the "
+                f"datasheet specifies 10 mA. The hard-coded base current no "
+                f"longer produces the test current, so the fT below would be "
+                f"measured at the wrong operating point")
+
+        if len(hfe_rows) < 2000:
+            return False, f"expected the full Vb sweep, got {len(hfe_rows)} rows"
+        hfe = _interp_hfe(hfe_rows, 10e-3)
+        if hfe is None:
+            problems.append("IC never reached 10 mA in the sweep")
+        else:
+            if not (HFE_MIN <= hfe <= HFE_MAX):
+                problems.append(
+                    f"hFE={hfe:.3f} at IC=10mA is outside the datasheet window "
+                    f"[{HFE_MIN:.0f}, {HFE_MAX:.0f}]")
+            if abs(hfe - hfe_locked) / hfe_locked * 100 > TOL_PCT:
+                problems.append(
+                    f"hFE={hfe:.3f} has moved from the value L25 measured "
+                    f"({hfe_locked}) by more than {TOL_PCT}% - the model changed")
+            report.append(f"hFE@10mA={hfe:.1f}")
+
+        if len(ac_rows) < 3:
+            return False, f"expected the AC sweep, got {len(ac_rows)} rows"
+        r100 = _row_at(ac_rows, 100e6)
+        ft = r100["x"] * r100["y0"]
+        if ft < FT_MIN:
+            problems.append(
+                f"fT={ft / 1e6:.3f}MHz is below the datasheet minimum "
+                f"{FT_MIN / 1e6:.0f}MHz")
+        if abs(ft - ft_locked) / ft_locked * 100 > TOL_PCT:
+            problems.append(
+                f"fT={ft / 1e6:.3f}MHz has moved from the value L25 measured "
+                f"({ft_locked / 1e6:.3f}MHz) by more than {TOL_PCT}%")
+        report.append(f"fT={ft / 1e6:.1f}MHz")
+
+        r1 = _row_at(ac_rows, 1e6)
+        cobo, ratio = _cap_from(r1, "y1", "y2")
+        if ratio > 0.05:
+            problems.append(
+                f"the C_obo reading is not capacitive: |Re/Im| = {ratio:.3g}")
+        if cobo > cobo_max:
+            problems.append(
+                f"C_obo={cobo * 1e12:.4f}pF exceeds the datasheet maximum "
+                f"{cobo_max * 1e12:.0f}pF")
+        if abs(cobo - cobo_locked) / cobo_locked * 100 > TOL_PCT:
+            problems.append(
+                f"C_obo={cobo * 1e12:.4f}pF has moved from the value L25 "
+                f"measured ({cobo_locked * 1e12:.4f}pF) by more than {TOL_PCT}%")
+        report.append(f"C_obo={cobo * 1e12:.3f}pF")
+
+        if problems:
+            return False, "; ".join(problems)
+        return True, (", ".join(report) + " - three of three inside the "
+                      "datasheet windows, at IC verified to 10.000 mA")
+    return cir, [op_csv, hfe_csv, ac_csv], [1, 2, 3], check
+
+
+def tb_mmbt5401(model_file):
+    """REGRESSION LOCK on the L25 cross-check of the MMBT5401 (the VAS).
+
+    Datasheet DS30057 Rev. 12-2, (c) 2024. Three quantities, three of
+    three inside the manufacturer's own windows - with the MMBT5551 the
+    only model in this repo with no mixed verdict:
+
+      hFE   @ IC = -10 mA, VCE = -5 V              124.917  (60 .. 240)
+      fT    @ IC = -10 mA, VCE = -10 V, 100 MHz    160.116 MHz  (100 min)
+      C_obo @ VCB = -10 V, 1 MHz, IE = 0           3.7063 pF    (6 max)
+
+    THE fT VALUE IS NOT L24's. L24 and ADR-017 record 169.5 MHz; that
+    number is reproduced exactly by a round IB = 100 uA, which this model
+    turns into IC = 12.68 mA. Re-measured at the datasheet's own IC =
+    10.000 mA it is 160.1 MHz on three agreeing legs. The verdict does not
+    change, the number moves by -5.5%, and it is the number the dominant
+    pole discussion rests on. See _tb_diodes_bjt() and the file header.
+
+    The base current below is what produces IC = 10.000 mA with the model
+    AS FROZEN; the op check in the recipe refuses if that stops being
+    true, so the lock cannot quietly drift onto another operating point.
+    """
+    return _tb_diodes_bjt(
+        model_file, "MMBT5401", "bjt_pnp_mmbt5401", -1,
+        ib_ft=78.9569265e-6, hfe_window=(60.0, 240.0), hfe_locked=124.917,
+        ft_locked=160.116e6, cobo_locked=3.7063e-12, cobo_max=6e-12)
+
+
+def tb_mmbt5551(model_file):
+    """REGRESSION LOCK on the L25 cross-check of the MMBT5551 (tail sink,
+    both cascodes, VAS load, Vbe multiplier - five instances per block).
+
+    Datasheet DS30061 Rev. 15-2, (c) 2025:
+
+      hFE   @ IC = 10 mA, VCE = 5 V               107.218  (80 .. 250)
+      fT    @ IC = 10 mA, VCE = 10 V, 100 MHz     175.683 MHz  (100 min)
+      C_obo @ VCB = 10 V, 1 MHz                   2.2207 pF    (6 max)
+
+    ON THIS DEVICE THE fT DEFINITION MATTERS. The datasheet's own - the
+    gain-bandwidth product at ftest = 100 MHz - gives 175.683 MHz, which
+    is what is locked because it is what the 100 MHz minimum is written
+    against. The |hfe| = 1 crossing gives 172.579 MHz, 1.8% lower, because
+    the roll-off is not a clean -20 dB/dec to unity: GBW peaks at 176.9
+    MHz near 30 MHz and is down to 105 MHz by 1 GHz. On the MMBT5401 the
+    same two definitions agree to 0.02%, which is why the difference is a
+    property of this model rather than of the method.
+    """
+    return _tb_diodes_bjt(
+        model_file, "MMBT5551", "bjt_npn_mmbt5551", +1,
+        ib_ft=91.6805512e-6, hfe_window=(80.0, 250.0), hfe_locked=107.218,
+        ft_locked=175.683e6, cobo_locked=2.2207e-12, cobo_max=6e-12)
+
+
+def _tb_mje(model_file, model_name, csv_base, sign, ib_ft, hfe_points,
+            ft_locked):
+    """Shared body of tb_mje15032() and tb_mje15033(), the two halves of
+    the output stage. One datasheet covers both (MJE15032/D, December 2024
+    Rev. 7), specifying hFE at 0.5 / 1.0 / 2.0 A with VCE = 5 V and fT at
+    IC = 500 mA, VCE = 10 V.
+
+    fT HERE IS NOT THE UNITY-GAIN CROSSING EITHER, AND ON THESE TWO IT
+    CHANGES A VERDICT RATHER THAN A DIGIT. Note 2 of the datasheet says
+    "fT = hfe ftest" and the test row gives ftest = 1.0 MHz, so fT is the
+    gain-bandwidth product measured AT 1 MHz. At 1 MHz these devices are
+    only ~2.6 octaves above their own beta pole, so that reading is
+    materially lower than the asymptote: 27.667 MHz for the NPN and 29.286
+    MHz for the PNP, against a 30 MHz minimum, where the crossings (30.713
+    and 30.719 MHz) would both clear it. The minimum is written against
+    the 1 MHz test, so the 1 MHz reading is the comparison that means
+    something - and made that way NEITHER MODEL REACHES ITS OWN MINIMUM.
+    That is NC-025, opened by L25; L24 had recorded 31.04 / 31.38 MHz and
+    read them as inside.
+
+    So this recipe locks two published deviations and does NOT claim
+    conformance: NC-024 (the NPN's hFE at 0.5 A) and NC-025 (fT on both).
+    A recipe that declared conformance where there is none would be worse
+    than no recipe.
+
+    As in the Diodes recipes the fT bias is a hard-coded base current and
+    the first output file records the collector current it actually
+    produces, so the lock cannot drift onto another operating point.
+    """
+    op_csv = os.path.join(SCRATCH_DIR, csv_base + "_op.csv")
+    hfe_csv = os.path.join(SCRATCH_DIR, csv_base + "_hfe.csv")
+    ac_csv = os.path.join(SCRATCH_DIR, csv_base + "_ac.csv")
+    ib_nodes = "b2 0" if sign < 0 else "0 b2"
+    cir = f"""* validate {csv_base}.lib - {model_name} at the datasheet's own conditions
+.include {model_file}
+Q1 c1 b1 0 {model_name}
+Vc1 c1 0 DC {5.0 * sign}
+Vb1 b1 0 DC {0.8 * sign}
+Q2 c2 b2 0 {model_name}
+Vc2 c2 0 DC {10.0 * sign}
+Ib2 {ib_nodes} DC {ib_ft:.9g} AC 1
+.control
+set temp = 25
+save @q1[ic] @q1[ib] @q2[ic] i(Vc2)
+op
+wrdata {op_csv} @q2[ic]
+destroy all
+dc Vb1 {0.5 * sign} {1.6 * sign} {0.0002 * sign}
+wrdata {hfe_csv} @q1[ic] @q1[ib]
+destroy all
+ac lin 1 1meg 1meg
+let hfe = mag(i(Vc2))
+wrdata {ac_csv} hfe
+destroy all
+.endc
+.end
+"""
+    FT_MIN = 30e6
+    TOL_PCT = 0.5
+
+    def check(sets):
+        op_rows, hfe_rows, ac_rows = sets
+        problems, report = [], []
+
+        if len(op_rows) != 1:
+            return False, f"expected one op row, got {len(op_rows)}"
+        ic_ft = abs(op_rows[0]["y0"])
+        if abs(ic_ft - 0.5) / 0.5 > 0.001:
+            problems.append(
+                f"the fT bias is off: IC = {ic_ft * 1e3:.2f} mA where the "
+                f"datasheet specifies 500 mA")
+
+        if len(hfe_rows) < 4000:
+            return False, f"expected the full Vb sweep, got {len(hfe_rows)} rows"
+        for target, locked, minimum in hfe_points:
+            hfe = _interp_hfe(hfe_rows, target)
+            if hfe is None:
+                problems.append(f"IC never reached {target:g} A in the sweep")
+                continue
+            if abs(hfe - locked) / locked * 100 > TOL_PCT:
+                problems.append(
+                    f"hFE={hfe:.3f} at IC={target:g}A has moved from the value "
+                    f"L25 measured ({locked}) by more than {TOL_PCT}%")
+            mark = "" if hfe >= minimum else f" BELOW its {minimum:g} minimum"
+            report.append(f"hFE@{target:g}A={hfe:.1f}{mark}")
+
+        if len(ac_rows) != 1:
+            return False, f"expected one AC row, got {len(ac_rows)}"
+        ft = ac_rows[0]["x"] * ac_rows[0]["y0"]
+        if abs(ft - ft_locked) / ft_locked * 100 > TOL_PCT:
+            problems.append(
+                f"fT={ft / 1e6:.3f}MHz has moved from the value L25 measured "
+                f"({ft_locked / 1e6:.3f}MHz) by more than {TOL_PCT}%")
+        short = (FT_MIN - ft) / FT_MIN * 100
+        report.append(f"fT={ft / 1e6:.3f}MHz ({short:.1f}% below its 30MHz "
+                      f"minimum - NC-025)")
+
+        if problems:
+            return False, "; ".join(problems)
+        return True, ", ".join(report)
+    return cir, [op_csv, hfe_csv, ac_csv], [1, 2, 1], check
+
+
+def tb_mje15032(model_file):
+    """REGRESSION LOCK on the L25 cross-check of the MJE15032, the NPN
+    output device. TWO of its four checked points are OUTSIDE the
+    manufacturer's own datasheet, and this recipe asserts exactly that:
+
+      hFE @ IC = 0.5 A   66.389    70 MIN.       OUTSIDE by 5.1%  (NC-024)
+      hFE @ IC = 1.0 A   61.335    50 MIN.       inside
+      hFE @ IC = 2.0 A   53.488    10 MIN.       inside
+      fT  @ 500 mA       27.667 MHz  30 MHz MIN. OUTSIDE by 7.8%  (NC-025)
+
+    The 2.0 A point corrects L24, which recorded it as "not reached" -
+    that was the extent of its base sweep, not a property of the model,
+    which reaches IC = 6.8 A smoothly.
+
+    Both deviations run pessimistic: less gain and less speed than the
+    guaranteed part. That is the safe direction, but it is not a known
+    amount, and the model does not describe a conforming device.
+    """
+    return _tb_mje(
+        model_file, "Qmje15032", "bjt_npn_mje15032", +1,
+        ib_ft=6.22718707e-3,
+        hfe_points=[(0.5, 66.389, 70.0), (1.0, 61.335, 50.0),
+                    (2.0, 53.488, 10.0)],
+        ft_locked=27.667e6)
+
+
+def tb_mje15033(model_file):
+    """REGRESSION LOCK on the L25 cross-check of the MJE15033, the PNP
+    output device. hFE is clean at all three published points, fT is not:
+
+      hFE @ IC = 0.5 A   88.218    70 MIN.       inside (by 26%)
+      hFE @ IC = 1.0 A   66.917    50 MIN.       inside
+      hFE @ IC = 2.0 A   42.766    10 MIN.       inside
+      fT  @ 500 mA       29.286 MHz  30 MHz MIN. OUTSIDE by 2.4%  (NC-025)
+
+    Worth reading next to its NPN complement: hFE 129.4 here against 75.7
+    there at the project's actual 15 mA working point is a 1.7x IMBALANCE
+    inside a complementary follower, which the hand-written placeholders
+    could not show because they were symmetric by construction. That is
+    Fase 4 material, not a regression, and is not asserted here.
+    """
+    return _tb_mje(
+        model_file, "Qmje15033", "bjt_pnp_mje15033", -1,
+        ib_ft=3.54936812e-3,
+        hfe_points=[(0.5, 88.218, 70.0), (1.0, 66.917, 50.0),
+                    (2.0, 42.766, 10.0)],
+        ft_locked=29.286e6)
+
+
+def tb_1n4148(model_file):
+    """REGRESSION LOCK on the L25 cross-check of the 1N4148 bias diode.
+
+    Datasheet 1N914/D, September 2024 Rev. 6 - the 1N4148 row, which is
+    not the 914B row. Both published limits are inside:
+
+      V_F @ I_F = 10 mA        0.766187 V   1.0 V MAX.   (23% margin)
+      C_T @ V_R = 0, 1 MHz     0.8687 pF    4.0 pF MAX.
+
+    THE MODEL NAME IS D1N914 AND THE FILE IT CAME FROM IS 1n914.lib, while
+    this file is named for the part. All three are correct and none should
+    be "corrected": onsemi files the 1N4148 under the 1N914 document, and
+    the file that DOES carry the part's name - 1n4148.lib on the same
+    server - contains .SUBCKT 1N4148WT, the SOD-323 variant, which ngspice
+    would load without a word. docs/limitations.md #20.
+
+    C_T is measured as the current a 1 V AC source pushes into the
+    unbiased junction, C = |Im(I)| / (2 pi f); the check also refuses if
+    the reading is not dominated by its imaginary part, because that is
+    what says the number is a capacitance at all.
+
+    Two devices in the deck because V_F needs a forward current source and
+    C_T needs zero bias - one instance cannot be at both.
+    """
+    vf_csv = os.path.join(SCRATCH_DIR, "diodes_1n4148_vf.csv")
+    ct_csv = os.path.join(SCRATCH_DIR, "diodes_1n4148_ct.csv")
+    cir = f"""* validate 1n4148.lib - onsemi D1N914 at the datasheet's own conditions
+.include {model_file}
+If 0 a DC 0.01
+D1 a 0 D1N914
+Vc k 0 DC 0 AC 1
+D2 k 0 D1N914
+.control
+set temp = 25
+save v(a) i(Vc)
+dc If 0.0005 0.02 0.00001
+wrdata {vf_csv} v(a)
+destroy all
+ac lin 1 1meg 1meg
+let cre = real(i(Vc))
+let cim = imag(i(Vc))
+wrdata {ct_csv} cre cim
+destroy all
+.endc
+.end
+"""
+    VF_MAX = 1.0
+    CT_MAX = 4e-12
+    VF_LOCKED = 0.766187      # V, at IF = 10 mA, 25 C
+    VF_TOL = 1e-3
+    CT_LOCKED = 0.8687e-12
+    TOL_PCT = 0.5
+
+    def check(sets):
+        vf_rows, ct_rows = sets
+        problems, report = [], []
+
+        if len(vf_rows) < 1000:
+            return False, f"expected the full IF sweep, got {len(vf_rows)} rows"
+        prev, vf = None, None
+        for r in vf_rows:
+            i, v = r["x"], r["y0"]
+            if prev is not None and prev[0] < 10e-3 <= i:
+                i0, v0 = prev
+                vf = v0 + (10e-3 - i0) / (i - i0) * (v - v0)
+                break
+            prev = (i, v)
+        if vf is None:
+            problems.append("IF never reached 10 mA in the sweep")
+        else:
+            if vf > VF_MAX:
+                problems.append(
+                    f"V_F={vf:.6f}V exceeds the datasheet maximum {VF_MAX}V")
+            if abs(vf - VF_LOCKED) > VF_TOL:
+                problems.append(
+                    f"V_F={vf:.6f}V has moved from the value L25 measured "
+                    f"({VF_LOCKED:.6f}V) by more than {VF_TOL * 1e3:.0f}mV")
+            report.append(f"V_F@10mA={vf:.4f}V")
+
+        if len(ct_rows) != 1:
+            return False, f"expected one AC row, got {len(ct_rows)}"
+        ct, ratio = _cap_from(ct_rows[0], "y0", "y1")
+        if ratio > 0.05:
+            problems.append(
+                f"the C_T reading is not capacitive: |Re/Im| = {ratio:.3g}")
+        if ct > CT_MAX:
+            problems.append(
+                f"C_T={ct * 1e12:.4f}pF exceeds the datasheet maximum "
+                f"{CT_MAX * 1e12:.0f}pF")
+        if abs(ct - CT_LOCKED) / CT_LOCKED * 100 > TOL_PCT:
+            problems.append(
+                f"C_T={ct * 1e12:.4f}pF has moved from the value L25 measured "
+                f"({CT_LOCKED * 1e12:.4f}pF) by more than {TOL_PCT}%")
+        report.append(f"C_T@VR=0={ct * 1e12:.4f}pF")
+
+        if problems:
+            return False, "; ".join(problems)
+        return True, (", ".join(report) + " - both published limits inside "
+                      "(C_T sits 4.6x below its ceiling, so the model is a "
+                      "typical specimen, not the datasheet's worst case)")
+    return cir, [vf_csv, ct_csv], [1, 2], check
+
+
 def tb_opamp(model_file):
     csv = os.path.join(SCRATCH_DIR, "opamp_generic.csv")
     cir = f"""* validate generic_opamp.lib (unity-gain buffer)
@@ -643,6 +1147,12 @@ def build_registry():
     reg["jfet/generic_njf.lib"] = lambda p: tb_jfet(p)
     reg["jfet/lsk489.lib"] = lambda p: tb_lsk489(p)
     reg["bjt_pnp/ls350.lib"] = lambda p: tb_ls350(p)
+    # L25 - the five vendor models promoted out of vendor/ (NC-017).
+    reg["bjt_pnp/mmbt5401.lib"] = lambda p: tb_mmbt5401(p)
+    reg["bjt_npn/mmbt5551.lib"] = lambda p: tb_mmbt5551(p)
+    reg["bjt_npn/mje15032.lib"] = lambda p: tb_mje15032(p)
+    reg["bjt_pnp/mje15033.lib"] = lambda p: tb_mje15033(p)
+    reg["diodes/1n4148.lib"] = lambda p: tb_1n4148(p)
     reg["opamp/generic_opamp.lib"] = lambda p: tb_opamp(p)
     reg["subckt_generic/generic_transformer.lib"] = lambda p: tb_transformer(p)
     return reg
@@ -697,20 +1207,39 @@ def main():
         with open(cir_path, "w") as f:
             f.write(cir_text)
 
+        # A recipe may write MORE THAN ONE output file: fT, C_obo and C_T
+        # are AC quantities while hFE and V_F are DC, and wrdata writes one
+        # plot at a time. When csv_path is a list, ncols is a list of the
+        # same length and check_fn receives the list of row-sets in the same
+        # order. Single-output recipes are unaffected.
+        multi = isinstance(csv_path, (list, tuple))
+        csv_paths = list(csv_path) if multi else [csv_path]
+        ncols_list = list(ncols) if multi else [ncols]
+
+        # Delete the outputs before running. Otherwise a deck that fails to
+        # write one of them leaves the PREVIOUS run's file on disk and the
+        # check reads stale numbers - a green result for a run that did not
+        # happen. Same family as the marker file run_simulation.sh uses.
+        for p in csv_paths:
+            if os.path.isfile(p):
+                os.remove(p)
+
         rc, output = run_ngspice(cir_path)
         if rc != 0:
             results.append((f"{rel} [electrical]", "FAIL", f"ngspice exited {rc}: {output.strip().splitlines()[-1] if output.strip() else '(no output)'}"))
             any_fail = True
             continue
 
-        if not os.path.isfile(csv_path) or os.path.getsize(csv_path) == 0:
-            results.append((f"{rel} [electrical]", "FAIL", f"expected output file missing/empty: {csv_path}"))
+        missing = [p for p in csv_paths
+                   if not os.path.isfile(p) or os.path.getsize(p) == 0]
+        if missing:
+            results.append((f"{rel} [electrical]", "FAIL", f"expected output file(s) missing/empty: {', '.join(missing)}"))
             any_fail = True
             continue
 
         try:
-            rows = read_wrdata(csv_path, ncols)
-            ok, msg = check_fn(rows)
+            sets = [read_wrdata(p, n) for p, n in zip(csv_paths, ncols_list)]
+            ok, msg = check_fn(sets if multi else sets[0])
         except Exception as e:
             results.append((f"{rel} [electrical]", "FAIL", f"error parsing/checking results: {e}"))
             any_fail = True
