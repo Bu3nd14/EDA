@@ -1,104 +1,90 @@
-# Prompt per la sessione successiva — L9
+# Prompt per la sessione successiva — L24
 
 Copiare da qui in giù.
 
 ---
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository.
-Il lavoro è organizzato in LOTTI PICCOLI: questa sessione ne fa UNO, L9,
+Il lavoro è organizzato in LOTTI PICCOLI: questa sessione ne fa UNO, L24,
 e si ferma. Non iniziarne un secondo.
 
-## PRIMA DI TUTTO: una cosa che non è un lotto e ha una scadenza
+## Cosa è cambiato, e perché il prossimo lotto non è L9
 
-Il **THAT320 è fine vita dal 2026-09-01** e il **last-time buy chiude il
-2026-09-30**. Il memo del costruttore è congelato in
-`vendor/bjt_array/that/THAT320/THAT-EOL-Memo.pdf`. È **NC-015**,
-bloccante, e la decisione è **mia, non tua**: comprare adesso una scorta,
-oppure riprogettare lo specchio d'ingresso su una coppia PNP ancora in
-produzione.
+Il 2026-09-10 ho posto **due regole di progetto**, registrate in
+**ADR-016** e come requisiti **T7** e **T8**:
 
-**Se non te ne ho ancora parlato, ricordamelo all'inizio della sessione**
-— una riga, non un'analisi. Poi procedi con L9: la decisione non blocca
-questo lotto.
+1. **Nessun componente a fine vita entra nel progetto.**
+2. **Ogni dispositivo attivo del percorso di segnale ha un modello SPICE
+   del costruttore.**
+
+Conseguenza immediata: il THAT320 esce (era fine vita), 2N5401 e 2N5551
+escono (nessun modello vendor), e **MJE15032/33 e 1N4148 vanno
+verificati** perché nessuno l'ha mai fatto. Dei sette dispositivi attivi
+del progetto **uno solo è conforme oggi**: l'LSK489.
+
+**L9 — la rosa dei componenti di segnale — è rinviata**: non sblocca
+niente, mentre L24 e L22 chiudono due non conformità bloccanti.
 
 ## Leggi PRIMA, in quest'ordine, e non saltare
 
   1. `CLAUDE.md` — ambiente, percorsi assoluti, trappole che falliscono
      in silenzio, e la regola di fine sessione (push PRIMA di tutto)
   2. `docs/preamp/STATE.md` — la sezione "Come si lavora da qui", la
-     tabella dei lotti, la sezione **L8**, "Prossimo passo concreto" e
-     **"Materiale già raccolto per L8-L10"**, che è il tuo punto di
-     partenza e che NON va ricercato di nuovo
-  3. `docs/preamp/reports/2026-09-10-L8-parti-nuove.md` — non per le
-     parti, che sono chiuse, ma per **il metodo**: come si verifica una
-     parte in modo che il fatto regga, e le tre trappole in cui L8 è
-     caduto per primo
-  4. `docs/limitations.md` — **da leggere prima di scrivere codice**, e
-     in particolare le due voci nuove, **#17** e **#18**, che sono di L8
-  5. `docs/preamp/decisions/ADR-014-cascode-ingresso.md` — perché
-     l'impedenza dell'attenuatore è un vincolo di progetto e non un
-     dettaglio
+     tabella dei lotti, le sezioni **L8** e **L8b**, e "Prossimo passo
+     concreto", che contiene il mandato di questo lotto per esteso
+  3. `docs/preamp/decisions/ADR-016-modello-vendor-e-ciclo-di-vita.md` —
+     le due regole, il perché **con i numeri**, e cosa la decisione costa
+  4. `docs/preamp/reports/2026-09-10-L8-parti-nuove.md` — non per le parti,
+     che sono chiuse, ma per **il metodo**: come si verifica una parte in
+     modo che il fatto regga, e le trappole in cui L8 è caduto per primo
+  5. `docs/limitations.md` — **da leggere prima di scrivere codice**, e in
+     particolare **#17** e **#18**, che sono di L8
 
-## IL LOTTO: L9 — Fase 3b, la rosa dei componenti di segnale
+## IL LOTTO: L24 — T7 su tutti i dispositivi attivi
 
-**Cambia natura rispetto a L8, e va tenuto presente dall'inizio.** L8
-verificava **fatti chiudibili**: una parte è disponibile o non lo è, un
-contatto è NO o è NC. L9 restringe un **giudizio aperto**.
+Chiude **NC-017** (bloccante) e sblocca la metà di **NC-004** che riguarda
+VAS, cascode e stadio d'uscita.
 
-**L9 non restituisce un vincitore.** Restringe su basi misurabili —
-assorbimento dielettrico, rumore in eccesso, coefficiente di tensione — e
-la scelta finale fra parti tutte buone è **mia, all'ascolto**. È la
-ragione per cui esiste **P6**. Un lotto che torna con «ho scelto questo»
-ha sbagliato il mandato; uno che torna con «questi tre, e questo è il
-criterio che li separa, e questo è ciò che il criterio non copre» ha
-fatto il suo lavoro.
+**Nell'ordine, e l'ordine conta:**
 
-Cosa coprire, dai vincoli che il progetto ha già scritto:
+1. **Verificare MJE15032, MJE15033 e 1N4148** contro T7 e T8: esiste un
+   modello del costruttore, in quale forma, e la parte è in produzione?
 
-1. **Il Miller da 470 pF: C0G/NP0 obbligatorio.** Vincolo dichiarato in
-   `circuits/preamp/gain_block.py`: vede ~13 V di continua e porta
-   l'intero segnale di correzione, e un X7R lì modulerebbe la
-   compensazione col segnale. Serve la parte reale, la tolleranza, e cosa
-   costa in ingombro.
-2. **I sei condensatori d'accoppiamento da 4,7 µF** (ADR-007 addendum:
-   tre uscite × due canali, stesso valore su tutte e tre per togliere una
-   riga di BOM e un errore di montaggio silenzioso). Polipropilene. La
-   loro **dimensione fisica** è già un vincolo di layout su telaio unico
-   (ADR-010): è parte della risposta, non una nota a margine.
-3. **I resistori del percorso di segnale**, in particolare R_f/R_g che
-   fissano il +9,96 dB reale e i 47 Ω di isolamento di ADR-008.
-   Coefficiente di tensione e rumore in eccesso sono i criteri; la
-   tolleranza da sola non lo è.
-4. **L'attenuatore a scatti da 10 kΩ**, fuori scheda (F4/ADR-009). La sua
-   impedenza culmina a **2,5 kΩ a metà corsa** ed è la ragione per cui
-   ADR-014 esiste: qualunque parte si scelga, quel numero non deve
-   crescere.
+   **È il primo passo perché dice quanto è grande tutto il resto.** I due
+   MJE sono i **dispositivi d'uscita**: se cadono, la sostituzione non è
+   un cambio di package, è una **modifica di topologia**. Saperlo prima
+   evita di riprogettare due volte.
 
-### Le tre lezioni di L8, che valgono per L9
+   La Fase 1 aveva scritto sui due MJE «pagina models esiste, file finale
+   non confermato». **È un'ipotesi ereditata, non un dato** — e L7 ha
+   dimostrato cosa succede a fidarsi di quelle: due affermazioni plausibili
+   lasciate da L6, nessuna delle due vera.
 
-Sono la cosa più utile che il lotto precedente lascia, e sono costate una
-scoperta ciascuna.
+2. **Trovare i sostituti di 2N5401 e 2N5551** che soddisfino **T7 e T8
+   insieme**. Sono cinque istanze per blocco: VAS, due cascode, due
+   generatori di corrente e il moltiplicatore di Vbe.
 
-- **Un dato di ciclo di vita non è un dato di datasheet, e nessuno dei due
-  è un dato di catalogo.** Il THAT320 era fine vita da una settimana
-  quando la topologia lo ha scelto, il memo era pubblico, e nessuno
-  l'aveva guardato. Per ogni parte che entra in rosa, lo stato di ciclo di
-  vita si legge **dal costruttore**.
-- **Un codice di stato non è una verifica** (`docs/limitations.md` #18).
-  Su `www.onsemi.com` un `200` è arrivato con dentro una pagina HTML: quel
-  sito risponde 200 con la stessa pagina da 303 722 byte per qualunque
-  percorso inesistente. Si controlla `Content-Type` **e** dimensione, e
-  per un PDF si apre il file. E **falsificare lo user-agent peggiora le
-  cose**: con un UA Safari plausibile lo stesso host risponde 403.
-- **Un costruttore può pubblicare due modelli della stessa parte**
-  (`docs/limitations.md` #17). THAT ne pubblica due del THAT320 che
-  differiscono solo per `RB` e danno il **71%** di rumore in più o in
-  meno. Se L9 tocca un componente con un modello SPICE, va scritto
-  **quale** modello accanto a ogni numero.
+   Attenzione al VAS: con il Miller da 470 pF fissa il **polo dominante di
+   tutto l'amplificatore**, quindi la sua f_T e la sua C_ob non sono
+   dettagli di catalogo. Le cifre di margine di fase andranno rifatte
+   comunque, ma serve sapere di quanto ci si muove.
 
-E la lezione di L7 che non è scaduta: **il nome di un file non è la sua
-revisione**. Si legge dal footer del documento —
-`/opt/homebrew/bin/pdftotext -layout <pdf> - | grep -i 'rev'`.
+3. **Congelare** ogni modello trovato in `vendor/` con hash, URL e
+   `PROVENANCE.json`, e **provare che ngspice lo carica** alle condizioni
+   del datasheet.
+
+### Cosa NON accettare
+
+- **un mirror di terze parti non conta.** ADR-016 lo scarta
+  esplicitamente: si congela ciò che il **costruttore** ha servito, con il
+  suo URL e il suo hash. È la stessa regola che ADR-013 impone per
+  l'LSK489, e accettarne uno qui la svuoterebbe là;
+- **un modello pubblicato come PDF invece conta** — è il caso
+  dell'LSK489, e la procedura di trascrizione a due letture indipendenti
+  di ADR-013 esiste apposta;
+- **lo stato di ciclo di vita si legge dal costruttore**, non dal
+  distributore. È la lezione che è costata il THAT320: il memo di EOL era
+  pubblico da una settimana quando la topologia lo ha scelto.
 
 ### Cosa vale come "verificato"
 
@@ -106,46 +92,58 @@ revisione**. Si legge dal footer del documento —
   plausibile — e se non ci sei riuscito, **si dichiara**, non si riempie.
   L8 non è riuscito a leggere le quantità di stock da nessun
   distributore, e l'ha scritto;
-- un limite di datasheet è verificato se hai letto **la tabella con le
-  sue condizioni**, non l'intestazione della pagina prodotto. E attenzione
-  a **quale** tabella: un *Absolute Maximum Rating* è una soglia di
-  stress, non una caratteristica garantita — sono due numeri diversi che
-  spesso coincidono, e solo il secondo è un limite di progetto;
+- un limite di datasheet è verificato se hai letto **la tabella con le sue
+  condizioni**. E attenzione a **quale** tabella: un *Absolute Maximum
+  Rating* è una soglia di stress, non una caratteristica garantita —
+  spesso danno lo stesso numero e solo la seconda è un limite di progetto;
+- un modello SPICE è verificato se **ngspice lo carica** ed esegue, non se
+  il link esiste;
 - se congeli un PDF, va in `vendor/` con sha256, URL e `PROVENANCE.json`,
-  e la revisione letta dal footer.
+  e **la revisione letta dal footer**, mai dal nome del file.
 
-## NON fa parte di L9
+### Le trappole già pagate
 
-**Correggere le non conformità.** Hanno i loro lotti — L11-L24 nella
-tabella di `STATE.md`. Le cinque bloccanti:
+Ognuna è costata una scoperta a un lotto precedente:
 
-- **NC-001**, il mute che porta lo stadio d'uscita fuori dalla Classe A
-  (L11);
-- **NC-004**, rumore e distorsione senza evidenza. L6 e L7 ne erano una
-  parte del rimedio ed è **fatta**; L8 ha scoperto che il modello vendor
-  dello specchio **non ha rumore 1/f**, quindi resta la riesecuzione di
-  `spice/preamp/tb/tb_noise_breakdown.cir` più i modelli mancanti di
-  VAS e cascode (L24);
-- **NC-010**, le uscite fisse non isolate (L17). Stessa fisica di NC-001
-  ma **rimedio diverso**: chi chiude una non chiude l'altra;
-- **NC-014**, il polo 2 del relè Omron invertito (L21);
-- **NC-015**, il THAT320 fine vita (L22) — la decisione con la scadenza.
+1. **Il nome di un file non è la sua revisione** (L7) —
+   `pdftotext -layout <pdf> - | grep -i 'rev'`.
+2. **Le condizioni di prova sono metà del numero** (L6): il datasheet è a
+   25 °C, ngspice gira a 27.
+3. **Un codice di stato non è una verifica** (`limitations.md` #18): su
+   `www.onsemi.com` un `200` arriva con dentro una pagina HTML da 303 722
+   byte per qualunque percorso inesistente, e **falsificare lo user-agent
+   peggiora le cose** — lo stesso host risponde 403.
+4. **Un costruttore può pubblicare due modelli della stessa parte**
+   (`limitations.md` #17): vanno il 71% di rumore in più o in meno. Quale
+   modello hai usato va scritto **accanto a ogni numero**.
+5. **Guarda cosa il repo ha già in casa prima di andare fuori** (L8): la
+   risposta su quale contatto del relè fosse NC era disegnata nelle
+   polilinee del simbolo KiCad, già sul disco.
 
-**Non toccare `circuits/` né `spice/preamp/`**: la sostituzione dei
-segnaposto nella topologia è **Fase 4**. Nessun numero del dossier deve
-cambiare, ed è una proprietà da verificare: il diff del ramo non deve
-nominare `circuits/` né `docs/preamp/data/`.
+## NON fa parte di L24
 
-**Non toccare i file già in `vendor/`**: sono la traccia di controllo. Se
-serve correggere un `PROVENANCE.json` congelato, si **aggiunge accanto**
-un addendum — è quello che ha fatto L7 con
-`PROVENANCE-L7-addendum.json` — non si riscrive l'originale.
+**Sostituire le parti nella topologia.** L24 trova e verifica; la
+sostituzione in `circuits/preamp/` è **Fase 4**. Nessun numero del dossier
+deve cambiare, ed è una proprietà da verificare: il diff del ramo non deve
+nominare `circuits/`, `spice/preamp/` né `docs/preamp/data/`.
 
-**Non promuovere modelli vendor dentro `models/`.** Deciso: la promozione
-porta con sé il controllo incrociato contro il datasheet, cioè il lavoro
-di L7 moltiplicato per parte, ed è un lotto suo (L24). Il conteggio della
-suite deve restare **26/26**, ed è la prova che `models/` non è stato
-toccato.
+**Lo specchio d'ingresso** (la parte che sostituisce il THAT320): è
+**L22**, da fare insieme a **L23** perché il footprint arriva con la
+parte. Viene dopo, non prima, per la ragione al punto 1.
+
+**Promuovere i modelli in `models/`** oltre a quelli che questo lotto
+riesce a incrociare col datasheet. La promozione porta con sé il controllo
+incrociato di L6+L7 per ogni parte: se diventa troppo grande, si congela
+in `vendor/` e la promozione è un lotto suo. Meglio un lotto chiuso che
+due a metà.
+
+**Correggere le altre non conformità.** Hanno i loro lotti — L11-L24. Le
+sei bloccanti: NC-001 (L11), NC-004, NC-010 (L17), NC-014 (L21), NC-015
+(L22), NC-017 (questo lotto).
+
+**Non toccare i file già in `vendor/`**: sono la traccia di controllo. Una
+correzione a un `PROVENANCE.json` congelato si **aggiunge accanto** come
+addendum — è quello che ha fatto L7 — non si riscrive l'originale.
 
 ## COME LAVORIAMO
 
@@ -155,12 +153,12 @@ toccato.
     NC-009 stava per essere aperta come «serve una decisione di progetto»:
     ADR-015 l'aveva presa il giorno prima.
   - **Verifica alla fonte anche ciò che il lotto precedente ti ha
-    scritto.** L6 ha lasciato a L7 due affermazioni plausibili e nessuna
-    delle due era vera. Un compito ereditato è un'ipotesi, non un dato.
-  - **Guarda cosa il repo ha già in casa prima di andare fuori.** In L8 la
-    risposta su quale contatto del relè fosse NC era **disegnata nelle
-    polilinee del simbolo KiCad**, già sul disco: quello che era stato
-    letto erano solo le posizioni dei pin.
+    scritto.** Un compito ereditato è un'ipotesi, non un dato — e in
+    questo lotto la frase della Fase 1 sui MJE è esattamente uno di quei
+    compiti.
+  - **Una parte che entra citando una parentesi non ha mai avuto
+    un'istruttoria.** È come il THAT320 è entrato nel progetto, ed è il
+    motivo per cui il suo fine vita non l'aveva controllato nessuno.
   - Niente cifre non eseguite. Una simulazione descritta e non lanciata
     non è evidenza.
   - **Diffida degli script che dichiarano di aver verificato qualcosa.**
@@ -174,13 +172,13 @@ toccato.
     `.claude/worktrees/` spariscono col worktree, ed è già successo.
   - CHIUSURA. Non è una lista da ricordare, è uno script che rifiuta.
     Nell'ordine:
-      1. aggiorna `docs/preamp/STATE.md` segnando **L9 fatto** e il lotto
+      1. aggiorna `docs/preamp/STATE.md` segnando **L24 fatto** e il lotto
          successivo come prossimo (la tabella deve dire `**fatto**`)
       2. riscrivi QUESTO file per il lotto successivo — se il titolo
-         nomina ancora L9, lo script rifiuta, ed è il controllo che
+         nomina ancora L24, lo script rifiuta, ed è il controllo che
          esiste apposta
       3. committa, pusha, apri la PR
-      4. `/bin/zsh scripts/chunk_close.sh L9`
+      4. `/bin/zsh scripts/chunk_close.sh L24`
          Verifica tutto, merghia, riallinea il checkout dell'utente e
          **rilegge da lì** per provare il riallineo. Se rifiuta, ha
          ragione: sistema e rilancia.

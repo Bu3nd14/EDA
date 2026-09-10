@@ -6,7 +6,7 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-10** (L8 chiuso: le quattro parti nuove sono verificate alla fonte, e **tre su quattro portano una sorpresa**. La più urgente: **il THAT320 è fine vita dal 2026-09-01 e il last-time buy chiude il 2026-09-30** — venti giorni. In più l'assegnazione **NO/NC del polo 2 del relè Omron nel codice è invertita**, e per 2N5401/2N5551 **non esiste un modello SPICE del costruttore raggiungibile**. Aperte **NC-014…NC-017**: 17 non conformità, **5 bloccanti** — l'accesso a G1 non è concesso. Prossimo lotto **L9**, la rosa dei componenti di segnale — ma vedi la nota sulla scadenza qui sotto)
+Ultimo aggiornamento: **2026-09-10** (L8 e **L8b** chiusi. L8: le quattro parti nuove verificate alla fonte, **tre su quattro con una sorpresa** — THAT320 **fine vita**, polo 2 del relè Omron **invertito nel codice**, e nessun modello SPICE vendor per 2N5401/2N5551. L8b: l'utente ha risposto con **due regole di progetto**, registrate in **ADR-016** e come requisiti **T7** e **T8** — *niente parti a fine vita, niente dispositivi attivi senza modello del costruttore*. Il last-time buy del THAT320 è **scartato**: si sostituisce. NC-017 sale a **bloccante** e copre tutti e sette i dispositivi attivi, di cui **uno solo è conforme oggi**. 17 non conformità, **6 bloccanti** — l'accesso a G1 non è concesso. Prossimo lotto **L24**, T7 su tutti i dispositivi attivi; **L9 è rinviata** perché non sblocca niente)
 
 ---
 
@@ -77,7 +77,8 @@ manciata di file, **M** = riempie una sessione da solo.
 | L6 | LSK489: passi 1-3 di ADR-013 (congela, trascrivi, provenance) | S | **fatto** |
 | L7 | LSK489: passo 4, il controllo incrociato | S | **fatto** |
 | L8 | Fase 3a — le parti nuove, fatti verificabili | M | **fatto** |
-| L9 | Fase 3b — la rosa dei componenti di segnale | M | **prossimo** |
+| L8b | Le due regole dell'utente diventano ADR-016 e requisiti T7/T8 | XS/S | **fatto** |
+| L9 | Fase 3b — la rosa dei componenti di segnale | M | **rinviata** — passa dopo i sostituti, vedi sotto |
 | L10 | Simbolo KiCad dell'LSK489 | S | da fare |
 
 **I lotti che le revisioni hanno generato.** È il meccanismo per cui una
@@ -100,9 +101,9 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L19 | **La soglia di margine di fase in V1**, col carico di prova dichiarato accanto; poi i KPI del dossier riferiti a quella | XS | **NC-012** | da fare |
 | L20 | **Quanto il progetto dipende da I_DSS.** Rieseguire punto di lavoro e rumore del blocco di guadagno con `Vto` ai due estremi compatibili con la finestra A — il modello vendor com'è (2,59 mA) e un `Vto` che porti I_DSS al tipico (5,5 mA) — e scrivere in `REQUIREMENTS.md` o in una ADR quale dispersione il progetto tollera | S | **NC-013** | da fare |
 | L21 | **Il polo 2 del relè, corretto e riverificato.** Riga 79 di `preamp_audio.py` in `"6", "5", "7"`, rigenerazione, e verifica **sulla netlist** che il contatto verso massa di ogni mute cada su 2 e 7 e il ramo `R_g` su 4 e 5 | XS/S | **NC-014** (bloccante) | da fare |
-| L22 | **La decisione sul THAT320**, e la ADR che la registra: last-time buy entro il **2026-09-30** oppure specchio riprogettato su una coppia PNP ancora in produzione. **Ha una scadenza esterna** | S | **NC-015** (bloccante) | **da fare, con scadenza** |
-| L23 | **Package e simbolo del THAT320**: footprint a 14 pin, pinout dalla Figura 2 del datasheet, coppie 1&2 / 3&4, substrato in alternata a massa. Dipende dall'esito di L22 | S | NC-016 | da fare |
-| L24 | **I modelli vendor di 2N5401 e 2N5551**: procurarli per una via che regga la regola di provenienza, congelarli, poi promuoverli in `models/` col controllo incrociato di L6+L7. Chiude anche la metà di NC-004 che riguarda VAS e cascode | M | NC-017, **NC-004** | da fare |
+| L22 | **Lo specchio d'ingresso senza THAT320.** Trovare e verificare una coppia PNP appaiata che soddisfi **T7 e T8 insieme**, poi rifare punto di lavoro e rumore dello stadio d'ingresso. La decisione *se* sostituire è presa (ADR-016): resta *con cosa* | M | **NC-015** (bloccante) | da fare |
+| L23 | **Package e simbolo della parte che sostituisce il THAT320**, col pinout letto dal suo datasheet. Va fatto **insieme a L22**, non dopo: il footprint arriva con la parte. Copre anche il residuo `SOIC-8` che oggi non corrisponde a nessuna parte esistente | S | NC-016 | da fare |
+| L24 | **T7 su tutti i dispositivi attivi.** Prima **verificare** MJE15032/33 e 1N4148 — è il passo che dice quanto è grande il resto — poi trovare i sostituti di 2N5401/2N5551, congelarli e promuoverli in `models/` col controllo incrociato di L6+L7 | M | **NC-017** (bloccante), **NC-004** | **prossimo** |
 
 **NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
 riesecuzione di `tb_noise_breakdown.cir` coi modelli veri. È il caso
@@ -870,6 +871,78 @@ dietro una sessione browser o un account; il modello THAT320 contro il
 datasheet oltre alla sola cifra di rumore; il **pinout** del THAT320, che
 servirà a L23; e MJE15032/33, fuori mandato.
 
+## L8b — le due regole dell'utente diventano una ADR. FATTO.
+
+Poche ore dopo L8, letto il quadro delle nuove non conformità, l'utente ha
+risposto con due decisioni. Non erano due verdetti su tre parti: erano due
+**regole di progetto**, ed è così che sono state registrate — **ADR-016**,
+più i requisiti **T7** e **T8** in `REQUIREMENTS.md`.
+
+> «non possiamo approvvigionare il THAT320 entro il 30.09 e non voglio un
+> componente a fine vita in un progetto nuovo, va sostituito, allo stesso
+> modo non accetto parti che non abbiano un modello vendor, anche loro da
+> sostituire»
+
+**Le due regole:**
+
+1. **Nessun componente a fine vita entra nel progetto** (**T8**). Un EOL
+   già annunciato squalifica la parte anche se c'è una finestra di
+   last-time buy. Il controllo si rifà **a ogni gate**, non una volta sola.
+2. **Ogni dispositivo attivo del percorso di segnale ha un modello SPICE
+   del costruttore** (**T7**). Un modello pubblicato come PDF conta — è il
+   caso dell'LSK489 — ma un mirror di terze parti no.
+
+**L'estensione è stata chiesta e confermata, non assunta.** La seconda
+regola nominava 2N5401 e 2N5551, ma il progetto ha **sette** dispositivi
+attivi e tre non erano mai stati verificati. Alla domanda se la regola
+valesse anche per MJE15032/33 e 1N4148, l'utente ha risposto **sì, a tutti
+i dispositivi attivi**. È la ragione per cui NC-017 ha cambiato dimensione
+invece di restare una voce su due parti.
+
+**Lo stato di partenza è uno su sette:**
+
+| Dispositivo | Modello vendor | Esito |
+|---|---|---|
+| LSK489 | **sì** — PDF, trascritto in L6, validato in L7 | **resta** |
+| THAT320 | sì, nativo — ma fine vita | **fuori per T8** |
+| 2N5551, 2N5401 | **no**, in nessuna forma | **fuori per T7** |
+| MJE15032/33 | **non confermato** (Fase 1) | **da verificare** |
+| 1N4148 | mai verificato | **da verificare** |
+
+I due MJE sono i **dispositivi d'uscita**: se cadono, non è un cambio di
+package, è una **modifica di topologia**.
+
+**Cosa è cambiato nel registro.** NC-015 non ha più una scadenza — il
+last-time buy è stato scartato, quindi la voce ora dice *con cosa*
+sostituire e non *se*. NC-017 è passata da **maggiore a bloccante**,
+perché da oggi misura la distanza da un requisito e non da una preferenza,
+e copre tutti e sette i dispositivi. NC-016 non si chiude più correggendo
+il footprint del THAT320: si chiude quando arriva la parte sostitutiva col
+proprio footprint — resta però il residuo reale che `gain_block.py:303-304`
+dichiara oggi un `SOIC-8` che non corrisponde a **nessuna parte
+esistente**. Le bloccanti passano da 5 a **6**.
+
+**Una nota di metodo che vale oltre questo lotto.** ADR-013 nomina il
+THAT320 **una volta sola, di passaggio**, dentro la discussione di
+un'alternativa scartata; la parte è entrata nella topologia come scelta
+implementativa in `gain_block.py` che citava quella parentesi. Non c'era
+quindi una decisione da superare. **Una parte che entra citando una
+parentesi non ha mai avuto un'istruttoria** — ed è precisamente il motivo
+per cui nessuno aveva controllato il suo stato di ciclo di vita, mentre
+per il JFET ADR-013 la clausola giusta («oppure l'LSK489 esce di
+produzione») l'aveva già scritta.
+
+**Cosa costa, dichiarato in ADR-016 e non nascosto.** Lo specchio va
+riprogettato e non ri-approvvigionato; se i due MJE cadono, si apre lo
+stadio d'uscita; e **tutte le cifre attuali di polarizzazione, margine di
+fase, PSRR e Z_out sono da rifare** dopo le sostituzioni. Erano già
+provvisorie — vengono da segnaposto — ma smettono di essere anche solo
+indicative. Il guadagno che paga il costo è che **NC-004 diventa
+chiudibile davvero**.
+
+**L8b non ha toccato nulla oltre la documentazione**: nessun file in
+`circuits/`, `spice/preamp/`, `models/`, `vendor/` o `docs/preamp/data/`.
+
 ## Il dossier: prima bozza consegnata in L5b
 
 **Il dossier non è negoziabile, e non si taglia per arrivare prima a G1.**
@@ -1261,68 +1334,88 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**Prima di tutto, una cosa che non è un lotto e ha una scadenza.**
+**L24 — T7 su tutti i dispositivi attivi.**
 
-Il **THAT320 è fine vita dal 2026-09-01** e il **last-time buy chiude il
-2026-09-30**. È **NC-015**, bloccante, e la decisione è dell'utente:
-comprare adesso una scorta che copra prototipi e ricambi, oppure
-riprogettare lo specchio di corrente d'ingresso su una coppia PNP ancora
-in produzione — strada che ADR-013 nomina già nel proprio testo. Il
-contatto è `sales@thatcorp.com`; l'evidenza è congelata in
-`vendor/bjt_array/that/THAT320/THAT-EOL-Memo.pdf`. Il lotto che registra
-la decisione è **L22**, ma la decisione non aspetta il lotto.
+L'ordine è cambiato dopo **ADR-016**, ed è cambiato per una ragione, non
+per gusto: **L9 (la rosa dei componenti di segnale) è rinviata**, perché
+non sblocca niente, mentre L22 e L24 stanno sul percorso critico verso
+G1 — chiudono due bloccanti.
 
-**Poi: L9 — Fase 3b: la rosa dei componenti di segnale.**
+**Perché L24 prima di L22.** Il primo passo di L24 è **verificare se
+MJE15032/33 e 1N4148 hanno un modello del costruttore**, ed è il passo che
+dice **quanto è grande tutto il resto del lavoro**: i due MJE sono i
+dispositivi d'uscita, e se cadono la sostituzione non è un cambio di
+package ma una modifica di topologia dello stadio d'uscita. Sapere questo
+prima di riprogettare lo specchio evita di riprogettarlo due volte.
 
-È il secondo dei tre lotti del giro componenti, e cambia natura rispetto a
-L8: L8 verificava **fatti chiudibili**, L9 restringe un **giudizio
-aperto**. Non restituisce un vincitore — restringe su basi misurabili
-(assorbimento dielettrico, rumore in eccesso, coefficiente di tensione) e
-la scelta finale fra parti tutte buone è dell'utente, all'ascolto. È la
-ragione per cui esiste **P6**.
+Cosa L24 deve fare, in ordine:
 
-Cosa L9 deve coprire, dai vincoli che il progetto ha già scritto:
+1. **Verificare** MJE15032, MJE15033 e 1N4148 contro **T7** e **T8**:
+   esiste un modello del costruttore, in quale forma, e la parte è in
+   produzione? La Fase 1 aveva scritto sui due MJE «pagina models esiste,
+   file finale non confermato» — è un'ipotesi ereditata, non un dato, e
+   va verificata alla fonte.
+2. **Trovare i sostituti** di 2N5401 e 2N5551 che soddisfino **T7 e T8
+   insieme**. Sono VAS, cascode, generatori di corrente e moltiplicatore
+   di Vbe: cinque istanze per blocco. La sostituzione del 2N5401 tocca il
+   VAS, che con il Miller da 470 pF fissa il **polo dominante di tutto
+   l'amplificatore** — le cifre di margine di fase andranno rifatte.
+3. **Congelare** ogni modello trovato in `vendor/` con hash, URL e
+   provenance, e **provare che ngspice lo carica** alle condizioni del
+   datasheet.
 
-- **il Miller da 470 pF deve essere C0G/NP0** — vincolo dichiarato in
-  `gain_block.py`: vede ~13 V di continua e porta l'intero segnale di
-  correzione, e un X7R lì modulerebbe la compensazione col segnale;
-- **i sei condensatori d'accoppiamento da 4,7 µF** (ADR-007 addendum, uno
-  per uscita per canale): polipropilene, e la loro dimensione fisica è
-  già un vincolo di layout su un telaio unico (ADR-010);
-- **i resistori del percorso di segnale**, in particolare R_f/R_g che
-  fissano il +9,96 dB e i 47 Ω di isolamento di ADR-008;
-- **l'attenuatore a scatti da 10 kΩ**, che è fuori scheda (F4/ADR-009) ma
-  la cui impedenza culmina a 2,5 kΩ a metà corsa ed è la ragione per cui
-  ADR-014 esiste.
+Poi **L22 + L23 insieme** (lo specchio senza THAT320, col suo footprint e
+il suo simbolo: il footprint arriva con la parte, non dopo), poi **L21**
+(il polo 2 del relè, che è quasi gratis), poi il resto.
 
-**Le due lezioni di L8 valgono per L9**, e sono la cosa più utile che
-questo lotto lascia al prossimo:
+### Cosa cercare, e cosa NON accettare
 
-1. **Un dato di ciclo di vita non è un dato di datasheet, e nessuno dei
-   due è un dato di catalogo.** Il THAT320 era EOL da una settimana
-   quando la topologia lo ha scelto, e nessuno l'aveva guardato. Per ogni
-   parte che L9 mette in rosa, lo stato di ciclo di vita si legge dal
-   costruttore, non dal distributore.
-2. **Un codice di stato non è una verifica** (`docs/limitations.md` #18).
-   Su onsemi un `200` è arrivato con dentro una pagina HTML. Si controlla
-   `Content-Type` e dimensione, e per un PDF si apre il file.
+Le regole sono **T7** e **T8** in `REQUIREMENTS.md`, e il ragionamento
+dietro sta in **ADR-016**. In pratica:
 
-E una terza, che riguarda i modelli e non le parti: **un costruttore può
-pubblicare due modelli della stessa parte** (`docs/limitations.md` #17).
-Se L9 tocca un componente con un modello SPICE, va scritto **quale**
-modello è stato usato accanto a ogni numero che ne esce.
+- **un mirror di terze parti non conta.** Circolano copie GitHub di
+  modelli attribuiti a Central Semiconductor: ADR-016 le scarta
+  esplicitamente. Si congela ciò che il **costruttore** ha servito, con il
+  suo URL e il suo hash — la stessa regola che ADR-013 impone per
+  l'LSK489, e accettare un mirror qui la svuoterebbe là;
+- **un modello pubblicato come PDF conta.** È il caso dell'LSK489: la
+  procedura di trascrizione a due letture indipendenti di ADR-013 esiste
+  apposta;
+- **lo stato di ciclo di vita si legge dal costruttore**, non dal
+  distributore. È la lezione che è costata il THAT320.
 
-**Non è bloccato dalle voci aperte**, per la stessa ragione di L6-L8:
-`AGENTS.md` scrive che una voce bloccante non ferma i lotti che procurano
-le parti e i modelli, perché quelli sono il rimedio. Ciò che le bloccanti
-fermano è l'accesso a **G1**.
+### Le trappole già pagate, che valgono per questo lotto
 
-**Materiale già raccolto**: la sezione «Materiale già raccolto per
-L8-L10» più sotto. Di quella lista, dopo L8 restano aperti solo il
-**simbolo KiCad dell'LSK489** (L10) e la rosa di segnale (L9) — con
-l'aggiunta che il **package e il simbolo del THAT320** sono ora un lotto
-loro (**L23**), perché il footprint nel codice è sbagliato e il pinout non
-è ancora stato letto.
+Tutte da L6, L7 e L8, e ognuna è costata una scoperta:
+
+1. **Il nome di un file non è la sua revisione** (L7). Si legge dal footer
+   del documento: `pdftotext -layout <pdf> - | grep -i 'rev'`.
+2. **Le condizioni di prova sono metà del numero** (L6). E attenzione a
+   *quale tabella*: un *Absolute Maximum Rating* è una soglia di stress,
+   non una caratteristica garantita — spesso danno lo stesso numero e solo
+   la seconda è un limite di progetto (L8, sul BVceo del THAT320).
+3. **Un codice di stato non è una verifica** (`docs/limitations.md` #18).
+   Su `www.onsemi.com` un `200` arriva con dentro una pagina HTML da
+   303 722 byte per qualunque percorso inesistente. E **falsificare lo
+   user-agent peggiora le cose**: lo stesso host risponde 403.
+4. **Un costruttore può pubblicare due modelli della stessa parte**
+   (`docs/limitations.md` #17). Vanno il 71% di rumore in più o in meno.
+   Quale modello si è usato va scritto **accanto a ogni numero**.
+5. **Guarda cosa il repo ha già in casa prima di andare fuori** (L8): la
+   risposta su quale contatto del relè fosse NC era disegnata nelle
+   polilinee del simbolo KiCad, già sul disco.
+
+### Cosa resta di NC-004 dopo tutto questo
+
+NC-004 (rumore e distorsione senza evidenza, bloccante) non si chiude con
+una riesecuzione: si chiude quando **T7 è soddisfatto su tutti e sette i
+dispositivi** e i deck girano coi modelli veri, con i dati versionati
+sotto `docs/preamp/data/<data>/`. Da leggere insieme a **NC-013** (il
+modello LSK489 descrive un esemplare d'angolo, quindi le cifre saranno
+conservative sul JFET) e alla scoperta di L8 che **il modello vendor dello
+specchio non ha rumore 1/f** — quindi il pavimento senza flicker resta
+proprio dove l'analisi dice che il rumore è dominante. Va scritto accanto
+ai numeri, non sottinteso.
 
 ### Materiale già raccolto per L8-L10 (il giro componenti)
 
@@ -1392,17 +1485,16 @@ buone è dell'utente, all'ascolto. È la ragione per cui esiste P6.
 | Condensatore verso il Singxer | **4,7 µF su tutte e tre le uscite** — ADR-007 addendum. Chiude la domanda sull'impedenza ignota del Singxer |
 | Resistenze di isolamento ADR-008 | **47 Ω** invece di ~100 Ω — soddisfa E4 con margine |
 
-**Una decisione dell'utente è pendente, ed è l'unica del progetto ad avere
-una scadenza esterna.** Aperta da L8 il 2026-09-10:
+**Nessuna decisione dell'utente è pendente.** L'unica che il progetto
+abbia mai avuto con una scadenza esterna — il last-time buy del THAT320 al
+2026-09-30 — è stata **presa il 2026-09-10** e registrata in **ADR-016**:
+il last-time buy è **scartato**, la parte si sostituisce, e da lì sono
+nate le due regole generali **T7** e **T8**.
 
-| Cosa | Scadenza | Dove sta l'evidenza |
-|---|---|---|
-| **THAT320 fine vita**: comprare last-time buy, o riprogettare lo specchio su una coppia PNP ancora in produzione | **2026-09-30**, poi la prima strada non esiste più | `vendor/bjt_array/that/THAT320/THAT-EOL-Memo.pdf`, **NC-015**, lotto L22 |
-
-Contatto per il last-time buy: `sales@thatcorp.com`. ADR-013 nomina già
-l'alternativa nel proprio testo, quindi la seconda strada non è nuova — ma
-comporta rifare punto di lavoro e cifre di rumore dello stadio d'ingresso.
-In entrambi i casi serve una ADR nuova: ADR-013 non si riscrive.
+Quel che resta non è una decisione, è **lavoro**: quali parti sostituiscono
+THAT320, 2N5401 e 2N5551, e se MJE15032/33 e 1N4148 debbano seguirle. Lo
+decidono i lotti **L24** e **L22** cercando candidati che soddisfino T7 e
+T8, non una domanda all'utente.
 
 ## Attenzione per chi riprende
 
