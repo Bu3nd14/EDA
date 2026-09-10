@@ -1,0 +1,80 @@
+{
+  "part_name": "MMBT5551 (high-voltage NPN small-signal transistor, SOT-23) - the 2N5551 die in a surface-mount package",
+  "vendor_name": "Diodes Incorporated",
+  "device_class": "bjt_npn",
+  "product_page": "https://www.diodes.com/part/view/MMBT5551 (returns HTTP 403 to automated clients; the manufacturer evidence used here is the datasheet, which the same host serves normally)",
+  "date_obtained": "2026-09-10",
+  "lotto": "L24",
+  "obtained_by": "AI agent (Claude Opus 5, session https://claude.ai/code/session_01EQyqDiEXRu19EcvTFHYMW7) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from Diodes Incorporated's own host (www.diodes.com), not from a distributor and not from a GitHub mirror. Byte-for-byte as served.",
+  "license_notes": "Manufacturer datasheet and manufacturer-published SPICE model, redistributed here unmodified for engineering traceability only. Copyright remains Diodes Incorporated. The model file carries the vendor's own AS-IS warranty disclaimer, reproduced unaltered.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "This is the T7/T8-compliant answer for the FIVE 2N5551 instances in the gain block: the tail current sink (circuits/preamp/gain_block.py:262), the two cascode transistors of ADR-014 (291-292), the VAS load current sink (328) and the Vbe multiplier / bias spreader (350). It is NOT a different device: MMBT5551 is the same 2N5551 die the design was built around, in SOT-23 instead of TO-92. See ADR-017.",
+  "files": [
+    {
+      "original_filename": "MMBT5551.spice.txt",
+      "role": "spice_model",
+      "url": "https://www.diodes.com/spice/download/2541/MMBT5551.spice.txt",
+      "served_content_type": "text/plain; name=\"MMBT5551.spice.txt\"",
+      "bytes": 1621,
+      "sha256": "38624454abd3eecad3761af8449495b20d6409aa25c5acef960f60b44549e492",
+      "local_filename": "MMBT5551.spice.txt",
+      "renamed": false
+    },
+    {
+      "original_filename": "MMBT5551.pdf",
+      "role": "datasheet",
+      "url": "https://www.diodes.com/assets/Datasheets/MMBT5551.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 413884,
+      "pages": 7,
+      "sha256": "f1eb3b2c83a35a2fc8219d9e1d3decfd578facb85b3bd1b04e5fc67f75fca317",
+      "local_filename": "MMBT5551.pdf",
+      "renamed": false
+    }
+  ],
+  "how_this_was_found_after_L8_concluded_it_did_not_exist": {
+    "see": "vendor/bjt_pnp/diodes_inc/MMBT5401/PROVENANCE.json, section how_this_was_found_after_L8_concluded_it_did_not_exist - the same story applies to both halves.",
+    "in_one_line": "L8's 'Diodes returns 403' is true of /design/ and /part/ but not of /spice/download/, which serves the model files as plain text to a bare curl. And onsemi's model route, re-tried in this lotto with the pattern that DID work for the MJE parts, still soft-404s on 2n5551 - so L8's onsemi finding holds.",
+    "a_partial_onsemi_result_worth_recording": "https://www.onsemi.com/download/models/lib/mmbt5551.lib DOES return a real 644-byte model - onsemi models the SOT-23 variant even though it does not model the TO-92 2N5551. It was not used: this project stands on ONE manufacturer per device, and Diodes supplies both the model and the datasheet whose windows the model is checked against."
+  },
+  "revision_note": "Read from the DOCUMENT FOOTER, not the filename: 'Document number: DS30061 Rev. 15 - 2', (c) 2025 Copyright Diodes Incorporated. Falsifiable with: /opt/homebrew/bin/pdftotext -layout MMBT5551.pdf - | grep -i 'DS30061'",
+  "limits_read_with_their_conditions": {
+    "BV_CEO": "160 V MINIMUM at IC = 1 mA, from the ELECTRICAL CHARACTERISTICS table. Same window as onsemi's 2N5551 - unlike the PNP half, where Diodes gives -150 V against onsemi's -160 V.",
+    "hFE": "80 to 250 at IC = 10 mA, VCE = 5 V.",
+    "fT": "100 MHz MINIMUM, 300 MHz typical, at VCE = 10 V, IC = 10 mA, f = 100 MHz. NOTE THE CURRENT: this design runs these devices at 2 to 6.4 mA, where fT is LOWER - measured below.",
+    "C_obo": "6 pF MAXIMUM at VCB = 10 V, f = 1 MHz.",
+    "package": "SOT-23.",
+    "extraction_note": "This vendor's PDFs DO carry real micro glyphs (8 occurrences here, 4 in the MMBT5401 datasheet), so the onsemi extraction defect recorded in docs/limitations.md #19 does not apply to these two documents. Checked, not assumed."
+  },
+  "lifecycle": {
+    "status": "ACTIVE - by the manufacturer's own datasheet, which carries no discontinuation marking.",
+    "how_it_was_read": "Diodes' product pages answer 403 to automated clients, so the manufacturer statement used is the datasheet: DS30061 Rev. 15-2, (c) 2025 - a very recent revision - with NO 'OBSOLETE', 'DISCONTINUED' or 'NRND' text anywhere in it.",
+    "the_control_that_makes_that_absence_meaningful": "Verified in this lotto on a known-discontinued part from the same vendor: https://www.diodes.com/datasheet/download/1N5401.pdf contains 'PART OBSOLETE' and 'OBSOLETE - PART DISCONTINUED'. Diodes does stamp its dead datasheets; this one is unstamped.",
+    "honest_limit": "Weaker evidence than an explicit 'Active' status string, and recorded as such."
+  },
+  "spice_model": {
+    "status": "FOUND, published by the manufacturer, and PROVEN to load and run in ngspice.",
+    "model_name": "MMBT5551",
+    "model_count_in_file": 1,
+    "declared_metadata": "*DIODES_INC_SPICE_MODEL / *ORIGIN=DZSL_DPG_GM / *SIMULATOR=PSPICE / *DATE=08FEB2011 / *VERSION=2",
+    "no_flicker_noise": "No KF or AF, so NO 1/f noise. Same gap as every other vendor model in this repo except the LSK489. This matters more for this part than for most: NC-004 records that the dominant noise contributors at 1 kHz sit in the input-stage current mirror and its degeneration resistors, and the cascodes fed by these devices are next to them. Any noise figure that leans on this device is a floor without flicker.",
+    "pspice_quasi_saturation_parameters": "QUASIMOD=1, RCO=170, VO=35, GAMMA=2.2E-7. ngspice 47 accepted the file with ZERO warnings - meaningful because ngspice does warn on parameters it does not know (four such warnings on models/jfet/lsk489.lib)."
+  },
+  "datasheet_cross_check_L24": {
+    "method": "The L6+L7 procedure: measure the vendor model at the vendor datasheet's own test conditions, 25 C, and compare against the vendor's own published window.",
+    "hFE_at_IC_10mA_VCE_5V_25C": "MEASURED 107.2 against the datasheet window 80..250. INSIDE.",
+    "fT_at_IC_10mA_VCE_10V_25C": "MEASURED 173.1 MHz against 100 MHz minimum / 300 MHz typical. INSIDE.",
+    "C_obo_at_VCB_10V_1MHz_25C": "MEASURED 2.221 pF against a datasheet MAXIMUM of 6 pF. INSIDE.",
+    "verdict": "CONFORMING on all three published limits.",
+    "fT_at_the_design_s_own_currents": "MEASURED 151.9 MHz at IC = 6 mA (VAS load sink) and 88.8 MHz at IC = 2 mA (tail sink and the two ADR-014 cascodes), both at VCE = 10 V. Only the current was changed from the datasheet condition, so the difference isolates the current dependence. AT 2 mA THE MODEL FALLS BELOW THE DATASHEET'S 100 MHz MINIMUM FIGURE - which is not a contradiction, because that minimum is specified at 10 mA. It is the concrete form of the warning already in this repo's NC-017: 'fT 100 MHz min, and measured at 10 mA while the circuit works at 2-6 mA, where it is lower still'.",
+    "against_the_placeholder_it_replaces": "spice/preamp/placeholder_devices.lib NSS2N5551 has TF = 0.5 ns, about 318 MHz, and its comment claims 'fT ~ 300 MHz'. Measured reality at the cascode operating point: 88.8 MHz. The placeholder is roughly 3.6x FAST there. Together with the MJE placeholders being about 2.8x fast and the PTHAT320 placeholder being about 3x SLOW, this is why ADR-016 says the present phase-margin figures are 'not conservative in a known direction'."
+  },
+  "what_was_NOT_verified": {
+    "product_page_status_string": "Diodes answers 403 to automated clients on /part/view/. Declared; the datasheet was used instead.",
+    "stock_quantities": "Not read, for any distributor. Same as L8.",
+    "a_TO-92_version_from_this_vendor": "None found - Diodes offers this die only in surface-mount packages. This is the reason the package changes; see ADR-017.",
+    "beta_matching_between_the_two_cascodes": "ADR-014 puts two of these in a cascode pair, and hFE spread 80..250 is wide. Whether the design tolerates that spread is a Fase 4 question of the same family as NC-013 for the LSK489, and it is NOT answered here."
+  }
+}

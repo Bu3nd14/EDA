@@ -10,9 +10,11 @@ L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **ADR-016** — niente parti a fine vita, niente dispositivi attivi senza
 modello vendor — che **chiudono la scadenza del THAT320 scartando il
 last-time buy** e **alzano NC-017 a bloccante** estendendola a tutti i
-dispositivi attivi. **17 voci aperte, 6 bloccanti.** L'accesso a G1 non è
-concesso finché NC-001, NC-004, NC-010, NC-014, NC-015 e NC-017 restano
-aperte)
+dispositivi attivi; **L24** ha eseguito T7 su tutti e sette i dispositivi
+attivi, ridotto NC-017 a ciò che resta da *eseguire* invece che da
+*scoprire*, e aperto NC-018 e NC-019. **19 voci aperte, 6 bloccanti.**
+L'accesso a G1 non è concesso finché NC-001, NC-004, NC-010, NC-014,
+NC-015 e NC-017 restano aperte)
 
 ---
 
@@ -211,6 +213,18 @@ contributori dominanti a 1 kHz lo **specchio di corrente** (~5,3 e
 rimedio non è un componente diverso: è il dimensionamento dello specchio.
 Congelare la topologia prima di saperlo è l'errore a catena che G0 esiste
 per intercettare.
+
+**AGGIORNATA IL 2026-09-10 da L24, e la notizia è cattiva.** I modelli
+vendor ora esistono per sei dispositivi attivi su sette
+(`reports/2026-09-10-L24-t7-dispositivi-attivi.md`), ma **nessuno dei
+cinque congelati in L24 porta `KF`/`AF`**: né MMBT5401, né MMBT5551, né
+MJE15032, né MJE15033, né il 1N4148. Con i due modelli THAT
+(`docs/limitations.md` #17) questo significa che **nel repo solo l'LSK489
+ha rumore 1/f**. Quindi questa voce **non si chiude «quando arrivano i
+modelli veri»**: le cifre che usciranno dalla Fase 4 restano un pavimento
+senza flicker, e il pavimento senza flicker cade proprio dove l'analisi
+dice che il rumore è dominante — lo specchio di corrente e le sue
+degenerazioni. Va scritto **accanto a ogni numero**, non sottinteso.
 
 **Cosa serve per chiuderla.** I modelli vendor (**L6-L7, che questa voce
 non blocca**, come `AGENTS.md` prescrive), poi una riesecuzione di
@@ -872,9 +886,53 @@ beta** sono state dismesse: il datasheet Rev. 7 elenca come DISCONTINUED
 **50…250**, il che riguarda la coerenza di beta nella coppia di cascode e
 nei generatori di corrente.
 
-**Cosa serve per chiuderla — riscritto il 2026-09-10 dopo ADR-016.** Non è
-più «procurare due modelli»: è portare **tutti** i dispositivi attivi a
-soddisfare T7.
+**AGGIORNATA IL 2026-09-10 da L24 — la voce cambia natura una seconda
+volta.** Nasceva come «mancano i modelli di due parti», ADR-016 l'ha resa
+«sei su sette non soddisfano T7», e L24 l'ha ridotta a **ciò che resta da
+eseguire invece che da scoprire**. Report:
+`reports/2026-09-10-L24-t7-dispositivi-attivi.md`; decisione: **ADR-017**.
+
+Stato dei sette dispositivi **dopo L24**:
+
+| Dispositivo | T7 | T8 | Resta |
+|---|---|---|---|
+| LSK489 | sì, in `models/` | sì | niente (NC-013 è un'altra voce) |
+| **MJE15032** | **sì** — modello onsemi, congelato, ngspice lo esegue | **Active** come `MJE15032G` | promozione in `models/` |
+| **MJE15033** | **sì** — idem | ordinabile, **senza pagina prodotto** | promozione in `models/` |
+| **1N4148** | **sì** — modello onsemi `1n914.lib` | **Active**, sei OPN | promozione in `models/` |
+| **2N5401** | **sì come MMBT5401** (Diodes) | nessun marchio di dismissione | promozione **e** sostituzione |
+| **2N5551** | **sì come MMBT5551** (Diodes) | idem | promozione **e** sostituzione |
+| THAT320 | sì | **no, fine vita** | **NC-015 → L22** |
+
+**Lo stadio d'uscita regge**: i due MJE hanno il modello, quindi la
+modifica di topologia che ADR-016 temeva non serve.
+
+**La conclusione di L8 su 2N5401/2N5551 era giusta sui percorsi provati e
+sbagliata come affermazione generale.** Il 403 di Diodes vale per le
+pagine HTML sotto `/design/` e `/part/`, non per i file di modello, che
+stanno su `/spice/download/` e rispondono `200 text/plain` a un `curl`
+nudo. Il percorso onsemi invece **è stato ri-provato con il pattern che ha
+funzionato per i MJE** (`/download/models/lib/<parte>.lib`) e continua a
+dare il soft 404: quella metà della conclusione di L8 tiene.
+
+**La severità resta bloccante**, e non è una formalità: T7 non è
+soddisfatto *nel repo* finché `models/` non porta i modelli e la topologia
+non li usa. La distanza da percorrere però è ora nota e limitata.
+
+**Cosa serve per chiuderla — riscritto il 2026-09-10 dopo L24.**
+
+1. **Promuovere** i cinque modelli congelati in `models/`, ognuno con la
+   propria `.provenance.json` e una ricetta di regressione in
+   `scripts/validate_models.py` sul modello di `tb_lsk489()`. Il controllo
+   incrociato contro i datasheet **è già fatto** e sta nelle
+   `PROVENANCE.json` e nel report di L24.
+2. **Sostituire** in `circuits/preamp/` (Fase 4), rigenerare gli artefatti
+   e rifare le misure. ADR-017 dichiara di quanto ci si muove: i
+   segnaposto sono 1,9× e 3,6× **veloci** sulla f_T al punto di lavoro.
+3. **L22** per il THAT320, l'unico dispositivo ancora senza risposta.
+
+**Il testo che segue è la formulazione precedente**, di ADR-016, tenuta
+perché è ciò che il lotto ha eseguito:
 
 1. **Verificare** MJE15032, MJE15033 e 1N4148: esiste un modello del
    costruttore, e in quale forma? È il passo che decide quanto è grande il
@@ -897,6 +955,85 @@ produzione con modello del costruttore, si applica la clausola «Da
 riaprire se» di ADR-016: o si rilassa T7 per quella funzione **con la
 lacuna dichiarata accanto a ogni numero che ne dipende**, o si cambia
 topologia per non aver bisogno di quel dispositivo.
+
+### NC-018 — Il codice nomina due OPN che il costruttore marca *Obsolete*
+
+| | |
+|---|---|
+| Requisito | **T8** (ADR-016) — nessun componente a fine vita entra nel progetto |
+| Severità | **minore** |
+| Aperta da | `reports/2026-09-10-L24-t7-dispositivi-attivi.md` |
+| Stato | aperta |
+
+**Evidenza.** `circuits/preamp/gain_block.py:367-368` istanzia i due
+dispositivi d'uscita con i valori `"MJE15032"` e `"MJE15033"`. Letto
+verbatim dal blocco JSON-LD `offers/itemProductList` della pagina prodotto
+di onsemi il 2026-09-10:
+
+| OPN | itemCondition | availability | prezzo |
+|---|---|---|---|
+| MJE15032 | **Obsolete** | unavailable | 0.0 |
+| MJE15032G | **Active** | available | 0.6 |
+
+La tabella ORDERING INFORMATION del datasheet (dicembre 2024, Rev. 7)
+elenca del resto **solo** `MJE15032G` e `MJE15033G`, TO-220 Pb-Free.
+
+**Perché è minore e non maggiore.** Il *dispositivo* è conforme a T8: la
+versione ordinabile è attiva. È la stringa della distinta a nominare una
+variante piombata fuori catalogo. Non cambia una cifra elettrica e non
+blocca nessuna fase.
+
+**Perché è comunque una voce e non una nota.** Una distinta che nomina un
+OPN obsoleto è esattamente il modo in cui una parte a fine vita entra in
+un progetto senza che nessuno lo decida — la dinamica che ha prodotto
+ADR-016. Ha un costo di una riga e si dimentica in un secondo.
+
+**Cosa serve per chiuderla.** In Fase 4, quando `gain_block.py` viene
+toccato: i due valori diventano `MJE15032G` e `MJE15033G`. Da verificare
+sulla netlist rigenerata, non sul sorgente.
+
+### NC-019 — Il moltiplicatore di Vbe perde il proprio metodo di accoppiamento termico
+
+| | |
+|---|---|
+| Requisito | La regola di piazzamento dichiarata in `circuits/preamp/gain_block.py:350`, conseguenza di **ADR-017** |
+| Severità | **maggiore** |
+| Aperta da | `reports/2026-09-10-L24-t7-dispositivi-attivi.md` |
+| Stato | aperta |
+
+**Evidenza.** `gain_block.py:350` porta una regola esplicita, già
+consegnata a `pcb-automation-engineer`:
+
+> This transistor **MUST be thermally coupled to the NPN output device's
+> tab** (thermal compound + cable tie is enough at 225 mW) or the bias
+> drifts.
+
+**ADR-017** sostituisce quel transistor con un **MMBT5551 in SOT-23**,
+perché Diodes Incorporated offre quel die solo a montaggio superficiale.
+**Un SOT-23 non si fascetta al tab di un TO-220.** Il metodo prescritto
+non è applicabile alla parte scelta.
+
+Non è un difetto di ADR-017: è il costo che ADR-017 dichiara. Ma è un
+requisito di progetto che oggi nessun artefatto soddisfa, ed è
+esattamente ciò che la tabella delle severità chiama «scostamento reale,
+con rimedio noto».
+
+**Perché conta.** Il moltiplicatore di Vbe esiste per **inseguire
+termicamente** la V_BE dei dispositivi d'uscita. Se non li insegue, la
+corrente di riposo deriva — e il commento dello stesso file spiega che
+1,69 kΩ è un valore *spazzato*, non calcolato, con 50 Ω che spostano I_q
+di 0,78 mA. Un accoppiamento termico che non funziona non è un difetto
+cosmetico di layout: rimette in gioco il punto di lavoro di Classe A che
+ADR-003 richiede.
+
+**Cosa serve per chiuderla.** Una regola di piazzamento nuova e
+verificabile — un percorso di rame sul PCB fra la piazzola del SOT-23 e
+quella del tab del TO-220, dimensionato e dichiarato — scritta dove verrà
+letta (il commento in `circuits/preamp/` **e** la consegna a
+`pcb-automation-engineer`), **oppure** la decisione motivata di tenere
+quel singolo dispositivo in un package a foro passante, con la lacuna T7
+dichiarata accanto ai numeri che ne dipendono, secondo la clausola «Da
+riaprire se» di ADR-016. Va risolta **prima del G2**.
 
 ## Voci chiuse
 
