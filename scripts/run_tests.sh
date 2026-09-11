@@ -155,5 +155,37 @@ fi
 report "schematic drawings match their netlists" $sch_fail
 echo
 
+echo "-- 2e. relay safe state on de-energised coils (NC-014) --"
+# A mute relay must short the outputs to ground when its coil is
+# de-energised (ADR-012) and a gain relay must leave R_g floating (ADR-004).
+# Until L21 the G6K-2F-Y pin map was DEDUCED instead of read, and pole 2 -
+# the right channel - came out inverted: at power-on that channel was not
+# muted at all, and nothing said so. The fix is one line; this is what stops
+# it from coming back in silence.
+#
+# The netlists are named rather than discovered: the checker FAILS when it
+# finds no relay, deliberately, so it cannot go blind. Adding a second
+# circuit means adding a line here.
+rly_fail=0
+for net in circuits/preamp/preamp_audio.net; do
+    p="$ROOT/$net"
+    if [ ! -f "$p" ]; then
+        echo "   MISSING: $net (rigenera con: env/venv/bin/python3 ${net%.net}.py)" >&2
+        rly_fail=$((rly_fail + 1))
+        continue
+    fi
+    # NOT a pipeline: the exit status of `cmd | sed` is sed's, so piping the
+    # output straight into an indenter would have made this block pass no
+    # matter what the checker said. Capture first, then print.
+    out=$(/usr/bin/python3 "$ROOT/scripts/check_relay_safe_state.py" "$p" 2>&1)
+    rc=$?
+    echo "$out" | sed 's/^/   /'
+    if [ $rc -ne 0 ]; then
+        rly_fail=$((rly_fail + 1))
+    fi
+done
+report "relays fail safe with de-energised coils" $rly_fail
+echo
+
 echo "== run_tests.sh SUMMARY: $n_pass passed, $n_fail failed =="
 exit $fail
