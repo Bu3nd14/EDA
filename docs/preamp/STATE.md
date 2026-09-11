@@ -1590,6 +1590,11 @@ topologia**.
 
 ## Il dossier: prima bozza consegnata in L5b
 
+**Riassunto per l'utente, 2026-09-11**:
+`dossier/2026-09-11-executive-summary.md` — una pagina, in parole povere, su
+cosa manca per dire finito il progetto. Datato come i report: è vero della
+data che porta, non si aggiorna in luogo. Richiesto dall'utente dopo L21.
+
 **Il dossier non è negoziabile, e non si taglia per arrivare prima a G1.**
 Detto dall'utente il 2026-09-08 («il dossier per me è estremamente
 importante»), in risposta a una stima in giornate uomo in cui era stato
