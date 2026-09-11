@@ -6,7 +6,32 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-10** (**L25 chiuso**: i cinque modelli
+Ultimo aggiornamento: **2026-09-11** (**L21 chiuso**: il polo 2 del relè
+G6K-2F-Y era cablato con NO e NC invertiti — sul **canale destro** il mute
+falliva nel verso sbagliato, cioè all'accensione quel canale **non veniva
+messo a massa** e il transitorio passava, sul ramo che ADR-012 protegge.
+Riga 79 corretta, netlist rigenerata, e il **diff normalizzato tocca
+esattamente quattro numeri di pin**: `GND` porta ora K1 4+5 e K2/K3/K4 2+7.
+Il pinout è stato **riletto alla fonte** e non ereditato da L8, su tre gambe
+concordi — nel PDF l'armatura passa a **0,44 pt** dal proprio NC e a 3,39 dal
+NO su *entrambi* i poli, e nel simbolo KiCad ha la **stessa x esatta** del NC.
+La trappola, ora scritta nel codice: entrambe le armature riposano sul pad
+immediatamente **a sinistra** del proprio COM, ma le due righe sono numerate
+in **versi opposti**, quindi «NO = COM+1» vale per il polo 1 e non per il
+polo 2. **Ma a chiudere la voce è il guardiano, non la correzione**:
+`scripts/check_relay_safe_state.py` asserisce l'**intento delle ADR** sulla
+netlist generata — mute diseccitato ⇒ uscita a massa, guadagno ⇒ `R_g`
+flottante — e gira nel blocco **2e**; la suite passa da 5 a **6 blocchi**. È
+stato **fatto fallire** sulla netlist di prima (12 rilevazioni, tutte e sole
+sul polo 2) e su quattro casi sintetici. Scrivendolo sono emersi due difetti
+della famiglia «passa sempre»: un parser che perdeva l'**ultima net del file**
+(cioè tutte le bobine) e un blocco di suite che, scritto come pipeline verso
+`sed`, avrebbe restituito lo stato d'uscita di `sed`. **Una bloccante in meno:
+6.** E verificando è emersa **NC-026**: il disegno a blocchi **non gira da
+L22** — quattro riferimenti obsoleti dopo lo scarto di −1 — quindi le sue
+asserzioni non girano; misurato, non stimato: coi rinomini lo script gira
+pulito e l'unica cifra che cambia sull'SVG è `205 componenti` contro **201**.
+**22 voci, 6 bloccanti.** Prossimo lotto **L10**. — Prima: **L25**: i cinque modelli
 congelati da L24 sono in `models/`, ognuno con la propria `.provenance.json` e
 una ricetta che lo **rimisura** alle condizioni del suo datasheet — libreria
 da 28 a **38 check**, tutti verdi, e i lucchetti **provati a fallire** sei
@@ -23,7 +48,7 @@ datasheet le definisce (`fT = hfe · ftest`, ftest = 1 MHz) — e letta così
 **nessuno dei due raggiunge il proprio minimo di 30 MHz**: 27,667 e
 29,286 MHz → **NC-025**. Più **NC-024**, l'h_FE del MJE15032 sotto il proprio
 minimo, che L24 aveva misurato ma mai messo a registro. **22 voci, 7
-bloccanti.** Prossimo lotto **L21**. — Prima: **L26**: tre requisiti nuovi
+bloccanti.** — Prima: **L26**: tre requisiti nuovi
 dell'utente, registrati in **ADR-019**. **1)** il **margine di fase minimo è
 60°**, e vale su **ogni** combinazione della matrice V1 — blocco A compreso,
 caso peggiore capacitivo da 4,7 nF compreso. Chiude **NC-012**, che quella
@@ -135,7 +160,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L18 | **Il vincolo PSRR scritto dove verrà letto**: quanto ripple può lasciare l'alimentatore sul rail positivo, ricavato da E5 | XS/S | **NC-011** | da fare |
 | L19 | ~~**La soglia di margine di fase in V1**~~ — **ASSORBITA da L26**: la soglia l'ha data l'utente (60° ovunque, ADR-019) e NC-012 è chiusa. Resta solo la parte «KPI del dossier riferiti a quella», che va con la rigenerazione del dossier | XS | ~~NC-012~~ | **superata** |
 | L20 | **Quanto il progetto dipende da I_DSS.** Rieseguire punto di lavoro e rumore del blocco di guadagno con `Vto` ai due estremi compatibili con la finestra A — il modello vendor com'è (2,59 mA) e un `Vto` che porti I_DSS al tipico (5,5 mA) — e scrivere in `REQUIREMENTS.md` o in una ADR quale dispersione il progetto tollera | S | **NC-013** | da fare |
-| L21 | **Il polo 2 del relè, corretto e riverificato.** Riga 79 di `preamp_audio.py` in `"6", "5", "7"`, rigenerazione, e verifica **sulla netlist** che il contatto verso massa di ogni mute cada su 2 e 7 e il ramo `R_g` su 4 e 5 | XS/S | **NC-014** (bloccante) | da fare |
+| L21 | **Il polo 2 del relè, corretto e riverificato.** Riga 79 di `preamp_audio.py` in `"6", "5", "7"`, rigenerazione, e verifica **sulla netlist** che il contatto verso massa di ogni mute cada su 2 e 7 e il ramo `R_g` su 4 e 5 | XS/S | **NC-014** (chiude, bloccante), apre **NC-026** | **fatto** |
 | L22 | **Lo specchio d'ingresso senza THAT320.** Trovare e verificare una coppia PNP appaiata che soddisfi **T7 e T8 insieme**, poi rifare punto di lavoro e rumore dello stadio d'ingresso. La decisione *se* sostituire è presa (ADR-016): resta *con cosa* | M | **NC-015** (bloccante) | **fatto** |
 | L23 | **Package e simbolo della parte che sostituisce il THAT320**, col pinout letto dal suo datasheet. Va fatto **insieme a L22**, non dopo: il footprint arriva con la parte. Copre anche il residuo `SOIC-8` che oggi non corrisponde a nessuna parte esistente | S | NC-016 | **fatto** |
 | L24 | **T7 su tutti i dispositivi attivi.** Prima **verificare** MJE15032/33 e 1N4148 — è il passo che dice quanto è grande il resto — poi trovare i sostituti di 2N5401/2N5551, congelarli e promuoverli in `models/` col controllo incrociato di L6+L7 | M | **NC-017** (bloccante), **NC-004** | **fatto** |
@@ -433,6 +458,13 @@ ricaduta (un controllo in `run_tests.sh` che rifiuti qualsiasi percorso
 cablato verso `.claude/worktrees/` nei sorgenti) **non è stato aggiunto**:
 cambierebbe il conteggio della suite, che tutta la documentazione cita
 come «5 passed». È un candidato dichiarato, non una dimenticanza.
+
+**L21 ha tolto a quell'argomento la sua metà pratica.** Aggiungendo il
+blocco 2e la suite è passata a **6 blocchi**, e il costo si è visto per
+intero: il conteggio in `run_tests.sh` è **dinamico**, e le righe di
+documentazione da riallineare erano **tre**. Quindi il guardiano sui
+percorsi cablati resta un candidato, ma non più per il motivo scritto
+qui sopra.
 
 **L4 — i due deck muti senza cicli. FATTO.** Additivo per costruzione:
 solo righe `wrdata` e commenti, nessun `.include`, nessuna analisi,
@@ -1464,6 +1496,98 @@ quantità non nota.
 di `vendor/` modificato. La sostituzione in topologia è **Fase 4**, ed è
 l'unico passo che tiene aperta NC-017.
 
+## L21 — Il polo 2 del relè, corretto e riverificato. FATTO.
+
+Report: `reports/2026-09-11-L21-polo-2-rele.md`. Chiude **NC-014**
+(bloccante), apre **NC-026** (maggiore).
+
+**1. La correzione è una riga, e il diff lo dimostra.**
+`circuits/preamp/preamp_audio.py:79` diventa
+`K_COM2, K_NO2, K_NC2 = "6", "5", "7"`. Rigenerata la netlist, il **diff
+normalizzato** (tolti `(date`, `SKiDL Tag`, `SKiDL Line`, `(tstamps` — L3b)
+tocca **quattro numeri di pin e nient'altro**. Sulla netlist, che è dove la
+verifica conta:
+
+| Relè | Ruolo | Pin a massa | Prima |
+|---|---|---|---|
+| K1 | guadagno | **4, 5** (i due NO) | 4, 7 |
+| K2, K3, K4 | mute | **2, 7** (i due NC) | 2, 5 |
+
+**2. Il pinout riletto alla fonte, tre gambe concordi.** Non ereditato da L8,
+perché L25 aveva appena mostrato cosa costa fidarsi di una cifra del lotto
+precedente. Render della pagina a 1200 dpi; coordinate vettoriali via
+`pdftocairo -svg`, dove alla quota delle punte l'armatura passa a **0,44 pt**
+dal proprio contatto NC e a **3,39 pt** dal NO — rapporto 7,6:1, su
+**entrambi** i poli; e le polilinee del simbolo KiCad `G6K-2`, dove la punta
+dell'armatura ha la **x esatta** del contatto NC e dista 3,81 mm dall'altro.
+La misura riproduce quella di L8 alla terza cifra.
+
+Un passo falso vale la pena registrarlo: il primo ritaglio era la riga
+**G6K-2G-Y**, non la nostra. Le cinque varianti hanno diagrammi identici a
+occhio e il nome sta fuori dal ritaglio.
+
+**3. La trappola, detta bene.** Entrambe le armature riposano sul pad
+immediatamente **a sinistra** del proprio COM — il disegno è geometricamente
+simmetrico. Ma la riga alta è numerata **8-7-6-5** e quella bassa **1-2-3-4**,
+in versi opposti: «il vicino di sinistra» è il 7 in alto e il 2 in basso. La
+simmetria che l'occhio vede è reale; è la **numerazione** a non essere
+simmetrica, ed è per questo che «NO = COM+1» è giusta per un polo e sbagliata
+per l'altro. Ora è scritta per esteso sopra la riga che l'errore ha prodotto.
+
+**4. A chiudere la voce è il guardiano, non la correzione.** Un difetto che
+fallisce in silenzio nel verso che manda il transitorio d'accensione sulle
+cuffie non è chiuso da una verifica una tantum.
+`scripts/check_relay_safe_state.py` legge **solo la netlist generata** e
+asserisce l'**intento delle ADR** — mute diseccitato ⇒ uscita a massa
+(ADR-012), guadagno diseccitato ⇒ `R_g` flottante (ADR-004), e i due poli
+cablati nello stesso modo (T3/ADR-006). Il pinout del datasheet ci sta come
+**dato citato**: scrivere le regole come «il pin 7 sia a massa» avrebbe solo
+spostato l'ipotesi altrove, e scritte così l'inversione fa scattare **tutte e
+tre** le famiglie invece di una.
+
+Gira nel blocco **2e** di `run_tests.sh`: la suite passa da 5 a **6 blocchi**,
+6 passed / 0 failed.
+
+**5. Il guardiano è stato fatto fallire**, e la falsificazione più autentica
+era già sul disco: la **netlist di prima**. Dà 12 rilevazioni, **tutte e sole
+sul polo 2**. Più quattro casi sintetici — un relè senza ruolo nel valore,
+nessun relè noto (che **non passa**, perché un controllo che esce 0 quando non
+ha trovato niente è decorativo), una bobina scollegata. E la suite intera,
+puntata sulla netlist di prima, dà **5 passed / 1 failed**.
+
+**6. Due difetti trovati scrivendolo, entrambi della famiglia «passa
+sempre».** Il parser spezzava le net con un look-ahead sulla successiva e
+perdeva quindi **l'ultima net del file** — che è `VRELAY`, cioè *tutte le
+bobine*. L'ha detto solo l'asserzione che le bobine siano collegate: senza,
+avrebbe riportato un pass pulito su una netlist che non aveva finito di
+leggere. E il blocco 2e, scritto come `checker | sed` per indentare l'output,
+avrebbe restituito lo stato d'uscita di **`sed`**: verde qualunque cosa
+dicesse il controllo. Entrambi corretti e annotati sul posto.
+
+**7. NC-026 — il disegno a blocchi non gira da L22.** Il piano prevedeva di
+rieseguire `schematic/preamp_blocks_draw.py` come controllo indiretto. Non
+gira: `KeyError: 'R237'`. Quattro riferimenti sono rimasti a prima dello
+scarto di **−1** che L22 ha prodotto fondendo le due Part dell'LS352 —
+`R237`/`R437` e `R239`/`R439` sono oggi `R236`/`R436` e `R238`/`R438`.
+
+**Non è un difetto di L21**: verificato sulla netlist di *prima*. È rimasto
+invisibile perché il diagramma a blocchi **non ha manifesto** — per scelta
+dichiarata al §L1 — quindi il blocco 2d non lo copre e **nulla lo esegue**.
+
+L'estensione è stata **misurata**: coi quattro rinomini su una copia di
+scratch lo script gira pulito, tutte le sue asserzioni passano (guadagno
+ricalcolato **+9,963 dB**, dentro E2), e l'SVG che ne esce differisce dal
+committato per **una sola cifra** — `205 componenti` contro **201**. Quindi il
+disegno non è sbagliato sul circuito: è fermo all'8 settembre e sbaglia il
+conteggio. Il danno è che **la garanzia dichiarata in `architecture.md` non è
+più in vigore**. Non corretto qui: è un artefatto di disegno dentro un lotto
+sui relè, e il mandato aveva fenced fuori le altre voci.
+
+**8. Una bloccante in meno, ed è la seconda volta da G0.** Restano NC-001
+(L11), NC-002 e NC-021 (L12), NC-004, NC-010 (L17), NC-017 (Fase 4). La prima
+volta fu L22, per una parte trovata; questa è la prima per una **correzione di
+topologia**.
+
 ## Il dossier: prima bozza consegnata in L5b
 
 **Il dossier non è negoziabile, e non si taglia per arrivare prima a G1.**
@@ -1855,52 +1979,57 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L21 — il polo 2 del relè Omron, corretto e riverificato.**
+**L10 — il simbolo KiCad dell'LSK489.**
 
-Chiude **NC-014**, che è **bloccante**, ed è la voce più economica del
-registro: una riga di `circuits/preamp/preamp_audio.py`, la rigenerazione, e
-una verifica che va fatta **sulla netlist** e non sul sorgente.
+È l'ultimo residuo della famiglia che L22 e L23 hanno quasi chiuso, e **costa
+molto meno di prima**: `library/preamp.kicad_sym` esiste ed è la prima
+libreria di simboli del repo, il meccanismo multi-unit è collaudato, e
+`spice_dev(..., suffix=)` è già lì.
 
-**Il difetto, da L8.** Il datasheet del G6K dà **polo 1: COM 3, NC 2, NO 4** e
-**polo 2: COM 6, NC 7, NO 5**. La riga 79 di `preamp_audio.py` dichiara
-`K_NO2="7", K_NC2="5"`: **scambiati**. Il polo 1 è corretto.
+**Il difetto che chiude.** L'LSK489 è un **duale** — due JFET appaiati sullo
+stesso die in un SOIC-8 — ma `circuits/preamp/` lo istanzia come **due Part**,
+ognuna con un footprint SOIC-8 suo. Sul PCB sono **due package per un
+dispositivo solo**. È esattamente il residuo che NC-016 aveva per il THAT320 e
+che L23 ha chiuso fondendo l'LS352 in una Part a due unità: la netlist è
+passata da quattro componenti su SOIC-8 a **tre**, e i tre sono l'LS352 più i
+**due LSK489**, che restano il gap noto.
 
-La trappola è che le due lame pendono dalla stessa parte del package ma la
-riga alta è numerata 8-7-6-5 e quella bassa 1-2-3-4, quindi la regola
-implicita «NO = COM+1» è giusta per un polo e sbagliata per l'altro.
+**Cosa fare**, e la strada è già battuta:
 
-**Perché è bloccante, e non è una svista cosmetica.** Il polo 2 serve il
-**canale destro**. A bobina diseccitata — cioè **all'accensione** — quel
-canale **non viene messo a massa** e il transitorio passa: è esattamente il
-guasto silenzioso contro cui ADR-012 è stata scritta, col ramo cuffie che
-finisce in un paio di elettrostatiche. (A bobina eccitata il canale destro
-sarebbe invece cortocircuitato — rumoroso, e lo si troverebbe al primo
-collaudo. È il caso *fortunato*.)
+1. aggiungere il simbolo LSK489 a `library/preamp.kicad_sym`, a **due unità**,
+   col pinout **letto dal datasheet congelato** in
+   `vendor/jfet/linear_systems/LSK489/` — non dedotto. Un pinout non
+   pubblicato non si usa: è la regola con cui L23 ha scartato PDIP-8 e DFN-8
+   dell'LS352;
+2. verificarlo con `kicad-cli sym upgrade` e `sym export svg`, che disegna
+   tutte le unità, come L23 ha fatto;
+3. fondere le due Part in una in `circuits/preamp/`, usando
+   `spice_dev(..., suffix=)` perché le due metà non emettano due righe SPICE
+   **con lo stesso nome**;
+4. rigenerare, e verificare **sulla netlist** che i componenti su SOIC-8
+   scendano da tre a **due**.
 
-**Cosa fare**, ed è tutto:
+### Quello che il repo ti consegna già — usalo invece di riscoprirlo
 
-1. riga 79 in `K_NO2="5", K_NC2="7"`, cioè NO 5 e NC 7 come il datasheet;
-2. rigenerare gli artefatti col venv SKiDL, ricordando che **un `.net` non è
-   riproducibile byte a byte** (L3b): il confronto è quello normalizzato,
-   tolti `(date`, `SKiDL Tag`, `SKiDL Line` e `(tstamps`;
-3. **verificare sulla netlist**, non sul sorgente: il contatto verso massa di
-   ogni mute deve cadere su **2 e 7** e il ramo di `R_g` su **4 e 5**. È la
-   forma di verifica che L22 ha collaudato ricavando la mappa dei riferimenti
-   **confrontando i nodi** invece di dedurla;
-4. `check_schematic.py` deve continuare a passare — in L22 ha rifiutato alla
-   prima esecuzione con 15 discordanze, e ha fatto il suo mestiere.
+- **Fondere due Part in una slitta di −1 tutti i riferimenti successivi**
+  (L22). La mappa vecchio→nuovo si **ricava confrontando i nodi** fra il
+  `.inc` vecchio e quello nuovo, non si deduce a mano. E va applicata a
+  **tutto** ciò che cita riferimenti espliciti: i deck, `gain_block_draw.py`
+  **e** `preamp_blocks_draw.py` — che L22 ha mancato, ed è **NC-026**.
+- **NC-026 sta proprio sulla strada di questo lotto.** Il disegno a blocchi
+  non gira da L22 per quattro riferimenti obsoleti, e L10 produrrà un altro
+  scarto di −1. Conviene chiuderla **prima** di rinumerare di nuovo, o
+  quantomeno insieme: la diagnosi e il rimedio sono già scritti nella voce.
+- **`check_schematic.py` fa il suo mestiere**: in L22 ha rifiutato alla prima
+  esecuzione con 15 discordanze. Se rifiuta, ha ragione.
+- **Un `.net` non è riproducibile byte a byte** (L3b): il confronto è quello
+  normalizzato, tolti `(date`, `SKiDL Tag`, `SKiDL Line`, `(tstamps`.
+- **Il blocco 2e esiste ora** e asserisce lo stato sicuro dei relè sulla
+  netlist. Se L10 rinumera, deve restare verde.
 
-**Attenzione a una cosa che L25 ha imparato e che qui vale doppio**: il tool
-di editing **normalizza le fini riga**. Non tocca `.py` e `.net`, che sono già
-LF, ma se il lotto dovesse toccare un file con CRLF, l'artefatto va ricomposto
-con `cat` e non modificato sul posto.
-
-**Poi**, nell'ordine: **L10 + il resto del simbolo LSK489** — che ora costa
-molto meno, perché `library/preamp.kicad_sym` esiste, il meccanismo multi-unit
-è collaudato e `spice_dev(..., suffix=)` è già lì — e il resto della tabella.
-Le due bloccanti che restano dopo L21 sono **L11** (mute) e **L17** (buffer
-sulle uscite fisse), più **L12**, che ADR-019 ha trasformato da misura in
-**rimedio**.
+**Poi**, nell'ordine: **L14** e **L15** (le correzioni di testo, XS), **L18**,
+e le bloccanti vere — **L11** (mute), **L17** (buffer sulle uscite fisse) e
+**L12**, che ADR-019 ha trasformato da misura in **rimedio**.
 
 ### Cosa cercare, e cosa NON accettare
 

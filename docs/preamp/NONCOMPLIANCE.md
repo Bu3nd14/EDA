@@ -17,9 +17,13 @@ promosso i cinque modelli in `models/` — primo dei tre passi di **NC-017**,
 che resta bloccante per la sola sostituzione in Fase 4 — e rimisurandoli alle
 condizioni dei loro datasheet ha aperto **NC-024** e **NC-025**: il MJE15032
 manca il proprio minimo di h_FE, ed **entrambi** i MJE mancano il proprio
-minimo di f_T quando la si legge come il datasheet la definisce. **22 voci
-aperte, 7 bloccanti.** L'accesso a G1 non è concesso finché NC-001, NC-002,
-NC-004, NC-010, NC-014, NC-017 e NC-021 restano aperte)
+minimo di f_T quando la si legge come il datasheet la definisce. **L21** ha
+**chiuso NC-014** — il polo 2 del relè, corretto, riverificato sulla netlist e
+protetto da un guardiano permanente in `run_tests.sh` — e, trovandolo mentre
+verificava, ha aperto **NC-026**: il disegno a blocchi non è rigenerabile da
+L22, quindi le sue asserzioni non girano. **22 voci aperte, 6 bloccanti.**
+L'accesso a G1 non è concesso finché NC-001, NC-002, NC-004, NC-010, NC-017
+e NC-021 restano aperte)
 
 ---
 
@@ -691,7 +695,7 @@ versionare i CSV sotto `docs/preamp/data/<data>/`.
 | Requisito | **ADR-012** (mute su tutte le uscite, con guasto verso il silenzio) · **ADR-004** (il relè di guadagno diseccitato deve lasciare il blocco a guadagno unitario) · F6 |
 | Severità | **bloccante** |
 | Aperta da | `reports/2026-09-10-L8-parti-nuove.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-11 (L21)** — riga 79 corretta, netlist rigenerata e verificata, e un guardiano permanente in `run_tests.sh` perché non rientri in silenzio. Vedi «Voci chiuse» in fondo |
 
 **Evidenza.** Il datasheet Omron congelato in
 `vendor/relays/omron/G6K/en-g6k.pdf` (Cat. No. K106-E1-11, revisione letta
@@ -743,6 +747,28 @@ contatto verso massa di ogni relè di mute cada su **2 e 7** e che il ramo
 `R_g` del relè di guadagno cada su **4 e 5**. Non è stato fatto in L8: la
 topologia è Fase 4, e L8 aveva il mandato esplicito di non toccare
 `circuits/`.
+
+**FATTO IL 2026-09-11 IN L21**, esattamente così. Riga 79 corretta, netlist
+rigenerata, e sulla netlist: il nodo `GND` porta ora **K1 pin 4 e 5** (il
+relè di guadagno, i due NO) e **K2/K3/K4 pin 2 e 7** (i tre relè di mute, i
+due NC). Prima portava K1 4+7 e K2/K3/K4 2+5. Il **diff normalizzato** della
+netlist tocca **esattamente quattro numeri di pin** e nient'altro.
+
+**E il pinout è stato riletto alla fonte, non ereditato da L8**, su tre gambe
+indipendenti che concordano — vedi il report di L21. Le due misure ripetibili
+danno lo stesso verso su **entrambi** i poli: nel PDF l'armatura passa a
+**0,44 pt** dal proprio contatto NC e a **3,39 pt** dal NO (rapporto 7,6:1),
+e nel simbolo KiCad la punta dell'armatura ha la **stessa x esatta** del
+contatto NC (3,81 mm dall'altro).
+
+**Quello che chiude davvero la voce, però, è il guardiano.** Una verifica una
+tantum non impedisce a un'inversione di rientrare, e questo difetto fallisce
+in silenzio nel verso che brucia un trasduttore. `scripts/check_relay_safe_state.py`
+legge **solo la netlist generata** e asserisce l'intento delle ADR — mute
+diseccitato ⇒ uscita a massa, guadagno diseccitato ⇒ `R_g` flottante — con il
+pinout del datasheet come dato citato. Gira nel blocco **2e** di
+`run_tests.sh`. È stato **fatto fallire** sulla netlist di prima: 12
+rilevazioni, tutte e sole sul polo 2.
 
 ### NC-015 — Il THAT320 è fine vita, e la finestra di acquisto chiude il 2026-09-30
 
@@ -1331,7 +1357,82 @@ cifra in alta frequenza, che poggia su dispositivi che il modello descrive
 mettere in discussione il Miller da 470 pF, ADR-017 prevede già che il valore
 di compensazione si ridecida con una ADR propria.
 
+### NC-026 — Il disegno a blocchi non è rigenerabile da L22: le sue asserzioni non girano da un giorno
+
+| | |
+|---|---|
+| Requisito | La garanzia dichiarata in `../architecture.md` e in `STATE.md` §L1: **nessuna cifra sul disegno è scritta a mano**, tutte vengono lette dalla netlist e **asserite** |
+| Severità | **maggiore** |
+| Aperta da | `reports/2026-09-11-L21-polo-2-rele.md` |
+| Stato | aperta |
+
+**Evidenza.** `docs/preamp/schematic/preamp_blocks_draw.py` termina con
+`KeyError: 'R237'` alla riga 117. Quattro riferimenti che cita non esistono
+più nella netlist:
+
+| Nel disegno | Nella netlist | Cos'è |
+|---|---|---|
+| `R237`, `R437` | **`R236`, `R436`** (1,50 kΩ) | R_f del blocco B |
+| `R239`, `R439` | **`R238`, `R438`** (698 Ω) | R_g del blocco B |
+
+Sono gli scarti di **−1** che **L22** ha prodotto fondendo le due Part
+dell'LS352 in una sola. L22 aveva applicato la mappa vecchio→nuovo «ai tre
+deck che citano riferimenti espliciti e al disegno» — ma *quel* disegno era
+`gain_block_draw.py`, che ha un manifesto ed è coperto dal blocco 2d di
+`run_tests.sh`. Il disegno a **blocchi** non ha manifesto, per scelta
+dichiarata in `STATE.md` §L1 (un diagramma a blocchi omette i dispositivi di
+proposito), quindi **niente lo esegue** e il guasto è rimasto invisibile.
+
+**Non è un difetto introdotto da L21**: verificato sulla netlist di *prima*
+della correzione dei relè, dove i quattro riferimenti mancano identicamente.
+
+**Quanto è grave, misurato e non stimato.** Applicando i quattro rinomini su
+una copia di scratch, lo script **gira pulito** e tutte le sue asserzioni
+passano — compresa quella che ricalcola il guadagno da R_f/R_g e pretende che
+cada nella finestra di E2 (**+9,963 dB**). Confrontando l'SVG che ne esce con
+quello committato, al netto del timestamp e degli id casuali di matplotlib,
+**una sola cifra differisce**:
+
+> `205 componenti` sul disegno committato, **201** nella netlist di oggi.
+
+Quindi il disegno committato **non è sbagliato sul circuito**: è fermo all'8
+settembre — prima di L22 — e sbaglia il solo conteggio dei componenti. Il
+danno vero non è quella cifra, è che **la garanzia non è più in vigore**:
+nessuna delle asserzioni può girare, quindi da L22 in poi il disegno potrebbe
+divergere senza che nulla lo dica.
+
+**Cosa serve per chiuderla.** I quattro rinomini, la rigenerazione dell'SVG, e
+una risposta alla domanda che il difetto solleva: *chi esegue questo script?*
+Le due strade sono un manifesto anche per il diagramma a blocchi (che però
+omette i dispositivi di proposito, ed è la ragione per cui non ce l'ha), o un
+blocco di `run_tests.sh` che si limiti a **eseguirlo** e a pretendere exit 0 —
+il che basta, perché lo script asserisce già da sé tutto ciò che legge.
+
 ## Voci chiuse
+
+**NC-014 — Il polo 2 del G6K-2F-Y è cablato con NO e NC invertiti**
+(bloccante). **CHIUSA il 2026-09-11 da L21.** La riga 79 di
+`circuits/preamp/preamp_audio.py` dice ora `K_COM2, K_NO2, K_NC2 = "6", "5",
+"7"`, e sulla netlist rigenerata il nodo `GND` porta **K1 pin 4 e 5** e
+**K2/K3/K4 pin 2 e 7** — prima K1 4+7 e K2/K3/K4 2+5. Il diff normalizzato
+tocca **quattro numeri di pin** e nient'altro.
+
+Il pinout è stato **riletto alla fonte** invece di ereditato da L8, su tre
+gambe concordi, e le due ripetibili danno lo stesso verso su entrambi i poli:
+0,44 pt contro 3,39 pt nel PDF, e stessa x esatta nel simbolo KiCad. La
+trappola è ora scritta per esteso nel codice: **entrambe le armature
+riposano sul pad immediatamente a sinistra del proprio COM, ma le due righe
+sono numerate in versi opposti**, quindi «NO = COM+1» vale per il polo 1 e non
+per il polo 2.
+
+**La voce si chiude col guardiano, non con la correzione.** Un difetto che
+fallisce in silenzio nel verso che manda il transitorio d'accensione sulle
+cuffie non è chiuso da una verifica una tantum:
+`scripts/check_relay_safe_state.py` asserisce l'intento delle ADR sulla
+netlist generata e gira nel blocco **2e** di `run_tests.sh` (la suite passa da
+5 a 6 blocchi). È stato **fatto fallire** sulla netlist di prima — 12
+rilevazioni, tutte e sole sul polo 2 — e su quattro casi sintetici. Report:
+`reports/2026-09-11-L21-polo-2-rele.md`.
 
 **NC-012 — V1 non dichiara la soglia di accettazione del margine di fase**
 (maggiore). **CHIUSA il 2026-09-10 da L26.** La soglia è **60°**, decisa

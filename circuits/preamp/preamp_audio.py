@@ -63,20 +63,41 @@ FP_RELAY = "Relay_SMD:Relay_DPDT_Omron_G6K-2F-Y"
 FP_CONN3 = "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical"
 FP_CONN2 = "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
 
-# Omron G6K-2F-Y, 2 Form C. Pin map deduced from the KiCad symbol geometry:
-#   1, 8  = coil
-#   3, 6  = the two commons
-#   2, 4  and  5, 7 = the throws
-# WHICH throw is normally open is NOT yet confirmed against the Omron
-# datasheet. Both relays here need a specific form and the design fails
-# safe only if they are right:
-#   gain relay - needs NORMALLY OPEN  (de-energised => R_g floating => 0 dB)
-#   mute relay - needs NORMALLY CLOSED (de-energised => outputs shorted to
-#                ground => silent when the supply is down)
-# Flagged to bom-component-manager: confirm the pin numbers before G2.
+# Omron G6K-2F-Y, 2 Form C. READ FROM THE DATASHEET, not deduced:
+# vendor/relays/omron/G6K/en-g6k.pdf, page 6, the G6K-2F-Y row, block
+# "Terminal Arrangement / Internal Connections (TOP VIEW)".
+#
+#   coil     1, 8
+#   pole 1   COM 3   NC 2   NO 4      (bottom row, numbered 1-2-3-4)
+#   pole 2   COM 6   NC 7   NO 5      (top row,    numbered 8-7-6-5)
+#
+# THE TRAP, and it is why this used to be wrong (NC-014, blocking, opened
+# by L8 and closed by L21): both armatures lean the SAME way - each rests
+# on the pad immediately to the LEFT of its own COM - but the two rows are
+# numbered in OPPOSITE directions. So "NO = COM+1" is right for pole 1 and
+# WRONG for pole 2. Until L21 this file carried the deduced version,
+# K_NO2/K_NC2 swapped, which left the RIGHT channel un-muted at power-on:
+# the silent failure ADR-012 exists to prevent, into a pair of
+# electrostatics.
+#
+# Re-read at the source in L21 on three independent legs that agree - the
+# rendered page, the SVG vector coordinates (the armature passes 0.44 pt
+# from its NC contact and 3.39 pt from its NO one, ratio 7.6:1, on BOTH
+# poles), and the polylines of the KiCad symbol G6K-2, where the armature
+# tip's x is EXACTLY the NC contact's x. Details in
+# docs/preamp/reports/2026-09-11-L21-polo-2-rele.md and, for L8's first
+# reading, reports/2026-09-10-L8-parti-nuove.md.
+#
+# What each relay needs, and the design fails safe only if they are right:
+#   gain relay - NORMALLY OPEN  (de-energised => R_g floating => 0 dB, ADR-004)
+#   mute relay - NORMALLY CLOSED (de-energised => outputs shorted to ground
+#                => silent when the supply is down, ADR-012)
+# Both are asserted on the generated netlist by
+# scripts/check_relay_safe_state.py, which run_tests.sh runs: a deduced pin
+# map cannot come back in silence.
 K_COIL_A, K_COIL_B = "1", "8"
 K_COM1, K_NO1, K_NC1 = "3", "4", "2"
-K_COM2, K_NO2, K_NC2 = "6", "7", "5"
+K_COM2, K_NO2, K_NC2 = "6", "5", "7"
 
 _n = [0]
 
