@@ -71,25 +71,55 @@ Quindi:
   nella condizione peggiore che l'uso consente, nessun dispositivo esce dai
   propri limiti. Se la topologia di oggi non ci sta, la topologia cambia.
 
+**Il secondo requisito dell'utente, stessa data.** Subito dopo, l'utente ha
+scritto:
+
+> «dovremo inserire la protezione per il corto sulle uscite, non possiamo
+> essere certi che le uscite non vengano messe in corto»
+
+Alla proposta di registrarlo insieme al mute ha risposto «OK procedi». Quindi:
+- **Ciascuna delle tre uscite deve reggere un corto al proprio connettore**, a
+  tempo indefinito e con segnale presente, senza mettere a rischio la termica.
+- **Il mute è un caso particolare di questo requisito.** Il contatto NC mette
+  a massa proprio il nodo del jack, a valle di 47 Ω e 4,7 µF, cioè il punto
+  dove arriva un corto esterno. Un solo criterio copre entrambi.
+- **Tocca anche L17 (NC-010).** Le due uscite fisse sono pilotate dal blocco
+  A. Con una fissa in corto il blocco A arriva a **65,46 mA** di picco (dati
+  col THAT320, 2026-09-09). Il criterio che L11 scrive è quello contro cui
+  L17 progetterà.
+- **Una resistenza in serie al contatto del mute non basta più come
+  rimedio.** Protegge dal mute, non da un corto esterno, che non passa da
+  nessun relè: lo dice già la nota sul rimedio in NC-010.
+
 **Cosa fare:**
 
-1. **Registrare la decisione, per prima.** Una ADR nuova (**ADR-021**, secondo
-   TEMPLATE e con la sua riga nell'indice) che:
+1. **Registrare le due decisioni, per prima.** Una ADR nuova (**ADR-021**,
+   secondo TEMPLATE e con la sua riga nell'indice) che:
    - supera la durata di ADR-012 e aggiorna F6;
-   - ammette la classe B a mute inserito come eccezione dichiarata a T1 e
-     ADR-003;
-   - fissa il criterio termico con un **verbo verificabile**.
+   - aggiunge il requisito: **ciascuna delle tre uscite regge un corto al
+     connettore a tempo indefinito**, con segnale presente. Va scritto in
+     `REQUIREMENTS.md` col rimando all'ADR, e il mute ne è un caso
+     particolare;
+   - ammette la classe B **a mute inserito e durante un corto** come eccezione
+     dichiarata a T1 e ADR-003: è la stessa condizione elettrica, ed è
+     inevitabile con un corto al connettore;
+   - fissa **un solo criterio termico a regime**, con un **verbo verificabile**,
+     valido sia per il corto su ciascuna uscita sia per il mute.
 
-   Col criterio di L15 la modifica è sostanziale. Un progetto
-   termicamente sicuro solo per qualche secondo era conforme e ora non lo è
-   più; uno in classe B a mute violava T1 e ora no. I numeri del criterio
+   Col criterio di L15 la modifica è sostanziale, per tre ragioni:
+   - un progetto termicamente sicuro solo per qualche secondo era conforme, e
+     ora non lo è più;
+   - uno che non reggeva un corto esterno era conforme, e ora non lo è più;
+   - uno in classe B a mute violava T1, e ora no. I numeri del criterio
    (temperatura di giunzione massima, declassamento, temperatura dentro il
    telaio chiuso di P5) si ricavano dai datasheet e da ADR-010, **non si
    inventano**. Se richiedono una scelta di prodotto, la scelta è dell'utente.
 2. **La misura, sulla topologia di oggi.** Un deck in `spice/preamp/tb/`
    (convenzione `@REPO@`, `wrdata` con nome nudo) che misuri, per i **due**
    dispositivi d'uscita:
-   - I_C e **dissipazione a regime** a mute inserito;
+   - I_C e **dissipazione a regime** a mute inserito **e con ciascuna delle
+     tre uscite in corto al connettore**: le due fisse caricano il blocco A, la
+     principale il blocco B;
    - il transitorio di inserzione e di rilascio.
 
    Va fatto nelle modalità di guadagno che la topologia ha, **con segnale
@@ -105,17 +135,21 @@ Quindi:
      rinumerazioni di L22 e L10 quel nome indica con ogni probabilità l'altro
      dispositivo. Ricava i nomi dalla netlist di oggi.
 4. **Il rimedio, deciso dal verdetto termico a regime.**
-   - **Se a regime i dispositivi reggono**, NC-001 si chiude con:
+   - **Se i dispositivi reggono in tutti i casi** (mute, e corto su ciascuna
+     uscita), NC-001 si chiude con:
      - l'ADR del passo 1;
      - il calcolo termico su MJE15032/33, fatto coi loro modelli e tenendo
        conto di NC-024 e NC-025, che stanno sotto i minimi del datasheet;
      - la correzione di «Classe A garantita» ovunque sia scritta (almeno
-       `gain_block.svg`), perché a mute inserito non è più vera.
-   - **Se non reggono, la topologia cambia.** Una modifica in
-     `preamp_audio.py` (resistenza in serie al contatto, o punto di
-     derivazione spostato), rigenerata, più il deck. Tocca il contatto che
-     ADR-019 usa come permissivo del trim, e `check_relay_safe_state.py`
-     (blocco 2e) deve continuare a passare.
+       `gain_block.svg`), perché a mute e in corto non è più vera.
+   - **Se non reggono, la topologia cambia.** Serve una modifica in
+     `preamp_audio.py`, rigenerata, che limiti la corrente **su ogni via** da
+     cui il corto può arrivare, più il deck. Una resistenza in serie al
+     contatto del mute chiude la sola via del mute. La modifica tocca il
+     contatto che ADR-019 usa come permissivo del trim, e
+     `check_relay_safe_state.py` (blocco 2e) deve continuare a passare.
+   - **Il blocco A in corto su una fissa.** Se non regge, lo si registra in
+     **NC-010** e lo si lascia a L17: non si ripara qui.
    - **Un calcolo termico su una durata finita non chiude niente.**
 
 ### Quello che il repo ti consegna già — usalo invece di riscoprirlo
@@ -128,6 +162,9 @@ Quindi:
   il polo 1 e **non** per il polo 2.
 - **La convenzione dei deck** (L2-L3) e la trappola dei `$var` nei nomi
   `wrdata` (`docs/limitations.md` #10).
+- **Il corto su una fissa è già spazzato**: `tb_blockA_carichi.cir` scende
+  fino a 0,01 Ω a valle della fissa. I dati del 2026-09-09 sono però della
+  topologia col THAT320, quindi va rieseguito.
 
 ## Cosa NON accettare
 
@@ -135,6 +172,8 @@ Quindi:
 - **Un nome di dispositivo copiato da un log vecchio.**
 - **Una verifica termica limitata alla durata di un temporizzatore.** Il mute
   si tiene a tempo indefinito: è una decisione dell'utente del 2026-09-13.
+- **Un rimedio che protegge una via sola.** Il corto può arrivare dal mute o
+  dal connettore di ciascuna uscita, e il criterio vale per tutte le vie.
 - **Un deck che esce 0 e che nessuno ha provato a far fallire**: L10 ne ha
   trovati due rotti in silenzio.
 - **Un'ADR riscritta**, o un'aggiunta in coda a una ADR esistente.
@@ -143,8 +182,8 @@ Quindi:
 
 ## NON fa parte di questo lotto
 
-- **Il buffer sulle uscite fisse (L17, NC-010)**, anche se tocca gli stessi
-  nodi.
+- **Il buffer sulle uscite fisse (L17, NC-010).** Il criterio di corto che
+  L11 scrive vale anche per le fisse, ma il loro rimedio è di L17.
 - **Il margine di fase (L12)**, il trim (L16), il terzo guadagno (L27).
 - **L'alimentatore** (ADR-020 e la metà aperta di NC-011).
 - **Il dossier**, che legge ancora `data/2026-09-09`.

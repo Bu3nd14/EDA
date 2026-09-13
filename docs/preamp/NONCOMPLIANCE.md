@@ -219,6 +219,17 @@ La decisione va registrata in una ADR nuova, che supera la durata «qualche
 secondo» di ADR-012 e ammette l'eccezione a T1 a mute inserito. È il primo
 passo di L11.
 
+**Secondo requisito dell'utente, 2026-09-13: protezione dal corto sulle
+uscite.** «Non possiamo essere certi che le uscite non vengano messe in
+corto.»
+- **Il mute ne è un caso particolare.** Il contatto NC mette a massa lo stesso
+  nodo del jack su cui arriva un corto esterno. La stessa ADR li registra
+  entrambi, con un solo criterio termico a regime.
+- **Conseguenza sulla strada 1.** Una resistenza in serie al contatto chiude la
+  via del mute, non quella del corto esterno: da sola non basta più.
+- **Se, una volta registrato il requisito**, la topologia non lo soddisfa su
+  una via che né questa voce né NC-010 coprono, L11 apre la voce che manca.
+
 ### NC-004 — E5 e V4 senza alcuna evidenza: rumore e distorsione non sono note
 
 | | |
@@ -326,6 +337,19 @@ piccolo segnale non può vederlo.
 lo stesso rimedio: una resistenza in serie al contatto del relè di mute
 non fa niente contro un apparecchio spento, perché su questa via non c'è
 nessun relè. Chi chiuderà NC-001 deve saperlo, o chiuderà una via sola.
+
+**Requisito dell'utente, 2026-09-13: protezione dal corto sulle uscite.**
+Ciascuna delle tre uscite deve reggere un corto al connettore a tempo
+indefinito, senza mettere a rischio la termica. Lo registrerà **ADR-021** al
+primo passo di L11, insieme al mute. Per questa voce cambiano due cose:
+- **Il caso 0,01 Ω della tabella** non descrive più soltanto un apparecchio
+  spento a valle: è una condizione che il progetto deve reggere.
+- **La strada 2 perde metà del suo contenuto.** Il «vincolo scritto
+  sull'impedenza minima ammessa a valle» non è più una via di chiusura, perché
+  il requisito chiede di reggere proprio il corto. Resta possibile accettare
+  la classe B in quella condizione, col calcolo termico a regime.
+
+Il rimedio resta di **L17**, che progetta contro il criterio di ADR-021.
 
 ### NC-002 — Il blocco A non ha evidenza di stabilità valida, e col nuovo requisito è sotto soglia
 
