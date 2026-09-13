@@ -6,97 +6,144 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-13** (**L14 chiuso**: tre correzioni di
-testo, nessun numero del circuito toccato. **NC-006**: i commenti del cascode
-in `gain_block.py` citano ora `v(ncasc) = 9.887 V` e i drain a 9,21 V dal log
-della topologia di **oggi**, `data/2026-09-10/tb_op-LS352.log`, e non da quello
-col THAT320 che la voce citava. `tb_op` rieseguito: 81 valori su 81 identici.
-L'AST del file è identico a HEAD, controllo fatto fallire. **NC-007**: il
-dossier distingue lo scarto ADR-014 **riferito a 1 kHz**, cioè la claim
-(4,35·10⁻⁵ dB a 0 dB, 1,37·10⁻⁴ a +10 dB, e il KPI cita il peggiore), dallo
-scarto **assoluto** (−0,0217 dB a ogni frequenza), che è il partitore con la
-Zin. **NC-003**: il KPI dice «blocco B, peggiore dei 4 casi pubblicati». Tutto
-letto sull'`index.html` generato. Suite **8 passed / 0 failed**. **19 voci, 6
-bloccanti.** Prossimo lotto **L15**. — Prima: **L10 chiuso**: l'LSK489 è **una**
-Part a due unità, col simbolo in `library/preamp.kicad_sym` e il pinout
-**letto** dal datasheet congelato — pag. 1, SOIC-A: 1=S1 2=D1 3=SS 4=G1 5=S2
-6=D2 7=SS 8=G2. Sulla netlist i componenti su SOIC-8 scendono da **3 a 2**
-(`preamp_audio.net`: 12 → 8). La trappola della lettura: i JFET dentro il
-package sono disegnati **ruotati**, e letti come JFET verticali sembrano
-scambiare D e G. **SS** è disegnato e mai definito dal datasheet
-dell'LSK489 — l'unica definizione, «substrate, leave floating», è stampata
-per l'LSK389 → **NC-027** (minore); i pin restano scollegati come prima.
-Mappa ricavata dai nodi, `.inc` rinominato **identico** al nuovo, `tb_op` 81
-valori su 81 identici. **E facendo la baseline sono emersi due deck rotti da
-L22 in silenzio**: il controfattuale di V2 apriva un `r138` inesistente
-(ngspice esce 0 — anello «aperto» a −0,0522 V; riparato, −13,773 V) e lo sweep
-del bias spazzava l'altro ramo (I_q 5,2 mA; riparato, 14,714 mA, uguale a
-`tb_op`). **NC-026 chiusa**: il disegno a blocchi gira e lo esegue il nuovo
-blocco **2f**; il blocco **2g** (`check_deck_refs.py`) ferma i nomi morti nei
-deck, non quelli vivi sbagliati (#22). Suite **8 passed / 0 failed**, entrambi
-i blocchi nuovi fatti fallire prima. Scoperto anche che SKiDL nomina le net
-fuse in modo non riproducibile (#23). **22 voci, 6 bloccanti.** Prossimo
-lotto **L14**. — Prima: **L21 chiuso**: il polo 2 del relè
-G6K-2F-Y era cablato con NO e NC invertiti — sul **canale destro** il mute
-falliva nel verso sbagliato, cioè all'accensione quel canale **non veniva
-messo a massa** e il transitorio passava, sul ramo che ADR-012 protegge.
-Riga 79 corretta, netlist rigenerata, e il **diff normalizzato tocca
-esattamente quattro numeri di pin**: `GND` porta ora K1 4+5 e K2/K3/K4 2+7.
-Il pinout è stato **riletto alla fonte** e non ereditato da L8, su tre gambe
-concordi — nel PDF l'armatura passa a **0,44 pt** dal proprio NC e a 3,39 dal
-NO su *entrambi* i poli, e nel simbolo KiCad ha la **stessa x esatta** del NC.
-La trappola, ora scritta nel codice: entrambe le armature riposano sul pad
-immediatamente **a sinistra** del proprio COM, ma le due righe sono numerate
-in **versi opposti**, quindi «NO = COM+1» vale per il polo 1 e non per il
-polo 2. **Ma a chiudere la voce è il guardiano, non la correzione**:
-`scripts/check_relay_safe_state.py` asserisce l'**intento delle ADR** sulla
-netlist generata — mute diseccitato ⇒ uscita a massa, guadagno ⇒ `R_g`
-flottante — e gira nel blocco **2e**; la suite passa da 5 a **6 blocchi**. È
-stato **fatto fallire** sulla netlist di prima (12 rilevazioni, tutte e sole
-sul polo 2) e su quattro casi sintetici. Scrivendolo sono emersi due difetti
-della famiglia «passa sempre»: un parser che perdeva l'**ultima net del file**
-(cioè tutte le bobine) e un blocco di suite che, scritto come pipeline verso
-`sed`, avrebbe restituito lo stato d'uscita di `sed`. **Una bloccante in meno:
-6.** E verificando è emersa **NC-026**: il disegno a blocchi **non gira da
-L22** — quattro riferimenti obsoleti dopo lo scarto di −1 — quindi le sue
-asserzioni non girano; misurato, non stimato: coi rinomini lo script gira
-pulito e l'unica cifra che cambia sull'SVG è `205 componenti` contro **201**.
-**22 voci, 6 bloccanti.** Prossimo lotto **L10**. — Prima: **L25**: i cinque modelli
-congelati da L24 sono in `models/`, ognuno con la propria `.provenance.json` e
-una ricetta che lo **rimisura** alle condizioni del suo datasheet — libreria
-da 28 a **38 check**, tutti verdi, e i lucchetti **provati a fallire** sei
-volte su sei. Il testo `.MODEL` promosso è **byte per byte** quello del
-costruttore: nessuno dei cinque portava `mfg=`, quindi zero rimozioni.
-**Tutti e sette i dispositivi attivi hanno ora un modello del costruttore in
-`models/`** — prima volta da G0 — e di **NC-017** resta il solo passo di
-Fase 4, la sostituzione in `circuits/preamp/`, quindi la voce **resta
-bloccante**. Rimisurando sono cadute **due cifre di L24**: la f_T del MMBT5401
-era presa a I_C = 12,68 mA invece dei 10 mA del datasheet (169,5 →
-**160,1 MHz**, verdetto invariato), e le f_T dei due MJE erano lette come
-attraversamento a guadagno unitario invece che come la **Nota 2** del
-datasheet le definisce (`fT = hfe · ftest`, ftest = 1 MHz) — e letta così
-**nessuno dei due raggiunge il proprio minimo di 30 MHz**: 27,667 e
-29,286 MHz → **NC-025**. Più **NC-024**, l'h_FE del MJE15032 sotto il proprio
-minimo, che L24 aveva misurato ma mai messo a registro. **22 voci, 7
-bloccanti.** — Prima: **L26**: tre requisiti nuovi
-dell'utente, registrati in **ADR-019**. **1)** il **margine di fase minimo è
-60°**, e vale su **ogni** combinazione della matrice V1 — blocco A compreso,
-caso peggiore capacitivo da 4,7 nF compreso. Chiude **NC-012**, che quella
-soglia la chiedeva, e rende **decidibili in negativo** due misure che
-esistevano già: **NC-002 sale a bloccante** (blocco A a 41,98°, mancano 18°) e
-nasce **NC-021** (blocco B a 0 dB con cavo, 56,46°, mancano 3,5°). Nessuno dei
-due è instabile: 60° è un margine di progetto. **2)** il **trim funziona solo
-a mute inserito**, con interlock **elettrico** sui suoi relè — l'unica delle
-tre forme proposte che un banco possa provare a fallire → **NC-023**, che va
-con **L16**. **3)** i guadagni diventano **tre — 0 / +3 / +10 dB** — con
-**riposo a 0 dB**, così nessun guasto di bobina alza il guadagno; il principio
-di ADR-004 (si commuta R_g, mai R_f) si conserva → **NC-022**, lotto **L27**,
-che deve estendere anche i dodici deck da due modalità a tre. Nessuna riga di
-topologia scritta: quel lotto registrava e apriva lavoro. —
-Prima: **L22 + L23** avevano sostituito il THAT320 fine-vita con un **Linear
-Systems LS352**, dual PNP monolitico in SOIC-8 (**ADR-018**), portando la
-degenerazione da 47 a **220 Ω** e lasciando lo stadio d'ingresso **25,7% più
-silenzioso** di prima; NC-015 e NC-016 chiuse, NC-020 aperta)
+## In breve
+
+| | |
+|---|---|
+| Ultimo aggiornamento | **2026-09-13** |
+| Ultimo lotto chiuso | **L14** — le tre correzioni di testo |
+| **Prossimo lotto** | **L15** — il vincolo su E3 scritto dove verrà letto (mandato in «Prossimo passo concreto») |
+| Non conformità | **19 aperte, 6 bloccanti** |
+| Le bloccanti | NC-001 (L11) · NC-002 e NC-021 (L12) · NC-004 · NC-010 (L17) · NC-017 (Fase 4) |
+| Suite | `run_tests.sh` **8 passed / 0 failed** |
+
+## Diario degli ultimi lotti
+
+Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
+sotto e nel report datato in `reports/`.
+
+### L14 — le tre correzioni di testo (2026-09-13)
+
+Nessun numero del circuito toccato.
+
+- **NC-006** — i commenti del cascode in `gain_block.py` citano ora
+  `v(ncasc) = 9.887 V` e i drain a 9,21 V, dal log della topologia di
+  **oggi** (`data/2026-09-10/tb_op-LS352.log`), non da quello col THAT320 che
+  la voce citava.
+  - `tb_op` rieseguito: 81 valori su 81 identici.
+  - L'AST del file è identico a HEAD; il controllo è stato fatto fallire.
+- **NC-007** — il dossier distingue lo scarto ADR-014 **riferito a 1 kHz**,
+  che è la claim (4,35·10⁻⁵ dB a 0 dB, 1,37·10⁻⁴ a +10 dB; il KPI cita il
+  peggiore), dallo scarto **assoluto** (−0,0217 dB a ogni frequenza), che è il
+  partitore con la Zin.
+- **NC-003** — il KPI dice «blocco B, peggiore dei 4 casi pubblicati».
+- Tutto verificato sull'`index.html` generato. **19 voci, 6 bloccanti.**
+
+### L10 — il simbolo dell'LSK489 (2026-09-13)
+
+- L'LSK489 è **una** Part a due unità: simbolo in
+  `library/preamp.kicad_sym`, pinout **letto** dal datasheet congelato
+  (pag. 1, SOIC-A): 1=S1 2=D1 3=SS 4=G1 5=S2 6=D2 7=SS 8=G2.
+- Sulla netlist i componenti su SOIC-8 scendono da **3 a 2**
+  (`preamp_audio.net`: 12 → 8).
+- **La trappola della lettura:** i JFET dentro il package sono disegnati
+  **ruotati**, e letti come JFET verticali sembrano scambiare D e G.
+- **SS** è disegnato ma mai definito dal datasheet dell'LSK489. L'unica
+  definizione («substrate, leave floating») è stampata per l'LSK389 →
+  **NC-027** (minore). I pin restano scollegati come prima.
+- Mappa ricavata dai nodi; `.inc` rinominato **identico** al nuovo; `tb_op`
+  81 valori su 81 identici.
+- **Due deck rotti da L22 in silenzio**, emersi facendo la baseline:
+  - il controfattuale di V2 apriva un `r138` inesistente (ngspice esce 0;
+    anello «aperto» a −0,0522 V → riparato, −13,773 V);
+  - lo sweep del bias spazzava l'altro ramo (I_q 5,2 mA → riparato,
+    14,714 mA, uguale a `tb_op`).
+- **NC-026 chiusa:** il disegno a blocchi gira e lo esegue il nuovo blocco
+  **2f**. Il blocco **2g** (`check_deck_refs.py`) ferma i nomi morti nei deck,
+  non quelli vivi sbagliati (#22). Entrambi i blocchi fatti fallire prima.
+- Scoperto che SKiDL nomina le net fuse in modo non riproducibile (#23).
+- Suite **8 passed / 0 failed**. **22 voci, 6 bloccanti.**
+
+### L21 — il polo 2 del relè (2026-09-11)
+
+- Il polo 2 del G6K-2F-Y era cablato con **NO e NC invertiti**. Sul **canale
+  destro** il mute falliva nel verso sbagliato: all'accensione quel canale
+  **non veniva messo a massa** e il transitorio passava, sul ramo che ADR-012
+  protegge.
+- Riga 79 corretta, netlist rigenerata. Il **diff normalizzato tocca
+  esattamente quattro numeri di pin**: `GND` porta ora K1 4+5 e K2/K3/K4 2+7.
+- Pinout **riletto alla fonte** e non ereditato da L8, su tre gambe
+  concordi: nel PDF l'armatura passa a **0,44 pt** dal proprio NC e a 3,39 dal
+  NO su *entrambi* i poli; nel simbolo KiCad ha la **stessa x esatta** del NC.
+- **La trappola, ora scritta nel codice:** entrambe le armature riposano sul
+  pad immediatamente **a sinistra** del proprio COM, ma le due righe sono
+  numerate in **versi opposti** — «NO = COM+1» vale per il polo 1 e non per il
+  polo 2.
+- **A chiudere la voce è il guardiano, non la correzione.**
+  `scripts/check_relay_safe_state.py` asserisce l'**intento delle ADR** sulla
+  netlist generata (mute diseccitato ⇒ uscita a massa; guadagno ⇒ `R_g`
+  flottante) e gira nel blocco **2e**: la suite passa da 5 a **6 blocchi**.
+  Fatto fallire sulla netlist di prima (12 rilevazioni, tutte e sole sul
+  polo 2) e su quattro casi sintetici.
+- Scrivendolo sono emersi due difetti della famiglia «passa sempre»: un parser
+  che perdeva l'**ultima net del file** (cioè tutte le bobine), e un blocco di
+  suite che, scritto come pipeline verso `sed`, avrebbe restituito lo stato
+  d'uscita di `sed`.
+- Verificando è emersa **NC-026**: il disegno a blocchi **non girava da L22**
+  (quattro riferimenti obsoleti dopo lo scarto di −1). Misurato, non stimato:
+  coi rinomini gira pulito, e l'unica cifra che cambia sull'SVG è
+  `205 componenti` contro **201**.
+- **Una bloccante in meno.** **22 voci, 6 bloccanti.**
+
+### L25 — i cinque modelli entrano in `models/` (2026-09-10)
+
+- I cinque modelli congelati da L24 sono in `models/`, ognuno con la propria
+  `.provenance.json` e una ricetta che lo **rimisura** alle condizioni del suo
+  datasheet.
+- Libreria da 28 a **38 check**, tutti verdi; i lucchetti **provati a
+  fallire** sei volte su sei.
+- Il testo `.MODEL` promosso è **byte per byte** quello del costruttore:
+  nessuno dei cinque portava `mfg=`, quindi zero rimozioni.
+- **Tutti e sette i dispositivi attivi hanno ora un modello del costruttore in
+  `models/`** — prima volta da G0. Di **NC-017** resta il solo passo di Fase 4,
+  la sostituzione in `circuits/preamp/`, quindi la voce **resta bloccante**.
+- Rimisurando sono cadute **due cifre di L24**:
+  - la f_T del MMBT5401 era presa a I_C = 12,68 mA invece dei 10 mA del
+    datasheet: 169,5 → **160,1 MHz**, verdetto invariato;
+  - le f_T dei due MJE erano lette come attraversamento a guadagno unitario
+    invece che come la **Nota 2** del datasheet le definisce
+    (`fT = hfe · ftest`, ftest = 1 MHz). Lette così **nessuno dei due
+    raggiunge il proprio minimo di 30 MHz** (27,667 e 29,286 MHz) → **NC-025**.
+- In più **NC-024**: l'h_FE del MJE15032 sotto il proprio minimo, che L24
+  aveva misurato ma mai messo a registro.
+- **22 voci, 7 bloccanti.**
+
+### L26 — i tre requisiti nuovi dell'utente, ADR-019 (2026-09-10)
+
+Nessuna riga di topologia scritta: il lotto registrava e apriva lavoro.
+
+1. **Margine di fase minimo 60°**, su **ogni** combinazione della matrice V1 —
+   blocco A e caso peggiore capacitivo da 4,7 nF compresi.
+   - Chiude **NC-012**, che quella soglia la chiedeva.
+   - Rende **decidibili in negativo** due misure che esistevano già:
+     **NC-002 sale a bloccante** (blocco A a 41,98°, mancano 18°) e nasce
+     **NC-021** (blocco B a 0 dB con cavo, 56,46°, mancano 3,5°).
+   - Nessuno dei due è instabile: 60° è un margine di progetto.
+2. **Il trim funziona solo a mute inserito**, con interlock **elettrico** sui
+   suoi relè — l'unica delle tre forme proposte che un banco possa provare a
+   fallire → **NC-023**, che va con **L16**.
+3. **I guadagni diventano tre — 0 / +3 / +10 dB — con riposo a 0 dB**, così
+   nessun guasto di bobina alza il guadagno. Il principio di ADR-004 (si
+   commuta R_g, mai R_f) si conserva → **NC-022**, lotto **L27**, che deve
+   estendere anche i dodici deck da due modalità a tre.
+
+### L22 + L23 — lo specchio d'ingresso senza THAT320 (2026-09-10)
+
+- Il THAT320 fine-vita è sostituito da un **Linear Systems LS352**, dual PNP
+  monolitico in SOIC-8 (**ADR-018**).
+- Degenerazione portata da 47 a **220 Ω**; lo stadio d'ingresso è **25,7% più
+  silenzioso** di prima.
+- NC-015 e NC-016 chiuse, NC-020 aperta.
 
 ---
 
