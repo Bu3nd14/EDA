@@ -560,16 +560,16 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 #                            at 20 Hz for ANY capacitor-coupled output; see
 #                            the report.
 #
-#   PSRR (same deck, bigger is better)
-#     from V+   72.0 / 59.5 / 39.7 dB at 100 Hz / 1 kHz / 10 kHz  (0 dB mode)
-#               62.1 / 49.6 / 29.8 dB                             (+10 dB)
-#     from V-   88.9 / 100.5 / 96.9 dB and 79.0 / 90.5 / 86.9 dB
+#   PSRR (same deck, bigger is better; LS352 topology, data/2026-09-13, L18)
+#     from V+   72.1 / 59.6 / 39.8 dB at 100 Hz / 1 kHz / 10 kHz  (0 dB mode)
+#               62.2 / 49.6 / 29.8 dB                             (+10 dB)
+#     from V-   84.3 / 97.7 / 96.2 dB and 74.4 / 87.8 / 86.2 dB
 #     THE POSITIVE RAIL IS THE WEAK ONE, by ~30 dB, and it is structural: the
 #     mirror emitters and the VAS emitter both stand on V+. The negative rail
 #     is quiet because every current source down there is referenced to V-
 #     AND BYPASSED TO V- (see the bias-reference comment above).
-#     -> psu-engineer: V+ ripple at 100 Hz must be <= 1 mV pk for the
-#        rail contribution to stay under 1 uV at the output in +10 dB mode.
+#     -> psu-engineer: the ripple budget is ADR-020 - 1 uV RMS at the output,
+#        both rails, 20 Hz-20 kHz; per-tone limits in REQUIREMENTS.md, E5.
 #
 #   NOISE, 20 Hz - 20 kHz unweighted (tb_noise_breakdown.cir)
 #     0 dB   1.68 uV (1 ohm source) / 1.72 uV (430 ohm) / 1.91 uV (2.5 kOhm)

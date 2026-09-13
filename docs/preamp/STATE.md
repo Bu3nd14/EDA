@@ -11,8 +11,8 @@ realtà, il progetto non è ripartibile.
 | | |
 |---|---|
 | Ultimo aggiornamento | **2026-09-13** |
-| Ultimo lotto chiuso | **L15** — il vincolo su E3 scritto accanto a E3 |
-| **Prossimo lotto** | **L18** — il vincolo PSRR scritto dove verrà letto (mandato in «Prossimo passo concreto») |
+| Ultimo lotto chiuso | **L18** — il vincolo PSRR scritto dove verrà letto (ADR-020) |
+| **Prossimo lotto** | **L11** — mute: misurare e rimediare, NC-001 bloccante (mandato in «Prossimo passo concreto») |
 | Non conformità | **19 aperte, 6 bloccanti** |
 | Le bloccanti | NC-001 (L11) · NC-002 e NC-021 (L12) · NC-004 · NC-010 (L17) · NC-017 (Fase 4) |
 | Suite | `run_tests.sh` **8 passed / 0 failed** |
@@ -21,6 +21,33 @@ realtà, il progetto non è ripartibile.
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L18 — il vincolo PSRR scritto dove verrà letto (2026-09-13)
+
+Nessun valore del circuito toccato. Un commento di `gain_block.py` è
+aggiornato, con AST identico.
+
+- **Le cifre rilette dalla topologia di oggi.** `tb_zout_psrr_noise.cir`
+  rieseguito:
+  - rail +: si muove di ≤ 0,107 dB (a 10 kHz, +10 dB: **29,82 dB**);
+  - rail −: **peggiora fino a 4,74 dB** (a 100 Hz, da 79,02 a 74,37).
+  - Il deck ha letto l'LS352: il rumore di caso peggiore è 4,231 µV. Dati in
+    `data/2026-09-13/`.
+- **Qualcuno aveva già deciso, a mezza voce.** `gain_block.py` e il report di
+  Fase 2 davano a `psu-engineer` «≤ 1 mV pk a 100 Hz, cioè < 1 µV in uscita».
+  Ora è **ADR-020**: **1 µV RMS** in uscita per ripple e rumore dei due rail,
+  20 Hz–20 kHz, col PSRR minimo fra le modalità.
+- **Sostanziale, quindi ADR** (criterio di L15): 5 µV di rumore più 5 µV di
+  ripple passavano E5, con la quota no. La tabella per tono sta nella «Nota su
+  E5 — la quota del ripple d'alimentazione»: sul rail + a 10 kHz il limite è
+  ≤ 31,0 µV RMS.
+- **Il verbo è stato fatto fallire.** Il controllo ha fermato anche un caso di
+  prova mal dimensionato, che passava in entrambe le modalità.
+- **NC-011 resta aperta** per rimedio e verifica, che sono
+  dell'alimentatore. **19 voci, 6 bloccanti.**
+- **Visto e non toccato.** Il dossier legge ancora `data/2026-09-09`, cioè il
+  PSRR del THAT320. `gain_block_draw.py:468` scrive «59,5 dB a 1 kHz», oggi
+  59,57.
 
 ### L15 — il vincolo su E3 scritto accanto a E3 (2026-09-13)
 
@@ -251,7 +278,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L15 | **Il vincolo su E3 scritto dove verrà letto** — in `REQUIREMENTS.md`, «Nota su E3», non in ADR-011 | XS | NC-005 (metà: il vincolo; la misura è L16) | **fatto** |
 | L16 | **Il trim entra nel progetto.** Dimensionarlo in `circuits/preamp/` coi due vincoli insieme — attenuazione richiesta da ADR-015 e la «Nota su E3» (min \|Zin\| 20 Hz–20 kHz ≥ 100 kΩ in tutte e tre le posizioni; R1 + R2 = 100 kΩ non basta, `R_IN` sta in parallelo) — e misurarlo. Chiude anche NC-005. Allineare F2 («a ponticello») a F8/ADR-019, che presuppongono relè. Più la riconciliazione delle tre cifre di margine nel dossier | S/M | **NC-009**, NC-005, **NC-023** | da fare |
 | L17 | **Buffer sulle uscite fisse.** Modifica di topologia in `preamp_audio.py` che disaccoppia le due fisse dal nodo del Blocco A, più la riesecuzione di `tb_blockA_carichi.cir` sulla topologia nuova | M | **NC-010** (bloccante) | da fare |
-| L18 | **Il vincolo PSRR scritto dove verrà letto**: quanto ripple può lasciare l'alimentatore sul rail positivo, ricavato da E5 | XS/S | **NC-011** | da fare |
+| L18 | **Il vincolo PSRR scritto dove verrà letto**: quanto ripple può lasciare l'alimentatore sui rail, ricavato da E5 — **ADR-020** e «Nota su E5 — la quota del ripple» | XS/S | **NC-011** (metà: il vincolo; rimedio e verifica vanno con l'alimentatore) | **fatto** |
 | L19 | ~~**La soglia di margine di fase in V1**~~ — **ASSORBITA da L26**: la soglia l'ha data l'utente (60° ovunque, ADR-019) e NC-012 è chiusa. Resta solo la parte «KPI del dossier riferiti a quella», che va con la rigenerazione del dossier | XS | ~~NC-012~~ | **superata** |
 | L20 | **Quanto il progetto dipende da I_DSS.** Rieseguire punto di lavoro e rumore del blocco di guadagno con `Vto` ai due estremi compatibili con la finestra A — il modello vendor com'è (2,59 mA) e un `Vto` che porti I_DSS al tipico (5,5 mA) — e scrivere in `REQUIREMENTS.md` o in una ADR quale dispersione il progetto tollera | S | **NC-013** | da fare |
 | L21 | **Il polo 2 del relè, corretto e riverificato.** Riga 79 di `preamp_audio.py` in `"6", "5", "7"`, rigenerazione, e verifica **sulla netlist** che il contatto verso massa di ogni mute cada su 2 e 7 e il ramo `R_g` su 4 e 5 | XS/S | **NC-014** (chiude, bloccante), apre **NC-026** | **fatto** |
@@ -275,7 +302,8 @@ conservative sul contributo del JFET, e questo va scritto accanto ai
 numeri e non sottinteso.
 
 Dopo, non pianificati in dettaglio perché dipendono dall'esito:
-**alimentatore + sicurezza rete**, **Fase 4** (revisione topologia coi
+**alimentatore + sicurezza rete** (chiude l'altra metà di **NC-011**: rimedio
+e verifica contro **ADR-020**, più il limite sopra 20 kHz), **Fase 4** (revisione topologia coi
 componenti veri), **Fase 5** (misure), **dossier**, **G1**.
 
 ### Cosa contiene ciascun lotto
@@ -1848,6 +1876,63 @@ R1 + R2 = 100 kΩ non basta.
 **6. Visto e non toccato.** L'indice di `decisions/README.md` si ferma ad
 ADR-016. Il diagramma in `REQUIREMENTS.md` dice ancora «0/+10 dB».
 
+## L18 — Il vincolo PSRR scritto dove verrà letto. FATTO.
+
+Report: `reports/2026-09-13-L18-vincolo-psrr.md`. Tocca **NC-011** (maggiore)
+per la metà che le compete, il vincolo scritto. **La voce resta aperta** per
+il rimedio e la verifica, che sono del lotto dell'alimentatore.
+
+**1. Chi aveva già deciso.** `gain_block.py:571-572` e
+`reports/2026-09-08-fase2-bozza-topologia.md:170-174` (commit `d9ca07f`)
+consegnavano a `psu-engineer` una quota di **1 µV in uscita**: «≤ 1 mV pk a
+100 Hz su V+». Stava in un commento, con cifre del THAT320, e mescolava picco
+e RMS. L18 la rende vincolo senza cambiarne l'ordine di grandezza.
+
+**2. Le cifre rilette.** `tb_zout_psrr_noise.cir` rieseguito dal worktree.
+- Due prove che ha letto la topologia di oggi: le `.include` risolte e il
+  rumore WORST CASE a **4,230582 µV** (LS352, non 5,697).
+- Rail +: si muove al più di **0,107 dB**.
+- Rail −: perde fino a **4,74 dB** in bassa frequenza (a 100 Hz, +10 dB:
+  79,02 → 74,37). La causa non è stata inseguita.
+- La modalità +10 dB è la peggiore su tutti gli 81 punti di entrambi i rail.
+- Log e 4 CSV versionati in `data/2026-09-13/`, con lo scarto nel README.
+
+**3. Dove.** Col criterio di L15 la quota è **sostanziale**: un progetto con
+5 + 5 µV passava E5 e ora non passa più. Quindi **ADR-020** (sola riga 020
+nell'indice), più la **«Nota su E5 — la quota del ripple d'alimentazione»** in
+`REQUIREMENTS.md` e il rimando nelle righe E5 ed E7, dove guarda chi progetta
+l'alimentatore. Nessuna aggiunta in coda ad ADR-010 o ADR-015.
+
+**4. Il verbo.** √(Σ_rail Σ_k [V_rail,k · 10^(−PSRR(f_k)/20)]²) ≤ 1 µV su
+20 Hz–20 kHz, col PSRR minimo fra le modalità. Rail + a +10 dB, tutta la
+quota su un tono: **1,28 mV** RMS a 100 Hz, **0,303 mV** a 1 kHz, **31,0 µV**
+a 10 kHz, **15,5 µV** a 20 kHz; rumore bianco ≤ 190 nV/√Hz.
+
+Fatto fallire su casi noti:
+- 1 mV a 10 kHz sul rail + fallisce (32,3 µV);
+- lo stesso tono sul rail − passa;
+- 0,5 mV a 1 kHz fallisce col PSRR minimo e passa, a torto, con quello della
+  modalità 0 dB;
+- con l'aspettativa invertita, lo script segnala l'errore.
+- Il precedente di Fase 2 dà 0,551 µV.
+- Un primo caso (d) mal dimensionato è stato fermato dal controllo stesso.
+
+**5. La metà non di L18.** La scelta fra regolatore a bassissimo rumore e
+moltiplicatore di capacità vuole dropout, calore e spettro di un alimentatore
+che non esiste, e il mandato lo esclude. Lo stesso vale per il limite sopra
+20 kHz: a 100 kHz il PSRR+ vale 10,20 dB, e E5 non può dare quel numero.
+
+**6. `gain_block.py`.** Il commento PSRR riporta le cifre LS352 con la fonte, e
+il rimando a `psu-engineer` punta ad ADR-020. `ast.dump` è identico a HEAD, 648
+righe su 648, e il controllo è stato fatto fallire con 6.81k → 6.82k.
+
+**7. Visto e non toccato.**
+- `build_dossier.py:32` ha `DATA_DATE = "2026-09-09"`: il dossier pubblica il
+  PSRR del THAT320.
+- `gain_block_draw.py:468` scrive «59,5 dB a 1 kHz».
+- In NC-001 le righe citate di `preamp_audio.py` e il nome `q134` non
+  corrispondono più al codice di oggi; è annotato nel mandato di L11.
+
 ## Il dossier: prima bozza consegnata in L5b
 
 **Riassunto per l'utente, 2026-09-11**:
@@ -2244,46 +2329,57 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L18 — il vincolo PSRR scritto dove verrà letto.** Chiude **NC-011**
-(maggiore). Lotto **XS/S**: nessuna topologia, nessun alimentatore progettato.
+**L11 — mute: misurare e rimediare.** Chiude **NC-001** (bloccante). Lotto
+**M**: misura più rimedio, e il rimedio è una scelta fra due strade.
 
-1. **Il vincolo.** NC-011 ne dà la forma: «il ripple residuo ammesso sul rail
-   positivo, alle frequenze in cui il PSRR vale X dB, deve stare sotto Y»,
-   ricavato da **E5** (< 10 µV RMS, 20 Hz–20 kHz). Oggi nessun documento dice
-   all'alimentatore quanto ripple può lasciare sul rail **+**, che è l'anello
-   debole (a 10 kHz, +10 dB: 29,76 dB contro 86,93 del rail −).
-2. **Le cifre prima del vincolo.** I CSV PSRR esistono **solo** in
-   `data/2026-09-09/`, cioè con la topologia **col THAT320**. Il report di L22
-   (riga 355) dice esplicitamente che il PSRR **non è stato rimisurato** dopo lo
-   specchio LS352. È la lezione di L14: una cifra si rilegge dalla topologia di
-   oggi, non dalla voce che la cita. Prima di derivare X, rieseguire
-   `spice/preamp/tb/tb_zout_psrr_noise.cir` sul codice di oggi e confrontare,
-   come L14 ha fatto con `tb_op`. Se le cifre si muovono, il vincolo si scrive
-   su quelle nuove e lo scarto si registra.
-3. **Dove e in che forma: da decidere, con il criterio di L15.** L15 ha scritto
-   quando una modifica ai requisiti è sostanziale: quando **cambia l'insieme dei
-   progetti conformi**. Per L18 la risposta è probabilmente l'opposta di L15:
-   decidere quanta parte dei 10 µV di E5 va al ripple è una **ripartizione di
-   budget**, cioè una scelta, e quindi con ogni probabilità vuole una ADR.
-   Scrivere la risposta, non assumerla.
-4. **Metà della voce, forse.** Il «cosa serve per chiuderla» di NC-011 chiede
-   anche **la scelta del rimedio** (regolatore a bassissimo rumore o cella a
-   moltiplicatore di capacità). Decidere se quella metà è di L18 o del lotto
-   dell'alimentatore, come L15 ha fatto con la misura di NC-005.
+1. **La misura che manca.** A mute inserito i contatti NC mettono a massa i
+   jack, a valle di 47 Ω e 4,7 µF. Il carico diventa |47 + 1/jωC| ≈ 58,6 Ω a
+   1 kHz invece di 100 kΩ. G0 ha simulato I_C del dispositivo d'uscita a
+   **65,07 mA** (0 dB) e **203,2 mA** (+10 dB), contro circa 14,6 mA di
+   riposo: lo stadio va in classe B, e F6 lo fa attraversare a ogni
+   commutazione di guadagno. **Non esiste un deck versionato per il mute.**
+   Primo passo: un deck in `spice/preamp/tb/` (convenzione `@REPO@`, `wrdata`
+   con nome nudo) che misuri I_C dei due dispositivi d'uscita a mute inserito
+   e il transitorio di inserzione e rilascio, coi dati in `data/<data>/`.
+2. **Le cifre di G0 sono della topologia col THAT320** (2026-09-09).
+   Rieseguirle sul codice di oggi prima di usarle: è la lezione di L14 e L18.
+   **E i riferimenti della voce non valgono più.**
+   - NC-001 cita le righe 132-141 e 242-243 di `preamp_audio.py`: oggi il
+     contatto NC verso massa è alla **riga 264** (`k[nc] += GND`) e le liste
+     dei jack sono alle 162-168 e 205-206.
+   - `@q134[ic]` era **+14,557 mA** in `data/2026-09-09/tb_op.log` ed è
+     **−14,557 mA** in `data/2026-09-10/tb_op-LS352.log`: stesso modulo, segno
+     opposto. Dopo le rinumerazioni di L22 e L10 quel nome indica con ogni
+     probabilità **l'altro** dispositivo d'uscita. I nomi si ricavano dalla
+     netlist di oggi, non da G0.
+3. **Il rimedio: una delle due strade di NC-001, per iscritto e coi numeri.**
+   - **Topologia.** Una modifica in `preamp_audio.py` (resistenza in serie al
+     contatto, o punto di derivazione spostato) più il deck. Tocca V2, F6 e
+     ADR-012, e il contatto del mute che **ADR-019** usa come permissivo del
+     trim. `scripts/check_relay_safe_state.py` (blocco 2e) deve continuare a
+     passare.
+   - **ADR nuova.** Accetta il regime fuori Classe A durante il mute, col
+     calcolo termico su MJE15032/33 per la durata del temporizzatore e la
+     correzione di «Classe A garantita» su `gain_block.svg`. Va letta insieme a
+     **NC-024** e **NC-025**: i modelli dei due MJE stanno sotto i minimi del
+     loro datasheet.
 
 ### Quello che il repo ti consegna già
 
-- **La suite è a 8 blocchi**, 8 passed a fine L15.
-- **La forma di un vincolo scritto accanto al requisito** esiste ora: la
-  «Nota su E3» in `REQUIREMENTS.md` (L15), con verbo verificabile, criterio di
-  passaggio e i fatti da conciliare.
-- **Il difetto `setplot`** di `tb_zout_psrr_noise.cir` annotato in L3d è
-  **corretto in L5**: il deck porta il commento al passato.
+- **La suite è a 8 blocchi**, 8 passed a fine L18.
+- **Il guardiano del mute esiste già**: `check_relay_safe_state.py` asserisce
+  sulla netlist generata «mute diseccitato ⇒ uscita a massa» (L21). Qualsiasi
+  modifica al contatto deve passarlo, e va fatto fallire di nuovo se si tocca.
+- **Il metodo per non fidarsi di una cifra vecchia** è collaudato tre volte:
+  rieseguire il deck dal worktree e provare con un numero indipendente che ha
+  letto la topologia di oggi (L14 con `tb_op`, L18 col rumore di caso
+  peggiore).
 - **I conteggi**: 19 voci aperte, 6 bloccanti.
 
-**Poi**, nell'ordine: le bloccanti vere — **L11** (mute),
-**L17** (buffer sulle uscite fisse) e **L12**, che ADR-019 ha trasformato da
-misura in **rimedio**. **L28** (SS dell'LSK489, NC-027) va fatto prima di G2.
+**Poi**, nell'ordine: **L17** (buffer sulle uscite fisse) e **L12**, che
+ADR-019 ha trasformato da misura in **rimedio**. **L28** (SS dell'LSK489,
+NC-027) va fatto prima di G2. L'alimentatore, quando arriva, parte da
+**ADR-020**.
 
 ### Cosa cercare, e cosa NON accettare
 

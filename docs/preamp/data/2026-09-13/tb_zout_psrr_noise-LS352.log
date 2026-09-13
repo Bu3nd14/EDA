@@ -1,0 +1,151 @@
+warning, model type mismatch in line
+    q121a nmiri nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: tb_zout_psrr_noise.cir - e4 (zout), psrr, and e5 (output noise)
+
+########## Zout at the jack, load removed, both gain modes ##########
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 81
+z20                 =  1.69341e+03
+z1k                 =  5.87591e+01
+z20k                =  4.80474e+01
+za20                =  1.03546e+00
+za1k                =  1.03554e+00
+za20k               =  1.06685e+00
+za100k              =  1.65116e+00
+RRG=1g
+z20 = 1.693406e+03
+z1k = 5.875914e+01
+z20k = 4.804744e+01
+za20 = 1.035458e+00
+za1k = 1.035536e+00
+za20k = 1.066852e+00
+za100k = 1.651157e+00
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 81
+z20                 =  1.69347e+03
+z1k                 =  6.05786e+01
+z20k                =  5.02910e+01
+za20                =  3.25844e+00
+za1k                =  3.25867e+00
+za20k               =  3.35114e+00
+za100k              =  4.97282e+00
+RRG=0.1
+z20 = 1.693470e+03
+z1k = 6.057864e+01
+z20k = 5.029105e+01
+za20 = 3.258440e+00
+za1k = 3.258673e+00
+za20k = 3.351143e+00
+za100k = 4.972822e+00
+########## PSRR (input source silenced) ##########
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 81
+p100                =  7.21174e+01
+p1k                 =  5.95737e+01
+p10k                =  3.97768e+01
+p100k               =  1.97773e+01
+PSRR+ RRG=1g (dB, bigger is better)
+p100 = 7.211741e+01
+p1k = 5.957366e+01
+p10k = 3.977676e+01
+p100k = 1.977729e+01
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 81
+p100                =  6.21663e+01
+p1k                 =  4.96164e+01
+p10k                =  2.98232e+01
+p100k               =  1.02032e+01
+PSRR+ RRG=0.1 (dB, bigger is better)
+p100 = 6.216627e+01
+p1k = 4.961645e+01
+p10k = 2.982316e+01
+p100k = 1.020320e+01
+########## PSRR from V- ##########
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 81
+p100                =  8.43260e+01
+p1k                 =  9.77128e+01
+p10k                =  9.62081e+01
+p100k               =  7.11493e+01
+PSRR- RRG=1g (dB, bigger is better)
+p100 = 8.432601e+01
+p1k = 9.771281e+01
+p10k = 9.620813e+01
+p100k = 7.114932e+01
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 81
+p100                =  7.43708e+01
+p1k                 =  8.77517e+01
+p10k                =  8.62347e+01
+p100k               =  6.15585e+01
+PSRR- RRG=0.1 (dB, bigger is better)
+p100 = 7.437077e+01
+p1k = 8.775166e+01
+p10k = 8.623467e+01
+p100k = 6.155852e+01
+########## output noise 20 Hz - 20 kHz ##########
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+RRG=1g  RSRC=430 (phono cathode follower)
+onoise_total = 1.216418e-06
+inoise_total = 1.218112e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+RRG=0.1  RSRC=430 (phono cathode follower)
+onoise_total = 3.339115e-06
+inoise_total = 1.063241e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+RRG=1G  RSRC=1 ohm (intrinsic)
+onoise_total = 1.156687e-06
+inoise_total = 1.157802e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+RRG=0.1  RSRC=2500 (attenuator at mid-rotation, +10 dB) - WORST CASE
+onoise_total = 4.230582e-06
+inoise_total = 1.349882e-06
+Note: Simulation executed from .control section 

@@ -51,3 +51,4 @@ Costa un commento. È il collegamento dall'artefatto al ragionamento, ed
 | [014](ADR-014-cascode-ingresso.md) | Cascode sulla coppia d'ingresso | accettata |
 | [015](ADR-015-rail-15v.md) | Rail a ±15 V, non ±18 V | accettata |
 | [016](ADR-016-modello-vendor-e-ciclo-di-vita.md) | Nessun componente a fine vita, nessun dispositivo attivo senza modello vendor | accettata |
+| [020](ADR-020-quota-ripple-alimentazione.md) | Quota del ripple d'alimentazione nel budget di E5: 1 µV RMS | accettata |
