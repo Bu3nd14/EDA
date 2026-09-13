@@ -51,14 +51,52 @@ G0 ha simulato I_C del dispositivo d'uscita a **65,07 mA** (0 dB) e
 condizione che F6 fa attraversare a ogni commutazione di guadagno. Contraddice
 T1, e **non esiste nessun deck versionato** per il mute.
 
+**La decisione dell'utente (2026-09-13, dopo la chiusura di L18).** Il
+mandato scritto da L18 proponeva come seconda strada un'ADR che accettasse la
+classe B «per la durata del temporizzatore». L'utente l'ha corretta così (in
+due messaggi, refusi corretti):
+
+> «il mute deve potersi tenere a tempo indefinito a costo di cambiare la
+> topologia»
+>
+> «la classe B può essere accettata in mute, ma il mute non deve mettere a
+> rischio la termica»
+
+Quindi:
+- **il mute si può tenere inserito senza limite di tempo.** Era già implicito
+  in ADR-019, perché il mute è il permissivo del trim e chi regola il trim lo
+  tiene inserito quanto vuole. Ma ADR-012 parla ancora di «qualche secondo»;
+- **a mute inserito la classe B è ammessa.** Fuori dal mute, T1 resta com'è;
+- **il criterio è termico e a regime**: col mute tenuto indefinitamente,
+  nella condizione peggiore che l'uso consente, nessun dispositivo esce dai
+  propri limiti. Se la topologia di oggi non ci sta, la topologia cambia.
+
 **Cosa fare:**
 
-1. **La misura, sulla topologia di oggi.** Un deck in `spice/preamp/tb/`
-   (convenzione `@REPO@`, `wrdata` con nome nudo) che misuri I_C dei **due**
-   dispositivi d'uscita a mute inserito e il transitorio di inserzione e
-   rilascio, nelle modalità di guadagno che la topologia ha. Dati in
-   `docs/preamp/data/<data>/`. Confronta con G0 e registra lo scarto.
-2. **I riferimenti della voce non valgono più: verificali, non ricopiarli.**
+1. **Registrare la decisione, per prima.** Una ADR nuova (**ADR-021**, secondo
+   TEMPLATE e con la sua riga nell'indice) che:
+   - supera la durata di ADR-012 e aggiorna F6;
+   - ammette la classe B a mute inserito come eccezione dichiarata a T1 e
+     ADR-003;
+   - fissa il criterio termico con un **verbo verificabile**.
+
+   Col criterio di L15 la modifica è sostanziale. Un progetto
+   termicamente sicuro solo per qualche secondo era conforme e ora non lo è
+   più; uno in classe B a mute violava T1 e ora no. I numeri del criterio
+   (temperatura di giunzione massima, declassamento, temperatura dentro il
+   telaio chiuso di P5) si ricavano dai datasheet e da ADR-010, **non si
+   inventano**. Se richiedono una scelta di prodotto, la scelta è dell'utente.
+2. **La misura, sulla topologia di oggi.** Un deck in `spice/preamp/tb/`
+   (convenzione `@REPO@`, `wrdata` con nome nudo) che misuri, per i **due**
+   dispositivi d'uscita:
+   - I_C e **dissipazione a regime** a mute inserito;
+   - il transitorio di inserzione e di rilascio.
+
+   Va fatto nelle modalità di guadagno che la topologia ha, **con segnale
+   presente all'ingresso**: il mute non spegne la sorgente, e il trim si regola
+   a mute inserito. Dati in `docs/preamp/data/<data>/`. Confronta con G0 e
+   registra lo scarto.
+3. **I riferimenti della voce non valgono più: verificali, non ricopiarli.**
    - NC-001 cita le righe 132-141 e 242-243 di `preamp_audio.py`: oggi il
      contatto NC verso massa è alla **riga 264** (`k[nc] += GND`) e le liste
      dei jack alle 162-168 e 205-206.
@@ -66,17 +104,19 @@ T1, e **non esiste nessun deck versionato** per il mute.
      **−14,557 mA** in `data/2026-09-10/tb_op-LS352.log`: dopo le
      rinumerazioni di L22 e L10 quel nome indica con ogni probabilità l'altro
      dispositivo. Ricava i nomi dalla netlist di oggi.
-3. **Il rimedio: una delle due strade di NC-001, per iscritto e coi numeri.**
-   - **Topologia.** Una modifica in `preamp_audio.py` (resistenza in serie al
-     contatto, o punto di derivazione spostato), rigenerata, più il deck. Tocca
-     il contatto che ADR-019 usa come permissivo del trim, e
-     `check_relay_safe_state.py` (blocco 2e) deve continuare a passare.
-   - **ADR nuova.** Accetta il regime fuori Classe A durante il mute, col
-     calcolo termico su MJE15032/33 per la durata del temporizzatore (tenendo
-     conto di NC-024 e NC-025) e la correzione di «Classe A garantita» su
-     `gain_block.svg`.
-   - Confronta le due strade coi numeri. Se la scelta è di prodotto e non di
-     progetto, è dell'utente.
+4. **Il rimedio, deciso dal verdetto termico a regime.**
+   - **Se a regime i dispositivi reggono**, NC-001 si chiude con:
+     - l'ADR del passo 1;
+     - il calcolo termico su MJE15032/33, fatto coi loro modelli e tenendo
+       conto di NC-024 e NC-025, che stanno sotto i minimi del datasheet;
+     - la correzione di «Classe A garantita» ovunque sia scritta (almeno
+       `gain_block.svg`), perché a mute inserito non è più vera.
+   - **Se non reggono, la topologia cambia.** Una modifica in
+     `preamp_audio.py` (resistenza in serie al contatto, o punto di
+     derivazione spostato), rigenerata, più il deck. Tocca il contatto che
+     ADR-019 usa come permissivo del trim, e `check_relay_safe_state.py`
+     (blocco 2e) deve continuare a passare.
+   - **Un calcolo termico su una durata finita non chiude niente.**
 
 ### Quello che il repo ti consegna già — usalo invece di riscoprirlo
 
@@ -93,6 +133,8 @@ T1, e **non esiste nessun deck versionato** per il mute.
 
 - **Una cifra di G0 usata senza dire che è della topologia col THAT320.**
 - **Un nome di dispositivo copiato da un log vecchio.**
+- **Una verifica termica limitata alla durata di un temporizzatore.** Il mute
+  si tiene a tempo indefinito: è una decisione dell'utente del 2026-09-13.
 - **Un deck che esce 0 e che nessuno ha provato a far fallire**: L10 ne ha
   trovati due rotti in silenzio.
 - **Un'ADR riscritta**, o un'aggiunta in coda a una ADR esistente.

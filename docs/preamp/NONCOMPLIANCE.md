@@ -206,6 +206,19 @@ regime di lavoro, dissipazione e correnti di rail, e contraddice T1.
    correzione della frase «Classe A garantita» su `gain_block.svg` e in
    `gain_block.py`.
 
+**Decisione dell'utente, 2026-09-13.** Il mute deve potersi tenere inserito
+**a tempo indefinito**, a costo di cambiare la topologia. A mute inserito la
+classe B **è accettabile**, ma il mute **non deve mettere a rischio la
+termica**. Le due strade qui sopra cambiano così:
+- **la strada 2 resta**, ma il calcolo termico va fatto **a regime**, non
+  «per tutta la durata del temporizzatore». Un calcolo su una durata finita
+  non chiude la voce;
+- **se a regime i dispositivi d'uscita non reggono**, resta solo la strada 1.
+
+La decisione va registrata in una ADR nuova, che supera la durata «qualche
+secondo» di ADR-012 e ammette l'eccezione a T1 a mute inserito. È il primo
+passo di L11.
+
 ### NC-004 — E5 e V4 senza alcuna evidenza: rumore e distorsione non sono note
 
 | | |

@@ -22,6 +22,21 @@ realtà, il progetto non è ripartibile.
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
 
+### Dopo L18 — il mandato di L11 corretto dall'utente (2026-09-13)
+
+Nessun lotto: si corregge l'handoff scritto alla chiusura di L18.
+
+- **Cosa diceva.** Il mandato di L11 offriva come seconda strada un'ADR che
+  accettasse la classe B «per la durata del temporizzatore».
+- **Perché era sbagliato.** L'ipotesi veniva da ADR-012 («qualche secondo»),
+  ma **contraddiceva già ADR-019**: il mute è il permissivo del trim, e chi lo
+  regola lo tiene inserito quanto vuole. L18 non l'aveva visto.
+- **La decisione dell'utente.** Mute **tenibile a tempo indefinito**; **classe
+  B ammessa** a mute inserito; **termica sicura a regime**, a costo di cambiare
+  la topologia.
+- **Dove è scritta.** `NEXT-SESSION.md` e la «Decisione dell'utente» di NC-001,
+  per ora. **L11 la registra per prima come ADR-021.**
+
 ### L18 — il vincolo PSRR scritto dove verrà letto (2026-09-13)
 
 Nessun valore del circuito toccato. Un commento di `gain_block.py` è
@@ -271,7 +286,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 
 | # | Lotto | Dim. | Chiude | Stato |
 |---|---|---|---|---|
-| L11 | **Mute: misurare e rimediare.** Deck che misura I_C dei due dispositivi d'uscita a mute inserito + il transitorio di inserzione/rilascio; poi o la modifica di topologia o la ADR che accetta il regime | M | **NC-001** (bloccante) | da fare |
+| L11 | **Mute: misurare e rimediare.** Prima la ADR della decisione dell'utente del 2026-09-13 (mute tenibile **a tempo indefinito**; classe B ammessa a mute, **termica sicura a regime**; supera la durata di ADR-012). Poi un deck che misura I_C, dissipazione a regime e transitorio dei due dispositivi d'uscita a mute inserito; se a regime non reggono, la topologia cambia | M | **NC-001** (bloccante) | da fare |
 | L12 | **Portare blocco A e blocco B sopra i 60°.** Cambia natura con **ADR-019**: non più solo «misura coi valori veri», ma **rimedio** — il blocco A sta a 41,98° e il blocco B a 0 dB con cavo a 56,46°, contro una soglia di 60°. Le strade (più compensazione, meno guadagno d'anello, rete d'isolamento diversa) costano tutte a un altro requisito e vanno confrontate coi numeri | M | **NC-002**, **NC-021** (bloccanti) | da fare |
 | L13 | **E4 sulle tre uscite e a manopola che gira.** Estendere `tb_zout_psrr_noise.cir` alle due uscite fisse e a tre posizioni dell'attenuatore | S | NC-008 | da fare |
 | L14 | **Le tre correzioni di testo.** KPI del margine di fase qualificato, i due commenti di cascode allineati, lo scarto ADR-014 riferito a 1 kHz | XS | NC-003, NC-006, NC-007 | **fatto** |
@@ -2330,8 +2345,22 @@ sulla carta.
 ## Prossimo passo concreto
 
 **L11 — mute: misurare e rimediare.** Chiude **NC-001** (bloccante). Lotto
-**M**: misura più rimedio, e il rimedio è una scelta fra due strade.
+**M**: registrare la decisione, poi misura e rimedio.
 
+0. **La decisione dell'utente, da registrare per prima** (2026-09-13, dopo
+   la chiusura di L18; parole esatte in `NEXT-SESSION.md` e in NC-001):
+   - il mute si tiene **a tempo indefinito**, a costo di cambiare la
+     topologia;
+   - a mute inserito la **classe B è accettabile**;
+   - il mute **non deve mettere a rischio la termica**.
+
+   Diventa una **ADR nuova (ADR-021)**:
+   - supera la durata «qualche secondo» di ADR-012 e aggiorna F6;
+   - dichiara l'eccezione a T1 e ADR-003 a mute inserito;
+   - fissa un criterio termico **a regime** con un verbo verificabile, coi
+     numeri presi dai datasheet e da ADR-010, non inventati.
+
+   È sostanziale col criterio di L15.
 1. **La misura che manca.** A mute inserito i contatti NC mettono a massa i
    jack, a valle di 47 Ω e 4,7 µF. Il carico diventa |47 + 1/jωC| ≈ 58,6 Ω a
    1 kHz invece di 100 kΩ. G0 ha simulato I_C del dispositivo d'uscita a
@@ -2352,17 +2381,20 @@ sulla carta.
      opposto. Dopo le rinumerazioni di L22 e L10 quel nome indica con ogni
      probabilità **l'altro** dispositivo d'uscita. I nomi si ricavano dalla
      netlist di oggi, non da G0.
-3. **Il rimedio: una delle due strade di NC-001, per iscritto e coi numeri.**
-   - **Topologia.** Una modifica in `preamp_audio.py` (resistenza in serie al
-     contatto, o punto di derivazione spostato) più il deck. Tocca V2, F6 e
-     ADR-012, e il contatto del mute che **ADR-019** usa come permissivo del
-     trim. `scripts/check_relay_safe_state.py` (blocco 2e) deve continuare a
-     passare.
-   - **ADR nuova.** Accetta il regime fuori Classe A durante il mute, col
-     calcolo termico su MJE15032/33 per la durata del temporizzatore e la
-     correzione di «Classe A garantita» su `gain_block.svg`. Va letta insieme a
-     **NC-024** e **NC-025**: i modelli dei due MJE stanno sotto i minimi del
-     loro datasheet.
+3. **Il rimedio, deciso dal verdetto termico a regime.** La misura va fatta
+   con segnale presente all'ingresso: il mute non spegne la sorgente, e il trim
+   si regola a mute inserito.
+   - **Se a regime MJE15032/33 reggono**, NC-001 si chiude con:
+     - l'ADR del passo 0;
+     - il calcolo termico, da leggere insieme a **NC-024** e **NC-025**
+       perché i modelli dei due MJE stanno sotto i minimi del loro datasheet;
+     - la correzione di «Classe A garantita» dovunque sia scritta.
+   - **Se non reggono, la topologia cambia.** Una modifica in
+     `preamp_audio.py` (resistenza in serie al contatto, o punto di
+     derivazione spostato) più il deck. Tocca V2, F6 e il contatto del mute che
+     **ADR-019** usa come permissivo del trim; `check_relay_safe_state.py`
+     (blocco 2e) deve continuare a passare.
+   - **Un calcolo termico su una durata finita non chiude niente.**
 
 ### Quello che il repo ti consegna già
 
