@@ -3,7 +3,7 @@
 **Documento vivo.** Riscritto quando i requisiti cambiano. Ogni modifica
 sostanziale deve avere una ADR corrispondente in `decisions/`.
 
-Ultimo aggiornamento: 2026-09-13 (L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
+Ultimo aggiornamento: 2026-09-13 (L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
 
 Le motivazioni non stanno qui: stanno nelle ADR referenziate e nel
 report `reports/2026-09-08-analisi-catena.md`.
@@ -41,9 +41,9 @@ report `reports/2026-09-08-analisi-catena.md`.
 | E3 | Impedenza d'ingresso | **≥ 100 kΩ**, al connettore d'ingresso, **in ogni posizione del trim** | Cap di accoppiamento del phono — vedi report e **nota sotto** |
 | E3b | Attenuazione tipica all'ascolto | ~29–31 dB con il nuovo preamp | Guadagno finale 20,7×–25,3× |
 | E4 | Impedenza d'uscita | **< 100 Ω in banda passante** (misurata escludendo la reattanza del condensatore d'accoppiamento), costante con la posizione del volume | ADR-002 |
-| E5 | Rumore in uscita | **< 10 µV RMS** (20 Hz–20 kHz, non pesato) | vedi nota sotto |
+| E5 | Rumore in uscita | **< 10 µV RMS** (20 Hz–20 kHz, non pesato), ripple dei rail compreso: **1 µV** è la quota dell'alimentazione | vedi note sotto · **ADR-020** |
 | E6 | Livello massimo d'ingresso | 2,7 V RMS | FiiO K11 R2R |
-| E7 | Alimentazione | **±15 V** regolati — confermati contro ±18 V | ADR-015 |
+| E7 | Alimentazione | **±15 V** regolati — confermati contro ±18 V. Ripple e rumore dei rail: **≤ 1 µV RMS riportati in uscita** (nota su E5) | ADR-015, **ADR-020** |
 | E8 | Accoppiamento d'uscita | Capacitivo, **4,7 µF su tutte e tre le uscite** | ADR-007 |
 
 **Nota su E5.** Con il guadagno del finale (21,1×) e le Heresy a
@@ -53,6 +53,61 @@ rumore di fondo di una stanza silenziosa (25-30 dB SPL). A 2 µV si
 scende a −0,5 dB SPL a 1 m. Il margine è ampio ma **non illimitato**: le
 trombe da 96 dB rendono il rumore più udibile che su diffusori normali,
 quindi il target va rispettato, non trattato come formalità.
+
+**Nota su E5 — la quota del ripple d'alimentazione** (2026-09-13, L18,
+**ADR-020**; chiude la metà «scritta» di **NC-011**).
+
+**Il vincolo.** Dei 10 µV di E5, **1 µV RMS** spetta all'alimentazione. Il
+ripple e il rumore dei **due** rail, riportati in uscita attraverso il PSRR
+del blocco e sommati in quadratura su 20 Hz–20 kHz, devono restare
+**≤ 1 µV**:
+
+√( Σ_rail∈{+,−} Σ_k [ V_rail,k · 10^(−PSRR_rail(f_k)/20) ]² ) ≤ 1 µV
+
+- **V_rail,k** è il valore RMS di ciascuna componente (un tono, o una densità
+  di rumore integrata), preso **al nodo di alimentazione del blocco**.
+- **PSRR(f)** è il **minimo fra le modalità di guadagno** sulla topologia
+  vigente.
+
+**Come si decide.** Si prende lo spettro dei rail, prima simulato da chi
+progetta l'alimentatore e poi misurato sul prototipo, e la PSRR(f) dai CSV
+vigenti: oggi `data/2026-09-13/tb_zout_psrr_noise_psrr{p,m}_10db.csv`,
+topologia LS352. La modalità +10 dB è la peggiore su tutti gli 81 punti di
+entrambi i rail. Il vincolo passa se la somma resta ≤ 1 µV. La verifica finale
+è la misura in uscita sul prototipo.
+
+**I limiti per tono, se tutta la quota cade su una sola frequenza**
+(1 µV · 10^(PSRR/20), modalità +10 dB; 50 Hz interpolato sulla griglia). Con
+più componenti vale la somma, non la tabella.
+
+| f | PSRR rail + | V+ massimo | PSRR rail − | V− massimo |
+|---|---|---|---|---|
+| 50 Hz | 62,76 dB | 1,37 mV RMS (1,94 mV pk) | 69,51 dB | 2,99 mV RMS |
+| 100 Hz | 62,17 dB | 1,28 mV RMS (1,81 mV pk) | 74,37 dB | 5,23 mV RMS |
+| 1 kHz | 49,62 dB | 0,303 mV RMS | 87,75 dB | 24,4 mV RMS |
+| 10 kHz | 29,82 dB | **31,0 µV RMS** | 86,23 dB | 20,5 mV RMS |
+| 20 kHz | 23,81 dB | **15,5 µV RMS** | 81,91 dB | 12,5 mV RMS |
+
+Rumore bianco sul solo rail +, su 20 Hz–20 kHz: **≤ 190 nV/√Hz**.
+
+**Perché c'è una ADR, e non solo questa nota.** Col criterio di L15 la
+ripartizione è **sostanziale**. Un progetto con 5 µV di rumore e 5 µV di
+ripple faceva 7,07 µV e passava E5; con la quota non passa più. La nota sta
+qui, accanto a E5 ed E7, perché è lì che la legge chi progetta
+l'alimentatore. Il perché del numero sta in ADR-020, non in un'aggiunta ad
+ADR-010 o ADR-015.
+
+**Cosa la nota non copre.**
+- **Sopra 20 kHz** E5 non vede niente, e il vincolo nemmeno: 100 mV a 100 kHz
+  sul rail + passano. Eppure lì il PSRR+ vale **10,20 dB** e lavora uno
+  switching. Il limite fuori banda, come la scelta del rimedio, è del lotto
+  dell'alimentatore.
+- **Il ronzio indotto dal toroide** (ADR-010) non passa dai rail.
+- **Le cifre di PSRR** vengono da modelli in parte ancora segnaposto
+  (NC-017). Quando la PSRR cambia, i limiti per tono si ricalcolano; la quota
+  no.
+
+Ragionamento completo: `reports/2026-09-13-L18-vincolo-psrr.md`.
 
 **Nota su E3 — vale anche per il trim** (2026-09-13, L15; chiude la metà
 «scritta» di **NC-005**).

@@ -25,7 +25,10 @@ L22, quindi le sue asserzioni non girano. **L10** ha chiuso NC-026 e aperto
 NC-027. **L14** ha chiuso **NC-003, NC-006 e NC-007**: tre punti in cui il repo
 diceva una cosa diversa da quella che i suoi dati misurano. **L15** ha scritto
 il vincolo di **NC-005** accanto a E3 (`REQUIREMENTS.md`, «Nota su E3»): la
-voce resta aperta per la misura, che è di L16. **19 voci aperte,
+voce resta aperta per la misura, che è di L16. **L18** ha fatto lo stesso con
+**NC-011**: la quota del ripple è **ADR-020**, e sta nella «Nota su E5 — la
+quota del ripple d'alimentazione». La voce resta aperta per il rimedio e la
+verifica, che sono del lotto dell'alimentatore. **19 voci aperte,
 6 bloccanti.**
 L'accesso a G1 non è concesso finché NC-001, NC-002, NC-004, NC-010, NC-017
 e NC-021 restano aperte)
@@ -438,9 +441,10 @@ una ADR nuova che superi ADR-015: non si fa modificandola.
 | Requisito | **E5** (rumore in uscita) · alimentatore, non ancora progettato |
 | Severità | **maggiore** |
 | Aperta da | `reports/2026-09-09-revisione-utente-dossier.md` |
-| Stato | aperta |
+| Stato | aperta — **metà scritta chiusa da L18** (2026-09-13, ADR-020); restano la scelta del rimedio e la verifica, lotto dell'alimentatore |
 
-**Evidenza.** Da `docs/preamp/data/2026-09-09/tb_zout_psrr_noise_psrr*.csv`:
+**Evidenza.** Da `docs/preamp/data/2026-09-09/tb_zout_psrr_noise_psrr*.csv`,
+topologia **col THAT320**, come all'apertura:
 
 | Configurazione | 100 Hz | 1 kHz | 10 kHz | 100 kHz |
 |---|---|---|---|---|
@@ -448,7 +452,17 @@ una ADR nuova che superi ADR-015: non si fa modificandola.
 | rail **+**, 0 dB | 72,02 | 59,51 | 39,72 | 19,72 |
 | rail **−**, +10 dB | 79,02 | 90,54 | 86,93 | 61,44 |
 
-Il divario fra i due rail a 10 kHz è di **57 dB**: la topologia non è
+**Rimisurata in L18** sulla topologia di oggi, con lo specchio LS352, da
+`docs/preamp/data/2026-09-13/tb_zout_psrr_noise_psrr*.csv` (100 Hz / 1 kHz /
+10 kHz / 100 kHz):
+- rail **+**, +10 dB: 62,17 / 49,62 / **29,82** / **10,20**;
+- rail **−**, +10 dB: 74,37 / 87,75 / 86,23 / 61,56.
+
+Il rail + si muove di meno di 0,11 dB. Il rail − perde fino a 4,74 dB (a
+20 Hz), ma resta 12 dB sopra il + a 100 Hz e 56 dB sopra a 10 kHz. La
+conclusione della voce non cambia.
+
+Il divario fra i due rail a 10 kHz, all'apertura, era di **57 dB**: la topologia non è
 simmetrica rispetto all'alimentazione, e il rail positivo è l'anello
 debole. Il numero **è già pubblicato** nel dossier; quello che non esiste
 è la sua **conseguenza**. L'alimentatore non è ancora progettato e nessun
@@ -466,6 +480,22 @@ Y», ricavato da E5; più la scelta del rimedio (regolatore a bassissimo
 rumore, oppure cella locale a moltiplicatore di capacità dedicata agli
 stadi d'ingresso). La verifica finale è una misura sul prototipo, non una
 simulazione.
+
+**Metà chiusa il 2026-09-13 da L18.** Il vincolo è scritto. **ADR-020**
+riserva all'alimentazione **1 µV RMS** dei 10 µV di E5. Il verbo e la tabella
+per tono stanno nella «Nota su E5 — la quota del ripple d'alimentazione» di
+`REQUIREMENTS.md`; per esempio, sul rail + a 10 kHz il limite è ≤ 31,0 µV RMS.
+Il verbo è stato fatto fallire su casi noti
+(`reports/2026-09-13-L18-vincolo-psrr.md` §4).
+
+**La voce resta aperta** per le due cose che L18 non poteva fare:
+1. **la scelta del rimedio**, che vuole i numeri di dropout e di calore
+   dell'alimentatore;
+2. **la verifica contro ADR-020**, prima sullo spettro simulato dei rail e poi
+   sul prototipo.
+
+Sono del lotto dell'alimentatore, insieme al limite sopra 20 kHz che E5 non
+può dare.
 
 ### NC-012 — V1 non dichiara la soglia di accettazione del margine di fase
 
