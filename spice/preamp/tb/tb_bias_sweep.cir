@@ -1,6 +1,6 @@
 tb_bias_sweep.cir - find the Vbe-multiplier resistor that centres Iq on 15 mA
-* Sweeps R130 (the collector-base leg of the bias spreader) and reports the
-* resulting Class A quiescent current, measured as the current in R136 (the
+* Sweeps R128 (the collector-base leg of the bias spreader) and reports the
+* resulting Class A quiescent current, measured as the current in R134 (the
 * NPN output emitter resistor). The hand calculation got this wrong twice;
 * this deck is the arbiter.
 * NOTE: the winning value must then be written back into
@@ -38,18 +38,18 @@ RLOAD JACK 0 100k
 *
 * PERCHE' DENTRO IL CICLO: ogni `op` crea un plot nuovo (op1...op7). Un
 * `wrdata` fuori dal ciclo scriverebbe solo la settima iterazione e la
-* curva Iq(R130) - il senso di questo deck - andrebbe persa.
+* curva Iq(R128) - il senso di questo deck - andrebbe persa.
 *
-* PERCHE' I `let`: `@r135[i]` e `@q133[ic]` sono parametri di DISPOSITIVO,
+* PERCHE' I `let`: `@r134[i]` e `@q132[ic]` sono parametri di DISPOSITIVO,
 * non vettori del plot, e `wrdata` vuole vettori. Il `let` ne prende uno
 * snapshot nel plot corrente.
 *
 * COLONNE: un `wrdata` da `.op` scrive UNA riga e, per ogni vettore, una
 * COPPIA (scale, valore). Lo scale di un plot `op` non significa niente:
 * i dati sono le colonne DISPARI, in quest'ordine:
-*   col1 = iq (A, corrente in R136)   col3 = ic134 (A)
+*   col1 = iq (A, corrente in R134)   col3 = ic134 (A)
 *   col5 = v(NX)                      col7 = v(NY)
-* Il valore di R130 non e' una colonna: e' nel NOME del file.
+* Il valore di R128 non e' una colonna: e' nel NOME del file.
 *
 * NOTA: nessun file si chiama tb_bias_sweep_wrdata.txt, quindi il percorso
 * primario di run_simulation.sh non trova nulla, avvisa, e scrive un
@@ -58,12 +58,12 @@ RLOAD JACK 0 100k
 * ---------------------------------------------------------------------
 set t = .txt
 foreach rval 1500 1600 1650 1690 1740 1780 1870
-  alter r130 = $rval
+  alter r128 = $rval
   op
-  echo "R130 = $rval ohm"
-  print @r135[i] @q133[ic] v(nx) v(ny)
-  let iq = @r135[i]
-  let ic134 = @q133[ic]
+  echo "R128 = $rval ohm"
+  print @r134[i] @q132[ic] v(nx) v(ny)
+  let iq = @r134[i]
+  let ic134 = @q132[ic]
   wrdata tb_bias_sweep_$rval$t iq ic134 v(nx) v(ny)
 end
 .endc

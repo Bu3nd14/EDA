@@ -1,6 +1,6 @@
 tb_switch_v2_counterfactual.cir - what the REJECTED arrangement would do
 * ADR-004 rejected putting the relay contact in series with R_f (the loop
-* leg). This deck shows why, on the same circuit, by opening R138 (R_f)
+* leg). This deck shows why, on the same circuit, by opening R136 (R_f)
 * to 1 Gohm - which is what an open contact in that position IS.
 *
 * Prediction: with R_f open there is no feedback path at all, the input pair
@@ -66,12 +66,12 @@ op
 print v(OUT) v(FB) v(NX) v(NY)
 wrdata tb_switch_v2_counterfactual_wrdata.txt v(OUT) v(FB) v(NX) v(NY)
 echo "--- B: contact OPEN (R_f = 1e12), R_g still strapped: loop is BROKEN ---"
-alter r138 = 1e12
+alter r136 = 1e12
 op
 print v(OUT) v(FB) v(NX) v(NY)
 wrdata tb_switch_v2_counterfactual_open.txt v(OUT) v(FB) v(NX) v(NY)
 echo "--- C: closed again, to prove B was not a solver artefact ---"
-alter r138 = 1.50k
+alter r136 = 1.50k
 op
 print v(OUT) v(FB)
 wrdata tb_switch_v2_counterfactual_reclosed.txt v(OUT) v(FB) v(NX) v(NY)

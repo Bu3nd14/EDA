@@ -10,7 +10,7 @@ tb_blockA_carichi.cir - BLOCCO A: cosa vede quando un apparecchio a valle si spe
 * potrebbe andare a zero, quindi la condizione non e' ipotetica.
 *
 * Due meta':
-*   1. TRANSITORIO - I_C dei due dispositivi d'uscita (Q134 NPN, Q135 PNP)
+*   1. TRANSITORIO - I_C dei due dispositivi d'uscita (Q132 NPN, Q133 PNP)
 *      al variare di RJ1, l'impedenza a valle della fissa 1. La Classe A
 *      esiste finche' ENTRAMBI conducono per tutto il periodo: se uno dei
 *      due tocca lo zero, lo stadio e' in Classe B. Il livello e' 2.7 V RMS
@@ -66,7 +66,7 @@ RJ2    J2 0 470k
 * rows: 0; i file veri li converte il SECONDO passaggio. E' atteso.
 * ---------------------------------------------------------------------
 set t = .txt
-save @q133[ic] @q134[ic] v(out) v(j1)
+save @q132[ic] @q133[ic] v(out) v(j1)
 
 * === 1. TRANSITORIO: la soglia oltre la quale la Classe A si perde =====
 * Si versiona la FORMA D'ONDA, non i soli estremi: da lei min e max sono
@@ -75,8 +75,8 @@ save @q133[ic] @q134[ic] v(out) v(j1)
 * pretende. Un wrdata dei soli `meas` avrebbe scritto 1001 righe identiche,
 * perche' in un plot di transitorio gli scalari finiscono sulla scala dei
 * tempi.
-*   col0 = tempo [s]  col1 = I_C(Q134) [A]   (NPN, la semionda positiva)
-*   col2 = tempo [s]  col3 = I_C(Q135) [A]   (PNP, la sua I_C esce: segno -)
+*   col0 = tempo [s]  col1 = I_C(Q132) [A]   (NPN, la semionda positiva)
+*   col2 = tempo [s]  col3 = I_C(Q133) [A]   (PNP, la sua I_C esce: segno -)
 *   col4 = tempo [s]  col5 = v(OUT) [V]
 * CLASSE A <=> q134min > 0 E q135max < 0: entrambi conducono per tutto il
 * periodo. Se uno dei due tocca lo zero, lo stadio e' in Classe B.
@@ -88,15 +88,15 @@ foreach rj 470k 10k 1k 100 10 0.01
   alter rj1 = $rj
   * 2 ms di finestra dopo 3 ms di assestamento: due periodi interi a 1 kHz
   tran 5u 5m 3m
-  meas tran q134max MAX @q133[ic]
-  meas tran q134min MIN @q133[ic]
-  meas tran q135max MAX @q134[ic]
-  meas tran q135min MIN @q134[ic]
+  meas tran q134max MAX @q132[ic]
+  meas tran q134min MIN @q132[ic]
+  meas tran q135max MAX @q133[ic]
+  meas tran q135min MIN @q133[ic]
   meas tran voutmax MAX v(out)
   meas tran voutmin MIN v(out)
   echo "BLOCCO A  RJ1=$rj"
   print q134max q134min q135max q135min voutmax voutmin
-  wrdata tb_blockA_carichi_$rj$t @q133[ic] @q134[ic] v(out)
+  wrdata tb_blockA_carichi_$rj$t @q132[ic] @q133[ic] v(out)
   destroy all
 end
 
