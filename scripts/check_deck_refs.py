@@ -39,9 +39,14 @@ USAGE
 
 Exit codes:  0 = every cited device exists
              1 = at least one cited device does not exist
-             2 = bad invocation / unreadable input / a deck with no citations
-                 at all among decks that were expected to have some is NOT an
-                 error - but a deck whose includes cannot be read IS.
+             2 = bad invocation, an include that cannot be read, or NO device
+                 citation found in any deck (a check with nothing to check
+                 does not pass). A single deck without citations is fine.
+
+WHAT IT CANNOT SEE: a citation of a device that EXISTS but is the wrong one.
+After L22, tb_bias_sweep.cir swept `r130`, which had become the other leg of
+the Vbe multiplier - a live name, so this check passes it. Only comparing a
+deck's numbers before and after a renumbering catches that (limitations #22).
 """
 import re
 import sys
