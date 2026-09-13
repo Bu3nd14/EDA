@@ -23,7 +23,9 @@ protetto da un guardiano permanente in `run_tests.sh` — e, trovandolo mentre
 verificava, ha aperto **NC-026**: il disegno a blocchi non è rigenerabile da
 L22, quindi le sue asserzioni non girano. **L10** ha chiuso NC-026 e aperto
 NC-027. **L14** ha chiuso **NC-003, NC-006 e NC-007**: tre punti in cui il repo
-diceva una cosa diversa da quella che i suoi dati misurano. **19 voci aperte,
+diceva una cosa diversa da quella che i suoi dati misurano. **L15** ha scritto
+il vincolo di **NC-005** accanto a E3 (`REQUIREMENTS.md`, «Nota su E3»): la
+voce resta aperta per la misura, che è di L16. **19 voci aperte,
 6 bloccanti.**
 L'accesso a G1 non è concesso finché NC-001, NC-002, NC-004, NC-010, NC-017
 e NC-021 restano aperte)
@@ -398,12 +400,16 @@ esista. Porta ora **due vincoli portanti e non ne ha soddisfatto nessuno**:
 
 1. attenuare abbastanza da riportare il margine dove ADR-015 lo vuole
    (con K11 a −6 dB l'uscita richiesta scende a 4,27 V RMS);
-2. lasciare la Zin ≥ 100 kΩ in **ogni** posizione — che è **NC-005**.
+2. lasciare la Zin ≥ 100 kΩ in **ogni** posizione — che è **NC-005**, ed è
+   scritto per esteso in `REQUIREMENTS.md`, «Nota su E3» (L15).
 
 I due vincoli tirano in direzioni opposte: un partitore che attenua di
-6 dB con resistenze basse viola E3, uno con resistenze alte carica la
-sorgente e alza il rumore. Nessuno ha ancora verificato che esista un
-punto che li soddisfi entrambi.
+6 dB con resistenze basse viola E3; uno con resistenze alte presenta al
+blocco A una resistenza di Thévenin alta (≥ 25 kΩ a −6 dB con Zin al minimo
+di 100 kΩ), che porta rumore Johnson all'ingresso e cambia la sorgente vista
+dalla matrice V1. *(Corretto in L15: il testo diceva che le resistenze alte
+«caricano la sorgente», che è il contrario — la caricano meno.)* Nessuno ha
+ancora verificato che esista un punto che li soddisfi entrambi.
 
 E la parte di ADR-015 che dice «va scritto sul pannello o nella
 documentazione d'uso» non è stata eseguita: **non esiste né un pannello né
@@ -593,7 +599,7 @@ volta che NC-002 avrà prodotto i dati.
 | Requisito | **E3** (Zin ≥ 100 kΩ) · F2/ADR-011 |
 | Severità | **minore** |
 | Aperta da | `reports/2026-09-09-gate-G0.md` |
-| Stato | aperta |
+| Stato | aperta — **metà scritta chiusa il 2026-09-13 da L15**; resta la misura AC, **L16** |
 
 **Evidenza.** Nessun file in `docs/preamp/data/2026-09-09/` misura
 l'impedenza d'ingresso. In topologia `R_IN = "1M"` in
@@ -610,6 +616,18 @@ file della scheda ingressi quando esisterà, o intanto in
 resistenza vista all'ingresso, in ogni posizione del ponticello di trim,
 deve restare ≥ 100 kΩ»), e verificarlo con una misura AC quando la scheda
 sarà in `circuits/preamp/`.
+
+**Il vincolo è scritto (L15, 2026-09-13).** Sta in `REQUIREMENTS.md`,
+«Nota su E3», accanto al requisito che lo impone e non in ADR-011: le ADR
+non si riscrivono, e la nota non è una decisione ma una conseguenza di E3
+che non cambia l'insieme dei progetti conformi. È formulato **indipendente
+dal meccanismo** («in ogni posizione del trim»), non «del ponticello»: F2
+dice ponticello, F8/ADR-019 presuppongono relè, e la tensione è di L16. Il
+criterio di passaggio è scritto: minimo di |Zin| su 20 Hz–20 kHz ≥ 100 kΩ
+al connettore, blocco A collegato, in tutte e tre le posizioni. Il
+controesempio della voce è stato **ricalcolato**: 13,29 kΩ, −12,13 dB.
+**Resta aperta** per la misura, che chiude L16 insieme a NC-009 (il cui
+criterio 1 la contiene già). Report: `reports/2026-09-13-L15-vincolo-e3.md`.
 
 ### NC-006 — `gain_block.py` porta due valori superati per il riferimento di cascode
 

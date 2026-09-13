@@ -11,8 +11,8 @@ realtà, il progetto non è ripartibile.
 | | |
 |---|---|
 | Ultimo aggiornamento | **2026-09-13** |
-| Ultimo lotto chiuso | **L14** — le tre correzioni di testo |
-| **Prossimo lotto** | **L15** — il vincolo su E3 scritto dove verrà letto (mandato in «Prossimo passo concreto») |
+| Ultimo lotto chiuso | **L15** — il vincolo su E3 scritto accanto a E3 |
+| **Prossimo lotto** | **L18** — il vincolo PSRR scritto dove verrà letto (mandato in «Prossimo passo concreto») |
 | Non conformità | **19 aperte, 6 bloccanti** |
 | Le bloccanti | NC-001 (L11) · NC-002 e NC-021 (L12) · NC-004 · NC-010 (L17) · NC-017 (Fase 4) |
 | Suite | `run_tests.sh` **8 passed / 0 failed** |
@@ -21,6 +21,23 @@ realtà, il progetto non è ripartibile.
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L15 — il vincolo su E3 scritto accanto a E3 (2026-09-13)
+
+Nessun numero del circuito, nessun codice, nessuna misura.
+
+- **Il vincolo** sta in `REQUIREMENTS.md`, «Nota su E3»: Zin al connettore,
+  blocco A collegato, **≥ 100 kΩ in ciascuna delle tre posizioni del trim**,
+  decisa sul minimo di |Zin| in 20 Hz–20 kHz.
+- **Non in ADR-011.** Delle quattro aggiunte in coda alle ADR, due (ADR-007,
+  ADR-008) **superano un valore** senza ADR nuova, e sono tutte del
+  2026-09-08. Il precedente dopo le regole è ADR-019, una ADR nuova.
+- **Nessuna ADR**: la nota non cambia l'insieme dei progetti conformi. E3 nasce
+  dal condensatore del phono, che vede il connettore, trim compreso.
+- **NC-005 resta aperta** per la misura (L16). **19 voci, 6 bloccanti.**
+- Trovato: F2 dice «ponticello», F8 presuppone **relè** → a L16. Una frase di
+  NC-009 diceva il contrario del vero, corretta. E **R1 + R2 = 100 kΩ non
+  basta**: con `R_IN` in parallelo, 50 k / 50 k fa 97,62 kΩ.
 
 ### L14 — le tre correzioni di testo (2026-09-13)
 
@@ -231,8 +248,8 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L12 | **Portare blocco A e blocco B sopra i 60°.** Cambia natura con **ADR-019**: non più solo «misura coi valori veri», ma **rimedio** — il blocco A sta a 41,98° e il blocco B a 0 dB con cavo a 56,46°, contro una soglia di 60°. Le strade (più compensazione, meno guadagno d'anello, rete d'isolamento diversa) costano tutte a un altro requisito e vanno confrontate coi numeri | M | **NC-002**, **NC-021** (bloccanti) | da fare |
 | L13 | **E4 sulle tre uscite e a manopola che gira.** Estendere `tb_zout_psrr_noise.cir` alle due uscite fisse e a tre posizioni dell'attenuatore | S | NC-008 | da fare |
 | L14 | **Le tre correzioni di testo.** KPI del margine di fase qualificato, i due commenti di cascode allineati, lo scarto ADR-014 riferito a 1 kHz | XS | NC-003, NC-006, NC-007 | **fatto** |
-| L15 | **Il vincolo su E3 scritto dove verrà letto** (nota di dimensionamento in ADR-011 o `REQUIREMENTS.md`) | XS | NC-005 | da fare |
-| L16 | **Il trim entra nel progetto.** Dimensionarlo in `circuits/preamp/` coi due vincoli insieme — attenuazione richiesta da ADR-015 e Zin ≥ 100 kΩ — e misurarlo. Chiude anche NC-005. Più la riconciliazione delle tre cifre di margine nel dossier | S/M | **NC-009**, NC-005, **NC-023** | da fare |
+| L15 | **Il vincolo su E3 scritto dove verrà letto** — in `REQUIREMENTS.md`, «Nota su E3», non in ADR-011 | XS | NC-005 (metà: il vincolo; la misura è L16) | **fatto** |
+| L16 | **Il trim entra nel progetto.** Dimensionarlo in `circuits/preamp/` coi due vincoli insieme — attenuazione richiesta da ADR-015 e la «Nota su E3» (min \|Zin\| 20 Hz–20 kHz ≥ 100 kΩ in tutte e tre le posizioni; R1 + R2 = 100 kΩ non basta, `R_IN` sta in parallelo) — e misurarlo. Chiude anche NC-005. Allineare F2 («a ponticello») a F8/ADR-019, che presuppongono relè. Più la riconciliazione delle tre cifre di margine nel dossier | S/M | **NC-009**, NC-005, **NC-023** | da fare |
 | L17 | **Buffer sulle uscite fisse.** Modifica di topologia in `preamp_audio.py` che disaccoppia le due fisse dal nodo del Blocco A, più la riesecuzione di `tb_blockA_carichi.cir` sulla topologia nuova | M | **NC-010** (bloccante) | da fare |
 | L18 | **Il vincolo PSRR scritto dove verrà letto**: quanto ripple può lasciare l'alimentatore sul rail positivo, ricavato da E5 | XS/S | **NC-011** | da fare |
 | L19 | ~~**La soglia di margine di fase in V1**~~ — **ASSORBITA da L26**: la soglia l'ha data l'utente (60° ovunque, ADR-019) e NC-012 è chiusa. Resta solo la parte «KPI del dossier riferiti a quella», che va con la rigenerazione del dossier | XS | ~~NC-012~~ | **superata** |
@@ -1788,6 +1805,49 @@ proprio wrdata nel **checkout principale**: lo stampa, «found wrdata output:
 /Users/roberto/EDA/results/01_op.csv». Passa lo stesso, perché il CSV della run
 viene riscritto nella directory giusta. Non era di questo lotto.
 
+## L15 — Il vincolo su E3 scritto accanto a E3. FATTO.
+
+Report: `reports/2026-09-13-L15-vincolo-e3.md`. Tocca **NC-005** (minore) per
+la metà che le compete: il vincolo scritto. **La voce resta aperta** per la
+misura AC, che è di L16. Nessun numero del circuito, nessun codice, nessuna
+misura.
+
+**1. Il vincolo e dove sta.** `REQUIREMENTS.md`, riga E3 qualificata e
+**«Nota su E3»** sotto la tabella elettrica, nella forma della nota su E5:
+Zin al connettore d'ingresso, blocco A collegato, **≥ 100 kΩ in ciascuna delle
+tre posizioni del trim**, deciso sul minimo di |Zin| in 20 Hz–20 kHz. La nota
+porta i due fatti che L16 dovrà conciliare: l'attenuazione portante di ADR-015,
+e la resistenza di Thévenin del partitore (≥ 25,0 kΩ a −6 dB, ≥ 18,8 kΩ a
+−12 dB, a Zin minima), che è rumore contro E5 e sorgente a monte in V1.
+
+**2. Perché non in ADR-011.** Letti col loro commit, i quattro addendum hanno
+tutti 0 righe rimosse e sono tutti del 2026-09-08. **Due su quattro superano un
+valore deciso**: ADR-007 da 2,2 a 4,7 µF, ADR-008 da ~100 a 47 Ω. È il caso
+che la regola 2 manda a una ADR nuova. Il precedente **dopo** le regole è
+ADR-019, una ADR nuova che aggiunge una condizione ad ADR-011. I precedenti
+provano quindi che la forma è stata usata, non che sia ammessa.
+
+**3. Perché nessuna ADR.** Criterio scritto: una modifica ai requisiti è
+sostanziale se **cambia l'insieme dei progetti conformi**. E3 nasce dal
+condensatore del phono, che vede il connettore, trim compreso: un trim da
+13 kΩ violava già E3. La nota dice dove si misura, non cosa si chiede.
+
+**4. Trovato leggendo.** F2 e ADR-011 dicono «a ponticello», F8/ADR-019
+presuppongono **relè**: il vincolo è scritto indipendente dal meccanismo, e
+l'allineamento di F2 è nella riga di L16. Una clausola di NC-009 diceva che le
+resistenze alte «caricano la sorgente», cioè il contrario: corretta.
+
+**5. Le cifre rieseguite, e il controllo fatto fallire.** Controesempio
+10 k / 3,3 k con `R_IN`: **13 289 Ω**, −12,13 dB. La Zin di oggi è `R_IN`: una
+sorgente da 2500 Ω su 1 MΩ dà −0,02169 dB, contro il −0,02167 di L14. Il verbo
+del vincolo applicato in python passa la sola `R_IN` e **rifiuta** il
+controesempio; con l'aspettativa invertita segnala l'errore. Un caso in più,
+utile a L16: **50 k / 50 k con `R_IN` fa 97,62 kΩ e fallisce**, quindi
+R1 + R2 = 100 kΩ non basta.
+
+**6. Visto e non toccato.** L'indice di `decisions/README.md` si ferma ad
+ADR-016. Il diagramma in `REQUIREMENTS.md` dice ancora «0/+10 dB».
+
 ## Il dossier: prima bozza consegnata in L5b
 
 **Riassunto per l'utente, 2026-09-11**:
@@ -2184,41 +2244,44 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L15 — il vincolo su E3 scritto dove verrà letto.** Chiude **NC-005**
-(minore). È un lotto **XS**: nessuna topologia, nessuna misura.
+**L18 — il vincolo PSRR scritto dove verrà letto.** Chiude **NC-011**
+(maggiore). Lotto **XS/S**: nessuna topologia, nessun alimentatore progettato.
 
-1. **Il vincolo.** «La resistenza vista all'ingresso, in ogni posizione del
-   ponticello di trim (0 / −6 / −12 dB, F2/ADR-011), deve restare ≥ 100 kΩ»
-   (E3). Oggi niente nel repo lo dice. `R_IN = "1M"` in `gain_block.py:118`
-   fissa la Zin del solo blocco A, e `preamp_audio.py:23` dichiara il trim
-   fuori dal proprio perimetro. NC-005 ne dà il controesempio: un partitore
-   10 k / 3,3 k per i −12 dB porterebbe la Zin a ~13 kΩ, e nessun controllo lo
-   vedrebbe.
-2. **Dove scriverlo: da decidere leggendo, non da copiare dalla voce.** NC-005
-   propone «`REQUIREMENTS.md` o ADR-011 come nota di dimensionamento». Due
-   vincoli di forma, trovati in L14:
-   - **le ADR non si riscrivono** (`decisions/README.md`, regola 2). Però
-     ADR-011 porta **già** un «Aggiornamento 2026-09-08» in coda, col testo
-     sopra intatto, e anche ADR-001, ADR-007 e ADR-008 hanno aggiunte in coda.
-     L'addendum datato ha quindi precedenti nel repo, ma resta da verificare
-     che sia compatibile con la regola: non va assunto;
-   - **`REQUIREMENTS.md` è congelato**, e ogni modifica sostanziale vuole una
-     ADR (`CLAUDE.md`). Una nota che rende esplicito un vincolo già implicato
-     da E3 probabilmente non è sostanziale, ma è un giudizio da scrivere, non
-     da saltare.
-3. **Cosa NON fa L15**: dimensionare il trim o misurarlo. Quello è **L16**, che
-   chiude NC-005 anche dal lato della misura e porta con sé NC-009 e NC-023 (F8,
-   l'interlock col mute). L15 scrive il vincolo che L16 dovrà soddisfare.
+1. **Il vincolo.** NC-011 ne dà la forma: «il ripple residuo ammesso sul rail
+   positivo, alle frequenze in cui il PSRR vale X dB, deve stare sotto Y»,
+   ricavato da **E5** (< 10 µV RMS, 20 Hz–20 kHz). Oggi nessun documento dice
+   all'alimentatore quanto ripple può lasciare sul rail **+**, che è l'anello
+   debole (a 10 kHz, +10 dB: 29,76 dB contro 86,93 del rail −).
+2. **Le cifre prima del vincolo.** I CSV PSRR esistono **solo** in
+   `data/2026-09-09/`, cioè con la topologia **col THAT320**. Il report di L22
+   (riga 355) dice esplicitamente che il PSRR **non è stato rimisurato** dopo lo
+   specchio LS352. È la lezione di L14: una cifra si rilegge dalla topologia di
+   oggi, non dalla voce che la cita. Prima di derivare X, rieseguire
+   `spice/preamp/tb/tb_zout_psrr_noise.cir` sul codice di oggi e confrontare,
+   come L14 ha fatto con `tb_op`. Se le cifre si muovono, il vincolo si scrive
+   su quelle nuove e lo scarto si registra.
+3. **Dove e in che forma: da decidere, con il criterio di L15.** L15 ha scritto
+   quando una modifica ai requisiti è sostanziale: quando **cambia l'insieme dei
+   progetti conformi**. Per L18 la risposta è probabilmente l'opposta di L15:
+   decidere quanta parte dei 10 µV di E5 va al ripple è una **ripartizione di
+   budget**, cioè una scelta, e quindi con ogni probabilità vuole una ADR.
+   Scrivere la risposta, non assumerla.
+4. **Metà della voce, forse.** Il «cosa serve per chiuderla» di NC-011 chiede
+   anche **la scelta del rimedio** (regolatore a bassissimo rumore o cella a
+   moltiplicatore di capacità). Decidere se quella metà è di L18 o del lotto
+   dell'alimentatore, come L15 ha fatto con la misura di NC-005.
 
 ### Quello che il repo ti consegna già
 
-- **La suite è a 8 blocchi**, 8 passed a fine L14.
-- **Il dossier ora distingue le cifre da ciò che misurano** (L14):
-  `build_dossier.py` ha `adr014()`, e il KPI del margine di fase dice «blocco B».
-  Se L15 tocca il dossier, la regola resta di leggere l'`index.html` generato.
+- **La suite è a 8 blocchi**, 8 passed a fine L15.
+- **La forma di un vincolo scritto accanto al requisito** esiste ora: la
+  «Nota su E3» in `REQUIREMENTS.md` (L15), con verbo verificabile, criterio di
+  passaggio e i fatti da conciliare.
+- **Il difetto `setplot`** di `tb_zout_psrr_noise.cir` annotato in L3d è
+  **corretto in L5**: il deck porta il commento al passato.
 - **I conteggi**: 19 voci aperte, 6 bloccanti.
 
-**Poi**, nell'ordine: **L18** (XS/S), e le bloccanti vere — **L11** (mute),
+**Poi**, nell'ordine: le bloccanti vere — **L11** (mute),
 **L17** (buffer sulle uscite fisse) e **L12**, che ADR-019 ha trasformato da
 misura in **rimedio**. **L28** (SS dell'LSK489, NC-027) va fatto prima di G2.
 
