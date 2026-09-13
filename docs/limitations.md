@@ -419,3 +419,56 @@ di un'altra parte, senza un errore da nessuna parte.
 confronta il nome dichiarato dalla risposta con la parte cercata, **e** si
 apre il file per leggerne l'intestazione (#20). Due controlli, perché
 falliscono in modo diverso.
+
+## 22. Una rinumerazione rompe i deck in silenzio, in due modi, e ngspice esce 0 in entrambi
+
+Scoperto in L10, facendo la baseline dei deck prima di rinumerare.
+
+**Primo modo — il nome non esiste più.** Dentro un blocco `.control`,
+`alter r138 = 1e12` o `print @q133[ic]` su un dispositivo che non c'è
+stampano
+
+```
+Error: no such device or model name r138
+```
+
+e l'esecuzione **prosegue ed esce 0**. `run_simulation.sh` riporta
+`ngspice rc=0`. Così, dopo lo scarto di −1 di L22,
+`tb_switch_v2_counterfactual.cir` ha smesso di aprire R_f: lo stato «anello
+aperto» era identico allo stato chiuso (−0,0522 V invece di −13,7 V).
+
+Rimedio meccanico: `scripts/check_deck_refs.py`, blocco **2g** di
+`run_tests.sh`.
+
+**Secondo modo — il nome esiste, ma è un altro dispositivo.** È il peggiore,
+e **nessun controllo di esistenza lo vede**. Dopo L22 `tb_bias_sweep.cir`
+continuava a spazzare `r130`, che era diventato l'**altro** ramo del
+moltiplicatore di Vbe: I_q 5,2 mA invece di 14,7, nessun errore.
+
+**Regola operativa**: una rinumerazione si fa (a) ricavando la mappa dai nodi,
+(b) portando **prima** ai nomi correnti ogni riferimento rimasto indietro, e
+solo dopo applicando la mappa nuova — applicata alla cieca, una mappa può
+trasformare un nome morto in un nome vivo sbagliato — e (c) confrontando i
+numeri dei deck prima e dopo. Il controllo del punto (c) è l'unico che vede il
+secondo modo.
+
+## 23. SKiDL non sceglie il nome di una net fusa in modo riproducibile
+
+Scoperto in L10.
+
+Quando due net vengono unite (`b["IN"] += att_wiper`), la net risultante
+prende **uno** dei due nomi, e quale dipende dall'esecuzione, non dal codice.
+Due rigenerazioni consecutive di `preamp_audio.py`, senza toccare nulla:
+
+| run | nomi diversi rispetto alla netlist di prima |
+|---|---|
+| 1 | `L_ATT_W→BL_IN`, `R_ATT_W→BR_IN`, `R_FIXJACK1→R_FIXOUT1` |
+| 2 | `AR_OUT→R_ATT_TOP`, `R_ATT_W→BR_IN` |
+
+I membri delle net sono identici. È una ragione in più, oltre a quella di L3b
+(`date`, `tstamps`), per cui **un `.net` non si confronta con `diff`**, e un
+confronto che abbina le net per **nome** fallisce o, peggio, abbina male.
+
+**Regola operativa**: nessun controllo deve dipendere dal nome di una net che
+nasce da un'unione. I nomi scelti esplicitamente e mai uniti (`GND`, `VPLUS`)
+sono stabili; il 2e si appoggia solo a `GND` per questo.

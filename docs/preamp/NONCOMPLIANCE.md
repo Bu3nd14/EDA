@@ -1364,7 +1364,7 @@ di compensazione si ridecida con una ADR propria.
 | Requisito | La garanzia dichiarata in `../architecture.md` e in `STATE.md` §L1: **nessuna cifra sul disegno è scritta a mano**, tutte vengono lette dalla netlist e **asserite** |
 | Severità | **maggiore** |
 | Aperta da | `reports/2026-09-11-L21-polo-2-rele.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-13 (L10)** — il disegno gira, e lo esegue il blocco 2f. Vedi «Voci chiuse» in fondo |
 
 **Evidenza.** `docs/preamp/schematic/preamp_blocks_draw.py` termina con
 `KeyError: 'R237'` alla riga 117. Quattro riferimenti che cita non esistono
@@ -1408,7 +1408,60 @@ omette i dispositivi di proposito, ed è la ragione per cui non ce l'ha), o un
 blocco di `run_tests.sh` che si limiti a **eseguirlo** e a pretendere exit 0 —
 il che basta, perché lo script asserisce già da sé tutto ciò che legge.
 
+### NC-027 — I pin SS dell'LSK489 sono disegnati dal suo datasheet ma non definiti
+
+| | |
+|---|---|
+| Requisito | ADR-013 · precondizione di **G2** (il layout deve sapere cosa fare di ogni pin) |
+| Severità | **minore** |
+| Aperta da | `reports/2026-09-13-L10-simbolo-lsk489.md` |
+| Stato | aperta |
+
+**Evidenza.** Il datasheet congelato
+`vendor/jfet/linear_systems/LSK489/LSK489DSRevA38.pdf` (Rev A40), pag. 1,
+disegno «SOIC-A Top View», assegna i pin **3 e 7** a «**SS**». Nessuna riga di
+testo del documento dice cosa sia SS né come trattarlo, e il modello SPICE non
+ne parla. L'unica definizione trovata — «SS: SUBSTRATE, LEAVE THESE PINS
+FLOATING (N/C)» — è stampata per l'**LSK389**: datasheet LSK389 Rev A27
+pag. 7, e Data Book Linear Systems pag. 15, ultima della sezione LSK389.
+L'LSK489 si dichiara «fit, form and pin compatible» con l'LSK389, ma una
+compatibilità dichiarata non è l'istruzione scritta per *questa* parte.
+
+**Cosa fa oggi il progetto.** Pin 3 e 7 scollegati in
+`circuits/preamp/gain_block.py`, come l'unica istruzione esistente chiede, e
+come erano *di fatto* prima di L10. Nel simbolo sono `passive`, non
+`no_connect`: il simbolo non afferma ciò che il datasheet non afferma.
+
+**Cosa serve per chiuderla.** Un documento del costruttore che definisca SS
+**per l'LSK489** — una revisione del datasheet, una nota applicativa, una
+risposta scritta di Linear Systems — congelato in `vendor/` come addendum; o
+una ADR che accetti esplicitamente di applicare l'istruzione dell'LSK389 in
+forza della compatibilità dichiarata. Prima di G2, perché un substrato
+lasciato flottante o collegato è una scelta di layout.
+
 ## Voci chiuse
+
+**NC-026 — Il disegno a blocchi non è rigenerabile da L22** (maggiore).
+**CHIUSA il 2026-09-13 da L10.** `preamp_blocks_draw.py` cita ora
+R113/R313, R235/R435 e R237/R437 — la mappa **ricavata dalla netlist**,
+composta con la fusione dell'LSK489 che L10 ha prodotto sopra — e gira: tutte
+le asserzioni passano, guadagno ricalcolato **+9,963 dB**, e l'SVG rigenerato
+differisce dal committato per la sola cifra `205 componenti` → **197**. Alla
+domanda *chi lo esegue* risponde il blocco **2f** di `run_tests.sh`, che lo
+esegue e pretende exit 0, scrivendo l'SVG in `results/`. Fatto fallire sulla
+netlist di prima: `KeyError: 'R237'`.
+
+**La voce era più larga di quanto dicesse.** Lo stesso scarto di −1 aveva
+rotto **due deck**, trovati facendo la baseline:
+`tb_switch_v2_counterfactual.cir` apriva un `r138` che non esisteva più
+(ngspice: «no such device», exit 0 — lo stato «anello aperto» era identico a
+quello chiuso, −0,0522 V; riparato, **−13,773 V**), e `tb_bias_sweep.cir`
+spazzava `r130`, diventato l'**altro** ramo del moltiplicatore di Vbe (I_q
+5,207 mA invece di **14,714** a 1690 Ω). Il primo tipo è ora coperto dal
+blocco **2g** (`scripts/check_deck_refs.py`), fatto fallire sui deck di prima:
+due rilevazioni, entrambe `r138`. Il secondo tipo **non è coperto da nessun
+controllo automatico**: vedi `limitations.md` #22. Report:
+`reports/2026-09-13-L10-simbolo-lsk489.md`.
 
 **NC-014 — Il polo 2 del G6K-2F-Y è cablato con NO e NC invertiti**
 (bloccante). **CHIUSA il 2026-09-11 da L21.** La riga 79 di

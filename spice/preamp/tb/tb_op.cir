@@ -65,27 +65,27 @@ print v(IN) v(FB) v(OUT) v(JACK) v(NREF) v(NREFM) v(NCASC) v(SRC)
 print v(G1) v(G2) v(S1) v(S2) v(D1N) v(D2N) v(NMIRI) v(NHI)
 print v(NX) v(NY) v(NBB) v(NBN) v(NBP) v(NEN) v(NEP) v(NVE) v(NVLE) v(NTE)
 echo "=== INPUT JFET PAIR (LSK489 halves) ==="
-print @jq110[id]
-print @jq111[id]
-print @jq110[vgs]
-print @jq111[vgs]
-print @jq110[gm]
-print @jq111[gm]
+print @jq110a[id]
+print @jq110b[id]
+print @jq110a[vgs]
+print @jq110b[vgs]
+print @jq110a[gm]
+print @jq110b[gm]
 echo "=== RAIL CURRENTS (A) ==="
 print i(VPP) i(VMM)
 echo "=== BJT OPERATING POINTS: ic / vce ==="
 print @q106[ic] @q106[ib] @q106[vbe] @q106[vbc]
+print @q117[ic] @q117[ib] @q117[vbe] @q117[vbc]
 print @q118[ic] @q118[ib] @q118[vbe] @q118[vbc]
-print @q119[ic] @q119[ib] @q119[vbe] @q119[vbc]
-print @q122A[ic] @q122A[ib] @q122A[vbe] @q122A[vbc]
-print @q122B[ic] @q122B[ib] @q122B[vbe] @q122B[vbc]
-print @q123[ic] @q123[ib] @q123[vbe] @q123[vbc]
-print @q126[ic] @q126[ib] @q126[vbe] @q126[vbc]
-print @q128[ic] @q128[ib] @q128[vbe] @q128[vbc]
+print @q121A[ic] @q121A[ib] @q121A[vbe] @q121A[vbc]
+print @q121B[ic] @q121B[ib] @q121B[vbe] @q121B[vbc]
+print @q122[ic] @q122[ib] @q122[vbe] @q122[vbc]
+print @q125[ic] @q125[ib] @q125[vbe] @q125[vbc]
+print @q127[ic] @q127[ib] @q127[vbe] @q127[vbc]
+print @q132[ic] @q132[ib] @q132[vbe] @q132[vbc]
 print @q133[ic] @q133[ib] @q133[vbe] @q133[vbc]
-print @q134[ic] @q134[ib] @q134[vbe] @q134[vbc]
 echo "=== KEY BRANCH CURRENTS ==="
-print @riso[i] @r137[i] @r135[i] @r136[i] @r107[i] @r124[i] @r127[i]
+print @riso[i] @r136[i] @r134[i] @r135[i] @r107[i] @r123[i] @r126[i]
 .endc
 
 .end

@@ -6,7 +6,26 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-11** (**L21 chiuso**: il polo 2 del relè
+Ultimo aggiornamento: **2026-09-13** (**L10 chiuso**: l'LSK489 è **una**
+Part a due unità, col simbolo in `library/preamp.kicad_sym` e il pinout
+**letto** dal datasheet congelato — pag. 1, SOIC-A: 1=S1 2=D1 3=SS 4=G1 5=S2
+6=D2 7=SS 8=G2. Sulla netlist i componenti su SOIC-8 scendono da **3 a 2**
+(`preamp_audio.net`: 12 → 8). La trappola della lettura: i JFET dentro il
+package sono disegnati **ruotati**, e letti come JFET verticali sembrano
+scambiare D e G. **SS** è disegnato e mai definito dal datasheet
+dell'LSK489 — l'unica definizione, «substrate, leave floating», è stampata
+per l'LSK389 → **NC-027** (minore); i pin restano scollegati come prima.
+Mappa ricavata dai nodi, `.inc` rinominato **identico** al nuovo, `tb_op` 81
+valori su 81 identici. **E facendo la baseline sono emersi due deck rotti da
+L22 in silenzio**: il controfattuale di V2 apriva un `r138` inesistente
+(ngspice esce 0 — anello «aperto» a −0,0522 V; riparato, −13,773 V) e lo sweep
+del bias spazzava l'altro ramo (I_q 5,2 mA; riparato, 14,714 mA, uguale a
+`tb_op`). **NC-026 chiusa**: il disegno a blocchi gira e lo esegue il nuovo
+blocco **2f**; il blocco **2g** (`check_deck_refs.py`) ferma i nomi morti nei
+deck, non quelli vivi sbagliati (#22). Suite **8 passed / 0 failed**, entrambi
+i blocchi nuovi fatti fallire prima. Scoperto anche che SKiDL nomina le net
+fuse in modo non riproducibile (#23). **22 voci, 6 bloccanti.** Prossimo
+lotto **L14**. — Prima: **L21 chiuso**: il polo 2 del relè
 G6K-2F-Y era cablato con NO e NC invertiti — sul **canale destro** il mute
 falliva nel verso sbagliato, cioè all'accensione quel canale **non veniva
 messo a massa** e il transitorio passava, sul ramo che ADR-012 protegge.
@@ -139,7 +158,7 @@ manciata di file, **M** = riempie una sessione da solo.
 | L8 | Fase 3a — le parti nuove, fatti verificabili | M | **fatto** |
 | L8b | Le due regole dell'utente diventano ADR-016 e requisiti T7/T8 | XS/S | **fatto** |
 | L9 | Fase 3b — la rosa dei componenti di segnale | M | **rinviata** — passa dopo i sostituti, vedi sotto |
-| L10 | Simbolo KiCad dell'LSK489 | S | da fare |
+| L10 | Simbolo KiCad dell'LSK489 — più NC-026 e due deck rotti da L22 | S | **fatto** |
 
 **I lotti che le revisioni hanno generato.** È il meccanismo per cui una
 non conformità produce lavoro invece di fermarlo: ogni voce aperta in
@@ -167,6 +186,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L25 | **Promuovere in `models/` i cinque modelli congelati in L24** (MMBT5401, MMBT5551, MJE15032, MJE15033, 1N4148), ognuno con la sua `.provenance.json` e una ricetta di regressione in `validate_models.py` sul modello di `tb_lsk489()`. Il controllo incrociato contro i datasheet **è già fatto** in L24: qui si tratta di bloccarne i numeri | S/M | **NC-017** (1° dei 3 passi), apre **NC-024** e **NC-025** | **fatto** |
 | L26 | **I tre requisiti nuovi dell'utente diventano ADR-019**: margine di fase minimo **60° ovunque**, trim abilitato dal mute con **interlock elettrico**, guadagni **0 / +3 / +10 dB** con riposo a 0 dB | XS/S | **NC-012** (chiude), apre NC-021…NC-023 | **fatto** |
 | L27 | **Il terzo livello di guadagno entra nel progetto.** Dimensionare il secondo ramo commutato verso massa (ADR-004 conservata: si commuta R_g, mai R_f; a relè diseccitati **0 dB**), decidere relè e poli col budget di corrente delle bobine, estendere i dodici deck da due modalità a tre e l'asserzione del diagramma a blocchi | M | **NC-022** | da fare |
+| L28 | **SS dell'LSK489 definito per l'LSK489.** Un documento del costruttore che dica cosa sono i pin 3 e 7 di *questa* parte — o una ADR che accetti l'istruzione dell'LSK389 in forza della compatibilità dichiarata. Prima di G2 | XS/S | NC-027 | da fare |
 
 **NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
 riesecuzione di `tb_noise_breakdown.cir` coi modelli veri. È il caso
@@ -1588,6 +1608,66 @@ sui relè, e il mandato aveva fenced fuori le altre voci.
 volta fu L22, per una parte trovata; questa è la prima per una **correzione di
 topologia**.
 
+## L10 — Il simbolo dell'LSK489, e due deck rotti da L22. FATTO.
+
+Report: `reports/2026-09-13-L10-simbolo-lsk489.md`. Chiude **NC-026**, apre
+**NC-027** (minore). Dati: `data/2026-09-13/`.
+
+**1. Il pinout, letto e non dedotto.** Datasheet congelato (Rev A40), pag. 1,
+«SOIC-A Top View»: **1=S1 2=D1 3=SS 4=G1 5=S2 6=D2 7=SS 8=G2**. È un raster a
+96 ppi: guardato a 600 e 1200 dpi. **La trappola:** i JFET dentro il package
+sono disegnati **ruotati** — la barra orizzontale è il canale, D e S la
+raggiungono dallo stesso lato e il gate dall'altro — e letti come JFET
+verticali sembrano scambiare D e G. Il datasheet LSK389, che l'LSK489 dichiara
+«pin compatible», disegna lo stesso simbolo in vettoriale: usato per
+controllare la lettura, **mai** come fonte. URL e sha256 nel report.
+
+**2. SS non è definito per l'LSK489 → NC-027.** L'unica definizione trovata,
+«SS: SUBSTRATE, LEAVE THESE PINS FLOATING (N/C)», è stampata per l'**LSK389**
+(datasheet Rev A27 pag. 7; Data Book pag. 15). I pin 3 e 7 restano
+scollegati, come erano di fatto; nel simbolo sono `passive`, non `no_connect`.
+
+**3. Una Part, verificata sulla netlist.** `library/preamp.kicad_sym` ha il
+simbolo LSK489 a tre unità (A, B, SS); `kicad-cli sym upgrade` exit 0, `sym
+export svg` disegna le 3 unità. Due `spice_dev(..., suffix=)` danno `JQ110A` e
+`JQ110B`.
+
+| | prima | dopo |
+|---|---|---|
+| `gain_block.net` su SOIC-8 | 3 | **2** |
+| `preamp_audio.net` componenti / su SOIC-8 | 201 / 12 | **197 / 8** |
+
+**4. La mappa, ricavata.** `.inc` 44 → 44, e l'insieme delle righe vecchie
+rinominate è **identico** al nuovo. `tb_op.cir` **81 valori su 81 identici**,
+`tb_blockA_carichi.cir` 8 CSV su 8 identici byte per byte. Sulla netlist
+completa la mappa è fallita la prima volta per una ragione nuova: **SKiDL
+nomina le net fuse in modo non riproducibile** (`limitations.md` #23) — stesso
+codice, due rigenerazioni, nomi diversi, membri identici. Ancorata ai
+componenti di canale, dà la stessa mappa su entrambe.
+
+**5. Due deck rotti da L22, in silenzio.** Trovati facendo la baseline
+*prima* di toccare niente:
+
+| deck | guasto | prima | dopo |
+|---|---|---|---|
+| `tb_switch_v2_counterfactual.cir` | `alter r138`: R138 non esiste da L22, ngspice esce 0 | anello «aperto» −0,0522 V, identico al chiuso | **−13,773 V** |
+| `tb_bias_sweep.cir` | `alter r130`: da L22 è l'**altro** ramo dello spreader | I_q 5,207 mA a 1690 Ω, e scende con R | **14,714 mA**, = `tb_op`, e sale con R |
+
+Correzione in **due passate**: prima i nomi vecchi portati a quelli di oggi,
+poi la mappa di L10. Alla cieca, la mappa di L10 avrebbe trasformato `r138` in
+**R_g** — un nome vivo sbagliato, invisibile a ogni controllo.
+
+**6. Due blocchi di suite, fatti fallire prima.** **2f** esegue il disegno a
+blocchi (NC-026: *chi lo esegue?*) — sui file di prima `KeyError: 'R237'`.
+**2g**, `scripts/check_deck_refs.py`, pretende che ogni dispositivo citato da
+un deck esista — sui deck di prima 2 rilevazioni, entrambe `r138`. Suite prima
+della rimappatura **6 passed / 2 failed**, a lavoro finito **8 passed / 0
+failed**. **Il 2g non vede il caso di `tb_bias_sweep`**: un nome esistente ma
+sbagliato. Scritto in `limitations.md` #22, non sottinteso.
+
+**7. Cosa NON è stato verificato.** Le quote del SOIC-A (non sono nel
+datasheet congelato); SS (NC-027); nessun'altra cifra del blocco.
+
 ## Il dossier: prima bozza consegnata in L5b
 
 **Riassunto per l'utente, 2026-09-11**:
@@ -1984,57 +2064,47 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L10 — il simbolo KiCad dell'LSK489.**
+**L14 — le tre correzioni di testo.** Chiude **NC-003**, **NC-006**, **NC-007**,
+tutte minori. È un lotto **XS**, ed è per questo che viene prima: nessuna
+topologia, nessuna rinumerazione, nessuna misura nuova.
 
-È l'ultimo residuo della famiglia che L22 e L23 hanno quasi chiuso, e **costa
-molto meno di prima**: `library/preamp.kicad_sym` esiste ed è la prima
-libreria di simboli del repo, il meccanismo multi-unit è collaudato, e
-`spice_dev(..., suffix=)` è già lì.
+1. **NC-006** — `circuits/preamp/gain_block.py` porta ancora due commenti
+   della bozza abbandonata: riga **314** («Cascode base reference: 8.485 V») e
+   riga **321** («the JFET drains at a fixed 7.8 V»). Il codice implementa il
+   partitore 4,99k/10,0k, cioè ~10 V; la riga 153 («First draft used 8.485 V»)
+   è storia dichiarata e **resta**. Allineare i due commenti al valore
+   implementato citando ADR-014 e il `tb_op` che lo misura — e **rileggere la
+   cifra dal log** invece di copiarla dalla voce: la voce cita
+   `data/2026-09-09/tb_op.log` (topologia col THAT320), e da L22 esiste
+   `data/2026-09-10/tb_op-LS352.log`.
+2. **NC-007** — `docs/preamp/dossier/build_dossier.py:782` pubblica lo
+   «Scarto ADR-014» **a 20 kHz**, che misura il partitore 2500 Ω / 1 MΩ e non la
+   claim di ADR-014. Va pubblicato lo scarto **riferito a 1 kHz** (o entrambe
+   le cifre, dicendo cosa misura ciascuna), e il KPI in testa deve citare
+   quello.
+3. **NC-003** — `build_dossier.py:783`, KPI «Margine di fase, peggiore»: è il
+   peggiore fra i **quattro casi del blocco B pubblicati**, non del prodotto (il
+   blocco A sta a 41,98°, NC-002). Il KPI prende il qualificatore.
 
-**Il difetto che chiude.** L'LSK489 è un **duale** — due JFET appaiati sullo
-stesso die in un SOIC-8 — ma `circuits/preamp/` lo istanzia come **due Part**,
-ognuna con un footprint SOIC-8 suo. Sul PCB sono **due package per un
-dispositivo solo**. È esattamente il residuo che NC-016 aveva per il THAT320 e
-che L23 ha chiuso fondendo l'LS352 in una Part a due unità: la netlist è
-passata da quattro componenti su SOIC-8 a **tre**, e i tre sono l'LS352 più i
-**due LSK489**, che restano il gap noto.
+Poi rigenerare il dossier e **leggere l'`index.html` generato**, non il
+sorgente, prima di chiudere le voci.
 
-**Cosa fare**, e la strada è già battuta:
+### Quello che il repo ti consegna già
 
-1. aggiungere il simbolo LSK489 a `library/preamp.kicad_sym`, a **due unità**,
-   col pinout **letto dal datasheet congelato** in
-   `vendor/jfet/linear_systems/LSK489/` — non dedotto. Un pinout non
-   pubblicato non si usa: è la regola con cui L23 ha scartato PDIP-8 e DFN-8
-   dell'LS352;
-2. verificarlo con `kicad-cli sym upgrade` e `sym export svg`, che disegna
-   tutte le unità, come L23 ha fatto;
-3. fondere le due Part in una in `circuits/preamp/`, usando
-   `spice_dev(..., suffix=)` perché le due metà non emettano due righe SPICE
-   **con lo stesso nome**;
-4. rigenerare, e verificare **sulla netlist** che i componenti su SOIC-8
-   scendano da tre a **due**.
+- **Due blocchi di suite nuovi** da L10: **2f** esegue il disegno a blocchi,
+  **2g** pretende che ogni dispositivo citato da un deck esista. La suite è a
+  **8 blocchi**.
+- **Un commento spostato sposta i `SKiDL Line`** della netlist alla
+  rigenerazione. È una differenza che il confronto normalizzato toglie (L3b):
+  non va letta come un cambio di topologia.
+- **Il dossier legge `data/2026-09-09/`**, che descrive la topologia col
+  THAT320. È dichiarato: L14 corregge *come* le cifre sono presentate, non le
+  rimisura.
 
-### Quello che il repo ti consegna già — usalo invece di riscoprirlo
-
-- **Fondere due Part in una slitta di −1 tutti i riferimenti successivi**
-  (L22). La mappa vecchio→nuovo si **ricava confrontando i nodi** fra il
-  `.inc` vecchio e quello nuovo, non si deduce a mano. E va applicata a
-  **tutto** ciò che cita riferimenti espliciti: i deck, `gain_block_draw.py`
-  **e** `preamp_blocks_draw.py` — che L22 ha mancato, ed è **NC-026**.
-- **NC-026 sta proprio sulla strada di questo lotto.** Il disegno a blocchi
-  non gira da L22 per quattro riferimenti obsoleti, e L10 produrrà un altro
-  scarto di −1. Conviene chiuderla **prima** di rinumerare di nuovo, o
-  quantomeno insieme: la diagnosi e il rimedio sono già scritti nella voce.
-- **`check_schematic.py` fa il suo mestiere**: in L22 ha rifiutato alla prima
-  esecuzione con 15 discordanze. Se rifiuta, ha ragione.
-- **Un `.net` non è riproducibile byte a byte** (L3b): il confronto è quello
-  normalizzato, tolti `(date`, `SKiDL Tag`, `SKiDL Line`, `(tstamps`.
-- **Il blocco 2e esiste ora** e asserisce lo stato sicuro dei relè sulla
-  netlist. Se L10 rinumera, deve restare verde.
-
-**Poi**, nell'ordine: **L14** e **L15** (le correzioni di testo, XS), **L18**,
-e le bloccanti vere — **L11** (mute), **L17** (buffer sulle uscite fisse) e
-**L12**, che ADR-019 ha trasformato da misura in **rimedio**.
+**Poi**, nell'ordine: **L15** (XS), **L18**, e le bloccanti vere — **L11**
+(mute), **L17** (buffer sulle uscite fisse) e **L12**, che ADR-019 ha
+trasformato da misura in **rimedio**. **L28** (SS dell'LSK489, NC-027) va fatto
+prima di G2.
 
 ### Cosa cercare, e cosa NON accettare
 
@@ -2120,11 +2190,7 @@ Da non ricercare di nuovo.
   degenerazione portata a 220 Ω. **ADR-018.**
 - ~~**Omron G6K-2F-Y**~~ — **CHIUSA in L8**: polo 2 invertito nel codice →
   **NC-014**, lotto **L21**.
-- **Simbolo KiCad dell'LSK489** (L10): **ancora aperta, ma ora economica**.
-  L22 ha creato `library/preamp.kicad_sym`, la prima libreria di simboli del
-  repo, e ci ha messo dentro un duale multi-unit collaudato end-to-end
-  (kicad-cli + SKiDL + netlist). Restano i due LSK489 come ultime due Part che
-  dichiarano un package ciascuna per un solo dispositivo.
+- ~~**Simbolo KiCad dell'LSK489** (L10)~~ — **CHIUSA in L10.** Una Part a due unità (più i due pin SS), pinout letto dal datasheet congelato; su SOIC-8 restano l'LS352 e l'LSK489. Residuo: **NC-027**, la definizione di SS per questa parte.
 - **La rosa dei componenti di segnale** (L9): **rinviata**, non restituisce
   un vincitore — restringe su basi misurabili e la scelta finale fra parti
   tutte buone è dell'utente, all'ascolto. È la ragione per cui esiste P6.

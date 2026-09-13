@@ -187,5 +187,44 @@ done
 report "relays fail safe with de-energised coils" $rly_fail
 echo
 
+echo "-- 2f. block diagram regenerates and its assertions hold (NC-026) --"
+# preamp_blocks_draw.py has no manifest - a block diagram omits devices on
+# purpose - so block 2d cannot cover it. Its guarantee is that every figure it
+# prints is READ from preamp_audio.net and ASSERTED. From L22 to L10 it did
+# not run at all (KeyError: 'R237' after a -1 renumbering), so none of those
+# assertions ran either, and nothing said so. Running it IS the check.
+#
+# The SVG goes to $SCRATCH, not over the versioned one (matplotlib stamps ids
+# and a date). The interpreter is the SKiDL venv: it is gitignored, so a
+# worktree does not have its own and falls back to the main checkout's - the
+# interpreter only; the script derives every data path from its own location.
+VENV_PY="$ROOT/env/venv/bin/python3"
+[ -x "$VENV_PY" ] || VENV_PY="/Users/roberto/EDA/env/venv/bin/python3"
+mkdir -p "$SCRATCH"
+# Captured first, printed after: `cmd | sed` would report sed's status (2e).
+out=$(PREAMP_BLOCKS_SVG="$SCRATCH/preamp_blocks.svg" \
+      "$VENV_PY" "$ROOT/docs/preamp/schematic/preamp_blocks_draw.py" 2>&1)
+rc=$?
+echo "$out" | tail -12 | sed 's/^/   /'
+report "block diagram assertions against preamp_audio.net" $rc
+echo
+
+echo "-- 2g. every device a testbench names exists in what it reads --"
+# ngspice does NOT fail on `alter r138` or `print @q133[ic]` when the device
+# is gone: it prints "no such device" and exits 0. After L22's -1 renumbering
+# tb_switch_v2_counterfactual.cir opened a resistor that no longer existed,
+# and V2's counterfactual silently stopped breaking the loop. Found in L10.
+decks=("${(@f)$(find "$ROOT/spice" -path '*/tb/*.cir' -type f 2>/dev/null | sort)}")
+if [ ${#decks[@]} -eq 0 ] || [ -z "${decks[1]}" ]; then
+    echo "   MISSING: nessun deck trovato sotto spice/*/tb/" >&2
+    report "testbench device citations resolve" 1
+else
+    out=$(/usr/bin/python3 "$ROOT/scripts/check_deck_refs.py" "$ROOT" "${decks[@]}" 2>&1)
+    rc=$?
+    echo "$out"
+    report "testbench device citations resolve" $rc
+fi
+echo
+
 echo "== run_tests.sh SUMMARY: $n_pass passed, $n_fail failed =="
 exit $fail

@@ -63,7 +63,10 @@ import schemdraw.elements as elm      # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-SVG = os.path.join(HERE, "preamp_blocks.svg")
+# PREAMP_BLOCKS_SVG lets scripts/run_tests.sh (block 2f) run this file for its
+# ASSERTIONS without rewriting the versioned SVG: matplotlib stamps ids and a
+# date, so every run would dirty the tree. Unset, the SVG lands next to here.
+SVG = os.environ.get("PREAMP_BLOCKS_SVG") or os.path.join(HERE, "preamp_blocks.svg")
 NETLIST = os.path.join(REPO, "circuits", "preamp", "preamp_audio.net")
 
 # =============================================================================
@@ -93,7 +96,7 @@ def same(refs, what):
 
 
 # Zin del blocco A: la resistenza d'ingresso, una per canale (E3 >= 100 kOhm).
-ZIN = same(["R114", "R314"], "resistenza d'ingresso blocco A")
+ZIN = same(["R113", "R313"], "resistenza d'ingresso blocco A")
 
 # Resistenze d'isolamento d'uscita, 3 per canale (T5/ADR-008 addendum: 47 Ohm).
 RISO = same(["R161", "R164", "R261", "R361", "R364", "R461"], "isolamento uscite")
@@ -114,8 +117,8 @@ assert len(set(_att.values())) == 1, f"attenuatore diverso fra canali: {_att}"
 ATT = _att["J120"]                           # "ATT_L 10k" -> "10k"
 
 # Rete di controreazione del blocco B: e' cio' che il rele' commuta (ADR-004).
-RF = same(["R237", "R437"], "R_f blocco B")
-RG = same(["R239", "R439"], "R_g blocco B")
+RF = same(["R235", "R435"], "R_f blocco B")
+RG = same(["R237", "R437"], "R_g blocco B")
 
 
 def ohms(s):

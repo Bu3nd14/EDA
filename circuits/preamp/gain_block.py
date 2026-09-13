@@ -80,8 +80,8 @@ REPO = os.path.dirname(
 
 # The project's OWN symbol library, searched in addition to KiCad's (L22).
 # It exists because some parts this design needs have no KiCad symbol at
-# all: the LS352 dual PNP of the input mirror is the first, and the LSK489
-# dual JFET (L10) is the next. Derived from REPO, never hard-coded, for the
+# all: the LS352 dual PNP of the input mirror (L22) and the LSK489 dual JFET
+# of the input pair (L10). Derived from REPO, never hard-coded, for the
 # same reason REPO itself is derived.
 #
 # It is appended to EVERY tool's search path, not just KICAD10's: SKiDL's
@@ -232,16 +232,6 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
         sx.spice_dev(q, "Q", ["C", "B", "E"], model)
         return q
 
-    def J(val, d, g, s, fp=FP_SOIC8):
-        i[0] += 1
-        j = Part("Device", "Q_NJFET_DGS", value=val, footprint=fp,
-                 ref=f"Q{i[0]}")
-        j["D"] += d
-        j["G"] += g
-        j["S"] += s
-        sx.spice_dev(j, "J", ["D", "G", "S"], "LSK489X")
-        return j
-
     def D(val, a, k, fp=FP_DO35):
         i[0] += 1
         d = Part("Device", "D", value=val, footprint=fp, ref=f"D{i[0]}")
@@ -276,16 +266,46 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     Q("npn", "2N5551", "NSS2N5551", SRC, NREF, NTE)
     R("137", NTE, VM)
 
-    # ADR-013: ONE LSK489 monolithic dual. It is drawn here as two symbols
-    # because the KiCad 10 libraries contain no dual-JFET symbol and no
-    # LSK489 at all. KNOWN GAP, not an accident: before G2 a project symbol
-    # library must supply a single 2-unit LSK489 symbol with the pinout read
-    # off the datasheet, or the PCB will place two packages.
-    # Flagged to bom-component-manager and pcb-automation-engineer.
+    # ADR-013: ONE LSK489 monolithic dual - and, since L10, ONE Part.
+    # Until L10 it was two Parts with a SOIC-8 footprint each, i.e. two
+    # packages on the board for one device: the same defect NC-016 closed
+    # for the LS352. The symbol lives in library/preamp.kicad_sym, because
+    # the KiCad 10 libraries contain no dual JFET and no LSK489 at all.
+    #
+    # Pin numbers below are the SOIC-8 pinout READ OFF THE FROZEN DATASHEET,
+    # vendor/jfet/linear_systems/LSK489/LSK489DSRevA38.pdf (content Rev A40),
+    # page 1, drawing "SOIC-A Top View":
+    #     1=S1  2=D1  3=SS  4=G1  5=S2  6=D2  7=SS  8=G2
+    # The drawing is a 96 ppi raster, so it was LOOKED AT, not extracted. Its
+    # internal JFET symbols are drawn ROTATED - the channel bar is horizontal,
+    # drain and source reach it from one side and the arrowed gate from the
+    # other - and read that way they agree with the pin labels on both
+    # halves. (Read as an upright JFET they seem to swap D and G: that is the
+    # misreading to avoid.) The LSK389 datasheet, which this one declares
+    # "fit, form and pin compatible", draws the identical symbol at legible
+    # resolution; it was used to check the reading, never as the source.
+    #
+    # SS (pins 3, 7) is NOT CONNECTED, and that is not a decision taken here:
+    # nothing was connected before either. The frozen LSK489 datasheet draws
+    # SS but never defines it. The only definition found - "SS: SUBSTRATE,
+    # LEAVE THESE PINS FLOATING (N/C)" - is printed for the LSK389 (its
+    # datasheet Rev A27 p.7, and the Linear Systems Data Book p.15), not for
+    # this part. Registered as NC-027: to be confirmed before G2.
     R(R_GATE_STOP, IN, G1)
     R(R_GATE_STOP, FB, G2)
-    J("LSK489B (1/2)", D1N, G1, S1)     # non-inverting side
-    J("LSK489B (2/2)", D2N, G2, S2)     # inverting side (feedback)
+    i[0] += 1
+    jp = Part("preamp", "LSK489", value="LSK489B", footprint=FP_SOIC8,
+              ref=f"Q{i[0]}")
+    jp["2"] += D1N        # D1 -> non-inverting half, into its cascode
+    jp["4"] += G1         # G1 -> after the input gate stopper
+    jp["1"] += S1         # S1 -> its own source degeneration
+    jp["6"] += D2N        # D2 -> inverting (feedback) half
+    jp["8"] += G2         # G2 -> after the feedback gate stopper
+    jp["5"] += S2         # S2 -> its own source degeneration
+    # Two SPICE elements from one Part: JQ<n>A and JQ<n>B (spice_dev suffix,
+    # L22). Node order is SPICE's D G S.
+    sx.spice_dev(jp, "J", ["2", "4", "1"], "LSK489X", suffix="A")
+    sx.spice_dev(jp, "J", ["6", "8", "5"], "LSK489X", suffix="B")
     R(R_SDEG, S1, SRC)
     R(R_SDEG, S2, SRC)
     if r_in:
