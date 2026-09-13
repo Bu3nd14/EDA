@@ -224,9 +224,19 @@ uscite.** «Non possiamo essere certi che le uscite non vengano messe in
 corto.»
 - **Il mute ne è un caso particolare.** Il contatto NC mette a massa lo stesso
   nodo del jack su cui arriva un corto esterno. La stessa ADR li registra
-  entrambi, con un solo criterio termico a regime.
+  entrambi.
+- **Il requisito descrive l'esito, non la tecnica** (precisato dall'utente lo
+  stesso giorno). Nessun dispositivo esce dai limiti termici e SOA, **a regime
+  e nel transitorio prima dell'intervento**. Limitazione di corrente, distacco
+  attivo e mute attivo sono tutti ammessi.
 - **Conseguenza sulla strada 1.** Una resistenza in serie al contatto chiude la
-  via del mute, non quella del corto esterno: da sola non basta più.
+  via del mute, non quella del corto esterno: da sola non basta più. E il mute
+  di oggi, in derivazione, **non protegge** dal corto; lo farebbe solo un mute
+  in serie.
+- **Operazionali e microcontrollore fuori dal percorso del segnale sono
+  ammessi** (decisione dell'utente dello stesso giorno, da registrare come
+  ADR-022). Una protezione attiva può quindi usarli, alle condizioni scritte
+  nel mandato di L11.
 - **Se, una volta registrato il requisito**, la topologia non lo soddisfa su
   una via che né questa voce né NC-010 coprono, L11 apre la voce che manca.
 
@@ -347,9 +357,13 @@ primo passo di L11, insieme al mute. Per questa voce cambiano due cose:
 - **La strada 2 perde metà del suo contenuto.** Il «vincolo scritto
   sull'impedenza minima ammessa a valle» non è più una via di chiusura, perché
   il requisito chiede di reggere proprio il corto. Resta possibile accettare
-  la classe B in quella condizione, col calcolo termico a regime.
+  la classe B in quella condizione, se passa il criterio di ADR-021: limiti
+  termici e SOA **a regime e nel transitorio prima dell'intervento**.
 
-Il rimedio resta di **L17**, che progetta contro il criterio di ADR-021.
+La tecnica di protezione è libera: limitazione di corrente, distacco attivo o
+mute attivo, anche con operazionali o microcontrollore fuori dal percorso del
+segnale (ADR-022). Il rimedio resta di **L17**, che progetta contro il criterio
+di ADR-021.
 
 ### NC-002 — Il blocco A non ha evidenza di stabilità valida, e col nuovo requisito è sotto soglia
 

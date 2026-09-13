@@ -22,6 +22,35 @@ realtà, il progetto non è ripartibile.
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
 
+### Dopo L18 — protezione neutra sulla tecnica, e operazionali e microcontrollore fuori dal percorso (2026-09-13)
+
+Nessun lotto: altre due decisioni dell'utente, messe nell'handoff.
+
+- **La protezione dal corto non prescrive la tecnica.** L'utente non voleva
+  che «venisse esclusa la possibilità di staccare o mutare le uscite in
+  maniera attiva». Il mandato di prima diceva «limitare la corrente su ogni
+  via», e chiedeva una verifica solo a regime.
+- **Il requisito diventa un risultato.** Con un corto su una qualsiasi uscita,
+  a tempo indefinito e con segnale presente, nessun dispositivo esce dai propri
+  limiti termici e SOA. Il vincolo vale **anche nel transitorio prima
+  dell'intervento**.
+- **Le tecniche ammesse**, da scegliere coi numeri: limitazione di corrente,
+  distacco attivo, mute attivo.
+- **Operazionali e microcontrollore** sono esclusi dal percorso del segnale ma
+  **ammessi nel circuito** (l'utente: «si procedi come hai detto»). Diventa
+  **ADR-022**, da registrare in L11:
+  - supera la clausola «nessun microcontrollore in tutto il progetto» di
+    ADR-009 e aggiorna F7;
+  - dà a T1 una definizione verificabile di percorso del segnale;
+  - pone tre condizioni al microcontrollore: stato sicuro senza firmware,
+    protezione dal corto non affidata solo al firmware, budget di rumore
+    digitale misurato come ADR-020.
+- **Tre vincoli scritti nel mandato**, perché non si scoprano dopo:
+  - il mute di oggi è in derivazione e **non protegge** dal corto;
+  - un distacco in serie **ridefinisce lo stato sicuro** dei relè;
+  - ricollegamento automatico o blocco dopo il corto è una **scelta
+    dell'utente**.
+
 ### Dopo L18 — la protezione dal corto sulle uscite (2026-09-13)
 
 Nessun lotto: un requisito nuovo dell'utente, messo nell'handoff.
@@ -304,13 +333,13 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 
 | # | Lotto | Dim. | Chiude | Stato |
 |---|---|---|---|---|
-| L11 | **Mute e corto sulle uscite: misurare e rimediare.** Prima la ADR-021 con le due decisioni dell'utente del 2026-09-13: mute tenibile **a tempo indefinito**, e **ciascuna uscita regge un corto al connettore a tempo indefinito**; classe B ammessa in entrambe le condizioni, **termica sicura a regime**; supera la durata di ADR-012. Poi un deck che misura I_C, dissipazione a regime e transitorio dei due dispositivi d'uscita a mute inserito e in corto su ogni uscita. Se a regime non reggono, la topologia cambia, e su ogni via | M | **NC-001** (bloccante) | da fare |
+| L11 | **Mute e corto sulle uscite: misurare e rimediare.** Prima le ADR delle decisioni dell'utente del 2026-09-13. **ADR-021**: mute tenibile **a tempo indefinito**; ciascuna uscita regge un corto al connettore a tempo indefinito, requisito scritto **come risultato** (limiti termici e SOA, a regime e sul transitorio d'intervento, tecnica libera); classe B ammessa. **ADR-022**: operazionali e microcontrollore fuori dal percorso del segnale ma ammessi nel circuito, con tre condizioni. Poi la baseline sulla topologia di oggi; se non regge, la tecnica si sceglie coi numeri. Divisibile in L11a/L11b | M | **NC-001** (bloccante) | da fare |
 | L12 | **Portare blocco A e blocco B sopra i 60°.** Cambia natura con **ADR-019**: non più solo «misura coi valori veri», ma **rimedio** — il blocco A sta a 41,98° e il blocco B a 0 dB con cavo a 56,46°, contro una soglia di 60°. Le strade (più compensazione, meno guadagno d'anello, rete d'isolamento diversa) costano tutte a un altro requisito e vanno confrontate coi numeri | M | **NC-002**, **NC-021** (bloccanti) | da fare |
 | L13 | **E4 sulle tre uscite e a manopola che gira.** Estendere `tb_zout_psrr_noise.cir` alle due uscite fisse e a tre posizioni dell'attenuatore | S | NC-008 | da fare |
 | L14 | **Le tre correzioni di testo.** KPI del margine di fase qualificato, i due commenti di cascode allineati, lo scarto ADR-014 riferito a 1 kHz | XS | NC-003, NC-006, NC-007 | **fatto** |
 | L15 | **Il vincolo su E3 scritto dove verrà letto** — in `REQUIREMENTS.md`, «Nota su E3», non in ADR-011 | XS | NC-005 (metà: il vincolo; la misura è L16) | **fatto** |
 | L16 | **Il trim entra nel progetto.** Dimensionarlo in `circuits/preamp/` coi due vincoli insieme — attenuazione richiesta da ADR-015 e la «Nota su E3» (min \|Zin\| 20 Hz–20 kHz ≥ 100 kΩ in tutte e tre le posizioni; R1 + R2 = 100 kΩ non basta, `R_IN` sta in parallelo) — e misurarlo. Chiude anche NC-005. Allineare F2 («a ponticello») a F8/ADR-019, che presuppongono relè. Più la riconciliazione delle tre cifre di margine nel dossier | S/M | **NC-009**, NC-005, **NC-023** | da fare |
-| L17 | **Buffer sulle uscite fisse.** Modifica di topologia in `preamp_audio.py` che disaccoppia le due fisse dal nodo del Blocco A, più la riesecuzione di `tb_blockA_carichi.cir` sulla topologia nuova. **Dopo L11**: progetta contro il criterio di corto di ADR-021, e il vincolo di impedenza minima a valle non basta più a chiudere NC-010 | M | **NC-010** (bloccante) | da fare |
+| L17 | **Buffer sulle uscite fisse.** Modifica di topologia in `preamp_audio.py` che disaccoppia le due fisse dal nodo del Blocco A, più la riesecuzione di `tb_blockA_carichi.cir` sulla topologia nuova. **Dopo L11**: progetta contro il criterio di corto di ADR-021 (risultato, tecnica libera) e nei limiti di ADR-022; il vincolo di impedenza minima a valle non basta più a chiudere NC-010 | M | **NC-010** (bloccante) | da fare |
 | L18 | **Il vincolo PSRR scritto dove verrà letto**: quanto ripple può lasciare l'alimentatore sui rail, ricavato da E5 — **ADR-020** e «Nota su E5 — la quota del ripple» | XS/S | **NC-011** (metà: il vincolo; rimedio e verifica vanno con l'alimentatore) | **fatto** |
 | L19 | ~~**La soglia di margine di fase in V1**~~ — **ASSORBITA da L26**: la soglia l'ha data l'utente (60° ovunque, ADR-019) e NC-012 è chiusa. Resta solo la parte «KPI del dossier riferiti a quella», che va con la rigenerazione del dossier | XS | ~~NC-012~~ | **superata** |
 | L20 | **Quanto il progetto dipende da I_DSS.** Rieseguire punto di lavoro e rumore del blocco di guadagno con `Vto` ai due estremi compatibili con la finestra A — il modello vendor com'è (2,59 mA) e un `Vto` che porti I_DSS al tipico (5,5 mA) — e scrivere in `REQUIREMENTS.md` o in una ADR quale dispersione il progetto tollera | S | **NC-013** | da fare |
@@ -2363,29 +2392,43 @@ sulla carta.
 ## Prossimo passo concreto
 
 **L11 — mute e corto sulle uscite: misurare e rimediare.** Chiude **NC-001**
-(bloccante). Lotto **M**: registrare le decisioni, poi misura e rimedio.
+(bloccante). Lotto **M**: registrare le decisioni, poi baseline e rimedio.
+Se non sta in una sessione, si divide: **L11a** (ADR e baseline) e **L11b**
+(rimedio).
 
-0. **Le due decisioni dell'utente, da registrare per prima** (2026-09-13,
-   dopo la chiusura di L18; parole esatte in `NEXT-SESSION.md`, NC-001 e
-   NC-010):
+0. **Le tre decisioni dell'utente, da registrare per prima** (2026-09-13,
+   dopo la chiusura di L18; parole esatte in `NEXT-SESSION.md`):
    - il mute si tiene **a tempo indefinito**, a costo di cambiare la
      topologia;
    - **ciascuna delle tre uscite regge un corto al connettore a tempo
-     indefinito**, perché «non possiamo essere certi che le uscite non vengano
-     messe in corto»;
-   - in entrambe le condizioni la **classe B è accettabile**, ma la termica
-     **non deve essere messa a rischio**.
+     indefinito**, e il requisito **non prescrive la tecnica**. L'utente non
+     vuole che venga esclusa la possibilità di «staccare o mutare le uscite in
+     maniera attiva»;
+   - **operazionali e microcontrollore** restano fuori dal percorso del
+     segnale, ma sono **ammessi nel circuito**.
 
-   Il mute è un caso particolare del corto: mette a massa lo stesso nodo del
-   jack. Le due decisioni diventano **una ADR nuova (ADR-021)**, che:
-   - supera la durata «qualche secondo» di ADR-012 e aggiorna F6;
-   - aggiunge il requisito di protezione dal corto in `REQUIREMENTS.md`;
-   - dichiara l'eccezione a T1 e ADR-003 a mute inserito e durante un corto;
-   - fissa **un solo** criterio termico **a regime**, con un verbo
-     verificabile, coi numeri presi dai datasheet e da ADR-010 e non
-     inventati.
+   Diventano **due ADR nuove**:
+   - **ADR-021 — mute e corto sulle uscite.**
+     - Supera la durata «qualche secondo» di ADR-012 e aggiorna F6.
+     - Aggiunge il requisito di protezione dal corto, scritto come
+       **risultato**: nessun dispositivo esce dai limiti termici e SOA, **a
+       regime e nel transitorio prima dell'intervento**.
+     - Ammette la classe B a mute e in corto.
+     - Lascia la tecnica libera fra limitazione di corrente, distacco attivo e
+       mute attivo.
+     - Numeri da datasheet e ADR-010, non inventati.
+   - **ADR-022 — operazionali e microcontrollore fuori dal percorso del
+     segnale.**
+     - Supera la clausola di ADR-009 e aggiorna F7.
+     - Definisce in modo verificabile il percorso del segnale per T1: nessun
+       integrato attraversato dal segnale o che chiuda un anello sul segnale;
+       un ingresso di sola rilevazione è ammesso se il suo effetto su E4, E5 e
+       sulla risposta è misurato.
+     - Tre condizioni al microcontrollore: **stato sicuro senza firmware**;
+       **protezione non affidata solo al firmware**; **budget di rumore
+       digitale misurato** dentro E5, come ADR-020.
 
-   È sostanziale col criterio di L15.
+   Entrambe sono sostanziali col criterio di L15.
 1. **La misura che manca.** A mute inserito i contatti NC mettono a massa i
    jack, a valle di 47 Ω e 4,7 µF. Il carico diventa |47 + 1/jωC| ≈ 58,6 Ω a
    1 kHz invece di 100 kΩ. G0 ha simulato I_C del dispositivo d'uscita a
@@ -2411,24 +2454,37 @@ sulla carta.
      opposto. Dopo le rinumerazioni di L22 e L10 quel nome indica con ogni
      probabilità **l'altro** dispositivo d'uscita. I nomi si ricavano dalla
      netlist di oggi, non da G0.
-3. **Il rimedio, deciso dal verdetto termico a regime.** La misura va fatta
-   con segnale presente all'ingresso: il mute non spegne la sorgente, e il trim
-   si regola a mute inserito.
-   - **Se a regime MJE15032/33 reggono in tutti i casi** (mute, e corto su
+3. **Il rimedio: la tecnica si sceglie coi numeri.** La misura della baseline
+   va fatta con segnale presente all'ingresso: il mute non spegne la sorgente, e
+   il trim si regola a mute inserito.
+   - **Se la topologia di oggi regge in tutti i casi** (mute, e corto su
      ciascuna uscita), NC-001 si chiude con:
-     - l'ADR del passo 0;
-     - il calcolo termico, da leggere insieme a **NC-024** e **NC-025**
+     - le ADR del passo 0;
+     - il calcolo termico e SOA, da leggere insieme a **NC-024** e **NC-025**
        perché i modelli dei due MJE stanno sotto i minimi del loro datasheet;
      - la correzione di «Classe A garantita» dovunque sia scritta.
-   - **Se non reggono, la topologia cambia.** Una modifica in
-     `preamp_audio.py`, più il deck, che limiti la corrente **su ogni via** da
-     cui il corto può arrivare. Una resistenza in serie al contatto del mute
-     chiude la sola via del mute, quindi non basta. Tocca V2, F6 e il contatto
-     del mute che **ADR-019** usa come permissivo del trim;
-     `check_relay_safe_state.py` (blocco 2e) deve continuare a passare.
+   - **Se non regge**, si confrontano le tecniche ammesse coi loro costi:
+     - **limitazione di corrente**: una resistenza in serie pesa contro E4, e
+       un limitatore attivo tocca il percorso del segnale;
+     - **distacco attivo**: un contatto in serie e un tempo di reazione;
+     - **mute attivo.**
+
+     La tecnica scelta si verifica **a regime e sul transitorio
+     d'intervento**, su ogni via da cui il corto può arrivare.
+   - **I vincoli che una protezione attiva incontra:**
+     - il mute di oggi è **in derivazione**, quindi in un corto ne aggiunge un
+       secondo invece di togliere il primo: protegge solo un mute **in serie**,
+       che cambia ADR-012;
+     - un distacco in serie **ridefinisce lo stato sicuro** che
+       `check_relay_safe_state.py` (blocco 2e) verifica, e il permissivo del
+       trim di **ADR-019**. Va deciso esplicitamente, e il guardiano va
+       riscritto e fatto fallire di nuovo;
+     - **ricollegamento automatico o blocco** dopo il corto è una scelta
+       dell'utente.
    - **Il blocco A in corto su una fissa.** Se non regge, lo si registra in
      **NC-010** e lo si lascia a **L17**.
-   - **Un calcolo termico su una durata finita non chiude niente.**
+   - **Due verifiche che non chiudono niente:** una verifica termica su una
+     durata finita, e una verifica solo a regime per una protezione attiva.
 
 ### Quello che il repo ti consegna già
 
