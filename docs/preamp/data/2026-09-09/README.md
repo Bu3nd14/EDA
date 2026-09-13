@@ -150,6 +150,16 @@ dell'attenuatore va da 0 a 2500 Ω ruotando la manopola, e la risposta a
 | 0 dB, 20 kHz | −0,00830 dB | −0,02993 dB | **0,022 dB** |
 | +10 dB, 20 kHz | +9,9331 dB | +9,9116 dB | **0,022 dB** |
 
+> **Nota L14 (2026-09-13) — la colonna «scarto» qui sopra NON misura la claim
+> di ADR-014** (NC-007). È lo scarto assoluto, e vale **lo stesso a ogni
+> frequenza**: 0,0217 dB a 20 Hz e a 1 kHz in entrambe le modalità, 0,0216 dB
+> (0 dB) e 0,0215 dB (+10 dB) a 20 kHz. È il partitore fra la sorgente da
+> 2500 Ω e la Zin da 1 MΩ, a banda larga, e ci sarebbe anche senza cascode. La claim
+> riguarda la **forma** della risposta: lo scarto a 20 kHz **riferito a 1 kHz**
+> vale **4,35·10⁻⁵ dB** a 0 dB e **1,37·10⁻⁴ dB** a +10 dB, ricavati dai
+> `print` di `tb_ac.log`. Il dossier pubblica queste cifre, e le due non vanno
+> confuse. La tabella resta com'era scritta, come traccia.
+
 Corner LF con il carico da 50 kΩ: −0,0163 dB a 1 kHz, −0,0238 dB a 20 Hz,
 −0,134 dB a 5 Hz.
 

@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-09-10** (creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-09-13** (creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -21,7 +21,10 @@ minimo di f_T quando la si legge come il datasheet la definisce. **L21** ha
 **chiuso NC-014** — il polo 2 del relè, corretto, riverificato sulla netlist e
 protetto da un guardiano permanente in `run_tests.sh` — e, trovandolo mentre
 verificava, ha aperto **NC-026**: il disegno a blocchi non è rigenerabile da
-L22, quindi le sue asserzioni non girano. **22 voci aperte, 6 bloccanti.**
+L22, quindi le sue asserzioni non girano. **L10** ha chiuso NC-026 e aperto
+NC-027. **L14** ha chiuso **NC-003, NC-006 e NC-007**: tre punti in cui il repo
+diceva una cosa diversa da quella che i suoi dati misurano. **19 voci aperte,
+6 bloccanti.**
 L'accesso a G1 non è concesso finché NC-001, NC-002, NC-004, NC-010, NC-017
 e NC-021 restano aperte)
 
@@ -568,7 +571,7 @@ la scelta di ADR-013 va riaperta con un numero in mano. Lotto **L20**.
 | Requisito | **V1** · regola operativa 6 di `AGENTS.md` |
 | Severità | **minore** |
 | Aperta da | `reports/2026-09-09-gate-G0.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-13 (L14)** — il KPI dice «blocco B, peggiore dei 4 casi pubblicati», e il corpo del dossier lo dice anche lui. Vedi «Voci chiuse» in fondo |
 
 **Evidenza.** `docs/preamp/dossier/index.html`, riquadro KPI in testa
 alla pagina: «Margine di fase, peggiore — 56,945 gradi», senza
@@ -615,7 +618,7 @@ sarà in `circuits/preamp/`.
 | Requisito | Regola di tracciabilità di `CLAUDE.md` · ADR-014 |
 | Severità | **minore** |
 | Aperta da | `reports/2026-09-09-gate-G0.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-13 (L14)** — i due commenti citano il valore implementato e il log della topologia di oggi, `data/2026-09-10/tb_op-LS352.log`. Vedi «Voci chiuse» in fondo |
 
 **Evidenza.** `circuits/preamp/gain_block.py` contiene, nella stessa
 funzione, tre valori incompatibili per lo stesso nodo: il blocco delle
@@ -639,7 +642,7 @@ implementato, col riferimento a ADR-014 e al `tb_op.log` che lo misura.
 | Requisito | **ADR-014** · V1 |
 | Severità | **minore** |
 | Aperta da | `reports/2026-09-09-gate-G0.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-13 (L14)** — il dossier pubblica lo scarto riferito a 1 kHz come misura della claim e lo scarto assoluto col suo nome, il partitore; il KPI cita il primo. Vedi «Voci chiuse» in fondo |
 
 **Evidenza.** Il dossier presenta come verifica della claim falsificabile
 di ADR-014 lo «scarto a 20 kHz» fra sorgente 1,5 Ω e 2500 Ω: 0,022 dB. Da
@@ -1440,6 +1443,40 @@ forza della compatibilità dichiarata. Prima di G2, perché un substrato
 lasciato flottante o collegato è una scelta di layout.
 
 ## Voci chiuse
+
+**NC-007 — Lo «scarto ADR-014» pubblicato non misura la claim di ADR-014**
+(minore). **CHIUSA il 2026-09-13 da L14.** Il dossier pubblica ora due cifre
+distinte, ciascuna col proprio nome. Lo **scarto assoluto** fra sorgente 2500 Ω
+e 1,5 Ω vale −0,02167 dB a 1 kHz in entrambe le modalità, e −0,02163 dB (0 dB)
+e −0,02154 dB (+10 dB) a 20 kHz: è il partitore con la Zin, e la pagina dice
+che non misura la claim. Lo **scarto a 20 kHz riferito a 1 kHz**, che è la
+claim, vale **4,35·10⁻⁵ dB** a 0 dB e **1,37·10⁻⁴ dB** a +10 dB. Le cifre
+vengono dai `print` di `tb_ac.log` e sono state ricalcolate in modo
+indipendente dai CSV (4,352·10⁻⁵ e 1,370·10⁻⁴). Il KPI in testa cita il
+**peggiore delle due modalità**, 1,37·10⁻⁴, e dice che è il peggiore. La
+seconda copia della cifra, cioè la tabella di `data/2026-09-09/README.md`, ha
+preso una nota datata e non è stata riscritta. Letto su `index.html`
+generato, non su `build_dossier.py`. Report:
+`reports/2026-09-13-L14-correzioni-di-testo.md`.
+
+**NC-006 — `gain_block.py` porta due valori superati per il riferimento di
+cascode** (minore). **CHIUSA il 2026-09-13 da L14.** Le righe 314-315 e
+320-321 dicono ora `v(ncasc) = 9.887 V` e drain a 9,21 V, e citano ADR-014 e
+**`data/2026-09-10/tb_op-LS352.log`**, non il `2026-09-09/tb_op.log` che la
+voce citava: quello è la topologia col THAT320. `tb_op.cir`, rieseguito il
+2026-09-13, dà 81 valori su 81 identici al log LS352; cambiano solo i nomi di
+47 righe, per la rinumerazione di L10. Che nessuna riga di codice sia
+cambiata lo prova l'**AST**: `ast.dump` identico fra HEAD e il file nuovo,
+stesso numero di righe, controllo fatto fallire su una copia con
+10.0k → 10.1k. La riga 153, la storia della bozza da 8,485 V, resta.
+
+**NC-003 — Il KPI «margine di fase, peggiore» non è il peggiore del
+prodotto** (minore). **CHIUSA il 2026-09-13 da L14**, col qualificatore e non
+portando il blocco A nel KPI, che resta NC-002/L12. Il KPI dice «Margine di
+fase, blocco B — 56,945 gradi · peggiore dei 4 casi pubblicati». La sezione 6
+si apre ora dicendo che tutti i dati d'anello sono del blocco B e che il blocco
+A non è pubblicato. La riga V1 e il titolo di `fig_loop.svg` portano lo stesso
+qualificatore. Verificato sul deck che `tb_loop.cir` è il blocco B.
 
 **NC-026 — Il disegno a blocchi non è rigenerabile da L22** (maggiore).
 **CHIUSA il 2026-09-13 da L10.** `preamp_blocks_draw.py` cita ora

@@ -311,14 +311,14 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     if r_in:
         R(r_in, IN, GND)                # E3: Zin. See R_IN above.
 
-    # Cascode base reference: 8.485 V from a ~1 mA divider off V+, heavily
-    # bypassed to ground so the JFET drains sit still while the rail moves.
+    # Cascode base reference (ADR-014): 4.99k/10.0k off V+, ~1 mA, bypassed so
+    # the drains sit still. v(ncasc) = 9.887 V: data/2026-09-10/tb_op-LS352.log
     R("4.99k", VP, NCASC)
     R("10.0k", NCASC, GND)
     C("47u", NCASC, GND, fp=FP_ELCO)
 
-    # Cascode transistors, common base: they hold the JFET drains at a fixed
-    # 7.8 V, which is what kills the Miller multiplication of C_rss.
+    # Cascode transistors, common base: they hold the JFET drains at 9.21 V
+    # (v(d1n)/v(d2n), same log), which kills the C_rss Miller multiplication.
     # The one above the NON-INVERTING JFET drives the mirror OUTPUT; the one
     # above the FEEDBACK JFET drives the mirror DIODE. That assignment - not
     # the other one - is what makes the global feedback negative.
