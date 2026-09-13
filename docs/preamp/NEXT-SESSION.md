@@ -1,30 +1,31 @@
-# Prompt per la sessione successiva — L14
+# Prompt per la sessione successiva — L15
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il
-lavoro è organizzato in LOTTI PICCOLI: questa sessione ne fa **UNO — L14** — e
+lavoro è organizzato in LOTTI PICCOLI: questa sessione ne fa **UNO — L15** — e
 si ferma. Non iniziarne un secondo.
 
-## Cosa è cambiato, e perché il prossimo lotto sono tre correzioni di testo
+## Cosa è cambiato, e perché il prossimo lotto è un vincolo scritto
 
-Il lotto precedente è **L10**, che ha fuso l'LSK489 in **una** Part a due
-unità col pinout letto dal datasheet congelato, e ha chiuso **NC-026**. Tre
-cose di quel lotto ti riguardano prima di toccare qualsiasi cosa:
+Il lotto precedente è **L14**, che ha chiuso tre voci minori di testo senza
+toccare un numero del circuito. Tre cose di quel lotto ti riguardano:
 
-1. **La suite è a 8 blocchi.** Il **2f** esegue il disegno a blocchi
-   (`preamp_blocks_draw.py`) e pretende exit 0; il **2g**
-   (`scripts/check_deck_refs.py`) pretende che ogni dispositivo citato da un
-   deck esista. Se tocchi un deck o un disegno, devono restare verdi.
-2. **Due deck erano rotti da L22, in silenzio, e ngspice usciva 0.** Il
-   controfattuale di V2 apriva un resistore inesistente, e lo sweep del bias
-   spazzava il ramo sbagliato. Riparati, dati in `data/2026-09-13/`. La
-   lezione vale anche per un lotto di solo testo: **ngspice non fallisce su un
-   nome di dispositivo che non trova**, e un nome che esiste ma è un altro non
-   lo vede nessuno (`limitations.md` #22).
-3. **Una voce nuova, minore: NC-027** — i pin SS (3, 7) dell'LSK489 sono
-   disegnati dal suo datasheet e mai definiti. Ha il suo lotto, **L28**. Non è
-   tuo.
+1. **Il dossier ora dice cosa misura ogni cifra.** Lo scarto ADR-014 ha due
+   cifre, ciascuna col suo nome: lo scarto **riferito a 1 kHz**, che è la
+   claim (4,35·10⁻⁵ dB a 0 dB, 1,37·10⁻⁴ a +10 dB, e il KPI cita il peggiore),
+   e lo scarto **assoluto**, che è il partitore con la Zin (−0,0217 dB a ogni
+   frequenza). Il KPI del margine di fase dice «blocco B, peggiore dei 4 casi
+   pubblicati». Se tocchi il dossier, verifica su `index.html`, non su
+   `build_dossier.py`.
+2. **Una cifra si rilegge dal log della topologia di oggi**, non dalla voce che
+   la cita. NC-006 citava un log col THAT320, e quello giusto era
+   `data/2026-09-10/tb_op-LS352.log`, riconfermato rieseguendo `tb_op`. Vale
+   anche per te: NC-005 è stata scritta a G0, prima di L22 e L26.
+3. **Un altro percorso cablato, visto e non corretto**:
+   `testbenches/01_op.cir:10` scrive in `/Users/roberto/EDA/results/`, quindi il
+   blocco 2b della suite, eseguito da un worktree, legge il wrdata dal checkout
+   principale.
 
-Bloccanti invariate: **sei** — NC-001 (L11), NC-002 e NC-021 (L12), NC-004,
+Voci: **19 aperte, 6 bloccanti** — NC-001 (L11), NC-002 e NC-021 (L12), NC-004,
 NC-010 (L17), NC-017 (Fase 4).
 
 ## Leggi PRIMA, in quest'ordine, e non saltare
@@ -32,81 +33,79 @@ NC-010 (L17), NC-017 (Fase 4).
 1. **`CLAUDE.md`** — ambiente, percorsi assoluti, trappole che falliscono in
    silenzio, e la regola di fine sessione (push prima di tutto)
 2. **`docs/preamp/STATE.md`** — «Come si lavora da qui», la tabella dei lotti,
-   la sezione **L10**, e **«Prossimo passo concreto»**, che contiene il mandato
+   la sezione **L14**, e **«Prossimo passo concreto»**, che contiene il mandato
    di questo lotto per esteso
-3. **`docs/preamp/NONCOMPLIANCE.md`**, voci **NC-003**, **NC-006**, **NC-007**
-   — le tre che chiudi — e **NC-002**, che NC-003 cita
-4. **`docs/preamp/decisions/ADR-014-*.md`** — la claim che NC-007 dice
-   misurata male
-5. **`docs/preamp/dossier/build_dossier.py`** — l'intestazione, per sapere
-   come si rigenera il dossier e da quali dati legge
-6. **`docs/limitations.md`** — in particolare #10, #22 e #23
+3. **`docs/preamp/NONCOMPLIANCE.md`**, voce **NC-005** — quella che chiudi — e
+   **NC-009**, che porta lo stesso trim con l'altro vincolo, quello opposto
+4. **`docs/preamp/REQUIREMENTS.md`** — E3, F2, F8 e la matrice V1, che elenca
+   «le tre posizioni del trim»
+5. **`docs/preamp/decisions/README.md`** (le regole delle ADR) e
+   **`ADR-011-trim-per-ingresso.md`**, compreso il suo «Aggiornamento» in coda
+6. **`docs/preamp/decisions/ADR-015-*.md`** e **`ADR-019-*.md`** — perché il
+   trim è diventato portante (headroom) e interbloccato col mute
 
-## IL LOTTO: L14 — le tre correzioni di testo
+## IL LOTTO: L15 — il vincolo su E3 scritto dove verrà letto
 
-**Il difetto comune.** Tre punti in cui ciò che il repo **dice** non è ciò che
-i suoi dati **misurano**. Nessuno cambia un numero del circuito; tutti e tre
-cambiano ciò che un lettore porta via.
+**Il difetto.** E3 chiede Zin ≥ 100 kΩ. Il trim 0 / −6 / −12 dB di ADR-011 sta
+**a monte** del blocco A, e nessun documento dice che anche il trim deve
+rispettare E3. Un partitore dimensionato senza quel vincolo — 10 k / 3,3 k per
+i −12 dB — porterebbe la Zin a ~13 kΩ, e niente nel repo lo segnalerebbe.
 
 **Cosa fare:**
 
-1. **NC-006** — `circuits/preamp/gain_block.py` righe **314** («Cascode base
-   reference: 8.485 V») e **321** («the JFET drains at a fixed 7.8 V») sono la
-   bozza abbandonata; il codice implementa il partitore 4,99k/10,0k. Allineali
-   al valore implementato citando ADR-014 e il log che lo misura. La riga
-   **153** («First draft used 8.485 V») è storia dichiarata: **resta**.
-2. **NC-007** — `docs/preamp/dossier/build_dossier.py:782` pubblica lo
-   «Scarto ADR-014» **a 20 kHz**. Quella cifra è il partitore 2500 Ω / 1 MΩ, a
-   banda larga, e ci sarebbe identica senza cascode. Il dossier deve
-   presentare lo scarto **riferito a 1 kHz** come misura della claim (o
-   entrambe, dicendo cosa misura ciascuna), e il KPI in testa cita quello.
-3. **NC-003** — `build_dossier.py:783`, KPI «Margine di fase, peggiore»: è il
-   peggiore dei **quattro casi pubblicati del blocco B**, non del prodotto. Il
-   KPI prende il qualificatore.
-4. Rigenerare il dossier e **leggere l'`index.html` prodotto**.
+1. Scrivere il vincolo: «la resistenza vista all'ingresso, **in ogni posizione**
+   del ponticello di trim, deve restare ≥ 100 kΩ». Va scritto accanto al
+   requisito che lo impone, e con i due fatti che il dimensionamento dovrà
+   conciliare: l'attenuazione chiesta da ADR-015 (NC-009) e il rumore di un
+   partitore ad alta impedenza.
+2. **Decidere dove, e scrivere perché.** Due vincoli di forma, trovati leggendo
+   in L14:
+   - **le ADR non si riscrivono** (`decisions/README.md`, regola 2), ma ADR-011
+     porta già un «Aggiornamento 2026-09-08» in coda col testo sopra intatto,
+     e anche ADR-001, ADR-007 e ADR-008 hanno aggiunte. Verifica se la forma
+     «addendum datato» è coerente con la regola **prima** di usarla;
+   - `REQUIREMENTS.md` è congelato, e **ogni modifica sostanziale vuole una
+     ADR** (`CLAUDE.md`). Decidi se rendere esplicito un vincolo implicato da
+     E3 sia sostanziale, e scrivi la risposta.
+3. Chiudere NC-005 **per la metà che le compete**: il vincolo scritto. La
+   misura AC che la voce chiede «quando la scheda sarà in `circuits/preamp/`» è
+   di **L16**.
 
 ### Quello che il repo ti consegna già — usalo invece di riscoprirlo
 
-- **La diagnosi completa sta nelle tre voci**, con le cifre rieseguite da G0:
-  0,02167 dB a tutte le frequenze per il partitore, 4,35·10⁻⁵ dB riferito a
-  1 kHz, 41,98° per il blocco A.
-- **Il dossier legge `data/2026-09-09/`**, cioè la topologia col THAT320. È
-  dichiarato: L14 corregge *come* le cifre sono presentate, non le rimisura.
-- **Un commento spostato in `gain_block.py` sposta i `SKiDL Line`** della
-  netlist. Se rigeneri, il confronto è quello normalizzato (L3b), e i nomi
-  delle net fuse possono cambiare da soli (#23): nessuno dei due è un cambio di
-  topologia.
+- **`R_IN = "1M"`** in `circuits/preamp/gain_block.py:118` fissa la Zin del
+  solo blocco A; `preamp_audio.py:23` dichiara selettore e trim fuori dal
+  proprio perimetro.
+- **La suite è a 8 blocchi**, 8 passed a fine L14.
+- **Cerca se qualcuno ha già deciso**: la voce è di G0 (2026-09-09). Da allora
+  ADR-015, ADR-019 e F8 hanno cambiato il ruolo del trim.
 
 ## Cosa NON accettare
 
-- **Una cifra copiata dalla voce invece che riletta dal log.** NC-006 cita
-  `data/2026-09-09/tb_op.log`, che è di prima di L22; da allora esiste
-  `data/2026-09-10/tb_op-LS352.log`. Leggi quale descrive la topologia di oggi
-  e cita quello.
-- **Una verifica fatta sul sorgente del dossier.** `build_dossier.py` dice
-  cosa volevi; `index.html` dice cosa hai pubblicato.
-- **Un KPI che chiude la voce e lascia il corpo del dossier a dire l'altra
-  cifra.** NC-007 lo dice: circolano due cifre per la stessa claim.
+- **Un'ADR riscritta.** Se scegli ADR-011, la forma è quella che le regole
+  permettono, verificata, non «aggiungo una riga».
+- **Un vincolo senza verbo verificabile.** «Deve restare ≥ 100 kΩ in ogni
+  posizione» si può misurare; «va tenuta alta» no.
+- **Un dimensionamento del trim.** È L16.
 
 ## NON fa parte di questo lotto
 
-- **NC-002** (il blocco A sotto i 60°): è **L12**, ed è un rimedio, non una
-  frase. NC-003 si chiude col qualificatore, non portando il blocco A nel KPI.
-- **NC-005**, il vincolo su E3: è **L15**.
-- **Rimisurare qualsiasi cosa.** PSRR, Z_out, risposta e margine di fase
-  restano da rifare in Fase 4.
-- **NC-027** e le altre voci: hanno i loro lotti.
+- **Dimensionare o simulare il trim**: **L16** (NC-009, NC-023, e NC-005 lato
+  misura).
+- **NC-011**, il vincolo PSRR per l'alimentatore: è **L18**, stessa forma ma
+  lotto suo.
+- **Rimisurare qualsiasi cosa.**
+- **Il percorso cablato di `testbenches/01_op.cir`**: annotato, non tuo.
 - **Non toccare i file già in `vendor/`.**
 
 ## Come lavoriamo
 
 - **Verifica invece di fidarti.** Se un subagente riporta dei numeri,
   rieseguili tu prima di riferirmeli.
-- **Verifica alla fonte anche ciò che il lotto precedente ti ha scritto.** L10
-  lo ha appena rifatto: facendo la baseline dei deck *prima* di toccarli ha
-  trovato due guasti che L22 aveva dichiarato sistemati.
-- **Un controllo mai fatto fallire non è un controllo.** L10 ha fatto fallire
-  i due blocchi nuovi sui file di prima, prima di dichiararli verdi.
+- **Verifica alla fonte anche ciò che il lotto precedente ti ha scritto.**
+  L14 l'ha rifatto: la voce citava il log di una topologia superata.
+- **Un controllo mai fatto fallire non è un controllo.** L14 ha fatto fallire
+  la prova AST su un valore alterato prima di fidarsene.
 - **Cerca se qualcuno ha già deciso, prima di aprire una voce.**
 - **Niente cifre non eseguite.**
 - **Diffida degli script che dichiarano di aver verificato qualcosa.**
@@ -115,7 +114,9 @@ cambiano ciò che un lettore porta via.
 - **Un lotto per volta, mai due agenti in parallelo**: il vincolo è il cap di
   token del piano.
 - **Lavora in un worktree.** I commit non pushati dentro `.claude/worktrees/`
-  spariscono col worktree, ed è già successo.
+  spariscono col worktree, ed è già successo. Nel worktree, lancia gli script
+  zsh **da soli**, non in comandi composti: il guardiano di isolamento li
+  rifiuta.
 
 ## CHIUSURA
 
@@ -124,9 +125,9 @@ Non è una lista da ricordare, è uno script che rifiuta. Nell'ordine:
 1. aggiorna `docs/preamp/STATE.md` segnando il lotto **fatto** e il successivo
    come prossimo (la tabella deve dire **fatto**)
 2. **riscrivi QUESTO file per il lotto successivo** — se il titolo nomina
-   ancora L14, lo script rifiuta, ed è il controllo che esiste apposta
+   ancora L15, lo script rifiuta, ed è il controllo che esiste apposta
 3. committa, pusha, apri la PR
-4. `/bin/zsh scripts/chunk_close.sh L14` — verifica tutto, merghia, riallinea
+4. `/bin/zsh scripts/chunk_close.sh L15` — verifica tutto, merghia, riallinea
    il checkout dell'utente e rilegge da lì per provare il riallineo. Se
    rifiuta, ha ragione: sistema e rilancia
 5. rimuovi il worktree con i due comandi che lo script stampa

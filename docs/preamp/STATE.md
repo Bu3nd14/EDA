@@ -6,7 +6,18 @@
 di chiudere, e lo committa insieme al lavoro. Se è disallineato dalla
 realtà, il progetto non è ripartibile.
 
-Ultimo aggiornamento: **2026-09-13** (**L10 chiuso**: l'LSK489 è **una**
+Ultimo aggiornamento: **2026-09-13** (**L14 chiuso**: tre correzioni di
+testo, nessun numero del circuito toccato. **NC-006**: i commenti del cascode
+in `gain_block.py` citano ora `v(ncasc) = 9.887 V` e i drain a 9,21 V dal log
+della topologia di **oggi**, `data/2026-09-10/tb_op-LS352.log`, e non da quello
+col THAT320 che la voce citava. `tb_op` rieseguito: 81 valori su 81 identici.
+L'AST del file è identico a HEAD, controllo fatto fallire. **NC-007**: il
+dossier distingue lo scarto ADR-014 **riferito a 1 kHz**, cioè la claim
+(4,35·10⁻⁵ dB a 0 dB, 1,37·10⁻⁴ a +10 dB, e il KPI cita il peggiore), dallo
+scarto **assoluto** (−0,0217 dB a ogni frequenza), che è il partitore con la
+Zin. **NC-003**: il KPI dice «blocco B, peggiore dei 4 casi pubblicati». Tutto
+letto sull'`index.html` generato. Suite **8 passed / 0 failed**. **19 voci, 6
+bloccanti.** Prossimo lotto **L15**. — Prima: **L10 chiuso**: l'LSK489 è **una**
 Part a due unità, col simbolo in `library/preamp.kicad_sym` e il pinout
 **letto** dal datasheet congelato — pag. 1, SOIC-A: 1=S1 2=D1 3=SS 4=G1 5=S2
 6=D2 7=SS 8=G2. Sulla netlist i componenti su SOIC-8 scendono da **3 a 2**
@@ -172,7 +183,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L11 | **Mute: misurare e rimediare.** Deck che misura I_C dei due dispositivi d'uscita a mute inserito + il transitorio di inserzione/rilascio; poi o la modifica di topologia o la ADR che accetta il regime | M | **NC-001** (bloccante) | da fare |
 | L12 | **Portare blocco A e blocco B sopra i 60°.** Cambia natura con **ADR-019**: non più solo «misura coi valori veri», ma **rimedio** — il blocco A sta a 41,98° e il blocco B a 0 dB con cavo a 56,46°, contro una soglia di 60°. Le strade (più compensazione, meno guadagno d'anello, rete d'isolamento diversa) costano tutte a un altro requisito e vanno confrontate coi numeri | M | **NC-002**, **NC-021** (bloccanti) | da fare |
 | L13 | **E4 sulle tre uscite e a manopola che gira.** Estendere `tb_zout_psrr_noise.cir` alle due uscite fisse e a tre posizioni dell'attenuatore | S | NC-008 | da fare |
-| L14 | **Le tre correzioni di testo.** KPI del margine di fase qualificato, i due commenti di cascode allineati, lo scarto ADR-014 riferito a 1 kHz | XS | NC-003, NC-006, NC-007 | da fare |
+| L14 | **Le tre correzioni di testo.** KPI del margine di fase qualificato, i due commenti di cascode allineati, lo scarto ADR-014 riferito a 1 kHz | XS | NC-003, NC-006, NC-007 | **fatto** |
 | L15 | **Il vincolo su E3 scritto dove verrà letto** (nota di dimensionamento in ADR-011 o `REQUIREMENTS.md`) | XS | NC-005 | da fare |
 | L16 | **Il trim entra nel progetto.** Dimensionarlo in `circuits/preamp/` coi due vincoli insieme — attenuazione richiesta da ADR-015 e Zin ≥ 100 kΩ — e misurarlo. Chiude anche NC-005. Più la riconciliazione delle tre cifre di margine nel dossier | S/M | **NC-009**, NC-005, **NC-023** | da fare |
 | L17 | **Buffer sulle uscite fisse.** Modifica di topologia in `preamp_audio.py` che disaccoppia le due fisse dal nodo del Blocco A, più la riesecuzione di `tb_blockA_carichi.cir` sulla topologia nuova | M | **NC-010** (bloccante) | da fare |
@@ -1668,6 +1679,68 @@ sbagliato. Scritto in `limitations.md` #22, non sottinteso.
 **7. Cosa NON è stato verificato.** Le quote del SOIC-A (non sono nel
 datasheet congelato); SS (NC-027); nessun'altra cifra del blocco.
 
+## L14 — Le tre correzioni di testo. FATTO.
+
+Report: `reports/2026-09-13-L14-correzioni-di-testo.md`. Chiude **NC-003**,
+**NC-006** e **NC-007**, tutte minori. Nessun numero del circuito toccato,
+nessuna misura nuova: il dossier legge ancora `data/2026-09-09/`.
+
+**1. Baseline prima di toccare.** Il dossier rigenerato **senza modifiche**
+lascia `git status` vuoto. La rigenerazione è quindi riproducibile, e il diff
+successivo contiene solo il lotto. `run_tests.sh` dà 8 passed / 0 failed.
+
+**2. NC-006: la cifra riletta, non copiata.** La voce citava
+`data/2026-09-09/tb_op.log`, che è la topologia col THAT320. `tb_op.cir`
+**rieseguito oggi** dà 81 valori su 81 identici a
+`data/2026-09-10/tb_op-LS352.log`; cambiano solo i nomi di 47 righe, per la
+rinumerazione di L10. Quel log descrive dunque il codice di oggi, e i commenti
+di `gain_block.py` 314-315 e 320-321 lo citano insieme ad ADR-014:
+`v(ncasc) = 9.887 V`, drain a 9,21 V. La riga 153 resta. **Che nessuna riga di
+codice sia cambiata lo prova l'AST**: `ast.dump` identico fra HEAD e il file
+nuovo, stesse 648 righe, e il controllo fatto fallire su una copia con
+10.0k → 10.1k. Con le stesse righe i `SKiDL Line` delle netlist committate
+restano veri, quindi non c'era niente da rigenerare.
+
+**3. NC-007: due cifre, ognuna col suo nome.** Dai `print` di `tb_ac.log`, e
+ricalcolate in modo indipendente dai CSV:
+
+| Modalità | scarto assoluto 1 kHz | scarto assoluto 20 kHz | **20 kHz rif. 1 kHz (la claim)** |
+|---|---|---|---|
+| 0 dB | −0,02167 dB | −0,02163 dB | **4,35·10⁻⁵ dB** |
+| +10 dB | −0,02167 dB | −0,02154 dB | **1,37·10⁻⁴ dB** |
+
+Lo scarto assoluto è il partitore con la Zin: uguale a ogni frequenza, e ci
+sarebbe anche senza cascode. Il KPI cita ora il **peggiore delle due
+modalità**, 1,37·10⁻⁴ a +10 dB, e dice che è il peggiore: la lezione di NC-003
+applicata alla voce accanto. `build_dossier.py` ha una funzione `adr014()` che
+produce entrambe le cifre dai valori già passati da `check()`. La seconda copia
+della cifra, nella tabella di `data/2026-09-09/README.md`, ha preso una **nota
+datata** e non una riscrittura.
+
+**4. NC-003.** Il KPI dice «Margine di fase, blocco B — 56,945 gradi · peggiore
+dei 4 casi pubblicati». La sezione 6 si apre dicendo che i dati d'anello sono
+tutti del blocco B e che il blocco A non è pubblicato (NC-002). La riga V1 e il
+titolo di `fig_loop.svg` sono qualificati. Che `tb_loop.cir` sia il blocco B è
+stato **letto nel deck**, non dedotto.
+
+**5. Letto il prodotto, non il sorgente.** Il diff di `index.html` tocca il
+KPI, la sottosezione ADR-014, l'apertura e la chiusura della sezione 6 e la
+riga V1, e **nessun altro numero**. `fig_loop.svg` cambia solo nel titolo.
+`dossier.summary.json` ha le chiavi rinominate secondo ciò che misurano, e nel
+repo nessuno lo legge. Suite a lavoro finito: **8 passed / 0 failed**.
+
+**6. Cosa resta com'è, deliberatamente.** La sezione storica L5 di questo file
+dice ancora «ADR-014 regge: 0,022 dB»: è storia. Il riepilogo in coda a
+`gain_block.py` («0.0001 dB», riga ~551) è arrotondato ed è compatibile con
+entrambe le cifre.
+
+**7. Un esemplare in più della famiglia dei percorsi cablati, visto e non
+toccato.** `testbenches/01_op.cir:10` fa `wrdata /Users/roberto/EDA/results/01_op.csv`.
+Quindi il blocco **2b** di `run_tests.sh`, eseguito da un worktree, trova il
+proprio wrdata nel **checkout principale**: lo stampa, «found wrdata output:
+/Users/roberto/EDA/results/01_op.csv». Passa lo stesso, perché il CSV della run
+viene riscritto nella directory giusta. Non era di questo lotto.
+
 ## Il dossier: prima bozza consegnata in L5b
 
 **Riassunto per l'utente, 2026-09-11**:
@@ -2064,47 +2137,43 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L14 — le tre correzioni di testo.** Chiude **NC-003**, **NC-006**, **NC-007**,
-tutte minori. È un lotto **XS**, ed è per questo che viene prima: nessuna
-topologia, nessuna rinumerazione, nessuna misura nuova.
+**L15 — il vincolo su E3 scritto dove verrà letto.** Chiude **NC-005**
+(minore). È un lotto **XS**: nessuna topologia, nessuna misura.
 
-1. **NC-006** — `circuits/preamp/gain_block.py` porta ancora due commenti
-   della bozza abbandonata: riga **314** («Cascode base reference: 8.485 V») e
-   riga **321** («the JFET drains at a fixed 7.8 V»). Il codice implementa il
-   partitore 4,99k/10,0k, cioè ~10 V; la riga 153 («First draft used 8.485 V»)
-   è storia dichiarata e **resta**. Allineare i due commenti al valore
-   implementato citando ADR-014 e il `tb_op` che lo misura — e **rileggere la
-   cifra dal log** invece di copiarla dalla voce: la voce cita
-   `data/2026-09-09/tb_op.log` (topologia col THAT320), e da L22 esiste
-   `data/2026-09-10/tb_op-LS352.log`.
-2. **NC-007** — `docs/preamp/dossier/build_dossier.py:782` pubblica lo
-   «Scarto ADR-014» **a 20 kHz**, che misura il partitore 2500 Ω / 1 MΩ e non la
-   claim di ADR-014. Va pubblicato lo scarto **riferito a 1 kHz** (o entrambe
-   le cifre, dicendo cosa misura ciascuna), e il KPI in testa deve citare
-   quello.
-3. **NC-003** — `build_dossier.py:783`, KPI «Margine di fase, peggiore»: è il
-   peggiore fra i **quattro casi del blocco B pubblicati**, non del prodotto (il
-   blocco A sta a 41,98°, NC-002). Il KPI prende il qualificatore.
-
-Poi rigenerare il dossier e **leggere l'`index.html` generato**, non il
-sorgente, prima di chiudere le voci.
+1. **Il vincolo.** «La resistenza vista all'ingresso, in ogni posizione del
+   ponticello di trim (0 / −6 / −12 dB, F2/ADR-011), deve restare ≥ 100 kΩ»
+   (E3). Oggi niente nel repo lo dice. `R_IN = "1M"` in `gain_block.py:118`
+   fissa la Zin del solo blocco A, e `preamp_audio.py:23` dichiara il trim
+   fuori dal proprio perimetro. NC-005 ne dà il controesempio: un partitore
+   10 k / 3,3 k per i −12 dB porterebbe la Zin a ~13 kΩ, e nessun controllo lo
+   vedrebbe.
+2. **Dove scriverlo: da decidere leggendo, non da copiare dalla voce.** NC-005
+   propone «`REQUIREMENTS.md` o ADR-011 come nota di dimensionamento». Due
+   vincoli di forma, trovati in L14:
+   - **le ADR non si riscrivono** (`decisions/README.md`, regola 2). Però
+     ADR-011 porta **già** un «Aggiornamento 2026-09-08» in coda, col testo
+     sopra intatto, e anche ADR-001, ADR-007 e ADR-008 hanno aggiunte in coda.
+     L'addendum datato ha quindi precedenti nel repo, ma resta da verificare
+     che sia compatibile con la regola: non va assunto;
+   - **`REQUIREMENTS.md` è congelato**, e ogni modifica sostanziale vuole una
+     ADR (`CLAUDE.md`). Una nota che rende esplicito un vincolo già implicato
+     da E3 probabilmente non è sostanziale, ma è un giudizio da scrivere, non
+     da saltare.
+3. **Cosa NON fa L15**: dimensionare il trim o misurarlo. Quello è **L16**, che
+   chiude NC-005 anche dal lato della misura e porta con sé NC-009 e NC-023 (F8,
+   l'interlock col mute). L15 scrive il vincolo che L16 dovrà soddisfare.
 
 ### Quello che il repo ti consegna già
 
-- **Due blocchi di suite nuovi** da L10: **2f** esegue il disegno a blocchi,
-  **2g** pretende che ogni dispositivo citato da un deck esista. La suite è a
-  **8 blocchi**.
-- **Un commento spostato sposta i `SKiDL Line`** della netlist alla
-  rigenerazione. È una differenza che il confronto normalizzato toglie (L3b):
-  non va letta come un cambio di topologia.
-- **Il dossier legge `data/2026-09-09/`**, che descrive la topologia col
-  THAT320. È dichiarato: L14 corregge *come* le cifre sono presentate, non le
-  rimisura.
+- **La suite è a 8 blocchi**, 8 passed a fine L14.
+- **Il dossier ora distingue le cifre da ciò che misurano** (L14):
+  `build_dossier.py` ha `adr014()`, e il KPI del margine di fase dice «blocco B».
+  Se L15 tocca il dossier, la regola resta di leggere l'`index.html` generato.
+- **I conteggi**: 19 voci aperte, 6 bloccanti.
 
-**Poi**, nell'ordine: **L15** (XS), **L18**, e le bloccanti vere — **L11**
-(mute), **L17** (buffer sulle uscite fisse) e **L12**, che ADR-019 ha
-trasformato da misura in **rimedio**. **L28** (SS dell'LSK489, NC-027) va fatto
-prima di G2.
+**Poi**, nell'ordine: **L18** (XS/S), e le bloccanti vere — **L11** (mute),
+**L17** (buffer sulle uscite fisse) e **L12**, che ADR-019 ha trasformato da
+misura in **rimedio**. **L28** (SS dell'LSK489, NC-027) va fatto prima di G2.
 
 ### Cosa cercare, e cosa NON accettare
 

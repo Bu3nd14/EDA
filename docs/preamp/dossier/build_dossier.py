@@ -159,6 +159,35 @@ def it(v, nd=3, unit=""):
     return fmt(v, nd, unit).replace(".", ",")
 
 
+def it_sci(v, nd=3):
+    """Numero piccolo come m·10^e in HTML, con la virgola italiana."""
+    if v == 0:
+        return "0"
+    e = math.floor(math.log10(abs(v)))
+    m = f"{v / 10 ** e:.{nd - 1}f}".replace(".", ",").replace("-", "&minus;")
+    return f'{m}&middot;10<sup>{str(e).replace("-", "&minus;")}</sup>'
+
+
+def adr014(resp):
+    """Le due cifre che il dossier ha confuso fino a L14 (NC-007).
+
+    - `shape`: di quanto la sorgente da 2500 ohm sposta la risposta a 20 kHz
+      RIFERITA a quella a 1 kHz. E' la claim di ADR-014, che riguarda la
+      FORMA della risposta al variare dell'impedenza dell'attenuatore.
+    - `level`: lo scarto ASSOLUTO fra sorgente 2500 e 1,5 ohm alla stessa
+      frequenza. E' il partitore fra la sorgente e la Zin da 1 MOhm: a banda
+      larga, uguale a 1 kHz e a 20 kHz, e ci sarebbe identico senza cascode.
+
+    Entrambe usano solo valori gia' passati da check().
+    """
+    shape, level = {}, {}
+    for m in ("0db", "10db"):
+        hi, lo = resp[(m, "2500")], resp[(m, "1.5")]
+        shape[m] = (hi["g20k"] - hi["g1k"]) - (lo["g20k"] - lo["g1k"])
+        level[m] = {f: hi[f] - lo[f] for f in ("g1k", "g20k")}
+    return shape, level
+
+
 AC_ORDER = [("0db", "1.5"), ("0db", "430"), ("0db", "2500"), ("0db", "10k"),
             ("10db", "1.5"), ("10db", "430"), ("10db", "2500"), ("10db", "10k")]
 LOOP_ORDER = [("0db", c) for c in ("1f", "100p", "470p", "1n", "2.2n", "4.7n")] + \
@@ -457,7 +486,7 @@ def fig_loop(loop):
     xlim = (1, 1e8)
     axm = sp.Axes(72, 46, W - 130, 230, xlim, (-40, 80),
                   ylabel="|T| [dB]",
-                  title="Guadagno d'anello e margine di fase (iniezione al gate invertente)")
+                  title="Guadagno d'anello e margine di fase, blocco B (iniezione al gate invertente)")
     axp = sp.Axes(72, 330, W - 130, 190, xlim, (0, 180),
                   xlabel="frequenza [Hz]", ylabel="fase di T [gradi]")
     style = {("0db", "1f"): (sp.C_0DB, "0 dB · cavo ~0", None),
@@ -774,13 +803,20 @@ def build_page(resp, loop, z, psrr, hr, cf, rails, devices, inline=False):
 
     worst_pm = min(r["pmarg"] for r in loop.values())
     weak_psrr = min(r["p10k"] for r in psrr.values())
-    d0_syn = abs(resp[("0db", "2500")]["g20k"] - resp[("0db", "1.5")]["g20k"])
+    # NC-007: il KPI di ADR-014 e' lo scarto riferito a 1 kHz, non quello
+    # assoluto a 20 kHz (che e' il partitore sorgente/Zin). NC-003: il margine
+    # di fase e' il peggiore dei 4 casi pubblicati del BLOCCO B, non del
+    # prodotto, e il KPI lo dice.
+    shape, _ = adr014(resp)
+    worst_shape = max(shape.values(), key=abs)
     A('<dl class="synopsis">')
     for lab, val, unit in (
             ("Guadagno 0 dB", it(resp[("0db", "1.5")]["g1k"], 3), "dB @ 1 kHz"),
             ("Guadagno +10 dB", it(resp[("10db", "1.5")]["g1k"], 4), "dB @ 1 kHz"),
-            ("Scarto ADR-014", it(d0_syn, 3), "dB @ 20 kHz"),
-            ("Margine di fase, peggiore", it(worst_pm, 3), "gradi"),
+            ("Scarto ADR-014", it_sci(worst_shape),
+             "dB @ 20 kHz rif. 1 kHz &middot; peggiore delle 2 modalità"),
+            ("Margine di fase, blocco B", it(worst_pm, 3),
+             "gradi &middot; peggiore dei 4 casi pubblicati"),
             ("PSRR, peggiore", it(weak_psrr, 3), "dB @ 10 kHz"),
             ("Z<sub>out</sub> al jack", it(z["0db"]["z1k"], 4), "&Omega; @ 1 kHz")):
         A(f'<div><dt>{lab}</dt><dd>{val}<span class="u">{unit}</span></dd></div>')
@@ -919,21 +955,28 @@ def build_page(resp, loop, z, psrr, hr, cf, rails, devices, inline=False):
     A('<h3>La claim falsificabile di ADR-014</h3>')
     A('<p>L\'attenuatore a gradini ha impedenza d\'uscita che va da ~0 a 2,5 kΩ '
       'e ritorno mentre si ruota la manopola. Se il cascode d\'ingresso fa il '
-      'suo lavoro, <strong>la risposta a 20 kHz non deve muoversi</strong>. '
-      'Se si muove, ADR-014 non è stata implementata, qualunque cosa dica lo '
-      'schema.</p>')
+      'suo lavoro, <strong>la forma della risposta non deve muoversi</strong>: '
+      'la risposta a 20 kHz <em>riferita a quella a 1 kHz</em> deve restare la '
+      'stessa con la sorgente a 1,5 Ω e a 2500 Ω. Se si muove, ADR-014 non è '
+      'stata implementata, qualunque cosa dica lo schema.</p>')
     A(figure("fig_response_adr014.svg", "ADR-014: risposta contro impedenza di sorgente"))
-    d0 = resp[("0db", "2500")]["g20k"] - resp[("0db", "1.5")]["g20k"]
-    d10 = resp[("10db", "2500")]["g20k"] - resp[("10db", "1.5")]["g20k"]
-    A('<div class="tablewrap"><table><tr><th>Modalità</th><th>20 kHz, sorgente 1,5 Ω</th>'
-      '<th>20 kHz, sorgente 2500 Ω</th><th>scarto</th></tr>')
-    A(f'<tr><td>0 dB</td><td class="num">{it(resp[("0db","1.5")]["g20k"], 4)} dB</td>'
-      f'<td class="num">{it(resp[("0db","2500")]["g20k"], 4)} dB</td>'
-      f'<td class="num"><strong>{it(abs(d0), 3)} dB</strong></td></tr>')
-    A(f'<tr><td>+10 dB</td><td class="num">{it(resp[("10db","1.5")]["g20k"], 4)} dB</td>'
-      f'<td class="num">{it(resp[("10db","2500")]["g20k"], 4)} dB</td>'
-      f'<td class="num"><strong>{it(abs(d10), 3)} dB</strong></td></tr>')
+    shape, level = adr014(resp)
+    A('<div class="tablewrap"><table><tr><th>Modalità</th>'
+      '<th>scarto assoluto a 1 kHz</th><th>scarto assoluto a 20 kHz</th>'
+      '<th>scarto a 20 kHz riferito a 1 kHz &mdash; la claim</th></tr>')
+    for m, lab in (("0db", "0 dB"), ("10db", "+10 dB")):
+        A(f'<tr><td>{lab}</td><td class="num">{it(level[m]["g1k"], 5)} dB</td>'
+          f'<td class="num">{it(level[m]["g20k"], 5)} dB</td>'
+          f'<td class="num"><strong>{it_sci(shape[m])} dB</strong></td></tr>')
     A('</table></div>')
+    A('<p>Ogni scarto è «sorgente 2500 Ω meno sorgente 1,5 Ω». Le due colonne '
+      'di scarto <em>assoluto</em> coincidono a 1 kHz e a 20 kHz perché sono '
+      'una perdita di livello a banda larga: il partitore fra la resistenza '
+      'della sorgente e la Zin da 1 MΩ del blocco. Ci sarebbero identiche anche '
+      'senza cascode, quindi <strong>non misurano la claim</strong>. La misura '
+      'della claim è l\'ultima colonna, cioè quanto la sorgente sposta i 20 kHz '
+      '<em>rispetto</em> a 1 kHz. È anche ciò che disegna la figura sopra, '
+      'normalizzata a 1 kHz.</p>')
 
     lf = resp["lf"]
     A('<h3>Il taglio in bassa, col carico da 50 kΩ</h3>')
@@ -944,6 +987,11 @@ def build_page(resp, loop, z, psrr, hr, cf, rails, devices, inline=False):
 
     # --- anello ---
     A('<h2 id="s6"><span class="secno">6</span><span>Guadagno d\'anello e margine di fase</span></h2>')
+    A('<p><strong>Tutti i dati d\'anello di questa sezione sono del blocco B</strong>, '
+      'l\'istanza che pilota l\'uscita principale. Il blocco A, che è le altre due '
+      'istanze del prodotto, non ha dati d\'anello versionati col carico '
+      'canonico (NC-002, lotto L12). Quindi il caso peggiore qui sotto '
+      '<strong>non è il peggiore del prodotto</strong>.</p>')
     A('<p>Iniezione di tensione al gate del JFET invertente. Quel nodo non '
       'assorbe corrente e la rete di controreazione lo pilota da ~470 Ω, quindi '
       'l\'iniezione semplice è esatta e non serve la correzione di Middlebrook. '
@@ -964,7 +1012,7 @@ def build_page(resp, loop, z, psrr, hr, cf, rails, devices, inline=False):
           f'<td class="num"><strong>{it(r["pmarg"], 4)}°</strong></td></tr>')
     A('</table></div>')
     worst = min(loop.values(), key=lambda r: r["pmarg"])
-    A(f'<p>Il caso peggiore fra questi quattro è <strong>{it(worst["pmarg"], 3)}°</strong>. '
+    A(f'<p>Il caso peggiore fra questi quattro casi del blocco B è <strong>{it(worst["pmarg"], 3)}°</strong>. '
       'Il carico capacitivo da 4,7 nF è molto più di quanto un cablaggio da '
       '20 cm possa presentare: è una sonda di margine, non un valore realistico.</p>')
 
@@ -1080,7 +1128,8 @@ def build_page(resp, loop, z, psrr, hr, cf, rails, devices, inline=False):
       f'margine {it(20*math.log10((vpk/math.sqrt(2))/(2.7*math.sqrt(10))), 2)} dB — '
       'il trim di ADR-011 non è opzionale</td></tr>')
     A(f'<tr><td>V1</td><td>margine di fase in tutta la matrice</td>'
-      f'<td class="num">peggiore fra i 4 casi: {it(worst["pmarg"], 3)}°</td>'
+      f'<td class="num">peggiore fra i 4 casi del blocco B: {it(worst["pmarg"], 3)}°'
+      ' &middot; blocco A non coperto (NC-002)</td>'
       '<td class="na">parziale — 4 casi su una matrice molto più grande</td></tr>')
     A('<tr><td>V2</td><td>l\'anello non si apre mai commutando</td>'
       '<td>controfattuale a −13,68 V, disposizione scelta stabile</td>'
@@ -1212,9 +1261,14 @@ def main():
         "controlli_incrociati": "tutti superati",
         "guadagno_0db_1kHz_dB": resp[("0db", "1.5")]["g1k"],
         "guadagno_10db_1kHz_dB": resp[("10db", "1.5")]["g1k"],
-        "adr014_scarto_20kHz_dB_0db":
-            resp[("0db", "2500")]["g20k"] - resp[("0db", "1.5")]["g20k"],
-        "margine_fase_peggiore_gradi":
+        # NC-007: la claim e' lo scarto riferito a 1 kHz; lo scarto assoluto
+        # e' il partitore sorgente/Zin e porta il suo nome.
+        "adr014_scarto_20kHz_rif_1kHz_dB_peggiore":
+            max(adr014(resp)[0].values(), key=abs),
+        "partitore_sorgente_2500ohm_20kHz_dB_0db":
+            adr014(resp)[1]["0db"]["g20k"],
+        # NC-003: peggiore dei 4 casi pubblicati del blocco B, non del prodotto.
+        "margine_fase_peggiore_blocco_B_4_casi_gradi":
             min(r["pmarg"] for r in loop.values()),
         "psrr_peggiore_10kHz_dB": min(r["p10k"] for r in psrr.values()),
         "zout_jack_1kHz_ohm_0db": z["0db"]["z1k"],
