@@ -3,7 +3,7 @@
 **Documento vivo.** Riscritto quando i requisiti cambiano. Ogni modifica
 sostanziale deve avere una ADR corrispondente in `decisions/`.
 
-Ultimo aggiornamento: 2026-09-08 · Stato: **congelati** (Fase 0 chiusa)
+Ultimo aggiornamento: 2026-09-13 (L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
 
 Le motivazioni non stanno qui: stanno nelle ADR referenziate e nel
 report `reports/2026-09-08-analisi-catena.md`.
@@ -38,7 +38,7 @@ report `reports/2026-09-08-analisi-catena.md`.
 |---|---|---|---|
 | E1 | Guadagno nominale | **0 dB** | ADR-001 |
 | E2 | Guadagni alternativi | **+3 dB** e **+10 dB**, commutabili. Valore esatto del gradino intermedio dal dimensionamento (ADR-019) | ADR-004, **ADR-019** |
-| E3 | Impedenza d'ingresso | **≥ 100 kΩ** | Cap di accoppiamento del phono — vedi report |
+| E3 | Impedenza d'ingresso | **≥ 100 kΩ**, al connettore d'ingresso, **in ogni posizione del trim** | Cap di accoppiamento del phono — vedi report e **nota sotto** |
 | E3b | Attenuazione tipica all'ascolto | ~29–31 dB con il nuovo preamp | Guadagno finale 20,7×–25,3× |
 | E4 | Impedenza d'uscita | **< 100 Ω in banda passante** (misurata escludendo la reattanza del condensatore d'accoppiamento), costante con la posizione del volume | ADR-002 |
 | E5 | Rumore in uscita | **< 10 µV RMS** (20 Hz–20 kHz, non pesato) | vedi nota sotto |
@@ -53,6 +53,59 @@ rumore di fondo di una stanza silenziosa (25-30 dB SPL). A 2 µV si
 scende a −0,5 dB SPL a 1 m. Il margine è ampio ma **non illimitato**: le
 trombe da 96 dB rendono il rumore più udibile che su diffusori normali,
 quindi il target va rispettato, non trattato come formalità.
+
+**Nota su E3 — vale anche per il trim** (2026-09-13, L15; chiude la metà
+«scritta» di **NC-005**).
+
+**Il vincolo.** L'impedenza d'ingresso misurata **al connettore
+d'ingresso**, col blocco A collegato (la sua `R_IN` compresa), deve restare
+**≥ 100 kΩ in ciascuna delle tre posizioni del trim** (0 / −6 / −12 dB, F2),
+comunque il trim sia commutato — ponticello come dice F2, o relè come
+presuppone F8.
+
+**Come si decide.** Analisi AC al connettore, una per posizione del trim:
+passa se il **minimo di |Zin| su 20 Hz–20 kHz** è ≥ 100 kΩ in tutte e tre.
+La misura non esiste ancora: il trim non è in `circuits/preamp/`, e la
+misura è del lotto che ce lo mette (L16, NC-005 e NC-009). Oggi `R_IN = 1 MΩ`
+in `gain_block.py` fissa la Zin del **solo** blocco A.
+
+**Perché è E3 e non un requisito nuovo.** E3 nasce dal condensatore
+d'uscita del phono a valvole (`reports/2026-09-08-analisi-catena.md`), e quel
+condensatore vede l'impedenza **al connettore**, qualunque cosa ci sia
+dietro: un trim che la porta a 13 kΩ viola E3 già com'è scritto. Il criterio
+usato per dire che questa nota **non è una modifica sostanziale** — e quindi
+non vuole una ADR — è verificabile: **non cambia l'insieme dei progetti
+conformi**. Nessun progetto che E3 accettava viene rifiutato, e nessuno che
+rifiutava viene accettato; la nota dice solo dove E3 si misura.
+
+**Il controesempio che la nota esiste per fermare** (NC-005): un partitore
+10 kΩ / 3,3 kΩ per i −12 dB, con `R_IN` in parallelo al ramo verso massa, dà
+**Zin = 13,3 kΩ** (e −12,1 dB) — E3 violata di un ordine di grandezza.
+
+**I due fatti che il dimensionamento dovrà conciliare.** Questa nota non
+dimensiona il trim; registra ciò contro cui andrà dimensionato.
+
+1. **L'attenuazione è portante**, non una comodità: con **ADR-015** il trim è
+   ciò che separa il +10 dB col K11 a fondo scala dal clipping (K11 a −6 dB →
+   4,27 V RMS richiesti in uscita invece di 8,54). Vedi **NC-009**, che porta
+   anche le tre cifre di margine ancora da riconciliare.
+2. **Alzare la Zin alza la resistenza del partitore vista dal blocco A.** Per
+   un partitore di attenuazione k (tensione) e resistenza totale Z, la
+   resistenza di Thévenin verso il blocco A vale **Z·k·(1−k)**: con Z al
+   minimo di 100 kΩ, sorgente e `R_IN` trascurate, fa **≥ 25,0 kΩ a −6 dB** e
+   **≥ 18,8 kΩ a −12 dB**. Quella resistenza porta **rumore Johnson** all'ingresso
+   di una catena a 0 / +3 / +10 dB, da confrontare con **E5** — e l'affermazione
+   di ADR-011 «non aggiunge rumore significativo» non ha ancora un numero. È
+   anche la **«sorgente a monte»** della matrice **V1** («le tre posizioni del
+   trim»), quindi entra nel margine di fase del blocco A.
+
+**Dove questa nota non sta, e perché.** Non in ADR-011 come aggiunta in coda:
+le ADR non si riscrivono (`decisions/README.md`, regola 2), e dopo il
+2026-09-08 il progetto ha aggiunto condizioni ad ADR-011 con una ADR nuova
+(ADR-019), non con un addendum. Non in una ADR nuova: non c'è una decisione da
+registrare, c'è una conseguenza di E3. Quando il trim entrerà in
+`circuits/preamp/`, i suoi valori porteranno un commento che rimanda qui.
+Ragionamento completo: `reports/2026-09-13-L15-vincolo-e3.md`.
 
 ## Requisiti di topologia
 
