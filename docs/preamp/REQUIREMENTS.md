@@ -291,10 +291,25 @@ compreso**, cioè la sonda da 4,7 nF che i banchi usano come margine di prova.
 Chiude **NC-012**, che chiedeva questa soglia e faceva notare che una soglia
 senza il carico a cui si riferisce non sarebbe stata un requisito migliore.
 
-**Il progetto oggi NON la soddisfa in due punti misurati**: 56,46° sul blocco
-B a 0 dB con 4,7 nF (rimisurato in L22) e 41,98° sul blocco A col carico
-canonico (evidenza di NC-002). Sono NC-021 e NC-002, e vanno risolte prima
-dell'avanzamento di fase.
+**Dove si applica la sonda** (**ADR-024**, decisione dell'utente del
+2026-09-14):
+- la sonda è il **cavo d'interconnessione**, e sta **al jack**, dopo i 47 Ω e
+  il 4,7 µF, sul blocco B e sui buffer delle fisse;
+- il verdetto è il **minimo sulla spazzata fino a 4,7 nF**, non il valore a
+  4,7 nF: al jack il minimo cade fra 2,2 e 3,3 nF;
+- il **blocco A** si giudica col suo cablaggio verso l'attenuatore, con una
+  capacità realistica presa **≤ 1 nF**;
+- la sonda sul nodo d'uscita resta nei deck come informazione.
+
+**Stato, da L12** (C_f a 330 pF, **ADR-025**; dati in
+`data/2026-09-14/L12/dopo/`): **conforme su ogni cella misurata.**
+- Blocco B a 0 dB: **61,21°** (attenuatore a metà corsa, 3,3 nF); a +10 dB
+  102,96°.
+- Blocco A: **63,36°** (sorgente phono 430 Ω, 1 nF di cablaggio).
+- Buffer delle fisse: **61,63°** (Stax, 2,7 nF).
+
+**Restano senza misura** due righe della matrice, che non esistono ancora nel
+circuito: il blocco B a **+3 dB** (L27) e le **tre posizioni del trim** (L16).
 
 Nessuno dei due è un circuito instabile: 60° è un **margine di progetto** —
 copre la dispersione dei componenti, la capacità di cavi che nessuno ha

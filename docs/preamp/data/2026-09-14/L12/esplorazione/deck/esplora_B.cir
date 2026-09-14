@@ -1,0 +1,61 @@
+esplora_B.cir - L12 scratch: block B loop margin, cable at the JACK, remedy candidates
+* Scratch, not versioned. Derived from spice/preamp/tb/tb_loop.cir.
+* Sweeps: C124 (Miller) x C137 (C_f) x RISO x gain mode x attenuator source
+* impedance x cable capacitance at the jack (1 fF .. 4.7 nF, minimum is what counts).
+* Node names: VSRCN, OUTA, JACK, NBRK - none used by gain_block_flat.inc (#24).
+
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN VSRCN 0 DC 0
+RSRCB VSRCN IN 1m
+
+CSTRAY RG 0 15p
+RRG    RG 0 1G
+
+RBRK FB NBRK 100
+VINJ NBRK G2 DC 0 AC 1
+
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+CCABLE JACK 0 1f
+
+.control
+alter r109 = 1G
+set units = degrees
+echo "c124,c137,riso,mode,rsrc,ccable,fcross_hz,pm_deg,tdb_10hz" > esplora_B_tab.csv
+foreach cm 470p 560p 680p 820p 1n
+  alter c124 = $cm
+  foreach cf 22p 47p
+    alter c137 = $cf
+    foreach ri 47 68
+      alter riso = $ri
+      foreach mode 1G 0.1
+        alter rrg = $mode
+        foreach rs 1m 2.5k
+          alter rsrcb = $rs
+          foreach cab 1f 100p 470p 1n 1.5n 2.2n 3.3n 4.7n
+            alter ccable = $cab
+            ac dec 100 1 100meg
+            let T = v(fb)/v(g2)
+            let Tdb = db(T)
+            let Tph = ph(T)
+            meas ac fcross when Tdb=0
+            meas ac pmarg find Tph when Tdb=0
+            meas ac tdc find Tdb at=10
+            echo "$cm,$cf,$ri,$mode,$rs,$cab,$&fcross,$&pmarg,$&tdc" >> esplora_B_tab.csv
+            destroy all
+          end
+        end
+      end
+    end
+  end
+end
+.endc
+
+.end

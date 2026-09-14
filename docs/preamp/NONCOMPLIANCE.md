@@ -35,9 +35,11 @@ NC-001**. Ha trovato il gradino che il rilascio del mute porta sul jack e
 **apre NC-028**. **L17** (2026-09-14) ha registrato **ADR-023** — la classe A si
 giudica sui percorsi ascoltabili — e ha dato a ogni uscita fissa il proprio
 buffer: **chiude NC-010**. Misurando il calore a riposo dei quattro blocchi
-in più ha **aperto NC-029**. **19 voci aperte, 4 bloccanti.**
-L'accesso a G1 non è concesso finché NC-002, NC-004, NC-017 e NC-021
-restano aperte.
+in più ha **aperto NC-029**. **L12** (2026-09-14) ha registrato **ADR-024** —
+la sonda capacitiva di V1 è il cavo al jack, e il blocco A si giudica col suo
+cablaggio — e **ADR-025**, il C_f da 22 a 330 pF: **chiude NC-002 e NC-021**.
+**17 voci aperte, 2 bloccanti.**
+L'accesso a G1 non è concesso finché NC-004 e NC-017 restano aperte.
 
 ---
 
@@ -478,7 +480,7 @@ Report: `reports/2026-09-14-L17-buffer-uscite-fisse.md`.
 | Requisito | **V1** (soglia **60°**, ADR-019) · ADR-008 addendum (47 Ω) · ADR-007 addendum (4,7 µF) |
 | Severità | **bloccante** — alzata il 2026-09-10 da **maggiore** |
 | Aperta da | `reports/2026-09-09-gate-G0.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-14 da L12** — ADR-024 e ADR-025. Vedi «Chiusura» in fondo alla voce e «Voci chiuse» |
 
 **Evidenza.** In `docs/preamp/data/2026-09-09/` i file `tb_loop_blockA_*`
 sono **zero**: i quattro file d'anello versionati sono tutti blocco B. Il
@@ -546,6 +548,31 @@ THAT320.
 - per il buffer la differenza fra nodo e jack vale 21°;
 - per il blocco A, dopo L17, sul nodo resta solo il cablaggio verso
   l'attenuatore.
+
+**Chiusura (L12, 2026-09-14).**
+
+**La risposta dell'utente** (**ADR-024**):
+- la sonda è il **cavo d'interconnessione**, e sta al jack;
+- conta il **minimo** della spazzata fino a 4,7 nF;
+- il blocco A si giudica col suo **cablaggio verso l'attenuatore**, con una
+  capacità realistica presa ≤ 1 nF.
+
+**Con quel criterio il blocco A passava già**: coi valori di L17, 63,32°
+(sorgente phono 430 Ω, 1 nF). I buffer, al jack, 61,51°.
+
+**Il rimedio del progetto** è quello di NC-021 (**ADR-025**, C_f da 22 a
+330 pF), e vale anche qui. Dati in `data/2026-09-14/L12/dopo/`:
+- blocco A **63,36°** (430 Ω, 1 nF), 62,69° agli spigoli di tolleranza;
+- buffer delle fisse **61,63°** (Stax, 2,7 nF), 61,16° agli spigoli;
+- con 4,7 nF sul nodo il blocco A darebbe 40,91°: il numero resta nel deck come
+  informazione, non come verdetto.
+
+**I «cosa serve» della voce, fatti**: `tb_loop_blockA.cir` ai valori veri
+(L17), con le sorgenti di V1 (L12); la capacità spazzata sul nodo e sui jack;
+CSV versionati. Il dossier legge ancora `data/2026-09-09`: resta da
+rigenerare.
+
+Report: `reports/2026-09-14-L12-margine-di-fase.md`.
 
 ### NC-009 — Il margine di headroom poggia su un trim che non esiste nel progetto, e la sua cifra circola in tre versioni
 
@@ -1386,7 +1413,7 @@ costruttore pubblica è ciò che si congela.
 | Requisito | **V1**, soglia 60° (**ADR-019**) |
 | Severità | **bloccante** |
 | Aperta da | `reports/2026-09-10-L26-requisiti-utente.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-14 da L12** — ADR-024 e ADR-025. Vedi «Chiusura» in fondo alla voce e «Voci chiuse» |
 
 **Evidenza.** Margine di fase del blocco B rimisurato in L22 con lo specchio
 LS352:
@@ -1415,6 +1442,34 @@ quindi non si può dedurne che la parte reale passi.
 **Cosa serve per chiuderla.** La stessa scelta di NC-002, e conviene farla una
 volta sola per entrambi i blocchi: più compensazione, meno guadagno d'anello,
 o una rete d'isolamento d'uscita diversa. Lotto **L12**.
+
+**Chiusura (L12, 2026-09-14).**
+
+**Il caso peggiore era peggiore di quanto dicesse la voce.** Col criterio di
+**ADR-024** — cavo al jack, ogni cavo fino a 4,7 nF, le sorgenti di V1 — il
+blocco B a 0 dB stava a **54,97°**, con l'attenuatore a metà corsa (2,5 kΩ) e
+2,7 nF. I 56,46° erano il valore a 4,7 nF con sorgente nulla, non il minimo.
+
+**Il rimedio (ADR-025): C137 da 22 a 330 pF, C0G**, uguale in tutte le
+istanze. Scelto fra le strade della voce, coi numeri
+(`data/2026-09-14/L12/esplorazione/`):
+
+| Strada | Blocco B 0 dB, minimo | Costo |
+|---|---|---|
+| **C_f 330 pF** (scelta) | **61,21°** | banda a +10 dB da 333 a 183 kHz |
+| Miller 1 nF | 61,74° | slew a 20 kHz fondo scala; −6,5 dB di PSRR e guadagno d'anello a 20 kHz |
+| Miller 680 pF + 68 Ω | 61,25° | ancora in slew; E4 a 82 Ω a 20 Hz |
+| C_f 330 pF + 56 Ω | 62,27° | tre reti d'uscita e i loro deck; E4 a 70 Ω |
+
+**Dopo**, `data/2026-09-14/L12/dopo/`:
+- 0 dB **61,21°**, 60,73° agli spigoli (C ±5 %, R ±1 %); +10 dB 102,96°;
+- punto di lavoro identico; PSRR, E5, slew, V2, V3, classe A e P7 invariati.
+
+**Cosa resta vero**: NC-020 e NC-025 dicono che questi margini sono
+pessimistici di quantità ignota, e la guardia di 0,7° agli spigoli si rimisura
+in Fase 4. La modalità +3 dB non esiste ancora (L27).
+
+Report: `reports/2026-09-14-L12-margine-di-fase.md`.
 
 ### NC-022 — La topologia ha due livelli di guadagno, il requisito ne chiede tre
 
@@ -1859,6 +1914,25 @@ l'apparecchio intero.
 Lotto **L30**.
 
 ## Voci chiuse
+
+**NC-021 — Il blocco B a 0 dB sta sotto i 60° nel caso peggiore capacitivo**
+(bloccante). **CHIUSA il 2026-09-14 da L12.**
+- **ADR-024**: la sonda è il cavo al jack, e conta il minimo fino a 4,7 nF. Il
+  caso peggiore vero era 54,97°, con l'attenuatore a metà corsa.
+- **ADR-025**: C_f da 22 a 330 pF in tutte le istanze. Blocco B a 0 dB
+  **61,21°**.
+- **Non regressione** rimisurata: PSRR, E5, slew, V2, V3, classe A e P7
+  invariati.
+
+**NC-002 — Il blocco A non ha evidenza di stabilità valida** (bloccante).
+**CHIUSA il 2026-09-14 da L12.**
+- **ADR-024**: il blocco A si giudica col suo cablaggio, capacità realistica
+  ≤ 1 nF.
+- Deck ai valori veri e con le sorgenti di V1: blocco A **63,36°**, buffer
+  delle fisse **61,63°**.
+
+Il testo completo delle due voci resta sopra, con la loro «Chiusura». Report:
+`reports/2026-09-14-L12-margine-di-fase.md`.
 
 **NC-010 — Le uscite fisse non sono isolate: un apparecchio spento a valle
 porta il Blocco A in Classe B** (bloccante). **CHIUSA il 2026-09-14 da L17.**

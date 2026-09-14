@@ -1,0 +1,65 @@
+esplora_A.cir - L12 scratch: block A loop margin, harness capacitance on the node, remedy candidates
+* Scratch, not versioned. Derived from spice/preamp/tb/tb_loop_blockA.cir (load 1 only).
+* Sweeps: C124 x C137 x input source (1 mohm, 430 ohm phono) x harness C up to 4.7 nF
+* (L12 decision: realistic harness capacitance, taken as <= 1 nF; 2.2n/4.7n kept for info).
+* Node names: VSRCN, BIN1/2, OUTF1/2, FIX1/2, J1/2, NBRK - none used by the flat block (#24).
+
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
+.include @REPO@/spice/preamp/gain_block.subckt
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN VSRCN 0 DC 0
+RSRCA VSRCN IN 1m
+
+RRG RG 0 1G
+
+RBRK FB NBRK 100
+VINJ NBRK G2 DC 0 AC 1
+
+CWIRE  OUT 0 1f
+RATT   OUT 0 10k
+
+XF1 OUT OUTF1 FBF1 RGF1 VPLUS VMINUS GAINBLOCK
+RRGF1 RGF1 0 1G
+XF2 OUT OUTF2 FBF2 RGF2 VPLUS VMINUS GAINBLOCK
+RRGF2 RGF2 0 1G
+RSEP1 OUTF1 FIX1 47
+CFIX1 FIX1 J1 4.7u
+RBL1  J1 0 470k
+RJ1   J1 0 10k
+RSEP2 OUTF2 FIX2 47
+CFIX2 FIX2 J2 4.7u
+RBL2  J2 0 470k
+RJ2   J2 0 50k
+
+.control
+alter r109 = 1G
+set units = degrees
+echo "c124,c137,rsrc,cwire,fcross_hz,pm_deg,tdb_10hz" > esplora_A_tab.csv
+foreach cm 470p 560p 680p 820p 1n
+  alter c124 = $cm
+  foreach cf 22p 47p
+    alter c137 = $cf
+    foreach rs 1m 430
+      alter rsrca = $rs
+      foreach cw 1f 100p 220p 470p 1n 2.2n 4.7n
+        alter cwire = $cw
+        ac dec 100 1 100meg
+        let T = v(fb)/v(g2)
+        let Tdb = db(T)
+        let Tph = ph(T)
+        meas ac fcross when Tdb=0
+        meas ac pmarg find Tph when Tdb=0
+        meas ac tdc find Tdb at=10
+        echo "$cm,$cf,$rs,$cw,$&fcross,$&pmarg,$&tdc" >> esplora_A_tab.csv
+        destroy all
+      end
+    end
+  end
+end
+.endc
+
+.end

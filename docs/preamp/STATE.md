@@ -11,16 +11,55 @@ realtà, il progetto non è ripartibile.
 | | |
 |---|---|
 | Ultimo aggiornamento | **2026-09-14** |
-| Ultimo lotto chiuso | **L17** — un buffer per ogni uscita fissa: ADR-023 (classe A sui percorsi ascoltabili), NC-010 chiusa, NC-029 aperta |
-| **Prossimo lotto** | **L12** — ogni istanza del blocco sopra i 60°, NC-002 e NC-021 bloccanti (mandato in «Prossimo passo concreto») |
-| Non conformità | **19 aperte, 4 bloccanti** |
-| Le bloccanti | NC-002 e NC-021 (L12) · NC-004 · NC-017 (Fase 4) |
+| Ultimo lotto chiuso | **L12** — ogni istanza del blocco sopra i 60°: ADR-024 (la sonda è il cavo al jack), ADR-025 (C_f 330 pF), NC-002 e NC-021 chiuse |
+| **Prossimo lotto** | **L27** — il terzo livello di guadagno, e V1 a +3 dB col C_f nuovo (mandato in «Prossimo passo concreto») |
+| Non conformità | **17 aperte, 2 bloccanti** |
+| Le bloccanti | NC-004 · NC-017 (Fase 4) |
 | Suite | `run_tests.sh` **8 passed / 0 failed** |
 
 ## Diario degli ultimi lotti
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L12 — ogni istanza del blocco sopra i 60° (2026-09-14)
+
+**Chiude NC-002 e NC-021** (bloccanti). Report:
+`reports/2026-09-14-L12-margine-di-fase.md`. Dati: `data/2026-09-14/L12/`.
+
+- **La domanda all'utente, prima di progettare**: dove si applica la sonda da
+  4,7 nF. Presentati i numeri di nodo e jack. L'utente ha chiesto cosa fosse
+  («per me é il cavo di collegamento tra il pre e il finale oppure tra il pre e
+  gli ampli cuffia») e ha deciso: «ogni cavo fino a 4,7 nF, blocco A con
+  capacità realistica». Diventa **ADR-024**.
+- **Il caso peggiore vero era peggiore.** Al jack il margine non è monotono, e
+  con l'attenuatore a metà corsa — cella di V1 mai misurata — il blocco B a
+  0 dB stava a **54,97°** (2,7 nF), non 56,46°. Il blocco A col cablaggio
+  ≤ 1 nF e i buffer al jack passavano già.
+- **Il rimedio, scelto coi numeri fra quattro strade** (**ADR-025**): **C137
+  da 22 a 330 pF C0G**, in tutte le otto istanze.
+  - Blocco B **61,21°**, blocco A **63,36°**, buffer **61,63°**.
+  - Agli spigoli di tolleranza: 60,73 / 62,69 / 61,16°.
+- **Scartati con misura:**
+  - più Miller: va in slew a 20 kHz fondo scala e toglie 6,5 dB di PSRR;
+  - Miller più 68 Ω: ancora in slew, E4 a 82 Ω;
+  - C_f più 56 Ω: più guardia, ma tre reti d'uscita e i loro deck.
+- **Il costo**: banda a +10 dB da 333 a 183 kHz, −0,053 dB a 20 kHz. Nessun
+  requisito lo vieta.
+- **Non regressione:**
+  - punto di lavoro 79 valori su 79 identici;
+  - netlist: 357 componenti, 8 valori cambiati, connettività identica;
+  - `tb_mute_corto`: 0 righe con lo stato di classe A cambiato, P7 invariata;
+  - E4, E5, PSRR, V2 e V3 invariati.
+- **I deck:**
+  - `tb_loop.cir`: sonda al jack e sul nodo, sorgenti dell'attenuatore. Fatto
+    fallire;
+  - `tb_loop_blockA.cir`: sorgente phono;
+  - `tb_loop_bufferfissa.cir`: griglia fitta. Il minimo del buffer stava fra i
+    punti: 61,85° sulla griglia rada contro 61,63°.
+- **Una trappola nuova**: `meas tran` su una `tran` con `tstart` fallisce in
+  silenzio → limitazione **#26**.
+- **17 voci aperte, 2 bloccanti** (NC-004, NC-017). Prossimo: **L27**.
 
 ### L17 — un buffer per ogni uscita fissa (2026-09-14)
 
@@ -435,7 +474,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | # | Lotto | Dim. | Chiude | Stato |
 |---|---|---|---|---|
 | L11 | **Mute e corto sulle uscite: misurare e rimediare.** Prima le ADR delle decisioni dell'utente del 2026-09-13. **ADR-021**: mute tenibile **a tempo indefinito**; ciascuna uscita regge un corto al connettore a tempo indefinito, requisito scritto **come risultato** (limiti termici e SOA, a regime e sul transitorio d'intervento, tecnica libera); classe B ammessa. **ADR-022**: operazionali e microcontrollore fuori dal percorso del segnale ma ammessi nel circuito, con tre condizioni. Poi la baseline sulla topologia di oggi; se non regge, la tecnica si sceglie coi numeri. Divisibile in L11a/L11b | M | **NC-001** (bloccante) | **fatto** — conforme senza protezione; apre NC-028 |
-| L12 | **Portare blocco A e blocco B sopra i 60°.** Cambia natura con **ADR-019**: non più solo «misura coi valori veri», ma **rimedio** — il blocco A sta a 41,98° e il blocco B a 0 dB con cavo a 56,46°, contro una soglia di 60°. Le strade (più compensazione, meno guadagno d'anello, rete d'isolamento diversa) costano tutte a un altro requisito e vanno confrontate coi numeri | M | **NC-002**, **NC-021** (bloccanti) | da fare |
+| L12 | **Portare blocco A e blocco B sopra i 60°.** Cambia natura con **ADR-019**: non più solo «misura coi valori veri», ma **rimedio** — il blocco A sta a 41,98° e il blocco B a 0 dB con cavo a 56,46°, contro una soglia di 60°. Le strade (più compensazione, meno guadagno d'anello, rete d'isolamento diversa) costano tutte a un altro requisito e vanno confrontate coi numeri | M | **NC-002**, **NC-021** (bloccanti) | **fatto** — ADR-024 (la sonda è il cavo al jack), ADR-025 (C_f 330 pF) |
 | L13 | **E4 sulle tre uscite e a manopola che gira.** Estendere `tb_zout_psrr_noise.cir` alle due uscite fisse e a tre posizioni dell'attenuatore | S | NC-008 | da fare |
 | L14 | **Le tre correzioni di testo.** KPI del margine di fase qualificato, i due commenti di cascode allineati, lo scarto ADR-014 riferito a 1 kHz | XS | NC-003, NC-006, NC-007 | **fatto** |
 | L15 | **Il vincolo su E3 scritto dove verrà letto** — in `REQUIREMENTS.md`, «Nota su E3», non in ADR-011 | XS | NC-005 (metà: il vincolo; la misura è L16) | **fatto** |
@@ -2494,26 +2533,27 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L12 — portare ogni istanza del blocco sopra i 60°.** Chiude **NC-002** e
-**NC-021** (bloccanti). Lotto **M**. Il mandato completo è in
-`NEXT-SESSION.md`.
+**L27 — il terzo livello di guadagno entra nel progetto.** Chiude **NC-022**.
+Lotto **M**. Il mandato completo è in `NEXT-SESSION.md`.
 
-**Dove parte, dai dati di L17** (`data/2026-09-14/L17/`) e di L22:
+**Perché adesso.** È il solo lotto che può rimettere in discussione il margine
+di fase appena ottenuto: il secondo ramo di R_g cambia la rete di
+controreazione, e la cella **B a +3 dB** è l'unica riga di stabilità di V1
+ancora senza misura, oltre al trim (L16). ADR-025 lo mette fra i «da riaprire
+se».
 
-| Istanza, sonda da 4,7 nF | Sul nodo d'uscita | Al jack |
-|---|---|---|
-| Blocco A, carico nuovo (attenuatore + due buffer) | **40,96°** | — |
-| Buffer delle fisse (4 istanze) | **40,98°** | **62,27°** (minimo 61,74°) |
-| Blocco B a 0 dB (NC-021) | — | **56,46°** |
+**Dove parte**, dai dati di `data/2026-09-14/L12/dopo/`, col C_f a 330 pF e il
+criterio di ADR-024:
 
-**La prima domanda è dell'utente.** ADR-019 fissa la sonda «ovunque» ma non
-dice in che punto, e per il buffer la risposta vale 21°. Poi il rimedio, coi
-numeri di ogni strada, e con un vincolo in più rispetto a quando L12 è stato
-scritto: ogni valore di `gain_block.py` cambia **otto** istanze. Quindi va
-rimisurato anche ciò che L17 ha verificato:
-- la classe A sui percorsi ascoltabili;
-- P7;
-- E4 ed E5 sulle fisse.
+| Istanza | Minimo |
+|---|---|
+| Blocco B 0 dB | **61,21°** (attenuatore a metà corsa, 3,3 nF) |
+| Blocco B +10 dB | 102,96° |
+| Blocco A | 63,36° (sorgente phono, 1 nF di cablaggio) |
+| Buffer delle fisse | 61,63° (Stax, 2,7 nF) |
+
+A +3 dB il guadagno d'anello sta fra le due modalità, ma il margine va
+misurato, non interpolato: il C_f da 330 pF lavora contro R_f ∥ R_g, che cambia.
 
 ### Quello che il repo ti consegna già
 
@@ -2528,7 +2568,7 @@ rimisurato anche ciò che L17 ha verificato:
   report: Tj per RθJA, percorsi ascoltabili per caso, confronto fra
   topologie.
 - **Due trappole nuove nei deck**, in `docs/limitations.md` #24 e #25.
-- **I conteggi**: 19 voci aperte, 4 bloccanti.
+- **I conteggi**: 17 voci aperte, 2 bloccanti.
 
 **Poi**, nell'ordine:
 - **L29** (NC-028) aspetta una soglia dell'utente su V2, e si può chiedere in

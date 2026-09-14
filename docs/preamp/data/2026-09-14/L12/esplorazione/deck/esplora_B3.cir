@@ -1,0 +1,62 @@
+esplora_B3.cir - L12 scratch: block B, larger C_f (C137) with low Miller, cable at the JACK
+* Scratch, not versioned. C124 470p/560p x C137 100p/150p/220p/330p x RISO 47/56/68,
+* both gain modes, attenuator source 1 mohm / 1 k / 2.5 k, load 100 k,
+* cable 1 f, 470 p, 1 n .. 4.7 n. Also |T| at 20 kHz.
+* Question: can C_f alone reach 60 deg without moving E4 (RISO 47) or slew (C124)?
+* Node names: VSRCN, OUTA, JACK, NBRK (#24).
+
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN VSRCN 0 DC 0
+RSRCB VSRCN IN 1m
+
+CSTRAY RG 0 15p
+RRG    RG 0 1G
+
+RBRK FB NBRK 100
+VINJ NBRK G2 DC 0 AC 1
+
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+CCABLE JACK 0 1f
+
+.control
+alter r109 = 1G
+set units = degrees
+echo "c124,c137,riso,mode,rsrc,ccable,fcross_hz,pm_deg,tdb_20k" > esplora_B3_tab.csv
+foreach cm 470p 560p
+  alter c124 = $cm
+  foreach cf 100p 150p 220p 330p
+    alter c137 = $cf
+    foreach ri 47 56 68
+      alter riso = $ri
+      foreach mode 1G 0.1
+        alter rrg = $mode
+        foreach rs 1m 1k 2.5k
+          alter rsrcb = $rs
+          foreach cab 1f 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+            alter ccable = $cab
+            ac dec 100 1 100meg
+            let T = v(fb)/v(g2)
+            let Tdb = db(T)
+            let Tph = ph(T)
+            meas ac fcross when Tdb=0
+            meas ac pmarg find Tph when Tdb=0
+            meas ac t20k find Tdb at=20000
+            echo "$cm,$cf,$ri,$mode,$rs,$cab,$&fcross,$&pmarg,$&t20k" >> esplora_B3_tab.csv
+            destroy all
+          end
+        end
+      end
+    end
+  end
+end
+.endc
+
+.end

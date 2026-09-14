@@ -16,18 +16,22 @@ tb_loop_blockA.cir - loop gain of BLOCK A, loaded as preamp_audio.py wires it si
 *   load 1  NUOVO   - ADR-023, as above.
 *   load 2  CANONICO ADR-008 - the load NC-002 measured by hand: 47 ohm +
 *           4.7 uF + 470 k on each fixed output, straight on OUT, 50 k at each
-*           jack. It is here as the CONTROL: it must reproduce NC-002's
-*           41.98 deg at 4.7 nF. If it does not, this deck measures something
-*           else and its load-1 numbers mean nothing.
+*           jack. It is here as the CONTROL: at the L17 values (C137 22 p) it
+*           reproduced NC-002 within 1 deg; since L12 it tracks load 1.
 *
-* CWIRE: 1 fF to 4.7 nF straight on the output node. 4.7 nF is V1's margin
-* probe (ADR-019: 60 deg everywhere, capacitive worst case included), far more
-* than a 20 cm harness can present.
+* CWIRE: 1 fF to 4.7 nF straight on the output node. Block A drives no cable to
+* another apparatus: its "cable" is the harness to the front-panel attenuator.
+* ADR-024 (L12) judges block A against a REALISTIC harness capacitance, taken as
+* <= 1 nF (a few tens of pF expected for <= 50 cm): the verdict is the minimum
+* over CWIRE <= 1 nF. The 2.2 nF and 4.7 nF rows stay as information.
+*
+* SOURCE (L12). Block A's source is the input connector: K11 (~1.5 ohm) or the
+* phono cathode follower (430 ohm, V1). RSRCA sweeps 1 mohm and 430 ohm; L12
+* found 430 ohm the worse. Node VSRCN, not SRC (docs/limitations.md #24).
 *
 * LOOP BREAK: as in tb_loop.cir. R109 (the FB-side gate stopper) is opened
 * and replaced by RBRK + VINJ in series; T = v(fb)/v(g2).
 *
-* NOT A REMEDY. NC-002 is L12's. This deck only measures where L12 starts.
 * Gain relay not fitted (ADR-006): unity gain, RG left on 1 G.
 * PROVISIONAL - placeholder device models, see tb_loop.cir header.
 
@@ -44,7 +48,8 @@ tb_loop_blockA.cir - loop gain of BLOCK A, loaded as preamp_audio.py wires it si
 
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15
-VIN IN 0 DC 0
+VIN VSRCN 0 DC 0
+RSRCA VSRCN IN 1m
 
 * R_g / relay not fitted on block A
 RRG RG 0 1G
@@ -91,22 +96,23 @@ RVJ2   VJ2 0 50k
 * invece TERMINA il nome: la forma che funziona e' `$cw$t` con t = ".txt".
 * Misurato con una sonda in L5, non dedotto.
 *
-* Solo il carico 1 scrive le curve (tb_loop_blockA_<cw>.txt); il controllo
-* stampa margine e attraversamento nel log e in tb_loop_blockA.csv.
+* Solo il carico 1 scrive le curve:
+*   sorgente 1 mohm: tb_loop_blockA_<cw>.txt        - i nomi di prima
+*   sorgente 430 ohm: tb_loop_blockA_src430_<cw>.txt
+* il controllo stampa margine e attraversamento nel log e in tb_loop_blockA.csv
+* (nessun wrdata produce quel nome, docs/limitations.md #25).
 *
 * COLONNE delle curve (~801 righe, 1 Hz - 100 MHz, 100 punti/decade).
 *   col0 = frequenza [Hz]   col1 = Tdb = |T| in dB
 *   col2 = frequenza [Hz]   col3 = Tph = fase di T in GRADI
 * Margine di fase = |Tph| dove Tdb attraversa lo zero (vedi tb_loop.cir).
 *
-* DOVE: dentro il ciclo, PRIMA del `destroy all` - senza quel destroy le
-* `ac` successive creerebbero ac2, ac3, ... e un `wrdata` fuori dal ciclo
-* leggerebbe il plot sbagliato in silenzio (docs/limitations.md #10).
+* DOVE: dentro il ciclo, PRIMA del `destroy all` (docs/limitations.md #10).
 * ---------------------------------------------------------------------
 set t = .txt
 alter r109 = 1G
 set units = degrees
-echo "carico,cwire,fcross_hz,pm_deg,tdb_10hz" > tb_loop_blockA.csv
+echo "carico,rsrc,cwire,fcross_hz,pm_deg,tdb_10hz" > tb_loop_blockA.csv
 foreach ld 1 2
   if $ld = 1
     alter rseln1 = 1m
@@ -119,22 +125,29 @@ foreach ld 1 2
     alter rselv1 = 1m
     alter rselv2 = 1m
   end
-  foreach cw 1f 47p 100p 220p 470p 1n 2.2n 4.7n
-    alter cwire = $cw
-    ac dec 100 1 100meg
-    let T = v(fb)/v(g2)
-    let Tdb = db(T)
-    let Tph = ph(T)
-    meas ac fcross when Tdb=0
-    meas ac pmarg find Tph when Tdb=0
-    meas ac tdc find Tdb at=10
-    echo "BLOCK A  carico=$ld  Cwire=$cw"
-    print fcross pmarg tdc
-    echo "$ld,$cw,$&fcross,$&pmarg,$&tdc" >> tb_loop_blockA.csv
-    if $ld = 1
-      wrdata tb_loop_blockA_$cw$t Tdb Tph
+  foreach rs 1m 430
+    alter rsrca = $rs
+    foreach cw 1f 47p 100p 220p 470p 1n 2.2n 4.7n
+      alter cwire = $cw
+      ac dec 100 1 100meg
+      let T = v(fb)/v(g2)
+      let Tdb = db(T)
+      let Tph = ph(T)
+      meas ac fcross when Tdb=0
+      meas ac pmarg find Tph when Tdb=0
+      meas ac tdc find Tdb at=10
+      echo "BLOCK A  carico=$ld  rsrc=$rs  Cwire=$cw"
+      print fcross pmarg tdc
+      echo "$ld,$rs,$cw,$&fcross,$&pmarg,$&tdc" >> tb_loop_blockA.csv
+      if $ld = 1
+        if $rs = 1m
+          wrdata tb_loop_blockA_$cw$t Tdb Tph
+        else
+          wrdata tb_loop_blockA_src430_$cw$t Tdb Tph
+        end
+      end
+      destroy all
     end
-    destroy all
   end
 end
 .endc

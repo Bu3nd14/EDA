@@ -553,7 +553,7 @@ txt((44.4, 1.5), "(ADR-021, termica verificata)", size=8, color=RED,
 # --- feedback network: the point of the whole design ------------------------
 res("R136", (64.0, 5.5), (64.0, 2.0), value="1.50k",
     lbl=((63.52, 4.1), "right"), color=GREEN)
-cap("C137", (66.8, 5.5), (66.8, 2.0), value="22p",
+cap("C137", (66.8, 5.5), (66.8, 2.0), value="330p",
     lbl=((67.28, 4.1), "left"))
 node("P3.out_end", "OUT", (68.5, 5.5))
 wire("P3.out", "R136.1")

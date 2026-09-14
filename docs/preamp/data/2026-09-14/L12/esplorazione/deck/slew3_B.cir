@@ -1,0 +1,79 @@
+slew3_B.cir - L12 scratch: slew rate at 20 kHz full scale, C_f candidates
+* Scratch, not versioned. Same measurement as slew2_B.cir (validated there: rise SR
+* matched I_tail/C124 within 3 %), on: 0 = today 470p/22p/47, 2 = 470p/330p/47,
+* 3 = 470p/330p/56, 4 = 470p/220p/56. Block B at +10 dB, load 100 k.
+* Node names: VSRCN, NMIDS, OUTA, JACK (#24).
+
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VSIN  VSRCN NMIDS SIN(0 3.818 20k)
+VSTEP NMIDS 0 PULSE(0 0 1m 1u 1u 1m 10m)
+RSRCB VSRCN IN 1.5
+
+CSTRAY RG 0 15p
+RRG    RG 0 0.1
+
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+
+.control
+echo "k,c137,riso,amp_in,vo_max,vo_min,vo_mean_dc,slope_pos_vus,slope_neg_vus,ideal_slope_vus" > slew3_tab.csv
+echo "k,c137,riso,sr_rise_vus,sr_fall_vus" > slew3_step.csv
+alter c124 = 470p
+foreach k 0 2 3 4
+  if $k = 0
+    alter c137 = 22p
+    alter riso = 47
+    set lab = "22p,47"
+  end
+  if $k = 2
+    alter c137 = 330p
+    alter riso = 47
+    set lab = "330p,47"
+  end
+  if $k = 3
+    alter c137 = 330p
+    alter riso = 56
+    set lab = "330p,56"
+  end
+  if $k = 4
+    alter c137 = 220p
+    alter riso = 56
+    set lab = "220p,56"
+  end
+  foreach amp 3.818 1.909
+    alter @vsin[sin] = [ 0 $amp 20k ]
+    alter @vstep[pulse] = [ 0 0 1m 1u 1u 1m 10m ]
+    tran 10n 1m
+    let dvo = deriv(v(out))
+    meas tran vomax max v(out) from=0.7m to=0.95m
+    meas tran vomin min v(out) from=0.7m to=0.95m
+    meas tran vodc avg v(out) from=0.7m to=0.95m
+    meas tran sp max dvo from=0.7m to=0.95m
+    meas tran sn min dvo from=0.7m to=0.95m
+    let spv = sp/1e6
+    let snv = sn/1e6
+    let ideal = 2*3.14159265*20e3*3.149*$amp/1e6
+    echo "$k,$lab,$amp,$&vomax,$&vomin,$&vodc,$&spv,$&snv,$&ideal" >> slew3_tab.csv
+    destroy all
+  end
+  alter @vsin[sin] = [ 0 0 20k ]
+  alter @vstep[pulse] = [ -1.9 1.9 1m 1u 1u 1m 10m ]
+  tran 10n 3m
+  let dvo = deriv(v(out))
+  meas tran srr max dvo from=0.95m to=1.5m
+  meas tran srf min dvo from=1.95m to=2.5m
+  let srrv = srr/1e6
+  let srfv = srf/1e6
+  echo "$k,$lab,$&srrv,$&srfv" >> slew3_step.csv
+  destroy all
+end
+.endc
+
+.end

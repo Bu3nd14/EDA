@@ -1,0 +1,60 @@
+toll_FA.cir - L12 scratch: tolerance corners for the chosen remedy (C137 330 pF) on the buffer and on block A
+* Scratch, not versioned. C124 470p and C137 330p at -5 % / +5 % (C0G).
+* Two blocks under test in one deck, each flat? No: the flat include can hold one block only,
+* so the BUFFER is the flat block here (its loop is broken) and block A is judged in a
+* second deck, toll_A.cir. Buffer: RSEP 47 at -1 % / +1 %, load 10 k / 50 k,
+* cable at the jack 1 f .. 4.7 n (fine grid).
+* Node names: VSRCN, FIX, JACK, NBRK (#24).
+
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN VSRCN 0 DC 0
+RSRC VSRCN IN 1
+
+RRG RG 0 1G
+
+RBRK FB NBRK 100
+VINJ NBRK G2 DC 0 AC 1
+
+RSEP OUT FIX 47
+CFIX FIX JACK 4.7u
+RBL  JACK 0 470k
+RLD  JACK 0 10k
+CPJ  JACK 0 1f
+
+.control
+alter r109 = 1G
+set units = degrees
+echo "c124,c137,rsep,rld,ccable,pm_deg" > toll_F_tab.csv
+foreach mm 0.95 1.05
+  let cmv = 470e-12*$mm
+  alter c124 = $&cmv
+  foreach fm 0.95 1.05
+    let cfv = 330e-12*$fm
+    alter c137 = $&cfv
+    foreach rm 0.99 1.01
+      let rv = 47*$rm
+      alter rsep = $&rv
+      foreach rl 10k 50k
+        alter rld = $rl
+        foreach cab 1f 470p 1n 1.5n 2n 2.3n 2.6n 2.9n 3.2n 3.5n 3.8n 4.2n 4.7n
+          alter cpj = $cab
+          ac dec 100 1 100meg
+          let T = v(fb)/v(g2)
+          let Tdb = db(T)
+          let Tph = ph(T)
+          meas ac pmarg find Tph when Tdb=0
+          echo "$&cmv,$&cfv,$&rv,$rl,$cab,$&pmarg" >> toll_F_tab.csv
+          destroy all
+        end
+      end
+    end
+  end
+end
+.endc
+
+.end
