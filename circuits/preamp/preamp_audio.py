@@ -141,6 +141,9 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_mute, k_pole):
     # The orchestrator resolved it to 47 ohm: satisfies E4 with margin and
     # still gives the mutual isolation between Singxer and Stax that was the
     # whole point of the resistor.
+    # ADR-021 rating constraint for the BOM: with a short at a fixed
+    # connector each 47 ohm dissipates up to 0.155 W (tb_mute_corto.cir),
+    # so rate it >= 0.16 W at 60 C.
     for k, (name, cval) in enumerate((("SINGXER", "4.7u"), ("STAX", "4.7u"))):
         # 4.7 uF on BOTH fixed outputs - see the ADR-007 addendum.
         # The Stax alone would be happy at 2.2 uF (50 kOhm => 1.4 Hz), but the
@@ -192,6 +195,10 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_mute, k_pole):
     # Taking feedback after it would give ~1 ohm of Zout and put the cable
     # capacitance inside the loop, which is the classic way to make a
     # discrete stage ring on a long interconnect.
+    # ADR-021 rating constraint for the BOM: with a short at MAIN_OUT and the
+    # block at +10 dB, 20 kHz full scale, this resistor dissipates 1.10 W
+    # (tb_mute_corto.cir, docs/preamp/data/2026-09-14/). It must be rated
+    # >= 1.1 W at 60 C; the DIN0207 footprint alone does not guarantee that.
     R("47", b["OUT"], main_a, base + 100)
     # C_out: 4.7u film - ADR-007. Sized for a FUTURE 10 kOhm power amp
     # (3.4 Hz), not for the cj EV250's 100 kOhm, on the same logic that put
@@ -254,6 +261,13 @@ if __name__ == "__main__":
     # The NORMALLY CLOSED throw shorts the jack to ground when the coil is
     # de-energised, i.e. whenever the supply is down or the timer has not
     # released yet. Failing safe = failing silent.
+    # The mute may be held INDEFINITELY (ADR-021, superseding ADR-012's "a few
+    # seconds"): it is the trim's permissive (ADR-019). With all three jacks
+    # grounded the output stages run in class B - block A sees its two fixed
+    # branches in parallel, the worst case of all - and ADR-021 asks only that
+    # every part stay inside its thermal and SOA limits. L11 measured that it
+    # does. This shunt mute is NOT a short-circuit protection: during an
+    # external short it adds a second ground instead of removing the first.
     for i, k in enumerate(K_MUTE):
         lst = mute_lists[i]
         for pole_i, (com, nc) in enumerate(((K_COM1, K_NC1), (K_COM2, K_NC2))):

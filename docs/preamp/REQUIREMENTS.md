@@ -3,7 +3,7 @@
 **Documento vivo.** Riscritto quando i requisiti cambiano. Ogni modifica
 sostanziale deve avere una ADR corrispondente in `decisions/`.
 
-Ultimo aggiornamento: 2026-09-13 (L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
+Ultimo aggiornamento: 2026-09-14 (L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
 
 Le motivazioni non stanno qui: stanno nelle ADR referenziate e nel
 report `reports/2026-09-08-analisi-catena.md`.
@@ -28,8 +28,8 @@ report `reports/2026-09-08-analisi-catena.md`.
 | F3 | **3 uscite**: principale (attenuata) + 2 a livello fisso | ADR-008 |
 | F4 | **Attenuatore a scatti**, commutatore rotativo, 10 kΩ, resistenze 0,1% | ADR-009 |
 | F5 | **Guadagno commutabile 0 / +3 / +10 dB**, relè sulla rete di controreazione. **A relè diseccitati il guadagno è 0 dB**: nessun guasto di bobina e nessuno stato di accensione può portare a un guadagno più alto | ADR-004, **ADR-019** |
-| F6 | **Relè di mute** su tutte le uscite: accensione e commutazione guadagno | ADR-012 |
-| F7 | **Nessun telecomando, nessun microcontrollore** | ADR-009 |
+| F6 | **Relè di mute** su tutte le uscite: accensione, commutazione guadagno e regolazione del trim (F8). **Tenibile a tempo indefinito**: il mute inserito rientra nel requisito P7 | ADR-012, **ADR-021** |
+| F7 | **Nessun telecomando.** Operazionali e microcontrollore **ammessi solo fuori dal percorso del segnale**, alle condizioni di ADR-022: stato sicuro senza firmware, protezione dal corto non affidata solo al firmware, quota ausiliaria di rumore **1 µV RMS** | ADR-009, **ADR-022** |
 | F8 | **Il trim d'ingresso funziona solo a mute inserito**, con interlock **elettrico**: il comando del trim raggiunge i propri relè solo se il mute è attivo. Due comandi distinti, il mute abilita il trim. Fuori mute agire sul trim non cambia nulla; il valore impostato resta applicato all'uscita dal mute | ADR-011, **ADR-019** |
 
 ## Requisiti elettrici
@@ -166,7 +166,7 @@ Ragionamento completo: `reports/2026-09-13-L15-vincolo-e3.md`.
 
 | # | Requisito | ADR |
 |---|---|---|
-| T1 | **Classe A pura, tutto a discreti.** Nessun operazionale nel percorso del segnale | ADR-003 |
+| T1 | **Classe A pura, tutto a discreti.** Nessun operazionale nel percorso del segnale. **Percorso del segnale** = ciò che il segnale attraversa fra i connettori, più ciò che chiude un anello su un nodo di segnale; un ingresso di sola rilevazione è ammesso entro le soglie di ADR-022. **Eccezione**: classe B ammessa a mute inserito e con un corto al connettore d'uscita, alle condizioni di P7 | ADR-003, **ADR-021**, **ADR-022** |
 | T2 | **Nessun servo di continua** (sarebbe un operazionale mascherato) | ADR-007 |
 | T3 | **Un solo blocco di guadagno**, progettato una volta, usato due volte per canale | ADR-006 |
 | T4 | Coppia JFET d'ingresso: **LSK489 duale monolitico** — appaiamento intrinseco, supera il "stesso lotto" di ADR-005 | ADR-013 |
@@ -194,11 +194,58 @@ per il JFET, e all'array non l'aveva applicata nessuno.
 | P4 | Due circuiti stampati (alimentazione / audio), massa a stella | ADR-010 |
 | P5 | Ventilazione prevista: ~3-4 W in mobile chiuso | ADR-010 |
 | P6 | **Condensatori di segnale e resistenze critiche facilmente sostituibili** — passi multipli, per permettere all'utente di provare per ascolto | vedi nota |
+| P7 | **Ogni uscita regge un corto, e il mute si tiene a tempo indefinito.** Con un corto franco al connettore di una qualsiasi uscita, o a mute inserito, con segnale e senza limite di tempo, **nessun componente esce dai propri limiti termici e SOA**: Tj ≤ 125 °C a 60 °C ambiente, a regime e nel transitorio prima di un'eventuale protezione. La tecnica è libera | **ADR-021** — vedi nota |
 
 **Nota su P6.** Nessun agente di questo progetto giudica come suona un
 circuito: è una regola di `AGENTS.md`. La valutazione soggettiva spetta
 all'utente, sull'hardware reale. Il progetto la serve rendendo lo scambio
 dei componenti **banale invece che richiedere un dissaldatore**.
+
+**Nota su P7 — mute e corto sulle uscite** (2026-09-14, L11, **ADR-021**; chiude
+**NC-001**).
+
+**Il verbo.** Per ogni componente e ogni punto del dominio:
+- **attivi**: 60 °C + P_media · RθJA ≤ 125 °C; ogni punto istantaneo
+  (V_CE, I_C) dentro la SOA pubblicata; nel transitorio, Tj di picco ≤ 125 °C
+  con la Zθ(t) del datasheet;
+- **resistenze**: potenza ≤ quella nominale a 60 °C della parte scelta;
+- **contatti di relè**: corrente RMS ≤ quella nominale di conduzione
+  (G6K-2F-Y: 2 A).
+
+**Il dominio:**
+- il **mute** come è cablato, cioè tutti e tre i jack a massa insieme;
+- un **corto ≤ 0,01 Ω** al connettore di una qualsiasi uscita;
+- segnale sinusoidale 20 Hz–20 kHz d'ampiezza qualsiasi fino a E6, ogni
+  posizione dell'attenuatore, ogni modalità di guadagno.
+
+La tabella delle RθJA e delle potenze ammesse per parte sta in ADR-021.
+
+**Come si decide.** `spice/preamp/tb/tb_mute_corto.cir`, dati in
+`data/2026-09-14/`. Sulla topologia di oggi, **senza protezione e senza
+dissipatore**, il verdetto è **conforme**:
+- MJE peggiore: 484 mW, Tj 90,2 °C, contro 1,04 W ammessi (blocco A a mute
+  inserito, le due fisse in parallelo);
+- dispositivo più caldo: Q125, Tj 96,5 °C.
+
+**I vincoli di distinta che il verdetto consegna** (a L9, che sceglie le parti):
+
+| Resistenza | Potenza misurata | Nominale richiesta a 60 °C |
+|---|---|---|
+| 47 Ω dell'uscita principale | 1,10 W (corto MAIN, +10 dB, 20 kHz fondo scala) | **≥ 1,1 W** |
+| 22 Ω d'emettitore, blocco B | 0,27 W | ≥ 0,27 W |
+| 47 Ω delle uscite fisse | 0,155 W | ≥ 0,16 W |
+
+**Cosa la nota non copre.**
+- **Un apparecchio spento a valle con Zin bassa** non è un corto: resta
+  NC-010 e L17.
+- **Il gradino che il rilascio del mute porta sul jack** è V2, non P7: vedi
+  NC-028.
+- **Le cifre dipendono dal punto di lavoro.** Coi modelli vendor la corrente
+  di riposo sale a 20,1 mA, perché il moltiplicatore di Vbe è tarato sui
+  segnaposto, e il MJE peggiore arriva a 496 mW. Si ripete quando la Fase 4
+  ritara la polarizzazione.
+
+Ragionamento completo: `reports/2026-09-14-L11-mute-e-corto.md`.
 
 ## Requisiti di verifica
 

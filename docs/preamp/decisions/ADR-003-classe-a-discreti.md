@@ -1,6 +1,6 @@
 # ADR-003 — Classe A pura a discreti, nessun operazionale
 
-Data: 2026-09-08 · Stato: accettata
+Data: 2026-09-08 · Stato: accettata — precisata da ADR-021 (classe B ammessa solo a mute inserito e in corto) e da ADR-022 (definizione verificabile di percorso del segnale)
 
 ## Contesto
 
