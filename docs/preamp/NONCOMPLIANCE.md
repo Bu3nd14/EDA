@@ -38,6 +38,10 @@ buffer: **chiude NC-010**. Misurando il calore a riposo dei quattro blocchi
 in più ha **aperto NC-029**. **L12** (2026-09-14) ha registrato **ADR-024** —
 la sonda capacitiva di V1 è il cavo al jack, e il blocco A si giudica col suo
 cablaggio — e **ADR-025**, il C_f da 22 a 330 pF: **chiude NC-002 e NC-021**.
+**L27** (2026-09-14) ha registrato **ADR-026** — il terzo livello di guadagno,
+due rami di R_g in parallelo su due relè — e l'ha misurato su tutta la matrice:
+**chiude NC-022**. Estendendo i deck ha trovato un deck che da tempo non scrive
+dati, e **apre NC-030**.
 **17 voci aperte, 2 bloccanti.**
 L'accesso a G1 non è concesso finché NC-004 e NC-017 restano aperte.
 
@@ -1478,7 +1482,7 @@ Report: `reports/2026-09-14-L12-margine-di-fase.md`.
 | Requisito | **E2**, **F5** (**ADR-019**) |
 | Severità | **maggiore** |
 | Aperta da | `reports/2026-09-10-L26-requisiti-utente.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-14 da L27** — ADR-026. Vedi «Chiusura» in fondo alla voce e «Voci chiuse» |
 
 **Evidenza.** `circuits/preamp/gain_block.py` implementa **un solo** ramo
 commutato: `R_G = "698"` verso massa attraverso un relè, quindi due stati —
@@ -1499,6 +1503,28 @@ codice né nella netlist né nel diagramma a blocchi.
 5. **la matrice V1**, che passa da tre a quattro configurazioni di blocco.
 
 Lotto **L27**.
+
+**Chiusura (L27, 2026-09-14).** I cinque punti, nell'ordine:
+
+1. **Il dimensionamento (ADR-026).** Due rami di R_g in parallelo verso massa:
+   **3,57 kΩ** su K1 (+3,047 dB) e **866 Ω** su K5, chiuso solo insieme a K1
+   (+9,972 dB). A riposo 0 dB; nessuno stato dei contatti supera il +10 dB.
+2. **I relè.** K5 è un secondo G6K-2F-Y, un polo per canale. Il budget delle
+   bobine, cinque eccitate, è 105,5 / 45,5 / 23,0 mA a 5 / 12 / 24 V.
+   `check_relay_safe_state.py` lo riconosce ed è stato fatto fallire.
+3. **I deck.** Tutti e 16 terminano `RG10`, sei spazzano tre modi. Il blocco 2g
+   rifiuta ora un nodo di contatto non terminato: la trappola è la limitazione
+   #27, e il controllo è stato fatto fallire sui deck di `main`.
+4. **Il diagramma a blocchi** asserisce +3 dB ± 0,1 dB, il +10 dB e la
+   connettività in parallelo. Fatto fallire su tre netlist sabotate.
+5. **V1**, `data/2026-09-14/L27/dopo/tb_loop/`:
+   - 0 dB **61,83°** (spigoli 61,45°);
+   - +3 dB **69,79°** (spigoli 68,67°);
+   - +10 dB 102,99°.
+
+   V2, P7, classe A, E4, E5 e PSRR rimisurati anche a +3 dB, tutti conformi.
+
+Report: `reports/2026-09-14-L27-terzo-livello-di-guadagno.md`.
 
 ### NC-023 — Il trim non ha interlock col mute, e il trim non esiste ancora
 
@@ -1913,7 +1939,57 @@ l'apparecchio intero.
 
 Lotto **L30**.
 
+### NC-030 — `tb_noise_vectors.cir` non scrive dati: cita vettori di rumore di dispositivi che non esistono più
+
+| | |
+|---|---|
+| Requisito | **V4** (le misure con la loro provenienza) · la disciplina di `docs/limitations.md` #22 |
+| Severità | **minore** |
+| Aperta da | `reports/2026-09-14-L27-terzo-livello-di-guadagno.md` |
+| Stato | aperta |
+
+**Evidenza.** `data/2026-09-14/L27/dopo/tb_noise_vectors/tb_noise_vectors.log`,
+riga 485: `Error: no such vector onoise_q123`.
+- ngspice esce **0**;
+- il `wrdata` si ferma e non viene scritto nessun file dati: il JSON ha 0 righe.
+
+**I nomi morti.** La riga `wrdata` del deck cita, fra gli altri, `onoise_q123`,
+`onoise_r121`, `onoise_jq110` e `onoise_jq111`. Nell'include del blocco, anche
+in quello di `main` prima di L27, non esistono né Q123 né R121: il VAS è Q122,
+lo specchio Q121A/B. Esistono JQ110A/B, non JQ110 né JQ111. L27 ha aggiunto al
+deck solo le due righe di terminazione di `RG10`, quindi il difetto è
+**preesistente**, con ogni probabilità dalle rinumerazioni di L22 e L10. Nessun
+dato versionato di questo deck esiste dopo quelle date.
+
+**Perché nessuno l'ha visto.** Il blocco 2g controlla i dispositivi citati come
+`@nome[…]` e dopo `alter`, non i nomi dei vettori che `noise` costruisce da sé
+(limitazione #27, «Cosa non vede»).
+
+**Perché minore.** Il deck è informativo: la ripartizione del rumore per
+dispositivo è anche in `tb_noise_breakdown.cir`, che funziona. Nessun verdetto
+poggia su questo file.
+
+**Cosa serve per chiuderla.**
+1. Rinominare i vettori a partire dall'include generato, non da un elenco scritto
+   a mano.
+2. Estendere `check_deck_refs.py` ai nomi `onoise_<dispositivo>` e
+   `inoise_<dispositivo>`, e farlo fallire sul deck di oggi.
+
+Lotto **L31** (XS).
+
 ## Voci chiuse
+
+**NC-022 — La topologia ha due livelli di guadagno, il requisito ne chiede tre**
+(maggiore). **CHIUSA il 2026-09-14 da L27.**
+- **ADR-026**: due rami di R_g in parallelo, 3,57 kΩ su K1 e 866 Ω su K5.
+  Guadagni calcolati dalla netlist: +3,047 e +9,972 dB.
+- **V1** al minimo della spazzata: 61,83° / 69,79° / 102,99°, e ai limiti di
+  tolleranza 61,45° / 68,67°.
+- **V2, P7, classe A, E4, E5, PSRR** conformi anche a +3 dB.
+- **Guardiani** estesi e fatti fallire: 2e, 2f, 2g. **Apre NC-030.**
+
+Il testo completo della voce resta sopra, con la sua «Chiusura». Report:
+`reports/2026-09-14-L27-terzo-livello-di-guadagno.md`.
 
 **NC-021 — Il blocco B a 0 dB sta sotto i 60° nel caso peggiore capacitivo**
 (bloccante). **CHIUSA il 2026-09-14 da L12.**

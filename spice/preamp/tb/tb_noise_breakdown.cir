@@ -1,7 +1,7 @@
 tb_noise_breakdown.cir - which devices actually make the noise (E5)
 * Single-frequency noise summary at 1 kHz so ngspice prints the per-device
-* contribution table, plus the integrated 20 Hz - 20 kHz totals for the four
-* configurations that matter.
+* contribution table, plus the integrated 20 Hz - 20 kHz totals for the five
+* configurations that matter (L27 added E, the +3 dB mode of ADR-026).
 * REMINDER: placeholder_devices.lib has KF = 0 everywhere. There is NO 1/f
 * noise in any of this. These are thermal + shot noise only, i.e. a FLOOR.
 
@@ -18,8 +18,11 @@ VMM VMINUS 0 DC -15
 VSRC SRCN 0 DC 0 AC 1
 RSRC SRCN IN 430
 
-CSTRAY RG 0 15p
-RRG    RG 0 1G
+* Gain-relay contacts (L27, ADR-026): open = 15 pF + 1 G, closed = 0.1 ohm.
+CSTRAY   RG   0 15p
+RRG      RG   0 1G
+CSTRAY10 RG10 0 15p
+RRG10    RG10 0 1G
 
 RISO   OUT OUTA 47
 COUT   OUTA JACK 4.7u
@@ -61,7 +64,7 @@ destroy all
 *
 * NOTA: nessun file si chiama tb_noise_breakdown_wrdata.txt, quindi il
 * percorso primario di run_simulation.sh avvisa e scrive un
-* tb_noise_breakdown.json con rows: 0. E' atteso: i 4 file veri li
+* tb_noise_breakdown.json con rows: 0. E' atteso: i 5 file veri li
 * converte il SECONDO passaggio, che guarda i file prodotti.
 *
 * ATTENZIONE DI MERITO: KF = 0 su ogni dispositivo segnaposto, quindi qui
@@ -70,30 +73,41 @@ destroy all
 * ---------------------------------------------------------------------
 set t = .txt
 echo "===== integrated totals, 20 Hz - 20 kHz ====="
-foreach cfg 1 2 3 4
+foreach cfg 1 2 3 4 5
   if $cfg = 1
     alter rrg = 1G
+    alter rrg10 = 1G
     alter rsrc = 1
     set lbl = "a_0db_1r"
     echo "A) 0 dB, source 1 ohm      (block A intrinsic)"
   end
   if $cfg = 2
     alter rrg = 1G
+    alter rrg10 = 1G
     alter rsrc = 430
     set lbl = "b_0db_430r"
     echo "B) 0 dB, source 430 ohm    (block A on the tube phono)"
   end
   if $cfg = 3
     alter rrg = 1G
+    alter rrg10 = 1G
     alter rsrc = 2500
     set lbl = "c_0db_2500r"
     echo "C) 0 dB, source 2500 ohm   (block B, attenuator mid-rotation)"
   end
   if $cfg = 4
     alter rrg = 0.1
+    alter rrg10 = 0.1
     alter rsrc = 2500
     set lbl = "d_10db_2500r"
     echo "D) +10 dB, source 2500 ohm (block B worst case)"
+  end
+  if $cfg = 5
+    alter rrg = 0.1
+    alter rrg10 = 1G
+    alter rsrc = 2500
+    set lbl = "e_3db_2500r"
+    echo "E) +3 dB, source 2500 ohm  (block B, K1 closed, K5 open)"
   end
   noise v(JACK) VSRC dec 100 20 20000 1
   setplot noise1

@@ -31,11 +31,11 @@ funzione. Sarebbe sbagliato lasciar credere il contrario.
 COSA E' VERIFICATO QUI, ALLORA
 ------------------------------
 Le CIFRE ANNOTATE. Ogni valore stampato su questo disegno - 1 MOhm, 47 Ohm,
-4,7 uF, 470k, 220k, 10k, 1,50k/698 - non e' scritto a mano nel testo del
-disegno: viene LETTO da circuits/preamp/preamp_audio.net, la netlist generata
-dalla fonte di verita', e le asserzioni sotto fanno fallire l'esecuzione se
-non corrisponde. Il guadagno "+10 dB" e' CALCOLATO da R_f e R_g letti li',
-non dichiarato.
+4,7 uF, 470k, 220k, 10k, 1,50k, 3,57k/866 - non e' scritto a mano nel testo
+del disegno: viene LETTO da circuits/preamp/preamp_audio.net, la netlist
+generata dalla fonte di verita', e le asserzioni sotto fanno fallire
+l'esecuzione se non corrisponde. I guadagni "+3 dB" e "+10 dB" sono CALCOLATI
+da R_f e dai due rami di R_g letti li', non dichiarati (L27, ADR-026).
 
 E' un controllo piu' debole di check_schematic.py - non vede una connessione
 sbagliata - ma copre l'errore piu' probabile in un documento derivato: la
@@ -122,9 +122,12 @@ _att = {r: VAL[r].split()[-1] for r in ("J120", "J320")}
 assert len(set(_att.values())) == 1, f"attenuatore diverso fra canali: {_att}"
 ATT = _att["J120"]                           # "ATT_L 10k" -> "10k"
 
-# Rete di controreazione del blocco B: e' cio' che il rele' commuta (ADR-004).
+# Rete di controreazione del blocco B: e' cio' che i rele' commutano (ADR-004).
+# Da L27 (ADR-026) R_f e' fissa e i rami di R_g sono DUE, in parallelo verso
+# massa: R237/R437 attraverso K1, R242/R442 attraverso K5.
 RF = same(["R235", "R435"], "R_f blocco B")
-RG = same(["R237", "R437"], "R_g blocco B")
+RG3 = same(["R237", "R437"], "R_g3 blocco B (K1)")
+RG10 = same(["R242", "R442"], "R_g10 blocco B (K5)")
 
 
 def ohms(s):
@@ -137,11 +140,30 @@ def ohms(s):
                                 "m": 1e6, "M": 1e6}[m.group(2)]
 
 
-# Il guadagno alternativo NON e' dichiarato: e' calcolato da cio' che c'e'.
-GAIN_LIN = 1.0 + ohms(RF) / ohms(RG)
-GAIN_DB = 20.0 * math.log10(GAIN_LIN)
+# I guadagni NON sono dichiarati: sono calcolati da cio' che c'e'.
+def _db(rg_ohm):
+    return 20.0 * math.log10(1.0 + ohms(RF) / rg_ohm)
+
+
+RG_PAR = 1.0 / (1.0 / ohms(RG3) + 1.0 / ohms(RG10))   # K1 e K5 chiusi
+GAIN_LIN = 1.0 + ohms(RF) / RG_PAR
+GAIN_DB = _db(RG_PAR)                 # +10 dB
+GAIN3_LIN = 1.0 + ohms(RF) / ohms(RG3)
+GAIN3_DB = _db(ohms(RG3))             # +3 dB: solo K1
+GAIN_K5_DB = _db(ohms(RG10))          # solo K5: esiste solo come guasto di K1
 assert 9.5 <= GAIN_DB <= 10.5, (
-    f"E2 chiede +10 dB commutabili; R_f={RF} / R_g={RG} danno {GAIN_DB:.2f} dB")
+    f"E2 chiede +10 dB commutabili; R_f={RF} / (R_g3={RG3} || R_g10={RG10}) "
+    f"danno {GAIN_DB:.2f} dB")
+# ADR-026: il gradino intermedio di E2 e' +3 dB entro 0,1 dB.
+assert 2.9 <= GAIN3_DB <= 3.1, (
+    f"E2/ADR-026 chiedono +3 dB entro 0,1 dB; R_f={RF} / R_g3={RG3} danno "
+    f"{GAIN3_DB:.2f} dB")
+# ADR-026: nessuno stato dei contatti supera il +10 dB. Coi valori e' vero per
+# costruzione solo se i rami sono IN PARALLELO: che lo siano lo asserisce la
+# connettivita', piu' sotto, dopo che le net sono lette.
+assert max(GAIN3_DB, GAIN_K5_DB) < GAIN_DB, (
+    f"uno stato parziale ({GAIN3_DB:.2f} / {GAIN_K5_DB:.2f} dB) supera il "
+    f"+10 dB ({GAIN_DB:.2f} dB)")
 
 # Il blocco A non ha affatto una gamba di guadagno: nessuna rete AL_RG/AR_RG
 # esiste nella netlist. E' cosi' che "guadagno 1" e' garantito per costruzione
@@ -151,11 +173,13 @@ for _n in ("AL_RG", "AR_RG"):
         f"il blocco A ha una rete {_n}: non e' piu' a guadagno unitario "
         "per costruzione, e questo disegno mente")
 
-# I rele' sono CONDIVISI fra i canali: uno di guadagno, tre di mute.
+# I rele' sono CONDIVISI fra i canali: due di guadagno (K1, K5), tre di mute.
 K_GAIN = v("K1")
+K_GAIN10 = v("K5")
 K_MUTE = [v(f"K{i}") for i in (2, 3, 4)]
-assert "GAIN" in K_GAIN and all("MUTE" in k for k in K_MUTE), \
-    f"i rele' non sono quelli attesi: {K_GAIN}, {K_MUTE}"
+assert ("GAIN" in K_GAIN and "GAIN" in K_GAIN10
+        and all("MUTE" in k for k in K_MUTE)), \
+    f"i rele' non sono quelli attesi: {K_GAIN}, {K_GAIN10}, {K_MUTE}"
 RELAY_PN = K_GAIN.split()[0]                 # "G6K-2F-Y"
 
 # =============================================================================
@@ -210,6 +234,24 @@ for _riso, _buf, _blkA, _fix in (("R161", 5, 1, "L_FIX1"), ("R164", 6, 1, "L_FIX
         f"il buffer {_tag} ha una rete {_tag}_RG: non e' piu' a guadagno "
         "unitario per costruzione")
 
+# =============================================================================
+# ADR-026: I DUE RAMI DI R_g SONO IN PARALLELO, OGNUNO COL PROPRIO RELE'
+# =============================================================================
+# Per canale: R_f, R_g3 e R_g10 condividono la stessa net (FB); l'altro capo di
+# R_g3 sta su una net col solo K1, quello di R_g10 su una net col solo K5. E'
+# questo, non i valori, che garantisce che nessuno stato dei contatti superi il
+# +10 dB e che nessun contatto stia in serie a un altro. Fatto fallire in L27.
+for _rf, _rg3, _rg10 in (("R235", "R237", "R242"), ("R435", "R437", "R442")):
+    _fb = [n for n, refs in _NETS.items() if {_rf, _rg3, _rg10} <= refs]
+    assert len(_fb) == 1, (
+        f"{_rf}, {_rg3} e {_rg10} non condividono un nodo: i rami di R_g non "
+        "sono in parallelo sulla controreazione (ADR-026)")
+    for _rg, _k in ((_rg3, "K1"), (_rg10, "K5")):
+        _far = [n for n, refs in _NETS.items() if _rg in refs and n != _fb[0]]
+        assert len(_far) == 1 and _NETS[_far[0]] - {_rg} == {_k}, (
+            f"l'altro capo di {_rg} deve andare al solo {_k} -> "
+            f"{[(n, sorted(_NETS[n])) for n in _far]}")
+
 
 def pretty(val, unit):
     """'470k' -> '470 kOhm' scritto come si scrive: cifra, prefisso, unita'.
@@ -228,7 +270,7 @@ R_ZIN = pretty(ZIN, OHM)
 R_BFIX = pretty(RBLEED_FIX, OHM)
 R_BMAIN = pretty(RBLEED_MAIN, OHM)
 R_ATT = pretty(ATT, OHM)
-R_F, R_G = pretty(RF, OHM), pretty(RG, OHM)
+R_F, R_G3, R_G10 = pretty(RF, OHM), pretty(RG3, OHM), pretty(RG10, OHM)
 
 # =============================================================================
 # Disegno
@@ -412,8 +454,9 @@ box(9.2, YM, 6.2, 3.2,
      "resistenze 0,1% — F4"], head_size=11)
 arrow(12.3, YM, 13.6, YM)
 box(17.0, YM, 6.2, 3.4,
-    ["BLOCCO B", "0 / +10 dB commutabili",
-     f"R_f {R_F} / R_g {R_G}", "stesso blocco del pannello 1"], head_size=11)
+    ["BLOCCO B", "0 / +3 / +10 dB commutabili",
+     f"R_f {R_F} / R_g {R_G3} ∥ {R_G10}", "stesso blocco del pannello 1"],
+    head_size=11)
 arrow(20.1, YM, 21.6, YM)
 series(23.4, YM, R_ISO)
 wire(24.7, YM, 25.6, YM)
@@ -431,14 +474,19 @@ txt((34.3, YM - 0.34), f"= MV50 in triodo, 30 W, Zin 100 k{OHM}",
 # Le due note stanno SOTTO i rami verso massa, non accanto: alla loro altezza
 # la meta' destra del pannello e' occupata.
 txt((16.0, 9.9),
-    "K1 a riposo → R_g flottante → guadagno 1.    "
-    "K1 eccitato → R_g a massa → 1 + R_f/R_g = "
+    "K1 e K5 a riposo → guadagno 1.   K1 → R_g3 a massa → "
+    f"{GAIN3_LIN:.3f}".replace(".", ",") + "× = +"
+    f"{GAIN3_DB:.2f}".replace(".", ",") + " dB.   K1 + K5 → R_g3 ∥ R_g10 → "
     f"{GAIN_LIN:.3f}".replace(".", ",") + "× = +"
     f"{GAIN_DB:.2f}".replace(".", ",") + " dB",
     size=8.5, color=GREEN)
 txt((16.0, 9.2),
-    "il relè commuta R_g verso massa, MAI R_f in serie: l'anello di "
+    "i relè commutano rami di R_g verso massa, MAI R_f in serie: l'anello di "
     "controreazione non si apre durante la commutazione (V2)",
+    size=8.5, color=GREEN)
+txt((16.0, 8.55),
+    "rami in parallelo (ADR-026): nessuno stato dei contatti, saldati "
+    "compresi, supera il +10 dB",
     size=8.5, color=GREEN)
 
 # ---------------------------------------------------------------------------
@@ -446,13 +494,13 @@ txt((16.0, 9.2),
 # ---------------------------------------------------------------------------
 panel(0.4, 0.2, 45.6, 7.9,
       "3 — Relè, alimentazione, e cosa sta su quale scheda",
-      "è qui che i due canali si toccano: un solo relè di guadagno e tre di "
+      "è qui che i due canali si toccano: due relè di guadagno e tre di "
       "mute servono entrambi.")
 
 box(6.6, 4.95, 11.0, 2.4,
-    [f"K1 — GUADAGNO   {RELAY_PN}",
-     "2 scambi: polo 1 → R_g canale L, polo 2 → R_g canale R",
-     "serve NORMALMENTE APERTO: a riposo 0 dB"], head_size=10)
+    [f"K1 K5 — GUADAGNO   {RELAY_PN}",
+     "K1 → R_g3, K5 → R_g10; polo 1 canale L, polo 2 canale R",
+     "servono NORMALMENTE APERTI: a riposo 0 dB"], head_size=10)
 
 box(20.4, 4.95, 13.0, 2.4,
     [f"K2 K3 K4 — MUTE   {RELAY_PN}",
@@ -466,9 +514,9 @@ box(35.0, 4.95, 11.6, 2.4,
      "±15 V regolati (E7/ADR-015)"], head_size=10)
 
 txt((23.0, 3.30),
-    f"NON ANCORA CONFERMATO quale contatto del {RELAY_PN} sia NO e quale NC "
-    "(lotto L8). Il progetto fallisce in sicurezza solo se sono quelli "
-    "giusti:", size=9, color=AMBER)
+    f"Contatti NO/NC del {RELAY_PN} letti dal datasheet (L21) e asseriti "
+    "sulla netlist da check_relay_safe_state.py. Il progetto fallisce in "
+    "sicurezza solo se restano quelli giusti:", size=9, color=AMBER)
 txt((23.0, 2.70),
     "a relè diseccitati — alimentazione assente, o temporizzatore non ancora "
     "rilasciato — il guadagno deve essere 0 dB e le uscite a massa. Mancare "
@@ -502,9 +550,11 @@ print(f"  isolamento uscite ....... {RISO} ohm  x3 per canale")
 print(f"  accoppiamento d'uscita .. {COUT}     x3 per canale")
 print(f"  scarico fisse / main .... {RBLEED_FIX} / {RBLEED_MAIN}")
 print(f"  attenuatore ............. {ATT}")
-print(f"  guadagno alternativo .... 1 + {RF}/{RG} = "
-      f"{GAIN_LIN:.4f}x = +{GAIN_DB:.3f} dB   (E2 chiede +10 dB)")
-print("  rele' ................... " + K_GAIN + " | " + " | ".join(K_MUTE))
+print(f"  guadagno +3 dB (K1) ..... 1 + {RF}/{RG3} = "
+      f"{GAIN3_LIN:.4f}x = +{GAIN3_DB:.3f} dB")
+print(f"  guadagno +10 dB (K1+K5) . 1 + {RF}/({RG3}||{RG10}) = "
+      f"{GAIN_LIN:.4f}x = +{GAIN_DB:.3f} dB   (solo K5: +{GAIN_K5_DB:.3f} dB)")
+print("  rele' ................... " + " | ".join([K_GAIN, K_GAIN10] + K_MUTE))
 if os.environ.get("PREVIEW_PNG"):
     d.save(os.environ["PREVIEW_PNG"], dpi=110)
     print("anteprima PNG ->", os.environ["PREVIEW_PNG"])

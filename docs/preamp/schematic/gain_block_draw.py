@@ -131,6 +131,7 @@ DEVICES = {
     "R136":  {"1": "OUT",    "2": "FB"},
     "C137":  {"1": "OUT",    "2": "FB"},
     "R138":  {"1": "FB",     "2": "RG"},
+    "R143":  {"1": "FB",     "2": "RG10"},
     # ---- panel 4: bias references and rail decoupling -----------------------
     "R101":  {"1": "0",      "2": "NREF"},
     "D102":  {"A": "NREF",   "K": "NREFM"},
@@ -567,25 +568,30 @@ flag("P3.fb_tag", "FB", direction="left", length=0.5)
 txt((65.4, 1.3), "FB  ->  gate di JQ110B (riq. 1)", size=7.5, color=NETCOL,
     halign="left")
 
-res("R138", NODE_XY["R136.2"], (64.0, -1.0), value="698",
+res("R138", NODE_XY["R136.2"], (64.0, -1.0), value="3.57k",
     lbl=((63.52, 0.65), "right"), color=GREEN)
 flag("R138.2", "RG", direction="down", length=0.8)
 
-# The relay contact is NOT a device of this netlist - it lives in
-# preamp_audio.py. Drawn grey and dashed so it cannot be mistaken for one.
-d.add(elm.Line().at((64.0, -2.6)).to((64.0, -3.1)).color(GREY)
-      .linestyle("--"))
-d.add(elm.Switch().at((64.0, -3.1)).down().color(GREY).linestyle("--"))
-d.add(elm.Ground().at((64.0, -5.0)).color(GREY))
-txt((64.95, -3.55), "K1a", size=8, color=GREY, halign="left")
-txt((64.95, -4.1), "contatto NO del rele',", size=7.5, color=GREY,
-    halign="left")
-txt((64.95, -4.6), "in preamp_audio.py:", size=7.5, color=GREY,
-    halign="left")
-txt((64.95, -5.1), "NON e' un dispositivo", size=7.5, color=GREY,
-    halign="left")
-txt((64.95, -5.6), "di questa netlist", size=7.5, color=GREY,
-    halign="left")
+# L27 / ADR-026: the second R_g leg, in PARALLEL with R138 from the same FB
+# node - never in series with it, and never in series with R136.
+node("P3.fb_r143", "FB", (69.3, 2.0))
+wire("C137.2", "P3.fb_r143", dots=[NODE_XY["C137.2"]])
+res("R143", NODE_XY["P3.fb_r143"], (69.3, -1.0), value="866",
+    lbl=((68.82, 0.65), "right"), color=GREEN)
+flag("R143.2", "RG10", direction="down", length=0.8)
+
+# The relay contacts are NOT devices of this netlist - they live in
+# preamp_audio.py. Drawn grey and dashed so they cannot be mistaken for one.
+for _x, _k in ((64.0, "K1a"), (69.3, "K5a")):
+    d.add(elm.Line().at((_x, -2.6)).to((_x, -3.1)).color(GREY)
+          .linestyle("--"))
+    d.add(elm.Switch().at((_x, -3.1)).down().color(GREY).linestyle("--"))
+    d.add(elm.Ground().at((_x, -5.0)).color(GREY))
+    txt((_x + 0.95, -3.55), _k, size=8, color=GREY, halign="left")
+txt((66.65, -5.25), "contatti NO dei rele', in preamp_audio.py:",
+    size=7.0, color=GREY)
+txt((66.65, -5.7), "NON sono dispositivi di questa netlist",
+    size=7.0, color=GREY)
 
 # =============================================================================
 # PANEL 4 - bias references and rail decoupling
@@ -682,24 +688,25 @@ txt((57.0, -8.35),
 _callout = [
     ("R136 (1.50k) e' CABLATA FISSA fra OUT e FB: l'anello di controreazione "
      "passa sempre di li'.", GREEN),
-    ("Il rele' commuta soltanto R138 (698) verso massa - una resistenza verso "
-     "il nodo comune, mai in serie all'anello.", GREEN),
-    ("", GREEN),
-    ("contatti APERTI       ->   guadagno = 1                 "
+    ("I rele' commutano soltanto R138 (3.57k, K1) e R143 (866, K5) verso massa: "
+     "rami IN PARALLELO, mai in serie all'anello.", GREEN),
+    ("K1, K5 APERTI     ->   guadagno = 1                            "
      "(0 dB)", GREEN),
-    ("contatti CHIUSI       ->   guadagno = 1 + Rf/Rg = 3,149  "
-     "(+9,96 dB)", GREEN),
-    ("contatti IN RIMBALZO  ->   il guadagno scorre fra i due, "
-     "monotonicamente: l'anello resta chiuso", GREEN),
+    ("K1 CHIUSO         ->   guadagno = 1 + Rf/R138 = 1,420            "
+     "(+3,05 dB)", GREEN),
+    ("K1 e K5 CHIUSI    ->   guadagno = 1 + Rf/(R138 || R143) = 3,152  "
+     "(+9,97 dB)", GREEN),
+    ("IN RIMBALZO o SALDATI  ->  il guadagno resta fra 1 e 3,152, mai sopra: "
+     "l'anello resta chiuso (ADR-026)", GREEN),
     ("", GREEN),
-    ("Simulato con contatto reale (R_on 50 mohm, R_off 1e12 ohm, 3 rimbalzi "
-     "in chiusura e 2 in apertura):", "#333333"),
-    ("l'uscita resta entro +/-1,61 V, cioe' esattamente l'inviluppo del "
-     "+10 dB. Non esce mai da quella banda.", "#333333"),
+    ("Simulato con due contatti reali (R_on 50 mohm, R_off 1e12 ohm, rimbalzi), "
+     "0 -> +3 -> +10 -> +3 -> 0 e 0 <-> +10:", "#333333"),
+    ("l'uscita resta entro +1,52 / -1,63 V, cioe' l'inviluppo del +10 dB. "
+     "Non esce mai da quella banda.", "#333333"),
     ("", "#333333"),
     ("CONTROFATTUALE - la disposizione che ADR-004 ha scartato, rele' in "
-     "serie a R136:  uscita a -13,68 V,", "#333333"),
-    ("1,3 V dal rail. E' il numero contro cui ADR-004 stava proteggendo.",
+     "serie a R136:  uscita a -13,77 V,", "#333333"),
+    ("1,2 V dal rail. E' il numero contro cui ADR-004 stava proteggendo.",
      "#333333"),
 ]
 for i, (line, col) in enumerate(_callout):
@@ -716,9 +723,9 @@ txt((34.0, 19.65),
     "continua (ADR-003, ADR-007).     Rail +/-15 V.",
     size=9.5, color="#333333")
 txt((34.0, 18.75),
-    "BLOCCO A (buffer d'ingresso): R138 e il rele' NON montati, guadagno 1 "
-    "fisso.          BLOCCO B (stadio d'uscita): come disegnato, "
-    "0 / +10 dB commutabile.", size=9.5, color="#333333")
+    "BLOCCO A e BUFFER (guadagno 1): R138, R143 e i rele' NON montati.     "
+    "BLOCCO B (stadio d'uscita): come disegnato, "
+    "0 / +3 / +10 dB commutabile.", size=9.5, color="#333333")
 txt((34.0, -20.5),
     "Disegno derivato da circuits/preamp/gain_block.py e verificato contro "
     "spice/preamp/gain_block_flat.inc da scripts/check_schematic.py.      "

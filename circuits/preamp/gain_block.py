@@ -8,7 +8,8 @@ Never hand-edit the generated netlist/schematic; edit this file.
 
 ADR-006: one discrete block, designed once, used twice per channel:
     BLOCK A  input buffer,  gain = 1 always  (relay/R_g not fitted)
-    BLOCK B  output stage,  gain = 0 / +10 dB, relay on the feedback network
+    BLOCK B  output stage,  gain = 0 / +3 / +10 dB, two relays on the
+                            feedback network (ADR-019, ADR-026)
 
 TOPOLOGY - three stages + global feedback, no op-amp, no DC servo:
 
@@ -26,17 +27,22 @@ TOPOLOGY - three stages + global feedback, no op-amp, no DC servo:
 
 LOOP INTEGRITY (ADR-004 + REQUIREMENTS V2) - the load-bearing constraint
 ------------------------------------------------------------------------
-R_f is HARD-WIRED from OUT to FB and is never switched. The relay only
-connects the far end of R_g to ground.
+R_f is HARD-WIRED from OUT to FB and is never switched. Since L27 there are
+TWO R_g legs from FB, in PARALLEL, and each relay contact only connects the
+far end of its own leg to ground (ADR-026):
 
-    contacts CLOSED   -> gain = 1 + R_f/R_g = 3.149  (+9.97 dB)
-    contacts OPEN     -> gain = 1 exactly            (0 dB)
-    contacts BOUNCING -> gain slides between 1 and 3.149, monotonically
+    K1 open,   K5 open    -> gain = 1 exactly                        (0 dB)
+    K1 CLOSED, K5 open    -> gain = 1 + R_f/R_g3          = 1.420   (+3.05 dB)
+    K1 CLOSED, K5 CLOSED  -> gain = 1 + R_f/(R_g3||R_g10) = 3.152   (+9.97 dB)
+    K1 open,   K5 CLOSED  -> 1 + R_f/R_g10 = 2.732 (+8.73 dB) - only as a fault
+    any contact BOUNCING  -> gain slides inside [1, 3.152], never above it
 
 There is no contact state - open, closed, bouncing, welded, corroded - in
-which the feedback loop is broken, because the loop does not pass through the
-relay at all. The de-energised (power-off / coil-fault) state is unity gain,
-which is also the intended normal mode per ADR-001.
+which the feedback loop is broken, because the loop does not pass through a
+relay at all. And because the legs are in parallel, no combination of
+contacts can exceed +10 dB: closing a leg can only lower the equivalent R_g
+towards R_g3||R_g10. The de-energised (power-off / coil-fault) state is unity
+gain, which is also the intended normal mode per ADR-001 and ADR-019.
 
 Run:
   /Users/roberto/EDA/env/venv/bin/python3 <this file>
@@ -106,14 +112,23 @@ FP_ELCO = "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm"
 # Rails: +/-15 V regulated - E7 / ADR-003. The current budget this block needs
 # is printed by __main__ and handed to psu-engineer.
 R_F = "1.50k"       # ADR-004: fixed feedback resistor, NEVER switched.
-R_G = "698"         # ADR-004: switched to GND by the relay.
-                    # 1 + 1500/698 = 3.149 = +9.97 dB, i.e. E2's "+10 dB"
-                    # to within 0.03 dB using two E96 values.
-                    # Chosen small enough that R_f's own Johnson noise
-                    # (4.98 nV/rtHz -> 0.70 uV over 20 kHz) stays far below
-                    # E5's 10 uV, and large enough that the network is a
-                    # 2.2 kOhm load on the output stage at +10 dB (3.9 mA
-                    # peak at clipping) - well inside the 15 mA Class A bias.
+# ADR-026: the three gain levels of ADR-019 from two R_g legs in PARALLEL,
+# each switched to GND by its own normally-open contact (read LOOP INTEGRITY).
+R_G3 = "3.57k"      # Leg 1, relay K1. Alone: 1 + 1500/3570 = 1.420 = +3.05 dB,
+                    # E2's "+3 dB". The E96 neighbours give 2.99 dB (3.65k)
+                    # and 2.93 dB (3.74k); 3.57k is the one whose PAIR with
+                    # R_G10 lands +10 dB closest to where it always was.
+R_G10 = "866"       # Leg 2, relay K5, commanded only TOGETHER with K1:
+                    # 3.57k || 866 = 696.9 ohm, 1 + 1500/696.9 = 3.152 =
+                    # +9.97 dB - E2's "+10 dB", 0.16 % from the single 698 ohm
+                    # leg it replaces (+9.96 dB until L27). So the network at
+                    # +10 dB is still a 2.2 kOhm load on the output stage
+                    # (3.9 mA peak at clipping, well inside the 15 mA Class A
+                    # bias), and R_f's own Johnson noise (4.98 nV/rtHz ->
+                    # 0.70 uV over 20 kHz) stays far below E5's 10 uV.
+                    # Why parallel and not a selector in series: no contact
+                    # state, welded included, can exceed +10 dB, and a single
+                    # coil fault always gives LESS gain than commanded.
 
 R_IN = "1M"         # E3 requires >= 100 kOhm. 1 MOhm is 10x that, and it is
                     # free: the corner it forms with the tube phono's unknown
@@ -188,9 +203,12 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     GND = gnd if gnd is not None else Net("GND")
     GND.drive = POWER
     IN, OUT, FB = n("IN"), n("OUT"), n("FB")
-    # RG only exists on a switchable block; creating it unconditionally
-    # would leave block A with a pinless net and an ERC warning.
+    # RG / RG10 only exist on a switchable block; creating them
+    # unconditionally would leave block A with pinless nets and ERC warnings.
+    # RG is the +3 dB leg's contact node (relay K1), RG10 the +10 dB leg's
+    # (relay K5) - ADR-026.
     RG = n("RG") if switchable else None
+    RG10 = n("RG10") if switchable else None
 
     # ---- internal nets ----
     NREF, NREFM = n("NREF"), n("NREFM")       # negative-rail bias reference
@@ -474,8 +492,8 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # 6. FEEDBACK NETWORK  (ADR-004 - read LOOP INTEGRITY at the top)
     # ========================================================================
     R(R_F, OUT, FB)
-    # C_f compensates the stray capacitance that the OPEN relay contact and
-    # the unused R_g leave hanging on the FB node (~15 pF). Without it the
+    # C_f compensates the stray capacitance that the OPEN relay contacts and
+    # the unused R_g legs leave hanging on the FB node (~15 pF each). Without it the
     # feedback factor rolls off near the loop's unity-gain frequency and the
     # phase margin in the 0 dB mode would be WORSE than in the +10 dB mode -
     # precisely the asymmetry that verification requirement V1 exists to catch.
@@ -487,12 +505,13 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # (333 -> 183 kHz). MUST be C0G/NP0, for the same reason as C124.
     C("330p", OUT, FB)
     if switchable:
-        R(R_G, FB, RG)
-        # The relay contact itself is instantiated in the channel file: one
-        # Omron G6K-2F-Y (2 poles) serves both channels. The design needs the
-        # NORMALLY OPEN throw, so that a de-energised or failed relay leaves
-        # the block at unity gain. CONTACT FORM NOT YET CONFIRMED against the
-        # Omron datasheet - flagged to bom-component-manager.
+        R(R_G3, FB, RG)
+        # The relay contacts themselves are instantiated in the channel file:
+        # one Omron G6K-2F-Y (2 poles) per leg serves both channels - K1 for
+        # this leg, K5 for R_G10 below. The design needs the NORMALLY OPEN
+        # throw, so that a de-energised or failed relay leaves its leg
+        # floating; the contact form was read from the datasheet in L21 and
+        # is asserted on the netlist by scripts/check_relay_safe_state.py.
 
     # local rail decoupling
     C("100n", VP, GND)
@@ -500,7 +519,16 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     C("100u", VP, GND, fp=FP_ELCO)
     C("100u", VM, GND, fp=FP_ELCO)
 
-    return dict(IN=IN, OUT=OUT, FB=FB, RG=RG, VP=VP, VM=VM, GND=GND)
+    if switchable:
+        # ADR-026: the +10 dB leg, in parallel with R_G3 from the same FB node.
+        # Placed AFTER the decoupling capacitors on purpose: appended last, it
+        # takes the next free number (R143 here, R242/R442 on the audio board)
+        # and every reference designator that existed before L27 keeps its
+        # number. A renumbering breaks decks in silence (limitations.md #22).
+        R(R_G10, FB, RG10)
+
+    return dict(IN=IN, OUT=OUT, FB=FB, RG=RG, RG10=RG10, VP=VP, VM=VM,
+                GND=GND)
 
 
 # ============================================================================
@@ -553,20 +581,25 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 #     0 dB CM ceiling   JFET Vds >= 2 V up to Vin = +6.75 V; gain holds to
 #                       +9.43 V. Negative side has no limit inside the rails.
 #
-#   LOOP (tb_loop.cir, tb_loop_blockA.cir, tb_loop_bufferfissa.cir; L12, C_f 330 p)
+#   LOOP (tb_loop.cir, tb_loop_blockA.cir, tb_loop_bufferfissa.cir; C_f 330 p)
 #     Verdicts by ADR-024 - cable at the jack, minimum over 0-4.7 nF, every V1
-#     source; block A with its harness <= 1 nF (data/2026-09-14/L12/dopo/):
-#     block B 0 dB   loop gain 72.4 dB, crossover 968 kHz, PM 69.5 deg bare,
-#                    61.2 deg worst (attenuator at mid-rotation, 3.3 nF)
-#     block B +10 dB loop gain 61.9 dB, crossover 528 kHz, PM 109.8 deg bare,
+#     source, 100 k and 10 k loads; block A with its harness <= 1 nF.
+#     Block B on the three-level network of ADR-026 (data/2026-09-14/L27/dopo/):
+#     block B 0 dB   loop gain 72.4 dB, crossover 929 kHz, PM 70.2 deg bare,
+#                    61.8 deg worst (attenuator at mid-rotation, 3.3 nF),
+#                    61.4 deg at the tolerance corners
+#     block B +3 dB  loop gain 69.1 dB, crossover 915 kHz, PM 77.4 deg bare,
+#                    69.8 deg worst (2.8 nF), 68.7 deg at the corners
+#     block B +10 dB loop gain 61.9 dB, crossover 527 kHz, PM 109.8 deg bare,
 #                    103.0 deg worst
-#     block A        PM 63.4 deg worst (430 ohm source, 1 nF of harness)
-#     buffer         PM 61.6 deg worst (Stax, 2.7 nF)
+#     block A        PM 63.4 deg worst (430 ohm source, 1 nF of harness), L12
+#     buffer         PM 61.6 deg worst (Stax, 2.7 nF), L12
 #     *** THE WORSE MODE IS 0 dB, WHICH IS THE NORMAL MODE. V1 was right to
 #         ask for both. ***
 #
 #   RESPONSE (tb_ac.cir)
-#     -3 dB   0.493 Hz / 2.20 MHz (0 dB), 0.493 Hz / 183 kHz (+10 dB)
+#     -3 dB   0.493 Hz / 2.12 MHz (0 dB), 537 kHz (+3 dB), 183 kHz (+10 dB),
+#             1.5 ohm source (L27); 1 kHz gain -0.009 / +3.037 / +9.958 dB
 #             (L12: C_f 330 p, ADR-025, took +10 dB from 333 kHz to 183 kHz)
 #     ADR-014 CLAIM UNDER TEST: 20 kHz response referred to 1 kHz changes by
 #     0.0001 dB between attenuator Zout = 0 and 2.5 kOhm. ADR-014 predicted
@@ -595,18 +628,20 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 #   NOISE, 20 Hz - 20 kHz unweighted (tb_noise_breakdown.cir)
 #     0 dB   1.68 uV (1 ohm source) / 1.72 uV (430 ohm) / 1.91 uV (2.5 kOhm)
 #     +10 dB 5.70 uV (2.5 kOhm source) - the worst single-block case
+#     L27, LS352 topology: +3 dB 2.01 uV and +10 dB 4.23 uV (2.5 kOhm source)
 #     Dominant contributors at 1 kHz: the CURRENT MIRROR, not the JFETs.
 #       THAT320 pair ~5.3 and ~5.0 nV/rtHz, R_f (1.5k) 4.98 nV/rtHz, the two
 #       47 ohm mirror degeneration resistors 4.85 nV/rtHz each, JFETs 1.6.
 #     NO 1/f NOISE IS PRESENT (KF = 0 in every placeholder model). This is a
 #     floor, not a prediction.
 #
-#   V2 - GAIN RELAY (tb_switch_v2.cir + _counterfactual.cir)
-#     With bounce modelled (RON 50 mohm, ROFF 1e12, 3 bounces make / 2 break):
-#       output stays inside +/-1.61 V, which IS the +10 dB envelope. It never
-#       leaves the band bounded by the two gain settings, at any point.
+#   V2 - GAIN RELAYS (tb_switch_v2.cir + _counterfactual.cir), L27
+#     Both relays bouncing (RON 50 mohm, ROFF 1e12, 3 bounces make / 2 break),
+#     0 -> +3 -> +10 -> +3 -> 0 dB and 0 <-> +10 dB with the contacts skewed:
+#       output stays inside +1.522 / -1.626 V, which IS the +10 dB envelope,
+#       in every transition window. It never leaves that band.
 #     Counterfactual - the arrangement ADR-004 rejected, relay in series with
-#     R_f: opening that contact drives the output to -13.68 V, 1.3 V from the
+#     R_f: opening that contact drives the output to -13.77 V, 1.2 V from the
 #     rail. That is the number ADR-004 was protecting against.
 #
 #   V3 - OVERLOAD RECOVERY (tb_v3_overload.cir)
@@ -639,13 +674,17 @@ if __name__ == "__main__":
 
     sub = sx.subckt(
         "GAINBLOCK",
-        ["IN", "OUT", "FB", "RG", "VPLUS", "VMINUS"],
+        ["IN", "OUT", "FB", "RG", "RG10", "VPLUS", "VMINUS"],
         gnd_names=("GND",),
         header=(
             "GENERATED by circuits/preamp/gain_block.py - DO NOT HAND-EDIT.\n"
-            "Ports: IN OUT FB RG VPLUS VMINUS   (node 0 = signal ground)\n"
-            "RG: gain-relay contact node. Tie to 0 for +10 dB; leave it on a\n"
-            "stray capacitance for 0 dB - that is what an open contact is.\n"
+            "Ports: IN OUT FB RG RG10 VPLUS VMINUS   (node 0 = signal ground)\n"
+            "RG, RG10: the two gain-relay contact nodes (ADR-026). An open\n"
+            "contact is a stray capacitance to 0, a closed one a short:\n"
+            "  0 dB   RG open,   RG10 open\n"
+            "  +3 dB  RG to 0,   RG10 open\n"
+            "  +10 dB RG to 0,   RG10 to 0\n"
+            "Leaving either port unterminated is NOT an open contact.\n"
             "Device models are PLACEHOLDERS - see placeholder_devices.lib."
         ),
     )
@@ -662,7 +701,7 @@ if __name__ == "__main__":
         f.write("* GENERATED by circuits/preamp/gain_block.py "
                 "- DO NOT HAND-EDIT.\n")
         f.write("* Flat single-block netlist. External nodes: "
-                "IN OUT FB RG VPLUS VMINUS 0\n")
+                "IN OUT FB RG RG10 VPLUS VMINUS 0\n")
         f.write(sx.flat(gnd_names=("GND",)))
     print("SPICE flat include ->", flatpath)
     print("device lines:", len([l for l in sub.splitlines()

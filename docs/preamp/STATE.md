@@ -11,8 +11,8 @@ realtà, il progetto non è ripartibile.
 | | |
 |---|---|
 | Ultimo aggiornamento | **2026-09-14** |
-| Ultimo lotto chiuso | **L12** — ogni istanza del blocco sopra i 60°: ADR-024 (la sonda è il cavo al jack), ADR-025 (C_f 330 pF), NC-002 e NC-021 chiuse |
-| **Prossimo lotto** | **L27** — il terzo livello di guadagno, e V1 a +3 dB col C_f nuovo (mandato in «Prossimo passo concreto») |
+| Ultimo lotto chiuso | **L27** — il terzo livello di guadagno: ADR-026 (due rami di R_g in parallelo, 3,57 kΩ su K1 e 866 Ω su K5), NC-022 chiusa, NC-030 aperta |
+| **Prossimo lotto** | **L16** — il trim entra nel progetto, con l'interlock elettrico dal mute (mandato in «Prossimo passo concreto») |
 | Non conformità | **17 aperte, 2 bloccanti** |
 | Le bloccanti | NC-004 · NC-017 (Fase 4) |
 | Suite | `run_tests.sh` **8 passed / 0 failed** |
@@ -21,6 +21,49 @@ realtà, il progetto non è ripartibile.
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L27 — il terzo livello di guadagno (2026-09-14)
+
+**Chiude NC-022**, apre **NC-030**. Report:
+`reports/2026-09-14-L27-terzo-livello-di-guadagno.md`. Dati:
+`data/2026-09-14/L27/`.
+
+- **La rete (ADR-026)**: due rami di R_g **in parallelo** verso massa.
+  - **3,57 kΩ su K1** → +3,047 dB;
+  - **866 Ω su K5**, chiuso solo con K1 → +9,972 dB. Con 698 Ω era +9,963.
+  - In parallelo **nessuno stato dei contatti supera il +10 dB**; due rami
+    esclusivi, con un contatto saldato, darebbero +11,03 dB.
+- **I relè**: K5 è un secondo G6K-2F-Y. Bobine, cinque eccitate: **105,5 mA a
+  5 V**, 45,5 a 12 V, 23,0 a 24 V. `VRELAY` non è decisa → `psu-engineer`.
+- **Baseline verificata**: `tb_loop` di `main` byte-identico a L12.
+- **V1 al minimo della spazzata**, carichi 100 k e 10 k:
+
+  | Blocco B | Minimo | Agli spigoli |
+  |---|---|---|
+  | 0 dB | **61,83°** (era 61,21°) | 61,45° |
+  | +3 dB | **69,79°** (griglia fitta) | 68,67° |
+  | +10 dB | 102,99° | — |
+
+  Nessun rimedio serve: a 0 dB i due rami appesi a FB pesano meno di uno.
+- **Il resto a +3 dB**, tutto conforme:
+  - V2 dentro l'inviluppo del +10 dB, con due relè che rimbalzano;
+  - P7: MJE peggiore 339,6 mW, Tj 81,2 °C;
+  - 0 righe ascoltabili fuori dalla classe A;
+  - E5 2,01 µV; PSRR+ a 10 kHz 36,73 dB.
+- **Una trappola nuova, limitazione #27**: un nodo di contatto non terminato non
+  dà errore. Il deck `tb_ac` di `main` sull'include nuovo stampava **+3,04 dB
+  nel modo che chiama 10db**, rc 0.
+  - Il blocco **2g** ora rifiuta nodi pendenti e porte mancanti;
+  - fatto fallire sui 16 deck di `main`, e senza falsi allarmi sullo stato
+    pre-L27.
+- **Guardiani estesi e fatti fallire**:
+  - 2e con K5 su NC;
+  - 2f con +3 dB fuori finestra e con R242 su K1.
+- **Netlist**: 360 componenti, partizione dei nodi identica a meno di K5, R242
+  e R442. Disegno del blocco a 45 dispositivi.
+- **Trovato, NC-030** (minore): `tb_noise_vectors.cir` non scrive dati da
+  tempo, per quattro nomi di vettore morti. Lotto **L31**.
+- **17 voci aperte, 2 bloccanti.** Prossimo: **L16**.
 
 ### L12 — ogni istanza del blocco sopra i 60° (2026-09-14)
 
@@ -489,10 +532,11 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L24 | **T7 su tutti i dispositivi attivi.** Prima **verificare** MJE15032/33 e 1N4148 — è il passo che dice quanto è grande il resto — poi trovare i sostituti di 2N5401/2N5551, congelarli e promuoverli in `models/` col controllo incrociato di L6+L7 | M | **NC-017** (bloccante), **NC-004** | **fatto** |
 | L25 | **Promuovere in `models/` i cinque modelli congelati in L24** (MMBT5401, MMBT5551, MJE15032, MJE15033, 1N4148), ognuno con la sua `.provenance.json` e una ricetta di regressione in `validate_models.py` sul modello di `tb_lsk489()`. Il controllo incrociato contro i datasheet **è già fatto** in L24: qui si tratta di bloccarne i numeri | S/M | **NC-017** (1° dei 3 passi), apre **NC-024** e **NC-025** | **fatto** |
 | L26 | **I tre requisiti nuovi dell'utente diventano ADR-019**: margine di fase minimo **60° ovunque**, trim abilitato dal mute con **interlock elettrico**, guadagni **0 / +3 / +10 dB** con riposo a 0 dB | XS/S | **NC-012** (chiude), apre NC-021…NC-023 | **fatto** |
-| L27 | **Il terzo livello di guadagno entra nel progetto.** Dimensionare il secondo ramo commutato verso massa (ADR-004 conservata: si commuta R_g, mai R_f; a relè diseccitati **0 dB**), decidere relè e poli col budget di corrente delle bobine, estendere i dodici deck da due modalità a tre e l'asserzione del diagramma a blocchi | M | **NC-022** | da fare |
+| L27 | **Il terzo livello di guadagno entra nel progetto.** Dimensionare il secondo ramo commutato verso massa (ADR-004 conservata: si commuta R_g, mai R_f; a relè diseccitati **0 dB**), decidere relè e poli col budget di corrente delle bobine, estendere i dodici deck da due modalità a tre e l'asserzione del diagramma a blocchi | M | **NC-022**, apre **NC-030** | **fatto** — ADR-026 (due rami di R_g in parallelo, K1 + K5) |
 | L28 | **SS dell'LSK489 definito per l'LSK489.** Un documento del costruttore che dica cosa sono i pin 3 e 7 di *questa* parte — o una ADR che accetti l'istruzione dell'LSK389 in forza della compatibilità dichiarata. Prima di G2 | XS/S | NC-027 | da fare |
 | L29 | **Il gradino al rilascio del mute.** Oggi il rilascio con segnale porta sul jack il condensatore caricato dalla musica: **5,37 V** a +10 dB, 1,79 V a 0 dB, 1,72 V sulle fisse, τ 0,32 s. **Il contatto prima del condensatore**, simulato in scratch dopo L11, toglie quel gradino ma ne mette uno **pari all'offset del blocco** (14-104 mV simulati, più fino a 63 mV di dispersione LSK489) **a ogni mute, accensione compresa**, e il volume non lo riduce (numeri e stima d'udibilità in NC-028). **Prima una soglia dell'utente su V2**; poi il confronto misurato, con un deck **versionato**, fra: contatto prima + offset abbassato (bilanciamento, coppie selezionate), rilascio lento, mute in serie, sequenza di rilascio. P7 va rimisurata per la posizione scelta | S/M | NC-028 | da fare |
 | L30 | **Il calore del telaio con otto blocchi.** A riposo la scheda audio dissipa 6,45 W (0,806 W per blocco, L17) contro i 3-4 W che P5 prevede per l'apparecchio intero. Stima termica del telaio con l'alimentatore; poi o P5 aggiornato al numero vero, o ventilazione e montaggio progettati con una ADR, o ADR-021 riaperta se i 60 °C non reggono. Va col lotto dell'alimentatore | S | NC-029 | da fare |
+| L31 | **I vettori di rumore di `tb_noise_vectors.cir`.** Il deck cita `onoise_q123`, `onoise_r121`, `onoise_jq110`, `onoise_jq111`, dispositivi che non esistono più; il `wrdata` si ferma e non scrive niente, con rc 0. Rinominarli dall'include generato ed estendere `check_deck_refs.py` ai nomi `onoise_*`/`inoise_*`, facendolo fallire sul deck di oggi | XS | NC-030 | da fare |
 
 **NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
 riesecuzione di `tb_noise_breakdown.cir` coi modelli veri. È il caso
@@ -2533,44 +2577,44 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L27 — il terzo livello di guadagno entra nel progetto.** Chiude **NC-022**.
-Lotto **M**. Il mandato completo è in `NEXT-SESSION.md`.
+**L16 — il trim entra nel progetto.** Chiude **NC-009**, **NC-005** (la metà
+della misura) e **NC-023**. Lotto **S/M**. Il mandato completo è in
+`NEXT-SESSION.md`.
 
-**Perché adesso.** È il solo lotto che può rimettere in discussione il margine
-di fase appena ottenuto: il secondo ramo di R_g cambia la rete di
-controreazione, e la cella **B a +3 dB** è l'unica riga di stabilità di V1
-ancora senza misura, oltre al trim (L16). ADR-025 lo mette fra i «da riaprire
-se».
+**Perché adesso.**
+- **È l'ultima riga di V1 senza misura**: le tre posizioni del trim come
+  sorgente a monte del blocco A. Dopo L27 il blocco B è misurato in tutti e tre
+  i modi.
+- **Porta tre voci**, e due tirano in direzioni opposte:
+  - NC-009: l'headroom a +10 dB poggia su un trim che non esiste;
+  - NC-005: la Zin di E3 va misurata in tutte e tre le posizioni;
+  - NC-023: l'interlock elettrico col mute di ADR-019.
 
-**Dove parte**, dai dati di `data/2026-09-14/L12/dopo/`, col C_f a 330 pF e il
-criterio di ADR-024:
-
-| Istanza | Minimo |
-|---|---|
-| Blocco B 0 dB | **61,21°** (attenuatore a metà corsa, 3,3 nF) |
-| Blocco B +10 dB | 102,96° |
-| Blocco A | 63,36° (sorgente phono, 1 nF di cablaggio) |
-| Buffer delle fisse | 61,63° (Stax, 2,7 nF) |
-
-A +3 dB il guadagno d'anello sta fra le due modalità, ma il margine va
-misurato, non interpolato: il C_f da 330 pF lavora contro R_f ∥ R_g, che cambia.
+**Dove parte.**
+- Il blocco A a **63,36°** (sorgente phono, 1 nF di cablaggio; L12, rieseguito
+  in L27 entro 1,2·10⁻⁴).
+- La «Nota su E3»: minimo di |Zin| su 20 Hz–20 kHz ≥ 100 kΩ al connettore, in
+  ogni posizione. `R_IN` da 1 MΩ sta in parallelo, e **R1 + R2 = 100 kΩ non
+  basta**.
+- Le resistenze del partitore viste dal blocco A: **≥ 25,0 kΩ a −6 dB**,
+  ≥ 18,8 kΩ a −12 dB. Portano rumore contro E5 in tre modi di guadagno.
 
 ### Quello che il repo ti consegna già
 
-- **La suite è a 8 blocchi**, 8 passed a fine L17. Il blocco 2f asserisce ora
-  anche ADR-023 sulla netlist; il 2g copre ogni deck nuovo sotto `spice/*/tb/`.
-- **I deck d'anello** per ogni ruolo del blocco:
-  - `tb_loop.cir`: blocco B;
-  - `tb_loop_blockA.cir`: carico nuovo e controllo;
-  - `tb_loop_bufferfissa.cir`: sonda al jack e sul nodo, Singxer e Stax.
-- **`tb_mute_corto.cir`** a quattro blocchi, con la tabella dei percorsi
-  ascoltabili nell'intestazione. Lo script d'analisi di L17 è descritto nel
-  report: Tj per RθJA, percorsi ascoltabili per caso, confronto fra
-  topologie.
-- **Due trappole nuove nei deck**, in `docs/limitations.md` #24 e #25.
+- **La suite è a 8 blocchi**, 8 passed a fine L27.
+  - Il **2e** conosce i ruoli MUTE e GAIN, non ancora TRIM;
+  - il **2f** asserisce tre guadagni e i rami in parallelo;
+  - il **2g** rifiuta anche i nodi di contatto non terminati (#27).
+- **Cinque relè** sulla scheda audio (K1, K5 guadagno; K2–K4 mute), tutti coi
+  due poli occupati.
+  - **Il permissivo del trim non ha un contatto libero**: serve un polo nuovo, e
+    va preso dal contatto che è chiuso **in** mute;
+  - budget attuale delle bobine: 105,5 mA a 5 V (ADR-026).
+- **I deck d'anello** di ogni ruolo del blocco, a tre modi per il blocco B.
 - **I conteggi**: 17 voci aperte, 2 bloccanti.
 
 **Poi**, nell'ordine:
+- **L31** (NC-030, XS): i vettori di rumore morti di `tb_noise_vectors.cir`.
 - **L29** (NC-028) aspetta una soglia dell'utente su V2, e si può chiedere in
   qualsiasi momento.
 - **L30** (NC-029) va col lotto dell'alimentatore e del telaio.

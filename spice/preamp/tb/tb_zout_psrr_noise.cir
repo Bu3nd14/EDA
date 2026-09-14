@@ -29,8 +29,11 @@ VMRAIL NMM 0 DC -15
 VSRC SRCN 0 DC 0 AC 1
 RSRC SRCN IN 430
 
-CSTRAY RG 0 15p
-RRG    RG 0 1G
+* Gain-relay contacts (L27, ADR-026): open = 15 pF + 1 G, closed = 0.1 ohm.
+CSTRAY   RG   0 15p
+RRG      RG   0 1G
+CSTRAY10 RG10 0 15p
+RRG10    RG10 0 1G
 
 RISO   OUT OUTA 47
 COUT   OUTA JACK 4.7u
@@ -46,17 +49,17 @@ IOUT   0 JACK DC 0 AC 0
 * invece TERMINA il nome: la forma che funziona e' `$gm$t` con t = ".txt".
 * Misurato con una sonda in L5, non dedotto.
 *
-* ETICHETTE: 0db/10db nel nome invece del valore di RRG. I `foreach`
-* restano quelli di prima e l'etichetta si ricava con un `if`, cosi'
-* `alter` e gli echo usano ancora i valori originali.
+* ETICHETTE: 0db/3db/10db nel nome invece dei valori di RRG e RRG10. L27
+* (ADR-026): i `foreach` sono `foreach mode 0 3 10`, ogni ramo imposta i DUE
+* contatti, e gli echo stampano MODE=<etichetta>.
 *
-* I 10 FILE, per sezione:
-*   _zout_0db / _zout_10db        Z al jack e Z al nodo OUT
-*   _psrrp_0db / _psrrp_10db      PSRR dal rail +
-*   _psrrm_0db / _psrrm_10db      PSRR dal rail -
-*   _noise_0db / _noise_10db      spettro di rumore, RSRC = 430
-*   _noise_intrinsic              coda: RRG=1G, RSRC=1 ohm
-*   tb_zout_psrr_noise_wrdata     coda: RRG=0.1, RSRC=2500 - IL CASO
+* I 14 FILE, per sezione:
+*   _zout_0db / _3db / _10db      Z al jack e Z al nodo OUT
+*   _psrrp_0db / _3db / _10db     PSRR dal rail +
+*   _psrrm_0db / _3db / _10db     PSRR dal rail -
+*   _noise_0db / _3db / _10db     spettro di rumore, RSRC = 430
+*   _noise_intrinsic              coda: 0 dB, RSRC=1 ohm
+*   tb_zout_psrr_noise_wrdata     coda: +10 dB, RSRC=2500 - IL CASO
 *                                 PEGGIORE, ed e' il file principale
 *                                 perche' <basename>_wrdata.txt e' il nome
 *                                 che run_simulation.sh cerca per primo.
@@ -119,13 +122,21 @@ set units = degrees
 echo "########## Zout at the jack, load removed, both gain modes ##########"
 alter rload = 1G
 alter @iout[acmag] = 1
-foreach mode 1G 0.1
-  alter rrg = $mode
-  if $mode = 1G
+foreach mode 0 3 10
+  if $mode = 0
     set gm = "0db"
+    alter rrg = 1G
+    alter rrg10 = 1G
   end
-  if $mode = 0.1
+  if $mode = 3
+    set gm = "3db"
+    alter rrg = 0.1
+    alter rrg10 = 1G
+  end
+  if $mode = 10
     set gm = "10db"
+    alter rrg = 0.1
+    alter rrg10 = 0.1
   end
   ac dec 20 20 200k
   let Z = mag(v(JACK))
@@ -137,7 +148,7 @@ foreach mode 1G 0.1
   meas ac za1k  find ZA at=1000
   meas ac za20k find ZA at=20000
   meas ac za100k find ZA at=100000
-  echo "RRG=$mode"
+  echo "MODE=$gm"
   print z20 z1k z20k za20 za1k za20k za100k
   wrdata tb_zout_psrr_noise_zout_$gm$t Z ZA
   destroy all
@@ -148,13 +159,21 @@ alter rload = 100k
 echo "########## PSRR (input source silenced) ##########"
 alter @vsrc[acmag] = 0
 alter @vpp[acmag] = 1
-foreach mode 1G 0.1
-  alter rrg = $mode
-  if $mode = 1G
+foreach mode 0 3 10
+  if $mode = 0
     set gm = "0db"
+    alter rrg = 1G
+    alter rrg10 = 1G
   end
-  if $mode = 0.1
+  if $mode = 3
+    set gm = "3db"
+    alter rrg = 0.1
+    alter rrg10 = 1G
+  end
+  if $mode = 10
     set gm = "10db"
+    alter rrg = 0.1
+    alter rrg10 = 0.1
   end
   ac dec 20 20 200k
   let P = -db(v(JACK))
@@ -162,7 +181,7 @@ foreach mode 1G 0.1
   meas ac p1k   find P at=1000
   meas ac p10k  find P at=10000
   meas ac p100k find P at=100000
-  echo "PSRR+ RRG=$mode (dB, bigger is better)"
+  echo "PSRR+ MODE=$gm (dB, bigger is better)"
   print p100 p1k p10k p100k
   wrdata tb_zout_psrr_noise_psrrp_$gm$t P
   destroy all
@@ -171,13 +190,21 @@ alter @vpp[acmag] = 0
 
 echo "########## PSRR from V- ##########"
 alter @vmm[acmag] = 1
-foreach mode 1G 0.1
-  alter rrg = $mode
-  if $mode = 1G
+foreach mode 0 3 10
+  if $mode = 0
     set gm = "0db"
+    alter rrg = 1G
+    alter rrg10 = 1G
   end
-  if $mode = 0.1
+  if $mode = 3
+    set gm = "3db"
+    alter rrg = 0.1
+    alter rrg10 = 1G
+  end
+  if $mode = 10
     set gm = "10db"
+    alter rrg = 0.1
+    alter rrg10 = 0.1
   end
   ac dec 20 20 200k
   let P = -db(v(JACK))
@@ -185,7 +212,7 @@ foreach mode 1G 0.1
   meas ac p1k   find P at=1000
   meas ac p10k  find P at=10000
   meas ac p100k find P at=100000
-  echo "PSRR- RRG=$mode (dB, bigger is better)"
+  echo "PSRR- MODE=$gm (dB, bigger is better)"
   print p100 p1k p10k p100k
   wrdata tb_zout_psrr_noise_psrrm_$gm$t P
   destroy all
@@ -194,25 +221,34 @@ alter @vmm[acmag] = 0
 alter @vsrc[acmag] = 1
 
 echo "########## output noise 20 Hz - 20 kHz ##########"
-foreach mode 1G 0.1
-  alter rrg = $mode
-  if $mode = 1G
+foreach mode 0 3 10
+  if $mode = 0
     set gm = "0db"
+    alter rrg = 1G
+    alter rrg10 = 1G
   end
-  if $mode = 0.1
+  if $mode = 3
+    set gm = "3db"
+    alter rrg = 0.1
+    alter rrg10 = 1G
+  end
+  if $mode = 10
     set gm = "10db"
+    alter rrg = 0.1
+    alter rrg10 = 0.1
   end
   noise v(JACK) VSRC dec 50 20 20000 1
   setplot noise1
   wrdata tb_zout_psrr_noise_noise_$gm$t onoise_spectrum inoise_spectrum
   setplot noise2
-  echo "RRG=$mode  RSRC=430 (phono cathode follower)"
+  echo "MODE=$gm  RSRC=430 (phono cathode follower)"
   print onoise_total inoise_total
   destroy all
 end
 * and with a dead-short source, to separate source-resistance noise
 alter rsrc = 1
 alter rrg = 1G
+alter rrg10 = 1G
 noise v(JACK) VSRC dec 50 20 20000 1
 setplot noise1
 wrdata tb_zout_psrr_noise_noise_intrinsic.txt onoise_spectrum inoise_spectrum
@@ -225,6 +261,7 @@ print onoise_total inoise_total
 destroy all
 alter rsrc = 2500
 alter rrg = 0.1
+alter rrg10 = 0.1
 noise v(JACK) VSRC dec 50 20 20000 1
 setplot noise1
 wrdata tb_zout_psrr_noise_wrdata.txt onoise_spectrum inoise_spectrum

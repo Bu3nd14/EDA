@@ -27,7 +27,9 @@ VSRC SRCN 0 DC 0 AC 1
 RSRC SRCN IN 430
 
 CSTRAY RG 0 15p
+CSTRAY10 RG10 0 15p
 RRG    RG 0 1G
+RRG10  RG10 0 1G
 
 RISO   OUT OUTA 47
 COUT   OUTA JACK 4.7u
@@ -61,6 +63,7 @@ RLOAD  JACK 0 100k
 * prova da se', perche' i tre stati stampano numeri diversi.
 * ---------------------------------------------------------------------
 alter rrg = 0.1
+alter rrg10 = 0.1
 echo "--- A: contact CLOSED (R_f = 1.50k), R_g strapped: the +10 dB state ---"
 op
 print v(OUT) v(FB) v(NX) v(NY)
