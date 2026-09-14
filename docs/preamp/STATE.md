@@ -11,9 +11,9 @@ realtà, il progetto non è ripartibile.
 | | |
 |---|---|
 | Ultimo aggiornamento | **2026-09-14** |
-| Ultimo lotto chiuso | **L27** — il terzo livello di guadagno: ADR-026 (due rami di R_g in parallelo, 3,57 kΩ su K1 e 866 Ω su K5), NC-022 chiusa, NC-030 aperta |
-| **Prossimo lotto** | **L16** — il trim entra nel progetto, con l'interlock elettrico dal mute (mandato in «Prossimo passo concreto») |
-| Non conformità | **17 aperte, 2 bloccanti** |
+| Ultimo lotto chiuso | **L16** — il trim entra nel progetto: ADR-027 (un solo trim sul ramo variabile, 845 / 464 / 464 Ω, bistabili G6KU-2F-Y con LED, permissivo K6 dal mute), NC-005 e NC-023 chiuse |
+| **Prossimo lotto** | **L32** — il dossier rigenerato sui dati di L27 e L16 (mandato in «Prossimo passo concreto») |
+| Non conformità | **15 aperte, 2 bloccanti** |
 | Le bloccanti | NC-004 · NC-017 (Fase 4) |
 | Suite | `run_tests.sh` **8 passed / 0 failed** |
 
@@ -21,6 +21,47 @@ realtà, il progetto non è ripartibile.
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L16 — il trim entra nel progetto (2026-09-14)
+
+**Chiude NC-005 e NC-023**; NC-009 resta aperta per il dossier (L32) e il
+pannello. Report: `reports/2026-09-14-L16-trim.md`. Dati:
+`data/2026-09-14/L16/`.
+
+- **Tre decisioni dell'utente**, parole esatte in NC-023:
+  - a relè;
+  - **un trim comune con LED** invece di uno per ingresso;
+  - dopo le prime misure, **il trim solo sull'uscita variabile**, con le fisse
+    come copia fedele della sorgente.
+- **Perché non all'ingresso del blocco A**: nessun partitore rispetta E3 ed E5
+  insieme. A +10 dB, attenuatore al massimo, trim −6 dB fa **10,12 µV** con la
+  scala più piccola consentita, contro 9,90 µV.
+- **ADR-027**: trim fra il blocco A e l'attenuatore, **845 / 464 / 464 Ω**,
+  −6,003 / −11,939 dB.
+  - Relè bistabili **G6KU-2F-Y**: K7 e K8 sul segnale (reset = 0 dB), K9 e K10
+    per i LED.
+  - **K6** sul comando del mute, due NC in serie, come permissivo.
+  - Comando rotativo SW1. Stato all'accensione = posizione del comando.
+- **Il relè**: pinout letto su tre gambe e due revisioni del datasheet. T8 sul
+  catalogo Omron **K106-E1-16** (03/2026), congelato dall'utente in
+  `vendor/relays/omron/G6K-K106-E1-16/`. **La pagina degli avvisi di fine
+  produzione non è stata letta.**
+- **Misure, tutte conformi**:
+  - **E3**: 121,1 kΩ con 68 pF, identica nelle tre posizioni;
+  - **E5**: ≤ 4,92 µV;
+  - **V1 blocco B** con la sorgente 2,611 k: 0 dB **61,80°**, agli spigoli
+    **61,42°**;
+  - **V1 blocco A**: 63,50°;
+  - classe A del blocco A col partitore: 13,28 mA.
+- **NC-009, una cifra**: metrica **M1**, **+6,58 dB** a +10 dB col trim a
+  −6 dB; +0,58 dB a 0 dB.
+- **Guardiani**:
+  - il 2e prova l'interblocco sulla netlist ed è stato fatto fallire da sei
+    varianti generate;
+  - il 2f asserisce le attenuazioni ed è caduto sulla scala fuori finestra.
+- **Budget bobine**: 126,6 mA a 5 V in mute e fuori. Vincolo per
+  `psu-engineer`: mute rilasciato ≥ 13 ms dopo `VRELAY`.
+- **15 voci aperte, 2 bloccanti.** Prossimo: **L32**.
 
 ### Dopo L27 — il trim: a relè, per ingresso, bistabili se possibile (2026-09-14)
 
@@ -560,7 +601,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L13 | **E4 sulle tre uscite e a manopola che gira.** Estendere `tb_zout_psrr_noise.cir` alle due uscite fisse e a tre posizioni dell'attenuatore | S | NC-008 | da fare |
 | L14 | **Le tre correzioni di testo.** KPI del margine di fase qualificato, i due commenti di cascode allineati, lo scarto ADR-014 riferito a 1 kHz | XS | NC-003, NC-006, NC-007 | **fatto** |
 | L15 | **Il vincolo su E3 scritto dove verrà letto** — in `REQUIREMENTS.md`, «Nota su E3», non in ADR-011 | XS | NC-005 (metà: il vincolo; la misura è L16) | **fatto** |
-| L16 | **Il trim entra nel progetto.** Dimensionarlo in `circuits/preamp/` coi due vincoli insieme — attenuazione richiesta da ADR-015 e la «Nota su E3» (min \|Zin\| 20 Hz–20 kHz ≥ 100 kΩ in tutte e tre le posizioni; R1 + R2 = 100 kΩ non basta, `R_IN` sta in parallelo) — e misurarlo. Chiude anche NC-005. **Decisioni dell'utente del 2026-09-14: trim a relè, uno per ingresso, meglio coi bistabili se possibile.** Allineare F2 («a ponticello») a relè, senza ADR; la ADR del trim (ADR-027) è di L16. Il valore del trim deve restare all'uscita dal mute (F8). La cifra unica di margine di NC-009 si sceglie qui e si pubblica in L32 | S/M | **NC-009**, NC-005, **NC-023** | da fare |
+| L16 | **Il trim entra nel progetto.** Dimensionarlo in `circuits/preamp/` coi due vincoli insieme — attenuazione richiesta da ADR-015 e la «Nota su E3» (min \|Zin\| 20 Hz–20 kHz ≥ 100 kΩ in tutte e tre le posizioni; R1 + R2 = 100 kΩ non basta, `R_IN` sta in parallelo) — e misurarlo. Chiude anche NC-005. **Decisioni dell'utente del 2026-09-14: trim a relè, uno per ingresso, meglio coi bistabili se possibile.** Allineare F2 («a ponticello») a relè, senza ADR; la ADR del trim (ADR-027) è di L16. Il valore del trim deve restare all'uscita dal mute (F8). La cifra unica di margine di NC-009 si sceglie qui e si pubblica in L32 | S/M | **NC-009**, NC-005, **NC-023** | **fatto** — ADR-027 (un solo trim sul ramo variabile, bistabili G6KU-2F-Y, LED, permissivo K6); NC-005 e NC-023 chiuse, NC-009 aperta per L32 |
 | L17 | **Buffer sulle uscite fisse.** Modifica di topologia in `preamp_audio.py` che disaccoppia le due fisse dal nodo del Blocco A, più la riesecuzione di `tb_blockA_carichi.cir` sulla topologia nuova. **Dopo L11**: progetta contro il criterio di corto di ADR-021 (risultato, tecnica libera) e nei limiti di ADR-022; il vincolo di impedenza minima a valle non basta più a chiudere NC-010 | M | **NC-010** (bloccante), apre **NC-029** | **fatto** — ADR-023 (classe A sui percorsi ascoltabili), un `GAINBLOCK` per fissa |
 | L18 | **Il vincolo PSRR scritto dove verrà letto**: quanto ripple può lasciare l'alimentatore sui rail, ricavato da E5 — **ADR-020** e «Nota su E5 — la quota del ripple» | XS/S | **NC-011** (metà: il vincolo; rimedio e verifica vanno con l'alimentatore) | **fatto** |
 | L19 | ~~**La soglia di margine di fase in V1**~~ — **ASSORBITA da L26**: la soglia l'ha data l'utente (60° ovunque, ADR-019) e NC-012 è chiusa. Resta solo la parte «KPI del dossier riferiti a quella», che va con la rigenerazione del dossier (**L32**) | XS | ~~NC-012~~ | **superata** |
@@ -2617,52 +2658,45 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L16 — il trim entra nel progetto.** Chiude **NC-009**, **NC-005** (la metà
-della misura) e **NC-023**. Lotto **S/M**. Il mandato completo è in
-`NEXT-SESSION.md`.
+**L32 — il dossier rigenerato sui dati di oggi.** Chiude la metà «dossier» di
+**NC-009** e il residuo di L19 (le KPI riferite a 60°). Lotto **S**. Il mandato
+completo è in `NEXT-SESSION.md`.
 
 **Perché adesso.**
-- **È l'ultima riga di V1 senza misura**: le tre posizioni del trim come
-  sorgente a monte del blocco A. Dopo L27 il blocco B è misurato in tutti e tre
-  i modi.
-- **Porta tre voci**, e due tirano in direzioni opposte:
-  - NC-009: l'headroom a +10 dB poggia su un trim che non esiste;
-  - NC-005: la Zin di E3 va misurata in tutte e tre le posizioni;
-  - NC-023: l'interlock elettrico col mute di ADR-019.
-
-**Le decisioni dell'utente, già prese** (2026-09-14):
-- trim **a relè**, e F2 si allinea senza ADR;
-- **uno per ingresso**, come ADR-011;
-- **relè bistabili, se possibile**, perché F8 vuole che il valore resti
-  all'uscita dal mute. Se non lo sono, L16 torna dall'utente coi numeri delle
-  due strade.
+- **Il dossier racconta un altro circuito**: `build_dossier.py` legge ancora
+  `data/2026-09-09` (THAT320, C_f 22 pF, due guadagni). L'utente ha deciso di
+  rifarlo subito dopo L16.
+- **Da L16 ogni riga di V1 ha una misura**, e NC-009 ha una cifra con la sua
+  metrica: **M1 +6,58 dB** a +10 dB col trim a −6 dB.
 
 **Dove parte.**
-- Il blocco A a **63,36°** (sorgente phono, 1 nF di cablaggio; L12, rieseguito
-  in L27 entro 1,2·10⁻⁴).
-- La «Nota su E3»: minimo di |Zin| su 20 Hz–20 kHz ≥ 100 kΩ al connettore, in
-  ogni posizione. `R_IN` da 1 MΩ sta in parallelo, e **R1 + R2 = 100 kΩ non
-  basta**.
-- Le resistenze del partitore viste dal blocco A: **≥ 25,0 kΩ a −6 dB**,
-  ≥ 18,8 kΩ a −12 dB. Portano rumore contro E5 in tre modi di guadagno.
+- **Dati vigenti**: `data/2026-09-14/L27/dopo/` e `data/2026-09-14/L16/dopo/`,
+  coi loro README.
+- **V1 al minimo della spazzata** (ADR-024):
+  - blocco B col trim: 61,80° / 69,77° / 102,98°, agli spigoli 61,42° / 68,64°;
+  - blocco A col partitore: 63,50°;
+  - buffer delle fisse: 61,63°.
+- **Il trim** (ADR-027): E3 121,1 kΩ con 68 pF in ogni posizione; E5 della
+  catena ≤ 4,92 µV.
+- **Accanto a ogni numero**: quali modelli sono ancora segnaposto (NC-004,
+  NC-017).
 
 ### Quello che il repo ti consegna già
 
-- **La suite è a 8 blocchi**, 8 passed a fine L27.
-  - Il **2e** conosce i ruoli MUTE e GAIN, non ancora TRIM;
-  - il **2f** asserisce tre guadagni e i rami in parallelo;
-  - il **2g** rifiuta anche i nodi di contatto non terminati (#27).
-- **Cinque relè** sulla scheda audio (K1, K5 guadagno; K2–K4 mute), tutti coi
-  due poli occupati.
-  - **Il permissivo del trim non ha un contatto libero**: serve un polo nuovo, e
-    va preso dal contatto che è chiuso **in** mute;
-  - budget attuale delle bobine: 105,5 mA a 5 V (ADR-026).
-- **I deck d'anello** di ogni ruolo del blocco, a tre modi per il blocco B.
-- **I conteggi**: 17 voci aperte, 2 bloccanti.
+- **La suite è a 8 blocchi**, 8 passed a fine L16.
+  - Il **2e** conosce MUTE, GAIN, PERMIT, TRIM e SPIA, e prova sulla netlist
+    l'interblocco del trim (F8);
+  - il **2f** asserisce tre guadagni, i rami in parallelo e le attenuazioni del
+    trim;
+  - il **2g** rifiuta i nodi di contatto non terminati (#27).
+- **Dieci relè** sulla scheda audio:
+  - K1, K5 guadagno; K2–K4 mute; K6 permissivo;
+  - K7, K8 trim; K9, K10 spie.
+
+  Budget delle bobine: 126,6 mA a 5 V, in mute e fuori (ADR-027).
+- **I conteggi**: 15 voci aperte, 2 bloccanti.
 
 **Poi**, nell'ordine:
-- **L32** (S), **subito dopo L16**: il dossier rigenerato sui dati di L27 e L16,
-  a tre modi di guadagno. Senza avvisi di obsolescenza: lo legge solo l'utente.
 - **L31** (NC-030, XS): i vettori di rumore morti di `tb_noise_vectors.cir`.
 - **L29** (NC-028) aspetta una soglia dell'utente su V2, e si può chiedere in
   qualsiasi momento.
@@ -2766,8 +2800,9 @@ Da non ricercare di nuovo.
 
 1. **E6 × E2 contro E7.** 2,7 V RMS a +10 dB vogliono 8,54 V RMS in
    uscita; con rail a ±15 V il blocco clippa a 9,31 V RMS simulati.
-   Margine 0,75 dB. Il rimedio è il trim di ADR-011 (−6 dB sull'ingresso
-   del K11), che con ADR-015 **non è più opzionale**.
+   Margine 0,75 dB. Il rimedio è il trim, che con ADR-015 **non è più
+   opzionale**: da L16 è comune e sta sul ramo variabile (ADR-027), e a −6 dB
+   il margine sale a **+6,58 dB** (metrica M1, NC-009).
 2. **E4 contro E8 a 20 Hz.** Con accoppiamento capacitivo la |Zout| al
    jack a 20 Hz è ~1,7 kΩ (è la reattanza del 4,7 µF). A 1 kHz è
    58,8 Ω. E4 letta alla lettera non è soddisfacibile a 20 Hz da nessun

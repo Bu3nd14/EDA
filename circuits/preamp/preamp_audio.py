@@ -12,11 +12,11 @@ channels or the outputs to drift apart.
 
                  IN_L -> [BLOCK A] -+-> [BUFFER F1] -> 47R -> 4.7u -> FIXED OUT 1 (Singxer)
                 (buffer, gain 1)    +-> [BUFFER F2] -> 47R -> 4.7u -> FIXED OUT 2 (Stax)
-                                    +-> attenuator (off board, 10k stepped)
-                                            |
-                                            v
-                                       [BLOCK B] -> 47R -> 4.7u -> MAIN OUT
-                               (0 / +3 / +10 dB, relays K1 + K5 on R_g)
+                                    +-> [TRIM 0/-6/-12 dB] -> attenuator (off board, 10k stepped)
+                                           (trim.py, K7/K8)          |
+                                                                     v
+                                                                [BLOCK B] -> 47R -> 4.7u -> MAIN OUT
+                                                        (0 / +3 / +10 dB, relays K1 + K5 on R_g)
    and the same again for the right channel.
 
 ADR-023: class A must hold on every path someone can listen to. A short, or a
@@ -24,19 +24,24 @@ switched-off device with a low input impedance, on ONE output may take only
 the block that serves THAT output out of class A - never block A, which feeds
 the main path and the other fixed output. Hence one buffer per fixed output.
 
+ADR-027 (L16): ONE trim for all inputs, on the VARIABLE branch only. The fixed
+outputs take block A's output before it and stay a faithful copy of the
+source; the trim sets the level of the main output alone. Its bistable relays,
+its LEDs and its interlock with the mute live in trim.py.
+
 WHAT IS DELIBERATELY NOT HERE
 -----------------------------
- - The INPUT SELECTOR and the per-input trim (F1, F2 / ADR-009, ADR-011).
-   They are a separate board upstream of IN_L/IN_R, and their relays and
-   jumpers do not interact with the gain blocks. Drawing them here would
-   couple two boards in one file for no benefit.
+ - The INPUT SELECTOR (F1 / ADR-009). It is upstream of IN_L/IN_R, and its
+   relays do not interact with the gain blocks.
  - The stepped ATTENUATOR itself (F4). It is a rotary switch on the front
    panel, not a PCB part; it appears here as a 3-pin harness connector per
    channel. Its ELECTRICAL effect - a source impedance that swings 0 -> 2.5k
-   -> 0 with the knob - is what the simulations in spice/preamp/tb sweep.
- - The MUTE TIMER (ADR-012). Only the mute contacts are here, because they
-   are in the signal path and change Zout. The coil drive, the delay and the
-   rail-collapse detector belong to psu-engineer.
+   -> 0 with the knob, 2.611k at most behind the trim - is what the
+   simulations in spice/preamp/tb sweep.
+ - The MUTE TIMER (ADR-012) and the VRELAY supply. Only the mute contacts are
+   here, because they are in the signal path and change Zout, plus the mute
+   COMMAND net, because the trim's permissive hangs on it. The coil drive, the
+   delay and the rail-collapse detector belong to psu-engineer.
 
 Run:
   /Users/roberto/EDA/env/venv/bin/python3 <this file>
@@ -59,6 +64,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from skidl import Part, Net, generate_netlist, POWER, ERC  # noqa: E402
 
 import spice_export as sx  # noqa: E402
+import trim  # noqa: E402
 from gain_block import (  # noqa: E402
     gain_block, FP_R, FP_ELCO, REPO,
 )
@@ -99,9 +105,12 @@ FP_CONN2 = "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
 #                 de-energised => 0 dB, ADR-004 / ADR-019 / ADR-026)
 #   mute relay - NORMALLY CLOSED (de-energised => outputs shorted to ground
 #                => silent when the supply is down, ADR-012)
-# Both are asserted on the generated netlist by
+#   permissive  - NORMALLY CLOSED, twice in series (de-energised = muted =>
+#                 the trim command is live, ADR-019 / ADR-027; trim.py)
+# All are asserted on the generated netlist by
 # scripts/check_relay_safe_state.py, which run_tests.sh runs: a deduced pin
-# map cannot come back in silence.
+# map cannot come back in silence. This is the ONE copy of the G6K-2F-Y map:
+# trim.py receives it, it does not keep its own.
 K_COIL_A, K_COIL_B = "1", "8"
 K_COM1, K_NO1, K_NC1 = "3", "4", "2"
 K_COM2, K_NO2, K_NC2 = "6", "5", "7"
@@ -125,7 +134,7 @@ def C(val, a, b, base, fp=FP_FILM_P15):
     return c
 
 
-def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_pole):
+def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole):
     """One complete channel. ch is "L" or "R"; base offsets the refs."""
     global _n
     # ---------------- BLOCK A: input buffer, gain 1 always -----------------
@@ -141,9 +150,10 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_pole):
     inconn[2] += gnd
 
     # ---- attenuator harness (off-board rotary, F4/ADR-009) --------------
-    # Built BEFORE the fixed-output buffers, so their inputs join this net.
+    # Since L16 (ADR-027) its top pin is NOT block A's output: it is the COM
+    # of the trim relay T1, which connects it to block A's output (0 dB) or to
+    # a tap of the trim ladder. See trim.trim_channel() below.
     att_top, att_wiper = Net(f"{ch}_ATT_TOP"), Net(f"{ch}_ATT_W")
-    att_top += a["OUT"]
     ac = Part("Connector_Generic", "Conn_01x03", value=f"ATT_{ch} 10k",
               footprint=FP_CONN3, ref=f"J{base + 20}")
     ac[1] += att_top
@@ -187,12 +197,13 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_pole):
         # R361-R366), which is what preamp_blocks_draw.py reads.
         f = gain_block(tag=f"F{k + 1}{ch}", base=base + 400 + 100 * k,
                        switchable=False, r_in=None, vp=vp, vm=vm, gnd=gnd)
-        # The buffer's input joins block A's output. NOTE on the NAME of that
-        # node in the netlist: SKiDL picks one of the merged names, and L17
-        # saw it come out as F1L_IN, F2L_IN or AR_OUT depending on the run and
-        # the channel - no connection order made it stable. Nothing in the
-        # repo reads it; do not start relying on it.
-        att_top += f["IN"]
+        # The buffer's input joins block A's output, BEFORE the trim: the
+        # fixed outputs are a faithful copy of the source (ADR-027). NOTE on
+        # the NAME of that node in the netlist: SKiDL picks one of the merged
+        # names, and L17 saw it come out as F1L_IN, F2L_IN or AR_OUT depending
+        # on the run and the channel - no connection order made it stable.
+        # Nothing in the repo reads it; do not start relying on it.
+        a["OUT"] += f["IN"]
         # 4.7 uF on BOTH fixed outputs - see the ADR-007 addendum.
         # The Stax alone would be happy at 2.2 uF (50 kOhm => 1.4 Hz), but the
         # Singxer's input impedance is NOT PUBLISHED (Fase 1 read the official
@@ -217,6 +228,12 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_pole):
         cn[1] += Net(f"{ch}_FIXOUT{k + 1}")
         cn[2] += gnd
         k_mute[k].append(cn[1])
+
+    # ---- the common trim, variable branch only (L16, ADR-027) ------------
+    # Between block A's output and the attenuator harness. Ladder and signal
+    # contacts per channel; the relays are shared and made by the caller.
+    trim.trim_channel(ch, a["OUT"], att_top, gnd, k_trim["T1"], k_trim["T2"],
+                      k_pole)
 
     # ---------------- BLOCK B: output stage, 0 / +3 / +10 dB ---------------
     # r_in=None: the attenuator ladder is itself the gate's DC return (at most
@@ -283,8 +300,13 @@ if __name__ == "__main__":
     #     +10 dB  GAIN_CMD on    GAIN10_CMD on
     # Coil budget for psu-engineer (vendor/relays/omron/G6K/en-g6k.pdf,
     # ratings table, +/-10 %): 21.1 mA at 5 V, 9.1 mA at 12 V, 4.6 mA at 24 V
-    # per coil. Worst case is +10 dB out of mute, five coils energised:
-    # 105.5 / 45.5 / 23.0 mA. The VRELAY voltage is not decided yet.
+    # per coil, the same for the G6KU-2F-Y bistables. Since L16 (ADR-027):
+    #   out of mute, +10 dB: K1, K5, K2-K4 and the permissive K6 energised,
+    #     six coils = 126.6 / 54.6 / 27.6 mA; the bistables draw nothing;
+    #   in mute, +10 dB: K1 and K5, plus the four bistable coils (K7-K10)
+    #     driven continuously by the trim knob = 126.6 / 54.6 / 27.6 mA,
+    #     plus ~2 mA of LED.
+    # The VRELAY voltage is not decided yet.
     K_GAIN10 = Part("Relay", "G6K-2", value="G6K-2F-Y GAIN10",
                     footprint=FP_RELAY, ref="K5")
     K_GAIN10[K_COIL_A] += VCC_RLY
@@ -309,10 +331,17 @@ if __name__ == "__main__":
         k[K_COIL_B] += MUTE_CMD
         K_MUTE.append(k)
 
+    # ADR-027 / F8 / F9: the trim's relays (K7, K8), their LED twins (K9,
+    # K10), the command switch and the permissive K6 on MUTE_CMD. Every mute
+    # pole carries signal, so the permissive is a relay of its own.
+    K_TRIM = trim.trim_relays(VCC_RLY, MUTE_CMD,
+                              (K_COIL_A, K_COIL_B, K_COM1, K_NO1, K_NC1,
+                               K_COM2, K_NO2, K_NC2))
+
     chans = {}
     for ch, base, pole in (("L", 100, 0), ("R", 300, 1)):
         chans[ch] = channel(ch, base, VP, VM, GND, K_GAIN, K_GAIN10,
-                            mute_lists, pole)
+                            mute_lists, K_TRIM, pole)
 
     # Wire the mute contacts. mute_lists[i] holds, per output pair,
     # [jack_node_L, connector_pin_L, jack_node_R, connector_pin_R].
@@ -320,13 +349,15 @@ if __name__ == "__main__":
     # de-energised, i.e. whenever the supply is down or the timer has not
     # released yet. Failing safe = failing silent.
     # The mute may be held INDEFINITELY (ADR-021, superseding ADR-012's "a few
-    # seconds"): it is the trim's permissive (ADR-019). With all three jacks
-    # grounded the output stages run in class B - since L17 (ADR-023) that is
-    # the two fixed buffers and block B, each on its own 47 ohm; block A only
-    # drives the buffers and the attenuator - and ADR-021 asks only that every
-    # part stay inside its thermal and SOA limits. L11 measured that on the
-    # topology without buffers; L17 re-measured it on this one. This shunt mute is NOT a short-circuit protection: during an
-    # external short it adds a second ground instead of removing the first.
+    # seconds"): its command is the trim's permissive, through K6 (ADR-019,
+    # ADR-027). With all three jacks grounded the output stages run in class
+    # B - since L17 (ADR-023) that is the two fixed buffers and block B, each
+    # on its own 47 ohm; block A only drives the buffers and the trim - and
+    # ADR-021 asks only that every part stay inside its thermal and SOA
+    # limits. L11 measured that on the topology without buffers; L17
+    # re-measured it on this one. This shunt mute is NOT a short-circuit
+    # protection: during an external short it adds a second ground instead of
+    # removing the first.
     for i, k in enumerate(K_MUTE):
         lst = mute_lists[i]
         for pole_i, (com, nc) in enumerate(((K_COM1, K_NC1), (K_COM2, K_NC2))):
@@ -349,6 +380,8 @@ if __name__ == "__main__":
     except Exception as e:  # noqa: BLE001
         print("SKiDL ERC raised:", e)
 
-    netpath = os.path.join(REPO, "circuits", "preamp", "preamp_audio.net")
+    netpath = os.environ.get(
+        "PREAMP_AUDIO_NET_OUT",
+        os.path.join(REPO, "circuits", "preamp", "preamp_audio.net"))
     generate_netlist(file_=netpath, tool="kicad10")
     print("KiCad netlist ->", netpath)

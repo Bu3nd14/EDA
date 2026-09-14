@@ -1,0 +1,77 @@
+toll_L16.cir - L16 scratch: L27 tolerance corners of block B with the attenuator source the trim adds (2.611 k)
+* Scratch, not versioned. The corners are L12's toll_B.cir
+* (docs/preamp/data/2026-09-14/L12/esplorazione/deck/toll_B.cir), applied to the
+* adopted network of ADR-025 + ADR-026: C124 470p and C137 330p at -5 % / +5 %
+* (C0G), RISO 47 at -1 % / +1 %. Modes 0 dB and +3 dB (+10 dB sits above 100 deg).
+* Source 2 k and 2.5 k, load 100 k and 10 k, cable 2.0 .. 4.7 nF in 11 steps,
+* denser around the +3 dB minimum at 2.7 nF.
+* Node names: VSRCN, OUTA, JACK, NBRK (#24).
+
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN VSRCN 0 DC 0
+RSRCB VSRCN IN 2.5k
+
+CSTRAY   RG   0 15p
+RRG      RG   0 1G
+CSTRAY10 RG10 0 15p
+RRG10    RG10 0 1G
+
+RBRK FB NBRK 100
+VINJ NBRK G2 DC 0 AC 1
+
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+CCABLE JACK 0 1f
+
+.control
+alter r109 = 1G
+set units = degrees
+echo "mode,c124,c137,riso,rsrc,rload,ccable,pm_deg" > toll_L16_tab.csv
+foreach mode 0 3
+  if $mode = 0
+    alter rrg = 1G
+    alter rrg10 = 1G
+  end
+  if $mode = 3
+    alter rrg = 0.1
+    alter rrg10 = 1G
+  end
+  foreach mm 0.95 1.05
+    let cmv = 470e-12*$mm
+    alter c124 = $&cmv
+    foreach fm 0.95 1.05
+      let cfv = 330e-12*$fm
+      alter c137 = $&cfv
+      foreach rm 0.99 1.01
+        let rv = 47*$rm
+        alter riso = $&rv
+        foreach rs 2.5k 2.611k
+          alter rsrcb = $rs
+          foreach rl 100k 10k
+            alter rload = $rl
+            foreach cab 2n 2.3n 2.5n 2.7n 2.9n 3.1n 3.3n 3.5n 3.8n 4.2n 4.7n
+              alter ccable = $cab
+              ac dec 100 1 100meg
+              let T = v(fb)/v(g2)
+              let Tdb = db(T)
+              let Tph = ph(T)
+              meas ac pmarg find Tph when Tdb=0
+              echo "$mode,$&cmv,$&cfv,$&rv,$rs,$rl,$cab,$&pmarg" >> toll_L16_tab.csv
+              destroy all
+            end
+          end
+        end
+      end
+    end
+  end
+end
+.endc
+
+.end

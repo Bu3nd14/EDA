@@ -41,8 +41,12 @@ cablaggio — e **ADR-025**, il C_f da 22 a 330 pF: **chiude NC-002 e NC-021**.
 **L27** (2026-09-14) ha registrato **ADR-026** — il terzo livello di guadagno,
 due rami di R_g in parallelo su due relè — e l'ha misurato su tutta la matrice:
 **chiude NC-022**. Estendendo i deck ha trovato un deck che da tempo non scrive
-dati, e **apre NC-030**.
-**17 voci aperte, 2 bloccanti.**
+dati, e **apre NC-030**. **L16** (2026-09-14) ha registrato **ADR-027** — un
+solo trim, fra il blocco A e l'attenuatore, a relè bistabili con LED e
+permissivo dal mute — e l'ha misurato e provato sulla netlist: **chiude NC-005 e
+NC-023**, e dà a NC-009 la sua cifra con la metrica, che resta da pubblicare
+nel dossier (L32).
+**15 voci aperte, 2 bloccanti.**
 L'accesso a G1 non è concesso finché NC-004 e NC-017 restano aperte.
 
 ---
@@ -648,6 +652,29 @@ Se invece si decide che il +10 dB con sorgenti a fondo scala va
 **impedito** e non mitigato (per esempio bloccando la commutazione), serve
 una ADR nuova che superi ADR-015: non si fa modificandola.
 
+**Stato dopo L16 (2026-09-14).** Criterio 1 **soddisfatto**, 2 **metà**, 3
+**metà**.
+
+1. **Il trim è nel progetto** (ADR-027): fra il blocco A e l'attenuatore,
+   −6,003 / −11,939 dB simulati, E3 conforme in ogni posizione (NC-005 chiusa).
+   I due vincoli non tirano più in direzioni opposte: fuori dall'ingresso del
+   blocco A il partitore può essere a bassa impedenza.
+2. **Una cifra, con la sua metrica**, in `reports/2026-09-14-L16-trim.md`.
+   - **M1**, limite lineare all'1 % contro il richiesto col guadagno misurato
+     (+9,9645 dB) e il trim misurato: **+6,58 dB** a +10 dB col trim a −6 dB.
+   - Caso raggiungibile per errore, trim a 0 dB: **+0,58 dB**.
+   - Etichettate: **M2** (saturazione contro nominale, la cifra di ADR-015)
+     +6,79 / +0,79 dB; **M3** (1 % contro nominale, la cifra del dossier)
+     +6,55 / +0,55 dB.
+   - Dati: `data/2026-09-14/L16/dopo/tb_dc_headroom/`.
+
+   Resta da **pubblicarla nel dossier**: **L32**.
+3. **La conseguenza operativa**: il trim è comune e si ritocca a ogni cambio di
+   sorgente, e il LED (F9) mostra il valore impostato. Una legenda di pannello
+   o una documentazione d'uso non esistono ancora.
+
+**Resta aperta**, maggiore, per il dossier (L32) e per il punto 3.
+
 ### NC-011 — Il PSRR del rail positivo non vincola nessuno
 
 | | |
@@ -843,7 +870,7 @@ volta che NC-002 avrà prodotto i dati.
 | Requisito | **E3** (Zin ≥ 100 kΩ) · F2/ADR-011 |
 | Severità | **minore** |
 | Aperta da | `reports/2026-09-09-gate-G0.md` |
-| Stato | aperta — **metà scritta chiusa il 2026-09-13 da L15**; resta la misura AC, **L16** |
+| Stato | **CHIUSA il 2026-09-14 da L16** — metà scritta L15, misura AC L16. Vedi «Chiusura» in fondo alla voce e «Voci chiuse» |
 
 **Evidenza.** Nessun file in `docs/preamp/data/2026-09-09/` misura
 l'impedenza d'ingresso. In topologia `R_IN = "1M"` in
@@ -872,6 +899,20 @@ al connettore, blocco A collegato, in tutte e tre le posizioni. Il
 controesempio della voce è stato **ricalcolato**: 13,29 kΩ, −12,13 dB.
 **Resta aperta** per la misura, che chiude L16 insieme a NC-009 (il cui
 criterio 1 la contiene già). Report: `reports/2026-09-13-L15-vincolo-e3.md`.
+
+**Chiusura (2026-09-14, L16).**
+- **Il trim misurato all'ingresso** del blocco A reggeva E3 solo con al massimo
+  22 pF di selettore, e **non reggeva E5**: 10,12 µV con la scala più piccola
+  consentita.
+- **ADR-027** lo mette fra il blocco A e l'attenuatore: la Zin al connettore è
+  quella del blocco A.
+- **Misura AC** (`data/2026-09-14/L16/dopo/tb_trim/tb_trim_e3.csv`): minimo di
+  |Zin| su 20 Hz–20 kHz **identico nelle tre posizioni e senza trim**:
+  - 1,000 MΩ senza capacità a monte;
+  - 349,8 kΩ con 22 pF;
+  - **121,1 kΩ con 68 pF**.
+
+  E3 è conforme in ogni posizione. Report: `reports/2026-09-14-L16-trim.md`.
 
 ### NC-006 — `gain_block.py` porta due valori superati per il riferimento di cascode
 
@@ -1533,7 +1574,7 @@ Report: `reports/2026-09-14-L27-terzo-livello-di-guadagno.md`.
 | Requisito | **F8** (**ADR-019**) · ADR-011 |
 | Severità | **maggiore** |
 | Aperta da | `reports/2026-09-10-L26-requisiti-utente.md` |
-| Stato | aperta — decisioni dell'utente del 2026-09-14 in fondo alla voce |
+| Stato | **CHIUSA il 2026-09-14 da L16** — decisioni dell'utente e «Chiusura» in fondo alla voce |
 
 **Evidenza.** Il trim d'ingresso di ADR-011 **non è ancora nel progetto**: è
 il lotto **L16**, che deve dimensionarlo coi due vincoli insieme
@@ -1589,6 +1630,38 @@ LED presi dallo stato vero dei relè**.
 - Cambia l'insieme dei progetti conformi, quindi serve una ADR: **ADR-027**.
 - Un LED preso dalla posizione del comando **mentirebbe** fuori mute: deve
   leggere i contatti.
+
+**Terza decisione dell'utente (2026-09-14, durante L16): dove sta il trim.** Il
+trim all'ingresso del blocco A non rispetta E5 con nessun partitore passivo
+che rispetti E3: nella cella +10 dB, attenuatore al massimo, trim −6 dB il
+rumore al jack vale 10,60 µV con la scala scelta e **10,12 µV** con la più piccola
+che E3 consenta, contro 9,90 µV (senza trim 4,77 µV;
+`data/2026-09-14/L16/esplorazione/`). Proposte due posizioni dopo il blocco A,
+l'utente ha scelto: «Voglio B: le fisse come copia fedele della sorgente, é
+quello che deve fare un´uscita fissa bufferizzata, il TRIM riguarda solo il
+guadagno dell´uscita Variabile». **Il trim sta fra il blocco A e l'attenuatore**,
+dopo la presa dei buffer delle fisse.
+
+**Chiusura (2026-09-14, L16) — ADR-027.**
+- **Il permissivo** è **K6**, un G6K-2F-Y monostabile con la bobina su
+  `MUTE_CMD` accanto a K2–K4. `VTRIM` passa per i suoi **due NC in serie**:
+  chiusi a bobina diseccitata, cioè in mute.
+- **I relè del trim** sono bistabili G6KU-2F-Y (K7, K8; spie K9, K10),
+  pilotati da SW1: in mute seguono il comando, fuori mute tengono il valore
+  senza corrente.
+- **Provato sulla netlist**, non dedotto: `check_relay_safe_state.py` (blocco
+  2e). Da `VRELAY`, fuori mute, nessuna bobina bistabile è raggiungibile in
+  nessuno dei 4 stati dei relè di guadagno; in mute lo sono tutte.
+- **Fatto fallire** su netlist generate da varianti di scratch
+  (`data/2026-09-14/L16/esplorazione/falsi/`), tutte rc 1:
+  - permissivo sui NO di K6;
+  - `VTRIM` presa direttamente da `VRELAY`;
+  - bobina di K6 su un'altra net;
+  - reset ≠ 0 dB;
+  - polarità delle spie invertita;
+  - polo 2 invertito.
+- **Resta dichiarato in ADR-027**: una bobina di K6 interrotta lascerebbe il trim
+  comandabile fuori mute, in silenzio. Report: `reports/2026-09-14-L16-trim.md`.
 
 ### NC-024 — L'h_FE del modello MJE15032 sta sotto il minimo del suo datasheet
 
@@ -2015,6 +2088,22 @@ poggia su questo file.
 Lotto **L31** (XS).
 
 ## Voci chiuse
+
+**NC-023 — Il trim non ha interlock col mute, e il trim non esiste ancora**
+(maggiore). **CHIUSA il 2026-09-14 da L16.**
+- **ADR-027**: permissivo **K6** sul comando del mute, due NC in serie; trim a
+  bistabili G6KU-2F-Y, che tengono il valore all'uscita dal mute (F8).
+- **Provato sulla netlist** dal 2e, per raggiungibilità da `VRELAY`, e **fatto
+  fallire** su sei varianti generate.
+
+**NC-005 — E3 non è verificabile: il valore lo determinerà il trim** (minore).
+**CHIUSA il 2026-09-14 da L16.**
+- Il trim sta fra il blocco A e l'attenuatore.
+- Minimo di |Zin| su 20 Hz–20 kHz identico nelle tre posizioni: 1,000 MΩ, e
+  121,1 kΩ con 68 pF di selettore.
+
+Il testo completo delle due voci resta sopra, con la loro «Chiusura». Report:
+`reports/2026-09-14-L16-trim.md`.
 
 **NC-022 — La topologia ha due livelli di guadagno, il requisito ne chiede tre**
 (maggiore). **CHIUSA il 2026-09-14 da L27.**

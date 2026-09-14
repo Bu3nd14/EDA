@@ -3,7 +3,7 @@
 **Documento vivo.** Riscritto quando i requisiti cambiano. Ogni modifica
 sostanziale deve avere una ADR corrispondente in `decisions/`.
 
-Ultimo aggiornamento: 2026-09-14 (L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
+Ultimo aggiornamento: 2026-09-14 (L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
 
 Le motivazioni non stanno qui: stanno nelle ADR referenziate e nel
 report `reports/2026-09-08-analisi-catena.md`.
@@ -24,7 +24,7 @@ report `reports/2026-09-08-analisi-catena.md`.
 | # | Requisito | ADR |
 |---|---|---|
 | F1 | **4 ingressi** sbilanciati RCA, commutati a **relè** | ADR-009 |
-| F2 | **Trim di livello comune, a valle del selettore d'ingresso**: 0 / −6 / −12 dB, **a relè bistabili**. Uno solo per tutti gli ingressi: cambiando sorgente si ritocca il trim o il volume | ADR-011, **ADR-027** |
+| F2 | **Trim di livello comune, sul solo ramo dell'uscita variabile**: fra il blocco A e l'attenuatore, 0 / −6 / −12 dB, **a relè bistabili**. **Le uscite fisse restano copia fedele della sorgente**: guadagno 1, il trim non le tocca. Uno solo per tutti gli ingressi: cambiando sorgente si ritocca il trim o il volume | ADR-011, **ADR-027** |
 | F3 | **3 uscite**: principale (attenuata) + 2 a livello fisso, **ciascuna fissa col proprio buffer** | ADR-008, **ADR-023** |
 | F4 | **Attenuatore a scatti**, commutatore rotativo, 10 kΩ, resistenze 0,1% | ADR-009 |
 | F5 | **Guadagno commutabile 0 / +3 / +10 dB**, relè sulla rete di controreazione. **A relè diseccitati il guadagno è 0 dB**: nessun guasto di bobina e nessuno stato di accensione può portare a un guadagno più alto. Due rami di R_g **in parallelo**: nessuno stato dei contatti supera il +10 dB | ADR-004, **ADR-019**, **ADR-026** |
@@ -122,8 +122,14 @@ d'ingresso è quello della sorgente selezionata.)*
 
 **Come si decide.** Analisi AC al connettore, una per posizione del trim:
 passa se il **minimo di |Zin| su 20 Hz–20 kHz** è ≥ 100 kΩ in tutte e tre.
-La misura non esiste ancora: il trim non è in `circuits/preamp/`, e la
-misura è del lotto che ce lo mette (L16, NC-005 e NC-009). Oggi `R_IN = 1 MΩ`
+**Esito, L16** (**ADR-027**, NC-005 chiusa):
+- il trim sta fra il blocco A e l'attenuatore, quindi al connettore si vede il
+  blocco A;
+- minimo di |Zin| su 20 Hz–20 kHz identico nelle tre posizioni: **1,000 MΩ**,
+  349,8 kΩ con 22 pF di selettore, **121,1 kΩ con 68 pF**
+  (`data/2026-09-14/L16/dopo/tb_trim/`);
+- all'ingresso del blocco A, invece, nessun partitore reggeva E3 ed E5 insieme
+  (punto 2 qui sotto, misurato: 10,12 µV). Oggi `R_IN = 1 MΩ`
 in `gain_block.py` fissa la Zin del **solo** blocco A.
 
 **Perché è E3 e non un requisito nuovo.** E3 nasce dal condensatore
@@ -314,8 +320,15 @@ senza il carico a cui si riferisce non sarebbe stata un requisito migliore.
 - Buffer delle fisse: **61,63°** (Stax, 2,7 nF), L12. Rieseguiti in L27 con le
   curve entro 1,2·10⁻⁴.
 
-**Resta senza misura** una riga della matrice, che non esiste ancora nel
-circuito: le **tre posizioni del trim** (L16).
+- **Il trim** (L16, **ADR-027**) sta fra il blocco A e l'attenuatore, non a monte
+  del blocco A. Dati in `data/2026-09-14/L16/`:
+  - blocco A col partitore, tre posizioni, cablaggio ≤ 1 nF: **63,50°** al
+    peggio;
+  - blocco B con la sorgente massima che il trim gli dà, (10 k + 442 Ω)/4 =
+    2,611 kΩ: 0 dB **61,80°** (agli spigoli **61,42°**), +3 dB 69,77° (68,64°),
+    +10 dB 102,98°.
+
+**Nessuna riga della matrice resta senza misura.**
 
 Una riga senza misura non è un circuito instabile: 60° è un **margine di progetto** —
 copre la dispersione dei componenti, la capacità di cavi che nessuno ha
@@ -381,15 +394,15 @@ va automatizzato.
 ## Architettura
 
 ```
-                                                          ┌─ BUFFER F1 ─47Ω─C 4,7µ─[mute]──► Singxer SA-1
- phono ECC82 ──┐                                          │  guadagno 1
- K11 R2R    ───┤  selettore    trim      BLOCCO A         ├─ BUFFER F2 ─47Ω─C 4,7µ─[mute]──► Stax SRM-T1
- (spare)    ───┤   a relè    0/-6/-12   guadagno 1  ──────┤  guadagno 1
- (spare)    ───┘             comune,    Zin ≥ 100k        │
-                             LED
-                                                          └─ ATTENUATORE ── BLOCCO B ─47Ω─C 4,7µ─[mute]──► cj EV250
-                                                              10k, a scatti   0/+3/+10 dB
-                                                                              K1, K5 su R_g
+                                              ┌─ BUFFER F1 ─47Ω─C 4,7µ─[mute]──► Singxer SA-1
+ phono ECC82 ──┐                              │  guadagno 1 (copia della sorgente)
+ K11 R2R    ───┤  selettore    BLOCCO A       ├─ BUFFER F2 ─47Ω─C 4,7µ─[mute]──► Stax SRM-T1
+ (spare)    ───┤   a relè     guadagno 1 ─────┤  guadagno 1 (copia della sorgente)
+ (spare)    ───┘              Zin ≥ 100k      │
+                                              └─ TRIM ── ATTENUATORE ── BLOCCO B ─47Ω─C 4,7µ─[mute]──► cj EV250
+                                                 0/-6/-12   10k, a scatti   0/+3/+10 dB
+                                                 comune,                    K1, K5 su R_g
+                                                 bistabile, LED
 ```
 
 Quattro blocchi identici per canale, otto in totale (T3, ADR-023). Un'uscita

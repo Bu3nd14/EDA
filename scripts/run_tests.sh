@@ -155,7 +155,11 @@ fi
 report "schematic drawings match their netlists" $sch_fail
 echo
 
-echo "-- 2e. relay safe state on de-energised coils (NC-014) --"
+echo "-- 2e. relay safe state on de-energised coils (NC-014) and the trim interlock (NC-023) --"
+# L16 (ADR-027): the same checker also proves, by reachability on the netlist,
+# that no trim coil can be powered out of mute, and that all of them can in
+# mute. Made to fail on seven generated variants: see
+# docs/preamp/data/2026-09-14/L16/esplorazione/falsi/.
 # A mute relay must short the outputs to ground when its coil is
 # de-energised (ADR-012) and a gain relay must leave R_g floating (ADR-004).
 # Until L21 the G6K-2F-Y pin map was DEDUCED instead of read, and pole 2 -

@@ -1,6 +1,6 @@
 # ADR-019 — Margine di fase minimo 60°, trim interbloccato col mute, tre livelli di guadagno
 
-Data: 2026-09-10 · Stato: accettata
+Data: 2026-09-10 · Stato: accettata — sonda precisata da ADR-024; permissivo del trim precisato da ADR-027 (un relè sul comando del mute, K6)
 
 ## Contesto
 
