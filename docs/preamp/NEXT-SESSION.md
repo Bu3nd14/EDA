@@ -88,8 +88,10 @@ riga di V1 senza misura. Il trim porta tre voci insieme:
    - V1 del blocco A con la sorgente del trim: tre posizioni, cablaggio ≤ 1 nF,
      minimo della spazzata;
    - l'headroom di NC-009 con **una** metrica dichiarata.
-5. **Le tre cifre di margine di NC-009**: una sola pubblicata, con la sua
-   metrica, e le altre etichettate.
+5. **Le tre cifre di margine di NC-009**: scegline **una**, con la sua metrica
+   dichiarata, e scrivila nel report e in NC-009, con le altre due etichettate.
+   **Pubblicarla nel dossier non è di questo lotto**: il dossier si rigenera
+   tutto in **L32**, subito dopo.
 
 ### I vincoli
 
@@ -119,6 +121,8 @@ riga di V1 senza misura. Il trim porta tre voci insieme:
 ## NON fa parte di questo lotto
 
 - **Il selettore d'ingresso** oltre a ciò che il trim richiede.
+- **Il dossier (L32)**: si rigenera nel lotto successivo, sui dati di L27 e di
+  questo. Nessun avviso di obsolescenza nel frattempo: lo legge solo l'utente.
 - **NC-030 (L31)**, **NC-028 (L29)**, **NC-029 (L30)**, **NC-027 (L28)**.
 - **Non toccare i file già in `vendor/`.**
 
