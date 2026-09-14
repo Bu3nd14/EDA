@@ -537,3 +537,29 @@ salita contro I_coda/C124, entro il 3 %.
 
 **Regola operativa**: in un deck con `meas`, contare le righe `Error:` del log e
 le celle vuote della tabella. L'exit code non basta.
+
+## 27. Un nodo del blocco lasciato su un solo terminale non dà errore, e il deck misura un altro circuito
+
+Scoperto in L27.
+
+L27 ha dato al blocco un secondo nodo di contatto del relè, `RG10`, che nel
+blocco tocca un solo terminale (R143). Un deck scritto per un solo contatto non
+lo collega a niente. **ngspice non se ne accorge**: un nodo appeso a una sola
+resistenza non rende la matrice singolare, segue il nodo all'altro capo.
+Misurato sui deck di `main` con l'include nuovo:
+- `tb_op.cir`: rc 0, 87 valori, uno solo diverso alla sesta cifra;
+- `tb_ac.cir`: la modalità «10db» chiudeva solo il vecchio contatto e ha
+  stampato **+3,037 dB** invece di +9,949, sotto un nome di file che dice ancora
+  10db.
+
+La forma generale: **ogni nodo esterno che un blocco generato lascia su un solo
+terminale è un contatto**, e un deck che non lo termina simula il contatto
+aperto e senza la sua capacità parassita, qualunque cosa dica l'etichetta.
+
+**Rimedio meccanico**: `scripts/check_deck_refs.py`, blocco **2g**. Ricava i nodi
+pendenti dall'intestazione «External nodes» dell'include flat e dal corpo dei
+`.subckt`, e rifiuta un deck che non li collega o una riga `X` col numero
+sbagliato di porte. Fatto fallire sui 16 deck di `main`.
+
+**Cosa non vede**: i nomi dei vettori di rumore (`onoise_<dispositivo>`), che un
+deck costruisce da sé. È NC-030.

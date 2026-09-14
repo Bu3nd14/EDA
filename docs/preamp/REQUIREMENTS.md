@@ -3,7 +3,7 @@
 **Documento vivo.** Riscritto quando i requisiti cambiano. Ogni modifica
 sostanziale deve avere una ADR corrispondente in `decisions/`.
 
-Ultimo aggiornamento: 2026-09-14 (L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
+Ultimo aggiornamento: 2026-09-14 (L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
 
 Le motivazioni non stanno qui: stanno nelle ADR referenziate e nel
 report `reports/2026-09-08-analisi-catena.md`.
@@ -27,7 +27,7 @@ report `reports/2026-09-08-analisi-catena.md`.
 | F2 | **Trim di livello per ingresso**: 0 / −6 / −12 dB a ponticello | ADR-011 |
 | F3 | **3 uscite**: principale (attenuata) + 2 a livello fisso, **ciascuna fissa col proprio buffer** | ADR-008, **ADR-023** |
 | F4 | **Attenuatore a scatti**, commutatore rotativo, 10 kΩ, resistenze 0,1% | ADR-009 |
-| F5 | **Guadagno commutabile 0 / +3 / +10 dB**, relè sulla rete di controreazione. **A relè diseccitati il guadagno è 0 dB**: nessun guasto di bobina e nessuno stato di accensione può portare a un guadagno più alto | ADR-004, **ADR-019** |
+| F5 | **Guadagno commutabile 0 / +3 / +10 dB**, relè sulla rete di controreazione. **A relè diseccitati il guadagno è 0 dB**: nessun guasto di bobina e nessuno stato di accensione può portare a un guadagno più alto. Due rami di R_g **in parallelo**: nessuno stato dei contatti supera il +10 dB | ADR-004, **ADR-019**, **ADR-026** |
 | F6 | **Relè di mute** su tutte le uscite: accensione, commutazione guadagno e regolazione del trim (F8). **Tenibile a tempo indefinito**: il mute inserito rientra nel requisito P7 | ADR-012, **ADR-021** |
 | F7 | **Nessun telecomando.** Operazionali e microcontrollore **ammessi solo fuori dal percorso del segnale**, alle condizioni di ADR-022: stato sicuro senza firmware, protezione dal corto non affidata solo al firmware, quota ausiliaria di rumore **1 µV RMS** | ADR-009, **ADR-022** |
 | F8 | **Il trim d'ingresso funziona solo a mute inserito**, con interlock **elettrico**: il comando del trim raggiunge i propri relè solo se il mute è attivo. Due comandi distinti, il mute abilita il trim. Fuori mute agire sul trim non cambia nulla; il valore impostato resta applicato all'uscita dal mute | ADR-011, **ADR-019** |
@@ -37,7 +37,7 @@ report `reports/2026-09-08-analisi-catena.md`.
 | # | Parametro | Valore | Origine |
 |---|---|---|---|
 | E1 | Guadagno nominale | **0 dB** | ADR-001 |
-| E2 | Guadagni alternativi | **+3 dB** e **+10 dB**, commutabili. Valore esatto del gradino intermedio dal dimensionamento (ADR-019) | ADR-004, **ADR-019** |
+| E2 | Guadagni alternativi | **+3 dB** e **+10 dB**, commutabili. Dal dimensionamento: **+3,05 dB** (finestra ±0,1 dB) e **+9,97 dB** (finestra 9,5–10,5 dB), entrambi asseriti sulla netlist | ADR-004, **ADR-019**, **ADR-026** |
 | E3 | Impedenza d'ingresso | **≥ 100 kΩ**, al connettore d'ingresso, **in ogni posizione del trim** | Cap di accoppiamento del phono — vedi report e **nota sotto** |
 | E3b | Attenuazione tipica all'ascolto | ~29–31 dB con il nuovo preamp | Guadagno finale 20,7×–25,3× |
 | E4 | Impedenza d'uscita | **< 100 Ω in banda passante** (misurata escludendo la reattanza del condensatore d'accoppiamento), costante con la posizione del volume | ADR-002 |
@@ -301,17 +301,21 @@ senza il carico a cui si riferisce non sarebbe stata un requisito migliore.
   capacità realistica presa **≤ 1 nF**;
 - la sonda sul nodo d'uscita resta nei deck come informazione.
 
-**Stato, da L12** (C_f a 330 pF, **ADR-025**; dati in
-`data/2026-09-14/L12/dopo/`): **conforme su ogni cella misurata.**
-- Blocco B a 0 dB: **61,21°** (attenuatore a metà corsa, 3,3 nF); a +10 dB
-  102,96°.
-- Blocco A: **63,36°** (sorgente phono 430 Ω, 1 nF di cablaggio).
-- Buffer delle fisse: **61,63°** (Stax, 2,7 nF).
+**Stato, da L27** (C_f a 330 pF, **ADR-025**; rete a tre livelli, **ADR-026**):
+**conforme su ogni cella misurata.**
+- Blocco B, carico 100 kΩ e 10 kΩ, `data/2026-09-14/L27/dopo/`:
+  - 0 dB **61,83°** (attenuatore a metà corsa, 3,3 nF), 61,45° agli spigoli di
+    tolleranza;
+  - **+3 dB 69,79°** (2,8 nF, griglia fitta), 68,67° agli spigoli;
+  - +10 dB 102,99°.
+- Blocco A: **63,36°** (sorgente phono 430 Ω, 1 nF di cablaggio), L12.
+- Buffer delle fisse: **61,63°** (Stax, 2,7 nF), L12. Rieseguiti in L27 con le
+  curve entro 1,2·10⁻⁴.
 
-**Restano senza misura** due righe della matrice, che non esistono ancora nel
-circuito: il blocco B a **+3 dB** (L27) e le **tre posizioni del trim** (L16).
+**Resta senza misura** una riga della matrice, che non esiste ancora nel
+circuito: le **tre posizioni del trim** (L16).
 
-Nessuno dei due è un circuito instabile: 60° è un **margine di progetto** —
+Una riga senza misura non è un circuito instabile: 60° è un **margine di progetto** —
 copre la dispersione dei componenti, la capacità di cavi che nessuno ha
 misurato e i modelli che non sono ancora tutti veri.
 
@@ -326,6 +330,10 @@ Comportamento dinamico durante e dopo ogni commutazione:
   contatti aperti il guadagno è 1 e l'anello resta chiuso. Se si
   commutasse R_f, l'anello si aprirebbe e lo stadio sbatterebbe contro
   un rail. **Da verificare sul circuito, non da assumere.**
+  **Verificato in L27** (`tb_switch_v2.cir`), con due contatti che rimbalzano:
+  in ogni passaggio fra 0, +3 e +10 dB, e in entrambi gli ordini dei contatti
+  sul salto diretto, l'uscita resta dentro l'inviluppo del +10 dB. Il
+  controfattuale con R_f commutata porta l'uscita a −13,77 V.
 - **Relè del selettore d'ingresso**: commutazione a caldo fra sorgenti,
   con l'eventuale carica residua sui condensatori di accoppiamento a
   monte.
@@ -377,8 +385,8 @@ va automatizzato.
  (spare)    ───┤   a relè    0/-6/-12   guadagno 1  ──────┤  guadagno 1
  (spare)    ───┘             per ingr.  Zin ≥ 100k        │
                                                           └─ ATTENUATORE ── BLOCCO B ─47Ω─C 4,7µ─[mute]──► cj EV250
-                                                              10k, a scatti   0/+10 dB (+3 dB: NC-022)
-                                                                              relè su R_g
+                                                              10k, a scatti   0/+3/+10 dB
+                                                                              K1, K5 su R_g
 ```
 
 Quattro blocchi identici per canale, otto in totale (T3, ADR-023). Un'uscita

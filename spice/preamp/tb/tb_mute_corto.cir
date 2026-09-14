@@ -73,21 +73,29 @@ VIN SRC 0 SIN(0 3.818 1k)
 RSRC SRC INA 1.5
 
 * ---------------- BLOCCO A: guadagno 1, R_g non montata ------------------
-XA INA OUTA FBA RGA VPLUS VMINUS GAINBLOCK
+* L27: il subckt ha due nodi di contatto di guadagno, RG e RG10 (ADR-026).
+* Sui blocchi senza rele' (A, F1, F2) restano entrambi aperti.
+XA INA OUTA FBA RGA RG10A VPLUS VMINUS GAINBLOCK
 RRGA RGA 0 1G
 CRGA RGA 0 15p
+RRG10A RG10A 0 1G
+CRG10A RG10A 0 15p
 
 * Attenuatore da 10 k: k = RATTB / 10 k. RATTT a 1 mohm = manopola al massimo.
 RATTT OUTA W 1m
 RATTB W 0 10k
 
 * ---------------- BUFFER DELLE FISSE (ADR-023): guadagno 1 ---------------
-XF1 OUTA OUTF1 FBF1 RGF1 VPLUS VMINUS GAINBLOCK
+XF1 OUTA OUTF1 FBF1 RGF1 RG10F1 VPLUS VMINUS GAINBLOCK
 RRGF1 RGF1 0 1G
 CRGF1 RGF1 0 15p
-XF2 OUTA OUTF2 FBF2 RGF2 VPLUS VMINUS GAINBLOCK
+RRG10F1 RG10F1 0 1G
+CRG10F1 RG10F1 0 15p
+XF2 OUTA OUTF2 FBF2 RGF2 RG10F2 VPLUS VMINUS GAINBLOCK
 RRGF2 RGF2 0 1G
 CRGF2 RGF2 0 15p
+RRG10F2 RG10F2 0 1G
+CRG10F2 RG10F2 0 15p
 
 * Fissa 1 (Singxer, Zin non pubblicata: 10 k come G0) e fissa 2 (Stax 50 k)
 RSEP1 OUTF1 FIX1 47
@@ -99,11 +107,16 @@ CFIX2 FIX2 J2 4.7u
 RBL2  J2 0 470k
 RLD2  J2 0 50k
 
-* ---------------- BLOCCO B: 0 / +10 dB, rele' su R_g ---------------------
-XB W OUTB FBB RGB VPLUS VMINUS GAINBLOCK
-* 0 dB: contatto aperto (1 G + 15 pF). +10 dB: alter rrgb = 0.1
+* ---------------- BLOCCO B: 0 / +3 / +10 dB, due rele' su R_g ------------
+XB W OUTB FBB RGB RG10B VPLUS VMINUS GAINBLOCK
+* Contatto aperto = 1 G + 15 pF, chiuso = alter ... = 0.1 (ADR-026):
+*   0 dB   rrgb = 1G    rrg10b = 1G
+*   +3 dB  rrgb = 0.1   rrg10b = 1G
+*   +10 dB rrgb = 0.1   rrg10b = 0.1
 RRGB RGB 0 1G
 CRGB RGB 0 15p
+RRG10B RG10B 0 1G
+CRG10B RG10B 0 15p
 RISOM OUTB MAINA 47
 COUTM MAINA JM 4.7u
 RBLM  JM 0 220k
@@ -167,16 +180,29 @@ echo "blk,modo_db,f_hz,vin_pk,k_att,caso,p_q132,p_q133,icmax_q132,icmin_q132,icm
 *     in classe B sta a Vpk = 2 Vcc / pi ~ 9.5 V in uscita, non al clipping.
 *     I casi 2 e 5 ci sono per il verbo di ADR-023 sul blocco B: con una
 *     fissa in corto o spenta, l'uscita principale a +10 dB resta in classe A.
-foreach sweep 1 2
+* 1c: +3 dB (L27, ADR-026), come 1b. ADR-021 lo chiede nel suo «da riaprire
+*     se»: il modo nuovo e' dentro il dominio, ma va verificato, non dedotto.
+foreach sweep 1 2 3
 if $sweep = 1
   alter rrgb = 1G
+  alter rrg10b = 1G
   set gm = 0
   set amps = ( 0 0.4243 1.4142 2.8284 3.818 )
   set ks = ( 1 )
   set cases = ( 0 1 2 3 4 5 6 )
-else
+end
+if $sweep = 2
   alter rrgb = 0.1
+  alter rrg10b = 0.1
   set gm = 10
+  set amps = ( 3.818 )
+  set ks = ( 0.25 0.5 0.79 1 )
+  set cases = ( 0 1 2 4 5 )
+end
+if $sweep = 3
+  alter rrgb = 0.1
+  alter rrg10b = 1G
+  set gm = 3
   set amps = ( 3.818 )
   set ks = ( 0.25 0.5 0.79 1 )
   set cases = ( 0 1 2 4 5 )
@@ -407,11 +433,18 @@ alter rsh2 = 1e12
 alter rshm = 1e12
 alter rld1 = 10k
 foreach a 3.818 0
-foreach gm 0 10
+foreach gm 0 3 10
   if $gm = 0
     alter rrgb = 1G
-  else
+    alter rrg10b = 1G
+  end
+  if $gm = 3
     alter rrgb = 0.1
+    alter rrg10b = 1G
+  end
+  if $gm = 10
+    alter rrgb = 0.1
+    alter rrg10b = 0.1
   end
   alter @vin[sin] = [ 0 $a 1k ]
   alter @vmute[pulse] = [ 0 1 10m 1u 1u 20m 1 ]
@@ -447,6 +480,7 @@ end
 *    e sulla 47 ohm RSEP1 dalla tensione ai suoi capi invece che dalla corrente.
 * =========================================================================
 alter rrgb = 1G
+alter rrg10b = 1G
 alter rsh1 = 0.01
 alter @vmute[pulse] = [ 0 0 0 1u 1u 1 2 ]
 alter @vin[sin] = [ 0 3.818 20000 ]

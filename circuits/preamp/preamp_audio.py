@@ -16,7 +16,7 @@ channels or the outputs to drift apart.
                                             |
                                             v
                                        [BLOCK B] -> 47R -> 4.7u -> MAIN OUT
-                                    (0 / +10 dB, relay on R_g)
+                               (0 / +3 / +10 dB, relays K1 + K5 on R_g)
    and the same again for the right channel.
 
 ADR-023: class A must hold on every path someone can listen to. A short, or a
@@ -95,7 +95,8 @@ FP_CONN2 = "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
 # reading, reports/2026-09-10-L8-parti-nuove.md.
 #
 # What each relay needs, and the design fails safe only if they are right:
-#   gain relay - NORMALLY OPEN  (de-energised => R_g floating => 0 dB, ADR-004)
+#   gain relays - NORMALLY OPEN (de-energised => R_g leg floating; both
+#                 de-energised => 0 dB, ADR-004 / ADR-019 / ADR-026)
 #   mute relay - NORMALLY CLOSED (de-energised => outputs shorted to ground
 #                => silent when the supply is down, ADR-012)
 # Both are asserted on the generated netlist by
@@ -124,7 +125,7 @@ def C(val, a, b, base, fp=FP_FILM_P15):
     return c
 
 
-def channel(ch, base, vp, vm, gnd, k_gain, k_mute, k_pole):
+def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_pole):
     """One complete channel. ch is "L" or "R"; base offsets the refs."""
     global _n
     # ---------------- BLOCK A: input buffer, gain 1 always -----------------
@@ -217,7 +218,7 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_mute, k_pole):
         cn[2] += gnd
         k_mute[k].append(cn[1])
 
-    # ---------------- BLOCK B: output stage, 0 / +10 dB --------------------
+    # ---------------- BLOCK B: output stage, 0 / +3 / +10 dB ---------------
     # r_in=None: the attenuator ladder is itself the gate's DC return (at most
     # 10 kOhm to ground in every knob position), so a second resistor here
     # would only add noise and load the wiper.
@@ -250,11 +251,14 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_mute, k_pole):
     k_mute[2].append(main_j)
     k_mute[2].append(mc[1])
 
-    # ---- gain relay leg, ADR-004 ---------------------------------------
-    # ONE pole of ONE relay per channel; K_GAIN is shared by both channels,
-    # which is why it is created by the caller and not here.
+    # ---- gain relay legs, ADR-004 / ADR-026 ----------------------------
+    # ONE pole of each gain relay per channel: K_GAIN (K1) grounds the R_g3
+    # leg, K_GAIN10 (K5) the R_g10 leg. Both relays are shared by the two
+    # channels, which is why the caller creates them and not this function.
     k_gain[K_COM1 if k_pole == 0 else K_COM2] += b["RG"]
     k_gain[K_NO1 if k_pole == 0 else K_NO2] += gnd
+    k_gain10[K_COM1 if k_pole == 0 else K_COM2] += b["RG10"]
+    k_gain10[K_NO1 if k_pole == 0 else K_NO2] += gnd
     return a, b
 
 
@@ -270,6 +274,21 @@ if __name__ == "__main__":
                   footprint=FP_RELAY, ref="K1")
     K_GAIN[K_COIL_A] += VCC_RLY
     K_GAIN[K_COIL_B] += Net("GAIN_CMD")
+
+    # ADR-026: the second gain relay, for the R_g10 leg. It is K5 and not K2
+    # so that the three mute relays keep their references (limitations #22).
+    # Coil commands, from the 3-position gain selector:
+    #     0 dB    GAIN_CMD off   GAIN10_CMD off   (the de-energised state)
+    #     +3 dB   GAIN_CMD on    GAIN10_CMD off
+    #     +10 dB  GAIN_CMD on    GAIN10_CMD on
+    # Coil budget for psu-engineer (vendor/relays/omron/G6K/en-g6k.pdf,
+    # ratings table, +/-10 %): 21.1 mA at 5 V, 9.1 mA at 12 V, 4.6 mA at 24 V
+    # per coil. Worst case is +10 dB out of mute, five coils energised:
+    # 105.5 / 45.5 / 23.0 mA. The VRELAY voltage is not decided yet.
+    K_GAIN10 = Part("Relay", "G6K-2", value="G6K-2F-Y GAIN10",
+                    footprint=FP_RELAY, ref="K5")
+    K_GAIN10[K_COIL_A] += VCC_RLY
+    K_GAIN10[K_COIL_B] += Net("GAIN10_CMD")
 
     # Three mute relays: 6 output lines (3 outputs x 2 channels), 2 poles each.
     # ADR-012 puts mute on ALL outputs, and the reason is the headphone
@@ -292,7 +311,8 @@ if __name__ == "__main__":
 
     chans = {}
     for ch, base, pole in (("L", 100, 0), ("R", 300, 1)):
-        chans[ch] = channel(ch, base, VP, VM, GND, K_GAIN, mute_lists, pole)
+        chans[ch] = channel(ch, base, VP, VM, GND, K_GAIN, K_GAIN10,
+                            mute_lists, pole)
 
     # Wire the mute contacts. mute_lists[i] holds, per output pair,
     # [jack_node_L, connector_pin_L, jack_node_R, connector_pin_R].

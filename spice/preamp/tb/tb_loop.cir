@@ -1,4 +1,4 @@
-tb_loop.cir - loop gain and phase margin of BLOCK B, V1 matrix (mode x attenuator source x cable x probe position)
+tb_loop.cir - loop gain and phase margin of BLOCK B, V1 matrix (mode x load x attenuator source x cable x probe position)
 * METHOD: voltage injection at the inverting JFET gate. That node draws no
 * current (JFET gate, ~1e12 ohm) while the feedback network drives it from
 * ~470 ohm, so simple voltage injection is exact here - no Middlebrook
@@ -44,8 +44,17 @@ VMM VMINUS 0 DC -15
 VIN VSRCN 0 DC 0
 RSRCB VSRCN IN 1m
 
-CSTRAY RG 0 15p
-RRG    RG 0 1G
+* The two gain-relay contact nodes (L27, ADR-026). Each starts as an OPEN
+* contact - 15 pF of stray, 1 G of leakage - and a closed one is 0.1 ohm:
+*   0 dB    rrg = 1G    rrg10 = 1G
+*   +3 dB   rrg = 0.1   rrg10 = 1G
+*   +10 dB  rrg = 0.1   rrg10 = 0.1
+* RG10 must be terminated here: left dangling it silently behaves as an open
+* contact without its stray (scripts/check_deck_refs.py refuses that).
+CSTRAY   RG   0 15p
+RRG      RG   0 1G
+CSTRAY10 RG10 0 15p
+RRG10    RG10 0 1G
 
 * loop break, substituting for the generated 100 ohm gate stopper R109
 RBRK FB NBRK 100
@@ -70,13 +79,22 @@ CNODE  OUT 0 1f
 *
 * DOVE: dentro il ciclo interno, PRIMA del `destroy all` (docs/limitations.md #10).
 *
-* I FILE (L12), con <C> in 1f 47p 100p 220p 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n:
-*   sorgente 1 mohm, sonda al jack:  tb_loop_{0db,10db}_<C>.txt      - i nomi di prima
-*   sorgente 1 mohm, sonda sul nodo: tb_loop_nodo_{0db,10db}_<C>.txt
-*   sorgente 2.5 k,  sonda al jack:  tb_loop_att2k5_{0db,10db}_<C>.txt
-* La sorgente da 1 k e la sorgente 2.5 k sul nodo stanno solo in tabella.
+* I FILE (L12, L27), con <C> in 1f 47p 100p 220p 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+* e <G> in 0db 3db 10db. Le curve si scrivono solo col carico da 100 k:
+*   sorgente 1 mohm, sonda al jack:  tb_loop_<G>_<C>.txt      - i nomi di prima
+*   sorgente 1 mohm, sonda sul nodo: tb_loop_nodo_<G>_<C>.txt
+*   sorgente 2.5 k,  sonda al jack:  tb_loop_att2k5_<G>_<C>.txt
+* La sorgente da 1 k, la 2.5 k sul nodo e il carico da 10 k stanno solo in tabella.
 * LA TABELLA dei margini e' tb_loop_margini.csv, scritta da echo: nessun
-* wrdata produce quel nome (docs/limitations.md #25).
+* wrdata produce quel nome (docs/limitations.md #25). La colonna rload (L27)
+* sta in CODA, cosi' le prime sette restano confrontabili con quelle di L12.
+*
+* CARICO (L27): V1 elenca il cj da 100 k, e ADR-007 dimensiona l'uscita per
+* un finale futuro da 10 k. RLOAD spazza entrambi.
+*
+* MODALITA' (L27, ADR-026): `foreach mode 0 3 10`, e ogni ramo imposta i DUE
+* contatti. Le etichette sono quotate: `set gm = 3db` memorizzerebbe 3
+* (docs/limitations.md #10).
 *
 * COLONNE delle curve (~801 righe, 1 Hz - 100 MHz, 100 punti/decade).
 *   col0 = frequenza [Hz]   col1 = Tdb = |T| in dB
@@ -87,49 +105,62 @@ set t = .txt
 set u = "_"
 alter r109 = 1G
 set units = degrees
-echo "mode,rsrc,pos,cprobe,fcross_hz,pm_deg,tdb_10hz" > tb_loop_margini.csv
-foreach mode 1G 0.1
-  alter rrg = $mode
-  if $mode = 1G
+echo "mode,rsrc,pos,cprobe,fcross_hz,pm_deg,tdb_10hz,rload" > tb_loop_margini.csv
+foreach mode 0 3 10
+  if $mode = 0
     set gm = "0db"
+    alter rrg = 1G
+    alter rrg10 = 1G
   end
-  if $mode = 0.1
+  if $mode = 3
+    set gm = "3db"
+    alter rrg = 0.1
+    alter rrg10 = 1G
+  end
+  if $mode = 10
     set gm = "10db"
+    alter rrg = 0.1
+    alter rrg10 = 0.1
   end
-  foreach rs 1m 1k 2.5k
-    alter rsrcb = $rs
-    foreach pos 1 2
-      foreach cab 1f 47p 100p 220p 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
-        if $pos = 1
-          alter ccable = $cab
-          alter cnode = 1f
-        else
-          alter ccable = 1f
-          alter cnode = $cab
-        end
-        ac dec 100 1 100meg
-        let T = v(fb)/v(g2)
-        let Tdb = db(T)
-        let Tph = ph(T)
-        meas ac fcross when Tdb=0
-        meas ac pmarg find Tph when Tdb=0
-        meas ac tdc find Tdb at=10
-        echo "mode(RRG)=$mode  rsrc=$rs  pos=$pos  C=$cab"
-        print fcross pmarg tdc
-        echo "$gm,$rs,$pos,$cab,$&fcross,$&pmarg,$&tdc" >> tb_loop_margini.csv
-        if $rs = 1m
+  foreach rl 100k 10k
+    alter rload = $rl
+    foreach rs 1m 1k 2.5k
+      alter rsrcb = $rs
+      foreach pos 1 2
+        foreach cab 1f 47p 100p 220p 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
           if $pos = 1
-            wrdata tb_loop_$gm$u$cab$t Tdb Tph
+            alter ccable = $cab
+            alter cnode = 1f
           else
-            wrdata tb_loop_nodo_$gm$u$cab$t Tdb Tph
+            alter ccable = 1f
+            alter cnode = $cab
           end
-        end
-        if $rs = 2.5k
-          if $pos = 1
-            wrdata tb_loop_att2k5_$gm$u$cab$t Tdb Tph
+          ac dec 100 1 100meg
+          let T = v(fb)/v(g2)
+          let Tdb = db(T)
+          let Tph = ph(T)
+          meas ac fcross when Tdb=0
+          meas ac pmarg find Tph when Tdb=0
+          meas ac tdc find Tdb at=10
+          echo "mode=$gm  rload=$rl  rsrc=$rs  pos=$pos  C=$cab"
+          print fcross pmarg tdc
+          echo "$gm,$rs,$pos,$cab,$&fcross,$&pmarg,$&tdc,$rl" >> tb_loop_margini.csv
+          if $rl = 100k
+            if $rs = 1m
+              if $pos = 1
+                wrdata tb_loop_$gm$u$cab$t Tdb Tph
+              else
+                wrdata tb_loop_nodo_$gm$u$cab$t Tdb Tph
+              end
+            end
+            if $rs = 2.5k
+              if $pos = 1
+                wrdata tb_loop_att2k5_$gm$u$cab$t Tdb Tph
+              end
+            end
           end
+          destroy all
         end
-        destroy all
       end
     end
   end

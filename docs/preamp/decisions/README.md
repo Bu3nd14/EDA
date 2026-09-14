@@ -60,3 +60,4 @@ Costa un commento. È il collegamento dall'artefatto al ragionamento, ed
 | [023](ADR-023-classe-a-sui-percorsi-ascoltabili.md) | Classe A su ogni percorso ascoltabile, e un buffer per ogni uscita fissa | accettata |
 | [024](ADR-024-sonda-capacitiva-cavo-al-jack.md) | La sonda capacitiva di V1 è il cavo: al jack, ogni cavo fino a 4,7 nF; il blocco A col suo cablaggio | accettata |
 | [025](ADR-025-cf-330p-rimedio-margine-di-fase.md) | C_f da 22 a 330 pF: il rimedio del margine di fase, uguale in tutte le istanze | accettata |
+| [026](ADR-026-terzo-livello-due-rami-in-parallelo.md) | Il terzo livello di guadagno: due rami di R_g in parallelo, 3,57 kΩ e 866 Ω, su due relè | accettata |

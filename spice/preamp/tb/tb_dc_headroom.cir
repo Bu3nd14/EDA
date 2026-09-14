@@ -1,4 +1,4 @@
-tb_dc_headroom.cir - large-signal transfer, both gain modes, both rails
+tb_dc_headroom.cir - large-signal transfer, all three gain modes, both rails
 * Answers three separate questions that are easy to confuse:
 *   1. where does the OUTPUT stage clip (V+/V- minus the drops)?
 *   2. where does the INPUT pair run out of common-mode range (the price
@@ -13,11 +13,12 @@ tb_dc_headroom.cir - large-signal transfer, both gain modes, both rails
 * Path convention: see the comment in tb_op.cir (settled in L2). Reads use
 * @REPO@/<path-from-repo-root>; writes use a bare wrdata name.
 *
-* This deck is the ONE that writes TWO wrdata files, so the bare names
-* cannot both be <basename>_wrdata.txt. The mapping is not guessable from
-* the names, so it is stated here and on each mode below:
-*   tb_dc_headroom_wrdata.txt -> 0 dB mode   (relay open,   RRG = 1 Gohm)
-*   tb_dc_headroom_10db.txt   -> +10 dB mode (relay closed, RRG = 0.1 ohm)
+* This deck writes THREE wrdata files (L27: the +3 dB mode of ADR-026), so
+* the bare names cannot all be <basename>_wrdata.txt. The mapping is not
+* guessable from the names, so it is stated here and on each mode below:
+*   tb_dc_headroom_wrdata.txt -> 0 dB mode   (both open: RRG = RRG10 = 1 Gohm)
+*   tb_dc_headroom_3db.txt    -> +3 dB mode  (K1 closed: RRG = 0.1, RRG10 = 1G)
+*   tb_dc_headroom_10db.txt   -> +10 dB mode (both closed: RRG = RRG10 = 0.1)
 * run_simulation.sh converts the first via its primary path (that name is
 * what it looks for first) and the second via its second pass, which
 * converts every wrdata file the run produced.
@@ -34,9 +35,11 @@ VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15
 VIN IN 0 DC 0
 
-* gain relay contact, altered inside .control
-CSTRAY RG 0 15p
-RRG    RG 0 1G
+* gain relay contacts (ADR-026), altered inside .control
+CSTRAY   RG   0 15p
+RRG      RG   0 1G
+CSTRAY10 RG10 0 15p
+RRG10    RG10 0 1G
 
 RISO  OUT OUTA 47
 COUT  OUTA JACK 4.7u
@@ -44,12 +47,19 @@ RBLEED JACK 0 220k
 RLOAD JACK 0 100k
 
 .control
-* ---------- 0 dB mode: relay open (RRG = 1 Gohm) ----------
+* ---------- 0 dB mode: both contacts open ----------
 alter rrg = 1G
+alter rrg10 = 1G
 dc VIN -14 14 0.05
 wrdata tb_dc_headroom_wrdata.txt v(OUT) v(D1N)-v(S1) v(D2N)-v(S2) v(NX) v(NY)
-* ---------- +10 dB mode: relay closed (RRG = 0.1 ohm) ----------
+* ---------- +3 dB mode: K1 closed, K5 open ----------
 alter rrg = 0.1
+alter rrg10 = 1G
+dc VIN -14 14 0.05
+wrdata tb_dc_headroom_3db.txt v(OUT) v(D1N)-v(S1) v(D2N)-v(S2) v(NX) v(NY)
+* ---------- +10 dB mode: both contacts closed ----------
+alter rrg = 0.1
+alter rrg10 = 0.1
 dc VIN -14 14 0.05
 wrdata tb_dc_headroom_10db.txt v(OUT) v(D1N)-v(S1) v(D2N)-v(S2) v(NX) v(NY)
 .endc
