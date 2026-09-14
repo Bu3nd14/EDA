@@ -449,10 +449,20 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # deliberately oversized - at 15 mA / 15 V they dissipate 225 mW against a
     # package good for tens of watts, so the operating point never leaves the
     # flat part of the beta and Vbe curves.
-    # Class A is guaranteed by arithmetic, not by hope: the heaviest load the
-    # stage ever sees is 100 kOhm (cj EV250) in parallel with the 2.2 kOhm
-    # feedback network, i.e. 3.9 mA peak at full output - a quarter of the
-    # 15 mA bias, so neither device ever turns off.
+    # Class A holds under the loads V1 lists, by arithmetic: the heaviest of
+    # them is 100 kOhm (cj EV250) in parallel with the 2.2 kOhm feedback
+    # network, i.e. 3.9 mA peak at full output - a quarter of the 15 mA bias,
+    # so neither device turns off.
+    # It does NOT hold with the mute engaged or with a short at an output
+    # connector (NC-001, NC-010): both put ground behind 47 ohm + 4.7 uF and
+    # the stage runs in class B. ADR-021 accepts class B in exactly those two
+    # conditions and asks for thermal and SOA limits instead (Tj <= 125 C at
+    # 60 C ambient). L11 measured them on this topology, no heatsink
+    # (spice/preamp/tb/tb_mute_corto.cir, docs/preamp/data/2026-09-14/):
+    # worst 484 mW per MJE, Tj 90 C, against 1.04 W allowed.
+    # ADR-021 rating constraint for the BOM: the two 22 ohm emitter resistors
+    # below dissipate up to 0.27 W (block B, short at MAIN, +10 dB, 20 kHz
+    # full scale), so they must be rated >= 0.27 W at 60 C.
     R("10", NX, NBN)
     R("10", NY, NBP)
     Q("npn", "MJE15032", "NMJE15032", VP, NBN, NEN, fp=FP_TO220)

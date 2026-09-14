@@ -10,17 +10,58 @@ realtà, il progetto non è ripartibile.
 
 | | |
 |---|---|
-| Ultimo aggiornamento | **2026-09-13** |
-| Ultimo lotto chiuso | **L18** — il vincolo PSRR scritto dove verrà letto (ADR-020) |
-| **Prossimo lotto** | **L11** — mute e corto sulle uscite: misurare e rimediare, NC-001 bloccante (mandato in «Prossimo passo concreto») |
-| Non conformità | **19 aperte, 6 bloccanti** |
-| Le bloccanti | NC-001 (L11) · NC-002 e NC-021 (L12) · NC-004 · NC-010 (L17) · NC-017 (Fase 4) |
+| Ultimo aggiornamento | **2026-09-14** |
+| Ultimo lotto chiuso | **L11** — mute e corto sulle uscite: ADR-021, ADR-022, baseline conforme, NC-001 chiusa |
+| **Prossimo lotto** | **L17** — le uscite fisse con un apparecchio spento a valle, NC-010 bloccante (mandato in «Prossimo passo concreto») |
+| Non conformità | **19 aperte, 5 bloccanti** |
+| Le bloccanti | NC-002 e NC-021 (L12) · NC-004 · NC-010 (L17) · NC-017 (Fase 4) |
 | Suite | `run_tests.sh` **8 passed / 0 failed** |
 
 ## Diario degli ultimi lotti
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L11 — mute tenuto e corto sulle uscite (2026-09-14)
+
+**Chiude NC-001** (bloccante). Report:
+`reports/2026-09-14-L11-mute-e-corto.md`.
+
+- **Le decisioni registrate.** **ADR-021**: mute a tempo indefinito; ogni
+  uscita regge un corto, requisito come esito (**P7**); classe B ammessa solo
+  lì. **ADR-022**: operazionali e microcontrollore fuori dal percorso del
+  segnale, con una definizione verificabile di percorso e tre condizioni.
+  Aggiornati F6, F7 e T1, e il campo `Stato:` di ADR-003, ADR-009 e ADR-012.
+  L'indice delle ADR aveva perso le righe 017-019: rimesse.
+- **Due numeri che il repo non aveva, chiesti all'utente:** **60 °C** di
+  ambiente nel telaio, **Tj ≤ 125 °C**. Le RθJA vengono dai datasheet in
+  `vendor/`.
+- **La baseline.** `tb_mute_corto.cir` è un canale intero, con cinque casi,
+  due modalità, due frequenze, ampiezza e manopola spazzate. **Conforme senza
+  protezione e senza dissipatore:**
+  - MJE peggiore 484 mW, Tj 90,2 °C, contro 1,04 W ammessi;
+  - dispositivo più caldo: Q125, Tj 96,5 °C.
+- **Il caso peggiore non era quello di G0.** Il mute mette a massa **entrambe**
+  le fisse, e il blocco A vede 47 ∥ 47 Ω. Le cifre di G0 (THAT320) sono
+  riprodotte entro lo 0,1 % nella loro configurazione.
+- **Provato su tre gambe:**
+  - il deck fatto fallire togliendo i contatti di mute (0 righe su 36
+    diverse);
+  - la potenza ricalcolata da tensioni e correnti (≤ 0,23 %);
+  - il riposo a 14,557 mA come `tb_op-LS352`.
+- **Consegna tre vincoli di distinta:** la 47 Ω dell'uscita principale
+  dissipa **1,10 W** in un corto a +10 dB e va dimensionata di conseguenza (P7).
+- **Trovato: NC-028** (maggiore). Al rilascio del mute con segnale presente il
+  jack riceve un gradino, **5,37 V** a +10 dB, che decade in 0,32 s. È il
+  condensatore caricato durante il mute. V2 non ha soglia, quindi serve una
+  decisione dell'utente. Lotto **L29**.
+- **Sensibilità**: coi modelli vendor il riposo sale a 20,1 mA (R128 è tarata
+  sui segnaposto), e il verdetto non cambia.
+- **«Classe A garantita» corretta** in `gain_block.py` (AST identico) e su
+  `gain_block.svg`.
+- **NC-010 aggiornata:** `tb_blockA_carichi` rieseguito, identico. Il corto su
+  una fissa è conforme a P7; resta l'apparecchio **spento**, che è T1 → L17.
+- **19 voci aperte, 5 bloccanti.**
 
 ### Dopo L18 — protezione neutra sulla tecnica, e operazionali e microcontrollore fuori dal percorso (2026-09-13)
 
@@ -333,7 +374,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 
 | # | Lotto | Dim. | Chiude | Stato |
 |---|---|---|---|---|
-| L11 | **Mute e corto sulle uscite: misurare e rimediare.** Prima le ADR delle decisioni dell'utente del 2026-09-13. **ADR-021**: mute tenibile **a tempo indefinito**; ciascuna uscita regge un corto al connettore a tempo indefinito, requisito scritto **come risultato** (limiti termici e SOA, a regime e sul transitorio d'intervento, tecnica libera); classe B ammessa. **ADR-022**: operazionali e microcontrollore fuori dal percorso del segnale ma ammessi nel circuito, con tre condizioni. Poi la baseline sulla topologia di oggi; se non regge, la tecnica si sceglie coi numeri. Divisibile in L11a/L11b | M | **NC-001** (bloccante) | da fare |
+| L11 | **Mute e corto sulle uscite: misurare e rimediare.** Prima le ADR delle decisioni dell'utente del 2026-09-13. **ADR-021**: mute tenibile **a tempo indefinito**; ciascuna uscita regge un corto al connettore a tempo indefinito, requisito scritto **come risultato** (limiti termici e SOA, a regime e sul transitorio d'intervento, tecnica libera); classe B ammessa. **ADR-022**: operazionali e microcontrollore fuori dal percorso del segnale ma ammessi nel circuito, con tre condizioni. Poi la baseline sulla topologia di oggi; se non regge, la tecnica si sceglie coi numeri. Divisibile in L11a/L11b | M | **NC-001** (bloccante) | **fatto** — conforme senza protezione; apre NC-028 |
 | L12 | **Portare blocco A e blocco B sopra i 60°.** Cambia natura con **ADR-019**: non più solo «misura coi valori veri», ma **rimedio** — il blocco A sta a 41,98° e il blocco B a 0 dB con cavo a 56,46°, contro una soglia di 60°. Le strade (più compensazione, meno guadagno d'anello, rete d'isolamento diversa) costano tutte a un altro requisito e vanno confrontate coi numeri | M | **NC-002**, **NC-021** (bloccanti) | da fare |
 | L13 | **E4 sulle tre uscite e a manopola che gira.** Estendere `tb_zout_psrr_noise.cir` alle due uscite fisse e a tre posizioni dell'attenuatore | S | NC-008 | da fare |
 | L14 | **Le tre correzioni di testo.** KPI del margine di fase qualificato, i due commenti di cascode allineati, lo scarto ADR-014 riferito a 1 kHz | XS | NC-003, NC-006, NC-007 | **fatto** |
@@ -351,6 +392,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L26 | **I tre requisiti nuovi dell'utente diventano ADR-019**: margine di fase minimo **60° ovunque**, trim abilitato dal mute con **interlock elettrico**, guadagni **0 / +3 / +10 dB** con riposo a 0 dB | XS/S | **NC-012** (chiude), apre NC-021…NC-023 | **fatto** |
 | L27 | **Il terzo livello di guadagno entra nel progetto.** Dimensionare il secondo ramo commutato verso massa (ADR-004 conservata: si commuta R_g, mai R_f; a relè diseccitati **0 dB**), decidere relè e poli col budget di corrente delle bobine, estendere i dodici deck da due modalità a tre e l'asserzione del diagramma a blocchi | M | **NC-022** | da fare |
 | L28 | **SS dell'LSK489 definito per l'LSK489.** Un documento del costruttore che dica cosa sono i pin 3 e 7 di *questa* parte — o una ADR che accetti l'istruzione dell'LSK389 in forza della compatibilità dichiarata. Prima di G2 | XS/S | NC-027 | da fare |
+| L29 | **Il gradino al rilascio del mute.** Con segnale presente, il rilascio porta sul jack il condensatore caricato durante il mute: **5,37 V** a +10 dB, 1,79 V a 0 dB, 1,72 V sulle fisse, τ 0,32 s (principale) e 46 ms (fisse). **Prima una soglia dell'utente su V2** (ampiezza al jack, o regola d'uso scritta come vincolo); poi, se serve, un rimedio misurato: mute in serie (cambia lo stato sicuro e il guardiano), sequenza di rilascio col segnale azzerato a monte, rilascio lento | S | NC-028 | da fare |
 
 **NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
 riesecuzione di `tb_noise_breakdown.cir` coi modelli veri. È il caso
@@ -2391,117 +2433,72 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L11 — mute e corto sulle uscite: misurare e rimediare.** Chiude **NC-001**
-(bloccante). Lotto **M**: registrare le decisioni, poi baseline e rimedio.
-Se non sta in una sessione, si divide: **L11a** (ADR e baseline) e **L11b**
-(rimedio).
+**L17 — le uscite fisse con un apparecchio spento a valle.** Chiude **NC-010**
+(bloccante). Lotto **M**.
 
-0. **Le tre decisioni dell'utente, da registrare per prima** (2026-09-13,
-   dopo la chiusura di L18; parole esatte in `NEXT-SESSION.md`):
-   - il mute si tiene **a tempo indefinito**, a costo di cambiare la
-     topologia;
-   - **ciascuna delle tre uscite regge un corto al connettore a tempo
-     indefinito**, e il requisito **non prescrive la tecnica**. L'utente non
-     vuole che venga esclusa la possibilità di «staccare o mutare le uscite in
-     maniera attiva»;
-   - **operazionali e microcontrollore** restano fuori dal percorso del
-     segnale, ma sono **ammessi nel circuito**.
+**Cosa resta di NC-010 dopo L11.** Il corto su una fissa **è conforme** a P7 /
+ADR-021:
+- MJE a 299,5 mW, Tj 78,7 °C;
+- col mute, che mette a massa entrambe le fisse, 483,7 mW, Tj 90,2 °C.
 
-   Diventano **due ADR nuove**:
-   - **ADR-021 — mute e corto sulle uscite.**
-     - Supera la durata «qualche secondo» di ADR-012 e aggiorna F6.
-     - Aggiunge il requisito di protezione dal corto, scritto come
-       **risultato**: nessun dispositivo esce dai limiti termici e SOA, **a
-       regime e nel transitorio prima dell'intervento**.
-     - Ammette la classe B a mute e in corto.
-     - Lascia la tecnica libera fra limitazione di corrente, distacco attivo e
-       mute attivo.
-     - Numeri da datasheet e ADR-010, non inventati.
-   - **ADR-022 — operazionali e microcontrollore fuori dal percorso del
-     segnale.**
-     - Supera la clausola di ADR-009 e aggiorna F7.
-     - Definisce in modo verificabile il percorso del segnale per T1: nessun
-       integrato attraversato dal segnale o che chiuda un anello sul segnale;
-       un ingresso di sola rilevazione è ammesso se il suo effetto su E4, E5 e
-       sulla risposta è misurato.
-     - Tre condizioni al microcontrollore: **stato sicuro senza firmware**;
-       **protezione non affidata solo al firmware**; **budget di rumore
-       digitale misurato** dentro E5, come ADR-020.
+Resta la parte per cui la voce è nata. Un apparecchio **spento** a valle, con
+Zin fra ~150 Ω e il corto, porta il blocco A in classe B **fuori** dalle due
+condizioni in cui ADR-021 la ammette: è **T1**. `tb_blockA_carichi.cir`,
+rieseguito in L11 sulla topologia di oggi, dà gli stessi numeri del
+2026-09-09 (`data/2026-09-14/`):
+- 100 Ω: I_C min 2,40 mA;
+- 10 Ω: −0,23 µA.
 
-   Entrambe sono sostanziali col criterio di L15.
-1. **La misura che manca.** A mute inserito i contatti NC mettono a massa i
-   jack, a valle di 47 Ω e 4,7 µF. Il carico diventa |47 + 1/jωC| ≈ 58,6 Ω a
-   1 kHz invece di 100 kΩ. G0 ha simulato I_C del dispositivo d'uscita a
-   **65,07 mA** (0 dB) e **203,2 mA** (+10 dB), contro circa 14,6 mA di
-   riposo: lo stadio va in classe B, e F6 lo fa attraversare a ogni
-   commutazione di guadagno. **Non esiste un deck versionato per il mute.**
-   Primo passo: un deck in `spice/preamp/tb/` (convenzione `@REPO@`, `wrdata`
-   con nome nudo) che misuri, coi dati in `data/<data>/`:
-   - I_C e dissipazione a regime dei due dispositivi d'uscita a mute
-     inserito;
-   - le stesse grandezze **con ciascuna delle tre uscite in corto al
-     connettore** (le fisse caricano il blocco A, la principale il blocco B;
-     `tb_blockA_carichi.cir` spazza già fino a 0,01 Ω);
-   - il transitorio di inserzione e rilascio del mute.
-2. **Le cifre di G0 sono della topologia col THAT320** (2026-09-09).
-   Rieseguirle sul codice di oggi prima di usarle: è la lezione di L14 e L18.
-   **E i riferimenti della voce non valgono più.**
-   - NC-001 cita le righe 132-141 e 242-243 di `preamp_audio.py`: oggi il
-     contatto NC verso massa è alla **riga 264** (`k[nc] += GND`) e le liste
-     dei jack sono alle 162-168 e 205-206.
-   - `@q134[ic]` era **+14,557 mA** in `data/2026-09-09/tb_op.log` ed è
-     **−14,557 mA** in `data/2026-09-10/tb_op-LS352.log`: stesso modulo, segno
-     opposto. Dopo le rinumerazioni di L22 e L10 quel nome indica con ogni
-     probabilità **l'altro** dispositivo d'uscita. I nomi si ricavano dalla
-     netlist di oggi, non da G0.
-3. **Il rimedio: la tecnica si sceglie coi numeri.** La misura della baseline
-   va fatta con segnale presente all'ingresso: il mute non spegne la sorgente, e
-   il trim si regola a mute inserito.
-   - **Se la topologia di oggi regge in tutti i casi** (mute, e corto su
-     ciascuna uscita), NC-001 si chiude con:
-     - le ADR del passo 0;
-     - il calcolo termico e SOA, da leggere insieme a **NC-024** e **NC-025**
-       perché i modelli dei due MJE stanno sotto i minimi del loro datasheet;
-     - la correzione di «Classe A garantita» dovunque sia scritta.
-   - **Se non regge**, si confrontano le tecniche ammesse coi loro costi:
-     - **limitazione di corrente**: una resistenza in serie pesa contro E4, e
-       un limitatore attivo tocca il percorso del segnale;
-     - **distacco attivo**: un contatto in serie e un tempo di reazione;
-     - **mute attivo.**
+**La prima domanda è dell'utente, e va fatta prima di progettare.** Dopo L11
+esistono due strade, e costano in modo molto diverso:
+1. **Accettare la classe B anche con un apparecchio spento a valle**, con
+   un'ADR che estenda l'eccezione di ADR-021 a questa condizione. La termica è
+   già provata: il corto è il caso peggiore, ed è conforme. È una scelta di
+   prodotto su T1, non un calcolo.
+2. **Disaccoppiare le fisse** con buffer inseguitori, la strada 1 di NC-010.
+   Supera **ADR-008** (buffer unico con resistenze di isolamento) con un'ADR
+   nuova. «Da riaprire se» di ADR-008 è scattato: un'uscita con impedenza
+   d'ingresso bassa.
 
-     La tecnica scelta si verifica **a regime e sul transitorio
-     d'intervento**, su ogni via da cui il corto può arrivare.
-   - **I vincoli che una protezione attiva incontra:**
-     - il mute di oggi è **in derivazione**, quindi in un corto ne aggiunge un
-       secondo invece di togliere il primo: protegge solo un mute **in serie**,
-       che cambia ADR-012;
-     - un distacco in serie **ridefinisce lo stato sicuro** che
-       `check_relay_safe_state.py` (blocco 2e) verifica, e il permissivo del
-       trim di **ADR-019**. Va deciso esplicitamente, e il guardiano va
-       riscritto e fatto fallire di nuovo;
-     - **ricollegamento automatico o blocco** dopo il corto è una scelta
-       dell'utente.
-   - **Il blocco A in corto su una fissa.** Se non regge, lo si registra in
-     **NC-010** e lo si lascia a **L17**.
-   - **Due verifiche che non chiudono niente:** una verifica termica su una
-     durata finita, e una verifica solo a regime per una protezione attiva.
+**Se si prende la strada 2, vincoli già scritti:**
+- **ADR-006 / T3**: un solo blocco progettato una volta. Un buffer diverso è
+  un secondo progetto da validare, e va detto;
+- **ADR-022 / T1**: nessun integrato nel percorso;
+- **T7 / T8**: modelli del costruttore e nessuna parte a fine vita;
+- **P7 / ADR-021**: le uscite nuove reggono corto e mute. Si estende
+  `tb_mute_corto.cir`, non se ne scrive uno nuovo;
+- **E4** < 100 Ω e **E5** < 10 µV, meno le quote di ADR-020 e ADR-022, cioè
+  9,90 µV per il circuito;
+- **NC-002**: il blocco A a 41,98° contro 60°. Togliere le fisse dal suo nodo
+  cambia il suo carico, e quindi il suo margine. Va misurato, perché L12
+  parte da lì;
+- **il mute**: le liste `k_mute` e `check_relay_safe_state.py` (blocco 2e)
+  devono continuare a valere sulle uscite nuove;
+- **NC-028**: se il rimedio del gradino al rilascio sarà un mute in serie,
+  conviene saperlo prima di cablare le fisse nuove.
 
 ### Quello che il repo ti consegna già
 
-- **La suite è a 8 blocchi**, 8 passed a fine L18.
-- **Il guardiano del mute esiste già**: `check_relay_safe_state.py` asserisce
-  sulla netlist generata «mute diseccitato ⇒ uscita a massa» (L21). Qualsiasi
-  modifica al contatto deve passarlo, e va fatto fallire di nuovo se si tocca.
-- **Il metodo per non fidarsi di una cifra vecchia** è collaudato tre volte:
-  rieseguire il deck dal worktree e provare con un numero indipendente che ha
-  letto la topologia di oggi (L14 con `tb_op`, L18 col rumore di caso
-  peggiore).
-- **I conteggi**: 19 voci aperte, 6 bloccanti.
+- **La suite è a 8 blocchi**, 8 passed a fine L11. Il blocco 2g copre
+  automaticamente ogni deck nuovo sotto `spice/*/tb/`.
+- **`tb_mute_corto.cir`** è un canale intero dai due `GAINBLOCK`. Ha i cinque
+  casi mute/corto e tabelle CSV con intestazione vera (`echo >>`). Il README
+  di `data/2026-09-14/` ne ha la legenda.
+- **Lo script di verdetto termico** è descritto nel report di L11: RθJA per
+  parte e Tj = 60 °C + P·RθJA. Le potenze ammesse sono in ADR-021.
+- **Il metodo per non fidarsi di un deck** è collaudato quattro volte:
+  - farlo fallire togliendo l'elemento che misura;
+  - una controprova indipendente;
+  - un numero che prova la topologia letta (riposo 14,557 mA).
+- **I conteggi**: 19 voci aperte, 5 bloccanti.
 
-**Poi**, nell'ordine: **L17** (buffer sulle uscite fisse) e **L12**, che
-ADR-019 ha trasformato da misura in **rimedio**. **L28** (SS dell'LSK489,
-NC-027) va fatto prima di G2. L'alimentatore, quando arriva, parte da
-**ADR-020**.
+**Poi**, nell'ordine: **L12**, che ADR-019 ha trasformato da misura in
+**rimedio**. **L29** (NC-028) aspetta una soglia dell'utente su V2, e si può
+chiedere in qualsiasi momento. **L28** (SS dell'LSK489, NC-027) va fatto prima
+di G2. L'alimentatore, quando arriva, parte da **ADR-020**. Da L11 deve
+anche:
+- dare corrente ai corti di P7, fino a ~200 mA di picco per blocco;
+- alimentare separatamente la parte digitale, se entra (ADR-022).
 
 ### Cosa cercare, e cosa NON accettare
 

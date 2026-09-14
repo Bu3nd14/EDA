@@ -28,10 +28,13 @@ il vincolo di **NC-005** accanto a E3 (`REQUIREMENTS.md`, «Nota su E3»): la
 voce resta aperta per la misura, che è di L16. **L18** ha fatto lo stesso con
 **NC-011**: la quota del ripple è **ADR-020**, e sta nella «Nota su E5 — la
 quota del ripple d'alimentazione». La voce resta aperta per il rimedio e la
-verifica, che sono del lotto dell'alimentatore. **19 voci aperte,
-6 bloccanti.**
-L'accesso a G1 non è concesso finché NC-001, NC-002, NC-004, NC-010, NC-017
-e NC-021 restano aperte)
+verifica, che sono del lotto dell'alimentatore. **L11** (2026-09-14) ha
+registrato **ADR-021** e **ADR-022**. Ha misurato il mute e il corto su
+ciascuna uscita, e la topologia di oggi regge il criterio termico: **chiude
+NC-001**. Ha trovato il gradino che il rilascio del mute porta sul jack e
+**apre NC-028**. **19 voci aperte, 5 bloccanti.**
+L'accesso a G1 non è concesso finché NC-002, NC-004, NC-010, NC-017 e NC-021
+restano aperte.
 
 ---
 
@@ -160,7 +163,7 @@ report di L5e, che riporta ogni misura col file da cui viene.
 | Requisito | **V2** · **T1**/ADR-003 (Classe A pura) · **F6**/ADR-012 · P5 |
 | Severità | **bloccante** |
 | Aperta da | `reports/2026-09-09-gate-G0.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-14 da L11** — ADR-021, deck versionato, verdetto termico conforme. Vedi «Chiusura» in fondo alla voce e «Voci chiuse» |
 
 **Evidenza.** I contatti NC dei relè di mute cortocircuitano a massa i
 nodi **jack**, cioè a valle dei 47 Ω e del 4,7 µF
@@ -239,6 +242,59 @@ corto.»
   nel mandato di L11.
 - **Se, una volta registrato il requisito**, la topologia non lo soddisfa su
   una via che né questa voce né NC-010 coprono, L11 apre la voce che manca.
+
+**Chiusura (L11, 2026-09-14).** La voce si chiude per la strada 2, nella forma
+che la decisione dell'utente le ha dato.
+
+1. **Decisione registrata: ADR-021.**
+   - Mute tenibile a tempo indefinito.
+   - Classe B ammessa solo a mute inserito e in corto.
+   - Criterio: Tj ≤ 125 °C a 60 °C ambiente, a regime e nel transitorio, SOA
+     dentro le curve.
+   - Requisito **P7** con la sua nota in `REQUIREMENTS.md`, eccezione scritta
+     in **T1**, **F6** aggiornato.
+2. **Misura versionata**: `spice/preamp/tb/tb_mute_corto.cir`, dati in
+   `data/2026-09-14/`.
+   - Copre un canale intero, A → attenuatore → B.
+   - Casi: normale, mute (tre jack a massa insieme, come il cablaggio),
+     corto franco su ciascuna delle tre uscite.
+   - Modalità 0 e +10 dB, 1 e 20 kHz, ampiezza e manopola spazzate.
+   - Transitorio di inserzione e rilascio.
+3. **Verdetto: conforme, senza protezione e senza dissipatore.**
+   - MJE peggiore **484 mW → Tj 90,2 °C** contro 1,04 W ammessi. È il blocco
+     A **a mute inserito**, con le due fisse in parallelo: il caso che G0
+     non aveva simulato.
+   - Dispositivo più caldo: Q125, Tj 96,5 °C.
+   - Picchi istantanei sulle MJE ≤ 1,55 W, con V_CE ≤ 30 V e I_C ≤ 207 mA:
+     sotto la curva da 250 ms della Fig. 2 del datasheet di più di un ordine
+     di grandezza.
+   - Contatti di mute ≤ 153 mA RMS contro 2 A.
+4. **Confronto con G0**, che era sulla topologia col THAT320. Nella stessa
+   configurazione di G0 (blocco B, mute, 1 kHz, fondo scala) oggi I_C(Q132)
+   vale:
+   - **65,063 mA** a 0 dB, contro 65,07;
+   - **203,017 mA** a +10 dB, contro 203,21.
+
+   Scarto ≤ 0,1 %. Il nome `@q134` di G0 **non esiste più**: i dispositivi
+   d'uscita sono Q132/Q133 in `gain_block.subckt`.
+5. **Il deck è stato fatto fallire.** Senza le tre righe `SMUTE`, le 36 righe
+   di mute diventano identiche a quelle normali (0 su 36, contro 32 su 36).
+   **Controprova indipendente** della potenza da tensioni e correnti:
+   scarti ≤ 0,23 %.
+6. **La frase «Classe A garantita» è corretta** in `gain_block.py` (AST
+   identico a HEAD, controllo fatto fallire) e in `gain_block_draw.py` →
+   `gain_block.svg`.
+
+**Cosa la chiusura consegna, e non risolve:**
+- **tre vincoli di distinta sulle resistenze** (la 47 Ω dell'uscita principale
+  ≥ 1,1 W a 60 °C), scritti in P7 e nei commenti dei sorgenti;
+- **NC-028**, il gradino al rilascio del mute, che V2 chiedeva di misurare e
+  che la misura ha trovato;
+- **la sensibilità ai modelli**: coi modelli vendor la corrente di riposo
+  sale a 20,1 mA e il MJE peggiore a 496 mW. Verdetto invariato, ma si ripete
+  quando la Fase 4 ritara la polarizzazione (NC-024, NC-025).
+
+Report: `reports/2026-09-14-L11-mute-e-corto.md`.
 
 ### NC-004 — E5 e V4 senza alcuna evidenza: rumore e distorsione non sono note
 
@@ -364,6 +420,24 @@ La tecnica di protezione è libera: limitazione di corrente, distacco attivo o
 mute attivo, anche con operazionali o microcontrollore fuori dal percorso del
 segnale (ADR-022). Il rimedio resta di **L17**, che progetta contro il criterio
 di ADR-021.
+
+**AGGIORNATA IL 2026-09-14 da L11.**
+- **`tb_blockA_carichi.cir` rieseguito sulla topologia di oggi**
+  (`data/2026-09-14/`). La tabella qui sopra, che era col THAT320, coincide a
+  quattro cifre: a 0,01 Ω I_C(Q132) massima **65,456 mA**, minima −0,34 µA.
+  Lo stadio d'uscita non ha sentito la sostituzione dello specchio.
+- **Il corto su una fissa passa il criterio di ADR-021.**
+  `tb_mute_corto.cir` dà:
+  - col corto su una fissa, MJE a **299,5 mW** al massimo (Tj 78,7 °C) e
+    I_C di picco **80,95 mA** (0 dB, 20 kHz, fondo scala);
+  - col mute, che mette a massa **entrambe** le fisse, **483,7 mW** (Tj
+    90,2 °C) e 160,15 mA: è il caso peggiore del progetto;
+  - le 47 Ω delle fisse a 0,155 W.
+- **Quindi la parte «corto» di questa voce è conforme.** Resta aperta la
+  parte per cui la voce esiste: un apparecchio **spento** a valle, con Zin
+  fra ~150 Ω e il corto, porta il blocco A in classe B **fuori** dalle due
+  condizioni in cui ADR-021 la ammette. È ancora **T1**, e il rimedio è ancora
+  di **L17**.
 
 ### NC-002 — Il blocco A non ha evidenza di stabilità valida, e col nuovo requisito è sotto soglia
 
@@ -1541,7 +1615,78 @@ una ADR che accetti esplicitamente di applicare l'istruzione dell'LSK389 in
 forza della compatibilità dichiarata. Prima di G2, perché un substrato
 lasciato flottante o collegato è una scelta di layout.
 
+### NC-028 — Il rilascio del mute con segnale presente porta sul jack un gradino che decade in 0,3 s
+
+| | |
+|---|---|
+| Requisito | **V2** (transitorio del relè di mute, al rilascio) · **F6**/ADR-012 (il mute esiste per non mandare botti alle uscite) · **ADR-019** (il trim si regola a mute inserito) |
+| Severità | **maggiore** |
+| Aperta da | `reports/2026-09-14-L11-mute-e-corto.md` |
+| Stato | aperta |
+
+**Evidenza.** `data/2026-09-14/tb_mute_corto_transitorio.csv` e
+`tb_mute_corto_trans_{0,10}.csv`. Segnale da 2,7 V RMS a 1 kHz, manopola al
+massimo, mute inserito a 10 ms e rilasciato a 30 ms.
+
+**Il meccanismo.** A mute inserito il 4,7 µF d'uscita porta la corrente del
+segnale verso massa attraverso i 47 Ω, e quindi si carica alla tensione del
+segnale, ≈ 0,58 × V_out a 1 kHz. Al rilascio quella carica resta: il jack
+vede il segnale **più** un gradino. Il gradino poi scarica sulla resistenza a
+valle.
+
+| Uscita | Picco prima del mute | Picco dopo il rilascio | Gradino medio misurato | Decadimento |
+|---|---|---|---|---|
+| principale, +10 dB | 11,99 V | **17,39 V** | **5,37 V** | τ = **0,320 s** misurata (calcolata 4,7 µF × 68,8 kΩ = 0,323 s) |
+| principale, 0 dB | 3,81 V | 5,61 V | 1,79 V | τ = 0,321 s |
+| fissa FIX1 | 3,81 V | 5,61 V | 1,72 V | τ = 46 ms (Singxer ipotizzato 10 kΩ) |
+
+La stessa commutazione **senza segnale** dà un gradino di picovolt: **il
+transitorio d'accensione, che è la ragione di ADR-012, è pulito.** Il
+gradino ha l'ampiezza del segnale nell'istante del rilascio, e a frequenza
+più bassa la reattanza del condensatore sale e il gradino si avvicina al
+picco del segnale.
+
+**Perché è una voce e non una nota.** F6 mette il mute proprio sulla
+commutazione del guadagno, e ADR-019 lo usa per regolare il trim. In entrambi
+i casi il mute si rilascia **con la musica presente**, e il rilascio produce
+un gradino della stessa natura di quello che il mute doveva togliere. Va
+nell'ingresso del finale (×21) e nell'SRM-T1.
+
+**Perché maggiore e non bloccante.** V2 chiede di misurare il transitorio, e
+ora la misura esiste. Ma V2 **non ha una soglia** su quanto botto sia
+accettabile, quindi la voce non è decidibile in negativo: è la forma che
+NC-002 aveva prima di ADR-019. Nessun componente è a rischio: P7 è conforme.
+
+**Cosa serve per chiuderla.**
+1. **Una soglia dell'utente** su V2: ampiezza massima del gradino al jack, o
+   regola d'uso («il mute si rilascia a volume minimo») scritta come vincolo.
+2. **Poi, se serve, un rimedio misurato.** Le forme note, **nessuna
+   valutata**:
+   - un mute **in serie**, che non carica il condensatore ma cambia lo stato
+     sicuro (ADR-012, `check_relay_safe_state.py`);
+   - una sequenza di rilascio con il segnale azzerato a monte;
+   - un rilascio lento attraverso una resistenza.
+
+   Va letta insieme a ADR-021, che lascia libera la tecnica del mute attivo.
+
 ## Voci chiuse
+
+**NC-001 — Il mute in derivazione porta lo stadio d'uscita fuori dalla Classe
+A** (bloccante). **CHIUSA il 2026-09-14 da L11**, per la strada 2 riformulata
+dalla decisione dell'utente.
+- **ADR-021** ammette la classe B a mute inserito e in corto, col criterio Tj
+  ≤ 125 °C a 60 °C ambiente, a regime e nel transitorio.
+- **`tb_mute_corto.cir`** misura mute e corto su tutte e tre le uscite:
+  - tutti i dispositivi conformi senza protezione né dissipatore;
+  - MJE peggiore 484 mW, Tj 90,2 °C;
+  - le cifre di G0 riprodotte entro lo 0,1 %.
+- **Il deck è stato fatto fallire** togliendo i contatti di mute.
+- **«Classe A garantita» è corretta** in `gain_block.py` e sul disegno.
+- **Consegna** tre vincoli di distinta sulle resistenze (P7) e **apre
+  NC-028**.
+
+Il testo completo della voce resta sopra, con la sua «Chiusura». Report:
+`reports/2026-09-14-L11-mute-e-corto.md`.
 
 **NC-007 — Lo «scarto ADR-014» pubblicato non misura la claim di ADR-014**
 (minore). **CHIUSA il 2026-09-13 da L14.** Il dossier pubblica ora due cifre

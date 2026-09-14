@@ -538,10 +538,16 @@ node("P3.out", "OUT", (NODE_XY["R134.2"][0], 5.5))
 wire("R134.2", "P3.out")
 wire("P3.out", "R135.2", dots=[NODE_XY["P3.out"]])
 txt((44.4, 4.0), "14,71 mA di riposo:", size=8, color=RED, halign="left")
-txt((44.4, 3.5), "Classe A garantita -", size=8, color=RED, halign="left")
+txt((44.4, 3.5), "Classe A coi carichi V1 -", size=8, color=RED, halign="left")
 txt((44.4, 3.0), "il carico piu' pesante", size=8, color=RED,
     halign="left")
-txt((44.4, 2.5), "chiede 3,9 mA di picco", size=8, color=RED,
+txt((44.4, 2.5), "chiede 3,9 mA di picco.", size=8, color=RED,
+    halign="left")
+# L11: the old claim was "Classe A garantita". It is false with the mute
+# engaged or a short at a connector (NC-001); ADR-021 admits class B there.
+txt((44.4, 2.0), "A mute o in corto: classe B", size=8, color=RED,
+    halign="left")
+txt((44.4, 1.5), "(ADR-021, termica verificata)", size=8, color=RED,
     halign="left")
 
 # --- feedback network: the point of the whole design ------------------------

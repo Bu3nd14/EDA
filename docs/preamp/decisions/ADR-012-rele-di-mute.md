@@ -1,6 +1,6 @@
 # ADR-012 — Relè di mute su tutte le uscite
 
-Data: 2026-09-08 · Stato: accettata
+Data: 2026-09-08 · Stato: accettata — la durata «per qualche secondo» è superata da ADR-021 (mute tenibile a tempo indefinito)
 
 ## Contesto
 
