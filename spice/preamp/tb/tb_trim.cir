@@ -1,0 +1,256 @@
+tb_trim.cir - L16: the common input trim. E3 (Zin at the connector, every position) and E5 (output noise of the whole chain)
+* Prima riga = titolo (docs/limitations.md #10).
+*
+* WHAT IS UNDER TEST (L16, ADR-027). One trim for all inputs, AFTER the input
+* selector, per channel:
+*
+*     TRIN --RL1-- TAP6 --RL2-- TAP12 --RL3-- 0
+*
+*   T1 (bistable): reset -> TRIN to block A IN (0 dB), set -> T2's COM
+*   T2 (bistable): reset -> TAP6 (-6 dB),               set -> TAP12 (-12 dB)
+*
+* and block A's own R_IN (R113, 1 MOhm, inside gain_block.subckt) in parallel
+* with whichever node T1/T2 select. REQUIREMENTS "Nota su E3": the verdict is
+* the MINIMUM of |Zin| over 20 Hz - 20 kHz, R_IN included - never the 1 kHz
+* value, never R1+R2+R3 alone.
+*
+* CONTACTS. Closed = 0.1 ohm, open = 1 GOhm, and 15 pF ACROSS every contact
+* (the stray L27 used for the gain relays; the G6K(U) datasheet gives none).
+*
+* CSEL: the capacitance to ground that the selector and the wiring add at the
+* connector. The selector is NOT designed (outside L16), so CSEL is swept and
+* declared, not assumed: 1 fF (the trim alone) to 68 pF.
+*
+* THE TWO CANDIDATE LADDERS, E96, from data/2026-09-14/L16/esplorazione/script/
+* trim_e96.py (attenuation within +/-0.1 dB, R_IN included):
+*   cand 1  54.9k / 29.4k / 28.7k   DC Zin >= 101.5 k   (the lowest noise)
+*   cand 2  63.4k / 34k   / 34k     DC Zin >= 116.1 k   (room for CSEL)
+*
+* THE CHAIN FOR E5: trim -> block A -> attenuator -> block B -> 47 ohm -> 4.7 uF
+* -> jack (220 k bleeder, 100 k load), both blocks from gain_block.subckt, so
+* no node of this deck can collide with a node of a block (limitations #24).
+*   - attenuator at MAX (block A's noise passes whole: the worst case for the
+*     trim) and at MID-travel (2.5 k source, the E5 reference of
+*     tb_zout_psrr_noise.cir);
+*   - the two fixed-output buffers on block A's output are omitted: their
+*     input is a JFET gate behind 100 ohm;
+*   - block B's subckt carries R113 (1 MOhm to 0) that the real block B does
+*     not have: in parallel with a <= 2.5 k attenuator it is negligible;
+*   - source K11 (1.5 ohm) and phono (430 ohm); pos 99 = NO TRIM (ladder cut,
+*     straight contact), the reference the trim is compared with.
+* Verdict: onoise over 20 Hz - 20 kHz <= 9.90 uV (E5 minus the two 1 uV
+* quotas, ADR-020 and ADR-022).
+*
+* Gain contacts of block B (ADR-026): open = 15 pF + 1 G, closed = 0.1 ohm.
+* Block A's relay leg is not fitted: its RG/RG10 ports go to 1 G
+* (limitations #27: an unterminated contact port is not an open contact).
+*
+* *** NOISE IS A FLOOR, NOT A PREDICTION ***: placeholder models, KF = 0 on
+* every device but the LSK489 (NC-004, NC-017). The RESISTOR noise of the
+* ladder, which is what this deck is for, does not depend on the models.
+*
+* TABLES (echo, no wrdata writes these names - limitations #25):
+*   tb_trim_e3.csv  cand,r1,r2,r3,pos,csel,zmin_ohm,z20_ohm,z1k_ohm,z20k_ohm,att1k_db
+*   tb_trim_e5.csv  cand,pos,mode,att,rsrc,onoise_uv
+* CURVES: tb_trim_zin_c<cand>_p<pos>.txt, CSEL = 1 fF: col0 f, col1 |Zin|.
+* Path convention: tb_op.cir (L2).
+
+.include @REPO@/spice/preamp/placeholder_devices.lib
+* L22: the input current mirror is an LS352 (ADR-018), vendor model.
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block.subckt
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+
+* --- the selected source and what the selector adds ---
+VSRC  VSN 0 DC 0 AC 1
+RSRC  VSN TRIN 1.5
+CSEL  TRIN 0 1f
+
+* --- the ladder (cand 1 by default, altered in .control) ---
+RL1 TRIN TAP6 54.9k
+RL2 TAP6 TAP12 29.4k
+RL3 TAP12 0 28.7k
+
+* --- the trim contacts ---
+RT1R TRIN AIN 0.1
+CT1R TRIN AIN 15p
+RT1S T2C AIN 1G
+CT1S T2C AIN 15p
+RT2R TAP6 T2C 0.1
+CT2R TAP6 T2C 15p
+RT2S TAP12 T2C 1G
+CT2S TAP12 T2C 15p
+
+* --- block A, unity gain, relay leg not fitted ---
+XA AIN AOUT AFB ARG ARG10 VPLUS VMINUS GAINBLOCK
+RARG   ARG   0 1G
+RARG10 ARG10 0 1G
+* harness to the front-panel attenuator (ADR-024 judges block A at <= 1 nF)
+CWIRE AOUT 0 100p
+
+* --- the 10 k stepped attenuator: top and bottom of the wiper ---
+RATTH AOUT BIN 1m
+RATTL BIN 0 10k
+
+* --- block B, 0 / +3 / +10 dB ---
+XB BIN BOUT BFB BRG BRG10 VPLUS VMINUS GAINBLOCK
+CSTB    BRG   0 15p
+RRGB    BRG   0 1G
+CSTB10  BRG10 0 15p
+RRG10B  BRG10 0 1G
+
+RISO   BOUT BOUTA 47
+COUT   BOUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+
+.control
+set t = .txt
+set u = "_p"
+
+* ===================== E3: Zin at the connector =====================
+echo "cand,r1,r2,r3,pos,csel,zmin_ohm,z20_ohm,z1k_ohm,z20k_ohm,att1k_db" > tb_trim_e3.csv
+alter rsrc = 1m
+foreach cand 1 2
+  if $cand = 1
+    set r1v = "54.9k"
+    set r2v = "29.4k"
+    set r3v = "28.7k"
+  end
+  if $cand = 2
+    set r1v = "63.4k"
+    set r2v = "34k"
+    set r3v = "34k"
+  end
+  alter rl1 = $r1v
+  alter rl2 = $r2v
+  alter rl3 = $r3v
+  foreach pos 0 6 12
+    if $pos = 0
+      alter rt1r = 0.1
+      alter rt1s = 1G
+      alter rt2r = 0.1
+      alter rt2s = 1G
+    end
+    if $pos = 6
+      alter rt1r = 1G
+      alter rt1s = 0.1
+      alter rt2r = 0.1
+      alter rt2s = 1G
+    end
+    if $pos = 12
+      alter rt1r = 1G
+      alter rt1s = 0.1
+      alter rt2r = 1G
+      alter rt2s = 0.1
+    end
+    foreach cs 1f 10p 22p 47p 68p
+      alter csel = $cs
+      ac dec 50 20 20k
+      let zmag = mag(v(trin)/(-i(vsrc)))
+      let attdb = db(v(ain)/v(vsn))
+      meas ac zmin min zmag from=20 to=20000
+      meas ac z20 find zmag at=20
+      meas ac z1k find zmag at=1000
+      meas ac z20k find zmag at=20000
+      meas ac att1k find attdb at=1000
+      echo "E3 cand=$cand pos=$pos csel=$cs"
+      print zmin z20 z1k z20k att1k
+      echo "$cand,$r1v,$r2v,$r3v,$pos,$cs,$&zmin,$&z20,$&z1k,$&z20k,$&att1k" >> tb_trim_e3.csv
+      if $cs = 1f
+        wrdata tb_trim_zin_c$cand$u$pos$t zmag
+      end
+      destroy all
+    end
+  end
+end
+alter csel = 1f
+
+* ===================== E5: output noise of the chain =====================
+echo "cand,pos,mode,att,rsrc,onoise_uv" > tb_trim_e5.csv
+foreach cand 1 2
+  if $cand = 1
+    set r1v = "54.9k"
+  end
+  if $cand = 2
+    set r1v = "63.4k"
+    alter rl2 = 34k
+    alter rl3 = 34k
+  end
+  if $cand = 1
+    alter rl2 = 29.4k
+    alter rl3 = 28.7k
+  end
+  foreach pos 99 0 6 12
+    alter rl1 = $r1v
+    if $pos = 99
+      alter rl1 = 1e12
+      alter rt1r = 0.1
+      alter rt1s = 1G
+      alter rt2r = 0.1
+      alter rt2s = 1G
+    end
+    if $pos = 0
+      alter rt1r = 0.1
+      alter rt1s = 1G
+      alter rt2r = 0.1
+      alter rt2s = 1G
+    end
+    if $pos = 6
+      alter rt1r = 1G
+      alter rt1s = 0.1
+      alter rt2r = 0.1
+      alter rt2s = 1G
+    end
+    if $pos = 12
+      alter rt1r = 1G
+      alter rt1s = 0.1
+      alter rt2r = 1G
+      alter rt2s = 0.1
+    end
+    foreach mode 0 3 10
+      if $mode = 0
+        set gm = "0db"
+        alter rrgb = 1G
+        alter rrg10b = 1G
+      end
+      if $mode = 3
+        set gm = "3db"
+        alter rrgb = 0.1
+        alter rrg10b = 1G
+      end
+      if $mode = 10
+        set gm = "10db"
+        alter rrgb = 0.1
+        alter rrg10b = 0.1
+      end
+      foreach at 1 2
+        if $at = 1
+          set ga = "max"
+          alter ratth = 1m
+          alter rattl = 10k
+        end
+        if $at = 2
+          set ga = "mid"
+          alter ratth = 5k
+          alter rattl = 5k
+        end
+        foreach rs 1.5 430
+          alter rsrc = $rs
+          noise v(JACK) VSRC dec 50 20 20000 1
+          setplot noise2
+          let onu = onoise_total*1e6
+          echo "E5 cand=$cand pos=$pos mode=$gm att=$ga rsrc=$rs"
+          print onu
+          echo "$cand,$pos,$gm,$ga,$rs,$&onu" >> tb_trim_e5.csv
+          destroy all
+        end
+      end
+    end
+  end
+end
+.endc
+
+.end

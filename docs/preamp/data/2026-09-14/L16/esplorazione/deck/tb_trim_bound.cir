@@ -1,0 +1,66 @@
+tb_trim_bound.cir - L16 scratch: the noise floor of ANY passive trim at block A's input, in the worst E5 cell
+* NOT a versioned deck. Same chain as spice/preamp/tb/tb_trim.cir, one cell:
+* trim at -6 dB, block B at +10 dB, attenuator at MAX, source K11 1.5 ohm.
+*
+* The ladder is the SMALLEST that E3 allows: R1 = 50k and R2 + R3 = 50k. With
+* R_IN (1 MOhm) in parallel Zin is 97.6 k - already BELOW E3 - and the
+* Thevenin seen by block A is 50k || (50k || 1M) = 24.4 k. Any ladder that
+* meets E3 has a Thevenin at -6 dB at least this large, so if this cell exceeds
+* 9.90 uV, no passive trim at block A's input can meet E5 in it.
+* A second run with the ladder cut (RL1 = 1e12) is the chain without trim.
+
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block.subckt
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VSRC  VSN 0 DC 0 AC 1
+RSRC  VSN TRIN 1.5
+RL1 TRIN TAP6 50k
+RL2 TAP6 TAP12 25k
+RL3 TAP12 0 25k
+* trim at -6 dB: T1 set (T2 COM to block A), T2 reset (TAP6)
+RT1R TRIN AIN 1G
+CT1R TRIN AIN 15p
+RT1S T2C AIN 0.1
+CT1S T2C AIN 15p
+RT2R TAP6 T2C 0.1
+CT2R TAP6 T2C 15p
+RT2S TAP12 T2C 1G
+CT2S TAP12 T2C 15p
+XA AIN AOUT AFB ARG ARG10 VPLUS VMINUS GAINBLOCK
+RARG   ARG   0 1G
+RARG10 ARG10 0 1G
+CWIRE AOUT 0 100p
+RATTH AOUT BIN 1m
+RATTL BIN 0 10k
+XB BIN BOUT BFB BRG BRG10 VPLUS VMINUS GAINBLOCK
+CSTB    BRG   0 15p
+RRGB    BRG   0 0.1
+CSTB10  BRG10 0 15p
+RRG10B  BRG10 0 0.1
+RISO   BOUT BOUTA 47
+COUT   BOUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+
+.control
+noise v(JACK) VSRC dec 50 20 20000 1
+setplot noise2
+let onu = onoise_total*1e6
+echo "BOUND ladder 50k/25k/25k, -6 dB, +10 dB, att max"
+print onu
+destroy all
+alter rl1 = 1e12
+alter rt1r = 0.1
+alter rt1s = 1G
+noise v(JACK) VSRC dec 50 20 20000 1
+setplot noise2
+let onu = onoise_total*1e6
+echo "NO TRIM, +10 dB, att max"
+print onu
+destroy all
+.endc
+
+.end

@@ -1575,6 +1575,21 @@ Il resto vale com'è: il contatto giusto è quello chiuso **in** mute, e la prov
 sulla netlist va fatta fallire. È un ragionamento, non ancora una simulazione:
 lo verifica L16.
 
+**Seconda decisione dell'utente (2026-09-14, all'apertura di L16)**, che supera
+il «per ingresso» della prima. Parole sue: «voglio introdurre una
+semplificazione, ora abbiamo un piano in cui ogni ingresso puó avere il suo
+guadagno indipedente, ma non abbiamo un modi per vedere quale guadagno é settato
+per ingresso. Credo sia meglio avere un guadagno comune per tutti gli ingressi,
+quindi Trim a valle della selezione, ma con un´indicazione a LED del guadagno
+selezionato». Discussi i costi, ha scelto: **trim comune a valle del selettore,
+LED presi dallo stato vero dei relè**.
+- Si perde il pareggio fra sorgenti di ADR-011, e la protezione dell'headroom
+  del K11 a +10 dB torna a dipendere dall'uso: il LED la rende visibile, non la
+  impone.
+- Cambia l'insieme dei progetti conformi, quindi serve una ADR: **ADR-027**.
+- Un LED preso dalla posizione del comando **mentirebbe** fuori mute: deve
+  leggere i contatti.
+
 ### NC-024 — L'h_FE del modello MJE15032 sta sotto il minimo del suo datasheet
 
 | | |

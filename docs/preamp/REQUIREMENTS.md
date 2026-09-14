@@ -24,13 +24,14 @@ report `reports/2026-09-08-analisi-catena.md`.
 | # | Requisito | ADR |
 |---|---|---|
 | F1 | **4 ingressi** sbilanciati RCA, commutati a **relè** | ADR-009 |
-| F2 | **Trim di livello per ingresso**: 0 / −6 / −12 dB a ponticello | ADR-011 |
+| F2 | **Trim di livello comune, a valle del selettore d'ingresso**: 0 / −6 / −12 dB, **a relè bistabili**. Uno solo per tutti gli ingressi: cambiando sorgente si ritocca il trim o il volume | ADR-011, **ADR-027** |
 | F3 | **3 uscite**: principale (attenuata) + 2 a livello fisso, **ciascuna fissa col proprio buffer** | ADR-008, **ADR-023** |
 | F4 | **Attenuatore a scatti**, commutatore rotativo, 10 kΩ, resistenze 0,1% | ADR-009 |
 | F5 | **Guadagno commutabile 0 / +3 / +10 dB**, relè sulla rete di controreazione. **A relè diseccitati il guadagno è 0 dB**: nessun guasto di bobina e nessuno stato di accensione può portare a un guadagno più alto. Due rami di R_g **in parallelo**: nessuno stato dei contatti supera il +10 dB | ADR-004, **ADR-019**, **ADR-026** |
 | F6 | **Relè di mute** su tutte le uscite: accensione, commutazione guadagno e regolazione del trim (F8). **Tenibile a tempo indefinito**: il mute inserito rientra nel requisito P7 | ADR-012, **ADR-021** |
 | F7 | **Nessun telecomando.** Operazionali e microcontrollore **ammessi solo fuori dal percorso del segnale**, alle condizioni di ADR-022: stato sicuro senza firmware, protezione dal corto non affidata solo al firmware, quota ausiliaria di rumore **1 µV RMS** | ADR-009, **ADR-022** |
-| F8 | **Il trim d'ingresso funziona solo a mute inserito**, con interlock **elettrico**: il comando del trim raggiunge i propri relè solo se il mute è attivo. Due comandi distinti, il mute abilita il trim. Fuori mute agire sul trim non cambia nulla; il valore impostato resta applicato all'uscita dal mute | ADR-011, **ADR-019** |
+| F8 | **Il trim d'ingresso funziona solo a mute inserito**, con interlock **elettrico**: il comando del trim raggiunge i propri relè solo se il mute è attivo. Due comandi distinti, il mute abilita il trim. Fuori mute agire sul trim non cambia nulla; il valore impostato resta applicato all'uscita dal mute | ADR-011, **ADR-019**, **ADR-027** |
+| F9 | **Indicazione a LED del trim impostato**, letta dai **contatti** dei relè del trim e non dalla posizione del comando: fuori mute il comando può non corrispondere allo stato (F8), e il LED deve dire lo stato vero | **ADR-027** |
 
 ## Requisiti elettrici
 
@@ -115,8 +116,9 @@ Ragionamento completo: `reports/2026-09-13-L18-vincolo-psrr.md`.
 **Il vincolo.** L'impedenza d'ingresso misurata **al connettore
 d'ingresso**, col blocco A collegato (la sua `R_IN` compresa), deve restare
 **≥ 100 kΩ in ciascuna delle tre posizioni del trim** (0 / −6 / −12 dB, F2),
-comunque il trim sia commutato — ponticello come dice F2, o relè come
-presuppone F8.
+comunque il trim sia commutato. *(Dal 2026-09-14, L16: il trim è uno solo, a
+valle del selettore e a relè bistabili — F2, ADR-027. Il connettore
+d'ingresso è quello della sorgente selezionata.)*
 
 **Come si decide.** Analisi AC al connettore, una per posizione del trim:
 passa se il **minimo di |Zin| su 20 Hz–20 kHz** è ≥ 100 kΩ in tutte e tre.
@@ -383,7 +385,8 @@ va automatizzato.
  phono ECC82 ──┐                                          │  guadagno 1
  K11 R2R    ───┤  selettore    trim      BLOCCO A         ├─ BUFFER F2 ─47Ω─C 4,7µ─[mute]──► Stax SRM-T1
  (spare)    ───┤   a relè    0/-6/-12   guadagno 1  ──────┤  guadagno 1
- (spare)    ───┘             per ingr.  Zin ≥ 100k        │
+ (spare)    ───┘             comune,    Zin ≥ 100k        │
+                             LED
                                                           └─ ATTENUATORE ── BLOCCO B ─47Ω─C 4,7µ─[mute]──► cj EV250
                                                               10k, a scatti   0/+3/+10 dB
                                                                               K1, K5 su R_g
