@@ -1,4 +1,4 @@
-tb_loop.cir - loop gain and phase margin, V1 matrix (gain mode x capacitive load)
+tb_loop.cir - loop gain and phase margin, V1 matrix (gain mode x capacitive load x probe position)
 * METHOD: voltage injection at the inverting JFET gate. That node draws no
 * current (JFET gate, ~1e12 ohm) while the feedback network drives it from
 * ~470 ohm, so simple voltage injection is exact here - no Middlebrook
@@ -9,6 +9,17 @@ tb_loop.cir - loop gain and phase margin, V1 matrix (gain mode x capacitive load
 * T = V(FB)/V(G2). G2 is the INVERTING input, so T is negative real at DC:
 * its phase there is 180 deg. Phase margin is therefore read directly as
 * |ph(T)| at the frequency where |T| = 1.
+*
+* PROBE POSITION (L12). ADR-019 asks 60 deg "everywhere, capacitive worst case
+* included" but does not say WHERE the 4.7 nF probe goes. Until L12 this deck
+* put it only at the JACK, while tb_loop_blockA.cir put it on the output node:
+* the two blocks were judged in different places. The capacitance is now swept
+* in both, as tb_loop_bufferfissa.cir already does:
+*   pos 1  CCABLE at the JACK, after 47 ohm + 4.7 uF - where a cable sits;
+*   pos 2  CNODE on the OUTPUT NODE, before the 47 ohm - the harsher probe.
+* The unused one sits at 1 fF. The grid is the other loop decks' 8 points: the
+* minimum at the jack is NOT at 4.7 nF (L12 baseline: 55.79 deg at 2.2 nF
+* against 56.46 at 4.7 nF, 0 dB), so the sweep has to be read whole.
 *
 * *** THE NUMBERS FROM THIS DECK ARE PROVISIONAL ***
 * Phase margin is set by device capacitances and transit times. Every one of
@@ -35,52 +46,49 @@ RRG    RG 0 1G
 RBRK FB NBRK 100
 VINJ NBRK G2 DC 0 AC 1
 
-* BLOCK B output network + cable. CCABLE is altered in the loop below.
+* BLOCK B output network + cable. The probes are altered in the loop below.
+* No new node names: CNODE sits on the block's own OUT (docs/limitations.md #24).
 RISO   OUT OUTA 47
 COUT   OUTA JACK 4.7u
 RBLEED JACK 0 220k
 RLOAD  JACK 0 100k
 CCABLE JACK 0 1f
+CNODE  OUT 0 1f
 
 .control
-* --- wrdata (L5): una curva di anello PER ITERAZIONE, 12 file ---------
+* --- wrdata (L5): una curva di anello PER ITERAZIONE ------------------
 * NOMI PARAMETRIZZATI: un `$var` in un nome di file non si chiude da solo
 * - ngspice fa entrare nel nome della variabile anche `.`, `-` e `_`,
 * quindi `wrdata tb_loop_$cab.txt` cercherebbe la variabile "cab.txt". Un
 * `$` invece TERMINA il nome: la forma che funziona e' `$cab$t` con
 * t = ".txt" e u = "_". Misurato con una sonda in L5, non dedotto.
 *
-* ETICHETTE: 0db/10db nel nome invece del valore di RRG. Il `foreach`
-* resta pero' quello di prima e l'etichetta si ricava con un `if`, cosi'
-* `alter` e l'echo usano ancora i valori originali e il log resta
-* confrontabile riga per riga con quello di prima della modifica.
+* ETICHETTE: 0db/10db nel nome invece del valore di RRG, ricavate con un `if`.
 *
 * DOVE: dentro il ciclo interno, PRIMA del `destroy all`. Senza quel
 * destroy ogni `ac` creerebbe ac2, ac3, ... e un `wrdata` fuori dal ciclo
 * leggerebbe il plot sbagliato in silenzio (docs/limitations.md #10).
 *
-* I 12 FILE: tb_loop_{0db,10db}_{1f,100p,470p,1n,2.2n,4.7n}.txt
-* Nessuno si chiama tb_loop_wrdata.txt - il deck non ha una sezione fuori
-* ciclo - quindi run_simulation.sh avvisa e scrive un tb_loop.json con
-* rows: 0, e i 12 file veri li converte il SECONDO passaggio. E' atteso.
+* I 32 FILE (L12):
+*   sonda al jack  (pos 1): tb_loop_{0db,10db}_<C>.txt       - i nomi di prima
+*   sonda sul nodo (pos 2): tb_loop_nodo_{0db,10db}_<C>.txt
+* con <C> in 1f 47p 100p 220p 470p 1n 2.2n 4.7n.
+* LA TABELLA dei margini e' tb_loop_margini.csv, scritta da echo: nessun
+* wrdata produce quel nome, quindi il secondo passaggio di run_simulation.sh
+* non la sovrascrive (docs/limitations.md #25).
 *
-* COLONNE (~801 righe, 1 Hz - 100 MHz, 100 punti/decade). Per ogni vettore
-* una COPPIA (frequenza, valore): le PARI sono la frequenza ripetuta, i
-* dati sono le DISPARI.
+* COLONNE delle curve (~801 righe, 1 Hz - 100 MHz, 100 punti/decade). Per
+* ogni vettore una COPPIA (frequenza, valore): le PARI sono la frequenza
+* ripetuta, i dati sono le DISPARI.
 *   col0 = frequenza [Hz]   col1 = Tdb = |T| in dB
 *   col2 = frequenza [Hz]   col3 = Tph = fase di T in GRADI
-* T = v(FB)/v(G2), e G2 e' l'ingresso INVERTENTE: T e' negativo reale in
-* continua, quindi la sua fase li' vale 180 gradi e il margine di fase si
-* legge come |Tph| dove Tdb attraversa lo zero. Non e' 180 - |Tph|.
-*
-* PROVVISORIO: le capacita' dei modelli segnaposto sono scelte a mano, non
-* fittate su datasheet. Il margine di fase che esce di qui va rifatto sui
-* modelli vendor (L6-L7) prima di poter essere citato.
+* Margine di fase = |Tph| dove Tdb attraversa lo zero. Non e' 180 - |Tph|.
 * ---------------------------------------------------------------------
 set t = .txt
 set u = "_"
 alter r109 = 1G
 set units = degrees
+echo "mode,pos,cprobe,fcross_hz,pm_deg,tdb_10hz" > tb_loop_margini.csv
 foreach mode 1G 0.1
   alter rrg = $mode
   if $mode = 1G
@@ -89,19 +97,32 @@ foreach mode 1G 0.1
   if $mode = 0.1
     set gm = "10db"
   end
-  foreach cab 1f 100p 470p 1n 2.2n 4.7n
-    alter ccable = $cab
-    ac dec 100 1 100meg
-    let T = v(fb)/v(g2)
-    let Tdb = db(T)
-    let Tph = ph(T)
-    meas ac fcross when Tdb=0
-    meas ac pmarg find Tph when Tdb=0
-    meas ac tdc find Tdb at=10
-    echo "mode(RRG)=$mode  Ccable=$cab"
-    print fcross pmarg tdc
-    wrdata tb_loop_$gm$u$cab$t Tdb Tph
-    destroy all
+  foreach pos 1 2
+    foreach cab 1f 47p 100p 220p 470p 1n 2.2n 4.7n
+      if $pos = 1
+        alter ccable = $cab
+        alter cnode = 1f
+      else
+        alter ccable = 1f
+        alter cnode = $cab
+      end
+      ac dec 100 1 100meg
+      let T = v(fb)/v(g2)
+      let Tdb = db(T)
+      let Tph = ph(T)
+      meas ac fcross when Tdb=0
+      meas ac pmarg find Tph when Tdb=0
+      meas ac tdc find Tdb at=10
+      echo "mode(RRG)=$mode  pos=$pos  C=$cab"
+      print fcross pmarg tdc
+      echo "$gm,$pos,$cab,$&fcross,$&pmarg,$&tdc" >> tb_loop_margini.csv
+      if $pos = 1
+        wrdata tb_loop_$gm$u$cab$t Tdb Tph
+      else
+        wrdata tb_loop_nodo_$gm$u$cab$t Tdb Tph
+      end
+      destroy all
+    end
   end
 end
 .endc
