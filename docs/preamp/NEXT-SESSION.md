@@ -36,6 +36,17 @@ riga di V1 senza misura. Il trim porta tre voci insieme:
 - **NC-005**: E3 va misurata al connettore in ogni posizione;
 - **NC-023**: l'interlock elettrico col mute di ADR-019.
 
+**Due decisioni dell'utente sul trim** (2026-09-14, dopo L27). Parole sue:
+«1. rele 2. trim per ingresso (meglio se possibile coi bistabili)».
+
+1. **Il trim è a relè.** L'interlock elettrico di ADR-019 resta, e F2 («a
+   ponticello») si allinea: a relè. Per F2 **non serve una ADR**: F8 escludeva
+   già il ponticello dal 2026-09-10, quindi l'insieme dei progetti conformi non
+   cambia (criterio di L15).
+2. **Un trim per ingresso**, come dice ADR-011: quattro ingressi, entrambi i
+   canali. Niente trim unico dopo il selettore. **Meglio coi relè bistabili, se
+   è possibile**: vedi il punto 3 di «Cosa fare».
+
 ## Leggi PRIMA, in quest'ordine, e non saltare
 
 1. **`CLAUDE.md`**: ambiente, percorsi assoluti, trappole silenziose, chiusura.
@@ -51,37 +62,58 @@ riga di V1 senza misura. Il trim porta tre voci insieme:
    - **ADR-022** (se il comando passa da una logica), **ADR-026** (il budget
      delle bobine cresce);
    - **ADR-024** (il blocco A col suo cablaggio ≤ 1 nF).
-5. **`REQUIREMENTS.md`**: **F2** contro **F8** (ponticello contro relè), E3 e la
-   «Nota su E3», E5, E6, V1.
-6. **`circuits/preamp/preamp_audio.py`**: la docstring dichiara selettore e trim
+5. **`REQUIREMENTS.md`**: **F2** (da allineare a relè) e **F8** (l'interlock *e*
+   il valore che resta all'uscita dal mute), E3 e la «Nota su E3», E5, E6, V1.
+6. **`vendor/relays/omron/G6K/en-g6k.pdf`**: la tabella delle bobine dei modelli
+   bistabili **G6KU-2F-Y**, accanto a quella dei G6K-2F-Y.
+7. **`circuits/preamp/preamp_audio.py`**: la docstring dichiara selettore e trim
    **fuori** dal perimetro, e il cablaggio dei relè di mute.
-7. **`scripts/check_relay_safe_state.py`**: i ruoli sono MUTE e GAIN, non TRIM.
-8. **`docs/limitations.md` #22, #24, #27**.
+8. **`scripts/check_relay_safe_state.py`**: i ruoli sono MUTE e GAIN, non TRIM.
+9. **`docs/limitations.md` #22, #24, #27**.
 
 ## IL LOTTO: L16 — il trim entra nel progetto
 
 ### Cosa fare
 
-1. **F2 contro F8, prima di disegnare.** F2 dice «a ponticello», F8 e ADR-019
-   presuppongono relè comandati.
-   - Allineare F2 è una modifica sostanziale solo se cambia l'insieme dei
-     progetti conformi (il criterio di L15);
-   - **«per ingresso»** di ADR-011 vuol dire 4 ingressi × 2 canali × 3
-     posizioni: conta i relè e le bobine prima di sceglierlo;
-   - **un trim solo dopo il selettore** cambierebbe ADR-011: è una decisione
-     dell'utente, con una ADR sua.
+1. **Registra le decisioni dell'utente, prima di disegnare.**
+   - **F2** in `REQUIREMENTS.md`: «a relè», con F8 accanto. Nessuna ADR
+     (vedi sopra).
+   - **La ADR del trim** (la prossima libera, ADR-027): a relè, per ingresso,
+     bistabili o monostabili secondo quanto esce dal punto 3. Decide un
+     componente e uno stato all'accensione, quindi vuole la sua ADR.
+   - **Conta relè e bobine**: 4 ingressi × 2 canali × 3 posizioni. Una
+     disposizione plausibile — due scambi per posizione, un relè a due poli per
+     sinistro e destro — fa 2 relè per ingresso, 8 in tutto: va verificata, non
+     assunta.
 2. **Il dimensionamento, coi due vincoli insieme:**
    - **attenuazione**: 0 / −6 / −12 dB, con −6 dB portante per il +10 dB
      (ADR-015);
    - **Zin**: minimo di |Zin| su 20 Hz–20 kHz ≥ 100 kΩ al connettore, `R_IN`
      compresa, in tutte e tre le posizioni.
-3. **L'interlock (NC-023).** L'alimentazione delle bobine del trim passa per un
-   contatto chiuso **in** mute. I poli dei relè di mute sono tutti occupati dal
-   segnale: il contatto va trovato o aggiunto, e va aggiunto il ruolo al
-   guardiano 2e.
-   - **Provalo sulla netlist**: a mute rilasciato il comando del trim non deve
-     raggiungere nessuna bobina;
-   - **fallo fallire** col contatto sbagliato.
+3. **L'interlock (NC-023), e il valore che deve restare.** F8 chiede due cose
+   insieme: il comando del trim passa solo a mute inserito, **e il valore
+   impostato resta applicato all'uscita dal mute**.
+   - **Con relè monostabili alimentati attraverso il mute, la seconda cade**:
+     uscendo dal mute le bobine si diseccitano e il trim torna a riposo. È un
+     ragionamento, non una simulazione, ed è il motivo per cui l'utente
+     preferisce i bistabili.
+   - **Bistabili, la strada preferita.** Il mute abilita solo gli impulsi di
+     set/reset, e lo stato si tiene senza corrente. Il datasheet in `vendor/`
+     elenca i **G6KU-2F-Y** a singolo avvolgimento. Da verificare:
+     - T7/T8, col ciclo di vita letto dal costruttore;
+     - il **pinout** letto alla fonte, come in L21, non ereditato dal G6K-2F-Y;
+     - lo **stato all'accensione**: resta l'ultimo impostato. Scrivi nella ADR
+       se è accettabile e perché.
+   - **Se i bistabili non sono possibili**: monostabili, col mute che abilita il
+     **comando** e non l'alimentazione, più una memoria di stato. È logica,
+     quindi sotto le condizioni di ADR-022. **Torna dall'utente coi numeri
+     delle due strade** prima di sceglierla.
+   - **Il contatto del permissivo va aggiunto**: i poli dei relè di mute sono
+     tutti occupati dal segnale.
+   - **Il guardiano 2e** va esteso al ruolo TRIM. Oggi ragiona su stati a
+     bobina diseccitata, che per un bistabile non sono uno stato.
+   - **Provalo sulla netlist**: a mute rilasciato nessun comando raggiunge una
+     bobina del trim. **Fallo fallire** col contatto sbagliato.
 4. **Le misure, con un deck versionato:**
    - Zin AC nelle tre posizioni;
    - rumore (E5) del partitore visto dal blocco A, nei tre modi del blocco B;
@@ -109,6 +141,10 @@ riga di V1 senza misura. Il trim porta tre voci insieme:
   **R1 + R2 = 100 kΩ** senza `R_IN` in parallelo: 50 k / 50 k fa 97,62 kΩ.
 - **Un interlock mai fatto fallire**, o preso dal contatto che è chiuso a
   riposo: è la famiglia di NC-014.
+- **Un trim che perde il valore uscendo dal mute**, cioè monostabili
+  alimentati attraverso il contatto del mute: viola F8.
+- **Un pinout del G6KU-2F-Y ereditato** da quello del G6K-2F-Y invece che letto
+  dal datasheet.
 - **Un deck che include `gain_block_flat.inc` senza terminare `RG` e `RG10`**
   (#27), o con un nodo che si chiama come un nodo del blocco (#24).
 - **Una `meas` il cui risultato non si è controllato nel log** (#26).

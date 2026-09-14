@@ -22,6 +22,30 @@ realtà, il progetto non è ripartibile.
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
 
+### Dopo L27 — il trim: a relè, per ingresso, bistabili se possibile (2026-09-14)
+
+Nessun lotto: l'utente ha chiesto di spiegare il primo punto del mandato di L16
+(F2 contro F8, «per ingresso», trim dopo il selettore) e ha deciso.
+
+- **Le parole dell'utente**: «1. rele 2. trim per ingresso (meglio se possibile
+  coi bistabili)».
+- **Il trim è a relè.** L'interlock elettrico di ADR-019 resta. F2 («a
+  ponticello») si allinea a relè **senza ADR**: F8 escludeva già il ponticello,
+  quindi l'insieme dei progetti conformi non cambia (criterio di L15).
+- **Un trim per ingresso**, come ADR-011: niente trim unico dopo il selettore,
+  che avrebbe voluto una ADR nuova. Una disposizione plausibile fa 8 relè,
+  ancora da contare davvero.
+- **Bistabili, se possibile.** Spiegando è emerso un punto che il mandato non
+  diceva:
+  - F8 vuole anche che **il valore del trim resti all'uscita dal mute**;
+  - monostabili alimentati attraverso il contatto del mute lo perderebbero;
+  - coi bistabili (G6KU-2F-Y, nel datasheet in `vendor/`) il mute abilita solo
+    gli impulsi, e il valore resta senza corrente.
+  È un ragionamento, non una simulazione.
+- **Dove sta scritto**: `NEXT-SESSION.md` (mandato di L16) e la «Decisione
+  dell'utente» di NC-023. **L16 registra la ADR del trim** (ADR-027) come primo
+  passo.
+
 ### Dopo L27 — il dossier diventa un lotto (2026-09-14)
 
 Nessun lotto: una domanda dell'utente, «ha senso rifare il dossier?».
@@ -536,7 +560,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L13 | **E4 sulle tre uscite e a manopola che gira.** Estendere `tb_zout_psrr_noise.cir` alle due uscite fisse e a tre posizioni dell'attenuatore | S | NC-008 | da fare |
 | L14 | **Le tre correzioni di testo.** KPI del margine di fase qualificato, i due commenti di cascode allineati, lo scarto ADR-014 riferito a 1 kHz | XS | NC-003, NC-006, NC-007 | **fatto** |
 | L15 | **Il vincolo su E3 scritto dove verrà letto** — in `REQUIREMENTS.md`, «Nota su E3», non in ADR-011 | XS | NC-005 (metà: il vincolo; la misura è L16) | **fatto** |
-| L16 | **Il trim entra nel progetto.** Dimensionarlo in `circuits/preamp/` coi due vincoli insieme — attenuazione richiesta da ADR-015 e la «Nota su E3» (min \|Zin\| 20 Hz–20 kHz ≥ 100 kΩ in tutte e tre le posizioni; R1 + R2 = 100 kΩ non basta, `R_IN` sta in parallelo) — e misurarlo. Chiude anche NC-005. Allineare F2 («a ponticello») a F8/ADR-019, che presuppongono relè. Più la riconciliazione delle tre cifre di margine nel dossier | S/M | **NC-009**, NC-005, **NC-023** | da fare |
+| L16 | **Il trim entra nel progetto.** Dimensionarlo in `circuits/preamp/` coi due vincoli insieme — attenuazione richiesta da ADR-015 e la «Nota su E3» (min \|Zin\| 20 Hz–20 kHz ≥ 100 kΩ in tutte e tre le posizioni; R1 + R2 = 100 kΩ non basta, `R_IN` sta in parallelo) — e misurarlo. Chiude anche NC-005. **Decisioni dell'utente del 2026-09-14: trim a relè, uno per ingresso, meglio coi bistabili se possibile.** Allineare F2 («a ponticello») a relè, senza ADR; la ADR del trim (ADR-027) è di L16. Il valore del trim deve restare all'uscita dal mute (F8). La cifra unica di margine di NC-009 si sceglie qui e si pubblica in L32 | S/M | **NC-009**, NC-005, **NC-023** | da fare |
 | L17 | **Buffer sulle uscite fisse.** Modifica di topologia in `preamp_audio.py` che disaccoppia le due fisse dal nodo del Blocco A, più la riesecuzione di `tb_blockA_carichi.cir` sulla topologia nuova. **Dopo L11**: progetta contro il criterio di corto di ADR-021 (risultato, tecnica libera) e nei limiti di ADR-022; il vincolo di impedenza minima a valle non basta più a chiudere NC-010 | M | **NC-010** (bloccante), apre **NC-029** | **fatto** — ADR-023 (classe A sui percorsi ascoltabili), un `GAINBLOCK` per fissa |
 | L18 | **Il vincolo PSRR scritto dove verrà letto**: quanto ripple può lasciare l'alimentatore sui rail, ricavato da E5 — **ADR-020** e «Nota su E5 — la quota del ripple» | XS/S | **NC-011** (metà: il vincolo; rimedio e verifica vanno con l'alimentatore) | **fatto** |
 | L19 | ~~**La soglia di margine di fase in V1**~~ — **ASSORBITA da L26**: la soglia l'ha data l'utente (60° ovunque, ADR-019) e NC-012 è chiusa. Resta solo la parte «KPI del dossier riferiti a quella», che va con la rigenerazione del dossier (**L32**) | XS | ~~NC-012~~ | **superata** |
@@ -2605,6 +2629,13 @@ della misura) e **NC-023**. Lotto **S/M**. Il mandato completo è in
   - NC-009: l'headroom a +10 dB poggia su un trim che non esiste;
   - NC-005: la Zin di E3 va misurata in tutte e tre le posizioni;
   - NC-023: l'interlock elettrico col mute di ADR-019.
+
+**Le decisioni dell'utente, già prese** (2026-09-14):
+- trim **a relè**, e F2 si allinea senza ADR;
+- **uno per ingresso**, come ADR-011;
+- **relè bistabili, se possibile**, perché F8 vuole che il valore resti
+  all'uscita dal mute. Se non lo sono, L16 torna dall'utente coi numeri delle
+  due strade.
 
 **Dove parte.**
 - Il blocco A a **63,36°** (sorgente phono, 1 nF di cablaggio; L12, rieseguito
