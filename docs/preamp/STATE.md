@@ -22,6 +22,27 @@ realtà, il progetto non è ripartibile.
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
 
+### Dopo L11 — dove mettere il contatto di mute (2026-09-14)
+
+Nessun lotto: una domanda dell'utente su NC-028, «perché non mettere a massa
+prima del condensatore?», studiata in simulazioni di scratch. I numeri sono in
+NC-028.
+
+- **Toglie il gradino della musica**: da −3,6 V a −72 mV, rilasciando sul
+  picco.
+- **Ne mette uno pari all'offset in continua del blocco.** A mute inserito il
+  condensatore non segue più l'uscita e si scarica sul carico: +104 mV
+  all'inserzione e −154 mV al rilascio dopo un mute di 2 s a +10 dB, **anche
+  all'accensione**, che oggi è pulita a pV.
+- **Il contatto su entrambi i lati non aiuta sull'offset.**
+- **L'offset** vale −14/−45 mV coi modelli vendor (0/+10 dB), più fino a
+  20 mV × 3,15 di dispersione LSK489.
+- **Stima d'udibilità**, calcolata: 76-94 dB SPL di picco a 1 m sulle Heresy,
+  per 14-104 mV. Il volume non la riduce.
+- **Quindi non è una vittoria netta**: è un rimedio che vale solo insieme a un
+  offset basso, o a un rilascio lento. **L29** confronta le strade con un
+  deck versionato.
+
 ### L11 — mute tenuto e corto sulle uscite (2026-09-14)
 
 **Chiude NC-001** (bloccante). Report:
@@ -392,7 +413,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L26 | **I tre requisiti nuovi dell'utente diventano ADR-019**: margine di fase minimo **60° ovunque**, trim abilitato dal mute con **interlock elettrico**, guadagni **0 / +3 / +10 dB** con riposo a 0 dB | XS/S | **NC-012** (chiude), apre NC-021…NC-023 | **fatto** |
 | L27 | **Il terzo livello di guadagno entra nel progetto.** Dimensionare il secondo ramo commutato verso massa (ADR-004 conservata: si commuta R_g, mai R_f; a relè diseccitati **0 dB**), decidere relè e poli col budget di corrente delle bobine, estendere i dodici deck da due modalità a tre e l'asserzione del diagramma a blocchi | M | **NC-022** | da fare |
 | L28 | **SS dell'LSK489 definito per l'LSK489.** Un documento del costruttore che dica cosa sono i pin 3 e 7 di *questa* parte — o una ADR che accetti l'istruzione dell'LSK389 in forza della compatibilità dichiarata. Prima di G2 | XS/S | NC-027 | da fare |
-| L29 | **Il gradino al rilascio del mute.** Con segnale presente, il rilascio porta sul jack il condensatore caricato durante il mute: **5,37 V** a +10 dB, 1,79 V a 0 dB, 1,72 V sulle fisse, τ 0,32 s (principale) e 46 ms (fisse). **Prima una soglia dell'utente su V2** (ampiezza al jack, o regola d'uso scritta come vincolo); poi, se serve, un rimedio misurato: mute in serie (cambia lo stato sicuro e il guardiano), sequenza di rilascio col segnale azzerato a monte, rilascio lento | S | NC-028 | da fare |
+| L29 | **Il gradino al rilascio del mute.** Oggi il rilascio con segnale porta sul jack il condensatore caricato dalla musica: **5,37 V** a +10 dB, 1,79 V a 0 dB, 1,72 V sulle fisse, τ 0,32 s. **Il contatto prima del condensatore**, simulato in scratch dopo L11, toglie quel gradino ma ne mette uno **pari all'offset del blocco** (14-104 mV simulati, più fino a 63 mV di dispersione LSK489) **a ogni mute, accensione compresa**, e il volume non lo riduce (numeri e stima d'udibilità in NC-028). **Prima una soglia dell'utente su V2**; poi il confronto misurato, con un deck **versionato**, fra: contatto prima + offset abbassato (bilanciamento, coppie selezionate), rilascio lento, mute in serie, sequenza di rilascio. P7 va rimisurata per la posizione scelta | S/M | NC-028 | da fare |
 
 **NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
 riesecuzione di `tb_noise_breakdown.cir` coi modelli veri. È il caso
