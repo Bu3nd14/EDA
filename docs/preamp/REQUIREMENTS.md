@@ -3,7 +3,7 @@
 **Documento vivo.** Riscritto quando i requisiti cambiano. Ogni modifica
 sostanziale deve avere una ADR corrispondente in `decisions/`.
 
-Ultimo aggiornamento: 2026-09-14 (L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
+Ultimo aggiornamento: 2026-09-14 (L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
 
 Le motivazioni non stanno qui: stanno nelle ADR referenziate e nel
 report `reports/2026-09-08-analisi-catena.md`.
@@ -25,7 +25,7 @@ report `reports/2026-09-08-analisi-catena.md`.
 |---|---|---|
 | F1 | **4 ingressi** sbilanciati RCA, commutati a **relè** | ADR-009 |
 | F2 | **Trim di livello per ingresso**: 0 / −6 / −12 dB a ponticello | ADR-011 |
-| F3 | **3 uscite**: principale (attenuata) + 2 a livello fisso | ADR-008 |
+| F3 | **3 uscite**: principale (attenuata) + 2 a livello fisso, **ciascuna fissa col proprio buffer** | ADR-008, **ADR-023** |
 | F4 | **Attenuatore a scatti**, commutatore rotativo, 10 kΩ, resistenze 0,1% | ADR-009 |
 | F5 | **Guadagno commutabile 0 / +3 / +10 dB**, relè sulla rete di controreazione. **A relè diseccitati il guadagno è 0 dB**: nessun guasto di bobina e nessuno stato di accensione può portare a un guadagno più alto | ADR-004, **ADR-019** |
 | F6 | **Relè di mute** su tutte le uscite: accensione, commutazione guadagno e regolazione del trim (F8). **Tenibile a tempo indefinito**: il mute inserito rientra nel requisito P7 | ADR-012, **ADR-021** |
@@ -166,11 +166,11 @@ Ragionamento completo: `reports/2026-09-13-L15-vincolo-e3.md`.
 
 | # | Requisito | ADR |
 |---|---|---|
-| T1 | **Classe A pura, tutto a discreti.** Nessun operazionale nel percorso del segnale. **Percorso del segnale** = ciò che il segnale attraversa fra i connettori, più ciò che chiude un anello su un nodo di segnale; un ingresso di sola rilevazione è ammesso entro le soglie di ADR-022. **Eccezione**: classe B ammessa a mute inserito e con un corto al connettore d'uscita, alle condizioni di P7 | ADR-003, **ADR-021**, **ADR-022** |
+| T1 | **Classe A pura, tutto a discreti.** Nessun operazionale nel percorso del segnale. **Percorso del segnale** = ciò che il segnale attraversa fra i connettori, più ciò che chiude un anello su un nodo di segnale; un ingresso di sola rilevazione è ammesso entro le soglie di ADR-022. **La classe A si giudica sui percorsi ascoltabili**: ogni stadio fra un ingresso e un'uscita non silenziata resta in classe A, qualunque condizione ci sia sulle altre uscite. **Eccezione**: classe B ammessa solo negli stadi che servono esclusivamente uscite silenziate — mutate, in corto al connettore, o caricate da un apparecchio a bassa Zin — alle condizioni di P7 | ADR-003, **ADR-021**, **ADR-022**, **ADR-023** |
 | T2 | **Nessun servo di continua** (sarebbe un operazionale mascherato) | ADR-007 |
-| T3 | **Un solo blocco di guadagno**, progettato una volta, usato due volte per canale | ADR-006 |
+| T3 | **Un solo blocco di guadagno**, progettato una volta, usato **quattro volte per canale**: blocco A, blocco B e un buffer per ogni uscita fissa | ADR-006, **ADR-023** |
 | T4 | Coppia JFET d'ingresso: **LSK489 duale monolitico** — appaiamento intrinseco, supera il "stesso lotto" di ADR-005 | ADR-013 |
-| T5 | Buffer d'ingresso **unico**, uscite fisse via resistenze di isolamento **47 Ω** | ADR-008 |
+| T5 | **Un buffer per ogni uscita fissa**, pilotato dal blocco A; dopo ciascuno resistenza d'isolamento **47 Ω**, 4,7 µF e 470 kΩ di scarico. Supera il buffer unico di ADR-008 | **ADR-023** |
 | T6 | **Coppia d'ingresso cascodata** in entrambi i blocchi | ADR-014 |
 | T7 | **Ogni dispositivo attivo del percorso di segnale ha un modello SPICE del costruttore.** Un modello pubblicato come PDF conta (è il caso dell'LSK489, ADR-013); un mirror di terze parti **no** — la provenienza è ciò che si verifica | ADR-016 |
 | T8 | **Nessun componente a fine vita entra nel progetto.** Un annuncio di EOL già pubblicato squalifica la parte anche se esiste una finestra di last-time buy. **Il controllo si rifà a ogni gate**, non una volta sola | ADR-016 |
@@ -221,11 +221,17 @@ dei componenti **banale invece che richiedere un dissaldatore**.
 La tabella delle RθJA e delle potenze ammesse per parte sta in ADR-021.
 
 **Come si decide.** `spice/preamp/tb/tb_mute_corto.cir`, dati in
-`data/2026-09-14/`. Sulla topologia di oggi, **senza protezione e senza
-dissipatore**, il verdetto è **conforme**:
-- MJE peggiore: 484 mW, Tj 90,2 °C, contro 1,04 W ammessi (blocco A a mute
-  inserito, le due fisse in parallelo);
-- dispositivo più caldo: Q125, Tj 96,5 °C.
+`data/2026-09-14/L17/`, sulla topologia coi buffer delle fisse (ADR-023). I
+dati di L11, un livello sopra, sono della topologia di prima. **Senza
+protezione e senza dissipatore** il verdetto è **conforme**:
+- MJE peggiore: 348 mW, Tj 81,8 °C, contro 1,04 W ammessi (blocco B, corto
+  MAIN, +10 dB, 20 kHz); i buffer delle fisse 298 mW, Tj 78,6 °C;
+- dispositivo più caldo: Q125, Tj 96,4 °C;
+- L11 misurava 484 mW sul blocco A a mute, con le due fisse in parallelo sul
+  suo nodo: coi buffer quel caso non esiste più.
+
+Lo stesso deck verifica anche **T1 sui percorsi ascoltabili** (ADR-023): 294
+righe, nessuno stadio ascoltabile fuori dalla classe A.
 
 **I vincoli di distinta che il verdetto consegna** (a L9, che sceglie le parti):
 
@@ -234,15 +240,17 @@ dissipatore**, il verdetto è **conforme**:
 | 47 Ω dell'uscita principale | 1,10 W (corto MAIN, +10 dB, 20 kHz fondo scala) | **≥ 1,1 W** |
 | 22 Ω d'emettitore, blocco B | 0,27 W | ≥ 0,27 W |
 | 47 Ω delle uscite fisse | 0,155 W | ≥ 0,16 W |
+| 22 Ω d'emettitore dei buffer delle fisse (L17) | 0,037 W | ≥ 0,04 W |
 
 **Cosa la nota non copre.**
-- **Un apparecchio spento a valle con Zin bassa** non è un corto: resta
-  NC-010 e L17.
+- **Un apparecchio spento a valle con Zin bassa** rientra da L17 (ADR-023):
+  il buffer della fissa lo regge meglio di un corto (261 mW a 10 Ω, contro
+  298 mW), e gli altri stadi restano in classe A.
 - **Il gradino che il rilascio del mute porta sul jack** è V2, non P7: vedi
   NC-028.
 - **Le cifre dipendono dal punto di lavoro.** Coi modelli vendor la corrente
   di riposo sale a 20,1 mA, perché il moltiplicatore di Vbe è tarato sui
-  segnaposto, e il MJE peggiore arriva a 496 mW. Si ripete quando la Fase 4
+  segnaposto, e il MJE peggiore arrivava a 496 mW (L11, prima dei buffer). Si ripete quando la Fase 4
   ritara la polarizzazione.
 
 Ragionamento completo: `reports/2026-09-14-L11-mute-e-corto.md`.
@@ -265,7 +273,7 @@ Il margine di fase va misurato per **ogni combinazione** di:
 
 | Variabile | Valori da coprire |
 |---|---|
-| Blocco | A (buffer, guadagno 1) · B a 0 dB · B a **+3 dB** · B a **+10 dB** |
+| Blocco | A (buffer, guadagno 1) · **buffer delle fisse** (guadagno 1, ADR-023) · B a 0 dB · B a **+3 dB** · B a **+10 dB** |
 | Posizione dell'attenuatore | minimo · **metà corsa (Zout massima, 2,5 kΩ)** · massimo |
 | Carico d'uscita | cj 100 kΩ · Stax ~50 kΩ · Singxer (Zin ignota) · **carico capacitivo** (cavo, spazzata di lunghezza) |
 | Sorgente a monte | phono 430 Ω · K11 <1,5 Ω · le tre posizioni del trim |
@@ -348,16 +356,18 @@ va automatizzato.
 ## Architettura
 
 ```
- phono ECC82 ──┐
- K11 R2R    ───┤  selettore    trim      BLOCCO A          ┌─100Ω─C 2,2µ─[mute]──► Singxer SA-1
- (spare)    ───┤   a relè    0/-6/-12   guadagno 1         ├─100Ω─C 2,2µ─[mute]──► Stax SRM-T1
- (spare)    ───┘             per ingr.  Zin ≥ 100k         │
-                                                            └── ATTENUATORE ── BLOCCO B ── C 4,7µ ─[mute]──► cj EV250
-                                                                 10k, a scatti   0/+10 dB
-                                                                                 relè su feedback
+                                                          ┌─ BUFFER F1 ─47Ω─C 4,7µ─[mute]──► Singxer SA-1
+ phono ECC82 ──┐                                          │  guadagno 1
+ K11 R2R    ───┤  selettore    trim      BLOCCO A         ├─ BUFFER F2 ─47Ω─C 4,7µ─[mute]──► Stax SRM-T1
+ (spare)    ───┤   a relè    0/-6/-12   guadagno 1  ──────┤  guadagno 1
+ (spare)    ───┘             per ingr.  Zin ≥ 100k        │
+                                                          └─ ATTENUATORE ── BLOCCO B ─47Ω─C 4,7µ─[mute]──► cj EV250
+                                                              10k, a scatti   0/+10 dB (+3 dB: NC-022)
+                                                                              relè su R_g
 ```
 
-Due blocchi identici per canale, quattro in totale.
+Quattro blocchi identici per canale, otto in totale (T3, ADR-023). Un'uscita
+silenziata porta in classe B soltanto lo stadio che la serve.
 
 ## Requisiti espliciti di NON-obiettivo
 

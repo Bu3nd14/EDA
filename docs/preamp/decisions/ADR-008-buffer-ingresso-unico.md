@@ -1,6 +1,6 @@
 # ADR-008 — Buffer d'ingresso unico con resistenze di isolamento
 
-Data: 2026-09-08 · Stato: accettata
+Data: 2026-09-08 · Stato: superata da ADR-023 (un buffer per ogni uscita fissa)
 
 ## Contesto
 

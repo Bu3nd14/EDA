@@ -472,3 +472,48 @@ confronto che abbina le net per **nome** fallisce o, peggio, abbina male.
 **Regola operativa**: nessun controllo deve dipendere dal nome di una net che
 nasce da un'unione. I nomi scelti esplicitamente e mai uniti (`GND`, `VPLUS`)
 sono stabili; il 2e si appoggia solo a `GND` per questo.
+
+## 24. Un deck che include `gain_block_flat.inc` condivide i nomi dei nodi del blocco, e una collisione non dà errore
+
+Scoperto in L17.
+
+`gain_block_flat.inc` mette i dispositivi del blocco **a livello superiore**,
+non dentro un `.subckt`: serve, perché i deck d'anello devono poter fare
+`alter r109`. Ma anche i **nodi** del blocco stanno a livello superiore —
+`SRC`, `IN`, `OUT`, `FB`, `G1`, `G2`, `S1`, `NX`, `NREF`… — e un nodo del deck
+con lo stesso nome **si collega** al blocco.
+
+`tb_loop_bufferfissa.cir` alla prima esecuzione chiamava `SRC` il nodo del
+generatore d'ingresso. Nel blocco `SRC` è la sorgente comune della coppia
+JFET: il generatore da 0 V cortocircuitava la coda. ngspice ha risolto il
+circuito senza un avviso e ha dato:
+
+| | con la collisione | corretto |
+|---|---|---|
+| guadagno d'anello a 10 Hz | 22,25 dB | 72,30 dB |
+| attraversamento | 76 MHz | 1,00 MHz |
+| margine di fase, a vuoto | 105,85° | 69,31° |
+
+Un margine **migliore** di quello vero, cioè il verso in cui nessuno va a
+controllare. `check_deck_refs.py` non lo vede: controlla i **dispositivi**
+citati, non i nodi.
+
+**Regola operativa**: in un deck che include `_flat.inc`, i nodi propri hanno
+nomi che il blocco non usa (`VSRCN`, non `SRC`), e un anello si confronta col
+guadagno a bassa frequenza noto (~72 dB) prima di leggerne il margine. Coi
+`.subckt` il problema non esiste: i nodi interni sono privati.
+
+## 25. Il secondo passaggio di `run_simulation.sh` sovrascrive una tabella `echo` che ha il nome di un `wrdata`
+
+Scoperto in L17.
+
+Il secondo passaggio converte ogni `<nome>.txt` prodotto dall'esecuzione in
+`<nome>.csv` e `<nome>.json`, **sovrascrivendo** ciò che c'è. Un deck che
+scrive con `echo ... > tb_x_zout.csv` una tabella di riepilogo **e** con
+`wrdata tb_x_zout.txt` la curva perde la tabella in silenzio: al suo posto c'è
+la conversione della curva, con intestazione `col0,col1,…`. È successo a
+`tb_uscite_fisse.cir`.
+
+**Regola operativa**: le tabelle scritte da `echo` hanno un nome che nessun
+`wrdata` dello stesso deck produce (`tb_uscite_fisse_e4.csv` accanto a
+`tb_uscite_fisse_zout.txt`).

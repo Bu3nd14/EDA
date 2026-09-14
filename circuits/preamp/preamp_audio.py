@@ -6,17 +6,23 @@ preamp_audio.py - the audio board: two channels, four gain blocks.
 Fase 2 DRAFT. Source of truth for the topology (AGENTS.md rule 2).
 
 This file demonstrates the ADR-006 contract in the only way that counts: the
-SAME function, gain_block(), is called four times. There is no second
-topology to validate, and no place for the two channels to drift apart.
+SAME function, gain_block(), is called for every block - eight times since
+L17 (ADR-023). There is no second topology to validate, and no place for the
+channels or the outputs to drift apart.
 
-                 IN_L -> [BLOCK A] -+->  47R -> 4.7u -> FIXED OUT 1 (Singxer)
-                (buffer, gain 1)    +->  47R -> 4.7u -> FIXED OUT 2 (Stax)
+                 IN_L -> [BLOCK A] -+-> [BUFFER F1] -> 47R -> 4.7u -> FIXED OUT 1 (Singxer)
+                (buffer, gain 1)    +-> [BUFFER F2] -> 47R -> 4.7u -> FIXED OUT 2 (Stax)
                                     +-> attenuator (off board, 10k stepped)
                                             |
                                             v
                                        [BLOCK B] -> 47R -> 4.7u -> MAIN OUT
                                     (0 / +10 dB, relay on R_g)
    and the same again for the right channel.
+
+ADR-023: class A must hold on every path someone can listen to. A short, or a
+switched-off device with a low input impedance, on ONE output may take only
+the block that serves THAT output out of class A - never block A, which feeds
+the main path and the other fixed output. Hence one buffer per fixed output.
 
 WHAT IS DELIBERATELY NOT HERE
 -----------------------------
@@ -133,18 +139,59 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_mute, k_pole):
     inconn[1] += a["IN"]
     inconn[2] += gnd
 
-    # ---- two fixed-level outputs, ADR-008 -------------------------------
+    # ---- attenuator harness (off-board rotary, F4/ADR-009) --------------
+    # Built BEFORE the fixed-output buffers, so their inputs join this net.
+    att_top, att_wiper = Net(f"{ch}_ATT_TOP"), Net(f"{ch}_ATT_W")
+    att_top += a["OUT"]
+    ac = Part("Connector_Generic", "Conn_01x03", value=f"ATT_{ch} 10k",
+              footprint=FP_CONN3, ref=f"J{base + 20}")
+    ac[1] += att_top
+    ac[2] += att_wiper
+    ac[3] += gnd
+
+    # ---- two fixed-level outputs, ONE BUFFER EACH (ADR-023) --------------
+    # Until L17 both fixed outputs hung straight off block A's output, which
+    # is also block A's feedback node and the top of the attenuator (ADR-008).
+    # A switched-off device with a low Zin on either jack then pushed block A
+    # into class B: I_C(Q132) minimum -0.23 uA at 10 ohm downstream
+    # (NC-010, docs/preamp/data/2026-09-14/tb_blockA_carichi_10.csv) - and
+    # with it the MAIN path and the other fixed output, which someone may be
+    # listening to. ADR-023 (the user's decision of 2026-09-14) forbids that
+    # and supersedes ADR-008: each fixed output gets its own buffer, and a
+    # fault on one jack stays inside the block that serves that jack.
+    #
+    # The buffer is THE gain block again (T3 / ADR-006), wired as block A is:
+    # switchable=False, unity gain by construction. r_in=None: its gate is
+    # DC-returned by block A's output, a ~1 ohm DC-coupled source, so a
+    # 1 MOhm to ground would only load block A for nothing - the same
+    # reasoning as block B, whose gate the attenuator returns.
+    # A buffer on a shorted or dead-loaded jack DOES go class B (same 15 mA
+    # bias, same 47 ohm): ADR-023 admits that, because nobody listens to that
+    # output, provided P7 / ADR-021 hold for it (tb_mute_corto.cir, L17).
+    #
     # 47 ohm isolation resistors - see the ADR-008 addendum of 2026-09-08.
     # The designer implemented the original "~100 ohm" as written and RAISED
     # the conflict with E4 (which asks Zout < 100 ohm, and 100 ohm sits AT
     # the limit rather than under it) instead of editing the ADR unilaterally.
-    # The orchestrator resolved it to 47 ohm: satisfies E4 with margin and
-    # still gives the mutual isolation between Singxer and Stax that was the
-    # whole point of the resistor.
+    # The orchestrator resolved it to 47 ohm: satisfies E4 with margin. With
+    # one buffer per output it is no longer what isolates Singxer from Stax -
+    # the buffers are - but it still keeps the cable capacitance outside the
+    # buffer's loop, exactly as on the main output.
     # ADR-021 rating constraint for the BOM: with a short at a fixed
     # connector each 47 ohm dissipates up to 0.155 W (tb_mute_corto.cir),
     # so rate it >= 0.16 W at 60 C.
     for k, (name, cval) in enumerate((("SINGXER", "4.7u"), ("STAX", "4.7u"))):
+        # Refs 500/600 (L) and 700/800 (R): 1xx-4xx are blocks A and B.
+        # The passives below keep the channel's own numbering (R161-R166,
+        # R361-R366), which is what preamp_blocks_draw.py reads.
+        f = gain_block(tag=f"F{k + 1}{ch}", base=base + 400 + 100 * k,
+                       switchable=False, r_in=None, vp=vp, vm=vm, gnd=gnd)
+        # The buffer's input joins block A's output. NOTE on the NAME of that
+        # node in the netlist: SKiDL picks one of the merged names, and L17
+        # saw it come out as F1L_IN, F2L_IN or AR_OUT depending on the run and
+        # the channel - no connection order made it stable. Nothing in the
+        # repo reads it; do not start relying on it.
+        att_top += f["IN"]
         # 4.7 uF on BOTH fixed outputs - see the ADR-007 addendum.
         # The Stax alone would be happy at 2.2 uF (50 kOhm => 1.4 Hz), but the
         # Singxer's input impedance is NOT PUBLISHED (Fase 1 read the official
@@ -155,7 +202,7 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_mute, k_pole):
         # can absorb.
         fx = Net(f"{ch}_FIX{k + 1}")
         jk = Net(f"{ch}_FIXJACK{k + 1}")
-        R("47", a["OUT"], fx, base)
+        R("47", f["OUT"], fx, base)
         C(cval, fx, jk, base, fp=FP_FILM_P15)
         # DC return for the coupling cap. Without it the far side floats when
         # nothing is plugged in, charges on leakage, and thumps on connection.
@@ -169,15 +216,6 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_mute, k_pole):
         cn[1] += Net(f"{ch}_FIXOUT{k + 1}")
         cn[2] += gnd
         k_mute[k].append(cn[1])
-
-    # ---- attenuator harness (off-board rotary, F4/ADR-009) --------------
-    att_top, att_wiper = Net(f"{ch}_ATT_TOP"), Net(f"{ch}_ATT_W")
-    att_top += a["OUT"]
-    ac = Part("Connector_Generic", "Conn_01x03", value=f"ATT_{ch} 10k",
-              footprint=FP_CONN3, ref=f"J{base + 20}")
-    ac[1] += att_top
-    ac[2] += att_wiper
-    ac[3] += gnd
 
     # ---------------- BLOCK B: output stage, 0 / +10 dB --------------------
     # r_in=None: the attenuator ladder is itself the gate's DC return (at most
@@ -263,10 +301,11 @@ if __name__ == "__main__":
     # released yet. Failing safe = failing silent.
     # The mute may be held INDEFINITELY (ADR-021, superseding ADR-012's "a few
     # seconds"): it is the trim's permissive (ADR-019). With all three jacks
-    # grounded the output stages run in class B - block A sees its two fixed
-    # branches in parallel, the worst case of all - and ADR-021 asks only that
-    # every part stay inside its thermal and SOA limits. L11 measured that it
-    # does. This shunt mute is NOT a short-circuit protection: during an
+    # grounded the output stages run in class B - since L17 (ADR-023) that is
+    # the two fixed buffers and block B, each on its own 47 ohm; block A only
+    # drives the buffers and the attenuator - and ADR-021 asks only that every
+    # part stay inside its thermal and SOA limits. L11 measured that on the
+    # topology without buffers; L17 re-measured it on this one. This shunt mute is NOT a short-circuit protection: during an
     # external short it adds a second ground instead of removing the first.
     for i, k in enumerate(K_MUTE):
         lst = mute_lists[i]

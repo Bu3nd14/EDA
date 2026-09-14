@@ -1,6 +1,6 @@
 # ADR-021 — Mute tenibile a tempo indefinito, e ogni uscita regge un corto
 
-Data: 2026-09-14 · Stato: accettata
+Data: 2026-09-14 · Stato: accettata — precisata da ADR-023 (classe A su ogni percorso ascoltabile: la classe B resta nei soli stadi che servono un'uscita mutata, in corto o con un apparecchio a bassa Zin)
 
 ## Contesto
 

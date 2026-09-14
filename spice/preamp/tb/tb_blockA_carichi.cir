@@ -1,119 +1,187 @@
-tb_blockA_carichi.cir - BLOCCO A: cosa vede quando un apparecchio a valle si spegne
-* Evidenza di NC-010. Il Blocco A pilota TRE carichi in parallelo (ADR-008):
-* l'attenuatore da 10 kohm piu' le due uscite fisse, ciascuna 47 ohm + 4.7 uF
-* + 470 kohm di scarico. Non c'e' nessun isolamento reciproco fra i tre rami:
-* il nodo di controreazione del Blocco A E' il nodo che li pilota tutti.
+tb_blockA_carichi.cir - apparecchio spento a valle di una fissa: chi esce dalla classe A (L17, ADR-023)
+* Prima riga = titolo (docs/limitations.md #10).
 *
-* La domanda che questo banco risponde: se un apparecchio a valle di una
-* uscita fissa si spegne e la sua impedenza d'ingresso crolla, cosa succede
-* al Blocco A? L'impedenza d'ingresso del Singxer non e' nota e da spento
-* potrebbe andare a zero, quindi la condizione non e' ipotetica.
+* STORIA. Il deck nasce come evidenza di NC-010: il blocco A pilotava
+* direttamente le due uscite fisse (ADR-008), e un apparecchio spento con Zin
+* bassa su una di loro lo portava in classe B - a 10 ohm I_C(Q132) minima
+* -0.23 uA (data/2026-09-09 col THAT320, data/2026-09-14 con l'LS352).
+* L17 mette un buffer per ogni fissa (ADR-023) e questo deck ne misura
+* l'effetto sulla topologia nuova.
 *
-* Due meta':
-*   1. TRANSITORIO - I_C dei due dispositivi d'uscita (Q132 NPN, Q133 PNP)
-*      al variare di RJ1, l'impedenza a valle della fissa 1. La Classe A
-*      esiste finche' ENTRAMBI conducono per tutto il periodo: se uno dei
-*      due tocca lo zero, lo stadio e' in Classe B. Il livello e' 2.7 V RMS
-*      (E6), cioe' 3.818 V di picco, e il Blocco A e' a guadagno unitario.
-*   2. AC - di quanto si muove il LIVELLO sul nodo OUT, che e' l'ingresso
-*      dell'attenuatore, fra fissa carica e fissa in corto. E' la meta'
-*      "modulazione reciproca" dell'osservazione: il carico di un ramo
-*      cambia il segnale che entra nel ramo del volume.
+* IL VERBO (ADR-023): la classe A deve restare sui percorsi ASCOLTABILI.
+* Con un apparecchio spento su FIX1:
+*   - XA (blocco A: alimenta l'attenuatore, cioe' il percorso principale, e
+*     l'altra fissa)  -> classe A in OGNI riga;
+*   - XF2 (buffer della fissa che si sta ascoltando) -> classe A in OGNI riga;
+*   - XF1 (buffer della fissa con l'apparecchio spento) -> libero: nessuno
+*     ascolta quell'uscita. La sua termica e' di tb_mute_corto.cir (P7).
+* Classe A <=> icmin_q132 > 0 E icmax_q133 < 0 (entrambi conducono sempre).
 *
-* NON e' un banco di stabilita': il margine di fase del Blocco A e' NC-002
-* e sta in tb_loop_blockA.cir, da aggiornare ai valori canonici in L12.
+* IL CONTROLLO CHE IL DECK SAPPIA FALLIRE. Le due fisse si prendono da un
+* nodo scelto con due resistenze per fissa:
+*   RVN1 OUTF1 SEL1  (cablaggio NUOVO,  dal buffer)
+*   RVV1 OUTA  SEL1  (cablaggio VECCHIO, dal blocco A, cioe' ADR-008)
+* una a 1 mohm e l'altra a 1e12. Col cablaggio vecchio lo STESSO deck deve
+* ritrovare la classe B di XA a 10 ohm: se non la trova, non vede niente.
+* Col cablaggio vecchio i buffer restano a vuoto e le loro righe non contano.
 *
-* Relay di guadagno non montato (ADR-006): RRG aperto, guadagno unitario.
-* PROVVISORIO - modelli segnaposto, vedi l'intestazione di tb_loop.cir.
-* Nessuna cifra di distorsione va ricavata da qui.
+* CIRCUITO. Tre GAINBLOCK da gain_block.subckt (generato, mai toccato a mano),
+* cablati a guadagno unitario come in preamp_audio.py: R_g non montata.
+* Differenza nota, la stessa di tb_mute_corto.cir: il subckt porta R113 =
+* 1 MEG sull'ingresso, che preamp_audio.py NON monta sui buffer (r_in=None).
+* Sui buffer e' 1 MEG in parallelo all'uscita del blocco A (~1 ohm): 1 uA di
+* picco, trascurabile sulle correnti d'uscita.
+*
+* NOMI DEI DISPOSITIVI letti da gain_block.subckt di oggi:
+*   Q132 NMJE15032 (NPN d'uscita)   Q133 PMJE15033 (PNP d'uscita)
+* Nei dati del 2026-09-09 compare Q134: e' lo stesso dispositivo prima delle
+* rinumerazioni L22/L10.
+*
+* PROVVISORIO SUI MODELLI: tutto tranne LS352 e LSK489 e' segnaposto
+* (placeholder_devices.lib, NC-017). Nessuna cifra di distorsione va ricavata
+* da qui.
+*
+* CONVENZIONE DI PERCORSO: `.include @REPO@/...` e file scritti con nome nudo.
+* Nessun file si chiama tb_blockA_carichi_wrdata.txt: run_simulation.sh avvisa
+* e scrive un json con rows: 0, e converte i .txt al secondo passaggio. Le
+* tabelle sono .csv scritte da echo, che il secondo passaggio non tocca.
 
 .include @REPO@/spice/preamp/placeholder_devices.lib
-* L22: the input current mirror is no longer a placeholder. It is an
-* LS352 (ADR-018) and this is its VENDOR model - the only real device
-* model in this deck besides the LSK489. Every OTHER device here is
-* still a hand-written placeholder.
 .include @REPO@/models/bjt_pnp/ls350.lib
-.include @REPO@/spice/preamp/gain_block_flat.inc
+.include @REPO@/spice/preamp/gain_block.subckt
 
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15
 
-* 3.818 V di picco = 2.700 V RMS = E6 a fondo scala.
-VIN IN 0 SIN(0 3.818 1k) AC 1
+* 3.818 V di picco = 2.700 V RMS = E6 a fondo scala. Sorgente K11 (< 1.5 ohm).
+VIN SRC 0 SIN(0 3.818 1k) AC 1
+RSRC SRC IN 1.5
 
-* R_g / relay non montati sul blocco A
-RRG RG 0 1G
+* ---------------- BLOCCO A: guadagno 1, R_g non montata ------------------
+XA IN OUTA FBA RGA VPLUS VMINUS GAINBLOCK
+RRGA RGA 0 1G
+CRGA RGA 0 15p
+* attenuatore da 10 k, manopola al massimo: il carico piu' pesante che vede
+RATT OUTA 0 10k
 
-* --- carico canonico, esattamente come preamp_audio.py lo cabla ----------
-* (righe 123-140: 47 ohm, 4.7 uF, 470 kohm di scarico su ogni fissa)
-RATT   OUT 0  10k
-RSEP1  OUT FIX1 47
-CFIX1  FIX1 J1 4.7u
-RJ1    J1 0 470k
-RSEP2  OUT FIX2 47
-CFIX2  FIX2 J2 4.7u
-RJ2    J2 0 470k
+* ---------------- i due buffer delle fisse (ADR-023) ---------------------
+XF1 OUTA OUTF1 FBF1 RGF1 VPLUS VMINUS GAINBLOCK
+RRGF1 RGF1 0 1G
+CRGF1 RGF1 0 15p
+XF2 OUTA OUTF2 FBF2 RGF2 VPLUS VMINUS GAINBLOCK
+RRGF2 RGF2 0 1G
+CRGF2 RGF2 0 15p
+
+* ---------------- selezione del cablaggio --------------------------------
+RVN1 OUTF1 SEL1 1m
+RVV1 OUTA  SEL1 1e12
+RVN2 OUTF2 SEL2 1m
+RVV2 OUTA  SEL2 1e12
+
+* ---------------- le due fisse, come preamp_audio.py le cabla ------------
+* 47 ohm + 4.7 uF + 470 k di scarico. RJ1 e' l'apparecchio a valle della
+* fissa 1, spazzato; la fissa 2 porta lo Stax (50 k), che si sta ascoltando.
+RSEP1 SEL1 FIX1 47
+CFIX1 FIX1 J1 4.7u
+RBL1  J1 0 470k
+RJ1   J1 0 470k
+RSEP2 SEL2 FIX2 47
+CFIX2 FIX2 J2 4.7u
+RBL2  J2 0 470k
+RJ2   J2 0 50k
 
 .control
-* --- wrdata: nomi parametrizzati, convenzione di L5 --------------------
-* Un `$var` in un nome di file NON si chiude da solo: ngspice fa entrare
-* nel nome della variabile anche `.`, `-` e `_`, quindi `..._$rj.txt`
-* cercherebbe una variabile "rj.txt". La forma che funziona e' `$rj$t`
-* con t = ".txt" - docs/limitations.md #10, misurata in L5.
-*
-* Nessun file si chiama tb_blockA_carichi_wrdata.txt, quindi
-* run_simulation.sh avvisa e scrive un tb_blockA_carichi.json con
-* rows: 0; i file veri li converte il SECONDO passaggio. E' atteso.
-* ---------------------------------------------------------------------
 set t = .txt
-save @q132[ic] @q133[ic] v(out) v(j1)
+save @q.xa.q132[ic] @q.xa.q133[ic] @q.xf1.q132[ic] @q.xf1.q133[ic]
+save @q.xf2.q132[ic] @q.xf2.q133[ic] v(outa) v(j1) v(j2) @rsep1[i]
 
-* === 1. TRANSITORIO: la soglia oltre la quale la Classe A si perde =====
-* Si versiona la FORMA D'ONDA, non i soli estremi: da lei min e max sono
-* ricalcolabili, e il confronto con i `meas` che ngspice stampa nel .log
-* sono le due strade indipendenti verso lo stesso numero che il dossier
-* pretende. Un wrdata dei soli `meas` avrebbe scritto 1001 righe identiche,
-* perche' in un plot di transitorio gli scalari finiscono sulla scala dei
-* tempi.
-*   col0 = tempo [s]  col1 = I_C(Q132) [A]   (NPN, la semionda positiva)
-*   col2 = tempo [s]  col3 = I_C(Q133) [A]   (PNP, la sua I_C esce: segno -)
-*   col4 = tempo [s]  col5 = v(OUT) [V]
-* CLASSE A <=> q134min > 0 E q135max < 0: entrambi conducono per tutto il
-* periodo. Se uno dei due tocca lo zero, lo stadio e' in Classe B.
-*
-* Passo 5 us su 2 ms: 401 righe per file. A 1 kHz l'errore di
-* campionamento sul picco vale (2*pi*1k*2.5u)^2/2 = 1.2e-4, cioe' la
-* quarta cifra - verificato contro una run a 2 us, vedi il report.
-foreach rj 470k 10k 1k 100 10 0.01
-  alter rj1 = $rj
-  * 2 ms di finestra dopo 3 ms di assestamento: due periodi interi a 1 kHz
-  tran 5u 5m 3m
-  meas tran q134max MAX @q132[ic]
-  meas tran q134min MIN @q132[ic]
-  meas tran q135max MAX @q133[ic]
-  meas tran q135min MIN @q133[ic]
-  meas tran voutmax MAX v(out)
-  meas tran voutmin MIN v(out)
-  echo "BLOCCO A  RJ1=$rj"
-  print q134max q134min q135max q135min voutmax voutmin
-  wrdata tb_blockA_carichi_$rj$t @q132[ic] @q133[ic] v(out)
-  destroy all
+* =========================================================================
+* 1. TRANSITORIO. Una riga per blocco per corsa in tb_blockA_carichi.csv.
+*    cablaggio: 1 nuovo (buffer) | 2 vecchio (ADR-008, il controllo)
+*    Finestra di 2 ms dopo 3 ms: due periodi a 1 kHz, quaranta a 20 kHz.
+*    Passo 5 us a 1 kHz (errore sul picco 1.2e-4, verificato in L5) e
+*    0.25 us a 20 kHz (stesso errore).
+* =========================================================================
+echo "cablaggio,f_hz,rj1,blk,icmax_q132,icmin_q132,icmax_q133,icmin_q133,classe_a,vpk_outa,vpk_j2,irms_rsep1" > tb_blockA_carichi.csv
+foreach w 1 2
+  if $w = 1
+    alter rvn1 = 1m
+    alter rvv1 = 1e12
+    alter rvn2 = 1m
+    alter rvv2 = 1e12
+  else
+    alter rvn1 = 1e12
+    alter rvv1 = 1m
+    alter rvn2 = 1e12
+    alter rvv2 = 1m
+  end
+  foreach f 1000 20000
+    alter @vin[sin] = [ 0 3.818 $f ]
+    foreach rj 470k 10k 1k 100 47 22 10 1 0.01
+      alter rj1 = $rj
+      if $f = 1000
+        tran 5u 5m 3m 5u
+      else
+        tran 0.25u 5m 3m 0.25u
+      end
+      meas tran vpa MAX v(outa)
+      meas tran vpj2 MAX v(j2)
+      meas tran irs1 RMS @rsep1[i]
+      meas tran a2x MAX @q.xa.q132[ic]
+      meas tran a2n MIN @q.xa.q132[ic]
+      meas tran a3x MAX @q.xa.q133[ic]
+      meas tran a3n MIN @q.xa.q133[ic]
+      let ca = (a2n > 0) & (a3x < 0)
+      echo "$w,$f,$rj,A,$&a2x,$&a2n,$&a3x,$&a3n,$&ca,$&vpa,$&vpj2,$&irs1" >> tb_blockA_carichi.csv
+      meas tran f12x MAX @q.xf1.q132[ic]
+      meas tran f12n MIN @q.xf1.q132[ic]
+      meas tran f13x MAX @q.xf1.q133[ic]
+      meas tran f13n MIN @q.xf1.q133[ic]
+      let cf1 = (f12n > 0) & (f13x < 0)
+      echo "$w,$f,$rj,F1,$&f12x,$&f12n,$&f13x,$&f13n,$&cf1,$&vpa,$&vpj2,$&irs1" >> tb_blockA_carichi.csv
+      meas tran f22x MAX @q.xf2.q132[ic]
+      meas tran f22n MIN @q.xf2.q132[ic]
+      meas tran f23x MAX @q.xf2.q133[ic]
+      meas tran f23n MIN @q.xf2.q133[ic]
+      let cf2 = (f22n > 0) & (f23x < 0)
+      echo "$w,$f,$rj,F2,$&f22x,$&f22n,$&f23x,$&f23n,$&cf2,$&vpa,$&vpj2,$&irs1" >> tb_blockA_carichi.csv
+      echo "cablaggio=$w f=$f RJ1=$rj  XA min $&a2n  XF1 min $&f12n  XF2 min $&f22n"
+      * La forma d'onda, cablaggio nuovo a 1 kHz: min e max sono ricalcolabili
+      * da qui, per una seconda strada verso gli stessi numeri.
+      *   col1 I_C XA.Q132  col3 I_C XA.Q133  col5 I_C XF1.Q132
+      *   col7 I_C XF2.Q132 col9 v(OUTA)      (colonne pari = tempo)
+      if $w = 1
+        if $f = 1000
+          wrdata tb_blockA_carichi_$rj$t @q.xa.q132[ic] @q.xa.q133[ic] @q.xf1.q132[ic] @q.xf2.q132[ic] v(outa)
+        end
+      end
+      destroy all
+    end
+  end
 end
 
-* === 2. AC: il livello all'ingresso dell'attenuatore ===================
-* v(OUT) e' cio' che entra nell'attenuatore del volume. Se il carico di
-* un ramo fisso lo sposta, il ramo del volume sente il ramo fisso.
-*   col0 = frequenza [Hz]  col1 = vdb(OUT) [dB]
-*   col2 = frequenza [Hz]  col3 = vdb(J1) [dB]  (il jack della fissa 1)
+* =========================================================================
+* 2. AC, cablaggio nuovo: di quanto il livello di chi si ascolta si muove fra
+*    fissa 1 carica e fissa 1 in corto. v(OUTA) e' l'ingresso
+*    dell'attenuatore, v(J2) il jack dello Stax.
+*      col1 vdb(OUTA)  col3 vdb(J2)   (colonne pari = frequenza)
+* =========================================================================
+alter rvn1 = 1m
+alter rvv1 = 1e12
+alter rvn2 = 1m
+alter rvv2 = 1e12
 foreach rj 470k 0.01
   alter rj1 = $rj
   ac dec 100 10 100k
-  meas ac lvl1k find vdb(out) at=1000
-  meas ac lvl20 find vdb(out) at=20
-  meas ac lvl20k find vdb(out) at=20000
-  echo "BLOCCO A  AC  RJ1=$rj"
-  print lvl20 lvl1k lvl20k
-  wrdata tb_blockA_carichi_ac_$rj$t vdb(out) vdb(j1)
+  meas ac lvl20 find vdb(outa) at=20
+  meas ac lvl1k find vdb(outa) at=1000
+  meas ac lvl20k find vdb(outa) at=20000
+  meas ac j2l20 find vdb(j2) at=20
+  meas ac j2l1k find vdb(j2) at=1000
+  meas ac j2l20k find vdb(j2) at=20000
+  echo "AC  RJ1=$rj"
+  print lvl20 lvl1k lvl20k j2l20 j2l1k j2l20k
+  wrdata tb_blockA_carichi_ac_$rj$t vdb(outa) vdb(j2)
   destroy all
 end
 .endc

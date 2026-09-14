@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-09-13** (creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-09-14** (creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -32,8 +32,11 @@ verifica, che sono del lotto dell'alimentatore. **L11** (2026-09-14) ha
 registrato **ADR-021** e **ADR-022**. Ha misurato il mute e il corto su
 ciascuna uscita, e la topologia di oggi regge il criterio termico: **chiude
 NC-001**. Ha trovato il gradino che il rilascio del mute porta sul jack e
-**apre NC-028**. **19 voci aperte, 5 bloccanti.**
-L'accesso a G1 non è concesso finché NC-002, NC-004, NC-010, NC-017 e NC-021
+**apre NC-028**. **L17** (2026-09-14) ha registrato **ADR-023** — la classe A si
+giudica sui percorsi ascoltabili — e ha dato a ogni uscita fissa il proprio
+buffer: **chiude NC-010**. Misurando il calore a riposo dei quattro blocchi
+in più ha **aperto NC-029**. **19 voci aperte, 4 bloccanti.**
+L'accesso a G1 non è concesso finché NC-002, NC-004, NC-017 e NC-021
 restano aperte.
 
 ---
@@ -348,7 +351,7 @@ richiede.
 | Requisito | **T1**/ADR-003 (Classe A pura) · **V1** (carico «Singxer (Zin ignota)») · F3/ADR-008 |
 | Severità | **bloccante** |
 | Aperta da | `reports/2026-09-09-revisione-utente-dossier.md` |
-| Stato | aperta |
+| Stato | **chiusa il 2026-09-14 da L17** |
 
 **Evidenza.** Il Blocco A pilota **tre carichi in parallelo** senza
 isolamento reciproco: l'attenuatore da 10 kΩ e le due uscite a livello
@@ -439,6 +442,35 @@ di ADR-021.
   condizioni in cui ADR-021 la ammette. È ancora **T1**, e il rimedio è ancora
   di **L17**.
 
+**CHIUSA IL 2026-09-14 da L17**, per la strada 1, con una decisione
+dell'utente che la voce non prevedeva.
+
+**La decisione** (**ADR-023**): la classe A si giudica sui **percorsi
+ascoltabili**. L'utente ha escluso la strada 2 perché un corto o un apparecchio
+spento su una fissa portava fuori dalla classe A «tutto l'ascolto primario»,
+e ha dichiarato ininfluente, se la termica è a posto, che ne esca un blocco
+che nessuno ascolta.
+
+**Il rimedio.** Un `GAINBLOCK` a guadagno unitario per ogni uscita fissa
+(`preamp_audio.py`); la netlist passa da 197 a 357 componenti.
+
+**L'evidenza**, `data/2026-09-14/L17/`:
+- `tb_blockA_carichi.cir`, fissa 1 da 470 kΩ a 0,01 Ω, a 1 kHz e 20 kHz:
+  - blocco A a **14,356 mA** e buffer della fissa 2 a **14,509 mA** in ogni
+    riga;
+  - va in classe B solo il buffer della fissa 1.
+- **Lo stesso deck col cablaggio di ADR-008** ritrova il blocco A in classe B
+  a ≤ 22 Ω (1 kHz) e ≤ 47 Ω (20 kHz). A 10 Ω e 1 kHz dà −0,2 µA, contro i
+  −0,23 µA di L11.
+- `tb_mute_corto.cir` a quattro blocchi:
+  - 294 righe di percorsi ascoltabili, **0 fuori dalla classe A**;
+  - P7 sui buffer: MJE al massimo 298,1 mW, Tj 78,6 °C;
+  - apparecchio spento a 10 Ω: 261,3 mW.
+- **Il blocco 2f** (`preamp_blocks_draw.py`) asserisce sulla netlist che ogni
+  fissa parte dal proprio buffer. Fatto fallire sulla netlist di `main`.
+
+Report: `reports/2026-09-14-L17-buffer-uscite-fisse.md`.
+
 ### NC-002 — Il blocco A non ha evidenza di stabilità valida, e col nuovo requisito è sotto soglia
 
 | | |
@@ -488,6 +520,32 @@ spazzare la capacità sia sul nodo OUT sia sui due jack, versionare i CSV
 sotto `docs/preamp/data/<data>/` e riportarli nel dossier accanto ai
 quattro del blocco B. Se il caso peggiore del blocco A resta sotto quello
 del blocco B, il KPI va corretto di conseguenza (NC-003).
+
+**AGGIORNATA IL 2026-09-14 da L17.**
+
+**Le istanze sono cambiate.** Coi buffer delle fisse (ADR-023) il blocco A
+pilota solo l'attenuatore e due ingressi, e ogni fissa ha un `GAINBLOCK` a
+guadagno unitario con l'anello che il blocco A aveva. Questa voce vale ora per
+il blocco A **e** per i quattro buffer.
+
+**Il deck del blocco A è ai valori veri** (`tb_loop_blockA.cir`), con un
+controllo sul carico canonico di ADR-008. Il buffer ha un deck suo,
+`tb_loop_bufferfissa.cir`. Dati in `data/2026-09-14/L17/`:
+
+| Istanza, 4,7 nF | Sonda sul nodo | Sonda al jack |
+|---|---|---|
+| Blocco A, carico nuovo | **40,96°** | — |
+| Blocco A, carico canonico (controllo) | 41,02° | — |
+| Buffer delle fisse | **40,98°** | **62,27°** (minimo 61,74° a 2,2 nF) |
+
+**Il controllo** sta entro 1° dai valori del 2026-09-09, che erano col
+THAT320.
+
+**La domanda che L12 deve fare per prima.** ADR-019 fissa la sonda da 4,7 nF
+«ovunque», ma non dice **in che punto**:
+- per il buffer la differenza fra nodo e jack vale 21°;
+- per il blocco A, dopo L17, sul nodo resta solo il cablaggio verso
+  l'attenuatore.
 
 ### NC-009 — Il margine di headroom poggia su un trim che non esiste nel progetto, e la sua cifra circola in tre versioni
 
@@ -1755,7 +1813,68 @@ Lo specchio LS352 aggiunge poco: 0,2 mV tipici di ΔV_BE.
    lascia libera la tecnica del mute attivo, e a P7: col contatto prima, il
    carico a mute è 47 Ω anche in bassa frequenza, e la termica va rimisurata.
 
+
+### NC-029 — Con i buffer delle fisse la dissipazione a riposo raddoppia, e P5 non la copre
+
+| | |
+|---|---|
+| Requisito | **P5** (~3-4 W in mobile chiuso) · **ADR-021** (60 °C nel telaio) · ADR-003 (~0,55 W per blocco) |
+| Severità | **maggiore** |
+| Aperta da | `reports/2026-09-14-L17-buffer-uscite-fisse.md` |
+| Stato | aperta |
+
+**Evidenza.** `data/2026-09-14/L17/tb_mute_corto_regime.csv`, colonna
+`p_rail`, caso 0 senza segnale. È la potenza media che i due rail erogano a un
+canale a riposo:
+- **3,2248 W** per canale;
+- **6,45 W** per i due;
+- **0,806 W per blocco**, contro gli ~0,55 W che ADR-003 stimava.
+
+**Il confronto con prima.** Con quattro blocchi invece di otto, la stessa
+cifra per blocco dà circa 3,2 W. È calcolato, non misurato sulla topologia di
+prima.
+
+**Cosa manca ancora.** L'alimentatore: regolatori, raddrizzatori, trasformatore
+e bobine dei relè. La sola scheda audio supera già i 3-4 W che P5 prevede per
+l'apparecchio intero.
+
+**Perché maggiore e non bloccante.**
+- **P5 è una previsione di ventilazione, non un limite**: nessuna soglia è
+  superata.
+- **Ma i 60 °C nel telaio** su cui ADR-021 e ADR-023 hanno misurato P7 sono
+  stati scelti per quel telaio: stanza a 35 °C più ~25 °C di aumento.
+- **Raddoppiare il calore interno** può far cadere l'ipotesi, e con lei il
+  margine di P7: il dispositivo più caldo è a 96,4 °C, cioè 28,6 °C sotto il
+  limite.
+
+**Cosa serve per chiuderla.**
+1. **Una stima termica del telaio** con la dissipazione totale: scheda audio
+   più alimentatore.
+2. **Se l'aumento resta dentro i 60 °C**, P5 si aggiorna al numero vero.
+3. **Se non ci resta**, o una ventilazione e un montaggio progettati, con una
+   ADR che aggiorni P5, oppure ADR-021 si riapre, come il suo «Da riaprire se»
+   prevede.
+4. **La conferma finale** è la temperatura misurata nel telaio del prototipo.
+
+Lotto **L30**.
+
 ## Voci chiuse
+
+**NC-010 — Le uscite fisse non sono isolate: un apparecchio spento a valle
+porta il Blocco A in Classe B** (bloccante). **CHIUSA il 2026-09-14 da L17.**
+- **ADR-023**: la classe A si giudica sui percorsi ascoltabili.
+- **Il rimedio**: un `GAINBLOCK` per ogni uscita fissa.
+- **Le misure**, `data/2026-09-14/L17/`:
+  - con un apparecchio da 470 kΩ a 0,01 Ω sulla fissa 1, il blocco A resta a
+    14,356 mA e il buffer dell'altra fissa a 14,509 mA;
+  - il cablaggio di ADR-008 nello stesso deck ritrova la classe B;
+  - `tb_mute_corto` a quattro blocchi: 0 righe ascoltabili fuori dalla classe
+    A, P7 conforme.
+- **Guardiano**: il blocco 2f, fatto fallire sulla netlist di `main`.
+- **Apre NC-029**, il calore.
+
+Il testo completo della voce resta sopra, con la sua «Chiusura». Report:
+`reports/2026-09-14-L17-buffer-uscite-fisse.md`.
 
 **NC-001 — Il mute in derivazione porta lo stadio d'uscita fuori dalla Classe
 A** (bloccante). **CHIUSA il 2026-09-14 da L11**, per la strada 2 riformulata

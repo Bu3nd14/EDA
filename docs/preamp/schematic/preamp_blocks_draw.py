@@ -5,7 +5,8 @@ preamp_blocks_draw.py - vista d'insieme del preamplificatore, a blocchi.
 
 DOCUMENTAZIONE DERIVATA, NON FONTE DI VERITA'.
 La topologia sta in circuits/preamp/preamp_audio.py e nel blocco che questa
-istanzia quattro volte, circuits/preamp/gain_block.py. Questo file disegna
+istanzia otto volte (quattro per canale da L17, ADR-023),
+circuits/preamp/gain_block.py. Questo file disegna
 soltanto. Se i due divergono, si corregge il disegno - o la topologia alla
 sua fonte - mai le asserzioni qui sotto.
 
@@ -67,7 +68,11 @@ REPO = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 # ASSERTIONS without rewriting the versioned SVG: matplotlib stamps ids and a
 # date, so every run would dirty the tree. Unset, the SVG lands next to here.
 SVG = os.environ.get("PREAMP_BLOCKS_SVG") or os.path.join(HERE, "preamp_blocks.svg")
-NETLIST = os.path.join(REPO, "circuits", "preamp", "preamp_audio.net")
+# PREAMP_AUDIO_NET points the assertions at another netlist - it exists so an
+# assertion can be MADE TO FAIL on a known-bad netlist (L17 ran the ADR-023
+# one against main's pre-L17 netlist) without touching the versioned file.
+NETLIST = (os.environ.get("PREAMP_AUDIO_NET")
+           or os.path.join(REPO, "circuits", "preamp", "preamp_audio.net"))
 
 # =============================================================================
 # I VALORI VENGONO DALLA NETLIST, NON DA QUI
@@ -98,7 +103,8 @@ def same(refs, what):
 # Zin del blocco A: la resistenza d'ingresso, una per canale (E3 >= 100 kOhm).
 ZIN = same(["R113", "R313"], "resistenza d'ingresso blocco A")
 
-# Resistenze d'isolamento d'uscita, 3 per canale (T5/ADR-008 addendum: 47 Ohm).
+# Resistenze d'isolamento d'uscita, 3 per canale (47 Ohm, addendum di ADR-008;
+# da L17 le due delle fisse stanno dopo il proprio buffer, T5/ADR-023).
 RISO = same(["R161", "R164", "R261", "R361", "R364", "R461"], "isolamento uscite")
 
 # Condensatori d'accoppiamento, 3 per canale (E8/ADR-007 addendum: 4,7 uF).
@@ -151,6 +157,58 @@ K_MUTE = [v(f"K{i}") for i in (2, 3, 4)]
 assert "GAIN" in K_GAIN and all("MUTE" in k for k in K_MUTE), \
     f"i rele' non sono quelli attesi: {K_GAIN}, {K_MUTE}"
 RELAY_PN = K_GAIN.split()[0]                 # "G6K-2F-Y"
+
+# =============================================================================
+# ADR-023: OGNI USCITA FISSA HA IL PROPRIO BUFFER (L17, chiude NC-010)
+# =============================================================================
+# Il pannello 1 disegna un buffer per fissa. E' vero solo se la 47 ohm di ogni
+# fissa parte dall'uscita di un blocco che NON e' il blocco A - cioe' se un
+# apparecchio spento su una fissa non puo' portare in classe B il blocco che
+# alimenta il percorso principale e l'altra fissa. Si verifica sulla netlist,
+# per centinaia di riferimento: blocco A 1xx/3xx, buffer 5xx/6xx (canale L)
+# e 7xx/8xx (canale R), come preamp_audio.py li numera. Un blocco e' fatto
+# solo di riferimenti della propria centinaia; le 47 ohm, i condensatori e le
+# scarichi delle fisse restano numerati dal canale (R161, R164, R361, R364).
+# Fatto fallire in L17 sulla netlist di main prima dei buffer.
+_NETS = {}
+for _chunk in re.split(r"\(net\s*\(code", _src.split("(nets", 1)[-1])[1:]:
+    _m = re.search(r'\(name "([^"]*)"\)', _chunk)
+    if _m:
+        _NETS[_m.group(1)] = set(re.findall(r'\(ref "([^"]+)"\)', _chunk))
+
+
+def _hundreds(ref):
+    num = re.sub(r"\D", "", ref)
+    return int(num) // 100 if num else None
+
+
+for _riso, _buf, _blkA, _fix in (("R161", 5, 1, "L_FIX1"), ("R164", 6, 1, "L_FIX2"),
+                                 ("R361", 7, 3, "R_FIX1"), ("R364", 8, 3, "R_FIX2")):
+    _nets = [n for n, refs in _NETS.items() if _riso in refs]
+    assert _fix in _nets and len(_nets) == 2, (
+        f"{_riso}: attesi due nodi, {_fix} e l'uscita di un blocco -> {_nets}")
+    _src_net = next(n for n in _nets if n != _fix)
+    _blocks = {_hundreds(r) for r in _NETS[_src_net] - {_riso}}
+    assert _blocks == {_buf}, (
+        f"{_riso} ({_fix}) parte da {_src_net}, che porta riferimenti delle "
+        f"centinaia {sorted(b for b in _blocks if b is not None)}: ADR-023 vuole "
+        f"che parta SOLO dall'uscita del buffer {_buf}xx. Se c'e' {_blkA}xx, e' "
+        "il cablaggio di ADR-008 che NC-010 ha chiuso")
+    # il buffer e' pilotato dal blocco A: un suo riferimento sta sul nodo
+    # d'uscita del blocco A, quello dell'attenuatore (J120 / J320)
+    _att = "J120" if _blkA == 1 else "J320"
+    # GND excluded: it carries J120 pin 3 and every decoupling cap of block A
+    _a_out = [n for n, refs in _NETS.items()
+              if n != "GND" and _att in refs
+              and any(_hundreds(r) == _blkA for r in refs - {_att})]
+    assert len(_a_out) == 1 and any(_hundreds(r) == _buf for r in _NETS[_a_out[0]]), (
+        f"il buffer {_buf}xx non e' pilotato dall'uscita del blocco {_blkA}xx "
+        f"(nodi con {_att}: {_a_out})")
+    # guadagno 1 per costruzione, come il blocco A: nessuna rete di R_g
+    _tag = ("F1" if _buf in (5, 7) else "F2") + ("L" if _blkA == 1 else "R")
+    assert f"{_tag}_RG" not in NETNAMES, (
+        f"il buffer {_tag} ha una rete {_tag}_RG: non e' piu' a guadagno "
+        "unitario per costruzione")
 
 
 def pretty(val, unit):
@@ -265,8 +323,9 @@ def shunt_to_gnd(x, y, label, sub=None, color=RED, drop=1.0):
 # ---------------------------------------------------------------------------
 txt((23.0, 32.2), "PREAMPLIFICATORE DI LINEA — vista d'insieme", size=17)
 txt((23.0, 31.3),
-    "guadagno unitario, Classe A pura a discreti, nessun operazionale nel "
-    "percorso del segnale (T1/ADR-003)", size=9.5, color=DIM)
+    "guadagno unitario, Classe A a discreti su ogni percorso ascoltabile, "
+    "nessun operazionale nel percorso del segnale (T1/ADR-003, ADR-023)",
+    size=9.5, color=DIM)
 txt((23.0, 30.55),
     "DIAGRAMMA A BLOCCHI — non è uno schematico e non è coperto da "
     "scripts/check_schematic.py.  Lo schematico del blocco di guadagno "
@@ -276,8 +335,8 @@ txt((23.0, 30.55),
 # Pannello 1 - ingresso, blocco A, le due uscite a livello fisso
 # ---------------------------------------------------------------------------
 panel(0.4, 18.4, 45.6, 30.0,
-      "1 — Ingresso, blocco A, uscite a livello fisso",
-      "un canale; il secondo è identico (T3/ADR-006: un blocco, quattro "
+      "1 — Ingresso, blocco A, buffer e uscite a livello fisso",
+      "un canale; il secondo è identico (T3/ADR-006: un blocco, otto "
       "istanze). I relè sono condivisi — pannello 3.")
 
 # Tre righe, distanziate di almeno SHUNT_DEPTH: i rami verso massa scendono,
@@ -302,27 +361,32 @@ box(23.0, Y, 5.6, 3.4,
     ["BLOCCO A", "guadagno 1 (0 dB)", f"Zin {R_ZIN}",
      "coppia JFET cascodata"], head_size=11)
 
-# Nodo di diramazione: UNA uscita, TRE carichi. E' il punto di ADR-008 -
-# un solo buffer d'ingresso, non tre.
+# Nodo di diramazione: il blocco A pilota TRE ingressi - i due buffer delle
+# fisse e l'attenuatore. Da L17 (ADR-023, che supera ADR-008) nessuna uscita
+# fissa sta piu' sul suo nodo di controreazione: le asserzioni ADR-023 sopra
+# lo verificano sulla netlist.
 wire(25.8, Y, 27.6, Y)
 dot(27.6, Y)
 wire(27.6, YA, 27.6, YS)                   # montante verticale
 
-for yy, dest, tag, kref in ((YS, "Singxer SA-1 V2", "uscita fissa 1", "K2"),
-                            (Y, "Stax SRM-T1", "uscita fissa 2", "K3")):
+for yy, dest, tag, kref, bname in (
+        (YS, "Singxer SA-1 V2", "uscita fissa 1", "K2", "BUFFER F1"),
+        (Y, "Stax SRM-T1", "uscita fissa 2", "K3", "BUFFER F2")):
     dot(27.6, yy)
-    wire(27.6, yy, 29.0, yy)
-    series(30.3, yy, R_ISO)
-    wire(31.6, yy, 32.4, yy)
-    series(33.8, yy, C_OUT)
-    wire(35.1, yy, 36.4, yy)
-    shunt_to_gnd(36.4, yy, R_BFIX, "scarico")
-    wire(36.4, yy, 38.4, yy)
-    shunt_to_gnd(38.4, yy, f"MUTE {kref}", "in derivazione")
-    arrow(38.4, yy, 40.4, yy)
-    txt((40.7, yy + 0.32), dest, size=9.5, halign="left")
-    txt((40.7, yy - 0.34), tag + " — ADR-008", size=8, color=DIM,
-        halign="left")
+    wire(27.6, yy, 28.4, yy)
+    box(29.9, yy, 3.0, 1.9, [bname, "guadagno 1", "ADR-023"],
+        size=8.5, head_size=9.5)
+    wire(31.4, yy, 32.0, yy)
+    series(33.1, yy, R_ISO, w=2.2)
+    wire(34.2, yy, 34.8, yy)
+    series(35.9, yy, C_OUT, w=2.2)
+    wire(37.0, yy, 38.2, yy)
+    shunt_to_gnd(38.2, yy, R_BFIX, "scarico")
+    wire(38.2, yy, 40.2, yy)
+    shunt_to_gnd(40.2, yy, f"MUTE {kref}", "in derivazione")
+    arrow(40.2, yy, 41.6, yy)
+    txt((41.8, yy + 0.32), dest, size=9.5, halign="left")
+    txt((41.8, yy - 0.34), tag, size=8, color=DIM, halign="left")
 
 # Prosecuzione verso il pannello 2. Sta sulla riga piu' bassa e finisce
 # presto: sopra di lei scendono i rami verso massa dell'uscita fissa 2.
@@ -419,7 +483,7 @@ txt((8.5, 1.15), "selettore + trim.  Non è in preamp_audio.py:\n"
     size=8, color=DIM)
 
 dashed_frame(16.2, 0.5, 30.0, 2.4, "SCHEDA AUDIO (P4)")
-txt((23.1, 1.15), "blocchi A e B ×2 canali, contatti di mute,\n"
+txt((23.1, 1.15), "blocchi A, B e 2 buffer ×2 canali, contatti di mute,\n"
                   f"{len(VAL)} componenti — circuits/preamp/preamp_audio.py",
     size=8, color=DIM)
 

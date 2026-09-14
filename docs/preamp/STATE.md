@@ -11,16 +11,55 @@ realtà, il progetto non è ripartibile.
 | | |
 |---|---|
 | Ultimo aggiornamento | **2026-09-14** |
-| Ultimo lotto chiuso | **L11** — mute e corto sulle uscite: ADR-021, ADR-022, baseline conforme, NC-001 chiusa |
-| **Prossimo lotto** | **L17** — le uscite fisse con un apparecchio spento a valle, NC-010 bloccante (mandato in «Prossimo passo concreto») |
-| Non conformità | **19 aperte, 5 bloccanti** |
-| Le bloccanti | NC-002 e NC-021 (L12) · NC-004 · NC-010 (L17) · NC-017 (Fase 4) |
+| Ultimo lotto chiuso | **L17** — un buffer per ogni uscita fissa: ADR-023 (classe A sui percorsi ascoltabili), NC-010 chiusa, NC-029 aperta |
+| **Prossimo lotto** | **L12** — ogni istanza del blocco sopra i 60°, NC-002 e NC-021 bloccanti (mandato in «Prossimo passo concreto») |
+| Non conformità | **19 aperte, 4 bloccanti** |
+| Le bloccanti | NC-002 e NC-021 (L12) · NC-004 · NC-017 (Fase 4) |
 | Suite | `run_tests.sh` **8 passed / 0 failed** |
 
 ## Diario degli ultimi lotti
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L17 — un buffer per ogni uscita fissa (2026-09-14)
+
+**Chiude NC-010** (bloccante). Report:
+`reports/2026-09-14-L17-buffer-uscite-fisse.md`. Dati: `data/2026-09-14/L17/`.
+
+- **La decisione dell'utente**, che ha corretto la domanda. Fra «ADR che
+  estende l'eccezione» e «buffer», ha indicato il punto mancato: un corto o un
+  apparecchio spento su una fissa toglieva la classe A a **tutto l'ascolto
+  primario**, e questo non è accettabile; un blocco che nessuno ascolta può
+  uscirne, se la termica regge. Diventa **ADR-023**: la classe A si giudica
+  sui **percorsi ascoltabili**.
+- **La topologia.** Un `GAINBLOCK` a guadagno unitario per ogni fissa, R_IN
+  non montata. La netlist passa da 197 a 357 componenti. ADR-008 superata;
+  ADR-006 e ADR-021 precisate; T1, T3, T5, F3, V1 e la Nota su P7
+  aggiornate.
+- **Le misure**, cinque deck:
+  - `tb_blockA_carichi`: blocco A a **14,356 mA** e l'altra fissa a
+    **14,509 mA** da 470 kΩ a 0,01 Ω. Lo stesso deck col cablaggio vecchio
+    ritrova la classe B;
+  - `tb_mute_corto` a quattro blocchi: **0 righe ascoltabili fuori dalla
+    classe A** su 294. P7 conforme: buffer 298,1 mW, più caldo Q125 a
+    96,4 °C. L'apparecchio spento a 10 Ω scalda meno del corto;
+  - `tb_loop_blockA`, ai valori veri: **40,96°** a 4,7 nF sul nodo. Il
+    controllo col carico canonico dà 41,02°;
+  - `tb_loop_bufferfissa`: **40,98°** sul nodo, **62,27°** al jack;
+  - `tb_uscite_fisse`: E4, Re(Z) ≤ 53,1 Ω; E5, 1,67 µV.
+- **Guardiani fatti fallire:**
+  - 2e su una netlist sabotata;
+  - la nuova asserzione ADR-023 del blocco 2f sulla netlist di `main`.
+- **Due errori di deck trovati prima di registrare numeri**, ora limitazioni
+  #24 e #25:
+  - un nodo `SRC` che collideva con `_flat.inc`, e dava 106° finti;
+  - una tabella `echo` sovrascritta dalla conversione di un `wrdata` omonimo.
+- **Trovato: NC-029** (maggiore). A riposo la scheda audio dissipa **6,45 W**
+  (0,806 W per blocco), contro i 3-4 W che P5 prevede per l'apparecchio
+  intero. Lotto **L30**.
+- **19 voci aperte, 4 bloccanti.** Prossimo: **L12**, che parte dalla domanda
+  su dove si applica la sonda da 4,7 nF.
 
 ### Dopo L11 — dove mettere il contatto di mute (2026-09-14)
 
@@ -401,7 +440,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L14 | **Le tre correzioni di testo.** KPI del margine di fase qualificato, i due commenti di cascode allineati, lo scarto ADR-014 riferito a 1 kHz | XS | NC-003, NC-006, NC-007 | **fatto** |
 | L15 | **Il vincolo su E3 scritto dove verrà letto** — in `REQUIREMENTS.md`, «Nota su E3», non in ADR-011 | XS | NC-005 (metà: il vincolo; la misura è L16) | **fatto** |
 | L16 | **Il trim entra nel progetto.** Dimensionarlo in `circuits/preamp/` coi due vincoli insieme — attenuazione richiesta da ADR-015 e la «Nota su E3» (min \|Zin\| 20 Hz–20 kHz ≥ 100 kΩ in tutte e tre le posizioni; R1 + R2 = 100 kΩ non basta, `R_IN` sta in parallelo) — e misurarlo. Chiude anche NC-005. Allineare F2 («a ponticello») a F8/ADR-019, che presuppongono relè. Più la riconciliazione delle tre cifre di margine nel dossier | S/M | **NC-009**, NC-005, **NC-023** | da fare |
-| L17 | **Buffer sulle uscite fisse.** Modifica di topologia in `preamp_audio.py` che disaccoppia le due fisse dal nodo del Blocco A, più la riesecuzione di `tb_blockA_carichi.cir` sulla topologia nuova. **Dopo L11**: progetta contro il criterio di corto di ADR-021 (risultato, tecnica libera) e nei limiti di ADR-022; il vincolo di impedenza minima a valle non basta più a chiudere NC-010 | M | **NC-010** (bloccante) | da fare |
+| L17 | **Buffer sulle uscite fisse.** Modifica di topologia in `preamp_audio.py` che disaccoppia le due fisse dal nodo del Blocco A, più la riesecuzione di `tb_blockA_carichi.cir` sulla topologia nuova. **Dopo L11**: progetta contro il criterio di corto di ADR-021 (risultato, tecnica libera) e nei limiti di ADR-022; il vincolo di impedenza minima a valle non basta più a chiudere NC-010 | M | **NC-010** (bloccante), apre **NC-029** | **fatto** — ADR-023 (classe A sui percorsi ascoltabili), un `GAINBLOCK` per fissa |
 | L18 | **Il vincolo PSRR scritto dove verrà letto**: quanto ripple può lasciare l'alimentatore sui rail, ricavato da E5 — **ADR-020** e «Nota su E5 — la quota del ripple» | XS/S | **NC-011** (metà: il vincolo; rimedio e verifica vanno con l'alimentatore) | **fatto** |
 | L19 | ~~**La soglia di margine di fase in V1**~~ — **ASSORBITA da L26**: la soglia l'ha data l'utente (60° ovunque, ADR-019) e NC-012 è chiusa. Resta solo la parte «KPI del dossier riferiti a quella», che va con la rigenerazione del dossier | XS | ~~NC-012~~ | **superata** |
 | L20 | **Quanto il progetto dipende da I_DSS.** Rieseguire punto di lavoro e rumore del blocco di guadagno con `Vto` ai due estremi compatibili con la finestra A — il modello vendor com'è (2,59 mA) e un `Vto` che porti I_DSS al tipico (5,5 mA) — e scrivere in `REQUIREMENTS.md` o in una ADR quale dispersione il progetto tollera | S | **NC-013** | da fare |
@@ -414,6 +453,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L27 | **Il terzo livello di guadagno entra nel progetto.** Dimensionare il secondo ramo commutato verso massa (ADR-004 conservata: si commuta R_g, mai R_f; a relè diseccitati **0 dB**), decidere relè e poli col budget di corrente delle bobine, estendere i dodici deck da due modalità a tre e l'asserzione del diagramma a blocchi | M | **NC-022** | da fare |
 | L28 | **SS dell'LSK489 definito per l'LSK489.** Un documento del costruttore che dica cosa sono i pin 3 e 7 di *questa* parte — o una ADR che accetti l'istruzione dell'LSK389 in forza della compatibilità dichiarata. Prima di G2 | XS/S | NC-027 | da fare |
 | L29 | **Il gradino al rilascio del mute.** Oggi il rilascio con segnale porta sul jack il condensatore caricato dalla musica: **5,37 V** a +10 dB, 1,79 V a 0 dB, 1,72 V sulle fisse, τ 0,32 s. **Il contatto prima del condensatore**, simulato in scratch dopo L11, toglie quel gradino ma ne mette uno **pari all'offset del blocco** (14-104 mV simulati, più fino a 63 mV di dispersione LSK489) **a ogni mute, accensione compresa**, e il volume non lo riduce (numeri e stima d'udibilità in NC-028). **Prima una soglia dell'utente su V2**; poi il confronto misurato, con un deck **versionato**, fra: contatto prima + offset abbassato (bilanciamento, coppie selezionate), rilascio lento, mute in serie, sequenza di rilascio. P7 va rimisurata per la posizione scelta | S/M | NC-028 | da fare |
+| L30 | **Il calore del telaio con otto blocchi.** A riposo la scheda audio dissipa 6,45 W (0,806 W per blocco, L17) contro i 3-4 W che P5 prevede per l'apparecchio intero. Stima termica del telaio con l'alimentatore; poi o P5 aggiornato al numero vero, o ventilazione e montaggio progettati con una ADR, o ADR-021 riaperta se i 60 °C non reggono. Va col lotto dell'alimentatore | S | NC-029 | da fare |
 
 **NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
 riesecuzione di `tb_noise_breakdown.cir` coi modelli veri. È il caso
@@ -2454,72 +2494,51 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L17 — le uscite fisse con un apparecchio spento a valle.** Chiude **NC-010**
-(bloccante). Lotto **M**.
+**L12 — portare ogni istanza del blocco sopra i 60°.** Chiude **NC-002** e
+**NC-021** (bloccanti). Lotto **M**. Il mandato completo è in
+`NEXT-SESSION.md`.
 
-**Cosa resta di NC-010 dopo L11.** Il corto su una fissa **è conforme** a P7 /
-ADR-021:
-- MJE a 299,5 mW, Tj 78,7 °C;
-- col mute, che mette a massa entrambe le fisse, 483,7 mW, Tj 90,2 °C.
+**Dove parte, dai dati di L17** (`data/2026-09-14/L17/`) e di L22:
 
-Resta la parte per cui la voce è nata. Un apparecchio **spento** a valle, con
-Zin fra ~150 Ω e il corto, porta il blocco A in classe B **fuori** dalle due
-condizioni in cui ADR-021 la ammette: è **T1**. `tb_blockA_carichi.cir`,
-rieseguito in L11 sulla topologia di oggi, dà gli stessi numeri del
-2026-09-09 (`data/2026-09-14/`):
-- 100 Ω: I_C min 2,40 mA;
-- 10 Ω: −0,23 µA.
+| Istanza, sonda da 4,7 nF | Sul nodo d'uscita | Al jack |
+|---|---|---|
+| Blocco A, carico nuovo (attenuatore + due buffer) | **40,96°** | — |
+| Buffer delle fisse (4 istanze) | **40,98°** | **62,27°** (minimo 61,74°) |
+| Blocco B a 0 dB (NC-021) | — | **56,46°** |
 
-**La prima domanda è dell'utente, e va fatta prima di progettare.** Dopo L11
-esistono due strade, e costano in modo molto diverso:
-1. **Accettare la classe B anche con un apparecchio spento a valle**, con
-   un'ADR che estenda l'eccezione di ADR-021 a questa condizione. La termica è
-   già provata: il corto è il caso peggiore, ed è conforme. È una scelta di
-   prodotto su T1, non un calcolo.
-2. **Disaccoppiare le fisse** con buffer inseguitori, la strada 1 di NC-010.
-   Supera **ADR-008** (buffer unico con resistenze di isolamento) con un'ADR
-   nuova. «Da riaprire se» di ADR-008 è scattato: un'uscita con impedenza
-   d'ingresso bassa.
-
-**Se si prende la strada 2, vincoli già scritti:**
-- **ADR-006 / T3**: un solo blocco progettato una volta. Un buffer diverso è
-  un secondo progetto da validare, e va detto;
-- **ADR-022 / T1**: nessun integrato nel percorso;
-- **T7 / T8**: modelli del costruttore e nessuna parte a fine vita;
-- **P7 / ADR-021**: le uscite nuove reggono corto e mute. Si estende
-  `tb_mute_corto.cir`, non se ne scrive uno nuovo;
-- **E4** < 100 Ω e **E5** < 10 µV, meno le quote di ADR-020 e ADR-022, cioè
-  9,90 µV per il circuito;
-- **NC-002**: il blocco A a 41,98° contro 60°. Togliere le fisse dal suo nodo
-  cambia il suo carico, e quindi il suo margine. Va misurato, perché L12
-  parte da lì;
-- **il mute**: le liste `k_mute` e `check_relay_safe_state.py` (blocco 2e)
-  devono continuare a valere sulle uscite nuove;
-- **NC-028**: se il rimedio del gradino al rilascio sarà un mute in serie,
-  conviene saperlo prima di cablare le fisse nuove.
+**La prima domanda è dell'utente.** ADR-019 fissa la sonda «ovunque» ma non
+dice in che punto, e per il buffer la risposta vale 21°. Poi il rimedio, coi
+numeri di ogni strada, e con un vincolo in più rispetto a quando L12 è stato
+scritto: ogni valore di `gain_block.py` cambia **otto** istanze. Quindi va
+rimisurato anche ciò che L17 ha verificato:
+- la classe A sui percorsi ascoltabili;
+- P7;
+- E4 ed E5 sulle fisse.
 
 ### Quello che il repo ti consegna già
 
-- **La suite è a 8 blocchi**, 8 passed a fine L11. Il blocco 2g copre
-  automaticamente ogni deck nuovo sotto `spice/*/tb/`.
-- **`tb_mute_corto.cir`** è un canale intero dai due `GAINBLOCK`. Ha i cinque
-  casi mute/corto e tabelle CSV con intestazione vera (`echo >>`). Il README
-  di `data/2026-09-14/` ne ha la legenda.
-- **Lo script di verdetto termico** è descritto nel report di L11: RθJA per
-  parte e Tj = 60 °C + P·RθJA. Le potenze ammesse sono in ADR-021.
-- **Il metodo per non fidarsi di un deck** è collaudato quattro volte:
-  - farlo fallire togliendo l'elemento che misura;
-  - una controprova indipendente;
-  - un numero che prova la topologia letta (riposo 14,557 mA).
-- **I conteggi**: 19 voci aperte, 5 bloccanti.
+- **La suite è a 8 blocchi**, 8 passed a fine L17. Il blocco 2f asserisce ora
+  anche ADR-023 sulla netlist; il 2g copre ogni deck nuovo sotto `spice/*/tb/`.
+- **I deck d'anello** per ogni ruolo del blocco:
+  - `tb_loop.cir`: blocco B;
+  - `tb_loop_blockA.cir`: carico nuovo e controllo;
+  - `tb_loop_bufferfissa.cir`: sonda al jack e sul nodo, Singxer e Stax.
+- **`tb_mute_corto.cir`** a quattro blocchi, con la tabella dei percorsi
+  ascoltabili nell'intestazione. Lo script d'analisi di L17 è descritto nel
+  report: Tj per RθJA, percorsi ascoltabili per caso, confronto fra
+  topologie.
+- **Due trappole nuove nei deck**, in `docs/limitations.md` #24 e #25.
+- **I conteggi**: 19 voci aperte, 4 bloccanti.
 
-**Poi**, nell'ordine: **L12**, che ADR-019 ha trasformato da misura in
-**rimedio**. **L29** (NC-028) aspetta una soglia dell'utente su V2, e si può
-chiedere in qualsiasi momento. **L28** (SS dell'LSK489, NC-027) va fatto prima
-di G2. L'alimentatore, quando arriva, parte da **ADR-020**. Da L11 deve
-anche:
-- dare corrente ai corti di P7, fino a ~200 mA di picco per blocco;
-- alimentare separatamente la parte digitale, se entra (ADR-022).
+**Poi**, nell'ordine:
+- **L29** (NC-028) aspetta una soglia dell'utente su V2, e si può chiedere in
+  qualsiasi momento.
+- **L30** (NC-029) va col lotto dell'alimentatore e del telaio.
+- **L28** (SS dell'LSK489, NC-027) va fatto prima di G2.
+- **L'alimentatore**, quando arriva, parte da **ADR-020** e da NC-029. Deve
+  anche:
+  - dare corrente ai corti di P7, fino a ~200 mA di picco per blocco;
+  - alimentare separatamente la parte digitale, se entra (ADR-022).
 
 ### Cosa cercare, e cosa NON accettare
 
