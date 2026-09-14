@@ -40,9 +40,9 @@ Costa un commento. È il collegamento dall'artefatto al ragionamento, ed
 | [003](ADR-003-classe-a-discreti.md) | Classe A pura a discreti, nessun operazionale | accettata — precisata da ADR-021 e ADR-022 |
 | [004](ADR-004-rele-su-controreazione.md) | Guadagno commutabile via relè sulla controreazione | accettata |
 | [005](ADR-005-appaiamento-rilassato.md) | Appaiamento JFET rilassato a "stessa gradazione" | accettata |
-| [006](ADR-006-blocco-unico-riusato.md) | Un solo blocco discreto, usato due volte | accettata |
+| [006](ADR-006-blocco-unico-riusato.md) | Un solo blocco discreto, usato due volte | accettata — precisata da ADR-023 |
 | [007](ADR-007-condensatore-non-servo.md) | Condensatore d'uscita invece di servo di continua | accettata |
-| [008](ADR-008-buffer-ingresso-unico.md) | Buffer d'ingresso unico con resistenze di isolamento | accettata |
+| [008](ADR-008-buffer-ingresso-unico.md) | Buffer d'ingresso unico con resistenze di isolamento | superata da ADR-023 |
 | [009](ADR-009-niente-telecomando.md) | Niente telecomando: attenuatore a scatti, nessun MCU | accettata — clausola MCU superata da ADR-022 |
 | [010](ADR-010-telaio-unico.md) | Telaio unico con alimentatore a bordo | accettata |
 | [011](ADR-011-trim-per-ingresso.md) | Trim di livello per ingresso | accettata |
@@ -55,5 +55,6 @@ Costa un commento. È il collegamento dall'artefatto al ragionamento, ed
 | [018](ADR-018-specchio-ingresso-ls352.md) | Lo specchio d'ingresso è un LS352, degenerazione da 47 a 220 Ω | accettata |
 | [019](ADR-019-margine-di-fase-trim-interbloccato-tre-guadagni.md) | Margine di fase minimo 60°, trim interbloccato col mute, tre livelli di guadagno | accettata |
 | [020](ADR-020-quota-ripple-alimentazione.md) | Quota del ripple d'alimentazione nel budget di E5: 1 µV RMS | accettata |
-| [021](ADR-021-mute-e-corto-sulle-uscite.md) | Mute tenibile a tempo indefinito, e ogni uscita regge un corto | accettata |
+| [021](ADR-021-mute-e-corto-sulle-uscite.md) | Mute tenibile a tempo indefinito, e ogni uscita regge un corto | accettata — precisata da ADR-023 |
 | [022](ADR-022-integrati-fuori-dal-percorso-del-segnale.md) | Operazionali e microcontrollore fuori dal percorso del segnale | accettata |
+| [023](ADR-023-classe-a-sui-percorsi-ascoltabili.md) | Classe A su ogni percorso ascoltabile, e un buffer per ogni uscita fissa | accettata |

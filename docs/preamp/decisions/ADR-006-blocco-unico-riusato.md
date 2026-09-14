@@ -1,6 +1,6 @@
 # ADR-006 — Un solo blocco discreto, usato due volte
 
-Data: 2026-09-08 · Stato: accettata
+Data: 2026-09-08 · Stato: accettata — precisata da ADR-023 (il blocco è usato quattro volte per canale: blocco A, blocco B e un buffer per ogni uscita fissa)
 
 ## Contesto
 
