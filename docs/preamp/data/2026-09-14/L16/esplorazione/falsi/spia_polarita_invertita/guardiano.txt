@@ -1,0 +1,20 @@
+netlist : /Users/roberto/EDA/.claude/worktrees/L16-trim-comune/docs/preamp/data/2026-09-14/L16/esplorazione/falsi/spia_polarita_invertita/preamp_audio.net
+          380 componenti, 10 rele' noti
+          K1  'G6K-2F-Y GAIN'  ruolo=GAIN
+          K2  'G6K-2F-Y MUTE1'  ruolo=MUTE
+          K3  'G6K-2F-Y MUTE2'  ruolo=MUTE
+          K4  'G6K-2F-Y MUTE3'  ruolo=MUTE
+          K5  'G6K-2F-Y GAIN10'  ruolo=GAIN
+          K6  'G6K-2F-Y PERMIT'  ruolo=PERMIT
+          K7  'G6KU-2F-Y TRIM1'  ruolo=TRIM
+          K8  'G6KU-2F-Y TRIM2'  ruolo=TRIM
+          K9  'G6KU-2F-Y SPIA1'  ruolo=SPIA
+          K10  'G6KU-2F-Y SPIA2'  ruolo=SPIA
+          interblocco: 4 net di bobina bistabili, 4 rele' sul comando di mute (K2, K3, K4, K6), 4 stati provati fuori mute e in mute
+
+FALLITO: 2 problemi
+
+  K9: la bobina deve stare sulle stesse net di K7, con la stessa polarita' - ('TRIM1_C8', 'TRIM1_C1') contro ('TRIM1_C1', 'TRIM1_C8'). Altrimenti il LED dice uno stato che il trim non ha (F9).
+  K10: la bobina deve stare sulle stesse net di K8, con la stessa polarita' - ('TRIM2_C8', 'TRIM2_C1') contro ('TRIM2_C1', 'TRIM2_C8'). Altrimenti il LED dice uno stato che il trim non ha (F9).
+
+Questo e' il difetto di NC-014 o di NC-023: fallisce in silenzio. Correggi la topologia, non questo controllo.

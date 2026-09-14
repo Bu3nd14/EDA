@@ -1,0 +1,33 @@
+{
+  "part_name": "G6K / G6KU-2F-Y (surface-mount signal relay, DPDT; G6KU = single-winding latching)",
+  "vendor_name": "OMRON Corporation (product page served under Aratas, an OMRON group company)",
+  "device_class": "relay",
+  "product_page": "https://components.omron.com/us-en/products/relays/G6K",
+  "date_obtained": "2026-09-14",
+  "lotto": "L16",
+  "obtained_by": "The user (roberto.carmeli@gmail.com), from the manufacturer's G6K product page, and handed to the AI agent (Claude Opus 5, session https://claude.ai/code/session_01HfcVH6EM1xWQZUvBBcTxPN) as /Users/roberto/EDA/tmp/K106-E1.pdf",
+  "obtained_from": "components.omron.com answers HTTP 403 to every non-browser request this session made (curl, also with a browser user-agent, and WebFetch), exactly as in L8. The user opened the page in a browser and downloaded the datasheet from its 'Datasheet' link; a screenshot of the page (G6K PCB Signal Relay, Aratas - an OMRON group company) was provided alongside. The exact download URL was not recorded. The file is copied byte-for-byte; nothing was converted or edited.",
+  "license_notes": "Manufacturer datasheet, redistributed here unmodified for engineering traceability only. Copyright remains OMRON Corporation.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "K106-E1.pdf",
+      "role": "datasheet / catalogue",
+      "url": null,
+      "bytes": 4531283,
+      "pages": 14,
+      "sha256": "7ef530c36b7997d7aa6c9e9eefdcb6ae580aed787f4e4af0f242936e8c8c5a4d",
+      "local_filename": "K106-E1.pdf",
+      "renamed": false
+    }
+  ],
+  "revision_note": "READ FROM THE DOCUMENT, NOT FROM THE FILENAME. The filename carries no revision number. The PDF Keywords field says 'K106-E1-16 0326 (0207)' and the last page footer says 'Cat. No. K106-E1-16': catalogue K106, English, edition 1, revision 16, printed 03/2026. It supersedes the K106-E1-11 (01/2018) frozen in vendor/relays/omron/G6K/, which is left untouched. Falsifiable with: /opt/homebrew/bin/pdfinfo K106-E1.pdf | grep Keywords",
+  "why_this_file": "L16 (ADR-027) puts the G6KU-2F-Y, the single-winding latching version, into the design. REQUIREMENTS T8 asks that the lifecycle status be read from the MANUFACTURER, not a distributor: a distributor page (onlinecomponents.com, G6KU-2F-Y-DC3) said 'no longer being manufactured' without citing any OMRON notice. A current catalogue from OMRON is the manufacturer-side evidence available to this session.",
+  "what_was_read": {
+    "ordering_information": "Page 3 (Ordering Information, Surface Mounting Terminal Standard Models): G6KU-2F-Y listed as an orderable model in 3, 4.5, 5, 12 and 24 VDC, tube (50 pcs) and tape (-TR) packing; a new G6KU-2F-Y-T1 (125 C ambient) variant is also listed.",
+    "coil": "Coil: Single-winding Latching Models, Standard: 5 VDC rated current 21.1 mA, coil resistance 237 ohm, must set / must reset 75 % max of rated voltage, max voltage 150 %, power approx. 100 mW - unchanged from K106-E1-11. Minimum set/reset signal width 10 ms.",
+    "terminal_arrangement": "PDF page 7, G6KU-2F-Y, Terminal Arrangement/Internal Connections (TOP VIEW): same drawing as K106-E1-11 page 7, shifted ~10 pt vertically. Vector reading via pdftocairo -svg: on both poles the armature axis passes 0.44 pt from the contact on its left and 3.39 pt from the one on its right, i.e. in the drawn state COM 3 - 2 and COM 6 - 7 are closed; coil column S: pin 8 -, pin 1 +; column R: pin 8 +, pin 1 -.",
+    "not_read": "The OMRON product-discontinuation notice page was not obtained (HTTP 403 here; not among the files the user provided). The absence of a discontinuation notice is therefore NOT verified; the evidence is a 03/2026 manufacturer catalogue that lists the part as orderable."
+  }
+}

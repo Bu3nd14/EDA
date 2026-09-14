@@ -12,6 +12,19 @@ tb_loop_blockA.cir - loop gain of BLOCK A, loaded as preamp_audio.py wires it si
 * The buffers are instantiated from gain_block.subckt with their own fixed
 * loads, so what block A sees is the real input of a real block, not a guess.
 *
+* WHAT CHANGED IN L16 (ADR-027). The common trim sits on the variable-output
+* branch: block A OUT -> ladder -> T1/T2 contacts -> harness -> attenuator. The
+* buffers stay on OUT, before the trim. The first loop below is L27's, with the
+* trim ABSENT (ladder cut at 1e12, contacts open): its rows and curves keep
+* their meaning. The SECOND loop moves the attenuator and CWIRE behind the trim
+* contacts and measures the three positions with the two candidate ladders of
+* data/2026-09-14/L16/esplorazione/script/trim_ramo_e96.py, load 1 only:
+*   cand 1  549 / 294 / 294     cand 2  845 / 464 / 464
+* At 0 dB block A carries the whole ladder in parallel with the attenuator (the
+* heaviest load) and CWIRE straight on its output through 0.1 ohm; at -6 and
+* -12 dB the harness sits behind R1. New nodes are named TRM*, which the block
+* does not use (docs/limitations.md #24). Table: tb_loop_blockA_trim.csv.
+*
 * TWO LOADS, selected by resistors (1 mohm / 1e12), same deck:
 *   load 1  NUOVO   - ADR-023, as above.
 *   load 2  CANONICO ADR-008 - the load NC-002 measured by hand: 47 ohm +
@@ -62,6 +75,17 @@ VINJ NBRK G2 DC 0 AC 1
 CWIRE  OUT 0 1f
 RATT   OUT 0 10k
 
+* --- L16: the trim on the variable-output branch, ABSENT by default ---
+RTRL1  OUT TRMT6 1e12
+RTRL2  TRMT6 TRMT12 294
+RTRL3  TRMT12 0 294
+RTR1R  OUT TRMATT 1e12
+RTR1S  TRMC2 TRMATT 1e12
+RTR2R  TRMT6 TRMC2 1e12
+RTR2S  TRMT12 TRMC2 1e12
+CWIRET TRMATT 0 1f
+RATTT  TRMATT 0 1e12
+
 * --- load 1: the two buffers of ADR-023, each with its fixed output ---
 RSELN1 OUT BIN1 1m
 RSELN2 OUT BIN2 1m
@@ -104,6 +128,7 @@ RVJ2   VJ2 0 50k
 *   sorgente 430 ohm: tb_loop_blockA_src430_<cw>.txt
 * il controllo stampa margine e attraversamento nel log e in tb_loop_blockA.csv
 * (nessun wrdata produce quel nome, docs/limitations.md #25).
+* Il secondo ciclo (L16, trim) non scrive curve: solo tb_loop_blockA_trim.csv.
 *
 * COLONNE delle curve (~801 righe, 1 Hz - 100 MHz, 100 punti/decade).
 *   col0 = frequenza [Hz]   col1 = Tdb = |T| in dB
@@ -150,6 +175,67 @@ foreach ld 1 2
         end
       end
       destroy all
+    end
+  end
+end
+
+* ---------------- L16: the trim on the variable-output branch ----------------
+echo "cand,pos,rsrc,cwire,fcross_hz,pm_deg,tdb_10hz" > tb_loop_blockA_trim.csv
+alter rseln1 = 1m
+alter rseln2 = 1m
+alter rselv1 = 1e12
+alter rselv2 = 1e12
+* the attenuator and the harness move behind the trim contacts
+alter ratt = 1e12
+alter cwire = 1f
+alter rattt = 10k
+foreach cand 1 2
+  if $cand = 1
+    set r1v = "549"
+    alter rtrl2 = 294
+    alter rtrl3 = 294
+  end
+  if $cand = 2
+    set r1v = "845"
+    alter rtrl2 = 464
+    alter rtrl3 = 464
+  end
+  alter rtrl1 = $r1v
+  foreach pos 0 6 12
+    if $pos = 0
+      alter rtr1r = 0.1
+      alter rtr1s = 1e12
+      alter rtr2r = 0.1
+      alter rtr2s = 1e12
+    end
+    if $pos = 6
+      alter rtr1r = 1e12
+      alter rtr1s = 0.1
+      alter rtr2r = 0.1
+      alter rtr2s = 1e12
+    end
+    if $pos = 12
+      alter rtr1r = 1e12
+      alter rtr1s = 0.1
+      alter rtr2r = 1e12
+      alter rtr2s = 0.1
+    end
+    foreach rs 1m 430
+      alter rsrca = $rs
+      foreach cw 1f 47p 100p 220p 470p 1n 2.2n 4.7n
+        alter cwiret = $cw
+        ac dec 100 1 100meg
+        let T = v(fb)/v(g2)
+        let Tdb = db(T)
+        let Tph = ph(T)
+        meas ac fcross when Tdb=0
+        meas ac pmarg find Tph when Tdb=0
+        meas ac tdc find Tdb at=10
+        echo "BLOCK A TRIM  cand=$cand  pos=$pos  rsrc=$rs  Cwire=$cw"
+        print fcross pmarg tdc
+        echo "$cand,$pos,$rs,$cw,$&fcross,$&pmarg,$&tdc" >> tb_loop_blockA_trim.csv
+        destroy all
+      end
     end
   end
 end

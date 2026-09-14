@@ -1,0 +1,21 @@
+netlist : /Users/roberto/EDA/.claude/worktrees/L16-trim-comune/docs/preamp/data/2026-09-14/L16/esplorazione/falsi/polo2_invertito/preamp_audio.net
+          380 componenti, 10 rele' noti
+          K1  'G6K-2F-Y GAIN'  ruolo=GAIN
+          K2  'G6K-2F-Y MUTE1'  ruolo=MUTE
+          K3  'G6K-2F-Y MUTE2'  ruolo=MUTE
+          K4  'G6K-2F-Y MUTE3'  ruolo=MUTE
+          K5  'G6K-2F-Y GAIN10'  ruolo=GAIN
+          K6  'G6K-2F-Y PERMIT'  ruolo=PERMIT
+          K7  'G6KU-2F-Y TRIM1'  ruolo=TRIM
+          K8  'G6KU-2F-Y TRIM2'  ruolo=TRIM
+          K9  'G6KU-2F-Y SPIA1'  ruolo=SPIA
+          K10  'G6KU-2F-Y SPIA2'  ruolo=SPIA
+          interblocco: 4 net di bobina bistabili, 4 rele' sul comando di mute (K2, K3, K4, K6), 4 stati provati fuori mute e in mute
+
+FALLITO: 3 problemi
+
+  K7/K8 polo 2 (riga alta 8-7-6-5): il contatto di SET di K7 (pin 5, 'F1R_IN') deve essere il COM di K8 ('R_T2C'). Se e' il RESET a finirci, il trim riposa attenuato, non a 0 dB - la famiglia di NC-014 (ADR-027).
+  K7/K8 polo 2 (riga alta 8-7-6-5): la scala non scende dal RESET: attesi un resistore da K7 reset ('R_T2C') a K8 reset ('R_TAP12'), uno da K8 reset a K8 set ('R_TAP6') e uno da K8 set a GND. Reset deve essere il verso MENO attenuato: 0 dB su K7, -6 dB su K8 (ADR-027).
+  K7/K8: i due poli del trim sono cablati in modo diverso ((True, True, True, True) contro (False, False, True, True)): i canali sono identici per contratto (T3), e poli diversi sono la forma di NC-014.
+
+Questo e' il difetto di NC-014 o di NC-023: fallisce in silenzio. Correggi la topologia, non questo controllo.

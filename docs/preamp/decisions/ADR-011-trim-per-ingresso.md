@@ -1,6 +1,6 @@
 # ADR-011 — Trim di livello per ingresso
 
-Data: 2026-09-08 · Stato: accettata
+Data: 2026-09-08 · Stato: superata da ADR-027 (un solo trim, sul ramo dell'uscita variabile, a relè bistabili: niente più «per ingresso», «a ponticello» né «prima del buffer»)
 
 ## Contesto
 

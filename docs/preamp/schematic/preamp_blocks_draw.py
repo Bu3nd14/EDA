@@ -219,15 +219,22 @@ for _riso, _buf, _blkA, _fix in (("R161", 5, 1, "L_FIX1"), ("R164", 6, 1, "L_FIX
         f"che parta SOLO dall'uscita del buffer {_buf}xx. Se c'e' {_blkA}xx, e' "
         "il cablaggio di ADR-008 che NC-010 ha chiuso")
     # il buffer e' pilotato dal blocco A: un suo riferimento sta sul nodo
-    # d'uscita del blocco A, quello dell'attenuatore (J120 / J320)
+    # d'uscita del blocco A. Da L16 (ADR-027) quel nodo si trova dal capo
+    # alto della scala del trim (R901 / R911), e l'attenuatore (J120 / J320)
+    # NON ci sta: le fisse prendono il segnale PRIMA del trim, l'attenuatore
+    # DOPO. Fino a L16 lo si cercava da J120, che ora e' sul COM di K7.
     _att = "J120" if _blkA == 1 else "J320"
-    # GND excluded: it carries J120 pin 3 and every decoupling cap of block A
+    _rtop = "R901" if _blkA == 1 else "R911"
+    # GND excluded: it carries every decoupling cap of block A
     _a_out = [n for n, refs in _NETS.items()
-              if n != "GND" and _att in refs
-              and any(_hundreds(r) == _blkA for r in refs - {_att})]
+              if n != "GND" and _rtop in refs
+              and any(_hundreds(r) == _blkA for r in refs - {_rtop})]
     assert len(_a_out) == 1 and any(_hundreds(r) == _buf for r in _NETS[_a_out[0]]), (
         f"il buffer {_buf}xx non e' pilotato dall'uscita del blocco {_blkA}xx "
-        f"(nodi con {_att}: {_a_out})")
+        f"(nodi con {_rtop}: {_a_out})")
+    assert _att not in _NETS[_a_out[0]], (
+        f"{_att} (l'attenuatore) sta sull'uscita del blocco {_blkA}xx: il trim "
+        "di ADR-027 non e' fra il blocco A e l'attenuatore")
     # guadagno 1 per costruzione, come il blocco A: nessuna rete di R_g
     _tag = ("F1" if _buf in (5, 7) else "F2") + ("L" if _blkA == 1 else "R")
     assert f"{_tag}_RG" not in NETNAMES, (
@@ -251,6 +258,42 @@ for _rf, _rg3, _rg10 in (("R235", "R237", "R242"), ("R435", "R437", "R442")):
         assert len(_far) == 1 and _NETS[_far[0]] - {_rg} == {_k}, (
             f"l'altro capo di {_rg} deve andare al solo {_k} -> "
             f"{[(n, sorted(_NETS[n])) for n in _far]}")
+
+# =============================================================================
+# ADR-027: UN SOLO TRIM, SUL RAMO VARIABILE, FRA IL BLOCCO A E L'ATTENUATORE
+# =============================================================================
+# Le attenuazioni si CALCOLANO dai valori della netlist, col carico
+# dell'attenuatore sul nodo scelto, e devono cadere a -6 e -12 dB entro
+# 0,1 dB. Sul pin alto dell'attenuatore (J120 / J320) c'e' solo il COM di K7.
+# Quale contatto e' il reset, l'interblocco col mute e le spie li asserisce il
+# 2e (check_relay_safe_state.py). Fatto fallire in L16: vedi il report.
+TR1 = same(["R901", "R911"], "trim R1")
+TR2 = same(["R902", "R912"], "trim R2")
+TR3 = same(["R903", "R913"], "trim R3")
+
+
+def _par(a, b):
+    return a * b / (a + b)
+
+
+_ra = ohms(ATT)
+_low6 = _par(ohms(TR2) + ohms(TR3), _ra)
+TRIM6_DB = 20 * math.log10(_low6 / (ohms(TR1) + _low6))
+_low12 = _par(ohms(TR3), _ra)
+TRIM12_DB = 20 * math.log10(_low12 / (ohms(TR1) + ohms(TR2) + _low12))
+assert abs(TRIM6_DB + 6.0) <= 0.1 and abs(TRIM12_DB + 12.0) <= 0.1, (
+    f"il trim {TR1}/{TR2}/{TR3} col carico di {ATT} da' {TRIM6_DB:.3f} e "
+    f"{TRIM12_DB:.3f} dB: fuori da -6 e -12 dB +/- 0,1 (ADR-027)")
+for _j in ("J120", "J320"):
+    _top = [n for n, refs in _NETS.items() if refs == {_j, "K7"}]
+    assert len(_top) == 1, (
+        f"il pin alto dell'attenuatore {_j} non sta sul solo COM di K7: "
+        f"{[(n, sorted(r)) for n, r in _NETS.items() if _j in r]}")
+K_TRIM = [v(f"K{i}") for i in (6, 7, 8, 9, 10)]
+assert ("PERMIT" in K_TRIM[0] and all("TRIM" in k for k in K_TRIM[1:3])
+        and all("SPIA" in k for k in K_TRIM[3:])), \
+    f"i rele' del trim non sono quelli attesi: {K_TRIM}"
+TRIM_PN = K_TRIM[1].split()[0]                # "G6KU-2F-Y"
 
 
 def pretty(val, unit):
@@ -394,11 +437,9 @@ box(3.0, Y, 4.0, 2.7,
 arrow(5.0, Y, 6.3, Y)
 box(9.0, Y, 5.2, 2.7,
     ["SELETTORE", "a relè", "ADR-009"], head_size=10)
-arrow(11.6, Y, 12.9, Y)
-box(15.9, Y, 5.2, 2.7,
-    ["TRIM d'ingresso", "0 / −6 / −12 dB", "ponticelli, ADR-011"],
-    head_size=10)
-arrow(18.5, Y, 19.8, Y)
+# Da L16 (ADR-027) il trim non sta qui: e' uno solo, sul ramo dell'uscita
+# variabile, sulla riga YA piu' sotto. Il selettore va dritto al blocco A.
+arrow(11.6, Y, 19.8, Y)
 box(23.0, Y, 5.6, 3.4,
     ["BLOCCO A", "guadagno 1 (0 dB)", f"Zin {R_ZIN}",
      "coppia JFET cascodata"], head_size=11)
@@ -430,11 +471,20 @@ for yy, dest, tag, kref, bname in (
     txt((41.8, yy + 0.32), dest, size=9.5, halign="left")
     txt((41.8, yy - 0.34), tag, size=8, color=DIM, halign="left")
 
-# Prosecuzione verso il pannello 2. Sta sulla riga piu' bassa e finisce
-# presto: sopra di lei scendono i rami verso massa dell'uscita fissa 2.
+# Prosecuzione verso il pannello 2 attraverso il TRIM (L16, ADR-027): e' uno
+# solo e sta SOLO su questo ramo - le due fisse qui sopra prendono il segnale
+# prima di lui. Sta sulla riga piu' bassa e finisce presto: sopra di lei
+# scendono i rami verso massa dell'uscita fissa 2. Le attenuazioni scritte
+# sono quelle CALCOLATE dalla netlist e asserite sopra.
 dot(27.6, YA)
-arrow(27.6, YA, 29.6, YA, color=NETC)
-txt((29.9, YA), "all'ATTENUATORE — pannello 2", size=9, color=NETC,
+wire(27.6, YA, 28.2, YA)
+_t6 = f"{TRIM6_DB:.1f}".replace(".", ",").replace("-", "−")
+_t12 = f"{TRIM12_DB:.1f}".replace(".", ",").replace("-", "−")
+box(31.0, YA, 5.6, 1.5,
+    [f"TRIM 0 / {_t6} / {_t12} dB", f"K7 K8 {TRIM_PN}, bistabili"],
+    size=7.5, head_size=8.5)
+arrow(33.8, YA, 34.6, YA, color=NETC)
+txt((34.8, YA), "all'ATTENUATORE — pann. 2", size=8, color=NETC,
     halign="left")
 
 # ---------------------------------------------------------------------------
@@ -494,29 +544,34 @@ txt((16.0, 8.55),
 # ---------------------------------------------------------------------------
 panel(0.4, 0.2, 45.6, 7.9,
       "3 — Relè, alimentazione, e cosa sta su quale scheda",
-      "è qui che i due canali si toccano: due relè di guadagno e tre di "
-      "mute servono entrambi.")
+      "è qui che i due canali si toccano: due relè di guadagno, tre di "
+      "mute e i cinque del trim servono entrambi.")
 
 box(6.6, 4.95, 11.0, 2.4,
     [f"K1 K5 — GUADAGNO   {RELAY_PN}",
      "K1 → R_g3, K5 → R_g10; polo 1 canale L, polo 2 canale R",
      "servono NORMALMENTE APERTI: a riposo 0 dB"], head_size=10)
 
-box(20.4, 4.95, 13.0, 2.4,
+box(19.6, 4.95, 12.2, 2.4,
     [f"K2 K3 K4 — MUTE   {RELAY_PN}",
      "2 scambi ciascuno = 6 linee (3 uscite × 2 canali)",
      "servono NORMALMENTE CHIUSI: a riposo uscite a massa"],
     color=RED, head_size=10)
 
-box(35.0, 4.95, 11.6, 2.4,
-    ["J1 — ALIMENTAZIONE",
-     "V+ / GND / V− / V_relè",
-     "±15 V regolati (E7/ADR-015)"], head_size=10)
+# ADR-027 (L16): il permissivo K6 sul comando del mute, i due bistabili del
+# trim e le loro due spie. Chi fa cosa lo asserisce il 2e.
+box(35.4, 4.95, 18.6, 2.4,
+    [f"K6 PERMESSO {RELAY_PN} · K7 K8 TRIM, K9 K10 SPIA {TRIM_PN}",
+     "K6 sul comando del mute, due NC in serie: il trim si comanda "
+     "solo in mute (F8)",
+     "bistabili: il valore resta all'uscita dal mute; i LED leggono K9 K10"],
+    color=GREEN, head_size=9.5, size=8.5)
 
 txt((23.0, 3.30),
-    f"Contatti NO/NC del {RELAY_PN} letti dal datasheet (L21) e asseriti "
-    "sulla netlist da check_relay_safe_state.py. Il progetto fallisce in "
-    "sicurezza solo se restano quelli giusti:", size=9, color=AMBER)
+    f"Contatti NO/NC del {RELAY_PN} (L21) e del {TRIM_PN} (L16) letti dal "
+    "datasheet e asseriti sulla netlist da check_relay_safe_state.py. Il "
+    "progetto fallisce in sicurezza solo se restano quelli giusti:",
+    size=9, color=AMBER)
 txt((23.0, 2.70),
     "a relè diseccitati — alimentazione assente, o temporizzatore non ancora "
     "rilasciato — il guadagno deve essere 0 dB e le uscite a massa. Mancare "
@@ -526,13 +581,13 @@ txt((23.0, 2.70),
 # Le tre cornici tratteggiate: il titolo sta in ALTO e il testo piu' in
 # basso. Nella prima versione si sovrapponevano.
 dashed_frame(1.6, 0.5, 15.4, 2.4, "SCHEDA INGRESSI (a monte)")
-txt((8.5, 1.15), "selettore + trim.  Non è in preamp_audio.py:\n"
-                 "è un'altra scheda, e non interagisce coi blocchi",
+txt((8.5, 1.15), "selettore d'ingresso.  Non è in preamp_audio.py:\n"
+                 "il trim sì, da L16 (ADR-027)",
     size=8, color=DIM)
 
 dashed_frame(16.2, 0.5, 30.0, 2.4, "SCHEDA AUDIO (P4)")
-txt((23.1, 1.15), "blocchi A, B e 2 buffer ×2 canali, contatti di mute,\n"
-                  f"{len(VAL)} componenti — circuits/preamp/preamp_audio.py",
+txt((23.1, 1.15), "blocchi A, B e 2 buffer ×2 canali, trim, contatti di mute,\n"
+                  f"{len(VAL)} componenti — preamp_audio.py + trim.py",
     size=8, color=DIM)
 
 dashed_frame(30.8, 0.5, 44.4, 2.4, "PANNELLO E ALIMENTAZIONE")
@@ -555,6 +610,8 @@ print(f"  guadagno +3 dB (K1) ..... 1 + {RF}/{RG3} = "
 print(f"  guadagno +10 dB (K1+K5) . 1 + {RF}/({RG3}||{RG10}) = "
       f"{GAIN_LIN:.4f}x = +{GAIN_DB:.3f} dB   (solo K5: +{GAIN_K5_DB:.3f} dB)")
 print("  rele' ................... " + " | ".join([K_GAIN, K_GAIN10] + K_MUTE))
+print("  trim (ADR-027) ........... " + " | ".join(K_TRIM)
+      + f"   {TR1}/{TR2}/{TR3}: {TRIM6_DB:.3f} / {TRIM12_DB:.3f} dB")
 if os.environ.get("PREVIEW_PNG"):
     d.save(os.environ["PREVIEW_PNG"], dpi=110)
     print("anteprima PNG ->", os.environ["PREVIEW_PNG"])
