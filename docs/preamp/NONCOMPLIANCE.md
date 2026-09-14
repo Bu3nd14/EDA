@@ -1533,7 +1533,7 @@ Report: `reports/2026-09-14-L27-terzo-livello-di-guadagno.md`.
 | Requisito | **F8** (**ADR-019**) · ADR-011 |
 | Severità | **maggiore** |
 | Aperta da | `reports/2026-09-10-L26-requisiti-utente.md` |
-| Stato | aperta |
+| Stato | aperta — decisioni dell'utente del 2026-09-14 in fondo alla voce |
 
 **Evidenza.** Il trim d'ingresso di ADR-011 **non è ancora nel progetto**: è
 il lotto **L16**, che deve dimensionarlo coi due vincoli insieme
@@ -1552,6 +1552,28 @@ polo 2 dello stesso relè.
 E va verificato **sulla netlist**, come L21 farà per NC-014: applicare il
 comando del trim a mute rilasciato e provare che non succede nulla. Un
 interlock che non è stato provato a fallire non è un interlock.
+
+**Decisione dell'utente (2026-09-14, dopo L27).** Parole sue: «1. rele 2. trim
+per ingresso (meglio se possibile coi bistabili)».
+- **Il trim è a relè**, e F2 («a ponticello») si allinea senza ADR: F8
+  escludeva già il ponticello.
+- **Un trim per ingresso**, come ADR-011.
+- **Relè bistabili, se possibile.**
+
+**Cosa cambia in «Cosa serve per chiuderla».** F8 chiede anche che **il valore
+impostato resti applicato all'uscita dal mute**. Alimentare le bobine
+*attraverso* il contatto del mute, come diceva questa voce, basta per
+l'interlock ma **perde il valore** con relè monostabili: uscendo dal mute si
+diseccitano e il trim torna a riposo. Quindi:
+- **coi bistabili** (G6KU-2F-Y) il contatto del mute abilita gli **impulsi**
+  di set/reset, e lo stato resta senza corrente;
+- **coi monostabili** il mute abilita il **comando** verso una memoria di
+  stato, che è logica e ricade sotto ADR-022. È una strada da riportare
+  all'utente coi numeri prima di sceglierla.
+
+Il resto vale com'è: il contatto giusto è quello chiuso **in** mute, e la prova
+sulla netlist va fatta fallire. È un ragionamento, non ancora una simulazione:
+lo verifica L16.
 
 ### NC-024 — L'h_FE del modello MJE15032 sta sotto il minimo del suo datasheet
 
