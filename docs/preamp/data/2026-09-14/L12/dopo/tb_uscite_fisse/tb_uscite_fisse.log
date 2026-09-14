@@ -1,0 +1,79 @@
+warning, model type mismatch in line
+    q121a nmiri nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: tb_uscite_fisse.cir - e4 (zout) ed e5 (rumore) sulle uscite fisse coi buffer (l17, adr-023)
+
+########## E4: Zout al jack J1, carico tolto ##########
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 81
+z20                 =  1.69361e+03
+z1k                 =  5.79515e+01
+z20k                =  4.70538e+01
+zr20                =  5.31318e+01
+zr1k                =  4.70339e+01
+zr20k               =  4.70323e+01
+zn20                =  3.61743e-02
+zn1k                =  3.86399e-02
+zn20k               =  2.74331e-01
+zrmax               =  5.31318e+01 at=  2.00000e+01
+z20 = 1.693610e+03
+z1k = 5.795147e+01
+z20k = 4.705378e+01
+zr20 = 5.313182e+01
+zr1k = 4.703391e+01
+zr20k = 4.703232e+01
+zn20 = 3.617434e-02
+zn1k = 3.863992e-02
+zn20k = 2.743308e-01
+zrmax = 5.313182e+01
+########## E5: rumore al jack J1, catena A -> F1, 20 Hz - 20 kHz ##########
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+J1  RSRC=1
+onoise_total = 1.623735e-06
+inoise_total = 1.632284e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+J1  RSRC=430
+onoise_total = 1.666448e-06
+inoise_total = 1.675941e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+J1  RSRC=2500
+onoise_total = 1.858351e-06
+inoise_total = 1.872800e-06
+########## scomposizione: il solo blocco A, al suo nodo d'uscita ##########
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+OUTA  RSRC=430
+onoise_total = 1.210608e-06
+inoise_total = 1.211399e-06
+Note: Simulation executed from .control section 

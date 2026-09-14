@@ -1,0 +1,90 @@
+slew2_B.cir - L12 scratch: slew rate at 20 kHz full scale, candidates, fixed measurement
+* Scratch, not versioned. Block B at +10 dB, load 100 k at the jack.
+* Fix over slew_B.cir: no tstart (the first run's meas failed on ft_polyfit),
+* slope read straight from deriv(v(out)) on the sine, and a large input step with a
+* 1 us edge so the capacitive feedthrough of a 1 ns edge is not read as slew.
+* Sine: 20 kHz at 3.818 V pk (E6 at +10 dB -> ~12 V pk out) and at half that.
+*   Ideal max slope of the output = 2*pi*20k*Vpk_out.
+* Step: -1.9 V -> +1.9 V in 1 us (demand ~24 V/us at the output), then back.
+* Node names: VSRCN, NMIDS, OUTA, JACK (#24).
+
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VSIN  VSRCN NMIDS SIN(0 3.818 20k)
+VSTEP NMIDS 0 PULSE(0 0 1m 1u 1u 1m 10m)
+RSRCB VSRCN IN 1.5
+
+CSTRAY RG 0 15p
+RRG    RG 0 0.1
+
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+
+.control
+echo "k,c124,c137,riso,amp_in,vo_max,vo_min,vo_mean_dc,slope_pos_vus,slope_neg_vus,ideal_slope_vus" > slew2_tab.csv
+echo "k,c124,c137,riso,sr_rise_vus,sr_fall_vus" > slew2_step.csv
+foreach k 0 1 2 3
+  if $k = 0
+    alter c124 = 470p
+    alter c137 = 22p
+    alter riso = 47
+    set lab = "470p,22p,47"
+  end
+  if $k = 1
+    alter c124 = 1n
+    alter c137 = 22p
+    alter riso = 47
+    set lab = "1n,22p,47"
+  end
+  if $k = 2
+    alter c124 = 820p
+    alter c137 = 47p
+    alter riso = 68
+    set lab = "820p,47p,68"
+  end
+  if $k = 3
+    alter c124 = 680p
+    alter c137 = 47p
+    alter riso = 68
+    set lab = "680p,47p,68"
+  end
+  foreach amp 3.818 1.909
+    alter @vsin[sin] = [ 0 $amp 20k ]
+    alter @vstep[pulse] = [ 0 0 1m 1u 1u 1m 10m ]
+    tran 10n 1m
+    let dvo = deriv(v(out))
+    meas tran vomax max v(out) from=0.7m to=0.95m
+    meas tran vomin min v(out) from=0.7m to=0.95m
+    meas tran vodc avg v(out) from=0.7m to=0.95m
+    meas tran sp max dvo from=0.7m to=0.95m
+    meas tran sn min dvo from=0.7m to=0.95m
+    let spv = sp/1e6
+    let snv = sn/1e6
+    let ideal = 2*3.14159265*20e3*3.149*$amp/1e6
+    echo "CANDIDATO $k ($lab) sine $amp V pk"
+    print vomax vomin vodc spv snv ideal
+    echo "$k,$lab,$amp,$&vomax,$&vomin,$&vodc,$&spv,$&snv,$&ideal" >> slew2_tab.csv
+    destroy all
+  end
+  alter @vsin[sin] = [ 0 0 20k ]
+  alter @vstep[pulse] = [ -1.9 1.9 1m 1u 1u 1m 10m ]
+  tran 10n 3m
+  let dvo = deriv(v(out))
+  meas tran srr max dvo from=0.95m to=1.5m
+  meas tran srf min dvo from=1.95m to=2.5m
+  let srrv = srr/1e6
+  let srfv = srf/1e6
+  echo "CANDIDATO $k ($lab) step"
+  print srrv srfv
+  echo "$k,$lab,$&srrv,$&srfv" >> slew2_step.csv
+  destroy all
+end
+.endc
+
+.end

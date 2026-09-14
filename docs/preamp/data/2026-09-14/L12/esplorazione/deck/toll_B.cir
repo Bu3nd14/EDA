@@ -1,0 +1,78 @@
+toll_B.cir - L12 scratch: block B 0 dB, tolerance corners on the C_f candidates, fine cable grid
+* Scratch, not versioned. Candidates (nominal C124 / C137 / RISO):
+*   2 = 470p / 330p / 47   3 = 470p / 330p / 56   4 = 470p / 220p / 56
+* Corners: C124 and C137 at -5 % / +5 % (C0G), RISO at -1 % / +1 %.
+* 0 dB only (the +10 dB mode sits above 88 deg). Source 2 k and 2.5 k (the attenuator's
+* worst Zout region), load 100 k and 10 k, cable 2.0 .. 4.7 nF in 9 steps.
+* Node names: VSRCN, OUTA, JACK, NBRK (#24).
+
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN VSRCN 0 DC 0
+RSRCB VSRCN IN 2.5k
+
+CSTRAY RG 0 15p
+RRG    RG 0 1G
+
+RBRK FB NBRK 100
+VINJ NBRK G2 DC 0 AC 1
+
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+CCABLE JACK 0 1f
+
+.control
+alter r109 = 1G
+set units = degrees
+echo "k,c124,c137,riso,rsrc,rload,ccable,pm_deg" > toll_B_tab.csv
+foreach k 2 3 4
+  if $k = 2
+    set cfn = 330
+    set rin = 47
+  end
+  if $k = 3
+    set cfn = 330
+    set rin = 56
+  end
+  if $k = 4
+    set cfn = 220
+    set rin = 56
+  end
+  foreach mm 0.95 1.05
+    let cmv = 470e-12*$mm
+    alter c124 = $&cmv
+    foreach fm 0.95 1.05
+      let cfv = $cfn*1e-12*$fm
+      alter c137 = $&cfv
+      foreach rm 0.99 1.01
+        let rv = $rin*$rm
+        alter riso = $&rv
+        foreach rs 2k 2.5k
+          alter rsrcb = $rs
+          foreach rl 100k 10k
+            alter rload = $rl
+            foreach cab 2n 2.3n 2.6n 2.9n 3.2n 3.5n 3.8n 4.2n 4.7n
+              alter ccable = $cab
+              ac dec 100 1 100meg
+              let T = v(fb)/v(g2)
+              let Tdb = db(T)
+              let Tph = ph(T)
+              meas ac pmarg find Tph when Tdb=0
+              echo "$k,$&cmv,$&cfv,$&rv,$rs,$rl,$cab,$&pmarg" >> toll_B_tab.csv
+              destroy all
+            end
+          end
+        end
+      end
+    end
+  end
+end
+.endc
+
+.end

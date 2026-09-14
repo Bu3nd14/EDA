@@ -517,3 +517,23 @@ la conversione della curva, con intestazione `col0,col1,…`. È successo a
 **Regola operativa**: le tabelle scritte da `echo` hanno un nome che nessun
 `wrdata` dello stesso deck produce (`tb_uscite_fisse_e4.csv` accanto a
 `tb_uscite_fisse_zout.txt`).
+
+## 26. Una `meas tran` su una `tran` con `tstart` può fallire in silenzio, e la tabella `echo` esce con celle vuote
+
+Scoperto in L12.
+
+Un deck di slew rate faceva `tran 20n 1m 0.5m 20n` e poi
+`meas tran vomax max v(out) from=0.5m to=1m`. ngspice ha stampato
+«ft_polyfit @ 240034 failed» e ha lasciato le variabili **non definite**:
+- `echo $&vpp_pos` dà «Error: &vpp_pos: no such variable»;
+- le colonne della tabella escono vuote;
+- ngspice esce **0**, e nella stessa esecuzione la `fourier` funziona.
+
+**Il rimedio usato**: `tran` senza `tstart`, con la finestra della `meas` dentro
+l'intervallo simulato. Anche `deriv()` emette gli stessi avvisi sui punti di
+rottura delle sorgenti PULSE, ma lì le misure escono. La verifica è che la
+tabella non abbia celle vuote e che un numero noto torni: in L12 lo slew in
+salita contro I_coda/C124, entro il 3 %.
+
+**Regola operativa**: in un deck con `meas`, contare le righe `Error:` del log e
+le celle vuote della tabella. L'exit code non basta.

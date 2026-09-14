@@ -25,7 +25,9 @@ tb_loop_bufferfissa.cir - loop gain of a FIXED-OUTPUT BUFFER (L17, ADR-023)
 * LOOP BREAK: as in tb_loop.cir. R109 opened, RBRK + VINJ in series;
 * T = v(fb)/v(g2). Margine di fase = |Tph| dove Tdb attraversa lo zero.
 *
-* NOT A REMEDY: that is L12's. PROVISIONAL - placeholder device models.
+* VERDICT (L12, ADR-024): pos 1 counts - the cable at the jack, minimum over the
+* whole sweep, which lies between 2.2 and 3.3 nF (hence the 1.5n/2.7n/3.3n points
+* added in L12). Pos 2 is information. PROVISIONAL - placeholder device models.
 *
 * Nessun file si chiama tb_loop_bufferfissa_wrdata.txt: run_simulation.sh
 * avvisa, e converte i .txt al secondo passaggio. La tabella e' un .csv
@@ -68,7 +70,7 @@ echo "pos,rld,cprobe,fcross_hz,pm_deg,tdb_10hz" > tb_loop_bufferfissa.csv
 foreach rl 10k 50k
   alter rld = $rl
   foreach pos 1 2
-    foreach cw 1f 47p 100p 220p 470p 1n 2.2n 4.7n
+    foreach cw 1f 47p 100p 220p 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
       if $pos = 1
         alter cpj = $cw
         alter cpn = 1f

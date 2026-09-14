@@ -479,7 +479,13 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # feedback factor rolls off near the loop's unity-gain frequency and the
     # phase margin in the 0 dB mode would be WORSE than in the +10 dB mode -
     # precisely the asymmetry that verification requirement V1 exists to catch.
-    C("22p", OUT, FB)
+    # L12 / ADR-025: 22 p -> 330 p. It is now also the lead that holds block B
+    # at 0 dB above ADR-019's 60 deg with any cable up to 4.7 nF at the jack and
+    # the attenuator at mid-rotation, where 22 p gave 54.97 deg (ADR-024 says
+    # where the probe goes). It moves neither the Miller pole (C124) nor slew
+    # rate, 20 kHz loop gain or PSRR; it costs closed-loop bandwidth at +10 dB
+    # (333 -> 183 kHz). MUST be C0G/NP0, for the same reason as C124.
+    C("330p", OUT, FB)
     if switchable:
         R(R_G, FB, RG)
         # The relay contact itself is instantiated in the channel file: one
@@ -547,16 +553,21 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 #     0 dB CM ceiling   JFET Vds >= 2 V up to Vin = +6.75 V; gain holds to
 #                       +9.43 V. Negative side has no limit inside the rails.
 #
-#   LOOP (tb_loop.cir, tb_loop_blockA.cir)
-#     0 dB   loop gain 72.3 dB, crossover 954 kHz, PM 63.5 deg (no load cap)
-#            PM 58.8 deg at 1 nF of cable, 56.3 deg at 2.2 nF
-#     +10 dB loop gain 61.8 dB, crossover 306 kHz, PM 86.2 deg
-#     block A PM 69.8 deg bare, 64.1 deg with 1 nF straight on the output node
+#   LOOP (tb_loop.cir, tb_loop_blockA.cir, tb_loop_bufferfissa.cir; L12, C_f 330 p)
+#     Verdicts by ADR-024 - cable at the jack, minimum over 0-4.7 nF, every V1
+#     source; block A with its harness <= 1 nF (data/2026-09-14/L12/dopo/):
+#     block B 0 dB   loop gain 72.4 dB, crossover 968 kHz, PM 69.5 deg bare,
+#                    61.2 deg worst (attenuator at mid-rotation, 3.3 nF)
+#     block B +10 dB loop gain 61.9 dB, crossover 528 kHz, PM 109.8 deg bare,
+#                    103.0 deg worst
+#     block A        PM 63.4 deg worst (430 ohm source, 1 nF of harness)
+#     buffer         PM 61.6 deg worst (Stax, 2.7 nF)
 #     *** THE WORSE MODE IS 0 dB, WHICH IS THE NORMAL MODE. V1 was right to
 #         ask for both. ***
 #
 #   RESPONSE (tb_ac.cir)
-#     -3 dB   0.493 Hz / 2.45 MHz (0 dB), 0.493 Hz / 330 kHz (+10 dB)
+#     -3 dB   0.493 Hz / 2.20 MHz (0 dB), 0.493 Hz / 183 kHz (+10 dB)
+#             (L12: C_f 330 p, ADR-025, took +10 dB from 333 kHz to 183 kHz)
 #     ADR-014 CLAIM UNDER TEST: 20 kHz response referred to 1 kHz changes by
 #     0.0001 dB between attenuator Zout = 0 and 2.5 kOhm. ADR-014 predicted
 #     -0.42 dB at 20 kHz WITHOUT a cascode. The cascode does what it was

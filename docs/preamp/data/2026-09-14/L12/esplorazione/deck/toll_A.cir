@@ -1,0 +1,65 @@
+toll_A.cir - L12 scratch: tolerance corners for the chosen remedy (C137 330 pF) on block A
+* Scratch, not versioned. C124 470p and C137 330p at -5 % / +5 % (C0G), source 1 mohm /
+* 430 ohm, harness capacitance on the node up to 1 nF (L12 decision: realistic harness),
+* plus 2.2 n / 4.7 n for information. Buffers from the subcircuit at nominal values.
+* Node names: VSRCN, BIN*, OUTF*, FIX*, J*, NBRK (#24).
+
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
+.include @REPO@/spice/preamp/gain_block.subckt
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN VSRCN 0 DC 0
+RSRCA VSRCN IN 1m
+
+RRG RG 0 1G
+
+RBRK FB NBRK 100
+VINJ NBRK G2 DC 0 AC 1
+
+CWIRE  OUT 0 1f
+RATT   OUT 0 10k
+
+XF1 OUT OUTF1 FBF1 RGF1 VPLUS VMINUS GAINBLOCK
+RRGF1 RGF1 0 1G
+XF2 OUT OUTF2 FBF2 RGF2 VPLUS VMINUS GAINBLOCK
+RRGF2 RGF2 0 1G
+RSEP1 OUTF1 FIX1 47
+CFIX1 FIX1 J1 4.7u
+RBL1  J1 0 470k
+RJ1   J1 0 10k
+RSEP2 OUTF2 FIX2 47
+CFIX2 FIX2 J2 4.7u
+RBL2  J2 0 470k
+RJ2   J2 0 50k
+
+.control
+alter r109 = 1G
+set units = degrees
+echo "c124,c137,rsrc,cwire,pm_deg" > toll_A_tab.csv
+foreach mm 0.95 1.05
+  let cmv = 470e-12*$mm
+  alter c124 = $&cmv
+  foreach fm 0.95 1.05
+    let cfv = 330e-12*$fm
+    alter c137 = $&cfv
+    foreach rs 1m 430
+      alter rsrca = $rs
+      foreach cw 1f 100p 220p 470p 700p 1n 2.2n 4.7n
+        alter cwire = $cw
+        ac dec 100 1 100meg
+        let T = v(fb)/v(g2)
+        let Tdb = db(T)
+        let Tph = ph(T)
+        meas ac pmarg find Tph when Tdb=0
+        echo "$&cmv,$&cfv,$rs,$cw,$&pmarg" >> toll_A_tab.csv
+        destroy all
+      end
+    end
+  end
+end
+.endc
+
+.end
