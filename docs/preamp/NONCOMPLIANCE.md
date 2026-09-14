@@ -1657,17 +1657,103 @@ ora la misura esiste. Ma V2 **non ha una soglia** su quanto botto sia
 accettabile, quindi la voce non è decidibile in negativo: è la forma che
 NC-002 aveva prima di ADR-019. Nessun componente è a rischio: P7 è conforme.
 
+**AGGIORNATA IL 2026-09-14, dopo L11, su domanda dell'utente: e se il contatto
+mettesse a massa prima del condensatore?**
+
+**Da dove vengono i numeri.** Simulazioni di **scratch**, non versionate: deck
+ricavati dal `tb_mute_corto.cir` risolto, con segnaposto tranne LS352 e
+LSK489. **L29 deve rifarle con un deck versionato** prima di usarle per
+decidere.
+
+**Le prove.** Segnale da 2,7 V RMS a 1 kHz, +10 dB, inserzione e rilascio sul
+**picco** del segnale. Una prima prova commutava sugli zeri e nascondeva
+proprio il gradino da confrontare. Tre posizioni del contatto di mute:
+- **dopo** il condensatore, com'è cablato;
+- **prima**, fra i 47 Ω e il 4,7 µF;
+- su **entrambi** i lati.
+
+| Uscita principale | Dopo (oggi) | Prima | Entrambi |
+|---|---|---|---|
+| Gradino al rilascio con musica | **−3,62 V** (5,37 V rilasciando sullo zero) | −72 mV | −166 mV |
+| Gradino all'inserzione | nessuno | +98 mV | nessuno |
+| Residuo sul jack a mute inserito, picco-picco | 4 mV | 4 mV | 1,6 µV |
+| Guadagno 0 → +10 dB sotto mute, senza segnale: al rilascio | pV | **−124 mV** (−67 mV dopo 25 ms) | **−155 mV** (−96 mV dopo 25 ms) |
+| Mute di 2 s senza segnale: all'inserzione / al rilascio | pV / pV | **+104 mV / −154 mV** (−41 mV dopo 300 ms) | non misurato |
+| Contatti di mute | 6 | 6 | 12 |
+
+Col contatto prima, o su entrambi i lati, il jack sale per **2,2 µs** a
+14,7 V subito dopo il rilascio. È l'anello che si riprende quando i 255 mA di
+carico spariscono di colpo: è fuori banda, e un relè vero si apre in
+millisecondi.
+
+**Il compromesso, in una frase per lato.**
+- **Oggi**, a mute inserito, il condensatore resta collegato all'uscita
+  attraverso i 47 Ω. Quindi segue sempre l'offset in continua, e nessun
+  gradino d'offset arriva mai al jack. Ma si carica anche con la **musica**.
+- **Col contatto prima**, la musica non lo carica. Però durante il mute si
+  scarica sul carico (τ 0,32 s). Ogni inserzione, e ogni rilascio dopo un
+  mute lungo, **accensione compresa**, portano sul jack un gradino **pari
+  all'offset in continua del blocco**.
+- **Il volume non lo riduce**: l'offset nasce nel blocco B, dopo
+  l'attenuatore.
+- **Il contatto su entrambi i lati non aiuta sull'offset**: il condensatore
+  si scarica comunque.
+
+**Quanto vale l'offset.**
+
+| Parte | Condizioni | 0 dB | +10 dB |
+|---|---|---|---|
+| Sistematica, simulata | segnaposto, sorgente 2,5 kΩ | −16,6 mV | −52,2 mV |
+| Sistematica, simulata | modelli vendor MJE/MMBT, sorgente 2,5 kΩ | −14,2 mV | −44,6 mV |
+| Sistematica, simulata | segnaposto, sorgente 1,5 Ω | −33 mV | −104 mV |
+| Casuale, dal datasheet | LSK489 \|V_GS1 − V_GS2\|: **8 mV tipici, 20 mV massimi** (Rev A40, pag. 1), ×1 a 0 dB e ×3,15 a +10 dB | fino a ±20 mV | fino a ±63 mV |
+
+Lo specchio LS352 aggiunge poco: 0,2 mV tipici di ΔV_BE.
+
+**Quanto si sente: stima d'ordine di grandezza, calcolata e non misurata.**
+- **Il calcolo.** Finale ×21,1, Heresy 96 dB/1 W/1 m, cioè 2,83 V. Il fronte
+  di un gradino ΔV al jack arriva a circa 96 + 20·log(21,1·ΔV / 2,83) dB SPL
+  di picco a 1 m.
+- **È un limite superiore grossolano.** Tratta il picco del fronte come un
+  tono, e un clic di millisecondi si sente meno di un tono.
+- **I risultati:**
+
+| ΔV al jack | ≈ dB SPL di picco a 1 m |
+|---|---|
+| 1 mV | 53 |
+| 14 mV | 76 |
+| 45 mV | 86 |
+| 104 mV | 94 |
+
+- **Per confronto**, il gradino della musica di oggi, a un normale livello
+  d'ascolto con qualche centinaio di mV al jack, arriva fra 95 e 100 dB.
+- **Per l'SRM-T1** il numero dipende dal suo guadagno, che il progetto non
+  conosce.
+
 **Cosa serve per chiuderla.**
 1. **Una soglia dell'utente** su V2: ampiezza massima del gradino al jack, o
-   regola d'uso («il mute si rilascia a volume minimo») scritta come vincolo.
-2. **Poi, se serve, un rimedio misurato.** Le forme note, **nessuna
-   valutata**:
-   - un mute **in serie**, che non carica il condensatore ma cambia lo stato
+   regola d'uso scritta come vincolo. «Volume al minimo prima di rilasciare»
+   funziona **solo** sul gradino della musica e **solo** sull'uscita
+   principale.
+2. **Poi un rimedio misurato.** Le forme note:
+   - **contatto prima del condensatore**, simulato qui sopra. Toglie il
+     gradino della musica e ne mette uno pari all'offset, a ogni mute;
+   - **abbassare l'offset**: bilanciare la parte sistematica del blocco, e
+     scegliere coppie LSK489 con V_GS appaiata. È ciò che rende piccolo il
+     gradino del contatto prima;
+   - **rilascio lento**: un elemento a resistenza graduale in derivazione, che
+     porta un gradino d'offset sotto la banda udibile. Un elemento a stato
+     solido normalmente aperto **non** mette a massa a macchina spenta, quindi
+     il relè NC di ADR-012 resta. Non serve contro il gradino della musica:
+     lo rallenta, ma resta di volt;
+   - **mute in serie**, che non carica il condensatore ma cambia lo stato
      sicuro (ADR-012, `check_relay_safe_state.py`);
-   - una sequenza di rilascio con il segnale azzerato a monte;
-   - un rilascio lento attraverso una resistenza.
+   - **una sequenza di rilascio col segnale azzerato a monte**: toglie il
+     gradino della musica, non quello d'offset.
 
-   Va letta insieme a ADR-021, che lascia libera la tecnica del mute attivo.
+   Nessuno di questi è ancora verificato. Va letta insieme a ADR-021, che
+   lascia libera la tecnica del mute attivo, e a P7: col contatto prima, il
+   carico a mute è 47 Ω anche in bassa frequenza, e la termica va rimisurata.
 
 ## Voci chiuse
 
