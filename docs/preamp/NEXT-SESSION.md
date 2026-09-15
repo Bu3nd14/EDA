@@ -36,9 +36,14 @@ del **gruppo B** (15 mA).
 
 Voci: **14 aperte, 2 bloccanti** (NC-004, NC-017, entrambe di Fase 4).
 
+**Dopo L20 l'utente ha risposto alle domande aperte** (voce di diario «Dopo
+L20» in `STATE.md`): soglia di V2 ≤ 100 µV, LED gemelli tenuti, ponte di rame
+per NC-019, manuale d'uso per NC-009, Singxer chiuso. **Non sono ancora
+requisiti**: li scrive **L38**. L37 non ne è toccato.
+
 **Perché questo lotto viene adesso.** Non aspetta nessuno. Gli altri sì:
-- L28 aspetta un documento del costruttore o una ADR, prima di G2;
-- L29 aspetta una soglia dell'utente su V2;
+- L28 aspetta una sessione interattiva con l'utente sui pin SS;
+- L29 aspetta L38, che scrive la soglia di V2 data dall'utente;
 - L36 e L35 aspettano L29;
 - L30 aspetta l'alimentatore, che viene dopo L35 e L36.
 
