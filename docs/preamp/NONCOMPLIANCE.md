@@ -63,7 +63,12 @@ posizione di trim e attenuatore, con un deck nuovo che porta la catena intera:
 conforme ovunque, **chiude NC-008**. Rileggendo i log ha trovato che la Zout
 pubblicata dal 2026-09-09 era misurata con la sorgente accesa, e **apre
 NC-033**.
-**15 voci aperte, 2 bloccanti.**
+**L20** (2026-09-15) ha misurato quanto il blocco dipende da I_DSS col modello
+del costruttore dell'LSK489: dal modello com'è (2,59 mA) a tutta la finestra del
+gruppo B che il sorgente nomina (15 mA). Punto di lavoro, E5 e V1 non ne
+dipendono; il margine di saturazione a modo comune scende a 2,4 V. Ha registrato
+**ADR-031** (gruppo B, tolleranza 8,0–15,0 mA): **chiude NC-013**.
+**14 voci aperte, 2 bloccanti.**
 L'accesso a G1 non è concesso finché NC-004 e NC-017 restano aperte.
 
 ---
@@ -365,6 +370,16 @@ modelli veri»**: le cifre che usciranno dalla Fase 4 restano un pavimento
 senza flicker, e il pavimento senza flicker cade proprio dove l'analisi
 dice che il rumore è dominante — lo specchio di corrente e le sue
 degenerazioni. Va scritto **accanto a ogni numero**, non sottinteso.
+
+**AGGIORNATA IL 2026-09-15 da L20.** Per la prima volta un deck simula l'LSK489
+del costruttore, con `Kf`: `tb_idss_op_noise.cir`, dati in
+`data/2026-09-15/L20/`.
+- Nel caso di E5 (blocco B a +10 dB, 2,5 kΩ) il totale va da 4,229 µV
+  (segnaposto) a **4,303 µV**.
+- L'1/f del JFET vale **0,116 µV** in quadratura, e a 20 Hz alza lo spettro del
+  5,1 %.
+- **La voce resta bloccante.** Ogni altro dispositivo è ancora senza flicker,
+  specchio compreso, e i deck di `main` istanziano ancora `LSK489X`.
 
 **Cosa serve per chiuderla.** I modelli vendor (**L6-L7, che questa voce
 non blocca**, come `AGENTS.md` prescrive), poi una riesecuzione di
@@ -817,7 +832,7 @@ altre due discutono di un confine che nessuno ha tracciato.
 | Requisito | **ADR-013** passo 4 / **E5** / **V4** — la credibilità dei numeri di rumore e distorsione |
 | Severità | **maggiore** |
 | Aperta da | `reports/2026-09-09-L7-controllo-incrociato-lsk489.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-15 da L20** — vedi «Chiusura» in fondo alla voce e «Voci chiuse» |
 
 **Evidenza.** Il controllo incrociato di ADR-013 passo 4, eseguito in L7
 alle condizioni di prova del datasheet (RevA40 pagina 2, gruppo **A**,
@@ -881,6 +896,38 @@ dispersione il progetto tollera. Se ne esce che il progetto è sensibile,
 la scelta di ADR-013 va riaperta con un numero in mano. Lotto **L20**.
 
 **Non chiude NC-004**, e non la aggrava: la rende leggibile.
+
+**Chiusura (L20, 2026-09-15).** Report:
+`reports/2026-09-15-L20-sensibilita-idss.md`. Dati: `data/2026-09-15/L20/`.
+Decisione: **ADR-031**.
+1. **Il gruppo, chiesto all'utente.** Il sorgente nomina `LSK489B` (I_DSS
+   8,0 / 11,5 / 15,0 mA); questa voce ragionava sul gruppo A. Risposta: «Solo B,
+   il gruppo del sorgente».
+2. **Il segnaposto, misurato contro il datasheet per la prima volta.** `LSK489X`
+   ha I_DSS **4,842 mA** e V_GS(off) −1,49935 V. Le cifre del progetto fino a
+   oggi descrivono un JFET quasi tipico del gruppo A.
+3. **Il blocco col modello del costruttore**, `Vto` spostato con `altermod` e
+   `Beta` fisso, a 2,59 · 5,50 · 8,00 · 11,50 · 15,00 mA (25 °C):
+   - I_D varia di 1,8 µA, gm dello 0,34 %, l'offset di 0,039 mV. Si muovono solo
+     V_GS e v(SRC), di 1,84 V;
+   - margine di saturazione a ±3,82 V di modo comune ≥ **2,415 V**;
+   - E5 ≤ **4,308 µV**, pavimento senza flicker fuori dalla coppia; l'1/f del
+     JFET vale 0,116 µV in quadratura;
+   - V1, blocco B a 0 dB, ≥ **62,508°**; dispersione del gruppo B ≤ 0,104°. Il
+     cambio di modello alza il minimo da 61,803°.
+4. **La tolleranza, scritta**: ADR-031 e «Nota su T4». Il progetto non è
+   sensibile, e ADR-013 non si riapre.
+5. **Nessun modello ritoccato, nessun file generato toccato.** Il blocco con
+   `LSK489A` è derivato da `scripts/derive_jfet_variant.py` e guardato dal
+   blocco **2i**.
+6. **Controlli fatti cadere**, ciascuno sul controllo atteso:
+   - 4 sabotaggi dei deck e 6 della derivazione;
+   - il 2h prima per la ragione sbagliata, poi per quella giusta.
+7. **Resta fuori**:
+   - nessun modello del costruttore del gruppo B;
+   - T8 del gruppo B non verificato;
+   - solo 27 °C;
+   - V1 solo sul blocco B a 0 dB.
 
 ### NC-003 — Il KPI «margine di fase, peggiore» non è il peggiore del prodotto
 
@@ -2387,6 +2434,18 @@ crede** di un numero pubblicato. La cifra al nodo è sbagliata di un fattore
    col guadagno.
 
 ## Voci chiuse
+
+**NC-013 — Il modello vendor dell'LSK489 descrive un esemplare d'angolo, non il
+tipico** (maggiore). **CHIUSA il 2026-09-15 da L20.**
+- **ADR-031**: JFET del gruppo B, tolleranza I_DSS 8,0–15,0 mA, col criterio
+  misurato ai tre punti.
+- Punto di lavoro, E5 e V1 non dipendono da I_DSS; il margine di saturazione a
+  modo comune scende a 2,4 V a 15 mA.
+- Blocco con `LSK489A` derivato e non copiato: blocco **2i**. **10 sabotaggi**,
+  ciascuno sul controllo atteso.
+
+Il testo completo della voce resta sopra, con la sua «Chiusura». Report:
+`reports/2026-09-15-L20-sensibilita-idss.md`.
 
 **NC-008 — E4 verificata su un'uscita su tre e a manopola ferma** (minore).
 **CHIUSA il 2026-09-15 da L13.**

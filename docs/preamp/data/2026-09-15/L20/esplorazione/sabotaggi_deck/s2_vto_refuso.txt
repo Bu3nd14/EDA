@@ -1,0 +1,116 @@
+== A. logs: no line with Error ==
+   [PASS] A tb_idss_op_noise.log has 0 Error lines
+   [PASS] A tb_idss_loop.log has 0 Error lines
+   [PASS] A tb_idss_jfet.log has 0 Error lines
+== B. the JFET alone ==
+   [PASS] B 10 rows, no empty cell - 10 rows, 0 empty
+   [PASS] B LSK489X never moves
+   [PASS] B LSK489A as published = L7 - 0.00259283 A, -1.12435 V, -0.650212 V
+   [PASS] B I_DSS of every variant = vto_dichiarati.csv
+== C. the block: operating point ==
+   [PASS] C 8 rows, no empty cell - 8 rows, 0 empty
+   [FAIL] C probe I_DSS (27 C) = the declared variant, in every row - b_min: probe 0.00785318 vs 7.976160e-03
+   [PASS] C a_ripristinato = a_come_e in every cell (altermods undone) - []
+   [PASS] C kf does not touch the operating point - []
+   [PASS] C xa: v(IN) = I_G(JQ110A) * 430 ohm, the only expected difference from tb_op - v(in) 4.16831e-09 V, I_G*430 4.17011e-09 V
+   [PASS] C xa prints the 81 values of L27 tb_op (rel 1e-6; IN, G1 less the shift)
+== D. the block: noise ==
+   [PASS] D 40 rows, no empty cell - 40 rows, 0 empty
+   [PASS] D xa = the five totals of L27 tb_noise_breakdown
+   [PASS] D a_ripristinato = a_come_e - []
+   [PASS] D the JFET's 1/f is simulated: kf column above kf=0 at 20 Hz - ratio at 20 Hz = 1.051079
+== E. the loop ==
+   [PASS] E 550 rows, no empty cell - 550 rows, 0 empty
+   [PASS] E |T| at 10 Hz within 71.5-72.6 dB on every row (#24) - 71.9246..72.3993
+   [PASS] E xa = the 110 cells of L16 tb_loop (0db, jack)
+
+== NUMBERS ==
+-- the JFET alone (V_DG = 15 V) --
+   var        vto      T   I_DSS mA   Gfs mS   V_GS(off) V   V_GS@500uA V
+   LSK489X  -1.500   25   4.84220   6.6716    -1.49935    -1.02873
+   LSK489X  -1.500   27   4.84220   6.6716    -1.49935    -1.02873
+   a_come_e -1.130   25   2.59283   4.9519    -1.12435    -0.65021
+   a_come_e -1.130   27   2.59188   4.9264    -1.12935    -0.65292
+   a_tip    -1.696   25   5.50250   7.2120    -1.69036    -1.21621
+   a_tip    -1.696   27   5.48711   7.1662    -1.69535    -1.21892
+   b_min    -2.086   25   8.00484   8.6969    -2.08035    -1.60621
+   b_min    -2.086   27   7.97616   8.6382    -2.08535    -1.60892
+   b_tip    -2.557   25  11.49940  10.4207    -2.55136    -2.07721
+   b_tip    -2.557   27  11.45200  10.3477    -2.55635    -2.07992
+   b_max    -2.976   25  14.99650  11.8968    -2.97036    -2.49621
+   b_max    -2.976   27  14.93060  11.8118    -2.97535    -2.49892
+-- operating point at 0 dB, 27 C --
+     I_D A mA   I_D B mA     V_GS A    gm A mS     V_DS A    tail mA   Vce Q106    casc mA    NCASC V     VAS mA     out mA      SRC V     OUT mV     I_G pA
+   xa               2.21131    2.16255   -0.49143    4.38505    8.73928    4.37385   14.64460    2.19307    9.88658   -6.44250   14.55730    0.24819  -16.57570   -9.69792
+   a_come_e         2.21091    2.16215   -0.14645    4.49579    9.12850    4.37306   14.25550    2.19267    9.88660   -6.44244   14.55730   -0.14097  -17.26060   -9.33674
+   a_tip            2.21149    2.16272   -0.71117    4.49112    8.56376    4.37421   14.82000    2.19325    9.88657   -6.44252   14.55730    0.42368  -17.27200   -9.90144
+   b_min            2.21186    2.16310   -1.08233    4.48804    8.19259    4.37496   15.19100    2.19362    9.88655   -6.44257   14.55740    0.79479  -17.27950  -10.27260
+   b_tip            2.21229    2.16353   -1.57023    4.48392    7.70468    4.37894   15.67880    2.19405    9.88653   -6.44265   14.55740    1.28264  -17.29100  -10.76040
+   b_max            2.21272    2.16395   -1.98828    4.48045    7.28662    4.37952   16.09670    2.19447    9.88651   -6.44271   14.55740    1.70063  -17.29950  -11.17850
+   a_come_e_kf0     2.21091    2.16215   -0.14645    4.49579    9.12850    4.37306   14.25550    2.19267    9.88660   -6.44244   14.55730   -0.14097  -17.26060   -9.33674
+   a_ripristinato   2.21091    2.16215   -0.14645    4.49579    9.12850    4.37306   14.25550    2.19267    9.88660   -6.44244   14.55730   -0.14097  -17.26060   -9.33674
+   spread over a_come_e..b_max (max - min):
+     I_D A mA   all    0.001810   B only    0.000860
+     I_D B mA   all    0.001800   B only    0.000850
+     V_GS A     all    1.841827   B only    0.905950
+     gm A mS    all    0.015340   B only    0.007590
+     V_DS A     all    1.841880   B only    0.905970
+     tail mA    all    0.006460   B only    0.004560
+     Vce Q106   all    1.841200   B only    0.905700
+     casc mA    all    0.001800   B only    0.000850
+     NCASC V    all    0.000090   B only    0.000040
+     VAS mA     all    0.000270   B only    0.000140
+     out mA     all    0.000100   B only    0.000000
+     SRC V      all    1.841595   B only    0.905842
+     OUT mV     all    0.038900   B only    0.020000
+     I_G pA     all    1.841760   B only    0.905900
+-- junction capacitances at the operating point, FROM THE MODEL FORMULA --
+   ngspice JFET level 1: C(V) = C0 / sqrt(1 - V/PB) (mj is ignored), V < FC*PB
+   xa        Vgs  -0.4914  Vgd  -9.2307  Cgs  2.282 pF  Cgd  0.311 pF
+   a_come_e  Vgs  -0.1465  Vgd  -9.2750  Cgs  2.685 pF  Cgd  0.899 pF
+   a_tip     Vgs  -0.7112  Vgd  -9.2749  Cgs  2.125 pF  Cgd  0.899 pF
+   b_min     Vgs  -1.0823  Vgd  -9.2749  Cgs  1.904 pF  Cgd  0.899 pF
+   b_tip     Vgs  -1.5702  Vgd  -9.2749  Cgs  1.696 pF  Cgd  0.899 pF
+   b_max     Vgs  -1.9883  Vgd  -9.2749  Cgs  1.564 pF  Cgd  0.899 pF
+-- common-mode range: VSRC -3.82..+3.82 V at 0 dB --
+   margin_sat = (V_D - V_G) - |V_P(27 C)|, terminal voltages; >0 = saturation
+   [PASS] G xa: 383 points, both halves saturated, Q106 Vce > 1 V - sat A min 3.891 V at +3.82, B 3.909 V at +3.82, Vce Q106 min 10.846 V at -3.82, max |OUT-VSRC| 19.36 mV
+   [PASS] G a_come_e: 383 points, both halves saturated, Q106 Vce > 1 V - sat A min 4.261 V at +3.82, B 4.280 V at +3.82, Vce Q106 min 10.448 V at -3.82, max |OUT-VSRC| 19.97 mV
+   [PASS] G a_tip: 383 points, both halves saturated, Q106 Vce > 1 V - sat A min 3.695 V at +3.82, B 3.714 V at +3.82, Vce Q106 min 11.012 V at -3.82, max |OUT-VSRC| 19.98 mV
+   [PASS] G b_min: 383 points, both halves saturated, Q106 Vce > 1 V - sat A min 3.305 V at +3.82, B 3.324 V at +3.82, Vce Q106 min 11.383 V at -3.82, max |OUT-VSRC| 19.99 mV
+   [PASS] G b_tip: 383 points, both halves saturated, Q106 Vce > 1 V - sat A min 2.834 V at +3.82, B 2.853 V at +3.82, Vce Q106 min 11.871 V at -3.82, max |OUT-VSRC| 20.00 mV
+   [PASS] G b_max: 383 points, both halves saturated, Q106 Vce > 1 V - sat A min 2.415 V at +3.82, B 2.434 V at +3.82, Vce Q106 min 12.289 V at -3.82, max |OUT-VSRC| 20.01 mV
+-- noise 20 Hz - 20 kHz, onoise_total uV RMS --
+        a_0db_1r    b_0db_430r   c_0db_2500r  d_10db_2500r   e_3db_2500r
+   xa                  1.15653       1.21628       1.47030       4.22886       2.01070
+   a_come_e            1.18414       1.24257       1.49213       4.30327       2.04279
+   a_tip               1.18463       1.24304       1.49252       4.30459       2.04335
+   b_min               1.18495       1.24334       1.49278       4.30545       2.04373
+   b_tip               1.18538       1.24376       1.49312       4.30660       2.04423
+   b_max               1.18575       1.24410       1.49341       4.30759       2.04466
+   a_come_e_kf0        1.18357       1.24203       1.49168       4.30171       2.04212
+   [PASS] E5 every variant, every configuration <= sqrt(10^2 - 1^2) uV (ADR-020 quota) - max 4.30759 uV against 9.9499
+   D: JFET 1/f contribution sqrt(kf^2 - kf0^2) = 0.1159 uV
+   D: a_come_e - xa = +0.07441 uV; b_max - a_come_e = +0.00432 uV
+   D spectrum at     20.0 Hz: kf  32.0565  kf0  30.4986  xa  29.9800 nV/sqrt(Hz)
+   D spectrum at    100.2 Hz: kf  30.8139  kf0  30.4966  xa  29.9776 nV/sqrt(Hz)
+   D spectrum at   1002.4 Hz: kf  30.5279  kf0  30.4960  xa  29.9770 nV/sqrt(Hz)
+   D spectrum at  20000.0 Hz: kf  30.3081  kf0  30.3065  xa  29.7983 nV/sqrt(Hz)
+-- loop, block B 0 dB, probe at the jack --
+   xa        load 100k: min  61.8030 deg at rsrc 2.611k, 3.3n, fcross   847.7 kHz
+   xa        load  10k: min  61.8447 deg at rsrc 2.611k, 3.3n, fcross   847.6 kHz
+   a_come_e  load 100k: min  62.5076 deg at rsrc 2.611k, 3.3n, fcross   814.8 kHz
+   a_come_e  load  10k: min  62.5505 deg at rsrc 2.611k, 3.3n, fcross   814.6 kHz
+   b_min     load 100k: min  62.7076 deg at rsrc 2.611k, 3.3n, fcross   814.4 kHz
+   b_min     load  10k: min  62.7504 deg at rsrc 2.611k, 3.3n, fcross   814.2 kHz
+   b_tip     load 100k: min  62.7629 deg at rsrc 2.611k, 3.3n, fcross   814.0 kHz
+   b_tip     load  10k: min  62.8057 deg at rsrc 2.611k, 3.3n, fcross   813.9 kHz
+   b_max     load 100k: min  62.8018 deg at rsrc 2.611k, 3.3n, fcross   813.7 kHz
+   b_max     load  10k: min  62.8446 deg at rsrc 2.611k, 3.3n, fcross   813.6 kHz
+   largest spread over the B grade in one cell: 0.1039 deg; with a_come_e too: 0.3228 deg
+   model change xa -> a_come_e, per cell: +0.5931 .. +0.9191 deg; minimum 61.8030 -> 62.5076
+   RULE (written before the data): extend V1 to the fixed-output buffer and block A if B spread > 1.63 deg or any minimum < 60 deg -> not needed
+   [PASS] V1 every variant >= 60 deg on every cell - lowest 61.8030 deg
+
+== 1 FAILED ==
+   - C probe I_DSS (27 C) = the declared variant, in every row

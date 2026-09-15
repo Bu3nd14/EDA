@@ -547,6 +547,13 @@ salita contro I_coda/C124, entro il 3 %.
 **Regola operativa**: in un deck con `meas`, contare le righe `Error:` del log e
 le celle vuote della tabella. L'exit code non basta.
 
+**Un'altra causa, stessa firma** (L20). Un vettore creato con `let` o una `meas`
+muore con `destroy all`. Un `echo "…$&x…"` scritto **dopo** il `destroy` dà
+«Error: &x: no such variable» e una cella vuota: `tb_idss_jfet.cir` alla prima
+esecuzione ha scritto 10 righe tutte vuote, con 80 righe `Error` e rc 0. Il
+rimedio: copiare il valore in una variabile stringa prima del `destroy`
+(`set sx = "$&x"`) e scrivere quella.
+
 ## 27. Un nodo del blocco lasciato su un solo terminale non dà errore, e il deck misura un altro circuito
 
 Scoperto in L27.
@@ -615,3 +622,34 @@ tabella esce vuota, con rc 0. È il #26 con un'altra causa.
 - Un controllo che deve dire «la manopola arriva al blocco» si fa col
   **guadagno**, a iniezione spenta. Una Zout costante da sola non lo prova,
   perché un attenuatore scollegato la darebbe identica.
+
+## 29. `altermod` su un nome sbagliato non cambia niente, e un modello alterato porta ancora il nome del costruttore
+
+Scoperto in L20.
+
+L20 sposta il `Vto` del modello del costruttore `LSK489A` con `altermod` dentro
+`.control`, per non toccare `models/jfet/lsk489.lib`. Due modi di sbagliare, e
+nessuno dei due ferma ngspice.
+
+**Primo modo — il nome non esiste.** `altermod lsk489x vto = -2.086` su un deck
+che non ha quel modello stampa **una** riga
+`Error: no such device or model name lsk489x`, prosegue ed esce 0. Il modello
+resta com'era, e la variante simula **la variante precedente**: nel sabotaggio
+`s1` di L20 il punto «8,0 mA» ha girato a 5,487 mA sotto l'etichetta `b_min`.
+Anche un valore sbagliato (`-2.068` invece di `-2.086`) passa senza errori, ed
+è peggio: nessuna riga `Error`.
+
+**Secondo modo — il nome resta.** Un modello alterato con `altermod` si chiama
+ancora `LSK489A`. La `provenance()` del dossier e il blocco **2h** leggono gli
+`.include`, non il `.control`: per loro il deck simula il modello del
+costruttore **com'è pubblicato**, qualunque `Vto` giri davvero.
+
+**Regola operativa**:
+- ogni variante stampa `showmod` dei parametri alterati;
+- un **dispositivo sonda** sullo stesso modello, su nodi propri (#24), misura
+  nella stessa esecuzione la grandezza che l'alterazione deve spostare (in L20,
+  I_DSS a V_DS = 15 V). Un verificatore la confronta col valore dichiarato;
+- il log deve avere 0 righe `Error`;
+- una variante che **rimette** i valori di partenza deve ridare la prima cella
+  per cella: prova che le alterazioni precedenti non restano appese;
+- il deck dice nell'intestazione che il modello è alterato, e dove.

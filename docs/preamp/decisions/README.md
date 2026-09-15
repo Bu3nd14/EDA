@@ -47,7 +47,7 @@ Costa un commento. È il collegamento dall'artefatto al ragionamento, ed
 | [010](ADR-010-telaio-unico.md) | Telaio unico con alimentatore a bordo | accettata |
 | [011](ADR-011-trim-per-ingresso.md) | Trim di livello per ingresso | superata da ADR-027 |
 | [012](ADR-012-rele-di-mute.md) | Relè di mute su tutte le uscite | accettata — durata superata da ADR-021 |
-| [013](ADR-013-jfet-ingresso-lsk489.md) | JFET d'ingresso: LSK489 | accettata |
+| [013](ADR-013-jfet-ingresso-lsk489.md) | JFET d'ingresso: LSK489 | accettata — gruppo precisato da ADR-031 |
 | [014](ADR-014-cascode-ingresso.md) | Cascode sulla coppia d'ingresso | accettata |
 | [015](ADR-015-rail-15v.md) | Rail a ±15 V, non ±18 V | accettata |
 | [016](ADR-016-modello-vendor-e-ciclo-di-vita.md) | Nessun componente a fine vita, nessun dispositivo attivo senza modello vendor | accettata |
@@ -65,3 +65,4 @@ Costa un commento. È il collegamento dall'artefatto al ragionamento, ed
 | [028](ADR-028-comandi-sul-frontale-e-led-cablati.md) | Comandi sul frontale, e indicazioni a LED a pannello cablate a filo | accettata |
 | [029](ADR-029-ingombro-del-telaio.md) | Ingombro del telaio: l'impronta del Technics SU-9070, alto 3U | accettata |
 | [030](ADR-030-guadagno-interbloccato-dal-mute.md) | Il cambio di guadagno interbloccato dal mute: monostabili con autoritenuta, solo se la misura lo giustifica | accettata |
+| [031](ADR-031-lsk489-gruppo-b-e-tolleranza-idss.md) | Il JFET d'ingresso è l'LSK489B, e il progetto tollera l'intera finestra di I_DSS del gruppo B | accettata |
