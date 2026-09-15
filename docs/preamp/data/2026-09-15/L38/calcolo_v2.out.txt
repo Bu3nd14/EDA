@@ -1,0 +1,13 @@
+# 1. Stima SPL di picco a 1 m, formula di NC-028 (CALCOLATA, limite superiore)
+soglia V2, 100 uV                                    33.45 dB SPL
+residuo in mute NC-028, 4 mV p-p = 2 mV di picco     59.47 dB SPL
+controllo NC-028: 1 mV (tabella: 53)                 53.45 dB SPL
+controllo NC-028: 14 mV (tabella: 76)                76.37 dB SPL
+controllo NC-028: 45 mV (tabella: 86)                86.51 dB SPL
+controllo NC-028: 104 mV (tabella: 94)               93.79 dB SPL
+
+# 2. Picco filtrato 20 Hz-20 kHz (LP Butterworth 2 ord. a 20 kHz), per ordine del HP a 20 Hz
+gradino netto 104 mV       ord 1: 0.111 V | ord 2: 0.1109 V | ord 4: 0.1104 V
+rampa 104 mV in 100 ms     ord 1: 0.008276 V | ord 2: 0.003774 V | ord 4: 0.001986 V
+rampa 104 mV in 500 ms     ord 1: 0.001655 V | ord 2: 0.0007547 V | ord 4: 0.0003972 V
+rampa 14 mV in 100 ms      ord 1: 0.001114 V | ord 2: 0.000508 V | ord 4: 0.0002673 V

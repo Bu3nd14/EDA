@@ -51,7 +51,7 @@ Costa un commento. È il collegamento dall'artefatto al ragionamento, ed
 | [014](ADR-014-cascode-ingresso.md) | Cascode sulla coppia d'ingresso | accettata |
 | [015](ADR-015-rail-15v.md) | Rail a ±15 V, non ±18 V | accettata |
 | [016](ADR-016-modello-vendor-e-ciclo-di-vita.md) | Nessun componente a fine vita, nessun dispositivo attivo senza modello vendor | accettata |
-| [017](ADR-017-dispositivi-attivi-conformi-a-t7.md) | I dispositivi attivi che soddisfano T7 e T8: si cambia costruttore e package, non topologia | accettata |
+| [017](ADR-017-dispositivi-attivi-conformi-a-t7.md) | I dispositivi attivi che soddisfano T7 e T8: si cambia costruttore e package, non topologia | accettata — accoppiamento termico del moltiplicatore precisato da ADR-034 |
 | [018](ADR-018-specchio-ingresso-ls352.md) | Lo specchio d'ingresso è un LS352, degenerazione da 47 a 220 Ω | accettata |
 | [019](ADR-019-margine-di-fase-trim-interbloccato-tre-guadagni.md) | Margine di fase minimo 60°, trim interbloccato col mute, tre livelli di guadagno | accettata — sonda precisata da ADR-024, permissivo da ADR-027 |
 | [020](ADR-020-quota-ripple-alimentazione.md) | Quota del ripple d'alimentazione nel budget di E5: 1 µV RMS | accettata |
@@ -61,8 +61,11 @@ Costa un commento. È il collegamento dall'artefatto al ragionamento, ed
 | [024](ADR-024-sonda-capacitiva-cavo-al-jack.md) | La sonda capacitiva di V1 è il cavo: al jack, ogni cavo fino a 4,7 nF; il blocco A col suo cablaggio | accettata |
 | [025](ADR-025-cf-330p-rimedio-margine-di-fase.md) | C_f da 22 a 330 pF: il rimedio del margine di fase, uguale in tutte le istanze | accettata |
 | [026](ADR-026-terzo-livello-due-rami-in-parallelo.md) | Il terzo livello di guadagno: due rami di R_g in parallelo, 3,57 kΩ e 866 Ω, su due relè | accettata |
-| [027](ADR-027-trim-comune-bistabile-sul-ramo-variabile.md) | Il trim è uno solo, sul ramo dell'uscita variabile, a relè bistabili, con LED e interblocco dal mute | accettata |
+| [027](ADR-027-trim-comune-bistabile-sul-ramo-variabile.md) | Il trim è uno solo, sul ramo dell'uscita variabile, a relè bistabili, con LED e interblocco dal mute | accettata — LED dai relè spia confermati da ADR-033 |
 | [028](ADR-028-comandi-sul-frontale-e-led-cablati.md) | Comandi sul frontale, e indicazioni a LED a pannello cablate a filo | accettata |
 | [029](ADR-029-ingombro-del-telaio.md) | Ingombro del telaio: l'impronta del Technics SU-9070, alto 3U | accettata |
-| [030](ADR-030-guadagno-interbloccato-dal-mute.md) | Il cambio di guadagno interbloccato dal mute: monostabili con autoritenuta, solo se la misura lo giustifica | accettata |
+| [030](ADR-030-guadagno-interbloccato-dal-mute.md) | Il cambio di guadagno interbloccato dal mute: monostabili con autoritenuta, solo se la misura lo giustifica | accettata — criterio 3 al caso peggiore da ADR-032, LED precisati da ADR-033 |
 | [031](ADR-031-lsk489-gruppo-b-e-tolleranza-idss.md) | Il JFET d'ingresso è l'LSK489B, e il progetto tollera l'intera finestra di I_DSS del gruppo B | accettata |
+| [032](ADR-032-soglia-v2-al-jack.md) | V2 ha una soglia: al jack, 100 µV di picco in banda, nel caso peggiore, per il gradino, il residuo in mute e il taglio della musica | accettata |
+| [033](ADR-033-led-dai-rele-spia-guasto-accettato.md) | I LED del trim restano sui relè spia K9 e K10: il guasto di un solo relè è un caso noto e accettato | accettata |
+| [034](ADR-034-moltiplicatore-vbe-accoppiato-col-rame.md) | Il moltiplicatore di Vbe si accoppia al transistor d'uscita col rame del PCB, non con la fascetta | accettata |
