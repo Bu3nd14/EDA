@@ -11,16 +11,53 @@ realtà, il progetto non è ripartibile.
 | | |
 |---|---|
 | Ultimo aggiornamento | **2026-09-15** |
-| Ultimo lotto chiuso | **L31** — i vettori di rumore di `tb_noise_vectors.cir`: il 2g esteso ai nomi `onoise_*`/`inoise_*` e fatto cadere sul deck di allora (4 nomi morti), i vettori rinominati con una mappa per nodi (e tre nomi vivi erano già il dispositivo sbagliato), 2 righe di dati, quadratura = spettro; chiude NC-030. Prima: **L32b** — gli schemi del dossier copiati accanto alla pagina |
-| **Prossimo lotto** | **L33** — le etichette di provenienza dell'LSK489, NC-031 (mandato in «Prossimo passo concreto») |
-| Non conformità | **15 aperte, 2 bloccanti** |
+| Ultimo lotto chiuso | **L33** — le etichette di provenienza dell'LSK489: 15 deck (non 13) corretti solo nei commenti, provato da uno script; 7 README datati (non 3) annotati in coda; guardiano nuovo **2h** fatto cadere su `main` (15 su 15) e su 11 sabotaggi; chiude NC-031. Prima: **L31** — i vettori di rumore di `tb_noise_vectors.cir`, chiude NC-030 |
+| **Prossimo lotto** | **L13** — E4 sulle tre uscite e a manopola che gira, NC-008 (mandato in «Prossimo passo concreto») |
+| Non conformità | **14 aperte, 2 bloccanti** |
 | Le bloccanti | NC-004 · NC-017 (Fase 4) |
-| Suite | `run_tests.sh` **8 passed / 0 failed** a fine L31. A metà L31, col 2g esteso e il deck non ancora corretto, 7 / 1 sul 2g: voluto |
+| Suite | `run_tests.sh` **9 passed / 0 failed** a fine L33. A metà L33, col 2h nuovo e i deck non ancora corretti, 8 / 1 sul 2h: voluto |
 
 ## Diario degli ultimi lotti
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L33 — le etichette di provenienza dell'LSK489 (2026-09-15)
+
+**Chiude NC-031.** Report: `reports/2026-09-15-L33-provenienza-lsk489.md`. Dati:
+`data/2026-09-15/L33/`. Nessun valore del circuito, nessun modello e nessuna ADR
+toccati; nessun numero rieseguito; dossier non rigenerato.
+
+- **Il conto rifatto non era quello di NC-031** (`esplorazione/conta.py`):
+  - **15 deck**, non 13: anche `tb_blockA_carichi.cir:40` e
+    `tb_mute_corto.cir:54` («tutto tranne LS352 e LSK489 e' segnaposto»);
+  - **5 README datati espliciti**, non 3 (anche L17 e `2026-09-10`), più **2
+    impliciti** (`2026-09-13`, `2026-09-14`);
+  - fuori conto e non toccata, perché datata:
+    `L16/esplorazione/deck/tb_blockA_carichi_trim.cir`.
+- **Il guardiano c'è: blocco 2h**, `scripts/check_deck_provenance.py`.
+  - Il criterio è la `provenance()` di `build_dossier.py`, **importata**, non
+    riscritta. Le affermazioni le legge dai commenti, nelle forme trovate.
+  - **Fatto cadere prima di correggere**: sui deck di `main` rc 1,
+    **esattamente 15**; suite 8 / 1 sul 2h. Sui 16 deck di `6748fbc`, 14.
+  - **11 sabotaggi su 11**, fra cui una frase negata e una vera, che non
+    devono scattare.
+  - **Cosa non vede**: un modo nuovo di dire «vendor». È una rete tessuta sulle
+    frasi trovate, non un lettore.
+- **Solo commenti, provato**: `solo_commenti.py` contro i deck di `main`. 15
+  cambiati, ogni riga `*`, righe di codice identiche. Caduto su `VPP … DC 16`.
+- **README** annotati in coda, testo intatto: il diff ha solo righe aggiunte.
+- **Il dossier diceva già il vero**: 16 righe di provenienza su 16, «del
+  costruttore: LS352», LSK489 fra i segnaposto.
+- **Trovato**: il README del `2026-09-10` dice anche «il contributo del JFET qui
+  è conservativo» (NC-013). Non si applica, perché il modello d'angolo non era
+  simulato: annotato, non riscritto.
+- **Precisato**: «solo l'LSK489 ha rumore 1/f», in NC-004 e qui sotto, è vero di
+  `models/`, non delle simulazioni.
+- **Il mandato di L33 contava male anche i lotti**: L13 e L20 sono «da fare»
+  e non aspettano nessuno, ma non comparivano fra gli aperti.
+- Suite **9 passed / 0 failed**. **14 voci aperte, 2 bloccanti.** Prossimo:
+  **L13**.
 
 ### L31 — i vettori di rumore di `tb_noise_vectors.cir` (2026-09-15)
 
@@ -731,7 +768,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L30 | **Il calore del telaio con otto blocchi.** A riposo la scheda audio dissipa 6,45 W (0,806 W per blocco, L17) contro i 3-4 W che P5 prevede per l'apparecchio intero. Stima termica del telaio con l'alimentatore; poi o P5 aggiornato al numero vero, o ventilazione e montaggio progettati con una ADR, o ADR-021 riaperta se i 60 °C non reggono. Va col lotto dell'alimentatore | S | NC-029 | da fare |
 | L31 | **I vettori di rumore di `tb_noise_vectors.cir`.** Il deck cita `onoise_q123`, `onoise_r121`, `onoise_jq110`, `onoise_jq111`, dispositivi che non esistono più; il `wrdata` si ferma e non scrive niente, con rc 0. Rinominarli dall'include generato ed estendere `check_deck_refs.py` ai nomi `onoise_*`/`inoise_*`, facendolo fallire sul deck di oggi | XS | NC-030 | **fatto** — 2g esteso e fatto cadere (4 nomi morti), mappa per nodi (tre nomi vivi erano già sbagliati), quadratura = spettro |
 | L32 | **Il dossier rigenerato sui dati di oggi. Subito dopo L16.** `build_dossier.py` legge ancora `data/2026-09-09`: THAT320, C_f 22 pF, due soli guadagni. Va esteso ai tre modi (0 / +3 / +10 dB) e puntato ai dati di L27 e L16, coi margini di V1 al minimo della spazzata (ADR-024), la cifra unica di headroom che L16 sceglie per NC-009 e la «KPI riferita a 60°» rimasta da L19. Accanto a ogni numero, la provenienza dei modelli ancora segnaposto (NC-004, NC-017). **Nessun avviso di obsolescenza**: il dossier lo legge solo l'utente (deciso il 2026-09-14) | S | NC-009 (la metà del dossier), apre **NC-031** | **fatto** — tre modi, V1 al minimo della spazzata, M1 +6,58 dB, provenienza letta dagli `.include`; nove controlli fatti fallire |
-| L33 | **Le etichette di provenienza dell'LSK489.** I README di `data/2026-09-14/` (L12, L27, L16) e i commenti di tredici deck (dodici col commento di L22, più `tb_trim.cir`) dicono che l'LSK489 simulato è il modello del costruttore; i deck istanziano `LSK489X`, segnaposto con `KF=0`, e nessuno include `models/jfet/lsk489.lib`. Correggere le frasi dei deck (i README datati si precisano con una nota, non si riscrivono) e decidere se un guardiano debba confrontare la provenienza dichiarata con quella degli `.include` | XS | NC-031 | da fare |
+| L33 | **Le etichette di provenienza dell'LSK489.** I README di `data/2026-09-14/` (L12, L27, L16) e i commenti di tredici deck (dodici col commento di L22, più `tb_trim.cir`) dicono che l'LSK489 simulato è il modello del costruttore; i deck istanziano `LSK489X`, segnaposto con `KF=0`, e nessuno include `models/jfet/lsk489.lib`. Correggere le frasi dei deck (i README datati si precisano con una nota, non si riscrivono) e decidere se un guardiano debba confrontare la provenienza dichiarata con quella degli `.include` | XS | NC-031 | **fatto** — 15 deck (non 13) corretti solo nei commenti, 7 README (non 3) annotati, guardiano 2h fatto cadere su `main` e su 11 sabotaggi |
 | L32b | **Gli schemi del dossier si vedono.** Segnalazione dell'utente dopo L32: schema a blocchi e schema del blocco mancavano, perché `index.html` li collegava da `../schematic/`. Il builder li copia accanto alla pagina e rifiuta se mancano | XS | — | **fatto** |
 
 **NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
@@ -2773,26 +2810,24 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L33 — le etichette di provenienza dell'LSK489.** Chiude **NC-031** (minore).
-Lotto **XS**. Il mandato completo è in `NEXT-SESSION.md`.
+**L13 — E4 sulle tre uscite e a manopola che gira.** Chiude **NC-008**
+(minore). Lotto **S**. Il mandato completo è in `NEXT-SESSION.md`.
 
 **Perché adesso.**
-- È il lotto più piccolo fra gli aperti.
-- Gli altri aspettano altro: L29 una soglia dell'utente, L30 l'alimentatore,
-  L28 va fatto prima di G2.
+- Non aspetta nessuno. Gli altri sì: L29 una soglia dell'utente su V2, L30
+  l'alimentatore, L28 un documento del costruttore o una ADR (prima di G2).
+- Il mandato di L33 non lo contava fra gli aperti, e nemmeno L20: nella tabella
+  dei lotti sono entrambi «da fare».
 
 **Dove parte.**
-- **Cosa si simula**: `gain_block.py` istanzia `LSK489X`, segnaposto con `KF=0`
-  in `spice/preamp/placeholder_devices.lib`. Nessun deck include
-  `models/jfet/lsk489.lib`.
-- **Cosa si dichiara**: il commento di L22 in dodici deck, `tb_trim.cir`, e i
-  README di `data/2026-09-14/` (L12, L27, L16). Sono conti di NC-031: **vanno
-  rifatti**, non copiati.
-- **Cosa c'è già**: `build_dossier.py` ricava la provenienza dagli `.include`
-  (L32). Il README di L31 la dichiara già giusta.
-- **Da decidere**: se un guardiano debba confrontare la provenienza dichiarata
-  con quella degli `.include`. Se sì, va fatto cadere prima di correggere le
-  frasi.
+- **NC-008 cita i dati del 2026-09-09**: THAT320, C_f 22 pF, due guadagni.
+  L'evidenza va riletta sulla topologia di oggi (L27, L16), non copiata.
+- **Una parte forse è già coperta.** L17 ha misurato E4 su una fissa
+  (`tb_uscite_fisse`, `data/2026-09-14/L17/`: Re(Z) al jack ≤ 53,13 Ω). Resta
+  da verificare cosa manca: l'altra fissa, i tre modi di L27, e la clausola
+  «costante con la posizione del volume», che nessun dato esercita.
+- **È una misura**: nessun valore del circuito cambia. Coi segnaposto
+  (NC-017), e la provenienza si scrive accanto al numero.
 
 ### Quello che il repo ti consegna già
 
@@ -2803,22 +2838,27 @@ Lotto **XS**. Il mandato completo è in `NEXT-SESSION.md`.
   modelli la legge dagli `.include`. Nove sabotaggi, tutti rifiutati. Rigenerarlo
   dopo un lotto che cambia i dati è un lotto a sé.
 
-- **La suite è a 8 blocchi**, 8 passed a fine L16.
+- **La suite è a 9 blocchi**, 9 passed a fine L33.
   - Il **2e** conosce MUTE, GAIN, PERMIT, TRIM e SPIA, e prova sulla netlist
     l'interblocco del trim (F8);
   - il **2f** asserisce tre guadagni, i rami in parallelo e le attenuazioni del
     trim;
-  - il **2g** rifiuta i nodi di contatto non terminati (#27).
+  - il **2g** rifiuta i nodi di contatto non terminati (#27) e i vettori di
+    rumore morti (L31);
+  - il **2h** rifiuta un commento di deck che dichiara una provenienza diversa
+    da quella dei suoi `.include` (L33). Un deck nuovo che copia un'intestazione
+    la eredita: se la frase è sbagliata, il 2h cade.
 - **Dieci relè** sulla scheda audio:
   - K1, K5 guadagno; K2–K4 mute; K6 permissivo;
   - K7, K8 trim; K9, K10 spie.
 
   Budget delle bobine: 126,6 mA a 5 V, in mute e fuori (ADR-027).
-- **I conteggi**: 16 voci aperte, 2 bloccanti.
+- **I conteggi**: 14 voci aperte, 2 bloccanti.
 
 **Poi**, nell'ordine:
-- **L33** (NC-031, XS): le etichette di provenienza dell'LSK489 nei README dei dati
-  e nei commenti dei deck.
+- **L20** (NC-013, S): quanto il progetto dipende da I_DSS. Nota di L33: oggi
+  nessuna cifra simulata usa il modello `LSK489A`, quindi è anche la prima volta
+  che quel modello entra in un deck del blocco.
 - **L29** (NC-028) aspetta una soglia dell'utente su V2, e si può chiedere in
   qualsiasi momento.
 - **L30** (NC-029) va col lotto dell'alimentatore e del telaio.
@@ -2880,7 +2920,10 @@ Ognuna è costata una scoperta:
 
 NC-004 (rumore e distorsione senza evidenza, bloccante) **non si chiude coi
 modelli veri**, e da L24 si sa perché con precisione: **nessuno dei cinque
-modelli congelati ha `KF`/`AF`**. Nel repo **solo l'LSK489 ha rumore 1/f**.
+modelli congelati ha `KF`/`AF`**. Nel repo **solo l'LSK489 ha rumore 1/f**
+— nella libreria `models/`, non nelle simulazioni: l'LSK489 simulato è il
+segnaposto `LSK489X` con `KF = 0`, e oggi nessun dispositivo simulato ha 1/f
+(NC-031, L33).
 
 Quindi le cifre della Fase 4 saranno un pavimento senza flicker, e il
 pavimento cade proprio dove l'analisi dice che il rumore è dominante — lo

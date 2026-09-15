@@ -1,0 +1,28 @@
+OK   c00_controllo_intatto: rc 0, atteso 0 - il deck corretto, senza modifiche
+OK   c01_forma_besides: rc 1, atteso 1 - la frase di L22 rimessa
+       c01_forma_besides.cir:39: calls LSK489 vendor; the includes give LSK489X (spice/preamp/placeholder_devices.lib): placeholder - "vendor model - the only real device model in this deck besides the lsk489"
+       1 CONTRADICTED: c01_forma_besides.cir (3 claims; vendor by includes: LS352)
+OK   c02_forma_tranne: rc 1, atteso 1 - l'LSK489 rimesso fra le eccezioni
+       c02_forma_tranne.cir:54: calls LSK489 vendor; the includes give LSK489X (spice/preamp/placeholder_devices.lib): placeholder - "tranne ls352 e lsk489 e' segnaposto"
+       1 CONTRADICTED: c02_forma_tranne.cir (2 claims; vendor by includes: LS352)
+OK   c03_forma_kf_but: rc 1, atteso 1 - «KF = 0 but on the LSK489» rimesso
+       c03_forma_kf_but.cir:43: says LSK489 has KF != 0; the includes give KF = 0 (LSK489X (spice/preamp/placeholder_devices.lib)) - "kf = 0 but on the lsk489"
+       1 CONTRADICTED: c03_forma_kf_but.cir (2 claims; vendor by includes: LS352)
+OK   c04_forma_diretta_vendor: rc 1, atteso 1 - «The LSK489 is a vendor model»
+       c04_forma_diretta_vendor.cir:15: calls LSK489 vendor; the includes give LSK489X (spice/preamp/placeholder_devices.lib): placeholder - "lsk489 is a vendor"
+       1 CONTRADICTED: c04_forma_diretta_vendor.cir (3 claims; vendor by includes: LS352)
+OK   c05_forma_solo: rc 1, atteso 1 - «solo LS352 e LSK489 hanno un modello del costruttore»
+       c05_forma_solo.cir:20: calls LSK489 vendor; the includes give LSK489X (spice/preamp/placeholder_devices.lib): placeholder - "solo ls352 e lsk489 hanno un modello del costruttore"
+       1 CONTRADICTED: c05_forma_solo.cir (4 claims; vendor by includes: LS352)
+OK   c06_ls352_segnaposto: rc 1, atteso 1 - il verso opposto: LS352, del costruttore, detto segnaposto
+       c06_ls352_segnaposto.cir:38: calls LS352 a placeholder; the includes give LS350 (models/bjt_pnp/ls350.lib): vendor - "ls352 (adr-018) and this is still a placeholder"
+       1 CONTRADICTED: c06_ls352_segnaposto.cir (2 claims; vendor by includes: LS352)
+OK   c07_include_del_costruttore_tolto: rc 2, atteso 2 - LS350 non definito da nessun include: la provenienza non si legge
+       UNREADABLE: provenienza docs/preamp/data/2026-09-15/L33/esplorazione/falsi/c07_include_del_costruttore_tolto.cir: il modello LS350 non e' definito da nessun file incluso
+OK   c08_negazione_non_scatta: rc 0, atteso 0 - una frase negata non e' un'affermazione: nessun falso allarme
+OK   c09_parte_segnaposto_corretta: rc 0, atteso 0 - una frase vera in forma diretta: nessun falso allarme
+OK   c10_2n5551_vendor: rc 1, atteso 1 - un altro dispositivo detto del costruttore
+       c10_2n5551_vendor.cir:19: calls 2N5551 vendor; the includes give NSS2N5551 (spice/preamp/placeholder_devices.lib): placeholder - "2n5551 is a vendor"
+       1 CONTRADICTED: c10_2n5551_vendor.cir (3 claims; vendor by includes: LS352)
+11 casi su 11 come attesi
+rc=0

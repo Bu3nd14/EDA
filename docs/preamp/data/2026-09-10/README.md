@@ -56,3 +56,23 @@ l'analisi dice che il rumore domina — lo specchio e le sue degenerazioni.
 
 Da leggere anche insieme a **NC-013**: il modello LSK489 descrive un esemplare
 d'angolo a bassa I_DSS, quindi il contributo del JFET qui è conservativo.
+
+## Nota di L33 (2026-09-15) — la provenienza dell'LSK489
+
+Il testo sopra resta com'era: è l'output di un'esecuzione datata. **Una sua frase non è vera**: «nel percorso di segnale solo lo specchio e l'LSK489 hanno un modello del costruttore».
+
+- L'LSK489 simulato è **`LSK489X`**, il segnaposto scritto a mano di
+  `spice/preamp/placeholder_devices.lib`, con `KF = 0`. Il modello del
+  costruttore, `models/jfet/lsk489.lib` (`LSK489A`), non l'ha mai incluso
+  nessun deck, né oggi né alla data di questi dati:
+  `git log -S "jfet/lsk489.lib" -- spice circuits` è vuoto.
+- L'unico modello del costruttore simulato è l'**LS352**
+  (`models/bjt_pnp/ls350.lib`), che non ha `KF`. Quindi **nessun dispositivo
+  simulato ha rumore 1/f**.
+- **Nessun numero cambia**, cambia cosa se ne crede: ogni cifra di rumore qui è
+  un pavimento senza flicker, JFET compresi (NC-004, NC-031).
+- Due frasi che ne discendono vanno lette così:
+  - «Nel repo solo l'LSK489 ha flicker» è vera della libreria `models/`, non di
+    questi dati;
+  - «il contributo del JFET qui è conservativo» (NC-013) non si applica: il
+    modello d'angolo di NC-013 è `LSK489A`, che qui non è simulato.

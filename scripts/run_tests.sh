@@ -236,5 +236,24 @@ else
 fi
 echo
 
+echo "-- 2h. what a testbench says it simulates is what its includes simulate --"
+# From L22 to L33 fifteen decks called the simulated LSK489 a vendor model
+# (NC-031). It is LSK489X, a hand-written placeholder with KF=0, and no deck
+# includes models/jfet/lsk489.lib. Every number was right; what a reader
+# believed about the numbers was not, and nothing compared a header comment
+# with the includes written under it. The criterion is the dossier's own
+# provenance(), imported. Made to fail on the 15 decks of main and on
+# sabotaged copies: see docs/preamp/data/2026-09-15/L33/.
+if [ ${#decks[@]} -eq 0 ] || [ -z "${decks[1]}" ]; then
+    echo "   MISSING: nessun deck trovato sotto spice/*/tb/" >&2
+    report "testbench provenance claims match their includes" 1
+else
+    out=$(/usr/bin/python3 "$ROOT/scripts/check_deck_provenance.py" "$ROOT" "${decks[@]}" 2>&1)
+    rc=$?
+    echo "$out"
+    report "testbench provenance claims match their includes" $rc
+fi
+echo
+
 echo "== run_tests.sh SUMMARY: $n_pass passed, $n_fail failed =="
 exit $fail
