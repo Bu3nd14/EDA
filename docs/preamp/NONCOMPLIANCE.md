@@ -68,7 +68,11 @@ del costruttore dell'LSK489: dal modello com'è (2,59 mA) a tutta la finestra de
 gruppo B che il sorgente nomina (15 mA). Punto di lavoro, E5 e V1 non ne
 dipendono; il margine di saturazione a modo comune scende a 2,4 V. Ha registrato
 **ADR-031** (gruppo B, tolleranza 8,0–15,0 mA): **chiude NC-013**.
-**14 voci aperte, 2 bloccanti.**
+**L37** (2026-09-15) ha rigenerato il dossier con E4 letto dai dati di L13 (tre
+uscite, costanza col volume, Zout a sorgente spenta). Rifiuta la Zout di L27 e
+una Zout al nodo che contiene il segnale, riconosciuta dalla grandezza e non dal
+rapporto col guadagno: **chiude NC-033**.
+**13 voci aperte, 2 bloccanti.**
 L'accesso a G1 non è concesso finché NC-004 e NC-017 restano aperte.
 
 ---
@@ -2394,7 +2398,7 @@ verificare un comando che non esiste.
 | Requisito | **E4** · letta insieme a NC-008 · limitations **#28** |
 | Severità | **minore** |
 | Aperta da | `reports/2026-09-15-L13-e4-tre-uscite.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-15 da L37** — il dossier legge E4 da L13 e rifiuta la Zout di L27; criterio 4 riformulato. Vedi «Chiusura» in fondo alla voce e «Voci chiuse» |
 
 **Evidenza.** `spice/preamp/tb/tb_zout_psrr_noise.cir`, fino a L13: la sezione
 Zout accendeva l'iniezione da 1 A e lasciava `VSRC` a 1 V AC.
@@ -2433,7 +2437,46 @@ crede** di un numero pubblicato. La cifra al nodo è sbagliata di un fattore
 4. un controllo fatto fallire: il builder rifiuta una Zout al nodo che scala
    col guadagno.
 
+**Chiusura (2026-09-15, L37).** Report `reports/2026-09-15-L37-e4-dossier.md`,
+evidenza `data/2026-09-15/L37/`.
+1. **Fatto.** `build_dossier.py` legge E4 da `data/2026-09-15/L13/dopo/`:
+   - `tb_e4_uscite` per le tre uscite e la costanza su trim × attenuatore;
+   - `tb_zout_psrr_noise` corretto per le curve.
+
+   `zout_src()` rifiuta un percorso Zout sotto `2026-09-14/L27`. PSRR e rumore
+   restano letti da L27, identici byte per byte a L13.
+2. **Fatto.** KPI, tabella di §10, nota E4/E8 e riepilogo sono rigenerati:
+   - Re(Z) max al jack **60,1281 Ω** sulla principale e **53,1318 Ω** sulle fisse;
+   - dispersione col volume **≤ 1,0·10⁻⁴ Ω**;
+   - \|Z\| al jack a 1 kHz 57,9449 / 57,9539 / 57,9914 Ω;
+   - nodo 0,0386 / 0,0549 / 0,1217 Ω.
+
+   Le cifre sbagliate compaiono 0 volte. Un confronto prova che il resto del
+   dossier è identico: sezioni 1–9, 11, 12, 15 e sette figure su otto.
+3. **Fatto.** Nota in coda a `data/2026-09-09/README.md`.
+4. **Fatto, riformulato.** «Una Zout al nodo che scala col guadagno» non
+   distingue: la Zout vera scala col guadagno anch'essa, 0,0387 Ω × G_lin in
+   tutti e tre i modi, contro 1,0366 Ω × G_lin di quella contaminata. Il
+   criterio letterale scatta su entrambe. Il builder usa due controlli:
+   - la **grandezza**: Zout al nodo sotto 0,5 × G_lin Ω;
+   - l'**incrocio** con `tb_e4_uscite`, entro 10⁻³.
+
+   La Zout contaminata, messa al percorso giusto, fa cadere entrambi. Tolto uno
+   dei due dalla copia del builder, cade l'altro da solo. 10 casi su 10 come
+   attesi. Limitazione #28 corretta in coda.
+
 ## Voci chiuse
+
+**NC-033 — La Zout di E4 pubblicata contiene il segnale** (minore). **CHIUSA il
+2026-09-15 da L37.**
+- Il dossier legge E4 da L13 e rifiuta la Zout di L27.
+- La firma del #28 si riconosce dalla grandezza, non dal rapporto col guadagno.
+  Si confronta anche con un secondo deck.
+- **10 sabotaggi**, ciascuno sul controllo atteso. Il resto del dossier è
+  provato identico.
+
+Il testo completo della voce resta sopra, con la sua «Chiusura». Report:
+`reports/2026-09-15-L37-e4-dossier.md`.
 
 **NC-013 — Il modello vendor dell'LSK489 descrive un esemplare d'angolo, non il
 tipico** (maggiore). **CHIUSA il 2026-09-15 da L20.**

@@ -623,6 +623,22 @@ tabella esce vuota, con rc 0. È il #26 con un'altra causa.
   **guadagno**, a iniezione spenta. Una Zout costante da sola non lo prova,
   perché un attenuatore scollegato la darebbe identica.
 
+**Correzione (L37).** Il secondo punto della regola, «se scala col guadagno,
+dentro c'è segnale», **non distingue**. Anche la Zout vera al nodo scala col
+guadagno del modo, perché il guadagno d'anello cala quando il guadagno sale.
+Dai log di `data/2026-09-15/L13/`, a 1 kHz, con G_lin da `tb_ac` di L27:
+
+| | 0 dB | +3 dB | +10 dB | Zout / G_lin |
+|---|---|---|---|---|
+| sorgente accesa (`prima/`) | 1,03554 Ω | 1,47045 Ω | 3,26212 Ω | 1,0366 Ω |
+| sorgente spenta (`dopo/`) | 0,03864 Ω | 0,05487 Ω | 0,12169 Ω | 0,0387 Ω |
+
+I rapporti fra i modi sono gli stessi a meno di 0,1 %: un controllo sul
+rapporto rifiuterebbe i dati buoni. La firma è la **grandezza**: con 1 V AC di
+sorgente e 1 A d'iniezione il segnale aggiunge circa G_lin × 1 Ω al nodo.
+`build_dossier.py` rifiuta una Zout al nodo che non sta sotto 0,5 × G_lin Ω, e
+la confronta con quella di un secondo deck (`tb_e4_uscite.cir`).
+
 ## 29. `altermod` su un nome sbagliato non cambia niente, e un modello alterato porta ancora il nome del costruttore
 
 Scoperto in L20.

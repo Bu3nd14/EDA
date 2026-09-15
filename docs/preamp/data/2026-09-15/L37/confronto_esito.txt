@@ -1,0 +1,49 @@
+fig_counterfactual.svg       identica
+fig_headroom.svg             identica
+fig_loop.svg                 identica
+fig_psrr.svg                 identica
+fig_response.svg             identica
+fig_response_adr014.svg      identica
+fig_v1.svg                   identica
+fig_zout.svg                 DIVERSA
+testata  DIVERSA, 6 righe +/-
+      -<p class="eyebrow">Bozza &middot; dati del 2026-09-14, lotti L27 e L16 &middot; modelli in gran parte segnaposto</p>
+      +<p class="eyebrow">Bozza &middot; dati del 2026-09-14 e del 2026-09-15, lotti L27, L16 e L13 &middot; modelli in gran parte segnaposto</p>
+      -<div><dt>Z<sub>out</sub> al jack</dt><dd>58,76 Ω<span class="u">a 1 kHz, 0 dB</span></dd></div>
+      +<div><dt>E4, Re(Z<sub>out</sub>) max</dt><dd>60,13 Ω<span class="u">al jack &middot; 20 Hz–20 kHz &middot; 3 uscite, costante col volume</span></dd><
+      -<p>Il progetto sostituisce un Technics SU-9070 la cui struttura di guadagno richiede <strong>46 dB di attenuazione</strong>, causa misurabile della m
+      +<p>Il progetto sostituisce un Technics SU-9070 la cui struttura di guadagno richiede <strong>46 dB di attenuazione</strong>, causa misurabile della m
+s1       identica
+s2       identica
+s3       identica
+s4       identica
+s5       identica
+s6       identica
+s7       identica
+s8       identica
+s9       identica
+s10      DIVERSA, 26 righe +/-
+s11      identica
+s12      identica
+s13      DIVERSA, 2 righe +/-
+      -<tr><td>E4</td><td>Z<sub>out</sub> &lt; 100 Ω in banda, esclusa la reattanza del cap</td><td class="num">≤ 60,5851 Ω a 1 kHz al jack, tre modi</td><t
+      +<tr><td>E4</td><td>Z<sub>out</sub> &lt; 100 Ω in banda, esclusa la reattanza del cap, costante col volume</td><td class="num">Re(Z) max al jack 60,12
+s14      DIVERSA, 2 righe +/-
+      -<li><strong>E4 è misurata solo sull&rsquo;uscita principale</strong> e a manopola ferma (NC-008).</li>
+      +<li><strong>E4 al nodo del blocco è una cifra dei segnaposto.</strong> La Z<sub>out</sub> prima della resistenza in serie (0,0386&ndash;0,1217 Ω a 1 
+s15      identica
+json dati: ['docs/preamp/data/2026-09-14/L27/dopo', 'docs/preamp/data/2026-09-14/L16/dopo'] -> ['docs/preamp/data/2026-09-14/L27/dopo', 'docs/preamp/data/2026-09-14/L16/dopo', 'docs/preamp/data/2026-09-15/L13/dopo']
+json e4_dispersione_volume_ohm: None -> 0.00010000000000331966
+json e4_rez_max_ohm: None -> {'main 0db': 60.0504, 'main 3db': 60.0656, 'main 10db': 60.1281, 'fix1 0db+3db+10db': 53.1318, 'fix2 0db+3db+10db': 53.1318}
+json zout_jack_1kHz_ohm_0db: 58.75905 -> 57.94488
+cifra vecchia '58,76': 0
+cifra vecchia '59,1132': 0
+cifra vecchia '60,5851': 0
+cifra vecchia '1,0355': 0
+cifra vecchia 'dà 1,035': 0
+cifra nuova '57,94': 2
+cifra nuova '60,1281': 3
+cifra nuova '53,1318': 3
+cifra nuova '0,0386': 5
+
+OK: cambia solo cio' che riguarda E4
