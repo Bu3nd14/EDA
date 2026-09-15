@@ -22,6 +22,42 @@ realtà, il progetto non è ripartibile.
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
 
+### Dopo L20 — le risposte dell'utente alle domande aperte (2026-09-15)
+
+Nessun lotto: sessione di sole domande, a fine token. Nessun file di
+`circuits/`, `spice/`, `scripts/` o `REQUIREMENTS.md` toccato. Le risposte
+sono **registrate qui e non ancora trasformate in requisiti**: lo fa **L38**.
+
+1. **V2, il rilascio del mute.** Parole dell'utente: «non deve essere udibile
+   come bump in nessuna condizione e su nessuna uscita, pensiamo ad un rilascio
+   soft a resistenza variabile se necessario, o a qualsiasi altra soluzione.
+   L'uso reale non conta».
+   - **Soglia proposta e accettata**: gradino all'uscita, filtrato 20 Hz–20 kHz,
+     **≤ 100 µV di picco**, su tutte e tre le uscite, accensione compresa.
+     Circa 34 dB SPL di picco a 1 m con la formula di NC-028: calcolato, limite
+     superiore.
+   - **Sotto i 20 Hz il cono può muoversi**, «in maniera non distruttiva»:
+     nessun limite infrasonico oltre questo.
+   - **Da scrivere in L38**: il caso peggiore sostituisce «l'uso reale» nel
+     criterio 3 di ADR-030. Il cambio a caldo calcolato (6–114 mV) non rispetta
+     la soglia, quindi l'interblocco è quasi certamente giustificato: lo
+     conferma L29, che cresce (servirà probabilmente rilascio lento + contatto
+     prima del condensatore + offset abbassato).
+2. **I LED del trim dai relè gemelli K9/K10.** L'utente voleva lo stato vero;
+   sentite le conseguenze (relè a 3-4 poli non verificati, LED e audio nello
+   stesso relè, L16 in parte da rifare) **tiene la soluzione attuale**. Il
+   guasto di un solo relè resta un caso noto e accettato, anche per i LED di
+   ADR-030.
+3. **NC-009, punto 3**: la conseguenza operativa del trim va nel **manuale
+   d'uso**, non su una legenda di pannello.
+4. **NC-027 (L28)**: i dati sui pin SS si cercano **insieme all'utente**, in una
+   sessione interattiva.
+5. **NC-019**: **ponte di rame** sul PCB fra la piazzola del SOT-23 e quella del
+   tab del TO-220. T7 resta intatta.
+6. **Condensatore d'uscita del phono**: rimandata.
+7. **Impedenza d'ingresso del Singxer**: **chiusa** dall'utente (4,7 µF, ADR-007
+   addendum). La riga «Aperti» di `REQUIREMENTS.md` va allineata in L38.
+
 ### L20 — quanto il progetto dipende da I_DSS (2026-09-15)
 
 **Chiude NC-013.** ADR nuova: **ADR-031**. Report:
@@ -903,6 +939,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L35 | **Comandi e LED a pannello nel sorgente** (ADR-028). Header di cablaggio al posto dei LED del trim sulla scheda (`trim.py`); comando del guadagno sul rotativo a 3 posizioni, cablato perché K5 non sia mai comandato senza K1 (ADR-026); interruttore di mute combinato col temporizzatore d'accensione; LED rosso di mute, letto da un contatto che dica lo stato; `check_relay_safe_state.py` esteso. **Dopo L29 e L36**: il comando del guadagno si cabla una volta sola | S/M | **NC-032** | da fare |
 | L36 | **Il guadagno interbloccato dal mute** (ADR-030, strada B). **Solo se L29 lo giustifica**, altrimenti «superata». Due relè ausiliari con autoritenuta su K1/K5; la corsa al rilascio del mute (scambio di K6 contro rilascio delle bobine) simulata e chiusa; il 2e esteso al guadagno; tre LED dello stato vero dai poli liberi degli ausiliari; budget delle bobine (~169 mA fuori mute a +10 dB, a 5 V) consegnato all'alimentatore. Se la corsa si chiude bene, rivalutare la stessa strada per il trim | M | parte di **NC-028** | da fare — **dipende da L29** |
 | L37 | **E4 nel dossier.** `build_dossier.py` legge la Zout da `data/2026-09-14/L27/dopo/tb_zout_psrr_noise/`, misurata con la sorgente accesa (NC-033): KPI 58,76 Ω, tabella con 1,0355 Ω «al nodo OUT», nota E4/E8, riepilogo «≤ 60,5851 Ω». Puntarlo ai dati di L13 (`tb_e4_uscite` sulle tre uscite e `tb_zout_psrr_noise` corretto), pubblicare la costanza col volume e le fisse, rifiutare la Zout di L27, annotare in coda `data/2026-09-09/README.md`. I report datati non si toccano | XS/S | NC-033 | da fare |
+| L38 | **Le risposte del 2026-09-15 diventano requisiti** (voce di diario «Dopo L20»). ADR per la soglia di V2 (≤ 100 µV di picco 20 Hz–20 kHz su tutte le uscite, accensione compresa, cono libero sotto 20 Hz) e V2 in `REQUIREMENTS.md`; criterio 3 di ADR-030 al caso peggiore; NC-028 e L29 aggiornati; NC-009 punto 3 verso il manuale d'uso; NC-019 col ponte di rame, scritto in `gain_block.py` e nella consegna a `pcb-automation-engineer`; LED gemelli accettati (nota in ADR nuova, ADR-027 non si riscrive); Singxer chiuso in «Aperti». **Prima di L29** | XS/S | aggiorna NC-009, NC-019, NC-028 | da fare |
 
 **NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
 riesecuzione di `tb_noise_breakdown.cir` coi modelli veri. È il caso
@@ -3150,14 +3187,15 @@ Da non ricercare di nuovo.
 
 | Cosa | Chi risponde | Blocca? |
 |---|---|---|
-| Condensatore verso il Singxer: 2,2 o 4,7 µF | utente | No |
+| ~~Condensatore verso il Singxer: 2,2 o 4,7 µF~~ | — | **CHIUSA**: 4,7 µF (ADR-007 addendum), confermata dall'utente il 2026-09-15 |
 | ~~Trascrizione e validazione del modello LSK489~~ | — | **CHIUSA**: trascritta in L6 (due letture byte-identiche), **validata contro il datasheet in L7** — I_DSS dentro la finestra, V_GS(off) **fuori di 0,376 V**, e non per un errore di trascrizione. Aperta NC-013; ADR-013 non riaperta |
-| Impedenza d'ingresso Singxer SA-1 V2 | — | **Non pubblicata**, verificato sul manuale ufficiale. Da L5e **non è più solo una curiosità**: è l'ipotesi su cui poggia NC-010, perché da spento può andare a zero |
-| Valore del cap d'uscita del phono a valvole | utente | **Rinviata** — non ha accesso agli schematici né può aprire agevolmente il telaio |
+| ~~Impedenza d'ingresso Singxer SA-1 V2~~ | — | **CHIUSA dall'utente il 2026-09-15**: non pubblicata, e non serve più (4,7 µF; NC-010 chiusa da L17). Allineare `REQUIREMENTS.md` in L38 |
+| Valore del cap d'uscita del phono a valvole | utente | **Rinviata**, di nuovo il 2026-09-15 — non ha accesso agli schematici né può aprire agevolmente il telaio |
 | ~~Quale JFET d'ingresso~~ | — | **CHIUSA**: LSK489 (ADR-013) |
 | ~~Conferma specifiche cj EV250~~ | — | **CHIUSA**: email costruttore + manuale MV50 |
-| Il LED del trim legge i relè spia K9/K10, non K7/K8 che portano il segnale: un guasto meccanico di uno solo dei due (contatto incollato, bobina aperta) fa divergere LED e segnale. ADR-027 non lo elenca fra i casi da riaprire. Da L34 | utente | No. Vale anche per i LED del guadagno di ADR-030, letti dagli ausiliari |
-| Soglia su V2: quanto gradino al jack è accettabile. Serve a L29, e ora anche alla decisione di ADR-030 | utente, all'apertura di L29 | Sì, L29 |
+| ~~Il LED del trim legge i relè spia K9/K10, non K7/K8~~ | — | **RISPOSTA il 2026-09-15**: l'utente tiene la soluzione attuale, anche per i LED di ADR-030. Da registrare in L38 |
+| ~~Soglia su V2: quanto gradino al jack è accettabile~~ | — | **RISPOSTA il 2026-09-15**: ≤ 100 µV di picco 20 Hz–20 kHz, ogni uscita, ogni condizione; cono libero sotto 20 Hz. Da registrare in L38, **prima di L29** |
+| Pin SS dell'LSK489 (NC-027, L28) | utente + orchestratore, sessione interattiva | No, ma prima di G2 |
 | Disponibilità e ciclo di vita dell'**LSK489B** (T8): ADR-013 cita 921 pezzi su DigiKey senza gruppo, e L20 non l'ha verificato. E se il costruttore pubblica un modello del gruppo B. Da L20, ADR-031 | giro componenti (`bom-component-manager`) | No, ma prima di G2 |
 
 ## Decisioni chiuse il 2026-09-08
