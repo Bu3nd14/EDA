@@ -445,6 +445,15 @@ e **nessun controllo di esistenza lo vede**. Dopo L22 `tb_bias_sweep.cir`
 continuava a spazzare `r130`, che era diventato l'**altro** ramo del
 moltiplicatore di Vbe: I_q 5,2 mA invece di 14,7, nessun errore.
 
+L31 ne ha trovati altri tre, in `tb_noise_vectors.cir`. La riga `wrdata` di L4
+citava `onoise_q122`, `onoise_r120` e `onoise_r138` per il diodo dello specchio,
+la sua degenerazione e R_f. Dopo L22 e L10 quei nomi erano il VAS, l'**altra**
+degenerazione e R_g, e il 2g esteso ai vettori di rumore li passa: sono vivi. Li
+ha mostrati solo la mappa per nodi dall'include di L4 a quello di oggi
+(`data/2026-09-15/L31/esplorazione/mappa.txt`). Il deck non scriveva dati per
+via dei quattro nomi morti accanto: senza quelli, i tre sbagliati avrebbero
+scritto colonne plausibili sotto l'etichetta sbagliata.
+
 **Regola operativa**: una rinumerazione si fa (a) ricavando la mappa dai nodi,
 (b) portando **prima** ai nomi correnti ogni riferimento rimasto indietro, e
 solo dopo applicando la mappa nuova — applicata alla cieca, una mappa può
@@ -561,5 +570,17 @@ pendenti dall'intestazione «External nodes» dell'include flat e dal corpo dei
 `.subckt`, e rifiuta un deck che non li collega o una riga `X` col numero
 sbagliato di porte. Fatto fallire sui 16 deck di `main`.
 
-**Cosa non vede**: i nomi dei vettori di rumore (`onoise_<dispositivo>`), che un
-deck costruisce da sé. È NC-030.
+**Cosa non vedeva**, fino a L31: i nomi dei vettori di rumore
+(`onoise_<dispositivo>`), che un deck costruisce da sé. Un nome morto in un
+`wrdata` dà `Error: no such vector`, ferma il `wrdata` e l'esecuzione esce 0:
+`tb_noise_vectors.cir` non ha scritto dati da L22 a L31 (NC-030). Da L31 il 2g
+controlla ogni `onoise_<x>`/`inoise_<x>` fuori da commenti e stringhe fra
+virgolette: `<x>` deve essere un vettore del circuito (`spectrum`, `total`), un
+nome definito con `let`, un dispositivo, o un dispositivo più un suffisso di
+sotto-sorgente che ngspice costruisce davvero. I suffissi sono letti da un deck
+sonda, perché nel log i nomi sono troncati a 15 caratteri (`d102_ids` è
+`d102_idsw`). Fatto cadere sul deck di allora (4 nomi morti) e su 13 casi di
+sabotaggio, senza falsi allarmi sui deck di `main` e su quelli pre-L27.
+
+**Cosa non vede ancora**: un vettore di rumore **vivo ma sbagliato**, come i tre
+che L31 ha trovato (#22).
