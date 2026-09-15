@@ -1,0 +1,462 @@
+tb_v2_mute_varianti.cir - V2 al jack (ADR-032): A, B e C delle varianti di mute di NC-028, screening sulla catena intera (L29a)
+* Prima riga = titolo (docs/limitations.md #10).
+*
+* COSA MISURA. Per ogni variante di mute di NC-028, le celle di V2 che piu'
+* probabilmente la fanno cadere. Una sola cella sopra 100 uV basta a RESPINGERE
+* una variante (il caso peggiore e' l'unione delle celle); nessuna cella di
+* questo deck basta ad ACCETTARLA. L'analisi e' scripts/v2_metodo.py analizza.
+*
+* LE VARIANTI (indice v nei nomi dei file):
+*   v0  dopo il condensatore, com'e' oggi: shunt al jack (JK)
+*   v1  prima del condensatore: shunt fra i 47 ohm e il 4,7 uF (PRE)
+*   v2  entrambi i lati: PRE + JK, stesso istante
+*   v3  prima, con l'offset ABBASSATO: PRE, e VOSB, VOSF1, VOSF2 che annullano
+*       l'offset in continua di MAIN_A, FIX1, FIX2 (tre giri di .op a +10 dB,
+*       tabella tb_v2_mute_varianti_offset.csv). E' l'offset residuo ideale,
+*       0 V: se cade questa, cade ogni offset reale
+*   v4  in serie: SER aperto a mute inserito, ponte RBYx aperto, bleeder lato
+*       condensatore 220 k / 470 k
+*   v5  in serie piu' shunt al jack dopo di lui: SER + JK, stesso istante
+*   v6  sequenza col segnale azzerato a monte: il selettore d'ingresso (SEL)
+*       apre 50 ms prima dell'inserzione di JK e richiude 50 ms dopo il suo
+*       rilascio. t_ins / t_rel del manifesto sono quelli del selettore
+* Le varianti "rilascio lento" e "mute graduale" sono in tb_v2_mute_graduale.cir.
+*
+* LE CELLE (per variante e per carico, 100 k e 10 k su tutte e tre le uscite):
+*   _bm        mute breve CON MUSICA: 2,7 V RMS a 1 kHz, +10 dB, manopola al
+*              massimo; inserzione a 1,0 s e rilascio a 1,1 s, entrambi SUL
+*              PICCO del segnale (fase pi/2: 1,0 e 1,1 s sono periodi interi);
+*              3,1 s, cosi' la finestra di A dopo il rilascio e' di 2 s
+*   _bmmai     riferimento: stessa sorgente, mai in mute
+*   _bmsempre  riferimento: stessa sorgente, sempre in mute
+*   _lz        mute LUNGO SENZA SEGNALE: inserzione a 1,0 s, rilascio a 3,0 s,
+*              5 s; e' il gradino d'offset
+*   _lzmai, _lzsempre  i riferimenti senza segnale
+* Piu', solo v0 a 100 k, _bmzero: il mute breve sullo ZERO del segnale, per
+* rileggere i 5,37 V di L11 al jack giusto e coi contatti a 100 mohm.
+* A dopo l'inserzione del mute breve ha 0,1 s di finestra: e' un limite
+* inferiore, che respinge e non accetta.
+*
+* PROVVISORIO SUI MODELLI: tutto tranne LS352 e' segnaposto, LSK489 compreso
+* (LSK489X in placeholder_devices.lib, KF=0; NC-017, NC-031). L'offset
+* sistematico e la distorsione, quindi il pavimento di C, dipendono da loro.
+*
+* CONVENZIONE DI PERCORSO: `.include @REPO@/...` (tb_op.cir, L2-L3) e file
+* scritti con nome nudo nella directory d'uscita di run_simulation.sh.
+
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block.subckt
+
+* >>> CANALE - identico nei tre deck tb_v2_mute_*.cir (v2_metodo.py canale)
+.options reltol=1e-6 vntol=1e-9 abstol=1e-15
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+
+* ---- sorgente con inviluppo d'entrata ----
+VAMP NAMP 0 DC 3.818
+VFRQ NFRQ 0 DC 1000
+VPHS NPHS 0 DC 0
+VTEN NTEN 0 DC 0.3
+BSRC SRC 0 V = V(NAMP) * sin(6.283185307179586*V(NFRQ)*time + V(NPHS))
++ * (0.5 - 0.5*cos(3.141592653589793*min(time/V(NTEN), 1)))
+RSRC SRC SELA 1.5
+
+* ---- stati dei contatti: t_ins, t_rel, durata graduale, netto(1)/graduale(0) ----
+VTIJK NTIJK 0 DC 1000
+VTRJK NTRJK 0 DC 2000
+VTGJK NTGJK 0 DC 1
+VMHJK NMHJK 0 DC 1
+BSJKR SJKR 0 V = V(NMHJK)
++ * pwl(time - V(NTIJK), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ * pwl(time - V(NTRJK), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
++ + (1 - V(NMHJK)) * min(max((time - V(NTIJK))/V(NTGJK), 0), 1)
++ * (1 - min(max((time - V(NTRJK))/V(NTGJK), 0), 1))
+RSJK SJKR SJK 1k
+CSJK SJK 0 4.55n
+VTIPRE NTIPRE 0 DC 1000
+VTRPRE NTRPRE 0 DC 2000
+VTGPRE NTGPRE 0 DC 1
+VMHPRE NMHPRE 0 DC 1
+BSPRER SPRER 0 V = V(NMHPRE)
++ * pwl(time - V(NTIPRE), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ * pwl(time - V(NTRPRE), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
++ + (1 - V(NMHPRE)) * min(max((time - V(NTIPRE))/V(NTGPRE), 0), 1)
++ * (1 - min(max((time - V(NTRPRE))/V(NTGPRE), 0), 1))
+RSPRE SPRER SPRE 1k
+CSPRE SPRE 0 4.55n
+VTISER NTISER 0 DC 1000
+VTRSER NTRSER 0 DC 2000
+VTGSER NTGSER 0 DC 1
+VMHSER NMHSER 0 DC 1
+BSSERR SSERR 0 V = V(NMHSER)
++ * pwl(time - V(NTISER), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ * pwl(time - V(NTRSER), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
++ + (1 - V(NMHSER)) * min(max((time - V(NTISER))/V(NTGSER), 0), 1)
++ * (1 - min(max((time - V(NTRSER))/V(NTGSER), 0), 1))
+RSSER SSERR SSER 1k
+CSSER SSER 0 4.55n
+VTISEL NTISEL 0 DC 1000
+VTRSEL NTRSEL 0 DC 2000
+VTGSEL NTGSEL 0 DC 1
+VMHSEL NMHSEL 0 DC 1
+BSSELR SSELR 0 V = V(NMHSEL)
++ * pwl(time - V(NTISEL), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ * pwl(time - V(NTRSEL), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
++ + (1 - V(NMHSEL)) * min(max((time - V(NTISEL))/V(NTGSEL), 0), 1)
++ * (1 - min(max((time - V(NTRSEL))/V(NTGSEL), 0), 1))
+RSSEL SSELR SSEL 1k
+CSSEL SSEL 0 4.55n
+
+* ---- selettore d'ingresso: serie, s = 1 vuol dire APERTO ----
+BSEL SELA INA I = V(SELA,INA) * pow(10, -12 + 13*(1 - V(SSEL)))
+
+* ---------------- BLOCCO A: guadagno 1, R_g non montata ------------------
+VOSA INA INAX DC 0
+XA INAX OUTA FBA RGA RG10A VPLUS VMINUS GAINBLOCK
+RRGA RGA 0 1G
+CRGA RGA 0 15p
+RRG10A RG10A 0 1G
+CRG10A RG10A 0 15p
+
+* Attenuatore da 10 k: RATTT a 1 mohm = manopola al massimo.
+RATTT OUTA W 1m
+RATTB W 0 10k
+
+* ---------------- BUFFER DELLE FISSE (ADR-023): guadagno 1 ---------------
+VOSF1 OUTA F1IN DC 0
+XF1 F1IN OUTF1 FBF1 RGF1 RG10F1 VPLUS VMINUS GAINBLOCK
+RRGF1 RGF1 0 1G
+CRGF1 RGF1 0 15p
+RRG10F1 RG10F1 0 1G
+CRG10F1 RG10F1 0 15p
+VOSF2 OUTA F2IN DC 0
+XF2 F2IN OUTF2 FBF2 RGF2 RG10F2 VPLUS VMINUS GAINBLOCK
+RRGF2 RGF2 0 1G
+CRGF2 RGF2 0 15p
+RRG10F2 RG10F2 0 1G
+CRG10F2 RG10F2 0 15p
+
+RSEP1 OUTF1 FIX1 47
+BPRE1 FIX1 0 I = V(FIX1) * pow(10, -12 + 13*V(SPRE))
+CFIX1 FIX1 FIXC1 4.7u
+RBC1 FIXC1 0 1e12
+RBY1 FIXC1 FIXJACK1 1m
+BSER1 FIXC1 FIXJACK1 I = V(FIXC1,FIXJACK1) * pow(10, -12 + 13*(1 - V(SSER)))
+BJK1 FIXJACK1 0 I = V(FIXJACK1) * pow(10, -12 + 13*V(SJK))
+RBL1 FIXJACK1 0 470k
+RLD1 FIXJACK1 0 100k
+
+RSEP2 OUTF2 FIX2 47
+BPRE2 FIX2 0 I = V(FIX2) * pow(10, -12 + 13*V(SPRE))
+CFIX2 FIX2 FIXC2 4.7u
+RBC2 FIXC2 0 1e12
+RBY2 FIXC2 FIXJACK2 1m
+BSER2 FIXC2 FIXJACK2 I = V(FIXC2,FIXJACK2) * pow(10, -12 + 13*(1 - V(SSER)))
+BJK2 FIXJACK2 0 I = V(FIXJACK2) * pow(10, -12 + 13*V(SJK))
+RBL2 FIXJACK2 0 470k
+RLD2 FIXJACK2 0 100k
+
+* ---------------- BLOCCO B: 0 / +3 / +10 dB, due rele' su R_g ------------
+* Contatto aperto = 1 G + 15 pF, chiuso = alter ... = 0.1 (ADR-026):
+*   0 dB   rrgb = 1G    rrg10b = 1G
+*   +3 dB  rrgb = 0.1   rrg10b = 1G
+*   +10 dB rrgb = 0.1   rrg10b = 0.1
+VOSB W WB DC 0
+XB WB OUTB FBB RGB RG10B VPLUS VMINUS GAINBLOCK
+RRGB RGB 0 1G
+CRGB RGB 0 15p
+RRG10B RG10B 0 1G
+CRG10B RG10B 0 15p
+RISOM OUTB MAIN_A 47
+BPREM MAIN_A 0 I = V(MAIN_A) * pow(10, -12 + 13*V(SPRE))
+COUTM MAIN_A MAINC 4.7u
+RBCM MAINC 0 1e12
+RBYM MAINC MAINJACK 1m
+BSERM MAINC MAINJACK I = V(MAINC,MAINJACK) * pow(10, -12 + 13*(1 - V(SSER)))
+BJKM MAINJACK 0 I = V(MAINJACK) * pow(10, -12 + 13*V(SJK))
+RBLM MAINJACK 0 220k
+RLDM MAINJACK 0 100k
+* <<< CANALE
+
+.control
+set d = .dat
+* solo i vettori usati: senza, ngspice tiene ogni nodo e una corsa da 7 s supera i GB
+save v(mainjack) v(fixjack1) v(fixjack2) v(main_a) v(fix1) v(fix2)
+echo "cella,file,variante,f_hz,amp,gm,rl,t_ins,t_rel,t_fine,tmax,tipo,rif_ins,rif_rel" > tb_v2_mute_varianti_manifest.csv
+echo "blocco,offset_prima_V,offset_dopo_V,compensazione_V" > tb_v2_mute_varianti_offset.csv
+
+* +10 dB, 1 kHz, fase pi/2: gli eventi a 1,0 / 1,1 / 3,0 s cadono sul picco
+alter rrgb = 0.1
+alter rrg10b = 0.1
+alter vfrq dc = 1000
+alter vphs dc = 1.5707963267948966
+
+* ---- v3: l'offset in continua annullato, tre giri di .op ----
+op
+let x = v(main_a)
+set ob0 = "$&x"
+let x = v(fix1)
+set of10 = "$&x"
+let x = v(fix2)
+set of20 = "$&x"
+let x = v(main_a)/3.148
+set scb = "$&x"
+let x = v(fix1)
+set sc1 = "$&x"
+let x = v(fix2)
+set sc2 = "$&x"
+destroy all
+alter vosb dc = $scb
+alter vosf1 dc = $sc1
+alter vosf2 dc = $sc2
+op
+let x = $scb + v(main_a)/3.148
+set scb = "$&x"
+let x = $sc1 + v(fix1)
+set sc1 = "$&x"
+let x = $sc2 + v(fix2)
+set sc2 = "$&x"
+destroy all
+alter vosb dc = $scb
+alter vosf1 dc = $sc1
+alter vosf2 dc = $sc2
+op
+let x = $scb + v(main_a)/3.148
+set scb = "$&x"
+let x = $sc1 + v(fix1)
+set sc1 = "$&x"
+let x = $sc2 + v(fix2)
+set sc2 = "$&x"
+destroy all
+alter vosb dc = $scb
+alter vosf1 dc = $sc1
+alter vosf2 dc = $sc2
+op
+let x = v(main_a)
+set ob1 = "$&x"
+let x = v(fix1)
+set of11 = "$&x"
+let x = v(fix2)
+set of21 = "$&x"
+echo "MAIN_A,$ob0,$ob1,$scb" >> tb_v2_mute_varianti_offset.csv
+echo "FIX1,$of10,$of11,$sc1" >> tb_v2_mute_varianti_offset.csv
+echo "FIX2,$of20,$of21,$sc2" >> tb_v2_mute_varianti_offset.csv
+destroy all
+
+foreach v 0 1 2 3 4 5 6
+foreach rlk 100 10
+foreach kind 1 2 3 4 5 6 7 8 9
+  set salta = 0
+  if $kind > 6
+    if $v > 0
+      set salta = 1
+    end
+    if $rlk = 10
+      set salta = 1
+    end
+  end
+  if $salta = 0
+  * ---- tutto a riposo ----
+  alter vtijk dc = 1000
+  alter vtrjk dc = 2000
+  alter vtipre dc = 1000
+  alter vtrpre dc = 2000
+  alter vtiser dc = 1000
+  alter vtrser dc = 2000
+  alter vtisel dc = 1000
+  alter vtrsel dc = 2000
+  alter rbym = 1m
+  alter rby1 = 1m
+  alter rby2 = 1m
+  alter rbcm = 1e12
+  alter rbc1 = 1e12
+  alter rbc2 = 1e12
+  alter vosb dc = 0
+  alter vosf1 dc = 0
+  alter vosf2 dc = 0
+  alter vphs dc = 1.5707963267948966
+  if $rlk = 100
+    alter rldm = 100k
+    alter rld1 = 100k
+    alter rld2 = 100k
+    set rl = "_100k"
+    set rlv = "100k"
+  else
+    alter rldm = 10k
+    alter rld1 = 10k
+    alter rld2 = 10k
+    set rl = "_10k"
+    set rlv = "10k"
+  end
+  * ---- la cella ----
+  set amp = 3.818
+  set tf = 3.1
+  set mti = 1.0
+  set mtr = 1.1
+  set rins = "-"
+  set rrel = "-"
+  set isev = 0
+  if $kind = 1
+    set ti = 1.0
+    set tr = 1.1
+    set tag = "_bm"
+    set tipo = "evento"
+    set isev = 1
+    set rins = "var$v$rl"
+    set rrel = "var$v$rl"
+    set sins = "_bmsempre"
+    set srel = "_bmmai"
+  end
+  if $kind = 2
+    set ti = 1000
+    set tr = 2000
+    set tag = "_bmmai"
+    set tipo = "rif_mai"
+  end
+  if $kind = 3
+    set ti = -1
+    set tr = 1000
+    set tag = "_bmsempre"
+    set tipo = "rif_sempre"
+  end
+  if $kind = 4
+    set ti = 1.0
+    set tr = 3.0
+    set amp = 0
+    set tf = 5.0
+    set mtr = 3.0
+    set tag = "_lz"
+    set tipo = "evento"
+    set isev = 1
+    set rins = "var$v$rl"
+    set rrel = "var$v$rl"
+    set sins = "_lzsempre"
+    set srel = "_lzmai"
+  end
+  if $kind = 5
+    set ti = 1000
+    set tr = 2000
+    set amp = 0
+    set tf = 5.0
+    set mtr = 3.0
+    set tag = "_lzmai"
+    set tipo = "rif_mai"
+  end
+  if $kind = 6
+    set ti = -1
+    set tr = 1000
+    set amp = 0
+    set tf = 5.0
+    set mtr = 3.0
+    set tag = "_lzsempre"
+    set tipo = "rif_sempre"
+  end
+  if $kind = 7
+    set ti = 1.0
+    set tr = 1.1
+    set tag = "_bmzero"
+    set tipo = "evento"
+    set isev = 1
+    set rins = "var$v$rl"
+    set rrel = "var$v$rl"
+    set sins = "_bmzerosempre"
+    set srel = "_bmzeromai"
+    alter vphs dc = 0
+  end
+  if $kind = 8
+    set ti = 1000
+    set tr = 2000
+    set tag = "_bmzeromai"
+    set tipo = "rif_mai"
+    alter vphs dc = 0
+  end
+  if $kind = 9
+    set ti = -1
+    set tr = 1000
+    set tag = "_bmzerosempre"
+    set tipo = "rif_sempre"
+    alter vphs dc = 0
+  end
+  alter vamp dc = $amp
+  * ---- la variante ----
+  if $v = 0
+    set nm = "v0_dopo"
+    alter vtijk dc = $ti
+    alter vtrjk dc = $tr
+  end
+  if $v = 1
+    set nm = "v1_prima"
+    alter vtipre dc = $ti
+    alter vtrpre dc = $tr
+  end
+  if $v = 2
+    set nm = "v2_entrambi"
+    alter vtipre dc = $ti
+    alter vtrpre dc = $tr
+    alter vtijk dc = $ti
+    alter vtrjk dc = $tr
+  end
+  if $v = 3
+    set nm = "v3_prima_offset_zero"
+    alter vtipre dc = $ti
+    alter vtrpre dc = $tr
+    alter vosb dc = $scb
+    alter vosf1 dc = $sc1
+    alter vosf2 dc = $sc2
+  end
+  if $v = 4
+    set nm = "v4_serie"
+    alter vtiser dc = $ti
+    alter vtrser dc = $tr
+    alter rbym = 1e12
+    alter rby1 = 1e12
+    alter rby2 = 1e12
+    alter rbcm = 220k
+    alter rbc1 = 470k
+    alter rbc2 = 470k
+  end
+  if $v = 5
+    set nm = "v5_serie_e_jack"
+    alter vtiser dc = $ti
+    alter vtrser dc = $tr
+    alter vtijk dc = $ti
+    alter vtrjk dc = $tr
+    alter rbym = 1e12
+    alter rby1 = 1e12
+    alter rby2 = 1e12
+    alter rbcm = 220k
+    alter rbc1 = 470k
+    alter rbc2 = 470k
+  end
+  if $v = 6
+    set nm = "v6_sequenza"
+    alter vtijk dc = $ti
+    alter vtrjk dc = $tr
+    let x = $ti - 0.05
+    set tsi = "$&x"
+    let x = $tr + 0.05
+    set tsr = "$&x"
+    alter vtisel dc = $tsi
+    alter vtrsel dc = $tsr
+    let x = $mti - 0.05
+    set mti = "$&x"
+    let x = $mtr + 0.05
+    set mtr = "$&x"
+  end
+  set cell = "var$v$rl$tag"
+  tran 10u $tf 0 10u
+  wrdata $cell$d v(mainjack) v(fixjack1) v(fixjack2)
+  if $isev = 1
+    echo "$cell,$cell$d,$nm,1000,$amp,10,$rlv,$mti,$mtr,$tf,10e-6,$tipo,$rins$sins,$rrel$srel" >> tb_v2_mute_varianti_manifest.csv
+  else
+    echo "$cell,$cell$d,$nm,1000,$amp,10,$rlv,$mti,$mtr,$tf,10e-6,$tipo,-,-" >> tb_v2_mute_varianti_manifest.csv
+  end
+  destroy all
+  end
+end
+end
+end
+.endc
+
+.end
