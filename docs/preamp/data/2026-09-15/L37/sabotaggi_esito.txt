@@ -1,0 +1,51 @@
+caso                          rc file  esito
+intatto                        0   12  come atteso  — nessuna alterazione
+contaminata                    1    0  come atteso  — dopo/tb_zout_psrr_noise sostituito da prima/: la Zout con VSRC accesa, al percorso giusto
+      · Zout(OUT) 0db @1 kHz: 1.0355 Ω non sta sotto 0.5 x G_lin = 0.4995 Ω: la Zout al nodo contiene il segnale del modo, sorgente AC accesa durante l'iniezione (NC-033, #28)
+      · Zout(OUT) 3db @1 kHz: 1.4704 Ω non sta sotto 0.5 x G_lin = 0.70929 Ω: la Zout al nodo contiene il segnale del modo, sorgente AC accesa durante l'iniezione (NC-033, #28)
+      · Zout(OUT) 10db @1 kHz: 3.2621 Ω non sta sotto 0.5 x G_lin = 1.5735 Ω: la Zout al nodo contiene il segnale del modo, sorgente AC accesa durante l'iniezione (NC-033, #28)
+      · Zout 0db: tb_zout_psrr_noise za1k 1.03554 Ω, tb_e4_uscite main trim 0 att 0 zn1k 0.0386443 Ω (scarto > 1e-3): i due deck non misurano la stessa impedenza
+      · Zout 3db: tb_zout_psrr_noise za1k 1.47045 Ω, tb_e4_uscite main trim 0 att 0 zn1k 0.0548705 Ω (scarto > 1e-3): i due deck non misurano la stessa impedenza
+      · Zout 10db: tb_zout_psrr_noise za1k 3.26212 Ω, tb_e4_uscite main trim 0 att 0 zn1k 0.121692 Ω (scarto > 1e-3): i due deck non misurano la stessa impedenza
+contaminata_senza_incrocio     1    0  come atteso  — come sopra, builder senza l'incrocio fra deck: deve cadere la sola firma
+      · Zout(OUT) 0db @1 kHz: 1.0355 Ω non sta sotto 0.5 x G_lin = 0.4995 Ω: la Zout al nodo contiene il segnale del modo, sorgente AC accesa durante l'iniezione (NC-033, #28)
+      · Zout(OUT) 3db @1 kHz: 1.4704 Ω non sta sotto 0.5 x G_lin = 0.70929 Ω: la Zout al nodo contiene il segnale del modo, sorgente AC accesa durante l'iniezione (NC-033, #28)
+      · Zout(OUT) 10db @1 kHz: 3.2621 Ω non sta sotto 0.5 x G_lin = 1.5735 Ω: la Zout al nodo contiene il segnale del modo, sorgente AC accesa durante l'iniezione (NC-033, #28)
+contaminata_senza_firma        1    0  come atteso  — come sopra, builder senza la firma: deve cadere il solo incrocio
+      · Zout 0db: tb_zout_psrr_noise za1k 1.03554 Ω, tb_e4_uscite main trim 0 att 0 zn1k 0.0386443 Ω (scarto > 1e-3): i due deck non misurano la stessa impedenza
+      · Zout 3db: tb_zout_psrr_noise za1k 1.47045 Ω, tb_e4_uscite main trim 0 att 0 zn1k 0.0548705 Ω (scarto > 1e-3): i due deck non misurano la stessa impedenza
+      · Zout 10db: tb_zout_psrr_noise za1k 3.26212 Ω, tb_e4_uscite main trim 0 att 0 zn1k 0.121692 Ω (scarto > 1e-3): i due deck non misurano la stessa impedenza
+radice_L27                     1    0  come atteso  — la radice di E4 puntata sui dati di L27
+      · RIFIUTATO: la Zout di docs/preamp/data/2026-09-14/L27/dopo/tb_zout_psrr_noise e' stata misurata con la sorgente AC accesa (NC-033, #28). E4 si legge da data/2026-09-15/L13/. Nessun file e' stato scritto.
+tab_zrmax                      1    0  come atteso  — tb_e4_uscite_tab.csv, zrmax della prima riga 60,0504 -> 61,0504
+      · tb_e4_uscite_tab.csv [zrmax]: riga 2, colonna zrmax: tabella '61.0504', log 60.05039
+      · e4.py esce 1: RIFIUTATO: 2 controlli falliti, sigle BF |   B: ('main', '0', '0', '0db') zrmax: log 60.05039 tabella 61.0504 |   F: main 0db: zrmax varia di 1 ohm (60.05 .. 61.05) - non costante
+tab_cella_vuota                1    0  come atteso  — tb_e4_uscite_tab.csv, zn1k della prima riga svuotata
+      · docs/preamp/data/2026-09-15/L13/dopo/tb_e4_uscite/tb_e4_uscite_tab.csv: 1 celle vuote, la prima alla riga 2, colonna zn1k (#26)
+      · tb_e4_uscite_tab.csv [zn1k]: riga 2, colonna zn1k: tabella '', log 0.03864432
+      · Zout 0db: tb_zout_psrr_noise za1k 0.0386443 Ω, tb_e4_uscite main trim 0 att 0 zn1k nan Ω (scarto > 1e-3): i due deck non misurano la stessa impedenza
+      · e4.py esce 1: RIFIUTATO: 1 controlli falliti, sigle A |   A: cella vuota in ('main', '0', '0', '0db')
+tab_riga_tolta                 1    0  come atteso  — tb_e4_uscite_tab.csv, ultima riga tolta
+      · docs/preamp/data/2026-09-15/L13/dopo/tb_e4_uscite/tb_e4_uscite_tab.csv: attese 135 righe, trovate 134
+      · tb_e4_uscite_tab.csv: l'ordine delle righe non e' quello del log dalla riga 136 (134 righe, 135 marcatori)
+      · tb_e4_uscite_tab.csv [zrmax]: 134 righe in tabella, 135 valori nel log
+      · tb_e4_uscite_tab.csv [zr20]: 134 righe in tabella, 135 valori nel log
+      · tb_e4_uscite_tab.csv [zr1k]: 134 righe in tabella, 135 valori nel log
+      · tb_e4_uscite_tab.csv [zr20k]: 134 righe in tabella, 135 valori nel log
+      · ... e altri 5
+log_error                      1    0  come atteso  — una riga Error aggiunta in coda al log di tb_e4_uscite
+      · docs/preamp/data/2026-09-15/L13/dopo/tb_e4_uscite/tb_e4_uscite.log: 1 righe 'Error' (#26)
+      · e4.py esce 1: RIFIUTATO: 1 controlli falliti, sigle A |   A: 1 righe 'Error' nel log
+dispersione_alterata           1    0  come atteso  — il builder calcola la dispersione 1 mΩ piu' larga: la seconda strada, e4.py, dissente
+      · E4 main 0db dispersione Re(Z)max: dossier 0.001, e4.py 0
+      · E4 main 3db dispersione Re(Z)max: dossier 0.0011, e4.py 0.0001
+      · E4 main 10db dispersione Re(Z)max: dossier 0.0011, e4.py 0.0001
+      · E4 fix1 0db+3db+10db dispersione Re(Z)max: dossier 0.001, e4.py 0
+      · E4 fix2 0db+3db+10db dispersione Re(Z)max: dossier 0.001, e4.py 0
+
+Il criterio ingenuo «rapporto fra i modi = rapporto dei guadagni, entro 1 %»:
+   L13 prima  scarto massimo 1.38e-05 -> SCATTA
+   L13 dopo   scarto massimo 3.74e-04 -> SCATTA
+   (scatta su entrambi: non distingue la Zout contaminata da quella vera)
+
+TUTTI I CASI COME ATTESI

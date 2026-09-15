@@ -14,6 +14,12 @@ trim, ADR-027). **Nessun numero viene da data/2026-09-09**, che racconta il
 circuito col THAT320: un percorso che contiene quella data fa rifiutare il
 generatore.
 
+L37: E4 viene da L13 (data/2026-09-15/L13/dopo/): tb_e4_uscite per le tre
+uscite e la costanza col volume, tb_zout_psrr_noise corretto per le curve. La
+Zout di L27 fu misurata con la sorgente AC accesa (NC-033, limitations #28), e
+un percorso Zout sotto 2026-09-14/L27 fa rifiutare il generatore. PSRR e rumore
+restano letti da L27: L13 li ha trovati identici byte per byte.
+
 Ogni numero passa per una seconda strada indipendente, e se le due divergono
 oltre la tolleranza dichiarata lo script **rifiuta e non scrive niente**, come
 export_fab.sh sulla DRC:
@@ -44,7 +50,10 @@ DATA = os.path.join(REPO, "docs", "preamp", "data", "2026-09-14")
 L27 = os.path.join(DATA, "L27", "dopo")
 L16 = os.path.join(DATA, "L16", "dopo")
 L16X = os.path.join(DATA, "L16", "esplorazione")
-TB = os.path.join(REPO, "spice", "preamp", "tb")
+DATA15 = os.path.join(REPO, "docs", "preamp", "data", "2026-09-15")
+L13 = os.path.join(DATA15, "L13", "dopo")
+L13X = os.path.join(DATA15, "L13", "esplorazione")
+TB =os.path.join(REPO, "spice", "preamp", "tb")
 SCHEM = os.path.join(REPO, "docs", "preamp", "schematic")
 # L32b: i due schemi si COPIANO accanto a index.html e si collegano da li'.
 # Un <img src="../schematic/..."> esce dalla cartella della pagina, e un
@@ -84,6 +93,21 @@ def src(root, *parts):
     if FORBIDDEN in p:
         raise SystemExit(f"RIFIUTATO: {rel(p)} viene dai dati del {FORBIDDEN}, "
                          "che raccontano un altro circuito. Nessun file e' stato scritto.")
+    return p
+
+
+# L37 (NC-033): tb_zout_psrr_noise.cir fino a L13 misurava la Zout con VSRC a
+# 1 V AC. I suoi CSV _zout_ di L27 contengono il segnale (limitations #28).
+ZOUT_FORBIDDEN = os.path.join("2026-09-14", "L27")
+
+
+def zout_src(root, *parts):
+    """Ogni percorso di dati di E4 passa di qui: niente Zout di L27."""
+    p = src(root, *parts)
+    if ZOUT_FORBIDDEN in p:
+        raise SystemExit(f"RIFIUTATO: la Zout di {rel(p)} e' stata misurata con la sorgente "
+                         "AC accesa (NC-033, #28). E4 si legge da data/2026-09-15/L13/. "
+                         "Nessun file e' stato scritto.")
     return p
 
 
@@ -559,15 +583,34 @@ def measure_v1():
     return v
 
 
-def measure_zout():
-    d = src(L27, "tb_zout_psrr_noise")
+def count_errors(path):
+    """Righe `Error` di un log: ngspice esce 0 anche con quelle (#26)."""
+    with open(path) as f:
+        return sum(1 for ln in f if "Error" in ln)
+
+
+# L37, la firma di #28. La sezione Zout inietta 1 A AC; VSRC, se resta accesa,
+# vale 1 V AC. Il segnale aggiunge allora al nodo OUT circa G_lin x (1 V / 1 A):
+# 1,0355 Ω a 0 dB nei dati di L27, contro 0,0386 Ω veri. NON si riconosce dal
+# fatto che "scala col guadagno": la Zout vera del blocco scala anch'essa col
+# guadagno del modo (il guadagno d'anello cala), 0,0387 Ω x G_lin in tutti e tre
+# i modi. Si riconosce dalla grandezza.
+ZSIG_FRAC = 0.5
+
+
+def measure_zout(resp):
+    """Le curve di Zout: tb_zout_psrr_noise corretto in L13 (sorgente spenta)."""
+    d = zout_src(L13, "tb_zout_psrr_noise")
     log = os.path.join(d, "tb_zout_psrr_noise.log")
+    n_err = count_errors(log)
+    if n_err:
+        refuse(f"{rel(log)}: {n_err} righe 'Error' (#26)")
     keys = ("z20", "z1k", "z20k", "za20", "za1k", "za20k", "za100k")
     lv = {k: log_print(log, k) for k in keys}
     for k in keys:
         if len(lv[k]) != 3:
             refuse(f"tb_zout_psrr_noise.log: attese 3 occorrenze di {k}, trovate {len(lv[k])}")
-    out = {}
+    out = {"dir": d}
     for idx, m in enumerate(MODES):
         rows = load_csv(os.path.join(d, f"tb_zout_psrr_noise_zout_{m}.csv"))
         f, z = pair(rows, 0)
@@ -579,7 +622,110 @@ def measure_zout():
                                 at(lv["za" + k], idx), 2e-3)
         r["za100k"] = check(f"Zout(OUT) {m} @100 kHz", interp(f, za, 100000),
                             at(lv["za100k"], idx), 2e-3)
+        r["glin"] = 10 ** (resp[(m, "1.5")]["g1k"] / 20)
+        if not r["za1k"] < ZSIG_FRAC * r["glin"]:
+            refuse(f"Zout(OUT) {m} @1 kHz: {r['za1k']:.5g} Ω non sta sotto {ZSIG_FRAC} x G_lin "
+                   f"= {ZSIG_FRAC * r['glin']:.5g} Ω: la Zout al nodo contiene il segnale del "
+                   "modo, sorgente AC accesa durante l'iniezione (NC-033, #28)")
         out[m] = r
+    return out
+
+
+E4_OUTS = ("main", "fix1", "fix2")
+E4_COLS = ("zrmax", "zr20", "zr1k", "zr20k", "zm20", "zm1k", "zn1k", "zn20k")
+E4_MAX = 100.0         # Ω, E4
+E4_COSTANZA = 1.0      # Ω, lettura di L13 (e4.py): E4 non da' tolleranza
+
+
+def _markers(log, pat):
+    with open(log) as f:
+        return [m.groups() for m in (re.match(pat, ln.rstrip("\n")) for ln in f) if m]
+
+
+def measure_e4(z):
+    """E4 sulle tre uscite e a manopola che gira: tb_e4_uscite di L13."""
+    d = zout_src(L13, "tb_e4_uscite")
+    log = os.path.join(d, "tb_e4_uscite.log")
+    n_err = count_errors(log)
+    if n_err:
+        refuse(f"{rel(log)}: {n_err} righe 'Error' (#26)")
+    tab = load_table(os.path.join(d, "tb_e4_uscite_tab.csv"), 135)
+    gain = load_table(os.path.join(d, "tb_e4_uscite_guadagno.csv"), 45)
+
+    # le righe delle tabelle nell'ordine dei marcatori del log, poi colonna per colonna
+    for label, rows, cols, pat in (
+            ("tb_e4_uscite_tab.csv", tab, ("out", "trim", "att", "mode"),
+             r"^CELL out=(\w+) trim=(\d+) att=(\d+) mode=(\w+)$"),
+            ("tb_e4_uscite_guadagno.csv", gain, ("trim", "att", "mode"),
+             r"^GAIN trim=(\d+) att=(\d+) mode=(\w+)$")):
+        mine = [tuple(r.get(c) for c in cols) for r in rows]
+        theirs = _markers(log, pat)
+        if mine != theirs:
+            i = next((i for i, (a, b) in enumerate(zip(mine, theirs)) if a != b),
+                     min(len(mine), len(theirs)))
+            refuse(f"{label}: l'ordine delle righe non e' quello del log dalla riga {i + 2} "
+                   f"({len(mine)} righe, {len(theirs)} marcatori)")
+    for c in E4_COLS:
+        cross_table(f"tb_e4_uscite_tab.csv [{c}]", tab, c, log_print(log, c))
+    cross_table("tb_e4_uscite_guadagno.csv [g1k_db]", gain, "g1k_db", log_print(log, "g1k"))
+
+    out = {"dir": d, "groups": []}
+    for o, ms in [("main", (m,)) for m in MODES] + [(o, MODES) for o in ("fix1", "fix2")]:
+        sel = [r for r in tab if r.get("out") == o and r.get("mode") in ms]
+        if not sel:
+            refuse(f"tb_e4_uscite_tab.csv: nessuna riga per {o} {'+'.join(ms)}")
+            continue
+        g = {"out": o, "modes": ms, "n": len(sel)}
+        for c in ("zrmax", "zr1k", "zm1k", "zn1k"):
+            vs = [num(r, c) for r in sel]
+            g[c + "_min"], g[c + "_max"] = min(vs), max(vs)
+            g[c + "_disp"] = max(vs) - min(vs)
+        g["disp"] = max(g[c + "_disp"] for c in ("zrmax", "zr1k", "zm1k"))
+        out["groups"].append(g)
+
+    # stessa grandezza da due deck diversi: il flat corretto e la catena in subckt
+    for m in MODES:
+        for r in tab:
+            if r.get("out") != "main" or r.get("mode") != m:
+                continue
+            bad = [(zk, tk) for zk, tk in (("za1k", "zn1k"), ("z1k", "zm1k"))
+                   if not abs(z[m][zk] - num(r, tk)) <= 1e-3 * abs(num(r, tk))]
+            if bad:
+                zk, tk = bad[0]
+                refuse(f"Zout {m}: tb_zout_psrr_noise {zk} {z[m][zk]:.6g} Ω, tb_e4_uscite main "
+                       f"trim {r['trim']} att {r['att']} {tk} {num(r, tk):.6g} Ω "
+                       "(scarto > 1e-3): i due deck non misurano la stessa impedenza")
+                break
+
+    # la stessa cifra dal verificatore di L13, sugli stessi file
+    script = os.path.join(L13X, "script", "e4.py")
+    proc = subprocess.run([sys.executable, script, d], capture_output=True, text=True)
+    if proc.returncode != 0:
+        tail = " | ".join(proc.stdout.strip().splitlines()[-3:])
+        refuse(f"e4.py esce {proc.returncode}: {tail[-300:]}")
+        return out
+    got = {}
+    for ln in proc.stdout.splitlines():
+        t = ln.replace("..", " ").split()
+        if len(t) == 11 and t[0] in E4_OUTS:
+            got[(t[0], t[1])] = [float(x) for x in t[2:]]
+    for g in out["groups"]:
+        key = (g["out"], "+".join(g["modes"]))
+        if key not in got:
+            refuse(f"e4.py: manca la riga {' '.join(key)}")
+            continue
+        n, zrmax, r1a, r1b, m1a, m1b, na, nb, dsp = got[key]
+        mine = (g["n"], g["zrmax_max"], g["zr1k_min"], g["zr1k_max"], g["zm1k_min"],
+                g["zm1k_max"], g["zn1k_min"], g["zn1k_max"], g["zrmax_disp"])
+        # lo script stampa 4 decimali, 5 al nodo, 3 cifre per la dispersione
+        tol = (0, 5.1e-5, 5.1e-5, 5.1e-5, 5.1e-5, 5.1e-5, 5.1e-6, 5.1e-6, 5.1e-8 + 5e-4 * dsp)
+        for name, a, b, tl in zip(("celle", "Re(Z)max", "Re(Z)1k min", "Re(Z)1k max",
+                                   "|Z|1k min", "|Z|1k max", "nodo min", "nodo max",
+                                   "dispersione Re(Z)max"),
+                                  mine, (n, zrmax, r1a, r1b, m1a, m1b, na, nb, dsp), tol):
+            if not abs(a - b) <= tl:
+                refuse(f"E4 {' '.join(key)} {name}: dossier {a:.6g}, e4.py {b:.6g}")
+    out["script"] = rel(script)
     return out
 
 
@@ -986,7 +1132,8 @@ def fig_psrr(psrr):
 
 def fig_zout(z):
     W, H = 900, 450
-    ax = sp.Axes(72, 46, W - 130, H - 160, (20, 200000), (0.5, 5000), ylog=True,
+    # L37: da 0,01 Ω, perche' il nodo OUT a sorgente spenta sta a ~0,04 Ω (NC-033)
+    ax = sp.Axes(72, 46, W - 130, H - 160, (20, 200000), (0.01, 5000), ylog=True,
                  xlabel="frequenza [Hz]", ylabel="|Z| [Ω]",
                  title="Impedenza d'uscita: al jack e al nodo OUT")
     for m in MODES:
@@ -994,8 +1141,8 @@ def fig_zout(z):
         ax.line(z[m]["f"], z[m]["za"], mcol(m, True), f"al nodo OUT · {MLAB[m]}", "5,3")
     ax.hline(100, sp.C_REQ, "E4: < 100 Ω")
     body = ax.render() + "\n" + ax.legend(80, ax.y0 + ax.h + 58, cols=3, colw=270)
-    return sp.document(W, H, body, "Dati: L27 tb_zout_psrr_noise_zout_*.csv · la salita "
-                       "sotto 200 Hz è la reattanza del 4,7 µF, non lo stadio")
+    return sp.document(W, H, body, "Dati: L13 tb_zout_psrr_noise_zout_*.csv, sorgente spenta · "
+                       "la salita sotto 200 Hz è la reattanza del 4,7 µF, non lo stadio")
 
 
 def fig_headroom(hr):
@@ -1216,6 +1363,11 @@ SECTIONS = (("s1", "Il blocco di guadagno"), ("s2", "Il preamplificatore intero"
 def build_page(M, inline=False):
     resp, v1, z, psrr, hr, cf = M["resp"], M["v1"], M["z"], M["psrr"], M["hr"], M["cf"]
     trim, noise, v2, v3, p7, op = M["trim"], M["noise"], M["v2"], M["v3"], M["p7"], M["op"]
+    e4 = M["e4"]
+    e4_main = max(g["zrmax_max"] for g in e4["groups"] if g["out"] == "main")
+    e4_fix = max(g["zrmax_max"] for g in e4["groups"] if g["out"] != "main")
+    e4_disp = max(g["disp"] for g in e4["groups"])
+    e4_ok = all(g["zrmax_max"] < E4_MAX and g["disp"] < E4_COSTANZA for g in e4["groups"])
 
     def figure(svgfile, alt):
         if inline:
@@ -1239,8 +1391,8 @@ def build_page(M, inline=False):
     h = []
     A = h.append
     A('<div class="wrap">')
-    A('<p class="eyebrow">Bozza &middot; dati del 2026-09-14, lotti L27 e L16 &middot; '
-      'modelli in gran parte segnaposto</p>')
+    A('<p class="eyebrow">Bozza &middot; dati del 2026-09-14 e del 2026-09-15, lotti L27, L16 '
+      'e L13 &middot; modelli in gran parte segnaposto</p>')
     A('<h1>Dossier di misura del preamplificatore di linea</h1>')
     A('<p class="lede">Classe A pura a componenti discreti, senza operazionali nel '
       'percorso del segnale. Guadagno 0 / +3 / +10 dB, trim 0 / &minus;6 / &minus;12 dB '
@@ -1266,7 +1418,8 @@ def build_page(M, inline=False):
             ("Scarto ADR-014", it_sci(worst_shape),
              "dB a 20 kHz rif. 1 kHz &middot; peggiore dei 3 modi"),
             ("PSRR, peggiore", f"{fx(weak_psrr)} dB", "a 10 kHz"),
-            ("Z<sub>out</sub> al jack", f"{fx(z['0db']['z1k'])} Ω", "a 1 kHz, 0 dB")):
+            ("E4, Re(Z<sub>out</sub>) max", f"{fx(max(e4_main, e4_fix))} Ω",
+             "al jack &middot; 20 Hz–20 kHz &middot; 3 uscite, costante col volume")):
         A(f'<div><dt>{lab}</dt><dd>{val}<span class="u">{unit}</span></dd></div>')
     A('</dl>')
 
@@ -1289,8 +1442,9 @@ def build_page(M, inline=False):
       'richiede <strong>46 dB di attenuazione</strong>, causa misurabile della mancanza '
       'di dinamica lamentata. La topologia canonica è in <code>circuits/preamp/</code>; i '
       'banchi di prova in <code>spice/preamp/tb/</code>; i dati in '
-      f'<code>{rel(L27)}/</code> (tre modi di guadagno, ADR-026) e '
-      f'<code>{rel(L16)}/</code> (il trim, ADR-027).</p>')
+      f'<code>{rel(L27)}/</code> (tre modi di guadagno, ADR-026), '
+      f'<code>{rel(L16)}/</code> (il trim, ADR-027) e '
+      f'<code>{rel(L13)}/</code> (E4 sulle tre uscite e a manopola che gira).</p>')
 
     A('<nav class="toc" aria-label="Indice"><ol>')
     for anchor, label in SECTIONS:
@@ -1596,7 +1750,38 @@ def build_page(M, inline=False):
 
     # --- 10 Zout ---
     A(h2("s10"))
-    A(prov_line("tb_zout_psrr_noise.cir", src(L27, "tb_zout_psrr_noise")))
+    A(prov_line("tb_e4_uscite.cir", e4["dir"]))
+    A('<p><strong>E4</strong> chiede un&rsquo;impedenza d&rsquo;uscita &lt; 100 Ω in banda '
+      'passante, misurata escludendo la reattanza del condensatore d&rsquo;accoppiamento, e '
+      'costante con la posizione del volume. Il deck porta la catena intera in subckt: blocco A, '
+      'buffer delle fisse, trim, attenuatore, blocco B. Inietta 1 A AC in un jack per volta, '
+      'a sorgente spenta, in ogni cella di trim &times; attenuatore &times; modo. «Escludendo la '
+      'reattanza» si legge come Re(Z) al jack: il condensatore in serie è reattanza pura, e '
+      'nella parte reale resta lo scarico in parallelo, che pesa a 20 Hz.</p>')
+    A('<div class="tablewrap"><table><tr><th>Uscita</th><th class="num">Celle</th>'
+      '<th class="num">Re(Z) max, 20 Hz–20 kHz</th><th class="num">Re(Z) 1 kHz</th>'
+      '<th class="num">|Z| 1 kHz</th><th class="num">nodo, 1 kHz</th>'
+      '<th class="num">dispersione su trim &times; attenuatore</th><th>Esito</th></tr>')
+    olab = {"main": "principale", "fix1": "fissa 1", "fix2": "fissa 2"}
+    for g in e4["groups"]:
+        mlab = MLAB[g["modes"][0]] if len(g["modes"]) == 1 else "tre modi"
+
+        def rng(c, nd=4):
+            lo, hi = it(g[c + "_min"], nd), it(g[c + "_max"], nd)
+            return lo if lo == hi else f"{lo}&ndash;{hi}"
+        A(f'<tr><td>{olab[g["out"]]} &middot; {mlab}</td><td class="num">{g["n"]}</td>'
+          f'<td class="num">{it(g["zrmax_max"], 4)} Ω</td><td class="num">{rng("zr1k")} Ω</td>'
+          f'<td class="num">{rng("zm1k")} Ω</td><td class="num">{rng("zn1k")} Ω</td>'
+          f'<td class="num">{it_sci(g["disp"], 2)} Ω</td>'
+          f'{verdict(g["zrmax_max"] < E4_MAX and g["disp"] < E4_COSTANZA)}</tr>')
+    A('</table></div>')
+    A(f'<p class="meta">La soglia di costanza, {it(E4_COSTANZA, 0)} Ω, è la lettura di L13: E4 '
+      'non dà tolleranza, e il termine di confronto è il passivo di ADR-002, che a metà corsa '
+      'porta in uscita un quarto della sua resistenza. La dispersione è il massimo su Re(Z) max, '
+      'Re(Z) e |Z| a 1 kHz. Le tabelle coincidono col log riga per riga; lo stesso esito lo dà '
+      f'<code>{html_escape(e4.get("script", ""))}</code> sugli stessi file; la Zout al nodo e al '
+      'jack del deck qui sotto coincide con quella della principale entro 10<sup>&minus;3</sup>.</p>')
+    A(prov_line("tb_zout_psrr_noise.cir", z["dir"]))
     A(figure("fig_zout.svg", "Impedenza d'uscita"))
     A('<div class="tablewrap"><table><tr><th>Punto di misura</th><th class="num">20 Hz</th>'
       '<th class="num">1 kHz</th><th class="num">20 kHz</th><th class="num">100 kHz</th></tr>')
@@ -1610,10 +1795,11 @@ def build_page(M, inline=False):
             f'<td class="num">{it(r[k], 4)} Ω</td>' for k in ("za20", "za1k", "za20k", "za100k")) + '</tr>')
     A('</table></div>')
     A(f'<div class="note"><strong>Tensione fra E4 ed E8, segnalata e non aggirata.</strong> '
-      f'E4 chiede &lt; 100 Ω in banda passante. Al jack a 20 Hz la misura dà '
+      f'E4 chiede &lt; 100 Ω in banda passante. Al jack a 20 Hz la |Z| vale '
       f'{it(z["0db"]["z20"], 4)} Ω, ma quella <em>è la reattanza del condensatore '
       f'd&rsquo;uscita da 4,7 µF</em>: al nodo OUT la stessa frequenza dà '
-      f'{it(z["0db"]["za20"], 3)} Ω. Per questo il requisito dice «misurata escludendo la '
+      f'{it(z["0db"]["za20"], 3)} Ω, e la parte reale al jack resta ≤ '
+      f'{it(max(e4_main, e4_fix), 4)} Ω. Per questo il requisito dice «misurata escludendo la '
       'reattanza del condensatore d&rsquo;accoppiamento».</div>')
 
     # --- 11 V2 ---
@@ -1704,11 +1890,11 @@ def build_page(M, inline=False):
     A(f'<tr><td>E3</td><td>≥ 100 kΩ al connettore, ogni posizione del trim</td>'
       f'<td class="num">min {it(trim["e3min"] / 1000, 4)} kΩ con {lab_c(trim["e3min_cs"])}</td>'
       f'{verdict(trim["e3min"] >= 1e5)}</tr>')
-    z1k = max(z[m]["z1k"] for m in MODES)
-    A(f'<tr><td>E4</td><td>Z<sub>out</sub> &lt; 100 Ω in banda, esclusa la reattanza del cap</td>'
-      f'<td class="num">≤ {it(z1k, 4)} Ω a 1 kHz al jack, tre modi</td>'
-      f'<td class="{"ok" if z1k < 100 else "no"}">{"conforme" if z1k < 100 else "no"} sull&rsquo;uscita '
-      'principale; fisse e manopola: NC-008</td></tr>')
+    A(f'<tr><td>E4</td><td>Z<sub>out</sub> &lt; 100 Ω in banda, esclusa la reattanza del cap, '
+      'costante col volume</td>'
+      f'<td class="num">Re(Z) max al jack {it(e4_main, 4)} Ω principale &middot; {it(e4_fix, 4)} Ω '
+      f'fisse &middot; dispersione su trim &times; attenuatore ≤ {it_sci(e4_disp, 2)} Ω</td>'
+      f'{verdict(e4_ok, "conforme su tre uscite, ogni posizione di trim e attenuatore")}</tr>')
     A(f'<tr><td>E5</td><td>rumore in uscita &lt; 10 µV RMS</td>'
       f'<td class="num">catena ≤ {fx(trim["e5max"], 3)} µV</td>'
       '<td class="na">sotto soglia, ma pavimento senza 1/f &mdash; NC-004 aperta</td></tr>')
@@ -1749,8 +1935,12 @@ def build_page(M, inline=False):
       f'{len(vendors) + len(placeholders)} sono segnaposto</strong> ({", ".join(placeholders)}). '
       'I margini di fase, il PSRR e le impedenze hanno la forma giusta e numeri '
       'provvisori: la sostituzione coi modelli del costruttore è la Fase 4 (NC-017).</li>')
-    A('<li><strong>E4 è misurata solo sull&rsquo;uscita principale</strong> e a manopola '
-      'ferma (NC-008).</li>')
+    zn_lo = min(g["zn1k_min"] for g in e4["groups"])
+    zn_hi = max(g["zn1k_max"] for g in e4["groups"])
+    A(f'<li><strong>E4 al nodo del blocco è una cifra dei segnaposto.</strong> La Z<sub>out</sub> '
+      f'prima della resistenza in serie ({it(zn_lo, 4)}&ndash;{it(zn_hi, 4)} Ω a 1 kHz) dipende '
+      'dalle transconduttanze scritte a mano; al jack domina la resistenza in serie, e il '
+      'verdetto di E4 non ne dipende.</li>')
     A('<li><strong>Gli spigoli di tolleranza di V1</strong> vengono da un deck '
       'd&rsquo;esplorazione, non da un banco versionato sotto '
       '<code>spice/preamp/tb/</code>.</li>')
@@ -1798,7 +1988,8 @@ def build_page(M, inline=False):
 DECKS = ["tb_op.cir", "tb_ac.cir", "tb_loop.cir", "tb_loop_blockA.cir",
          "tb_loop_bufferfissa.cir", "tb_trim.cir", "tb_zout_psrr_noise.cir",
          "tb_noise_breakdown.cir", "tb_dc_headroom.cir", "tb_switch_v2.cir",
-         "tb_switch_v2_counterfactual.cir", "tb_v3_overload.cir", "tb_mute_corto.cir"]
+         "tb_switch_v2_counterfactual.cir", "tb_v3_overload.cir", "tb_mute_corto.cir",
+         "tb_e4_uscite.cir"]
 
 
 def main():
@@ -1806,10 +1997,12 @@ def main():
     if "--standalone" in sys.argv:
         standalone = sys.argv[sys.argv.index("--standalone") + 1]
 
-    M = {"resp": measure_response(), "v1": measure_v1(), "z": measure_zout(),
+    M = {"resp": measure_response(), "v1": measure_v1(),
          "psrr": measure_psrr(), "noise": measure_noise(), "trim": measure_trim(),
          "cf": measure_counterfactual(), "v2": measure_v2(), "v3": measure_v3(),
          "p7": measure_p7(), "op": measure_oppoint()}
+    M["z"] = measure_zout(M["resp"])
+    M["e4"] = measure_e4(M["z"])
     M["hr"] = measure_headroom(M["trim"])
     M["decks"] = [os.path.join(TB, d) for d in DECKS]
     for deck in M["decks"]:
@@ -1859,7 +2052,7 @@ def main():
 
     v1, hr, trim = M["v1"], M["hr"], M["trim"]
     summary = {
-        "dati": [rel(L27), rel(L16)],
+        "dati": [rel(L27), rel(L16), rel(L13)],
         "controlli_incrociati": "tutti superati",
         "guadagno_1kHz_dB": {m: M["resp"][(m, "1.5")]["g1k"] for m in MODES},
         "adr014_scarto_20kHz_rif_1kHz_dB_peggiore": max(adr014(M["resp"])[0].values(), key=abs),
@@ -1874,6 +2067,9 @@ def main():
         "e5_catena_peggiore_uV": trim["e5max"],
         "psrr_peggiore_10kHz_dB": min(r["p10k"] for r in M["psrr"].values()),
         "zout_jack_1kHz_ohm_0db": M["z"]["0db"]["z1k"],
+        "e4_rez_max_ohm": {f'{g["out"]} {"+".join(g["modes"])}': g["zrmax_max"]
+                           for g in M["e4"]["groups"]},
+        "e4_dispersione_volume_ohm": max(g["disp"] for g in M["e4"]["groups"]),
         "p7_tj_massima_C": M["p7"]["tjmax"],
     }
     with open(os.path.join(HERE, "dossier.summary.json"), "w") as f:

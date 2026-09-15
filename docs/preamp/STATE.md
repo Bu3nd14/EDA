@@ -11,16 +11,56 @@ realtà, il progetto non è ripartibile.
 | | |
 |---|---|
 | Ultimo aggiornamento | **2026-09-15** |
-| Ultimo lotto chiuso | **L20** — quanto il progetto dipende da I_DSS. Col modello del costruttore, dal modello com'è (2,59 mA) a tutto il gruppo B (15 mA): punto di lavoro, E5 e V1 non ne dipendono, il margine di modo comune scende a 2,4 V. ADR-031 (gruppo B, tolleranza 8,0–15,0 mA); chiude NC-013. Prima: **L13** — E4 sulle tre uscite, chiude NC-008, apre NC-033 |
-| **Prossimo lotto** | **L37** — E4 nel dossier, NC-033 (mandato in «Prossimo passo concreto») |
-| Non conformità | **14 aperte, 2 bloccanti** |
+| Ultimo lotto chiuso | **L37** — E4 nel dossier. `build_dossier.py` legge E4 da L13: tre uscite, costanza col volume, Zout a sorgente spenta. Rifiuta la Zout di L27 e una Zout al nodo che contiene il segnale, per grandezza e non per rapporto: anche la Zout vera scala col guadagno. Chiude NC-033. Prima: **L20** — quanto il progetto dipende da I_DSS, ADR-031, chiude NC-013 |
+| **Prossimo lotto** | **L38** — le risposte del 2026-09-15 diventano requisiti (mandato in «Prossimo passo concreto») |
+| Non conformità | **13 aperte, 2 bloccanti** |
 | Le bloccanti | NC-004 · NC-017 (Fase 4) |
-| Suite | `run_tests.sh` **10 passed / 0 failed** a fine L20 (nuovo il 2i: il blocco derivato con `LSK489A` coincide con quello generato) |
+| Suite | `run_tests.sh` **10 passed / 0 failed** a fine L37, eseguita dal worktree (il 2h importa `provenance()` dal builder modificato) |
 
 ## Diario degli ultimi lotti
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L37 — E4 nel dossier (2026-09-15)
+
+**Chiude NC-033.** Report: `reports/2026-09-15-L37-e4-dossier.md`. Evidenza:
+`data/2026-09-15/L37/`. Nessun deck eseguito, nessun valore del circuito, nessuna
+ADR.
+
+- **La baseline, verificata.** Il builder non modificato rigenera il dossier di
+  `main` identico byte per byte. Le quattro cifre di NC-033 stavano alle righe
+  indicate.
+- **Il controllo del mandato non distingueva.** Anche la Zout vera al nodo scala
+  col guadagno del modo (0,0387 Ω × G_lin in tutti e tre i modi), perché il
+  guadagno d'anello cala. «Rapporto = rapporto dei guadagni» scatta sui dati
+  contaminati **e** su quelli buoni.
+  - La firma del #28 è la **grandezza**: il segnale aggiunge G_lin × 1 Ω.
+  - Il builder rifiuta sotto 0,5 × G_lin Ω e incrocia con `tb_e4_uscite`
+    entro 10⁻³.
+  - Limitazione #28 corretta in coda.
+- **Il builder legge E4 da L13.**
+  - `tb_e4_uscite` (tabella = log riga per riga, ordine dei marcatori, 0 `Error`,
+    seconda strada `e4.py`) e `tb_zout_psrr_noise` corretto.
+  - Rifiuta un percorso Zout sotto `2026-09-14/L27`.
+  - PSRR e rumore restano su L27, identici.
+- **Pubblicato.**
+  - KPI «E4, Re(Z<sub>out</sub>) max» **60,13 Ω**.
+  - §10 con le tre uscite: 60,05 / 60,07 / 60,13 Ω principale, 53,13 Ω fisse,
+    dispersione ≤ 1,0·10⁻⁴ Ω.
+  - Nodo 0,0386 / 0,0549 / 0,1217 Ω; asse di `fig_zout` da 0,01 Ω.
+  - Riepilogo «conforme su tre uscite, ogni posizione di trim e attenuatore».
+- **Il resto, provato identico** da `confronto.py`: sezioni 1–9, 11, 12, 15, sette
+  figure su otto, «Leggere prima questo». Le cifre vecchie compaiono 0 volte.
+- **Dieci sabotaggi, dieci come attesi.**
+  - La Zout contaminata al percorso giusto fa cadere firma e incrocio; ciascuno
+    è provato anche da solo.
+  - Radice L27, tabella alterata, cella vuota, riga tolta, riga `Error` e
+    dispersione alterata cadono ciascuno sul controllo atteso.
+- **Nota in coda** a `data/2026-09-09/README.md`. Report datati non toccati.
+
+Suite **10 passed / 0 failed**. **13 voci aperte, 2 bloccanti.** Prossimo:
+**L38**.
 
 ### Dopo L20 — le risposte dell'utente alle domande aperte (2026-09-15)
 
@@ -938,7 +978,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L34 | **Le decisioni del 2026-09-15 diventano requisiti.** Da una sessione di domande dell'utente: **ADR-028** (comandi sul frontale, LED a pannello cablati), **ADR-029** (ingombro del telaio 450 × 130 × 367 mm), **ADR-030** (guadagno interbloccato dal mute con la strada B, subordinato a L29); in `REQUIREMENTS.md` F3 con «RCA», F10, F11, P8, note su F5 e su «jack», una riga in V2 | XS/S | apre **NC-032**, aggiorna NC-028 | **fatto** — nessun numero simulato; le cifre del bump a caldo sono calcolate ed etichettate |
 | L35 | **Comandi e LED a pannello nel sorgente** (ADR-028). Header di cablaggio al posto dei LED del trim sulla scheda (`trim.py`); comando del guadagno sul rotativo a 3 posizioni, cablato perché K5 non sia mai comandato senza K1 (ADR-026); interruttore di mute combinato col temporizzatore d'accensione; LED rosso di mute, letto da un contatto che dica lo stato; `check_relay_safe_state.py` esteso. **Dopo L29 e L36**: il comando del guadagno si cabla una volta sola | S/M | **NC-032** | da fare |
 | L36 | **Il guadagno interbloccato dal mute** (ADR-030, strada B). **Solo se L29 lo giustifica**, altrimenti «superata». Due relè ausiliari con autoritenuta su K1/K5; la corsa al rilascio del mute (scambio di K6 contro rilascio delle bobine) simulata e chiusa; il 2e esteso al guadagno; tre LED dello stato vero dai poli liberi degli ausiliari; budget delle bobine (~169 mA fuori mute a +10 dB, a 5 V) consegnato all'alimentatore. Se la corsa si chiude bene, rivalutare la stessa strada per il trim | M | parte di **NC-028** | da fare — **dipende da L29** |
-| L37 | **E4 nel dossier.** `build_dossier.py` legge la Zout da `data/2026-09-14/L27/dopo/tb_zout_psrr_noise/`, misurata con la sorgente accesa (NC-033): KPI 58,76 Ω, tabella con 1,0355 Ω «al nodo OUT», nota E4/E8, riepilogo «≤ 60,5851 Ω». Puntarlo ai dati di L13 (`tb_e4_uscite` sulle tre uscite e `tb_zout_psrr_noise` corretto), pubblicare la costanza col volume e le fisse, rifiutare la Zout di L27, annotare in coda `data/2026-09-09/README.md`. I report datati non si toccano | XS/S | NC-033 | da fare |
+| L37 | **E4 nel dossier.** `build_dossier.py` legge la Zout da `data/2026-09-14/L27/dopo/tb_zout_psrr_noise/`, misurata con la sorgente accesa (NC-033): KPI 58,76 Ω, tabella con 1,0355 Ω «al nodo OUT», nota E4/E8, riepilogo «≤ 60,5851 Ω». Puntarlo ai dati di L13 (`tb_e4_uscite` sulle tre uscite e `tb_zout_psrr_noise` corretto), pubblicare la costanza col volume e le fisse, rifiutare la Zout di L27, annotare in coda `data/2026-09-09/README.md`. I report datati non si toccano | XS/S | NC-033 | **fatto** — E4 da L13 (tre uscite, dispersione ≤ 1,0·10⁻⁴ Ω), Zout di L27 rifiutata; il controllo «scala col guadagno» non distingueva (anche la Zout vera scala), sostituito da grandezza + incrocio fra deck; resto del dossier provato identico; 10 sabotaggi |
 | L38 | **Le risposte del 2026-09-15 diventano requisiti** (voce di diario «Dopo L20»). ADR per la soglia di V2 (≤ 100 µV di picco 20 Hz–20 kHz su tutte le uscite, accensione compresa, cono libero sotto 20 Hz) e V2 in `REQUIREMENTS.md`; criterio 3 di ADR-030 al caso peggiore; NC-028 e L29 aggiornati; NC-009 punto 3 verso il manuale d'uso; NC-019 col ponte di rame, scritto in `gain_block.py` e nella consegna a `pcb-automation-engineer`; LED gemelli accettati (nota in ADR nuova, ADR-027 non si riscrive); Singxer chiuso in «Aperti». **Prima di L29** | XS/S | aggiorna NC-009, NC-019, NC-028 | da fare |
 
 **NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
@@ -2991,35 +3031,36 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L37 — E4 nel dossier.** Chiude **NC-033** (minore). Lotto **XS/S**. Il
-mandato completo è in `NEXT-SESSION.md`.
+**L38 — Le risposte del 2026-09-15 diventano requisiti.** Aggiorna NC-009,
+NC-019 e NC-028. Lotto **XS/S**. Il mandato completo è in `NEXT-SESSION.md`.
 
 **Perché adesso.**
-- Non aspetta nessuno. Gli altri sì: L28 un documento del costruttore o una ADR
-  (prima di G2), L29 una soglia dell'utente su V2, L36 e L35 aspettano L29, L30
-  l'alimentatore.
-- Il dossier pubblica oggi una Zout che contiene il segnale: KPI 58,76 Ω e
-  1,0355 Ω «al nodo OUT», contro 57,945 e 0,0386 Ω veri.
+- **L29**, sul cammino critico, aspetta la soglia di V2 che l'utente ha dato dopo
+  L20. Finché non è un requisito, L29 non ha un criterio scritto contro cui
+  misurare. L36 e L35 aspettano L29.
+- Gli altri aspettano altro. L28 aspetta una sessione interattiva con l'utente
+  sui pin SS. L30 aspetta l'alimentatore.
 
 **Dove parte.**
-- `build_dossier.py` legge la Zout da
-  `data/2026-09-14/L27/dopo/tb_zout_psrr_noise/`, misurata con la sorgente
-  accesa (NC-033, limitazione #28).
-- I dati giusti ci sono già: `data/2026-09-15/L13/dopo/`, cioè `tb_e4_uscite`
-  sulle tre uscite e `tb_zout_psrr_noise` corretto.
-- **Il dossier non pubblica niente di L20**, e L37 non lo aggiunge: resta un
-  lotto su E4.
+- Le risposte sono nella voce di diario «Dopo L20», **registrate e non ancora
+  requisiti**.
+- Le ADR sono immutabili: la prima libera è **ADR-032**. ADR-027 e ADR-030 non
+  si riscrivono, si superano o si precisano con una ADR nuova.
+- **Nessun numero simulato**: L38 scrive decisioni. Le cifre del gradino a caldo
+  (6–114 mV) sono calcolate, e restano etichettate così.
 
 ### Quello che il repo ti consegna già
 
-- **Il dossier è rigenerato** (L32). `build_dossier.py` legge
-  `data/2026-09-14/L27/dopo/` e `L16/dopo/` e rifiuta ogni percorso del
-  2026-09-09. Confronta le tabelle `echo` riga per riga con le `print` o le `meas`
+- **Il dossier è rigenerato** (L32, E4 da L37). `build_dossier.py` legge
+  `data/2026-09-14/L27/dopo/` e `L16/dopo/`, ed E4 da `data/2026-09-15/L13/dopo/`.
+  Rifiuta ogni percorso del 2026-09-09 e ogni Zout di L27. Rifiuta anche una Zout
+  al nodo sopra 0,5 × G_lin Ω, la firma del #28, e la incrocia con
+  `tb_e4_uscite`. Confronta le tabelle `echo` riga per riga con le `print` o le `meas`
   del log, e la cifra di NC-009 con `headroom_nc009.py`. La provenienza dei
   modelli la legge dagli `.include`. Nove sabotaggi, tutti rifiutati. Rigenerarlo
   dopo un lotto che cambia i dati è un lotto a sé.
 
-- **La suite è a 10 blocchi**, 10 passed a fine L20.
+- **La suite è a 10 blocchi**, 10 passed a fine L37.
   - Il **2e** conosce MUTE, GAIN, PERMIT, TRIM e SPIA, e prova sulla netlist
     l'interblocco del trim (F8);
   - il **2f** asserisce tre guadagni, i rami in parallelo e le attenuazioni del
@@ -3045,10 +3086,10 @@ mandato completo è in `NEXT-SESSION.md`.
   - K7, K8 trim; K9, K10 spie.
 
   Budget delle bobine: 126,6 mA a 5 V, in mute e fuori (ADR-027).
-- **I conteggi**: 14 voci aperte, 2 bloccanti. L20 ha chiuso NC-013.
+- **I conteggi**: 13 voci aperte, 2 bloccanti. L37 ha chiuso NC-033.
 - **E4 è misurata su tutto** (L13): `tb_e4_uscite.cir`, tre uscite × 45 celle,
-  e `tb_zout_psrr_noise.cir` con la Zout a sorgente spenta. Il dossier pubblica
-  ancora le cifre vecchie: L37.
+  e `tb_zout_psrr_noise.cir` con la Zout a sorgente spenta. Il dossier lo
+  pubblica da L37.
 - **Da L34, requisiti nuovi che il circuito non soddisfa ancora**: F10 e F11
   (comandi e LED a pannello, NC-032), P8 (ingombro del telaio). E ADR-030, che
   si realizza solo se L29 lo giustifica.

@@ -162,7 +162,7 @@ hr.end{border:0;border-top:1px solid var(--rule);margin:56px 0 0}
 }
 </style>
 <div class="wrap">
-<p class="eyebrow">Bozza &middot; dati del 2026-09-14, lotti L27 e L16 &middot; modelli in gran parte segnaposto</p>
+<p class="eyebrow">Bozza &middot; dati del 2026-09-14 e del 2026-09-15, lotti L27, L16 e L13 &middot; modelli in gran parte segnaposto</p>
 <h1>Dossier di misura del preamplificatore di linea</h1>
 <p class="lede">Classe A pura a componenti discreti, senza operazionali nel percorso del segnale. Guadagno 0 / +3 / +10 dB, trim 0 / &minus;6 / &minus;12 dB sull&rsquo;uscita variabile.</p>
 <dl class="synopsis">
@@ -173,10 +173,10 @@ hr.end{border:0;border-top:1px solid var(--rule);margin:56px 0 0}
 <div><dt>E5, catena col trim</dt><dd>4,92 µV<span class="u">peggiore &middot; pavimento senza 1/f</span></dd></div>
 <div><dt>Scarto ADR-014</dt><dd>1,34&middot;10<sup>&minus;4</sup><span class="u">dB a 20 kHz rif. 1 kHz &middot; peggiore dei 3 modi</span></dd></div>
 <div><dt>PSRR, peggiore</dt><dd>29,82 dB<span class="u">a 10 kHz</span></dd></div>
-<div><dt>Z<sub>out</sub> al jack</dt><dd>58,76 Ω<span class="u">a 1 kHz, 0 dB</span></dd></div>
+<div><dt>E4, Re(Z<sub>out</sub>) max</dt><dd>60,13 Ω<span class="u">al jack &middot; 20 Hz–20 kHz &middot; 3 uscite, costante col volume</span></dd></div>
 </dl>
 <div class="note"><strong>Leggere prima questo.</strong> Dei 7 dispositivi attivi che questi deck simulano, <strong>solo LS352 usa il modello del costruttore</strong>. 1N4148, 2N5401, 2N5551, LSK489, MJE15032, MJE15033 sono modelli segnaposto scritti a mano (NC-017): i margini di fase dipendono da capacità e tempi di transito scelti a mano, e la soglia di 60° esiste anche per coprire questo. <strong>Nessun modello simulato ha rumore 1/f</strong> (KF = 0 o assente su tutti): ogni cifra di rumore qui è un pavimento termico e shot, non una previsione (NC-004). Il modello del costruttore dell&rsquo;LSK489 esiste in <code>models/jfet/lsk489.lib</code>, ma nessuno di questi deck lo include. Nessuna cifra di distorsione. La provenienza è scritta sotto ogni titolo di sezione, ed è letta dagli <code>.include</code> dei deck, non dichiarata.</div>
-<p>Il progetto sostituisce un Technics SU-9070 la cui struttura di guadagno richiede <strong>46 dB di attenuazione</strong>, causa misurabile della mancanza di dinamica lamentata. La topologia canonica è in <code>circuits/preamp/</code>; i banchi di prova in <code>spice/preamp/tb/</code>; i dati in <code>docs/preamp/data/2026-09-14/L27/dopo/</code> (tre modi di guadagno, ADR-026) e <code>docs/preamp/data/2026-09-14/L16/dopo/</code> (il trim, ADR-027).</p>
+<p>Il progetto sostituisce un Technics SU-9070 la cui struttura di guadagno richiede <strong>46 dB di attenuazione</strong>, causa misurabile della mancanza di dinamica lamentata. La topologia canonica è in <code>circuits/preamp/</code>; i banchi di prova in <code>spice/preamp/tb/</code>; i dati in <code>docs/preamp/data/2026-09-14/L27/dopo/</code> (tre modi di guadagno, ADR-026), <code>docs/preamp/data/2026-09-14/L16/dopo/</code> (il trim, ADR-027) e <code>docs/preamp/data/2026-09-15/L13/dopo/</code> (E4 sulle tre uscite e a manopola che gira).</p>
 <nav class="toc" aria-label="Indice"><ol>
 <li><a href="#s1">Il blocco di guadagno</a></li>
 <li><a href="#s2">Il preamplificatore intero</a></li>
@@ -350,17 +350,27 @@ hr.end{border:0;border-top:1px solid var(--rule);margin:56px 0 0}
 </table></div>
 <p>Il lato debole è il rail positivo a +10 dB: <strong>29,82 dB a 10 kHz</strong>. La quota di ripple che l&rsquo;alimentatore può lasciare si ricava da queste curve («Nota su E5 — la quota del ripple», ADR-020).</p>
 <h2 id="s10"><span class="secno">10</span><span>Impedenza d&rsquo;uscita</span></h2>
-<p class="prov">Deck <code>spice/preamp/tb/tb_zout_psrr_noise.cir</code> &middot; dati <code>docs/preamp/data/2026-09-14/L27/dopo/tb_zout_psrr_noise/</code><br>Modelli del costruttore: <strong>LS352</strong> &middot; segnaposto scritti a mano: <strong>1N4148, 2N5401, 2N5551, LSK489, MJE15032, MJE15033</strong> (NC-017) &middot; tutti KF = 0: nessun rumore 1/f (NC-004)</p>
+<p class="prov">Deck <code>spice/preamp/tb/tb_e4_uscite.cir</code> &middot; dati <code>docs/preamp/data/2026-09-15/L13/dopo/tb_e4_uscite/</code><br>Modelli del costruttore: <strong>LS352</strong> &middot; segnaposto scritti a mano: <strong>1N4148, 2N5401, 2N5551, LSK489, MJE15032, MJE15033</strong> (NC-017) &middot; tutti KF = 0: nessun rumore 1/f (NC-004)</p>
+<p><strong>E4</strong> chiede un&rsquo;impedenza d&rsquo;uscita &lt; 100 Ω in banda passante, misurata escludendo la reattanza del condensatore d&rsquo;accoppiamento, e costante con la posizione del volume. Il deck porta la catena intera in subckt: blocco A, buffer delle fisse, trim, attenuatore, blocco B. Inietta 1 A AC in un jack per volta, a sorgente spenta, in ogni cella di trim &times; attenuatore &times; modo. «Escludendo la reattanza» si legge come Re(Z) al jack: il condensatore in serie è reattanza pura, e nella parte reale resta lo scarico in parallelo, che pesa a 20 Hz.</p>
+<div class="tablewrap"><table><tr><th>Uscita</th><th class="num">Celle</th><th class="num">Re(Z) max, 20 Hz–20 kHz</th><th class="num">Re(Z) 1 kHz</th><th class="num">|Z| 1 kHz</th><th class="num">nodo, 1 kHz</th><th class="num">dispersione su trim &times; attenuatore</th><th>Esito</th></tr>
+<tr><td>principale &middot; 0 dB</td><td class="num">15</td><td class="num">60,0504 Ω</td><td class="num">47,0313 Ω</td><td class="num">57,9449 Ω</td><td class="num">0,0386 Ω</td><td class="num">0 Ω</td><td class="ok">conforme</td></tr>
+<tr><td>principale &middot; +3 dB</td><td class="num">15</td><td class="num">60,0656 Ω</td><td class="num">47,0465 Ω</td><td class="num">57,9539 Ω</td><td class="num">0,0549 Ω</td><td class="num">1,0&middot;10<sup>&minus;4</sup> Ω</td><td class="ok">conforme</td></tr>
+<tr><td>principale &middot; +10 dB</td><td class="num">15</td><td class="num">60,1281 Ω</td><td class="num">47,1092 Ω</td><td class="num">57,9913&ndash;57,9914 Ω</td><td class="num">0,1216&ndash;0,1217 Ω</td><td class="num">1,0&middot;10<sup>&minus;4</sup> Ω</td><td class="ok">conforme</td></tr>
+<tr><td>fissa 1 &middot; tre modi</td><td class="num">45</td><td class="num">53,1318 Ω</td><td class="num">47,0339 Ω</td><td class="num">57,9515 Ω</td><td class="num">0,0386 Ω</td><td class="num">0 Ω</td><td class="ok">conforme</td></tr>
+<tr><td>fissa 2 &middot; tre modi</td><td class="num">45</td><td class="num">53,1318 Ω</td><td class="num">47,0339 Ω</td><td class="num">57,9515 Ω</td><td class="num">0,0386 Ω</td><td class="num">0 Ω</td><td class="ok">conforme</td></tr>
+</table></div>
+<p class="meta">La soglia di costanza, 1 Ω, è la lettura di L13: E4 non dà tolleranza, e il termine di confronto è il passivo di ADR-002, che a metà corsa porta in uscita un quarto della sua resistenza. La dispersione è il massimo su Re(Z) max, Re(Z) e |Z| a 1 kHz. Le tabelle coincidono col log riga per riga; lo stesso esito lo dà <code>docs/preamp/data/2026-09-15/L13/esplorazione/script/e4.py</code> sugli stessi file; la Zout al nodo e al jack del deck qui sotto coincide con quella della principale entro 10<sup>&minus;3</sup>.</p>
+<p class="prov">Deck <code>spice/preamp/tb/tb_zout_psrr_noise.cir</code> &middot; dati <code>docs/preamp/data/2026-09-15/L13/dopo/tb_zout_psrr_noise/</code><br>Modelli del costruttore: <strong>LS352</strong> &middot; segnaposto scritti a mano: <strong>1N4148, 2N5401, 2N5551, LSK489, MJE15032, MJE15033</strong> (NC-017) &middot; tutti KF = 0: nessun rumore 1/f (NC-004)</p>
 <div class="plate"><img src="fig_zout.svg" alt="Impedenza d'uscita" loading="lazy"></div>
 <div class="tablewrap"><table><tr><th>Punto di misura</th><th class="num">20 Hz</th><th class="num">1 kHz</th><th class="num">20 kHz</th><th class="num">100 kHz</th></tr>
-<tr><td>al jack &middot; 0 dB</td><td class="num">1693 Ω</td><td class="num">58,7591 Ω</td><td class="num">48,0471 Ω</td><td class="num">48,0493 Ω</td></tr>
-<tr><td>al jack &middot; +3 dB</td><td class="num">1693 Ω</td><td class="num">59,1132 Ω</td><td class="num">48,4876 Ω</td><td class="num">48,6591 Ω</td></tr>
-<tr><td>al jack &middot; +10 dB</td><td class="num">1693 Ω</td><td class="num">60,5851 Ω</td><td class="num">50,3058 Ω</td><td class="num">51,0619 Ω</td></tr>
-<tr><td>al nodo OUT &middot; 0 dB</td><td class="num">1,0355 Ω</td><td class="num">1,0355 Ω</td><td class="num">1,0673 Ω</td><td class="num">1,6673 Ω</td></tr>
-<tr><td>al nodo OUT &middot; +3 dB</td><td class="num">1,4703 Ω</td><td class="num">1,4704 Ω</td><td class="num">1,5125 Ω</td><td class="num">2,2607 Ω</td></tr>
-<tr><td>al nodo OUT &middot; +10 dB</td><td class="num">3,2619 Ω</td><td class="num">3,2621 Ω</td><td class="num">3,3405 Ω</td><td class="num">4,5548 Ω</td></tr>
+<tr><td>al jack &middot; 0 dB</td><td class="num">1693 Ω</td><td class="num">57,9449 Ω</td><td class="num">47,0477 Ω</td><td class="num">47,045 Ω</td></tr>
+<tr><td>al jack &middot; +3 dB</td><td class="num">1693 Ω</td><td class="num">57,9539 Ω</td><td class="num">47,0714 Ω</td><td class="num">47,3318 Ω</td></tr>
+<tr><td>al jack &middot; +10 dB</td><td class="num">1693 Ω</td><td class="num">57,9914 Ω</td><td class="num">47,1891 Ω</td><td class="num">48,6928 Ω</td></tr>
+<tr><td>al nodo OUT &middot; 0 dB</td><td class="num">0,0362 Ω</td><td class="num">0,0386 Ω</td><td class="num">0,2744 Ω</td><td class="num">1,3746 Ω</td></tr>
+<tr><td>al nodo OUT &middot; +3 dB</td><td class="num">0,0514 Ω</td><td class="num">0,0549 Ω</td><td class="num">0,3888 Ω</td><td class="num">1,8637 Ω</td></tr>
+<tr><td>al nodo OUT &middot; +10 dB</td><td class="num">0,1139 Ω</td><td class="num">0,1217 Ω</td><td class="num">0,8587 Ω</td><td class="num">3,7542 Ω</td></tr>
 </table></div>
-<div class="note"><strong>Tensione fra E4 ed E8, segnalata e non aggirata.</strong> E4 chiede &lt; 100 Ω in banda passante. Al jack a 20 Hz la misura dà 1693 Ω, ma quella <em>è la reattanza del condensatore d&rsquo;uscita da 4,7 µF</em>: al nodo OUT la stessa frequenza dà 1,035 Ω. Per questo il requisito dice «misurata escludendo la reattanza del condensatore d&rsquo;accoppiamento».</div>
+<div class="note"><strong>Tensione fra E4 ed E8, segnalata e non aggirata.</strong> E4 chiede &lt; 100 Ω in banda passante. Al jack a 20 Hz la |Z| vale 1693 Ω, ma quella <em>è la reattanza del condensatore d&rsquo;uscita da 4,7 µF</em>: al nodo OUT la stessa frequenza dà 0,036 Ω, e la parte reale al jack resta ≤ 60,1281 Ω. Per questo il requisito dice «misurata escludendo la reattanza del condensatore d&rsquo;accoppiamento».</div>
 <h2 id="s11"><span class="secno">11</span><span>I relè di guadagno: V2</span></h2>
 <p class="prov">Deck <code>spice/preamp/tb/tb_switch_v2.cir</code> &middot; dati <code>docs/preamp/data/2026-09-14/L27/dopo/tb_switch_v2/</code><br>Modelli del costruttore: <strong>LS352</strong> &middot; segnaposto scritti a mano: <strong>1N4148, 2N5401, 2N5551, LSK489, MJE15032, MJE15033</strong> (NC-017) &middot; tutti KF = 0: nessun rumore 1/f (NC-004)</p>
 <p><strong>V2</strong>: l&rsquo;anello non si apre mai commutando. Il deck modella K1 e K5 come contatti veri, con rimbalzi in chiusura e in apertura, e percorre ogni passaggio fra 0, +3 e +10 dB, compresi i due ordini in cui una coppia di relè può arrivare sul salto diretto. La previsione falsificabile: v(OUT) resta nell&rsquo;inviluppo del regime a +10 dB in ogni istante.</p>
@@ -412,7 +422,7 @@ hr.end{border:0;border-top:1px solid var(--rule);margin:56px 0 0}
 <tr><td>E1</td><td>guadagno nominale 0 dB</td><td class="num">&minus;0,0086 dB a 1 kHz</td><td class="ok">conforme</td></tr>
 <tr><td>E2</td><td>+3 dB (±0,1) e +10 dB (9,5–10,5)</td><td class="num">+3,0371 / +9,9582 dB a 1 kHz</td><td class="ok">conforme</td></tr>
 <tr><td>E3</td><td>≥ 100 kΩ al connettore, ogni posizione del trim</td><td class="num">min 121,068 kΩ con 68 pF</td><td class="ok">conforme</td></tr>
-<tr><td>E4</td><td>Z<sub>out</sub> &lt; 100 Ω in banda, esclusa la reattanza del cap</td><td class="num">≤ 60,5851 Ω a 1 kHz al jack, tre modi</td><td class="ok">conforme sull&rsquo;uscita principale; fisse e manopola: NC-008</td></tr>
+<tr><td>E4</td><td>Z<sub>out</sub> &lt; 100 Ω in banda, esclusa la reattanza del cap, costante col volume</td><td class="num">Re(Z) max al jack 60,1281 Ω principale &middot; 53,1318 Ω fisse &middot; dispersione su trim &times; attenuatore ≤ 1,0&middot;10<sup>&minus;4</sup> Ω</td><td class="ok">conforme su tre uscite, ogni posizione di trim e attenuatore</td></tr>
 <tr><td>E5</td><td>rumore in uscita &lt; 10 µV RMS</td><td class="num">catena ≤ 4,918 µV</td><td class="na">sotto soglia, ma pavimento senza 1/f &mdash; NC-004 aperta</td></tr>
 <tr><td>E6×E2</td><td>2,7 V RMS d&rsquo;ingresso a +10 dB</td><td class="num">M1 +6,58 dB col trim a &minus;6 dB &middot; +0,58 dB a trim 0</td><td class="ok">margine col trim (ADR-015, ADR-027); legenda di pannello ancora da fare (NC-009)</td></tr>
 <tr><td>V1</td><td>margine ≥ 60° su tutta la matrice (ADR-019, ADR-024)</td><td class="num">minimo 61,632° &middot; Buffer delle fisse</td><td class="ok">conforme</td></tr>
@@ -426,7 +436,7 @@ hr.end{border:0;border-top:1px solid var(--rule);margin:56px 0 0}
 <li><strong>Niente distorsione.</strong> Con modelli segnaposto la non linearità non è stata adattata a niente: una cifra di THD sarebbe priva di significato.</li>
 <li><strong>Il rumore è un pavimento.</strong> Nessun modello simulato ha rumore 1/f: le cifre di E5 sono termico e shot. NC-004 resta aperta.</li>
 <li><strong>6 dispositivi attivi su 7 sono segnaposto</strong> (1N4148, 2N5401, 2N5551, LSK489, MJE15032, MJE15033). I margini di fase, il PSRR e le impedenze hanno la forma giusta e numeri provvisori: la sostituzione coi modelli del costruttore è la Fase 4 (NC-017).</li>
-<li><strong>E4 è misurata solo sull&rsquo;uscita principale</strong> e a manopola ferma (NC-008).</li>
+<li><strong>E4 al nodo del blocco è una cifra dei segnaposto.</strong> La Z<sub>out</sub> prima della resistenza in serie (0,0386&ndash;0,1217 Ω a 1 kHz) dipende dalle transconduttanze scritte a mano; al jack domina la resistenza in serie, e il verdetto di E4 non ne dipende.</li>
 <li><strong>Gli spigoli di tolleranza di V1</strong> vengono da un deck d&rsquo;esplorazione, non da un banco versionato sotto <code>spice/preamp/tb/</code>.</li>
 <li><strong>Le forme d&rsquo;onda dei transitori</strong> non sono versionate: di V2 ci sono le finestre, di V3 il CSV.</li>
 <li><strong>Nessuno qui giudica come suona.</strong> La simulazione copre stabilità, risposta, PSRR e impedenze; non copre l&rsquo;ascolto.</li>

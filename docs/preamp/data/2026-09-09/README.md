@@ -432,3 +432,22 @@ Ogni numero della tabella qui sopra è stato **ricalcolato dal CSV
 versionato** e confrontato con il `meas` che ngspice ha stampato da sé nel
 `.log`: coincidono su tutte le cifre stampate. Sono le due strade
 indipendenti verso lo stesso numero che il generatore del dossier pretende.
+
+---
+
+## Nota in coda (2026-09-15, L37) — la Zout di questi dati contiene il segnale
+
+Il testo sopra non è riscritto: racconta un'esecuzione. Va letto con questa
+nota.
+
+- **Cosa è sbagliato.** Le cifre di impedenza d'uscita di questa cartella
+  (la tabella con 58,76 Ω al jack a 1 kHz, e `z1k` 58,8414 / 58,7602 Ω nel
+  confronto più sotto) vengono da `tb_zout_psrr_noise.cir` quando la sezione Zout
+  lasciava `VSRC` a 1 V AC durante l'iniezione da 1 A. Anche `za1k` 1,03692 Ω, al
+  nodo del blocco, è quel segnale. Voce **NC-033**, limitazione **#28**.
+- **Le cifre a sorgente spenta** stanno in `data/2026-09-15/L13/dopo/`: al jack a
+  1 kHz 57,945 Ω a 0 dB, al nodo 0,0386 Ω. È sul circuito di L27, non su quello
+  col THAT320 di questa cartella: il confronto è di ordine di grandezza, non di
+  cifra.
+- **Il verdetto di E4 non si rovescia**: le cifre vere sono più basse.
+- **Il dossier** legge E4 da L13 da L37, e rifiuta la Zout di L27.
