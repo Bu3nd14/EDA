@@ -3,7 +3,7 @@
 **Documento vivo.** Riscritto quando i requisiti cambiano. Ogni modifica
 sostanziale deve avere una ADR corrispondente in `decisions/`.
 
-Ultimo aggiornamento: 2026-09-15 (L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
+Ultimo aggiornamento: 2026-09-15 (L38: V2 con soglia e metodo di misura, Nota su F5, Aperti — ADR-032; L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
 
 Le motivazioni non stanno qui: stanno nelle ADR referenziate e nel
 report `reports/2026-09-08-analisi-catena.md`.
@@ -52,6 +52,12 @@ stato vero del guadagno** a pannello, **solo se una misura lo giustifica**:
     diseccitati il guadagno è 0 dB» resta vero;
 - **altrimenti** niente interblocco, e la regola d'uso va scritta sul pannello o
   nella documentazione d'uso.
+
+**Precisata da ADR-032** (2026-09-15, L38):
+- **il confronto si fa nel caso peggiore**, non nell'uso reale;
+- **una regola d'uso non rende conforme V2**: la soglia vale «in nessuna
+  condizione». Qualunque strada scelga L29, il cambio di guadagno deve rispettare
+  V2.
 
 **Nota su «jack»** (2026-09-15, L34). Nei documenti, nei deck e nei nomi di nodo
 (`MAINJACK`, `FIXJACK1/2`) «jack» vuol dire **la presa d'uscita RCA**: il nodo a
@@ -390,7 +396,69 @@ misurato e i modelli che non sono ancora tutti veri.
 
 ### V2 — Stabilità ai transienti di commutazione
 
-Comportamento dinamico durante e dopo ogni commutazione:
+Comportamento dinamico durante e dopo ogni commutazione.
+
+**SOGLIA DI ACCETTAZIONE (ADR-032, dall'utente il 2026-09-15)**: **≤ 100 µV di
+picco, filtrato 20 Hz–20 kHz, al jack di ognuna delle tre uscite, in ogni
+condizione**, accensione e spegnimento compresi. Sotto i 20 Hz nessun limite oltre
+il filtro. Il caso peggiore sostituisce l'uso reale. La soglia vale per tre
+grandezze:
+- **A — il gradino** che una commutazione lascia al jack;
+- **B — il residuo**: la musica che arriva al jack a mute inserito;
+- **C — il taglio**: la musica che sparisce o ricompare di colpo quando un contatto
+  commuta.
+
+Alla soglia corrispondono ≈ 33 dB SPL di picco a 1 m con la formula di NC-028: una
+cifra **calcolata**, un limite superiore.
+
+**Metodo di misura** (ADR-032). Una misura che non lo segue non verifica V2.
+- **Nodo**: il jack, `MAINJACK`, `FIXJACK1` e `FIXJACK2`, a valle dei 47 Ω e del
+  4,7 µF. **Non `v(OUT)`.** Nel sorgente le reti portano il prefisso di canale
+  (`{ch}_MAINJACK`, `{ch}_FIXJACK{k+1}` in `preamp_audio.py`), e
+  `tb_mute_corto.cir` le chiama `JM`, `J1` e `J2`: il nome si legge nel deck.
+- **Carichi**: 10 kΩ e 100 kΩ, su ogni uscita.
+- **Filtro**:
+  - passa-alto Butterworth del **2° ordine** a 20 Hz;
+  - passa-basso Butterworth del 2° ordine a 20 kHz;
+  - il verdetto è il picco, max |y|.
+- **Campionamento**: passo del transitorio ≤ 10 µs, ricampionato uniforme
+  ≥ 96 kHz.
+- **Contatti**:
+  - resistenza **100 mΩ**, il massimo del datasheet G6K
+    (`vendor/relays/omron/G6K/en-g6k.pdf`); i banchi di L11 usano 0,01 Ω;
+  - intervento e rilascio ≤ 3 ms;
+  - fronte e rimbalzi modellati e dichiarati. Il datasheet non dà la durata del
+    fronte: lo spike da 2,2 µs di NC-028 non si dà per artefatto finché non è
+    modellato.
+- **A — il gradino.**
+  - La grandezza è d(t) = v_jack(corsa con l'evento) − v_jack(corsa di
+    riferimento). Il riferimento tiene dall'inizio lo **stato finale**: mai in
+    mute, sempre in mute, o già al guadagno d'arrivo. Stessa sorgente, stessa
+    fase.
+  - Si filtra d(t) da t_evento, con lo stato del filtro nullo a t_evento, per
+    **≥ 2 s** (τ al jack 0,32 s).
+  - **Accensione e spegnimento**: v_jack contro il regime, con la sorgente a zero,
+    dall'inizio della rampa dei rail fino a 2 s dopo il rilascio del mute, o dopo
+    la fine della discesa.
+- **B — il residuo.** v_jack filtrato **per tutta la durata del mute inserito**,
+  fuori dalla finestra di A. Col segnale di prova sotto.
+- **C — il taglio.**
+  - **Tono di prova** da 2,7 V RMS alla sorgente, a 20 Hz, 1 kHz e 20 kHz.
+  - Il residuo è v_jack meno il tono ricostruito **a frequenza nota su una
+    finestra scorrevole di 10 ms**: seno più coseno, senza termine continuo.
+    Poi si filtra.
+  - Si guarda attraverso ogni inserzione e ogni rilascio.
+  - Una dissolvenza più lenta di 10 ms resta nel tono ricostruito, un taglio più
+    rapido nel residuo.
+  - A 20 Hz la finestra copre un quinto di periodo: chi misura verifica il
+    condizionamento del fit e lo dichiara.
+- **Il caso peggiore da coprire**:
+  - con e senza segnale, commutando sul picco e sullo zero;
+  - ogni passaggio di guadagno, 0↔+3, +3↔+10 e 0↔+10 dB, nei due versi;
+  - mute breve e mute di almeno 2 s;
+  - dispersione dell'LSK489 fino a ±20 mV, in più posizioni dell'attenuatore;
+  - trim nelle tre posizioni;
+  - accensione e spegnimento.
 
 - **Relè del guadagno (0 ↔ +3 ↔ +10 dB, ADR-019).** Vincolo di progetto: la rete va
   disposta in modo che **l'anello di controreazione non si apra mai**
@@ -406,7 +474,9 @@ Comportamento dinamico durante e dopo ogni commutazione:
   **Non misurato** (L34): il gradino che la commutazione a caldo porta **sul
   jack** principale. `tb_switch_v2` guarda `v(OUT)` per 70 ms, contro un τ di
   0,32 s al jack; il calcolo dà ~6–114 mV (ADR-030). Lo misura **L29**, a
-  confronto col cambio sotto mute seguito dal rilascio.
+  confronto col cambio sotto mute seguito dal rilascio. **Contro la soglia**
+  (L38): 6–114 mV calcolati stanno 60–1140 volte sopra i 100 µV. È un calcolo, e
+  L29 lo conferma misurando.
 - **Relè del selettore d'ingresso**: commutazione a caldo fra sorgenti,
   con l'eventuale carica residua sui condensatori di accoppiamento a
   monte.
@@ -478,7 +548,7 @@ silenziata porta in classe B soltanto lo stadio che la serve.
 | Cosa | Impatto | Assegnato a | Stato |
 |---|---|---|---|
 | ~~Conferma specifiche cj EV250~~ | Struttura di guadagno | utente | **CHIUSO** — email costruttore + manuale MV50, vedi report 2026-09-08 |
-| Impedenza d'**ingresso** Singxer SA-1 V2 | Dimensionamento C uscita fissa | Fase 1 | **NON PUBBLICATA.** Verificato sul manuale ufficiale. Vie residue: chiedere a Singxer, misurare, o adottare 4,7 µF e chiudere la questione |
+| ~~Impedenza d'**ingresso** Singxer SA-1 V2~~ | Dimensionamento C uscita fissa | utente | **CHIUSO** — non pubblicata (verificato sul manuale ufficiale) e non serve più: 4,7 µF su tutte e tre le uscite, ADR-007 aggiornamento del 2026-09-08; confermato dall'utente il 2026-09-15 |
 | ~~Scelta del JFET d'ingresso~~ | Topologia dello stadio d'ingresso | utente | **CHIUSO** — **LSK489**, vedi ADR-013 |
 | Valore del cap d'uscita del phono a valvole | Verifica del margine su E3 | utente | **RINVIATO** — non ha accesso agli schematici né può aprire agevolmente il telaio. Non blocca: E3 ≥ 100 kΩ copre il caso peggiore ragionevole |
 | ~~Modello SPICE LSJ74~~ | — | — | **DECADUTO** — LSJ74 non è più in progetto (ADR-013) |

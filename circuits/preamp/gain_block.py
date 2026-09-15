@@ -456,9 +456,15 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # re-swept when the vendor MJE15032/33 and 2N5551 models arrive (Fase 4):
     # it is set by device Vbe, which is exactly what a placeholder model
     # gets wrong.
-    # This transistor MUST be thermally coupled to the NPN output device's tab
-    # (thermal compound + cable tie is enough at 225 mW) or the bias drifts.
-    # Handed to pcb-automation-engineer as a placement rule.
+    # This transistor MUST be thermally coupled to the NPN output device
+    # (MJE15032) or the bias drifts. ADR-034 / NC-019: the coupling is PCB
+    # COPPER, not thermal compound + cable tie - ADR-017 makes this part an
+    # MMBT5551 in SOT-23, which cannot be tied to a TO-220 tab (T7 stays).
+    # The copper must NOT join them galvanically: the TO-220 tab is the
+    # collector, on VP, and no pin of this transistor is on VP. And
+    # TO-220-3_Vertical has no tab pad. Geometry, layer, isolation and the
+    # TO-220 footprint: pcb-automation-engineer, before G2. This comment is
+    # the whole hand-off today - no separate layout brief exists yet.
     # NO trimmer, deliberately: with 22 Ohm emitter resistors a 50 mV Vbe
     # spread moves Iq by only +/-1.1 mA, and a trimmer with an open wiper is
     # a thermal-runaway mechanism. R(NBB-NY) is select-on-test if needed.

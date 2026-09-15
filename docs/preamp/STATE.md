@@ -11,16 +11,58 @@ realtà, il progetto non è ripartibile.
 | | |
 |---|---|
 | Ultimo aggiornamento | **2026-09-15** |
-| Ultimo lotto chiuso | **L37** — E4 nel dossier. `build_dossier.py` legge E4 da L13: tre uscite, costanza col volume, Zout a sorgente spenta. Rifiuta la Zout di L27 e una Zout al nodo che contiene il segnale, per grandezza e non per rapporto: anche la Zout vera scala col guadagno. Chiude NC-033. Prima: **L20** — quanto il progetto dipende da I_DSS, ADR-031, chiude NC-013 |
-| **Prossimo lotto** | **L38** — le risposte del 2026-09-15 diventano requisiti (mandato in «Prossimo passo concreto») |
-| Non conformità | **13 aperte, 2 bloccanti** |
-| Le bloccanti | NC-004 · NC-017 (Fase 4) |
-| Suite | `run_tests.sh` **10 passed / 0 failed** a fine L37, eseguita dal worktree (il 2h importa `provenance()` dal builder modificato) |
+| Ultimo lotto chiuso | **L38** — le risposte del 2026-09-15 diventano requisiti. **ADR-032**: V2 ≤ 100 µV di picco 20 Hz–20 kHz al jack delle tre uscite, per gradino, residuo in mute e taglio della musica, accensione e spegnimento compresi, col metodo di misura. **ADR-033**: LED dai relè spia. **ADR-034**: moltiplicatore di Vbe accoppiato col rame (un ponte galvanico sarebbe un corto: il tab è su VP). **NC-028 sale a bloccante.** Prima: **L37** — E4 nel dossier, chiude NC-033 |
+| **Prossimo lotto** | **L29** — il gradino, il residuo e il taglio al jack, misurati col metodo di V2 (mandato in «Prossimo passo concreto») |
+| Non conformità | **13 aperte, 3 bloccanti** |
+| Le bloccanti | NC-004 · NC-017 (Fase 4) · NC-028 (L29) |
+| Suite | `run_tests.sh` **10 passed / 0 failed** a fine L38, eseguita dal worktree (2i compreso: `gain_block.py` ha ricevuto solo un commento, nessuna rigenerazione) |
 
 ## Diario degli ultimi lotti
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L38 — le risposte del 2026-09-15 diventano requisiti (2026-09-15)
+
+**NC-028 sale a bloccante.** Report: `reports/2026-09-15-L38-risposte-requisiti.md`.
+Calcolo: `data/2026-09-15/L38/`. Nessun deck eseguito, nessun valore del circuito.
+ADR nuove: **ADR-032**, **ADR-033**, **ADR-034**.
+
+- **La soglia letta contro i numeri, prima di scriverla** (la lezione di L37).
+  - 100 µV valgono **33,45** dB SPL calcolati, non «circa 34».
+  - Un gradino netto passa il filtro quasi intero; l'ordine del passa-alto pesa
+    solo sulle rampe, circa ×2 per ordine.
+  - Letta alla lettera, la soglia avrebbe bocciato per il residuo a mute inserito
+    (4 mV p-p) ogni mute a contatto singolo. E i banchi usano contatti a 0,01 Ω,
+    contro i 100 mΩ massimi del datasheet G6K.
+- **Chiesto all'utente, che ha risposto.**
+  - La soglia vale per **A, B e C**: gradino, residuo in mute, taglio della
+    musica.
+  - Spegnimento: «si lo spegnimento rientra».
+  - Ordine del filtro: «indifferente», quindi 2° ordine.
+  - Finestra di C: 10 ms.
+- **ADR-032 e V2.** Soglia e metodo scritti in V2. Il criterio 3 di ADR-030 si
+  legge nel caso peggiore, e una regola d'uso non rende conforme V2.
+- **NC-028 è decidibile, e il verdetto è negativo.** Il CSV versionato di L11
+  porta 5,37 V al jack. La voce sale a **bloccante**, come NC-002 in L26, e resta
+  aperta per L29.
+- **NC-019: il ponte di rame, alla lettera, era un corto.**
+  - Il tab del MJE15032 è su `VP`, e `TO-220-3_Vertical` non ha la piazzola del
+    tab.
+  - ADR-034 registra la risposta dell'utente: «Rame, forma da dimensionare».
+  - `gain_block.py` ha ricevuto solo un commento: AST identico a `main`, e il
+    controllo è stato fatto fallire.
+  - La consegna a `pcb-automation-engineer` è solo quel commento. NC-019 resta
+    aperta.
+- **ADR-033**: LED dai relè spia, e il guasto di un solo relè è accettato.
+- **NC-009**: il punto 3 si sposta sul manuale d'uso, che non esiste. Resta
+  aperta.
+- **Il Singxer** è chiuso in «Aperti»; il condensatore del phono resta rinviato.
+- **L'indice delle ADR** segna ADR-017, ADR-027 e ADR-030 come precisate; i loro
+  file sono intatti.
+
+Suite **10 passed / 0 failed**. **13 voci aperte, 3 bloccanti.** Prossimo:
+**L29**.
 
 ### L37 — E4 nel dossier (2026-09-15)
 
@@ -969,7 +1011,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L26 | **I tre requisiti nuovi dell'utente diventano ADR-019**: margine di fase minimo **60° ovunque**, trim abilitato dal mute con **interlock elettrico**, guadagni **0 / +3 / +10 dB** con riposo a 0 dB | XS/S | **NC-012** (chiude), apre NC-021…NC-023 | **fatto** |
 | L27 | **Il terzo livello di guadagno entra nel progetto.** Dimensionare il secondo ramo commutato verso massa (ADR-004 conservata: si commuta R_g, mai R_f; a relè diseccitati **0 dB**), decidere relè e poli col budget di corrente delle bobine, estendere i dodici deck da due modalità a tre e l'asserzione del diagramma a blocchi | M | **NC-022**, apre **NC-030** | **fatto** — ADR-026 (due rami di R_g in parallelo, K1 + K5) |
 | L28 | **SS dell'LSK489 definito per l'LSK489.** Un documento del costruttore che dica cosa sono i pin 3 e 7 di *questa* parte — o una ADR che accetti l'istruzione dell'LSK389 in forza della compatibilità dichiarata. Prima di G2 | XS/S | NC-027 | da fare |
-| L29 | **Il gradino al rilascio del mute.** Oggi il rilascio con segnale porta sul jack il condensatore caricato dalla musica: **5,37 V** a +10 dB, 1,79 V a 0 dB, 1,72 V sulle fisse, τ 0,32 s. **Il contatto prima del condensatore**, simulato in scratch dopo L11, toglie quel gradino ma ne mette uno **pari all'offset del blocco** (14-104 mV simulati, più fino a 63 mV di dispersione LSK489) **a ogni mute, accensione compresa**, e il volume non lo riduce (numeri e stima d'udibilità in NC-028). **Prima una soglia dell'utente su V2**; poi il confronto misurato, con un deck **versionato**, fra: contatto prima + offset abbassato (bilanciamento, coppie selezionate), rilascio lento, mute in serie, sequenza di rilascio. P7 va rimisurata per la posizione scelta. **Esteso da L34 (ADR-030)**: per ogni variante di mute, **cambio di guadagno a caldo contro cambio sotto mute seguito dal rilascio**, misurati sul jack e non su `v(OUT)`; transitorio ≥ 2 s (τ 0,32 s); passaggi 0↔+3, +3↔+10 e 0↔+10 dB, con e senza segnale, commutazione sul picco e sullo zero; dispersione LSK489 iniettata (±8 mV tipici, ±20 mV massimi) in più posizioni dell'attenuatore; rimbalzi dei contatti e break-before-make del rotativo; carichi 100 kΩ e 10 kΩ. **Dal confronto dipende L36** | M | NC-028 | da fare |
+| L29 | **Il gradino al rilascio del mute.** Oggi il rilascio con segnale porta sul jack il condensatore caricato dalla musica: **5,37 V** a +10 dB, 1,79 V a 0 dB, 1,72 V sulle fisse, τ 0,32 s. **Il contatto prima del condensatore**, simulato in scratch dopo L11, toglie quel gradino ma ne mette uno **pari all'offset del blocco** (14-104 mV simulati, più fino a 63 mV di dispersione LSK489) **a ogni mute, accensione compresa**, e il volume non lo riduce (numeri e stima d'udibilità in NC-028). **La soglia c'è da L38: V2 in `REQUIREMENTS.md` e ADR-032.** Vale ≤ 100 µV di picco, filtrato 20 Hz–20 kHz, al jack delle tre uscite, carichi 10 e 100 kΩ, contatti a 100 mΩ. Si applica ad A, il gradino (differenza da una corsa di riferimento); a B, il residuo a mute inserito; a C, il taglio della musica (tono meno ricostruzione su 10 ms). Accensione **e spegnimento** compresi. **Il metodo di V2 si segue alla lettera**, e un deck che non lo segue non verifica V2. **Il cambio a caldo calcolato (6–114 mV) non rispetta la soglia**: L29 lo deve **confermare misurando**, non assumere. Nessuna cifra di oggi sta sotto soglia. Il residuo in mute di 4 mV p-p era simulato con contatti a 0,01 Ω, dieci volte meglio del massimo del datasheet. Con la musica presente un contatto netto difficilmente rispetta C: il confronto deve includere un **mute graduale**, il «rilascio soft» dell'utente. Poi il confronto misurato, con un deck **versionato**, fra: contatto prima + offset abbassato (bilanciamento, coppie selezionate), rilascio lento, mute in serie, sequenza di rilascio. P7 va rimisurata per la posizione scelta. **Esteso da L34 (ADR-030)**: per ogni variante di mute, **cambio di guadagno a caldo contro cambio sotto mute seguito dal rilascio**, misurati sul jack e non su `v(OUT)`; transitorio ≥ 2 s (τ 0,32 s); passaggi 0↔+3, +3↔+10 e 0↔+10 dB, con e senza segnale, commutazione sul picco e sullo zero; dispersione LSK489 iniettata (±8 mV tipici, ±20 mV massimi) in più posizioni dell'attenuatore; rimbalzi dei contatti e break-before-make del rotativo; carichi 100 kΩ e 10 kΩ. **Dal confronto dipende L36** | M/L | NC-028 | da fare |
 | L30 | **Il calore del telaio con otto blocchi.** A riposo la scheda audio dissipa 6,45 W (0,806 W per blocco, L17) contro i 3-4 W che P5 prevede per l'apparecchio intero. Stima termica del telaio con l'alimentatore; poi o P5 aggiornato al numero vero, o ventilazione e montaggio progettati con una ADR, o ADR-021 riaperta se i 60 °C non reggono. Va col lotto dell'alimentatore | S | NC-029 | da fare |
 | L31 | **I vettori di rumore di `tb_noise_vectors.cir`.** Il deck cita `onoise_q123`, `onoise_r121`, `onoise_jq110`, `onoise_jq111`, dispositivi che non esistono più; il `wrdata` si ferma e non scrive niente, con rc 0. Rinominarli dall'include generato ed estendere `check_deck_refs.py` ai nomi `onoise_*`/`inoise_*`, facendolo fallire sul deck di oggi | XS | NC-030 | **fatto** — 2g esteso e fatto cadere (4 nomi morti), mappa per nodi (tre nomi vivi erano già sbagliati), quadratura = spettro |
 | L32 | **Il dossier rigenerato sui dati di oggi. Subito dopo L16.** `build_dossier.py` legge ancora `data/2026-09-09`: THAT320, C_f 22 pF, due soli guadagni. Va esteso ai tre modi (0 / +3 / +10 dB) e puntato ai dati di L27 e L16, coi margini di V1 al minimo della spazzata (ADR-024), la cifra unica di headroom che L16 sceglie per NC-009 e la «KPI riferita a 60°» rimasta da L19. Accanto a ogni numero, la provenienza dei modelli ancora segnaposto (NC-004, NC-017). **Nessun avviso di obsolescenza**: il dossier lo legge solo l'utente (deciso il 2026-09-14) | S | NC-009 (la metà del dossier), apre **NC-031** | **fatto** — tre modi, V1 al minimo della spazzata, M1 +6,58 dB, provenienza letta dagli `.include`; nove controlli fatti fallire |
@@ -979,7 +1021,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L35 | **Comandi e LED a pannello nel sorgente** (ADR-028). Header di cablaggio al posto dei LED del trim sulla scheda (`trim.py`); comando del guadagno sul rotativo a 3 posizioni, cablato perché K5 non sia mai comandato senza K1 (ADR-026); interruttore di mute combinato col temporizzatore d'accensione; LED rosso di mute, letto da un contatto che dica lo stato; `check_relay_safe_state.py` esteso. **Dopo L29 e L36**: il comando del guadagno si cabla una volta sola | S/M | **NC-032** | da fare |
 | L36 | **Il guadagno interbloccato dal mute** (ADR-030, strada B). **Solo se L29 lo giustifica**, altrimenti «superata». Due relè ausiliari con autoritenuta su K1/K5; la corsa al rilascio del mute (scambio di K6 contro rilascio delle bobine) simulata e chiusa; il 2e esteso al guadagno; tre LED dello stato vero dai poli liberi degli ausiliari; budget delle bobine (~169 mA fuori mute a +10 dB, a 5 V) consegnato all'alimentatore. Se la corsa si chiude bene, rivalutare la stessa strada per il trim | M | parte di **NC-028** | da fare — **dipende da L29** |
 | L37 | **E4 nel dossier.** `build_dossier.py` legge la Zout da `data/2026-09-14/L27/dopo/tb_zout_psrr_noise/`, misurata con la sorgente accesa (NC-033): KPI 58,76 Ω, tabella con 1,0355 Ω «al nodo OUT», nota E4/E8, riepilogo «≤ 60,5851 Ω». Puntarlo ai dati di L13 (`tb_e4_uscite` sulle tre uscite e `tb_zout_psrr_noise` corretto), pubblicare la costanza col volume e le fisse, rifiutare la Zout di L27, annotare in coda `data/2026-09-09/README.md`. I report datati non si toccano | XS/S | NC-033 | **fatto** — E4 da L13 (tre uscite, dispersione ≤ 1,0·10⁻⁴ Ω), Zout di L27 rifiutata; il controllo «scala col guadagno» non distingueva (anche la Zout vera scala), sostituito da grandezza + incrocio fra deck; resto del dossier provato identico; 10 sabotaggi |
-| L38 | **Le risposte del 2026-09-15 diventano requisiti** (voce di diario «Dopo L20»). ADR per la soglia di V2 (≤ 100 µV di picco 20 Hz–20 kHz su tutte le uscite, accensione compresa, cono libero sotto 20 Hz) e V2 in `REQUIREMENTS.md`; criterio 3 di ADR-030 al caso peggiore; NC-028 e L29 aggiornati; NC-009 punto 3 verso il manuale d'uso; NC-019 col ponte di rame, scritto in `gain_block.py` e nella consegna a `pcb-automation-engineer`; LED gemelli accettati (nota in ADR nuova, ADR-027 non si riscrive); Singxer chiuso in «Aperti». **Prima di L29** | XS/S | aggiorna NC-009, NC-019, NC-028 | da fare |
+| L38 | **Le risposte del 2026-09-15 diventano requisiti** (voce di diario «Dopo L20»). ADR per la soglia di V2 (≤ 100 µV di picco 20 Hz–20 kHz su tutte le uscite, accensione compresa, cono libero sotto 20 Hz) e V2 in `REQUIREMENTS.md`; criterio 3 di ADR-030 al caso peggiore; NC-028 e L29 aggiornati; NC-009 punto 3 verso il manuale d'uso; NC-019 col ponte di rame, scritto in `gain_block.py` e nella consegna a `pcb-automation-engineer`; LED gemelli accettati (nota in ADR nuova, ADR-027 non si riscrive); Singxer chiuso in «Aperti». **Prima di L29** | XS/S | aggiorna NC-009 e NC-019; NC-028 sale a **bloccante** | **fatto** — ADR-032 (soglia e metodo di V2: A gradino, B residuo in mute, C taglio della musica; spegnimento compreso), ADR-033, ADR-034; il ponte galvanico era un corto (tab su VP); `gain_block.py` solo commento, AST identico e controllo fatto fallire; NC-009 e NC-019 restano aperte |
 
 **NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
 riesecuzione di `tb_noise_breakdown.cir` coi modelli veri. È il caso
@@ -3031,23 +3073,28 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L38 — Le risposte del 2026-09-15 diventano requisiti.** Aggiorna NC-009,
-NC-019 e NC-028. Lotto **XS/S**. Il mandato completo è in `NEXT-SESSION.md`.
+**L29 — Il gradino, il residuo e il taglio al jack, misurati col metodo di V2.**
+Riguarda NC-028, **bloccante** da L38. Lotto **M/L**: se non entra in una
+sessione, si divide e lo si scrive qui. Il mandato completo è in
+`NEXT-SESSION.md`.
 
 **Perché adesso.**
-- **L29**, sul cammino critico, aspetta la soglia di V2 che l'utente ha dato dopo
-  L20. Finché non è un requisito, L29 non ha un criterio scritto contro cui
-  misurare. L36 e L35 aspettano L29.
-- Gli altri aspettano altro. L28 aspetta una sessione interattiva con l'utente
-  sui pin SS. L30 aspetta l'alimentatore.
+- **È sul cammino critico**: L36 e L35 aspettano il suo confronto, e NC-028 è
+  bloccante.
+- **La soglia esiste** (L38, ADR-032). Gli altri lotti aspettano altro: L28 una
+  sessione interattiva con l'utente sui pin SS, L30 l'alimentatore.
 
 **Dove parte.**
-- Le risposte sono nella voce di diario «Dopo L20», **registrate e non ancora
-  requisiti**.
-- Le ADR sono immutabili: la prima libera è **ADR-032**. ADR-027 e ADR-030 non
-  si riscrivono, si superano o si precisano con una ADR nuova.
-- **Nessun numero simulato**: L38 scrive decisioni. Le cifre del gradino a caldo
-  (6–114 mV) sono calcolate, e restano etichettate così.
+- **V2 in `REQUIREMENTS.md`**: la soglia, le grandezze A, B e C, e il metodo, da
+  seguire alla lettera. Il perché sta in ADR-032.
+- **NC-028**: le varianti di mute simulate in scratch dopo L11, da rifare con un
+  deck versionato.
+- **I nomi dei nodi.** `tb_mute_corto.cir` chiama i jack `JM`, `J1` e `J2`, con
+  contatti a **RON 0,01 Ω**. `tb_e4_uscite.cir` li chiama `MAINJACK`,
+  `FIXJACK1` e `FIXJACK2`, e `preamp_audio.py` ha `MAINJACK`: il nome si legge
+  nel deck, prima di scrivere il marcatore. V2 vuole contatti a 100 mΩ.
+- **Nessuna cifra di oggi sta sotto soglia.** Il cambio a caldo, 6–114 mV, è
+  calcolato. Il taglio della musica (C) non è mai stato misurato.
 
 ### Quello che il repo ti consegna già
 
@@ -3086,7 +3133,13 @@ NC-019 e NC-028. Lotto **XS/S**. Il mandato completo è in `NEXT-SESSION.md`.
   - K7, K8 trim; K9, K10 spie.
 
   Budget delle bobine: 126,6 mA a 5 V, in mute e fuori (ADR-027).
-- **I conteggi**: 13 voci aperte, 2 bloccanti. L37 ha chiuso NC-033.
+- **I conteggi**: 13 voci aperte, 3 bloccanti. L38 ha portato NC-028 a bloccante;
+  L37 aveva chiuso NC-033.
+- **V2 ha soglia e metodo** (L38, ADR-032). Altre decisioni di L38: i LED del
+  trim restano sui relè spia (ADR-033); il moltiplicatore di Vbe si accoppia col
+  rame, in una forma che dimensiona `pcb-automation-engineer` (ADR-034, NC-019).
+  Il manuale d'uso, dove va il punto 3 di NC-009, non esiste e nessun lotto lo
+  produce.
 - **E4 è misurata su tutto** (L13): `tb_e4_uscite.cir`, tre uscite × 45 celle,
   e `tb_zout_psrr_noise.cir` con la Zout a sorgente spenta. Il dossier lo
   pubblica da L37.
@@ -3096,10 +3149,8 @@ NC-019 e NC-028. Lotto **XS/S**. Il mandato completo è in `NEXT-SESSION.md`.
 
 **Poi**, nell'ordine:
 - **L28** (SS dell'LSK489, NC-027) va fatto prima di G2.
-- **L29** (NC-028, **esteso da L34**, ora M) aspetta una soglia dell'utente su
-  V2, che si può chiedere in qualsiasi momento. È **sul cammino critico**: dal
-  suo confronto fra cambio di guadagno a caldo e cambio sotto mute dipende
-  **L36**.
+- **L29** (NC-028) è il prossimo, qui sopra. Dal suo confronto fra cambio di
+  guadagno a caldo e cambio sotto mute dipende **L36**.
 - **L36** (ADR-030), **solo se L29 lo giustifica**: interblocco del guadagno con
   gli ausiliari e i LED del guadagno. Se L29 dice di no, «superata».
 - **L35** (NC-032): comandi e LED a pannello nel sorgente, dopo L36, perché il
@@ -3230,12 +3281,12 @@ Da non ricercare di nuovo.
 |---|---|---|
 | ~~Condensatore verso il Singxer: 2,2 o 4,7 µF~~ | — | **CHIUSA**: 4,7 µF (ADR-007 addendum), confermata dall'utente il 2026-09-15 |
 | ~~Trascrizione e validazione del modello LSK489~~ | — | **CHIUSA**: trascritta in L6 (due letture byte-identiche), **validata contro il datasheet in L7** — I_DSS dentro la finestra, V_GS(off) **fuori di 0,376 V**, e non per un errore di trascrizione. Aperta NC-013; ADR-013 non riaperta |
-| ~~Impedenza d'ingresso Singxer SA-1 V2~~ | — | **CHIUSA dall'utente il 2026-09-15**: non pubblicata, e non serve più (4,7 µF; NC-010 chiusa da L17). Allineare `REQUIREMENTS.md` in L38 |
+| ~~Impedenza d'ingresso Singxer SA-1 V2~~ | — | **CHIUSA dall'utente il 2026-09-15**: non pubblicata, e non serve più (4,7 µF; NC-010 chiusa da L17). «Aperti» di `REQUIREMENTS.md` allineato in L38 |
 | Valore del cap d'uscita del phono a valvole | utente | **Rinviata**, di nuovo il 2026-09-15 — non ha accesso agli schematici né può aprire agevolmente il telaio |
 | ~~Quale JFET d'ingresso~~ | — | **CHIUSA**: LSK489 (ADR-013) |
 | ~~Conferma specifiche cj EV250~~ | — | **CHIUSA**: email costruttore + manuale MV50 |
-| ~~Il LED del trim legge i relè spia K9/K10, non K7/K8~~ | — | **RISPOSTA il 2026-09-15**: l'utente tiene la soluzione attuale, anche per i LED di ADR-030. Da registrare in L38 |
-| ~~Soglia su V2: quanto gradino al jack è accettabile~~ | — | **RISPOSTA il 2026-09-15**: ≤ 100 µV di picco 20 Hz–20 kHz, ogni uscita, ogni condizione; cono libero sotto 20 Hz. Da registrare in L38, **prima di L29** |
+| ~~Il LED del trim legge i relè spia K9/K10, non K7/K8~~ | — | **RISPOSTA il 2026-09-15**: l'utente tiene la soluzione attuale, anche per i LED di ADR-030. **Registrata in L38: ADR-033** |
+| ~~Soglia su V2: quanto gradino al jack è accettabile~~ | — | **RISPOSTA il 2026-09-15**: ≤ 100 µV di picco 20 Hz–20 kHz, ogni uscita, ogni condizione; cono libero sotto 20 Hz. **Registrata in L38: ADR-032 e V2**, con le risposte di L38 (A gradino + B residuo in mute + C taglio della musica; spegnimento compreso; filtro «indifferente» → 2° ordine; finestra di C 10 ms) |
 | Pin SS dell'LSK489 (NC-027, L28) | utente + orchestratore, sessione interattiva | No, ma prima di G2 |
 | Disponibilità e ciclo di vita dell'**LSK489B** (T8): ADR-013 cita 921 pezzi su DigiKey senza gruppo, e L20 non l'ha verificato. E se il costruttore pubblica un modello del gruppo B. Da L20, ADR-031 | giro componenti (`bom-component-manager`) | No, ma prima di G2 |
 

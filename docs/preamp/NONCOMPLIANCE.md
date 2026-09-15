@@ -72,8 +72,14 @@ dipendono; il margine di saturazione a modo comune scende a 2,4 V. Ha registrato
 uscite, costanza col volume, Zout a sorgente spenta). Rifiuta la Zout di L27 e
 una Zout al nodo che contiene il segnale, riconosciuta dalla grandezza e non dal
 rapporto col guadagno: **chiude NC-033**.
-**13 voci aperte, 2 bloccanti.**
-L'accesso a G1 non è concesso finché NC-004 e NC-017 restano aperte.
+**L38** (2026-09-15) ha messo per iscritto le risposte dell'utente: **ADR-032**
+(la soglia di V2 col suo metodo di misura), **ADR-033** (i LED del trim dai relè
+spia) e **ADR-034** (il moltiplicatore di Vbe accoppiato col rame del PCB). La
+soglia rende **NC-028 decidibile**, e sulla misura versionata di L11 il verdetto
+è **negativo**: la voce sale a **bloccante**, come NC-002 in L26. NC-009 e NC-019
+restano aperte, aggiornate.
+**13 voci aperte, 3 bloccanti.**
+L'accesso a G1 non è concesso finché NC-004, NC-017 e NC-028 restano aperte.
 
 ---
 
@@ -734,6 +740,18 @@ una ADR nuova che superi ADR-015: non si fa modificandola.
 
 **Resta aperta**, maggiore, per il solo punto 3: la legenda di pannello o la
 documentazione d'uso di ADR-015.
+
+**Stato dopo L38 (2026-09-15).** Punto 3 **spostato, non chiuso**.
+- **Dove va scritto**: l'utente, dopo L20, ha deciso che la conseguenza
+  operativa del trim va nel **manuale d'uso**, non su una legenda di pannello
+  (`STATE.md`, «Dopo L20», punto 3). Il criterio 3 si legge quindi così: «la
+  conseguenza operativa di ADR-015 e del trim comune (F2) è scritta nel manuale
+  d'uso».
+- **Perché non si chiude**:
+  - il manuale d'uso **non esiste**, e nessun lotto della tabella di `STATE.md`
+    lo produce;
+  - decidere dove va scritto non equivale ad averlo scritto.
+- **Resta aperta**, maggiore, per il solo punto 3: il testo nel manuale d'uso.
 
 ### NC-011 — Il PSRR del rail positivo non vincola nessuno
 
@@ -1487,7 +1505,7 @@ sulla netlist rigenerata, non sul sorgente.
 
 | | |
 |---|---|
-| Requisito | La regola di piazzamento dichiarata in `circuits/preamp/gain_block.py:350`, conseguenza di **ADR-017** |
+| Requisito | La regola di piazzamento dichiarata in `circuits/preamp/gain_block.py`, sezione 4 (riga 350 a L24, 459 a L38), conseguenza di **ADR-017**; da L38 **ADR-034** |
 | Severità | **maggiore** |
 | Aperta da | `reports/2026-09-10-L24-t7-dispositivi-attivi.md` |
 | Stato | aperta |
@@ -1525,6 +1543,29 @@ letta (il commento in `circuits/preamp/` **e** la consegna a
 quel singolo dispositivo in un package a foro passante, con la lacuna T7
 dichiarata accanto ai numeri che ne dipendono, secondo la clausola «Da
 riaprire se» di ADR-016. Va risolta **prima del G2**.
+
+**Stato dopo L38 (2026-09-15).** La decisione c'è, il rimedio no: **resta
+aperta**, maggiore.
+- **La decisione, ADR-034**: accoppiamento col rame del PCB, non con la fascetta,
+  e T7 intatta. L'utente, dopo L20: «ponte di rame sul PCB fra la piazzola del
+  SOT-23 e quella del tab del TO-220». In L38, sentiti i due vincoli qui sotto:
+  «Rame, forma da dimensionare».
+- **Due vincoli che il «Cosa serve per chiuderla» qui sopra non vedeva**, trovati
+  rileggendo il sorgente:
+  - **il tab del MJE15032 è il collettore, su `VP`**, e nessun piedino del
+    moltiplicatore (`NX`, `NBB`, `NY`) è su `VP`. Un ponte di rame galvanico
+    diretto metterebbe in corto il rail;
+  - **`TO-220-3_Vertical`**, il footprint del sorgente, ha solo le piazzole 1–3:
+    la piazzola del tab non c'è.
+- **Il riferimento a `gain_block.py:350` era deriva di righe.** A L38 la regola
+  stava alle righe 459–461. Ora è un commento che punta ad ADR-034:
+  - è solo commento: l'AST coincide con `main`;
+  - il controllo è stato fatto fallire su una copia con un valore alterato.
+- **La consegna a `pcb-automation-engineer` non esiste come documento**: è quel
+  commento. Nessun brief di layout esiste ancora.
+- **Per chiuderla**: la geometria isolata, dimensionata e dichiarata da
+  `pcb-automation-engineer`, prima di G2. Il sorgente istanzia ancora il 2N5551
+  in TO-92: l'MMBT5551 arriva in Fase 4.
 
 ### NC-020 — La f_T del modello LS352 sta il 35% sotto il minimo del suo datasheet
 
@@ -1993,7 +2034,7 @@ lasciato flottante o collegato è una scelta di layout.
 | | |
 |---|---|
 | Requisito | **V2** (transitorio del relè di mute, al rilascio) · **F6**/ADR-012 (il mute esiste per non mandare botti alle uscite) · **ADR-019** (il trim si regola a mute inserito) |
-| Severità | **maggiore** |
+| Severità | **bloccante** da L38 (maggiore fino a L38: V2 non aveva una soglia) |
 | Aperta da | `reports/2026-09-14-L11-mute-e-corto.md` |
 | Stato | aperta |
 
@@ -2153,6 +2194,50 @@ l'interblocco di ADR-030.**
 - **Evidenza**: il calcolo in
   `reports/2026-09-15-L34-decisioni-comandi-guadagno-telaio.md`. Nessun dato
   nuovo.
+
+**AGGIORNATA IL 2026-09-15, da L38: V2 ha una soglia, e la voce sale a
+bloccante.**
+
+- **La soglia** (ADR-032; V2 in `REQUIREMENTS.md`, col metodo di misura).
+  - ≤ 100 µV di picco, filtrato 20 Hz–20 kHz, al jack delle tre uscite, in ogni
+    condizione, accensione e spegnimento compresi.
+  - Vale per **A**, il gradino; per **B**, il residuo a mute inserito; per
+    **C**, il taglio della musica.
+  - Circa 33 dB SPL di picco a 1 m con la formula sopra: calcolati (33,45 dB),
+    limite superiore.
+- **La voce diventa decidibile, e il verdetto è negativo.**
+  - «Perché maggiore e non bloccante», qui sopra, diceva che V2 non aveva una
+    soglia. Ora ce l'ha.
+  - La misura di L11 è **versionata**: `data/2026-09-14/tb_mute_corto_transitorio.csv`,
+    colonna `vjm_max_rel`, 17,3886 V dopo il rilascio contro 11,9907 V di picco
+    prima, a +10 dB. Porta sul jack un gradino di volt, circa 54 000 volte la
+    soglia.
+  - Nessuna scelta di filtro, carico o contatto porta 5,37 V sotto 100 µV. Un
+    gradino netto passa il filtro quasi intero: 104 mV escono a 0,11 V
+    (`data/2026-09-15/L38/calcolo_v2.out.txt`).
+  - È il passaggio che NC-002 fece in L26: un requisito non soddisfatto, quindi
+    **bloccante**.
+- **Le altre cifre di questa voce, contro la soglia.** Stanno tutte sopra, e
+  nessuna è misurata col metodo di V2:
+  - contatto prima del condensatore: −72 mV al rilascio con musica, +98 mV
+    all'inserzione, −124 mV al rilascio dopo un cambio di guadagno sotto mute,
+    +104 / −154 mV attorno a un mute di 2 s. Tutte scratch;
+  - cambio di guadagno a caldo: 6–114 mV, **calcolati**;
+  - **B**, il residuo a mute inserito: 4 mV picco-picco (≈ 59 dB SPL calcolati)
+    col contatto singolo, 1,6 µV col contatto su entrambi i lati. Scratch, con
+    contatti a **0,01 Ω**, mentre il datasheet G6K dà **100 mΩ massimi**;
+  - **C**, il taglio della musica: non esiste nessuna misura.
+- **Cosa serve per chiuderla, da L38.** Un rimedio che L29 misura col metodo di
+  V2, con un deck versionato:
+  - su tutte e tre le uscite e in ogni condizione del caso peggiore;
+  - sotto 100 µV per A, B e C;
+  - poi nel sorgente.
+
+  Una lettura, non una misura: con la musica presente un contatto netto
+  difficilmente rispetta C. Il confronto deve includere un **mute graduale**, il
+  «rilascio soft a resistenza variabile» dell'utente. Il criterio 3 di ADR-030 si
+  legge nel caso peggiore (ADR-032).
+- **Chi**: **L29**. La voce resta aperta finché la misura non c'è.
 
 
 ### NC-029 — Con i buffer delle fisse la dissipazione a riposo raddoppia, e P5 non la copre
