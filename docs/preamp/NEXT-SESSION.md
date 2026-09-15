@@ -1,37 +1,40 @@
-# Prompt per la sessione successiva — L20
+# Prompt per la sessione successiva — L37
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il
-lavoro è organizzato in LOTTI PICCOLI: questa sessione ne fa **UNO — L20** — e
+lavoro è organizzato in LOTTI PICCOLI: questa sessione ne fa **UNO — L37** — e
 si ferma. Non iniziarne un secondo.
 
 ## Cosa è cambiato col lotto precedente
 
-**L13 ha chiuso NC-008**: E4 è misurata sulle tre uscite, nei tre modi, a ogni
-posizione di trim e attenuatore. Il deck è `spice/preamp/tb/tb_e4_uscite.cir`,
-i dati stanno in `data/2026-09-15/L13/`.
-- **Re(Z) al jack ≤ 60,13 Ω** sulla principale e **≤ 53,13 Ω** sulle fisse. Il
-  massimo cade a 20 Hz, dove pesa lo scarico.
-- La dispersione su trim × attenuatore è **≤ 1e-4 Ω**.
+**L20 ha chiuso NC-013.** Il blocco di guadagno è stato misurato col modello del
+costruttore dell'LSK489, dal modello com'è (I_DSS 2,59 mA) a tutta la finestra
+del **gruppo B** (15 mA).
+- **Decisione dell'utente**: il JFET è del gruppo B, «Solo B, il gruppo del
+  sorgente». È **ADR-031**, con la tolleranza 8,0–15,0 mA e il suo criterio;
+  in `REQUIREMENTS.md` stanno la riga T4 e la «Nota su T4».
+- **I numeri**: punto di lavoro, E5 e V1 non dipendono da I_DSS. Il margine di
+  saturazione a modo comune scende a 2,4 V a 15 mA. E5 ≤ 4,308 µV; V1 del blocco
+  B a 0 dB ≥ 62,51°.
+- **Il segnaposto `LSK489X`**, che ogni altro deck istanzia ancora, ha I_DSS
+  4,842 mA: un JFET quasi tipico del gruppo A.
+- **Un blocco nuovo della suite, il 2i**: `spice/preamp/derived/` contiene il
+  blocco con `LSK489A`, derivato da `scripts/derive_jfet_variant.py`, e il 2i
+  rifiuta un derivato stantio. **Se L37 rigenera il blocco generato, il 2i cade
+  finché il derivato non si rigenera.**
+- **`build_dossier.py` è stato toccato**: una voce `"LSK489A": "LSK489"` in
+  `PART`. Il dossier non è stato rigenerato, e l'output del 2h sui 18 deck è
+  identico prima e dopo.
 
-**E ha trovato un difetto di misura vecchio di una settimana.**
-- La sezione Zout di `tb_zout_psrr_noise.cir` lasciava `VSRC` a 1 V AC: le cifre
-  di E4 pubblicate contenevano il segnale (58,76 / 59,11 / 60,59 Ω a 1 kHz invece
-  di 57,94 / 57,95 / 57,99).
-- Il deck è corretto; PSRR e rumore sono rimasti identici byte per byte.
-- **NC-033** (minore) tiene aperto il dossier, che pubblica ancora le cifre
-  vecchie. Lotto **L37**. Limitazione **#28**.
+**Due lezioni di L20 che valgono anche qui.**
+1. **Un controllo può trovare un errore nel commento, non nel circuito.** Il
+   confronto con `tb_op` è caduto su due nodi soli: il commento del deck stimava
+   4 pV uno spostamento che è 4,2 nV. Quando un controllo cade, si legge
+   **dove** cade prima di allargare la tolleranza.
+2. **Un `echo "$&x"` dopo `destroy all` scrive celle vuote con rc 0** (#26), e un
+   `altermod` su un nome sbagliato non cambia niente con rc 0 (#29). Si contano
+   le righe `Error` e le celle vuote, sempre.
 
-**Due lezioni che valgono anche per L20.**
-1. **Un controllo che non riesce a esercitare il suo caso non è fallito, è muto.**
-   Il primo sabotaggio «attenuatore scollegato» di L13 è stato rifiutato per la
-   ragione sbagliata: segnale zero, `vdb(0)` dà `Error`, cella vuota. Il
-   controllo positivo non era mai stato messo alla prova. Si guarda **quale**
-   controllo cade, non solo che qualcosa cada.
-2. **Un numero che scala con la cosa sbagliata è un segnale.** `za1k` seguiva il
-   guadagno del modo: bastava leggerlo.
-
-Voci: **15 aperte, 2 bloccanti** (NC-004, NC-017, entrambe di Fase 4). NC-008
-chiusa, NC-033 aperta.
+Voci: **14 aperte, 2 bloccanti** (NC-004, NC-017, entrambe di Fase 4).
 
 **Perché questo lotto viene adesso.** Non aspetta nessuno. Gli altri sì:
 - L28 aspetta un documento del costruttore o una ADR, prima di G2;
@@ -39,108 +42,89 @@ chiusa, NC-033 aperta.
 - L36 e L35 aspettano L29;
 - L30 aspetta l'alimentatore, che viene dopo L35 e L36.
 
-Nemmeno L37 (NC-033, il dossier) aspetta nessuno, e viene dopo.
-
 ## Leggi PRIMA, in quest'ordine, e non saltare
 
 1. **`CLAUDE.md`**: ambiente, percorsi assoluti, trappole silenziose, chiusura.
-2. **`docs/preamp/STATE.md`**: le voci di diario di L13 e L33, «Prossimo passo
-   concreto» e la riga L20 della tabella dei lotti.
-3. **`docs/preamp/NONCOMPLIANCE.md`**: **NC-013** per intero, poi NC-004,
-   NC-017 e la chiusura di NC-031. Dicono che cosa è davvero simulato oggi.
-4. **`docs/preamp/decisions/ADR-013-jfet-ingresso-lsk489.md`** e il report di L7,
-   `reports/2026-09-09-L7-controllo-incrociato-lsk489.md`: le condizioni di
-   prova, 25 °C gruppo A, e le tre strade per V_P.
-5. **`docs/preamp/REQUIREMENTS.md`**: **E5**, **V1**, **V4**, T7.
+2. **`docs/preamp/STATE.md`**: le voci di diario di L20, L13 e L32, «Prossimo
+   passo concreto» e la riga L37 della tabella dei lotti.
+3. **`docs/preamp/NONCOMPLIANCE.md`**: **NC-033** per intero, poi la chiusura di
+   NC-008.
+4. **`docs/preamp/reports/2026-09-15-L13-e4-tre-uscite.md`** e il report di L32,
+   `reports/2026-09-15-L32-dossier.md`: come il builder confronta le tabelle col
+   log, e che cosa L13 ha misurato.
+5. **`docs/preamp/REQUIREMENTS.md`**: **E4**, **E8** e la nota su «jack».
 6. **Cosa c'è già**:
-   - `models/jfet/lsk489.lib` (`LSK489A`, del costruttore, con `Kf`), la sua
-     `.provenance.json` e la ricetta `tb_lsk489` in `scripts/validate_models.py`,
-     che riesegue i tre numeri di L7 a ogni giro della suite;
-   - `spice/preamp/placeholder_devices.lib`: `LSK489X`, il segnaposto che **ogni**
-     deck istanzia oggi, con `KF = 0`;
-   - `spice/preamp/tb/tb_op.cir`, `tb_noise_breakdown.cir`, `tb_loop.cir`;
-   - i dati vigenti, `data/2026-09-14/L27/dopo/` e `L16/dopo/`.
-7. **`docs/limitations.md`**: in particolare #17 (due modelli della stessa
-   parte), #22 (un nome vivo ma sbagliato), #24 (nodi che collidono con
-   `_flat.inc`), #27 (contatti non terminati) e #28 (sorgenti AC dimenticate e
-   `vdb(0)`).
+   - `docs/preamp/dossier/build_dossier.py`, in particolare `measure_zout()` e i
+     controlli che rifiutano i percorsi del 2026-09-09;
+   - i dati di L13: `data/2026-09-15/L13/dopo/tb_e4_uscite/` e
+     `dopo/tb_zout_psrr_noise/`, col loro README e `esplorazione/script/e4.py`;
+   - il dossier generato, `docs/preamp/dossier/index.html`, con le quattro righe
+     sbagliate che NC-033 elenca.
+7. **`docs/limitations.md`**: #25 (tabelle `echo` sovrascritte), #26 (celle
+   vuote) e #28 (sorgenti AC dimenticate).
 
-## IL LOTTO: L20 — quanto il progetto dipende da I_DSS
+## IL LOTTO: L37 — E4 nel dossier
 
 ### Cosa fare
 
-1. **Baseline: che JFET simula il progetto oggi, misurato e non ricordato.**
-   - I_DSS e V_GS(off) di `LSK489X` alle condizioni di L7, accanto a quelli di
-     `LSK489A`. È la prima volta che il segnaposto si misura contro la finestra
-     del datasheet.
-   - Quale dei due sta più vicino al tipico? La risposta dice quanto valgono
-     tutte le cifre del progetto fino a oggi.
-2. **Il blocco di guadagno con il modello del costruttore**, ai due estremi di
-   NC-013:
-   - `LSK489A` com'è, con I_DSS 2,59 mA;
-   - `LSK489A` con `Vto` portato a una I_DSS di 5,5 mA (tipico), `Beta` invariato.
-     Si dichiara il `Vto` usato e si misura la I_DSS che ne esce.
-   - Misurare punto di lavoro (correnti di coda, cascode, VAS, uscita; offset in
-     uscita) e rumore in uscita 20 Hz–20 kHz (E5), nei casi di
-     `tb_noise_breakdown`.
-   - Il JFET entra nel guadagno d'anello: dire coi numeri se V1 (60°) va
-     rimisurato nel caso peggiore di L27, e se sì misurarlo.
-3. **Come istanziare `LSK489A` senza toccare niente di generato.**
-   `gain_block.subckt` e `_flat.inc` sono generati da `gain_block.py` (AGENTS.md
-   regola 2), e i file di `models/` non si ritoccano. Decidere coi file, e
-   scrivere perché.
-4. **La tolleranza, scritta.** In `REQUIREMENTS.md` o in una ADR nuova: quale
-   dispersione di I_DSS il progetto tollera, e con quale criterio. Se il
-   progetto risulta sensibile, la scelta di ADR-013 si riapre con un numero in
-   mano: con una ADR nuova, non riscrivendo la 013.
-5. **Chiudere NC-013**, o lasciarla aperta con cosa manca.
+1. **Baseline, verificata e non ricordata.** Rigenera il dossier dal `main` di
+   oggi in una cartella di scratch.
+   - Controlla che le quattro cifre di NC-033 ci siano davvero, alle righe
+     indicate: KPI 58,76 Ω; tabella 59,1132 / 60,5851 Ω e 1,0355 Ω «al nodo
+     OUT»; nota E4/E8; riepilogo «≤ 60,5851 Ω».
+2. **Il builder legge E4 dai dati di L13.**
+   - `tb_e4_uscite` per le tre uscite e la costanza con trim × attenuatore.
+   - `tb_zout_psrr_noise` corretto per le curve.
+   - **Rifiuta** la Zout di `data/2026-09-14/L27/`, come oggi rifiuta i percorsi
+     del 2026-09-09.
+3. **KPI, tabella, nota E4/E8 e riepilogo rigenerati**, con le fisse e la
+   costanza col volume pubblicate. Le tabelle nuove si confrontano col log come
+   le altre (L32).
+4. **Un controllo fatto fallire**: il builder rifiuta una Zout al nodo che scala
+   col guadagno del modo (la firma di #28).
+5. **Una nota in coda a `data/2026-09-09/README.md`**, che non ne riscrive il
+   testo.
+6. **Chiudere NC-033**, o lasciarla aperta con cosa manca.
 
 ### I vincoli
 
-- **Nessun valore del circuito cambia.** Se un risultato chiede un rimedio, è una
-  non conformità nuova o un lotto suo.
-- **I dati si versionano** sotto `docs/preamp/data/<data>/L20/`, con un README
-  che dichiara la provenienza.
-- **Il 2h legge i commenti dei deck.** Un deck che include `models/jfet/lsk489.lib`
-  ha l'LSK489 **del costruttore, con `Kf`**. Le intestazioni copiate dagli altri
-  deck dicono il contrario, e il 2h deve cadere se restano: fallo cadere apposta
-  una volta.
-- **Il dossier non si rigenera** (è L37).
+- **Nessun valore del circuito e nessun deck cambia.** L37 impagina dati che
+  esistono.
+- **Il dossier si rigenera** (è il lotto), ma le sezioni che non riguardano E4
+  devono restare identiche: provalo con un confronto, non a occhio.
 - **Un controllo mai fatto fallire non è un controllo**, e un controllo fatto
   fallire per la ragione sbagliata nemmeno.
 
 ## Cosa NON accettare
 
-- **Un `Vto` ritoccato dentro `models/jfet/lsk489.lib`** o in un file di
-  `vendor/`.
-- **Una I_DSS dichiarata e non misurata** sul modello modificato.
-- **Una cifra di rumore senza la frase** «pavimento senza flicker» dove vale. Coi
-  segnaposto nessun dispositivo ha 1/f; con `LSK489A` il JFET ce l'ha, e il resto
-  no.
-- **Un deck che include due modelli con lo stesso nome** (#17), o un modello
-  modificato che ombreggia quello del costruttore senza dirlo.
-- **Un'ADR riscritta**, o un'aggiunta in coda a una esistente.
+- **Una cifra di E4 presa dal log di L27.**
+- **Una tolleranza allargata** per far passare un confronto, invece di capire
+  dove cade.
+- **Un report datato riscritto**: G0, L14, L27 e la bozza di Fase 2 restano
+  com'erano.
+- **Il dossier pubblicato come Artifact** senza che l'utente l'abbia chiesto.
 
 ## NON fa parte di questo lotto
 
+- **Pubblicare nel dossier i dati di L20** (I_DSS, gruppo B, `LSK489A`).
 - **L28** (NC-027), **L29** (NC-028, aspetta una soglia dell'utente su V2),
-  **L30** (NC-029), **L35**, **L36**, **L37** (NC-033, il dossier).
-- **La sostituzione dei modelli nel circuito** (Fase 4, NC-017): L20 misura una
-  sensibilità, non adotta `LSK489A` nei deck di `main`.
-- **Il selettore d'ingresso**, l'alimentatore, `VRELAY`.
+  **L30** (NC-029), **L35**, **L36**.
+- **La sostituzione dei modelli nel circuito** (Fase 4, NC-017).
+- **La verifica T8 dell'LSK489B**: è in «Domande aperte» di `STATE.md`.
 - **Non toccare i file già in `vendor/`.**
 
 ## Come lavoriamo
 
-- **Verifica invece di fidarti**, anche dei numeri qui sopra: L33 e L13 hanno
-  trovato sbagliate cose che il lotto precedente aveva scritto.
+- **Verifica invece di fidarti**, anche dei numeri qui sopra: L33, L13 e L20
+  hanno trovato sbagliate cose che il lotto precedente aveva scritto.
 - **Un controllo mai fatto fallire non è un controllo.**
 - **Niente cifre non eseguite.**
 - **Un lotto per volta, mai due agenti in parallelo.**
 - **Lavora in un worktree.** Gli script zsh si lanciano da soli, non in comandi
   composti.
   - `git` dentro un `python -c` viene rifiutato: esporta prima con
-    `git archive -o <file>` e `tar -xf` separato;
+    `git show HEAD:<file> > <copia>` o `git archive -o <file>` e `tar -xf`
+    separato;
   - anche `python` con un heredoc e `awk` con un programma inline vengono
     rifiutati: scrivi lo script su file e lancialo;
   - un ciclo di shell con modificatori di variabile (`${f:t}`), un comando con
@@ -150,6 +134,8 @@ Nemmeno L37 (NC-033, il dossier) aspetta nessuno, e viene dopo.
   - in zsh un argomento `--include=*.md` non quotato viene espanso come glob e
     il comando fallisce («no matches found»): quotalo;
   - `echo "===="` in zsh fallisce (`= not found`): usa `echo "---"`;
+  - `sort -t, -k6 -g` non ordina in modo affidabile una colonna di un CSV:
+    calcola i minimi con uno script;
   - se il classificatore dei permessi va in timeout, il comando non è partito:
     rilancialo.
 - **`testbenches/01_op.cir` ha un `wrdata` con percorso assoluto**: il 2b
@@ -165,8 +151,8 @@ Non è una lista da ricordare, è uno script che rifiuta. Nell'ordine:
 1. aggiorna `docs/preamp/STATE.md` segnando il lotto **fatto** e il successivo
    come prossimo;
 2. **riscrivi QUESTO file per il lotto successivo**: se il titolo nomina
-   ancora L20, lo script rifiuta;
+   ancora L37, lo script rifiuta;
 3. committa, pusha, apri la PR;
-4. `/bin/zsh scripts/chunk_close.sh L20`;
+4. `/bin/zsh scripts/chunk_close.sh L37`;
 5. rimuovi il worktree coi due comandi che lo script stampa;
 6. **fermati.**

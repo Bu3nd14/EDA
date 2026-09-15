@@ -293,7 +293,10 @@ def verdict(ok, yes="conforme", no="non conforme"):
 # Il nome della parte per ciascun modello istanziato. Sono nomi, non numeri:
 # cio' che il dossier AFFERMA - costruttore o segnaposto, e con quale KF -
 # viene dai file, non da questa tabella.
-PART = {"LSK489X": "LSK489", "LS350": "LS352", "NSS2N5551": "2N5551",
+# LSK489A (L20): the vendor model of models/jfet/lsk489.lib. Without this line a
+# deck simulating it names a part "LSK489A" that no comment says, and the claims
+# about "LSK489" read as claims about a part the deck does not simulate.
+PART = {"LSK489X": "LSK489", "LSK489A": "LSK489", "LS350": "LS352", "NSS2N5551": "2N5551",
         "PSS2N5401": "2N5401", "NMJE15032": "MJE15032", "PMJE15033": "MJE15033",
         "D1N4148": "1N4148"}
 PLACEHOLDER_LIB = "spice/preamp/placeholder_devices.lib"

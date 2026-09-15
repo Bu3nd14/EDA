@@ -1,0 +1,111 @@
+tb_idss_jfet.cir - L20: the input JFET alone, placeholder against vendor model, at the datasheet's conditions
+* First line is a title (docs/limitations.md #10).
+*
+* Dated deck of L20 (NC-013, ADR-031), kept with its data. It is NOT under
+* spice/*/tb: it instantiates its two JFETs directly, and the dossier's
+* provenance() reads instance models only from the block includes, so a deck
+* without a block include is refused there (and by block 2h).
+*
+* CONDITIONS - datasheet LSK489 RevA40 page 2, the same as L7:
+*   I_DSS      V_DG = 15 V with V_GS = 0, i.e. V_DS = 15 V at the terminals
+*   V_GS(off)  V_DS = 15 V, crossing of I_D = 1 nA      (meas on the sweep)
+*   V_GS       V_DS = 15 V, crossing of I_D = 500 uA    (meas on the sweep)
+*   Gfs        V_DG = 15 V, V_GS = 0: small-signal gm at the operating point
+* at 25 C, the datasheet's temperature, and 27 C, ngspice's default and the one
+* every circuit deck of the repo runs at. Vto is the model value at Tnom = 27 C;
+* the vendor model carries Vtotc = -2.5m, worth 5 mV on V_P between the two.
+*
+* THE TWO DEVICES
+*   JX = LSK489X from spice/preamp/placeholder_devices.lib, hand-written, KF = 0.
+*        It is never altered: its columns must be the same in every row.
+*   JA = LSK489A from models/jfet/lsk489.lib, the vendor model, INCLUDED
+*        UNTOUCHED. Variant 1 runs it as published. Variants 2-5 change its Vto
+*        with `altermod` inside .control, Beta held at the transcribed 2.2m
+*        (NC-013 prescribes moving Vto only). The Vto values are the declared
+*        ones of ../esplorazione/vto_dichiarati.csv: bisection, rounded to 1 mV,
+*        the window edges rounded toward the inside.
+*
+* A wrong model name in `altermod` prints one Error line and changes nothing
+* (L20 step 0): the log must contain no line with "Error". The four warnings
+* on isr/alpha/vk/mj are expected (models/jfet/lsk489.lib header).
+*
+* TABLE tb_idss_jfet_tab.csv, written by echo; no wrdata uses that name (#25).
+*   var, vto_v (JA), temp_c, then for X and A: idss [A], gfs [S],
+*   vgsoff [V] at 1 nA, vgs500 [V] at 500 uA.
+
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/jfet/lsk489.lib
+
+VDX DX 0 DC 15
+VGX GX 0 DC 0
+JX  DX GX 0 LSK489X
+
+VDA DA 0 DC 15
+VGA GA 0 DC 0
+JA  DA GA 0 LSK489A
+
+.control
+echo "var,vto_v,temp_c,idss_x_a,gfs_x_s,vgsoff_x_v,vgs500_x_v,idss_a_a,gfs_a_s,vgsoff_a_v,vgs500_a_v" > tb_idss_jfet_tab.csv
+foreach v 1 2 3 4 5
+  if $v = 1
+    set lbl = "A_come_e"
+    set vto = "-1.130"
+  end
+  if $v = 2
+    set lbl = "A_tip"
+    set vto = "-1.696"
+    altermod lsk489a vto = -1.696
+  end
+  if $v = 3
+    set lbl = "B_min"
+    set vto = "-2.086"
+    altermod lsk489a vto = -2.086
+  end
+  if $v = 4
+    set lbl = "B_tip"
+    set vto = "-2.557"
+    altermod lsk489a vto = -2.557
+  end
+  if $v = 5
+    set lbl = "B_max"
+    set vto = "-2.976"
+    altermod lsk489a vto = -2.976
+  end
+  echo "=== variant $lbl: the model JA simulates ==="
+  showmod ja : vto beta lambda rs rd kf
+  foreach tc 25 27
+    set temp = $tc
+    op
+    let ix = abs(i(vdx))
+    let ia = abs(i(vda))
+    let gx = @jx[gm]
+    let ga = @ja[gm]
+    print ix gx ia ga
+* A vector dies with `destroy all`: its value is copied into a string variable
+* first. The first run of this deck echoed $&ix after the destroy - 80 lines
+* "Error: &ix: no such variable", every cell empty, ngspice rc 0 (#26, #28).
+    set six = "$&ix"
+    set sgx = "$&gx"
+    set sia = "$&ia"
+    set sga = "$&ga"
+    destroy all
+    dc VGA -3.5 0 20u
+    let ida = abs(i(vda))
+    meas dc vpa when ida=1e-9 cross=1
+    meas dc vga500 when ida=500u cross=1
+    set svpa = "$&vpa"
+    set svga = "$&vga500"
+    destroy all
+    dc VGX -3.5 0 20u
+    let idx = abs(i(vdx))
+    meas dc vpx when idx=1e-9 cross=1
+    meas dc vgx500 when idx=500u cross=1
+    set svpx = "$&vpx"
+    set svgx = "$&vgx500"
+    destroy all
+    echo "$lbl,$vto,$tc,$six,$sgx,$svpx,$svgx,$sia,$sga,$svpa,$svga" >> tb_idss_jfet_tab.csv
+  end
+end
+.endc
+
+.end

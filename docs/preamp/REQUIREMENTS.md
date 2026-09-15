@@ -203,7 +203,7 @@ Ragionamento completo: `reports/2026-09-13-L15-vincolo-e3.md`.
 | T1 | **Classe A pura, tutto a discreti.** Nessun operazionale nel percorso del segnale. **Percorso del segnale** = ciò che il segnale attraversa fra i connettori, più ciò che chiude un anello su un nodo di segnale; un ingresso di sola rilevazione è ammesso entro le soglie di ADR-022. **La classe A si giudica sui percorsi ascoltabili**: ogni stadio fra un ingresso e un'uscita non silenziata resta in classe A, qualunque condizione ci sia sulle altre uscite. **Eccezione**: classe B ammessa solo negli stadi che servono esclusivamente uscite silenziate — mutate, in corto al connettore, o caricate da un apparecchio a bassa Zin — alle condizioni di P7 | ADR-003, **ADR-021**, **ADR-022**, **ADR-023** |
 | T2 | **Nessun servo di continua** (sarebbe un operazionale mascherato) | ADR-007 |
 | T3 | **Un solo blocco di guadagno**, progettato una volta, usato **quattro volte per canale**: blocco A, blocco B e un buffer per ogni uscita fissa | ADR-006, **ADR-023** |
-| T4 | Coppia JFET d'ingresso: **LSK489 duale monolitico** — appaiamento intrinseco, supera il "stesso lotto" di ADR-005 | ADR-013 |
+| T4 | Coppia JFET d'ingresso: **LSK489B duale monolitico** — appaiamento intrinseco, supera il "stesso lotto" di ADR-005. **Gruppo B**: il progetto tollera la sua intera finestra di I_DSS, **8,0–15,0 mA** (vedi nota) | ADR-013, **ADR-031** |
 | T5 | **Un buffer per ogni uscita fissa**, pilotato dal blocco A; dopo ciascuno resistenza d'isolamento **47 Ω**, 4,7 µF e 470 kΩ di scarico. Supera il buffer unico di ADR-008 | **ADR-023** |
 | T6 | **Coppia d'ingresso cascodata** in entrambi i blocchi | ADR-014 |
 | T7 | **Ogni dispositivo attivo del percorso di segnale ha un modello SPICE del costruttore.** Un modello pubblicato come PDF conta (è il caso dell'LSK489, ADR-013); un mirror di terze parti **no** — la provenienza è ciò che si verifica | ADR-016 |
@@ -217,6 +217,33 @@ scritti a mano con `KF = 0`, e due di essi sbagliano la f_T in direzioni
 modo noto. T8 nasce dal THAT320, che era fine vita da una settimana quando
 la topologia lo ha scelto: ADR-013 aveva già la clausola giusta, ma solo
 per il JFET, e all'array non l'aveva applicata nessuno.
+
+**Nota su T4 — la dispersione di I_DSS** (2026-09-15, L20, **ADR-031**; chiude
+**NC-013**).
+
+**Il vincolo.** L'LSK489 è del **gruppo B**: I_DSS 8,0 / 11,5 / 15,0 mA a
+V_DG = 15 V, V_GS = 0, 25 °C (datasheet RevA40 p. 2). Il progetto deve
+soddisfare il criterio qui sotto a **ogni** I_DSS della finestra. Misurato a
+8,0 · 11,5 · 15,0 mA, `data/2026-09-15/L20/`:
+
+| Criterio | Soglia | Peggiore nel gruppo B |
+|---|---|---|
+| Coppia in saturazione su tutto il modo comune di E6 (±3,82 V, 0 dB) | (V_D − V_G) − \|V_P\| > 0 | **2,415 V** (15 mA, +3,82 V) |
+| Gate in inversa a riposo | I_G < 0 | −10,3 … −11,2 pA |
+| Q106 in zona attiva su tutto il modo comune | V_CE > 1 V | 11,40 V |
+| Classe A: coda, cascode, VAS e uscita | entro lo 0,5 % del modello com'è | 0,15 % (coda) |
+| E5, i cinque casi di `tb_noise_breakdown` | ≤ √(10² − 1²) = 9,95 µV (ADR-020) | **4,308 µV** (+10 dB, 2,5 kΩ) |
+| V1, blocco B a 0 dB, caso peggiore di L27/L16 | ≥ 60° | **62,71°**; dispersione nel gruppo ≤ 0,10° |
+| Offset in uscita | **nessuna soglia**: è di L29 (NC-028) | −17,28 … −17,30 mV |
+
+**Come si legge.** La coda impone la corrente dei JFET, quindi I_DSS sposta
+V_GS e il nodo di sorgente, non gm né il rumore. La grandezza che si consuma è il
+margine di saturazione a modo comune alto. Le cifre B sono l'`LSK489A` del
+costruttore con `Vto` spostato e `Beta` invariato: **non esiste un modello del
+costruttore del gruppo B**, e va detto accanto a ogni cifra (V4). Il rumore è un
+pavimento senza flicker per ogni dispositivo tranne la coppia d'ingresso. Il
+buffer delle fisse e il blocco A non sono rimisurati: la dispersione di V1 nel
+gruppo, 0,10°, sta sotto la regola di estensione scritta prima dei dati (1,63°).
 
 ## Requisiti fisici e di sicurezza
 

@@ -312,6 +312,12 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     R(R_GATE_STOP, IN, G1)
     R(R_GATE_STOP, FB, G2)
     i[0] += 1
+    # The grade is B, I_DSS 8.0 / 11.5 / 15.0 mA (datasheet RevA40 p.2): ADR-031,
+    # the user's decision of 2026-09-15. The value came in with L10 unexplained.
+    # L20 measured this block across the whole B window with the vendor model,
+    # Vto shifted: the tail sets I_D, so I_DSS moves only V_GS - operating point,
+    # E5 and V1 do not depend on it; the common-mode saturation margin shrinks
+    # to 2.4 V at 15 mA. reports/2026-09-15-L20-sensibilita-idss.md.
     jp = Part("preamp", "LSK489", value="LSK489B", footprint=FP_SOIC8,
               ref=f"Q{i[0]}")
     jp["2"] += D1N        # D1 -> non-inverting half, into its cascode

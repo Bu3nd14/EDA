@@ -11,16 +11,57 @@ realtà, il progetto non è ripartibile.
 | | |
 |---|---|
 | Ultimo aggiornamento | **2026-09-15** |
-| Ultimo lotto chiuso | **L13** — E4 sulle tre uscite e a manopola che gira: conforme ovunque (Re(Z) ≤ 60,13 Ω, dispersione col volume ≤ 1e-4 Ω); chiude NC-008. Trovato che la Zout pubblicata conteneva il segnale: apre NC-033. Prima: **L34** — le decisioni del 2026-09-15 diventano requisiti, apre NC-032 |
-| **Prossimo lotto** | **L20** — quanto il progetto dipende da I_DSS, NC-013 (mandato in «Prossimo passo concreto») |
-| Non conformità | **15 aperte, 2 bloccanti** |
+| Ultimo lotto chiuso | **L20** — quanto il progetto dipende da I_DSS. Col modello del costruttore, dal modello com'è (2,59 mA) a tutto il gruppo B (15 mA): punto di lavoro, E5 e V1 non ne dipendono, il margine di modo comune scende a 2,4 V. ADR-031 (gruppo B, tolleranza 8,0–15,0 mA); chiude NC-013. Prima: **L13** — E4 sulle tre uscite, chiude NC-008, apre NC-033 |
+| **Prossimo lotto** | **L37** — E4 nel dossier, NC-033 (mandato in «Prossimo passo concreto») |
+| Non conformità | **14 aperte, 2 bloccanti** |
 | Le bloccanti | NC-004 · NC-017 (Fase 4) |
-| Suite | `run_tests.sh` **9 passed / 0 failed** a fine L13 (il 2g e il 2h coprono il deck nuovo) |
+| Suite | `run_tests.sh` **10 passed / 0 failed** a fine L20 (nuovo il 2i: il blocco derivato con `LSK489A` coincide con quello generato) |
 
 ## Diario degli ultimi lotti
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L20 — quanto il progetto dipende da I_DSS (2026-09-15)
+
+**Chiude NC-013.** ADR nuova: **ADR-031**. Report:
+`reports/2026-09-15-L20-sensibilita-idss.md`. Dati: `data/2026-09-15/L20/`.
+Nessun valore del circuito cambia; dossier non rigenerato.
+
+- **Una domanda all'utente, prima di misurare.** Il sorgente nomina `LSK489B`
+  (da L10, senza motivazione), mentre NC-013 ragionava sul gruppo A.
+  - Risposta: «Solo B, il gruppo del sorgente».
+  - La tolleranza si scrive su 8,0 · 11,5 · 15,0 mA; il modello com'è e il tipico
+    A restano come riferimento.
+- **Il segnaposto, misurato contro il datasheet**: `LSK489X` ha I_DSS
+  **4,842 mA**, V_GS(off) −1,49935 V (sul bordo). Le cifre del progetto fino a
+  oggi descrivono un JFET quasi tipico del gruppo A, non il B.
+- **Come entra `LSK489A` senza toccare niente di generato.**
+  - Il nome del modello si **deriva**: `scripts/derive_jfet_variant.py` scrive
+    `spice/preamp/derived/gain_block_flat_lsk489a.inc`, e il blocco **2i**
+    rifiuta un derivato stantio.
+  - Il `Vto` si **altera a runtime** con `altermod`, sul modello incluso intatto.
+    Una JFET sonda misura la I_DSS in ogni variante.
+  - Trappola nuova, **#29**: un `altermod` su un nome sbagliato non cambia
+    niente, e ngspice esce 0.
+  - `build_dossier.PART` conosce ora `LSK489A`: senza, il 2h cadeva per la
+    ragione sbagliata.
+- **I numeri**, da 2,59 a 15 mA, 27 °C:
+  - I_D varia di 1,8 µA, gm dello 0,34 %, l'offset di 0,039 mV. Si muovono solo
+    V_GS e v(SRC), di 1,84 V;
+  - margine di saturazione a ±3,82 V di modo comune: da 4,26 a **2,42 V**;
+  - E5 peggiore **4,308 µV**; l'1/f del JFET vale 0,116 µV in quadratura;
+  - V1, blocco B a 0 dB: il modello del costruttore alza il minimo da 61,80° a
+    **62,51°**, il gruppo B lo muove di ≤ 0,10°. Per la regola scritta prima,
+    nessuna estensione.
+- **Controlli fatti cadere**, guardando quale cade: 4 sabotaggi dei deck, 6 della
+  derivazione, il 2h due volte. Un controllo ha trovato un commento di deck
+  sbagliato di mille volte: 4 pV contro 4,2 nV.
+- **Fuori**: nessun modello del costruttore del gruppo B; T8 del gruppo B non
+  verificato; solo 27 °C.
+
+Suite **10 passed / 0 failed**. **14 voci aperte, 2 bloccanti.** Prossimo:
+**L37**.
 
 ### L13 — E4 sulle tre uscite e a manopola che gira (2026-09-15)
 
@@ -843,7 +884,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L17 | **Buffer sulle uscite fisse.** Modifica di topologia in `preamp_audio.py` che disaccoppia le due fisse dal nodo del Blocco A, più la riesecuzione di `tb_blockA_carichi.cir` sulla topologia nuova. **Dopo L11**: progetta contro il criterio di corto di ADR-021 (risultato, tecnica libera) e nei limiti di ADR-022; il vincolo di impedenza minima a valle non basta più a chiudere NC-010 | M | **NC-010** (bloccante), apre **NC-029** | **fatto** — ADR-023 (classe A sui percorsi ascoltabili), un `GAINBLOCK` per fissa |
 | L18 | **Il vincolo PSRR scritto dove verrà letto**: quanto ripple può lasciare l'alimentatore sui rail, ricavato da E5 — **ADR-020** e «Nota su E5 — la quota del ripple» | XS/S | **NC-011** (metà: il vincolo; rimedio e verifica vanno con l'alimentatore) | **fatto** |
 | L19 | ~~**La soglia di margine di fase in V1**~~ — **ASSORBITA da L26**: la soglia l'ha data l'utente (60° ovunque, ADR-019) e NC-012 è chiusa. Resta solo la parte «KPI del dossier riferiti a quella», che va con la rigenerazione del dossier (**L32**) | XS | ~~NC-012~~ | **superata** |
-| L20 | **Quanto il progetto dipende da I_DSS.** Rieseguire punto di lavoro e rumore del blocco di guadagno con `Vto` ai due estremi compatibili con la finestra A — il modello vendor com'è (2,59 mA) e un `Vto` che porti I_DSS al tipico (5,5 mA) — e scrivere in `REQUIREMENTS.md` o in una ADR quale dispersione il progetto tollera | S | **NC-013** | da fare |
+| L20 | **Quanto il progetto dipende da I_DSS.** Rieseguire punto di lavoro e rumore del blocco di guadagno con `Vto` ai due estremi compatibili con la finestra A — il modello vendor com'è (2,59 mA) e un `Vto` che porti I_DSS al tipico (5,5 mA) — e scrivere in `REQUIREMENTS.md` o in una ADR quale dispersione il progetto tollera | S | **NC-013** | **fatto** — chiesto il gruppo all'utente: B (ADR-031, tolleranza 8,0–15,0 mA); blocco derivato con `LSK489A` (2i) e `Vto` via `altermod` con sonda; punto di lavoro, E5 e V1 non dipendono da I_DSS, margine di modo comune 2,4 V a 15 mA; 10 sabotaggi |
 | L21 | **Il polo 2 del relè, corretto e riverificato.** Riga 79 di `preamp_audio.py` in `"6", "5", "7"`, rigenerazione, e verifica **sulla netlist** che il contatto verso massa di ogni mute cada su 2 e 7 e il ramo `R_g` su 4 e 5 | XS/S | **NC-014** (chiude, bloccante), apre **NC-026** | **fatto** |
 | L22 | **Lo specchio d'ingresso senza THAT320.** Trovare e verificare una coppia PNP appaiata che soddisfi **T7 e T8 insieme**, poi rifare punto di lavoro e rumore dello stadio d'ingresso. La decisione *se* sostituire è presa (ADR-016): resta *con cosa* | M | **NC-015** (bloccante) | **fatto** |
 | L23 | **Package e simbolo della parte che sostituisce il THAT320**, col pinout letto dal suo datasheet. Va fatto **insieme a L22**, non dopo: il footprint arriva con la parte. Copre anche il residuo `SOIC-8` che oggi non corrisponde a nessuna parte esistente | S | NC-016 | **fatto** |
@@ -2913,27 +2954,24 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L20 — Quanto il progetto dipende da I_DSS.** Chiude **NC-013** (maggiore).
-Lotto **S**. Il mandato completo è in `NEXT-SESSION.md`.
+**L37 — E4 nel dossier.** Chiude **NC-033** (minore). Lotto **XS/S**. Il
+mandato completo è in `NEXT-SESSION.md`.
 
 **Perché adesso.**
 - Non aspetta nessuno. Gli altri sì: L28 un documento del costruttore o una ADR
   (prima di G2), L29 una soglia dell'utente su V2, L36 e L35 aspettano L29, L30
   l'alimentatore.
-- L37 (NC-033, E4 nel dossier) non aspetta nessuno neppure lui, e viene dopo.
+- Il dossier pubblica oggi una Zout che contiene il segnale: KPI 58,76 Ω e
+  1,0355 Ω «al nodo OUT», contro 57,945 e 0,0386 Ω veri.
 
 **Dove parte.**
-- **Oggi nessuna cifra simulata usa `LSK489A`**: ogni deck istanzia il segnaposto
-  `LSK489X` (L33). Il primo passo è misurare **il segnaposto** contro la finestra
-  del datasheet, alle condizioni di L7, perché dice quanto valgono le cifre del
-  progetto fino a oggi.
-- **Poi il modello del costruttore ai due estremi** di NC-013: com'è, con
-  2,59 mA, e con `Vto` portato al tipico di 5,5 mA. Punto di lavoro, rumore e,
-  se i numeri lo chiedono, V1.
-- **Nessun file generato e nessun file di `models/` si ritocca.** Come
-  istanziare `LSK489A` nel blocco si decide coi file.
-- **Il 2h cadrà** su un deck che include `models/jfet/lsk489.lib` e ne copia
-  l'intestazione da un altro deck. È voluto: la frase va riscritta vera.
+- `build_dossier.py` legge la Zout da
+  `data/2026-09-14/L27/dopo/tb_zout_psrr_noise/`, misurata con la sorgente
+  accesa (NC-033, limitazione #28).
+- I dati giusti ci sono già: `data/2026-09-15/L13/dopo/`, cioè `tb_e4_uscite`
+  sulle tre uscite e `tb_zout_psrr_noise` corretto.
+- **Il dossier non pubblica niente di L20**, e L37 non lo aggiunge: resta un
+  lotto su E4.
 
 ### Quello che il repo ti consegna già
 
@@ -2944,7 +2982,7 @@ Lotto **S**. Il mandato completo è in `NEXT-SESSION.md`.
   modelli la legge dagli `.include`. Nove sabotaggi, tutti rifiutati. Rigenerarlo
   dopo un lotto che cambia i dati è un lotto a sé.
 
-- **La suite è a 9 blocchi**, 9 passed a fine L13.
+- **La suite è a 10 blocchi**, 10 passed a fine L20.
   - Il **2e** conosce MUTE, GAIN, PERMIT, TRIM e SPIA, e prova sulla netlist
     l'interblocco del trim (F8);
   - il **2f** asserisce tre guadagni, i rami in parallelo e le attenuazioni del
@@ -2953,14 +2991,24 @@ Lotto **S**. Il mandato completo è in `NEXT-SESSION.md`.
     rumore morti (L31);
   - il **2h** rifiuta un commento di deck che dichiara una provenienza diversa
     da quella dei suoi `.include` (L33). Un deck nuovo che copia un'intestazione
-    la eredita: se la frase è sbagliata, il 2h cade.
+    la eredita: se la frase è sbagliata, il 2h cade;
+  - il **2i** rifiuta un blocco derivato che non coincide con la derivazione
+    fresca del blocco generato (L20).
+- **L'LSK489 del costruttore si può simulare nel blocco** (L20).
+  - `spice/preamp/derived/gain_block_flat_lsk489a.inc` è derivato da
+    `scripts/derive_jfet_variant.py`.
+  - `tb_idss_op_noise.cir` e `tb_idss_loop.cir` spostano `Vto` con `altermod`, e
+    una JFET sonda misura la I_DSS simulata.
+  - I deck di prima istanziano ancora `LSK489X`: la sostituzione è Fase 4
+    (NC-017).
+  - Il JFET è del **gruppo B**, con tolleranza 8,0–15,0 mA (ADR-031, «Nota su
+    T4»).
 - **Dieci relè** sulla scheda audio:
   - K1, K5 guadagno; K2–K4 mute; K6 permissivo;
   - K7, K8 trim; K9, K10 spie.
 
   Budget delle bobine: 126,6 mA a 5 V, in mute e fuori (ADR-027).
-- **I conteggi**: 15 voci aperte, 2 bloccanti. L13 ha chiuso NC-008 e aperto
-  NC-033.
+- **I conteggi**: 14 voci aperte, 2 bloccanti. L20 ha chiuso NC-013.
 - **E4 è misurata su tutto** (L13): `tb_e4_uscite.cir`, tre uscite × 45 celle,
   e `tb_zout_psrr_noise.cir` con la Zout a sorgente spenta. Il dossier pubblica
   ancora le cifre vecchie: L37.
@@ -2969,7 +3017,6 @@ Lotto **S**. Il mandato completo è in `NEXT-SESSION.md`.
   si realizza solo se L29 lo giustifica.
 
 **Poi**, nell'ordine:
-- **L37** (NC-033, XS/S): E4 nel dossier, sui dati di L13. Non aspetta nessuno.
 - **L28** (SS dell'LSK489, NC-027) va fatto prima di G2.
 - **L29** (NC-028, **esteso da L34**, ora M) aspetta una soglia dell'utente su
   V2, che si può chiedere in qualsiasi momento. È **sul cammino critico**: dal
@@ -3111,6 +3158,7 @@ Da non ricercare di nuovo.
 | ~~Conferma specifiche cj EV250~~ | — | **CHIUSA**: email costruttore + manuale MV50 |
 | Il LED del trim legge i relè spia K9/K10, non K7/K8 che portano il segnale: un guasto meccanico di uno solo dei due (contatto incollato, bobina aperta) fa divergere LED e segnale. ADR-027 non lo elenca fra i casi da riaprire. Da L34 | utente | No. Vale anche per i LED del guadagno di ADR-030, letti dagli ausiliari |
 | Soglia su V2: quanto gradino al jack è accettabile. Serve a L29, e ora anche alla decisione di ADR-030 | utente, all'apertura di L29 | Sì, L29 |
+| Disponibilità e ciclo di vita dell'**LSK489B** (T8): ADR-013 cita 921 pezzi su DigiKey senza gruppo, e L20 non l'ha verificato. E se il costruttore pubblica un modello del gruppo B. Da L20, ADR-031 | giro componenti (`bom-component-manager`) | No, ma prima di G2 |
 
 ## Decisioni chiuse il 2026-09-08
 

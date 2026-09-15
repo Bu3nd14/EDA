@@ -1,0 +1,17 @@
+--- s0 intact copy, --check: rc 0 (expected 0, text 'is the current derivation') -> AS EXPECTED
+       OK: spice/preamp/derived/gain_block_flat_lsk489a.inc is the current derivation of spice/preamp/gain_block_flat.inc
+--- s1 derived file edited by hand, --check: rc 1 (expected 1, text 'STALE') -> AS EXPECTED
+       STALE: spice/preamp/derived/gain_block_flat_lsk489a.inc:50
+         committed: R136 OUT FB 1.51k
+         derived:   R136 OUT FB 1.50k
+--- s2 generated block changed, derived stale, --check: rc 1 (expected 1, text 'STALE') -> AS EXPECTED
+       STALE: spice/preamp/derived/gain_block_flat_lsk489a.inc:2
+         committed: * Source sha256: 13afa31304cbf3ed1b4fa41d58b2a01d2779d7b5ee5af4913a39dc683de7c1af
+         derived:   * Source sha256: 57b2fa2577a4b4ec3995a29710bf6e261cf0cfe1ff298b7dca61a8df58c53a8a
+--- s3 source with one LSK489X line: rc 2 (expected 2, text '1 JFET lines on LSK489X') -> AS EXPECTED
+    REFUSED: spice/preamp/gain_block_flat.inc: 1 JFET lines on LSK489X, expected exactly 2 - the block has changed, re-read before deriving
+--- s4 source with three LSK489X lines: rc 2 (expected 2, text '3 JFET lines on LSK489X') -> AS EXPECTED
+    REFUSED: spice/preamp/gain_block_flat.inc: 3 JFET lines on LSK489X, expected exactly 2 - the block has changed, re-read before deriving
+--- s5 LSK489X on a BJT line: rc 2 (expected 2, text 'not a JFET') -> AS EXPECTED
+    REFUSED: spice/preamp/gain_block_flat.inc:48: LSK489X on a line that is not a JFET naming it as its model: Q999 NX NHI NVE LSK489X
+--- s6 --model LSK489X, header aside, identical to the source: cmp rc 0 (expected 0)
