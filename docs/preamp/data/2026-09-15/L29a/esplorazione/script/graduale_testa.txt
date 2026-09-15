@@ -1,0 +1,36 @@
+tb_v2_mute_graduale.cir - V2 al jack (ADR-032): il rilascio lento e il mute graduale, con un elemento ideale, sulla catena intera (L29a, NC-028)
+* Prima riga = titolo (docs/limitations.md #10).
+*
+* COSA MISURA. Che profilo deve avere un mute graduale per rispettare A, B e C
+* al jack. L'elemento e' IDEALE: la conduttanza del canale con NMHx = 0, cioe'
+* G = 10^(-12 + 13 s) con s che rampa linearmente in T secondi, quindi G
+* log-lineare fra 1e-12 S e 10 S (100 mohm a fine corsa, come il contatto).
+* Nessuna tecnica e' scelta: il deck consegna un requisito di profilo, non un
+* rimedio. Con G log-lineare l'ampiezza al jack cambia quasi tutta mentre G
+* attraversa i ~3 decenni attorno a 1/47 S: la dissolvenza EFFICACE e' circa
+* 3/13 di T, e va detto accanto a ogni cifra.
+* L'analisi e' scripts/v2_metodo.py analizza; la colonna t_grad del manifesto
+* estende la finestra di C e l'inizio di B2 a tutta la rampa.
+*
+* LE POSIZIONI (indice g nei nomi dei file):
+*   g1  graduale al jack (JK), in derivazione dopo il condensatore
+*   g2  graduale fra i 47 ohm e il 4,7 uF (PRE), in derivazione prima
+*   g3  graduale fra i 47 ohm e il 4,7 uF, con l'offset in continua annullato
+*       come v3 di tb_v2_mute_varianti.cir (tre giri di .op, tabella
+*       tb_v2_mute_graduale_offset.csv): "contatto prima + offset abbassato +
+*       rilascio lento"
+*   g4  graduale in serie (SER): aperto a mute inserito, ponte RBYx aperto,
+*       bleeder lato condensatore 220 k / 470 k
+*
+* LE CELLE (per posizione e per carico, 100 k e 10 k su tutte e tre le uscite),
+* +10 dB, manopola al massimo, T = 20 ms, 200 ms, 1 s:
+*   _bmT       CON MUSICA, 2,7 V RMS a 1 kHz, fase pi/2: la rampa d'inserzione
+*              parte a 1,0 s; quella di rilascio a 1,0 + T + 0,1 s; la corsa
+*              finisce 2 s dopo la fine del rilascio
+*   _lzT       SENZA SEGNALE: inserzione a 1,0 s, rilascio a 3,0 + T s, 2 s dopo
+*   _bmmai, _bmsempre, _lzmai, _lzsempre   riferimenti, uno per posizione e
+*              carico, lunghi quanto la cella piu' lunga
+*   _b20       solo 100 k e T = 1 s: la stessa cella con musica a 20 Hz, dove il
+*              condensatore si carica di piu' (fase pi/2: 1,0 s e 2,1 s sono
+*              periodi interi), coi suoi due riferimenti _b20mai, _b20sempre
+*

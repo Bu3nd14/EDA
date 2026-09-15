@@ -12,7 +12,7 @@ realtà, il progetto non è ripartibile.
 |---|---|
 | Ultimo aggiornamento | **2026-09-15** |
 | Ultimo lotto chiuso | **L38** — le risposte del 2026-09-15 diventano requisiti. **ADR-032**: V2 ≤ 100 µV di picco 20 Hz–20 kHz al jack delle tre uscite, per gradino, residuo in mute e taglio della musica, accensione e spegnimento compresi, col metodo di misura. **ADR-033**: LED dai relè spia. **ADR-034**: moltiplicatore di Vbe accoppiato col rame (un ponte galvanico sarebbe un corto: il tab è su VP). **NC-028 sale a bloccante.** Prima: **L37** — E4 nel dossier, chiude NC-033 |
-| **Prossimo lotto** | **L29** — il gradino, il residuo e il taglio al jack, misurati col metodo di V2 (mandato in «Prossimo passo concreto») |
+| **Prossimo lotto** | **L29a IN CORSO, SOSPESO il 2026-09-15** sul ramo `worktree-l29a-v2-mute` (pushato, NON mergiato): leggi la voce di diario «L29a — in corso» qui sotto prima di ogni altra cosa. L29 è diviso: L29a = strumento + confronto delle varianti; L29b = ADR-030, accensione/spegnimento, P7, ADR, sorgente |
 | Non conformità | **13 aperte, 3 bloccanti** |
 | Le bloccanti | NC-004 · NC-017 (Fase 4) · NC-028 (L29) |
 | Suite | `run_tests.sh` **10 passed / 0 failed** a fine L38, eseguita dal worktree (2i compreso: `gain_block.py` ha ricevuto solo un commento, nessuna rigenerazione) |
@@ -21,6 +21,55 @@ realtà, il progetto non è ripartibile.
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L29a — in corso, sospeso per il cap dei token (2026-09-15)
+
+**Non chiuso. Nessun verdetto, nessun report, NC-028 invariata.** Si riprende dal
+ramo `worktree-l29a-v2-mute` (in un worktree nuovo: `git worktree add … origin/worktree-l29a-v2-mute`).
+Dati parziali in `data/2026-09-15/L29a/` (`strumento/`, `esplorazione/`).
+
+**Fatto e versionato.**
+- `scripts/v2_metodo.py`: il metodo di V2 (ricampionamento cubico a 96 kHz,
+  filtri di `calcolo_v2.py`, A dal riferimento, B1/B2, C col fit su 960 campioni).
+  Autotest 14/14, **nove sabotaggi tutti caduti** (`strumento/autotest_e_sabotaggi.txt`).
+  Errore dello strumento sulla griglia vera di ngspice: 4 µV, C di un seno esatto 2,6 µV.
+- `tb_v2_mute_pavimento/varianti/graduale.cir`: canale identico (controllato),
+  jack `MAINJACK/FIXJACK1/2`, contatti 100 mΩ con fronte RC 10 µs e rimbalzi
+  entro i tempi del grafico G6K pag. 5 (forma assunta), 2g e 2h puliti.
+  **Varianti e graduale NON sono ancora stati eseguiti fino in fondo** (fermati).
+
+**Tre scoperte, tutte da portare all'utente — il metodo di V2 non separa i casi.**
+1. **C non si passa con nessuna dissolvenza pratica** (calcolato sul metodo,
+   `strumento/caratterizza_C_960.txt`): il fit su 10 ms lascia un residuo che
+   scende solo come 1/T. A 12 V pk serve una dissolvenza **oltre 10 s** a 1 kHz e
+   a 20 Hz. La frase di V2 «una dissolvenza più lenta di 10 ms resta nel tono
+   ricostruito» è falsa a 100 µV. Non dipende dalla parità della finestra (960/961).
+2. **Il pavimento di C del circuito, senza nessun evento, supera la soglia**
+   (+10 dB, 2,7 V RMS, simulato, `esplorazione/pav4_out.csv`): principale 1,23 mV
+   a 1 kHz, 21,9 mV a 20 kHz, 167 µV a 20 Hz; fisse 188 µV a 1 kHz. H2 = 887 µV;
+   il resto (~390 µV principale, 124 µV fisse) è un fondo diffuso senza righe,
+   identico sulle uscite a meno del guadagno (nasce prima del blocco B), che non
+   cambia con TMAX 5 µs né reltol 1e-7. Con `method=gear` (sonda scratch) scende
+   poco: 1,10 mV / 147 µV. **Non attribuito.** Modelli segnaposto (NC-017).
+3. **Il pavimento numerico di A con musica a 1 kHz è ~0,5–0,8 mV** (evento nullo
+   scollegato): 705 µV a 10 µs, 813 µV a 5 µs, 597 µV a reltol 1e-7, 476 µV con
+   gear; 20 kHz 864 µV; **20 Hz 8,5 µV (ok)**. A con musica a 1 kHz non è
+   decidibile sotto ~0,6 mV; senza segnale e a 20 Hz sì.
+
+**Misurato sulle varianti (solo v0, oggi, 1 kHz, +10 dB, 100 k, sul picco).**
+A 12,2 V principale / 3,9 V fisse (i rimbalzi al rilascio tagliano il picco),
+B1 20 mV / 6,6 mV (10× L11: contatto 0,1 Ω invece di 0,01), C 8,9 V / 3,1 V.
+Offset di partenza −104,4 mV (principale) e −33,1 mV (fisse): coincide con NC-028.
+
+**Prossimo passo, domani, nell'ordine.**
+1. Portare all'utente le tre scoperte coi numeri e chiedere come procedere sul
+   metodo (ADR se cambia): C con fit anche delle armoniche o per differenza dal
+   riferimento? tono di prova e livello? soglia su C? trattamento del pavimento?
+2. Decidere trap o gear per i deck; poi eseguire `tb_v2_mute_varianti.cir` (87
+   corse) e `tb_v2_mute_graduale.cir` (92) con `run_simulation.sh`, in background;
+   `v2_metodo.py analizza` + `riassumi`. Con `save` le corse stanno sotto 150 MB.
+3. Report, NC-028 aggiornata (resta aperta), riga L29a/L29b nella tabella dei
+   lotti, `NEXT-SESSION.md` per il lotto dopo, `chunk_close.sh L29a`.
 
 ### L38 — le risposte del 2026-09-15 diventano requisiti (2026-09-15)
 
