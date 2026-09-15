@@ -16,6 +16,8 @@ tb_ac.cir - closed-loop response over the V1 source/load/mode matrix
 * are LSK489X, a hand-written placeholder with KF=0; the vendor model
 * models/jfet/lsk489.lib is included by no deck (Fase 4, NC-017). Every
 * OTHER device here is a hand-written placeholder too, and none has 1/f.
+*
+* Nota: solo LS352 e LSK489 hanno un modello del costruttore.
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block_flat.inc
 

@@ -50,8 +50,11 @@ nel dossier (L32).
 la provenienza dagli `.include`, ha **aperto NC-031**. **L31** (2026-09-15) ha
 esteso il blocco 2g ai vettori di rumore per dispositivo, l'ha fatto cadere sul
 deck di allora, e ha rinominato i vettori con una mappa per nodi: **chiude
-NC-030**.
-**15 voci aperte, 2 bloccanti.**
+NC-030**. **L33** (2026-09-15) ha corretto le etichette di provenienza
+dell'LSK489: quindici deck, solo nei commenti, e sette README datati annotati
+in coda. Ha aggiunto il blocco **2h**, che confronta ciò che un deck dichiara
+con i suoi `.include`, e l'ha fatto cadere su `main`: **chiude NC-031**.
+**14 voci aperte, 2 bloccanti.**
 L'accesso a G1 non è concesso finché NC-004 e NC-017 restano aperte.
 
 ---
@@ -345,7 +348,10 @@ vendor ora esistono per sei dispositivi attivi su sette
 cinque congelati in L24 porta `KF`/`AF`**: né MMBT5401, né MMBT5551, né
 MJE15032, né MJE15033, né il 1N4148. Con i due modelli THAT
 (`docs/limitations.md` #17) questo significa che **nel repo solo l'LSK489
-ha rumore 1/f**. Quindi questa voce **non si chiude «quando arrivano i
+ha rumore 1/f**. *Precisato da L33 (NC-031):* è vero della libreria
+`models/`, non delle simulazioni. Nessun deck include
+`models/jfet/lsk489.lib`; l'LSK489 simulato è il segnaposto `LSK489X` con
+`KF = 0`, quindi oggi **nessun dispositivo simulato ha rumore 1/f**. Quindi questa voce **non si chiude «quando arrivano i
 modelli veri»**: le cifre che usciranno dalla Fase 4 restano un pavimento
 senza flicker, e il pavimento senza flicker cade proprio dove l'analisi
 dice che il rumore è dominante — lo specchio di corrente e le sue
@@ -2152,7 +2158,7 @@ dati `data/2026-09-15/L31/`.
 | Requisito | **V4** (la provenienza del modello accanto a ogni cifra) · ADR-013 · letta insieme a **NC-004** e **NC-017** |
 | Severità | **minore** |
 | Aperta da | `reports/2026-09-15-L32-dossier.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-15 da L33** — vedi «Chiusura» in fondo alla voce e «Voci chiuse» |
 
 **Evidenza.** Da L32, che ricava la provenienza dagli `.include` invece di
 leggerla dai commenti.
@@ -2194,7 +2200,53 @@ La sostituzione vera del modello nel circuito resta la Fase 4 (NC-017).
 
 Lotto **L33** (XS).
 
+**Chiusura (L33, 2026-09-15).** Report:
+`reports/2026-09-15-L33-provenienza-lsk489.md`. Dati: `data/2026-09-15/L33/`.
+1. **Il conto rifatto non era quello di questa voce**
+   (`esplorazione/conta.py`).
+   - **Quindici deck**, non tredici: anche `tb_blockA_carichi.cir:40` e
+     `tb_mute_corto.cir:54` dicevano «tutto tranne LS352 e LSK489 e'
+     segnaposto».
+   - **Cinque README datati espliciti**, non tre: anche
+     `data/2026-09-14/L17/` e `data/2026-09-10/`. Più **due impliciti**,
+     `data/2026-09-13/` e `data/2026-09-14/`, che scrivono «ogni altro
+     dispositivo ancora segnaposto» dopo aver nominato l'LSK489.
+   - Fuori conto e non toccata, perché output datato: la copia
+     `data/2026-09-14/L16/esplorazione/deck/tb_blockA_carichi_trim.cir:40`.
+2. **Il guardiano c'è: blocco 2h**, `scripts/check_deck_provenance.py`. Il
+   criterio è la `provenance()` del dossier, importata e non riscritta; le
+   affermazioni sono lette dai commenti nelle forme trovate.
+   - **Fatto cadere prima di correggere**: sui deck di `main` rc 1 con
+     **esattamente 15** contraddizioni, una per deck; `run_tests.sh` 8 / 1 sul
+     2h. Sui 16 deck di `6748fbc` (L12), 14: la stessa frase, prima di
+     `tb_trim`.
+   - **11 sabotaggi su 11** come attesi, fra cui una frase negata e una vera in
+     forma diretta, che non devono scattare.
+3. **Solo commenti, provato**: `solo_commenti.py` confronta i deck con quelli di
+   `main`. 15 deck cambiati, ogni riga tolta o aggiunta comincia con `*`, le
+   righe non di commento sono identiche. Fatto cadere su una copia con una riga
+   `VPP … DC 16`.
+4. **I sette README** sono annotati in coda, con una nota di L33. Il testo resta
+   intatto: il diff ha solo righe aggiunte.
+5. **Nessun numero rieseguito, dossier non rigenerato.** Le sue 16 righe di
+   provenienza dicevano già «del costruttore: LS352», con l'LSK489 fra i
+   segnaposto.
+6. **NC-004 precisata**: «nel repo solo l'LSK489 ha rumore 1/f» è vero di
+   `models/`, non delle simulazioni.
+7. Suite **9 passed / 0 failed**.
+
 ## Voci chiuse
+
+**NC-031 — La provenienza dichiarata dell'LSK489 non è quella simulata**
+(minore). **CHIUSA il 2026-09-15 da L33.**
+- **Quindici deck e sette README datati**, non tredici e tre. I deck sono
+  corretti solo nei commenti, e lo prova uno script; i README sono annotati in
+  coda.
+- Il **2h** confronta ciò che i commenti affermano con la `provenance()` del
+  dossier. Fatto cadere sui 15 deck di `main` e su 11 sabotaggi.
+
+Il testo completo della voce resta sopra, con la sua «Chiusura». Report:
+`reports/2026-09-15-L33-provenienza-lsk489.md`.
 
 **NC-030 — `tb_noise_vectors.cir` non scrive dati: cita vettori di rumore di
 dispositivi che non esistono più** (minore). **CHIUSA il 2026-09-15 da L31.**
