@@ -584,3 +584,34 @@ sabotaggio, senza falsi allarmi sui deck di `main` e su quelli pre-L27.
 
 **Cosa non vede ancora**: un vettore di rumore **vivo ma sbagliato**, come i tre
 che L31 ha trovato (#22).
+
+## 28. Un'impedenza misurata per iniezione con la sorgente AC ancora accesa somma il segnale, e non dà errore
+
+Scoperto in L13.
+
+Una Zout si misura iniettando 1 A AC nel nodo e leggendo la tensione: è
+un'impedenza solo se **ogni altra sorgente AC è spenta**. La sezione Zout di
+`tb_zout_psrr_noise.cir`, dal 2026-09-09 a L13, accendeva l'iniezione e
+lasciava `VSRC` a 1 V AC. ngspice non se ne accorge: il circuito è lineare, le
+due risposte si sommano, rc 0. Il dossier ha pubblicato quei numeri per E4.
+
+La firma sta nei numeri, se si guardano:
+- al nodo d'uscita del blocco, prima dei 47 Ω, `za1k` valeva **1,0355 /
+  1,4704 / 3,2621 Ω** a 0 / +3 / +10 dB. È il guadagno del modo per 1 V, piatto
+  in frequenza. Il nodo di un buffer identico, a sorgente spenta, dà 0,0386 Ω;
+- al jack il segnale si nasconde: 58,76 Ω invece di 57,94, perché lì domina la
+  47 Ω.
+
+**Il gemello, dal lato opposto** (L13, sabotaggio `c0`): un controllo positivo
+`vdb(nodo)` su un nodo dove il segnale è **zero esatto** non dà −∞. Dà
+`Error: argument out of range for db`, la `meas` non esiste e la cella della
+tabella esce vuota, con rc 0. È il #26 con un'altra causa.
+
+**Regola operativa.**
+- In una sezione d'impedenza, `alter @<sorgente>[acmag] = 0` per ogni sorgente
+  AC, prima della prima `ac`, e rimetterla dopo.
+- Accanto a una Zout al jack si legge anche la Zout **al nodo del blocco**: se
+  scala col guadagno, dentro c'è segnale.
+- Un controllo che deve dire «la manopola arriva al blocco» si fa col
+  **guadagno**, a iniezione spenta. Una Zout costante da sola non lo prova,
+  perché un attenuatore scollegato la darebbe identica.

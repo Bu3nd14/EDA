@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-09-14** (creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-09-15** (creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -58,6 +58,11 @@ con i suoi `.include`, e l'ha fatto cadere su `main`: **chiude NC-031**.
 domande dell'utente: **ADR-028** (comandi sul frontale e LED a pannello),
 **ADR-029** (ingombro del telaio) e **ADR-030** (guadagno interbloccato dal
 mute, subordinato alla misura di L29). **Apre NC-032** e aggiorna NC-028.
+**L13** (2026-09-15) ha misurato E4 sulle tre uscite, nei tre modi e a ogni
+posizione di trim e attenuatore, con un deck nuovo che porta la catena intera:
+conforme ovunque, **chiude NC-008**. Rileggendo i log ha trovato che la Zout
+pubblicata dal 2026-09-09 era misurata con la sorgente accesa, e **apre
+NC-033**.
 **15 voci aperte, 2 bloccanti.**
 L'accesso a G1 non è concesso finché NC-004 e NC-017 restano aperte.
 
@@ -1010,7 +1015,7 @@ cosa misura ciascuna), e il KPI in testa cita quella.
 | Requisito | **E4** («… costante con la posizione del volume») · F3 · ADR-008 |
 | Severità | **minore** |
 | Aperta da | `reports/2026-09-09-gate-G0.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-15 da L13** — E4 conforme su tre uscite, tre modi, ogni posizione di trim e attenuatore. Vedi «Chiusura» in fondo alla voce e «Voci chiuse»; apre NC-033 |
 
 **Evidenza.** `docs/preamp/data/2026-09-09/tb_zout_psrr_noise_zout_0db.csv`
 e `tb_zout_psrr_noise_zout_10db.csv` misurano l'impedenza al solo **jack
@@ -1029,6 +1034,38 @@ la clausola ce l'ha scritta.
 `spice/preamp/tb/tb_zout_psrr_noise.cir` alle due uscite fisse e ad
 almeno tre posizioni dell'attenuatore (minimo, metà corsa, massimo), e
 versionare i CSV sotto `docs/preamp/data/<data>/`.
+
+**Chiusura (L13, 2026-09-15).** Report:
+`reports/2026-09-15-L13-e4-tre-uscite.md`. Dati: `data/2026-09-15/L13/`.
+
+1. **La baseline rifatta sui file, non copiata da qui.** L'evidenza sopra cita
+   il 2026-09-09: THAT320, C_f 22 pF, due guadagni. Sulla topologia di oggi:
+   - la fissa 1 era già coperta da L17 (Re(Z) max 53,1318 Ω);
+   - la fissa 2 non aveva nessun dato;
+   - la principale aveva i tre modi di L27, ma con una sola `RSRC` e **misurati
+     con la sorgente accesa**. Vedi NC-033.
+2. **Il deck non è l'estensione chiesta qui**, ed è scritto perché:
+   `tb_zout_psrr_noise.cir` include il flat, che ospita un blocco solo (#24), e
+   al posto del volume ha una `RSRC`. `tb_e4_uscite.cir` porta la catena
+   intera in subckt:
+   - le 45 celle trim {0, −6, −12} × attenuatore {0, 25, 50, 75, 100 %} × modo
+     {0, +3, +10}, **cinque** posizioni invece di tre;
+   - un jack per volta, a sorgente spenta;
+   - il controllo positivo del guadagno in ogni cella.
+3. **Il verdetto**, con E4 accanto:
+   - «< 100 Ω in banda passante»: Re(Z) max su 20 Hz–20 kHz **60,05 / 60,07 /
+     60,13 Ω** sulla principale nei tre modi, **53,13 Ω** su FIX1 e FIX2;
+   - «costante con la posizione del volume»: dispersione su trim × attenuatore
+     **≤ 1e-4 Ω** sulla principale e **0** sulle fisse. La soglia di 1 Ω è una
+     lettura del lotto; il riferimento è il passivo di ADR-002, 0 → 2,5 kΩ.
+4. **Numeri noti ritrovati**: FIX1 = L17 a tutte le cifre; la principale = il
+   deck flat corretto a 6 cifre; il controllo positivo entro 0,15 dB.
+5. **Otto sabotaggi, 8 su 8 rifiutati come attesi**, e per il controllo giusto.
+   Il primo «attenuatore scollegato» era caduto sulla completezza (`vdb(0)` →
+   `Error`) senza esercitare il controllo positivo; rifatto, cade su quello
+   soltanto.
+6. Provenienza: l'unico modello del costruttore è l'LS352; LSK489 = `LSK489X`,
+   segnaposto. Suite **9 passed / 0 failed**.
 
 ### NC-014 — Il polo 2 del G6K-2F-Y è cablato con NO e NC invertiti: sul canale destro il mute fallisce nel verso sbagliato
 
@@ -2303,7 +2340,65 @@ verificare un comando che non esiste.
 5. `check_relay_safe_state.py` esteso ai comandi nuovi, e fatto fallire su una
    netlist sbagliata.
 
+### NC-033 — La Zout di E4 pubblicata contiene il segnale: il deck la misurava con la sorgente accesa
+
+| | |
+|---|---|
+| Requisito | **E4** · letta insieme a NC-008 · limitations **#28** |
+| Severità | **minore** |
+| Aperta da | `reports/2026-09-15-L13-e4-tre-uscite.md` |
+| Stato | aperta |
+
+**Evidenza.** `spice/preamp/tb/tb_zout_psrr_noise.cir`, fino a L13: la sezione
+Zout accendeva l'iniezione da 1 A e lasciava `VSRC` a 1 V AC.
+- **La firma**, in `data/2026-09-14/L27/dopo/tb_zout_psrr_noise/tb_zout_psrr_noise.log`:
+  `za1k` = 1,0355 / 1,4704 / 3,2621 Ω a 0 / +3 / +10 dB. È il guadagno del modo
+  per 1 V, piatto in frequenza.
+- **Rieseguito da L13** (`data/2026-09-15/L13/prima/`, identico a L27) e
+  **corretto** (`dopo/`): al jack a 1 kHz 57,945 / 57,954 / 57,991 Ω, al nodo
+  0,0386 / 0,0549 / 0,1217 Ω. PSRR e rumore identici byte per byte.
+- **Presente dal 2026-09-09**: `za1k` 1,03692 in `data/2026-09-09/`. G0 lo aveva
+  rieseguito e ritrovato, perché una riesecuzione riproduce anche un difetto
+  del deck.
+- **Dove sta la cifra sbagliata, oggi.** `docs/preamp/dossier/index.html`:
+  - riga 176, il KPI «58,76 Ω»;
+  - righe 357-359, la tabella: 59,1132 / 60,5851 Ω e «al nodo OUT 1,0355 Ω»;
+  - riga 363, la nota E4/E8: «al nodo OUT la stessa frequenza dà 1,035 Ω»;
+  - riga 415, il riepilogo: «≤ 60,5851 Ω».
+
+  Tutte vengono da `measure_zout()` di `build_dossier.py`, che legge i CSV
+  `_zout_` di L27. Nei documenti datati la cifra sta in
+  `data/2026-09-09/README.md` e nei report di G0, L14, L27 e della bozza di
+  Fase 2: output di esecuzioni, non si riscrivono.
+
+**Perché minore.** Nessun verdetto si rovescia: le cifre vere sono più basse
+di al massimo 2,6 Ω al jack, ed E4 era e resta conforme. È sbagliato **cosa si
+crede** di un numero pubblicato. La cifra al nodo è sbagliata di un fattore
+**~27** in tutti e tre i modi: 1,0355 contro 0,0386 Ω a 0 dB, 3,2621 contro
+0,1217 Ω a +10 dB.
+
+**Cosa serve per chiuderla.** Lotto **L37**:
+1. `build_dossier.py` prende E4 dai dati di L13: `tb_e4_uscite` per le tre uscite
+   e la costanza col volume, `tb_zout_psrr_noise` corretto per le curve, e
+   **rifiuta** la Zout di `data/2026-09-14/L27/`;
+2. KPI, tabella, nota E4/E8 e riepilogo rigenerati;
+3. una nota in coda a `data/2026-09-09/README.md`, che non ne riscrive il testo;
+4. un controllo fatto fallire: il builder rifiuta una Zout al nodo che scala
+   col guadagno.
+
 ## Voci chiuse
+
+**NC-008 — E4 verificata su un'uscita su tre e a manopola ferma** (minore).
+**CHIUSA il 2026-09-15 da L13.**
+- `tb_e4_uscite.cir`, deck nuovo con la catena intera: 3 uscite × 45 celle (trim
+  × attenuatore × modo). **Re(Z) al jack ≤ 60,13 Ω** sulla principale, **53,13 Ω**
+  sulle fisse; dispersione col volume **≤ 1e-4 Ω**.
+- Controllo positivo del guadagno in ogni cella. **8 sabotaggi su 8** rifiutati,
+  e per il controllo giusto.
+- Trovato durante la misura: la Zout pubblicata conteneva il segnale → **NC-033**.
+
+Il testo completo della voce resta sopra, con la sua «Chiusura». Report:
+`reports/2026-09-15-L13-e4-tre-uscite.md`.
 
 **NC-031 — La provenienza dichiarata dell'LSK489 non è quella simulata**
 (minore). **CHIUSA il 2026-09-15 da L33.**
