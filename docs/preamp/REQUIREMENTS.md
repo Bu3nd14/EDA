@@ -3,7 +3,7 @@
 **Documento vivo.** Riscritto quando i requisiti cambiano. Ogni modifica
 sostanziale deve avere una ADR corrispondente in `decisions/`.
 
-Ultimo aggiornamento: 2026-09-14 (L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
+Ultimo aggiornamento: 2026-09-15 (L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
 
 Le motivazioni non stanno qui: stanno nelle ADR referenziate e nel
 report `reports/2026-09-08-analisi-catena.md`.
@@ -25,13 +25,39 @@ report `reports/2026-09-08-analisi-catena.md`.
 |---|---|---|
 | F1 | **4 ingressi** sbilanciati RCA, commutati a **relè** | ADR-009 |
 | F2 | **Trim di livello comune, sul solo ramo dell'uscita variabile**: fra il blocco A e l'attenuatore, 0 / −6 / −12 dB, **a relè bistabili**. **Le uscite fisse restano copia fedele della sorgente**: guadagno 1, il trim non le tocca. Uno solo per tutti gli ingressi: cambiando sorgente si ritocca il trim o il volume | ADR-011, **ADR-027** |
-| F3 | **3 uscite**: principale (attenuata) + 2 a livello fisso, **ciascuna fissa col proprio buffer** | ADR-008, **ADR-023** |
+| F3 | **3 uscite sbilanciate RCA**: principale (attenuata) + 2 a livello fisso, **ciascuna fissa col proprio buffer** | ADR-008, **ADR-023** |
 | F4 | **Attenuatore a scatti**, commutatore rotativo, 10 kΩ, resistenze 0,1% | ADR-009 |
 | F5 | **Guadagno commutabile 0 / +3 / +10 dB**, relè sulla rete di controreazione. **A relè diseccitati il guadagno è 0 dB**: nessun guasto di bobina e nessuno stato di accensione può portare a un guadagno più alto. Due rami di R_g **in parallelo**: nessuno stato dei contatti supera il +10 dB | ADR-004, **ADR-019**, **ADR-026** |
 | F6 | **Relè di mute** su tutte le uscite: accensione, commutazione guadagno e regolazione del trim (F8). **Tenibile a tempo indefinito**: il mute inserito rientra nel requisito P7 | ADR-012, **ADR-021** |
 | F7 | **Nessun telecomando.** Operazionali e microcontrollore **ammessi solo fuori dal percorso del segnale**, alle condizioni di ADR-022: stato sicuro senza firmware, protezione dal corto non affidata solo al firmware, quota ausiliaria di rumore **1 µV RMS** | ADR-009, **ADR-022** |
 | F8 | **Il trim d'ingresso funziona solo a mute inserito**, con interlock **elettrico**: il comando del trim raggiunge i propri relè solo se il mute è attivo. Due comandi distinti, il mute abilita il trim. Fuori mute agire sul trim non cambia nulla; il valore impostato resta applicato all'uscita dal mute | ADR-011, **ADR-019**, **ADR-027** |
 | F9 | **Indicazione a LED del trim impostato**, letta dai **contatti** dei relè del trim e non dalla posizione del comando: fuori mute il comando può non corrispondere allo stato (F8), e il LED deve dire lo stato vero | **ADR-027** |
+| F10 | **Comandi sul frontale**: selettore d'ingresso e attenuatore rotativi (F1, F4), **trim rotativo a 3 posizioni** (F2), **guadagno rotativo a 3 posizioni** (F5), **interruttore di mute** (F6). Sul pannello passa solo la continua di bobine e LED, nessun segnale. Il mute è inserito se l'interruttore lo chiede **oppure** se il temporizzatore d'accensione non è scaduto | **ADR-028** |
+| F11 | **LED a pannello, cablati a filo**: i tre del trim (F9) e **uno rosso di mute**, che indica il mute inserito. Sulla scheda audio restano gli header di cablaggio. Per i LED del guadagno vedi la nota su F5 | **ADR-028** |
+
+**Nota su F5 — il cambio di guadagno interbloccato dal mute** (2026-09-15, L34,
+**ADR-030**).
+
+Oggi il mute sulla commutazione del guadagno (F6) è una **regola d'uso**: nessun
+interblocco lo impone. Il cambio a caldo è sicuro (V2), ma porta sul jack
+principale un gradino d'offset **calcolato** di ~6–114 mV secondo il passaggio.
+L'utente vuole un interblocco come quello del trim (F8), con **tre LED dello
+stato vero del guadagno** a pannello, **solo se una misura lo giustifica**:
+- **se L29** mostra che il cambio sotto mute seguito dal rilascio porta al jack
+  un gradino minore del cambio a caldo:
+  - F5 acquista la clausola «il comando del guadagno raggiunge i relè solo a
+    mute inserito, e il valore resta applicato all'uscita dal mute»;
+  - i LED diventano un requisito gemello di F9;
+  - lo realizza **L36**, con relè monostabili e autoritenuta, così «a relè
+    diseccitati il guadagno è 0 dB» resta vero;
+- **altrimenti** niente interblocco, e la regola d'uso va scritta sul pannello o
+  nella documentazione d'uso.
+
+**Nota su «jack»** (2026-09-15, L34). Nei documenti, nei deck e nei nomi di nodo
+(`MAINJACK`, `FIXJACK1/2`) «jack» vuol dire **la presa d'uscita RCA**: il nodo a
+valle dei 47 Ω e del 4,7 µF, dove si attacca il cavo. Il progetto non ha
+connettori jack né uscite cuffia (F3). Le ADR che usano la parola, come
+ADR-024, non si riscrivono.
 
 ## Requisiti elettrici
 
@@ -203,6 +229,7 @@ per il JFET, e all'array non l'aveva applicata nessuno.
 | P5 | Ventilazione prevista: ~3-4 W in mobile chiuso | ADR-010 |
 | P6 | **Condensatori di segnale e resistenze critiche facilmente sostituibili** — passi multipli, per permettere all'utente di provare per ascolto | vedi nota |
 | P7 | **Ogni uscita regge un corto, e il mute si tiene a tempo indefinito.** Con un corto franco al connettore di una qualsiasi uscita, o a mute inserito, con segnale e senza limite di tempo, **nessun componente esce dai propri limiti termici e SOA**: Tj ≤ 125 °C a 60 °C ambiente, a regime e nel transitorio prima di un'eventuale protezione. La tecnica è libera | **ADR-021** — vedi nota |
+| P8 | **Ingombro del telaio: L ≤ 450 mm · A ≤ 130 mm (3U, piedini esclusi) · P ≤ 367 mm.** È l'impronta del Technics SU-9070 che l'apparecchio sostituisce, misurata con la stessa convenzione: manopole e cavi non sporgono più di oggi. Esempi entro l'ingombro: Modushop Pesante 03PN 3U (esterni 435 × 305 × 122, 415 mm fra i fianchi) e Audiophonics 430×315×120 con dissipatori (interni 330 × 300 × 112). **I PCB si verificano sulle misure interne del contenitore scelto, e il contenitore si sceglie entro G2** | **ADR-029** |
 
 **Nota su P6.** Nessun agente di questo progetto giudica come suona un
 circuito: è una regola di `AGENTS.md`. La valutazione soggettiva spetta
@@ -349,6 +376,10 @@ Comportamento dinamico durante e dopo ogni commutazione:
   in ogni passaggio fra 0, +3 e +10 dB, e in entrambi gli ordini dei contatti
   sul salto diretto, l'uscita resta dentro l'inviluppo del +10 dB. Il
   controfattuale con R_f commutata porta l'uscita a −13,77 V.
+  **Non misurato** (L34): il gradino che la commutazione a caldo porta **sul
+  jack** principale. `tb_switch_v2` guarda `v(OUT)` per 70 ms, contro un τ di
+  0,32 s al jack; il calcolo dà ~6–114 mV (ADR-030). Lo misura **L29**, a
+  confronto col cambio sotto mute seguito dal rilascio.
 - **Relè del selettore d'ingresso**: commutazione a caldo fra sorgenti,
   con l'eventuale carica residua sui condensatori di accoppiamento a
   monte.

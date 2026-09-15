@@ -11,16 +11,64 @@ realtà, il progetto non è ripartibile.
 | | |
 |---|---|
 | Ultimo aggiornamento | **2026-09-15** |
-| Ultimo lotto chiuso | **L33** — le etichette di provenienza dell'LSK489: 15 deck (non 13) corretti solo nei commenti, provato da uno script; 7 README datati (non 3) annotati in coda; guardiano nuovo **2h** fatto cadere su `main` (15 su 15) e su 11 sabotaggi; chiude NC-031. Prima: **L31** — i vettori di rumore di `tb_noise_vectors.cir`, chiude NC-030 |
+| Ultimo lotto chiuso | **L34** — le decisioni del 2026-09-15 diventano requisiti: ADR-028 (comandi sul frontale, LED a pannello), ADR-029 (ingombro 450 × 130 × 367 mm), ADR-030 (guadagno interbloccato dal mute, subordinato a L29); apre NC-032; nessun numero simulato. Prima: **L33** — le etichette di provenienza dell'LSK489, chiude NC-031 |
 | **Prossimo lotto** | **L13** — E4 sulle tre uscite e a manopola che gira, NC-008 (mandato in «Prossimo passo concreto») |
-| Non conformità | **14 aperte, 2 bloccanti** |
+| Non conformità | **15 aperte, 2 bloccanti** |
 | Le bloccanti | NC-004 · NC-017 (Fase 4) |
-| Suite | `run_tests.sh` **9 passed / 0 failed** a fine L33. A metà L33, col 2h nuovo e i deck non ancora corretti, 8 / 1 sul 2h: voluto |
+| Suite | `run_tests.sh` **9 passed / 0 failed** a fine L34, lotto di sola documentazione |
 
 ## Diario degli ultimi lotti
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L34 — le decisioni del 2026-09-15 diventano requisiti (2026-09-15)
+
+**Apre NC-032, aggiorna NC-028.** ADR nuove: **ADR-028**, **ADR-029**,
+**ADR-030**. Report: `reports/2026-09-15-L34-decisioni-comandi-guadagno-telaio.md`.
+Nessun file di `circuits/`, `spice/` o `scripts/` toccato; nessun numero
+simulato.
+
+Nasce da una sessione di domande dell'utente, in sola lettura. Le decisioni,
+con le sue parole:
+- **Uscite**: nessun jack, solo sbilanciate RCA. F3 ora lo dice, e «jack» nei
+  documenti vuol dire la presa d'uscita (nota in `REQUIREMENTS.md`).
+- **Comandi** (ADR-028, F10, F11): «il guadagno é rotativo a 3 posizioni sul
+  frontale», «il mute ha un comando sul pannello (switch)», un LED «rosso per il
+  mute», «i LED li colleghiamo con fili».
+- **Guadagno** (ADR-030):
+  - «vorrei evitare bump sulle casse, mettiamo il cambio gudagno condizionato
+    al mute, prendiamo la strada B»;
+  - «ovviamente servono i LED anche per il guadagno ora»;
+  - ma «si serve una misura perchè altrimenti rischiamo di aggiungere relè e
+    LED senza motivo, introducendo un bump per togliere un bump». Quindi **L36
+    si fa solo se L29 lo giustifica**.
+- **Trim**: resta bistabile, «seguo il tuo consiglio». La strada B si rivaluta
+  dopo L36.
+- **Telaio** (ADR-029, P8): «3U», profondità «come il technics», «il limite di
+  ingombro e un paio di modelli come esempio». Risultato: L ≤ 450 · A ≤ 130 ·
+  P ≤ 367 mm.
+
+**Cosa è emerso, e non era scritto:**
+- **Il comando del guadagno e quello del mute non esistono nel sorgente**: ci
+  sono solo le net. E i LED del trim hanno footprint sulla scheda. Apre
+  **NC-032**, la chiude **L35**.
+- **Il cambio di guadagno a caldo** porta sul jack un gradino **calcolato** di
+  ~6–114 mV, e nessuna misura esiste: `tb_switch_v2` guarda `v(OUT)` per 70 ms.
+  Quindi **L29 si estende**.
+- **Il LED del trim legge il relè gemello** K9/K10, non K7/K8: un guasto di uno
+  solo dei due li fa divergere. Messo in «Domande aperte».
+- **Corretta un'affermazione fatta in sessione**: la caduta di `VRELAY`
+  inserisce il mute, quindi non distingue i bistabili dalla strada B. La
+  differenza vera è il guasto di una sola bobina.
+
+**L'ordine dei lotti cambia solo in coda**: L13 → L20 → L28 → **L29 esteso** →
+**L36**, se giustificato → **L35** → **L30 e l'alimentatore**. Questi ultimi
+ereditano il budget delle bobine e il mute combinato con l'interruttore. Il
+contenitore si sceglie entro G2.
+
+Suite **9 passed / 0 failed**. **15 voci aperte, 2 bloccanti.** Prossimo:
+**L13**.
 
 ### L33 — le etichette di provenienza dell'LSK489 (2026-09-15)
 
@@ -764,12 +812,15 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L26 | **I tre requisiti nuovi dell'utente diventano ADR-019**: margine di fase minimo **60° ovunque**, trim abilitato dal mute con **interlock elettrico**, guadagni **0 / +3 / +10 dB** con riposo a 0 dB | XS/S | **NC-012** (chiude), apre NC-021…NC-023 | **fatto** |
 | L27 | **Il terzo livello di guadagno entra nel progetto.** Dimensionare il secondo ramo commutato verso massa (ADR-004 conservata: si commuta R_g, mai R_f; a relè diseccitati **0 dB**), decidere relè e poli col budget di corrente delle bobine, estendere i dodici deck da due modalità a tre e l'asserzione del diagramma a blocchi | M | **NC-022**, apre **NC-030** | **fatto** — ADR-026 (due rami di R_g in parallelo, K1 + K5) |
 | L28 | **SS dell'LSK489 definito per l'LSK489.** Un documento del costruttore che dica cosa sono i pin 3 e 7 di *questa* parte — o una ADR che accetti l'istruzione dell'LSK389 in forza della compatibilità dichiarata. Prima di G2 | XS/S | NC-027 | da fare |
-| L29 | **Il gradino al rilascio del mute.** Oggi il rilascio con segnale porta sul jack il condensatore caricato dalla musica: **5,37 V** a +10 dB, 1,79 V a 0 dB, 1,72 V sulle fisse, τ 0,32 s. **Il contatto prima del condensatore**, simulato in scratch dopo L11, toglie quel gradino ma ne mette uno **pari all'offset del blocco** (14-104 mV simulati, più fino a 63 mV di dispersione LSK489) **a ogni mute, accensione compresa**, e il volume non lo riduce (numeri e stima d'udibilità in NC-028). **Prima una soglia dell'utente su V2**; poi il confronto misurato, con un deck **versionato**, fra: contatto prima + offset abbassato (bilanciamento, coppie selezionate), rilascio lento, mute in serie, sequenza di rilascio. P7 va rimisurata per la posizione scelta | S/M | NC-028 | da fare |
+| L29 | **Il gradino al rilascio del mute.** Oggi il rilascio con segnale porta sul jack il condensatore caricato dalla musica: **5,37 V** a +10 dB, 1,79 V a 0 dB, 1,72 V sulle fisse, τ 0,32 s. **Il contatto prima del condensatore**, simulato in scratch dopo L11, toglie quel gradino ma ne mette uno **pari all'offset del blocco** (14-104 mV simulati, più fino a 63 mV di dispersione LSK489) **a ogni mute, accensione compresa**, e il volume non lo riduce (numeri e stima d'udibilità in NC-028). **Prima una soglia dell'utente su V2**; poi il confronto misurato, con un deck **versionato**, fra: contatto prima + offset abbassato (bilanciamento, coppie selezionate), rilascio lento, mute in serie, sequenza di rilascio. P7 va rimisurata per la posizione scelta. **Esteso da L34 (ADR-030)**: per ogni variante di mute, **cambio di guadagno a caldo contro cambio sotto mute seguito dal rilascio**, misurati sul jack e non su `v(OUT)`; transitorio ≥ 2 s (τ 0,32 s); passaggi 0↔+3, +3↔+10 e 0↔+10 dB, con e senza segnale, commutazione sul picco e sullo zero; dispersione LSK489 iniettata (±8 mV tipici, ±20 mV massimi) in più posizioni dell'attenuatore; rimbalzi dei contatti e break-before-make del rotativo; carichi 100 kΩ e 10 kΩ. **Dal confronto dipende L36** | M | NC-028 | da fare |
 | L30 | **Il calore del telaio con otto blocchi.** A riposo la scheda audio dissipa 6,45 W (0,806 W per blocco, L17) contro i 3-4 W che P5 prevede per l'apparecchio intero. Stima termica del telaio con l'alimentatore; poi o P5 aggiornato al numero vero, o ventilazione e montaggio progettati con una ADR, o ADR-021 riaperta se i 60 °C non reggono. Va col lotto dell'alimentatore | S | NC-029 | da fare |
 | L31 | **I vettori di rumore di `tb_noise_vectors.cir`.** Il deck cita `onoise_q123`, `onoise_r121`, `onoise_jq110`, `onoise_jq111`, dispositivi che non esistono più; il `wrdata` si ferma e non scrive niente, con rc 0. Rinominarli dall'include generato ed estendere `check_deck_refs.py` ai nomi `onoise_*`/`inoise_*`, facendolo fallire sul deck di oggi | XS | NC-030 | **fatto** — 2g esteso e fatto cadere (4 nomi morti), mappa per nodi (tre nomi vivi erano già sbagliati), quadratura = spettro |
 | L32 | **Il dossier rigenerato sui dati di oggi. Subito dopo L16.** `build_dossier.py` legge ancora `data/2026-09-09`: THAT320, C_f 22 pF, due soli guadagni. Va esteso ai tre modi (0 / +3 / +10 dB) e puntato ai dati di L27 e L16, coi margini di V1 al minimo della spazzata (ADR-024), la cifra unica di headroom che L16 sceglie per NC-009 e la «KPI riferita a 60°» rimasta da L19. Accanto a ogni numero, la provenienza dei modelli ancora segnaposto (NC-004, NC-017). **Nessun avviso di obsolescenza**: il dossier lo legge solo l'utente (deciso il 2026-09-14) | S | NC-009 (la metà del dossier), apre **NC-031** | **fatto** — tre modi, V1 al minimo della spazzata, M1 +6,58 dB, provenienza letta dagli `.include`; nove controlli fatti fallire |
 | L33 | **Le etichette di provenienza dell'LSK489.** I README di `data/2026-09-14/` (L12, L27, L16) e i commenti di tredici deck (dodici col commento di L22, più `tb_trim.cir`) dicono che l'LSK489 simulato è il modello del costruttore; i deck istanziano `LSK489X`, segnaposto con `KF=0`, e nessuno include `models/jfet/lsk489.lib`. Correggere le frasi dei deck (i README datati si precisano con una nota, non si riscrivono) e decidere se un guardiano debba confrontare la provenienza dichiarata con quella degli `.include` | XS | NC-031 | **fatto** — 15 deck (non 13) corretti solo nei commenti, 7 README (non 3) annotati, guardiano 2h fatto cadere su `main` e su 11 sabotaggi |
 | L32b | **Gli schemi del dossier si vedono.** Segnalazione dell'utente dopo L32: schema a blocchi e schema del blocco mancavano, perché `index.html` li collegava da `../schematic/`. Il builder li copia accanto alla pagina e rifiuta se mancano | XS | — | **fatto** |
+| L34 | **Le decisioni del 2026-09-15 diventano requisiti.** Da una sessione di domande dell'utente: **ADR-028** (comandi sul frontale, LED a pannello cablati), **ADR-029** (ingombro del telaio 450 × 130 × 367 mm), **ADR-030** (guadagno interbloccato dal mute con la strada B, subordinato a L29); in `REQUIREMENTS.md` F3 con «RCA», F10, F11, P8, note su F5 e su «jack», una riga in V2 | XS/S | apre **NC-032**, aggiorna NC-028 | **fatto** — nessun numero simulato; le cifre del bump a caldo sono calcolate ed etichettate |
+| L35 | **Comandi e LED a pannello nel sorgente** (ADR-028). Header di cablaggio al posto dei LED del trim sulla scheda (`trim.py`); comando del guadagno sul rotativo a 3 posizioni, cablato perché K5 non sia mai comandato senza K1 (ADR-026); interruttore di mute combinato col temporizzatore d'accensione; LED rosso di mute, letto da un contatto che dica lo stato; `check_relay_safe_state.py` esteso. **Dopo L29 e L36**: il comando del guadagno si cabla una volta sola | S/M | **NC-032** | da fare |
+| L36 | **Il guadagno interbloccato dal mute** (ADR-030, strada B). **Solo se L29 lo giustifica**, altrimenti «superata». Due relè ausiliari con autoritenuta su K1/K5; la corsa al rilascio del mute (scambio di K6 contro rilascio delle bobine) simulata e chiusa; il 2e esteso al guadagno; tre LED dello stato vero dai poli liberi degli ausiliari; budget delle bobine (~169 mA fuori mute a +10 dB, a 5 V) consegnato all'alimentatore. Se la corsa si chiude bene, rivalutare la stessa strada per il trim | M | parte di **NC-028** | da fare — **dipende da L29** |
 
 **NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
 riesecuzione di `tb_noise_breakdown.cir` coi modelli veri. È il caso
@@ -784,8 +835,19 @@ numeri e non sottinteso.
 
 Dopo, non pianificati in dettaglio perché dipendono dall'esito:
 **alimentatore + sicurezza rete** (chiude l'altra metà di **NC-011**: rimedio
-e verifica contro **ADR-020**, più il limite sopra 20 kHz), **Fase 4** (revisione topologia coi
-componenti veri), **Fase 5** (misure), **dossier**, **G1**.
+e verifica contro **ADR-020**, più il limite sopra 20 kHz; viene **dopo L35 e
+L36**, da cui eredita il budget delle bobine, la tensione di `VRELAY` e il
+temporizzatore di mute da combinare con l'interruttore di ADR-028), **Fase 4**
+(revisione topologia coi componenti veri), **Fase 5** (misure), **dossier**,
+**G1**.
+
+**Entro G2** (da L34):
+- la scelta del contenitore dentro l'ingombro di ADR-029, verificata sulle sue
+  misure interne;
+- le prese RCA vere al posto dei `Conn_01x02` generici di `preamp_audio.py`.
+
+**L9**, quando riparte, deve includere relè ausiliari, commutatori e LED di
+pannello.
 
 ### Cosa contiene ciascun lotto
 
@@ -2853,20 +2915,34 @@ sulla carta.
   - K7, K8 trim; K9, K10 spie.
 
   Budget delle bobine: 126,6 mA a 5 V, in mute e fuori (ADR-027).
-- **I conteggi**: 14 voci aperte, 2 bloccanti.
+- **I conteggi**: 15 voci aperte, 2 bloccanti (NC-032 aperta da L34).
+- **Da L34, requisiti nuovi che il circuito non soddisfa ancora**: F10 e F11
+  (comandi e LED a pannello, NC-032), P8 (ingombro del telaio). E ADR-030, che
+  si realizza solo se L29 lo giustifica. Nessuno tocca E4.
 
 **Poi**, nell'ordine:
 - **L20** (NC-013, S): quanto il progetto dipende da I_DSS. Nota di L33: oggi
   nessuna cifra simulata usa il modello `LSK489A`, quindi è anche la prima volta
   che quel modello entra in un deck del blocco.
-- **L29** (NC-028) aspetta una soglia dell'utente su V2, e si può chiedere in
-  qualsiasi momento.
-- **L30** (NC-029) va col lotto dell'alimentatore e del telaio.
 - **L28** (SS dell'LSK489, NC-027) va fatto prima di G2.
+- **L29** (NC-028, **esteso da L34**, ora M) aspetta una soglia dell'utente su
+  V2, che si può chiedere in qualsiasi momento. È **sul cammino critico**: dal
+  suo confronto fra cambio di guadagno a caldo e cambio sotto mute dipende
+  **L36**.
+- **L36** (ADR-030), **solo se L29 lo giustifica**: interblocco del guadagno con
+  gli ausiliari e i LED del guadagno. Se L29 dice di no, «superata».
+- **L35** (NC-032): comandi e LED a pannello nel sorgente, dopo L36, perché il
+  comando del guadagno si cabla una volta sola.
+- **L30** (NC-029) va col lotto dell'alimentatore e del telaio, **dopo L35 e
+  L36**.
 - **L'alimentatore**, quando arriva, parte da **ADR-020** e da NC-029. Deve
   anche:
   - dare corrente ai corti di P7, fino a ~200 mA di picco per blocco;
-  - alimentare separatamente la parte digitale, se entra (ADR-022).
+  - alimentare separatamente la parte digitale, se entra (ADR-022);
+  - alimentare le bobine col budget finale di L35/L36 (fino a ~169 mA fuori
+    mute a +10 dB, a 5 V, se L36 si fa);
+  - dare il temporizzatore d'accensione, da combinare con l'interruttore di mute
+    (ADR-028).
 
 ### Cosa cercare, e cosa NON accettare
 
@@ -2982,6 +3058,8 @@ Da non ricercare di nuovo.
 | Valore del cap d'uscita del phono a valvole | utente | **Rinviata** — non ha accesso agli schematici né può aprire agevolmente il telaio |
 | ~~Quale JFET d'ingresso~~ | — | **CHIUSA**: LSK489 (ADR-013) |
 | ~~Conferma specifiche cj EV250~~ | — | **CHIUSA**: email costruttore + manuale MV50 |
+| Il LED del trim legge i relè spia K9/K10, non K7/K8 che portano il segnale: un guasto meccanico di uno solo dei due (contatto incollato, bobina aperta) fa divergere LED e segnale. ADR-027 non lo elenca fra i casi da riaprire. Da L34 | utente | No. Vale anche per i LED del guadagno di ADR-030, letti dagli ausiliari |
+| Soglia su V2: quanto gradino al jack è accettabile. Serve a L29, e ora anche alla decisione di ADR-030 | utente, all'apertura di L29 | Sì, L29 |
 
 ## Decisioni chiuse il 2026-09-08
 

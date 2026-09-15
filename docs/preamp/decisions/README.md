@@ -62,3 +62,6 @@ Costa un commento. È il collegamento dall'artefatto al ragionamento, ed
 | [025](ADR-025-cf-330p-rimedio-margine-di-fase.md) | C_f da 22 a 330 pF: il rimedio del margine di fase, uguale in tutte le istanze | accettata |
 | [026](ADR-026-terzo-livello-due-rami-in-parallelo.md) | Il terzo livello di guadagno: due rami di R_g in parallelo, 3,57 kΩ e 866 Ω, su due relè | accettata |
 | [027](ADR-027-trim-comune-bistabile-sul-ramo-variabile.md) | Il trim è uno solo, sul ramo dell'uscita variabile, a relè bistabili, con LED e interblocco dal mute | accettata |
+| [028](ADR-028-comandi-sul-frontale-e-led-cablati.md) | Comandi sul frontale, e indicazioni a LED a pannello cablate a filo | accettata |
+| [029](ADR-029-ingombro-del-telaio.md) | Ingombro del telaio: l'impronta del Technics SU-9070, alto 3U | accettata |
+| [030](ADR-030-guadagno-interbloccato-dal-mute.md) | Il cambio di guadagno interbloccato dal mute: monostabili con autoritenuta, solo se la misura lo giustifica | accettata |

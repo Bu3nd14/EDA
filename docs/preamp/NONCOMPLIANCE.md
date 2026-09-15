@@ -54,7 +54,11 @@ NC-030**. **L33** (2026-09-15) ha corretto le etichette di provenienza
 dell'LSK489: quindici deck, solo nei commenti, e sette README datati annotati
 in coda. Ha aggiunto il blocco **2h**, che confronta ciò che un deck dichiara
 con i suoi `.include`, e l'ha fatto cadere su `main`: **chiude NC-031**.
-**14 voci aperte, 2 bloccanti.**
+**L34** (2026-09-15) ha messo per iscritto le decisioni di una sessione di
+domande dell'utente: **ADR-028** (comandi sul frontale e LED a pannello),
+**ADR-029** (ingombro del telaio) e **ADR-030** (guadagno interbloccato dal
+mute, subordinato alla misura di L29). **Apre NC-032** e aggiorna NC-028.
+**15 voci aperte, 2 bloccanti.**
 L'accesso a G1 non è concesso finché NC-004 e NC-017 restano aperte.
 
 ---
@@ -2036,6 +2040,32 @@ Lo specchio LS352 aggiunge poco: 0,2 mV tipici di ΔV_BE.
    lascia libera la tecnica del mute attivo, e a P7: col contatto prima, il
    carico a mute è 47 Ω anche in bassa frequenza, e la termica va rimisurata.
 
+**AGGIORNATA IL 2026-09-15, da L34: il cambio di guadagno a caldo e
+l'interblocco di ADR-030.**
+
+- **Cosa cambia per questa voce.** L'utente vuole togliere il bump del cambio
+  di guadagno con un interblocco dal mute (ADR-030, strada B), ma solo se una
+  misura lo giustifica. Parole sue: «altrimenti rischiamo di aggiungere relè e
+  LED senza motivo, introducendo un bump per togliere un bump».
+- **Il gradino del cambio a caldo, calcolato e non misurato.** Coi Vos_in della
+  tabella sopra, al jack principale:
+  - 0↔+3 dB: ~6–14 mV;
+  - +3↔+10 dB: ~25–59 mV;
+  - 0↔+10 dB: ~31–114 mV.
+
+  Con la formula sopra sono ~69–95 dB SPL di picco. Tabella in ADR-030; le
+  fisse non sono toccate.
+- **Il confronto che serve.** Per ogni rimedio elencato in «Cosa serve per
+  chiuderla»: cambio a caldo contro cambio sotto mute seguito dal rilascio.
+  - Col mute di oggi il cambio sotto mute non lascia gradino d'offset, perché il
+    4,7 µF segue l'uscita attraverso i 47 Ω; resta il gradino della musica al
+    rilascio.
+  - Col contatto prima del condensatore ne lascia uno d'offset.
+- **Chi lo fa**: **L29**, esteso. Da quell'esito dipende **L36**.
+- **Evidenza**: il calcolo in
+  `reports/2026-09-15-L34-decisioni-comandi-guadagno-telaio.md`. Nessun dato
+  nuovo.
+
 
 ### NC-029 — Con i buffer delle fisse la dissipazione a riposo raddoppia, e P5 non la copre
 
@@ -2234,6 +2264,44 @@ Lotto **L33** (XS).
 6. **NC-004 precisata**: «nel repo solo l'LSK489 ha rumore 1/f» è vero di
    `models/`, non delle simulazioni.
 7. Suite **9 passed / 0 failed**.
+
+### NC-032 — I comandi e i LED del frontale di ADR-028 non esistono nel circuito
+
+| | |
+|---|---|
+| Requisito | **F10**, **F11** · ADR-028 · letta insieme a **F5**/ADR-030 e **P8**/ADR-029 |
+| Severità | **maggiore** |
+| Aperta da | `reports/2026-09-15-L34-decisioni-comandi-guadagno-telaio.md` |
+| Stato | aperta |
+
+**Evidenza.** Letta su `circuits/preamp/` e sulla netlist generata
+`circuits/preamp/preamp_audio.net`, a `3f625aa`:
+- **Nessun comando pilota le bobine.**
+  - `GAIN_CMD` ha un solo nodo, K1 pin 8; `GAIN10_CMD` un solo nodo, K5 pin 8.
+  - `MUTE_CMD` porta soltanto le bobine dei relè: K2, K3, K4 e il permissivo K6.
+  - Non ci sono commutatore del guadagno, interruttore di mute, né un
+    connettore che porti queste net al pannello.
+- **Nessun LED di mute.**
+- **I LED del trim sono sulla scheda.** D4–D6 hanno footprint
+  `LED_THT:LED_D3.0mm` (`trim.py`, `FP_LED`), mentre SW1 è già un header di
+  cablaggio (`FP_SW`).
+- **Il temporizzatore d'accensione** che F10 combina con l'interruttore
+  appartiene all'alimentatore, non ancora progettato.
+
+**Perché maggiore e non bloccante.** Nessuna cifra del progetto cambia, e i
+comandi mancanti stanno fuori dal percorso del segnale. Ma senza di loro la
+topologia non si congela a G1, e il 2e (`check_relay_safe_state.py`) non può
+verificare un comando che non esiste.
+
+**Cosa serve per chiuderla.** **L35**, dopo L29 e L36:
+1. header di cablaggio al posto dei LED del trim;
+2. il comando del guadagno sul rotativo a 3 posizioni, cablato così che K5 non
+   sia mai comandato senza K1 (ADR-026), con o senza l'interblocco di ADR-030
+   secondo l'esito di L29;
+3. l'interruttore di mute combinato col temporizzatore d'accensione;
+4. il LED rosso di mute, da un contatto che dica lo stato;
+5. `check_relay_safe_state.py` esteso ai comandi nuovi, e fatto fallire su una
+   netlist sbagliata.
 
 ## Voci chiuse
 

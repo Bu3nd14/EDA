@@ -6,7 +6,17 @@ si ferma. Non iniziarne un secondo.
 
 ## Cosa è cambiato col lotto precedente
 
-**Il lotto precedente ha chiuso NC-031**: nessun deck e nessun README chiama più
+**L34, di sola documentazione, non tocca L13.** Dalla sessione di domande
+dell'utente del 2026-09-15:
+- **ADR-028**: comandi sul frontale e LED a pannello cablati (F10, F11);
+- **ADR-029**: ingombro del telaio, 450 × 130 × 367 mm (P8);
+- **ADR-030**: il guadagno interbloccato dal mute, solo se L29 lo giustifica;
+- **F3** dice ora «sbilanciate RCA»; «jack» vuol dire la presa d'uscita RCA
+  (nota in `REQUIREMENTS.md`). Per E4 non cambia niente;
+- **NC-032** aperta (maggiore, la chiude L35); **L29** esteso; lotti nuovi
+  **L35** e **L36**.
+
+**Prima, L33 ha chiuso NC-031**: nessun deck e nessun README chiama più
 «del costruttore» l'LSK489 simulato.
 
 1. **Cosa si simula, detto una volta per tutte.**
@@ -25,11 +35,12 @@ si ferma. Non iniziarne un secondo.
    le frasi dei mandati resta la regola**, anche questo.
 4. **I dati** stanno in `data/2026-09-15/L33/`.
 
-Voci: **14 aperte, 2 bloccanti** (NC-004, NC-017, entrambe di Fase 4).
+Voci: **15 aperte, 2 bloccanti** (NC-004, NC-017, entrambe di Fase 4).
 
 **Perché questo lotto viene adesso.** Non aspetta nessuno. Gli altri sì:
-- L29 una soglia dell'utente su V2;
-- L30 l'alimentatore;
+- L29 una soglia dell'utente su V2, ed è stato esteso da L34;
+- L36 e L35 aspettano L29;
+- L30 l'alimentatore, che viene dopo L35 e L36;
 - L28 un documento del costruttore o una ADR, prima di G2.
 
 L20 (NC-013) non aspetta nessuno neppure lui, e viene dopo.
