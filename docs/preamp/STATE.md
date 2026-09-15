@@ -11,7 +11,7 @@ realtà, il progetto non è ripartibile.
 | | |
 |---|---|
 | Ultimo aggiornamento | **2026-09-15** |
-| Ultimo lotto chiuso | **L32** — il dossier rigenerato sui dati di L27 e L16: tre modi, V1 al minimo della spazzata (61,63°, buffer delle fisse), NC-009 pubblicata come **M1 +6,58 dB**, provenienza dei modelli letta dai deck; apre NC-031 |
+| Ultimo lotto chiuso | **L32b** — gli schemi del dossier copiati accanto alla pagina, perché si vedano in ogni visualizzatore. Prima: **L32** — il dossier rigenerato sui dati di L27 e L16: tre modi, V1 al minimo della spazzata (61,63°, buffer delle fisse), NC-009 pubblicata come **M1 +6,58 dB**, provenienza dei modelli letta dai deck; apre NC-031 |
 | **Prossimo lotto** | **L31** — i vettori di rumore morti di `tb_noise_vectors.cir`, NC-030 (mandato in «Prossimo passo concreto») |
 | Non conformità | **16 aperte, 2 bloccanti** |
 | Le bloccanti | NC-004 · NC-017 (Fase 4) |
@@ -21,6 +21,29 @@ realtà, il progetto non è ripartibile.
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L32b — gli schemi del dossier si vedono (2026-09-15)
+
+Nessun numero toccato. Una segnalazione dell'utente dopo la chiusura di L32:
+«nel nuovo dossier le immagini dello schema a blocchi e dello schema di guadagno
+mancano».
+
+- **La causa.**
+  - `index.html` collegava i due schemi come `../schematic/…`, fuori dalla
+    propria cartella. Le figure `fig_*.svg`, che stanno accanto alla pagina, si
+    vedevano.
+  - I due SVG sono XML valido, con `xmlns`, e si renderizzano da soli: il
+    visualizzatore dell'utente non serve file fuori dalla cartella della pagina.
+  - Il difetto c'era anche prima di L32. Non si notava perché l'Artifact del
+    2026-09-09 era stato pubblicato con `--standalone`, che incorpora gli SVG.
+- **Il rimedio.**
+  - `build_dossier.py` copia `gain_block.svg` e `preamp_blocks.svg` accanto a
+    `index.html` e li collega da lì.
+  - Rifiuta se uno dei due manca, prima di scrivere qualsiasi file.
+  - Con `--standalone` li incorpora ancora da `docs/preamp/schematic/`.
+- **È un'ipotesi sul visualizzatore**, confermata solo dal sintomo: le figure
+  accanto alla pagina si vedono. Nessun browser headless per provarla qui.
+- L'Artifact del dossier è ancora quello del **2026-09-09**.
 
 ### L32 — il dossier rigenerato sui dati di L27 e L16 (2026-09-15)
 
@@ -668,6 +691,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L31 | **I vettori di rumore di `tb_noise_vectors.cir`.** Il deck cita `onoise_q123`, `onoise_r121`, `onoise_jq110`, `onoise_jq111`, dispositivi che non esistono più; il `wrdata` si ferma e non scrive niente, con rc 0. Rinominarli dall'include generato ed estendere `check_deck_refs.py` ai nomi `onoise_*`/`inoise_*`, facendolo fallire sul deck di oggi | XS | NC-030 | da fare |
 | L32 | **Il dossier rigenerato sui dati di oggi. Subito dopo L16.** `build_dossier.py` legge ancora `data/2026-09-09`: THAT320, C_f 22 pF, due soli guadagni. Va esteso ai tre modi (0 / +3 / +10 dB) e puntato ai dati di L27 e L16, coi margini di V1 al minimo della spazzata (ADR-024), la cifra unica di headroom che L16 sceglie per NC-009 e la «KPI riferita a 60°» rimasta da L19. Accanto a ogni numero, la provenienza dei modelli ancora segnaposto (NC-004, NC-017). **Nessun avviso di obsolescenza**: il dossier lo legge solo l'utente (deciso il 2026-09-14) | S | NC-009 (la metà del dossier), apre **NC-031** | **fatto** — tre modi, V1 al minimo della spazzata, M1 +6,58 dB, provenienza letta dagli `.include`; nove controlli fatti fallire |
 | L33 | **Le etichette di provenienza dell'LSK489.** I README di `data/2026-09-14/` (L12, L27, L16) e i commenti di tredici deck (dodici col commento di L22, più `tb_trim.cir`) dicono che l'LSK489 simulato è il modello del costruttore; i deck istanziano `LSK489X`, segnaposto con `KF=0`, e nessuno include `models/jfet/lsk489.lib`. Correggere le frasi dei deck (i README datati si precisano con una nota, non si riscrivono) e decidere se un guardiano debba confrontare la provenienza dichiarata con quella degli `.include` | XS | NC-031 | da fare |
+| L32b | **Gli schemi del dossier si vedono.** Segnalazione dell'utente dopo L32: schema a blocchi e schema del blocco mancavano, perché `index.html` li collegava da `../schematic/`. Il builder li copia accanto alla pagina e rifiuta se mancano | XS | — | **fatto** |
 
 **NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
 riesecuzione di `tb_noise_breakdown.cir` coi modelli veri. È il caso
