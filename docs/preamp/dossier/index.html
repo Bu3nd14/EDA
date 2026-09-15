@@ -197,9 +197,9 @@ hr.end{border:0;border-top:1px solid var(--rule);margin:56px 0 0}
 <p class="meta">Nessuna cifra di questa pagina è scritta a mano. Le curve sono ricontrollate contro le <code>print</code> che ngspice ha stampato nei log versionati; le tabelle, riga per riga, contro le <code>print</code> o le <code>meas</code> dello stesso log, e una cella vuota è un rifiuto; la cifra di headroom contro lo script di L16 che l&rsquo;ha scelta. Se una strada diverge, il generatore rifiuta di produrre la pagina.</p>
 <h2 id="s1"><span class="secno">1</span><span>Il blocco di guadagno</span></h2>
 <p>Il blocco è uno solo (ADR-006) e il prodotto lo usa otto volte: per canale, il blocco A (buffer d&rsquo;ingresso), i due buffer delle uscite fisse (ADR-023) e il blocco B (uscita variabile). È l&rsquo;oggetto da giudicare.</p>
-<div class="plate"><img src="../schematic/gain_block.svg" alt="Schema del blocco di guadagno" loading="lazy"></div>
+<div class="plate"><img src="gain_block.svg" alt="Schema del blocco di guadagno" loading="lazy"></div>
 <h2 id="s2"><span class="secno">2</span><span>Il preamplificatore intero</span></h2>
-<div class="plate"><img src="../schematic/preamp_blocks.svg" alt="Diagramma a blocchi del preamplificatore" loading="lazy"></div>
+<div class="plate"><img src="preamp_blocks.svg" alt="Diagramma a blocchi del preamplificatore" loading="lazy"></div>
 <h2 id="s3"><span class="secno">3</span><span>Punti di lavoro</span></h2>
 <p class="prov">Deck <code>spice/preamp/tb/tb_op.cir</code> &middot; dati <code>docs/preamp/data/2026-09-14/L27/dopo/tb_op/</code><br>Modelli del costruttore: <strong>LS352</strong> &middot; segnaposto scritti a mano: <strong>1N4148, 2N5401, 2N5551, LSK489, MJE15032, MJE15033</strong> (NC-017) &middot; tutti KF = 0: nessun rumore 1/f (NC-004)</p>
 <p>Corrente dai rail e punto di lavoro di ogni dispositivo attivo, a ingresso a massa. Il trim sta dopo il condensatore d&rsquo;uscita del blocco A e non tocca la continua.</p>

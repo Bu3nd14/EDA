@@ -34,6 +34,7 @@ import json
 import math
 import os
 import re
+import shutil
 import subprocess
 import sys
 
@@ -45,6 +46,11 @@ L16 = os.path.join(DATA, "L16", "dopo")
 L16X = os.path.join(DATA, "L16", "esplorazione")
 TB = os.path.join(REPO, "spice", "preamp", "tb")
 SCHEM = os.path.join(REPO, "docs", "preamp", "schematic")
+# L32b: i due schemi si COPIANO accanto a index.html e si collegano da li'.
+# Un <img src="../schematic/..."> esce dalla cartella della pagina, e un
+# visualizzatore che serve solo quella cartella li perdeva in silenzio,
+# mentre le figure fig_*.svg accanto alla pagina restavano visibili.
+SCHEMATICS = ("gain_block.svg", "preamp_blocks.svg")
 FORBIDDEN = "2026-09-09"
 
 MODES = ("0db", "3db", "10db")
@@ -1210,8 +1216,7 @@ def build_page(M, inline=False):
 
     def figure(svgfile, alt):
         if inline:
-            with open(os.path.join(HERE, svgfile) if not svgfile.startswith("..")
-                      else os.path.join(SCHEM, os.path.basename(svgfile))) as f:
+            with open(os.path.join(SCHEM if svgfile in SCHEMATICS else HERE, svgfile)) as f:
                 body = f.read()
             return f'<div class="plate">{body.split("?>", 1)[-1]}</div>'
         return (f'<div class="plate"><img src="{svgfile}" '
@@ -1301,9 +1306,9 @@ def build_page(M, inline=False):
     A('<p>Il blocco è uno solo (ADR-006) e il prodotto lo usa otto volte: per canale, '
       'il blocco A (buffer d&rsquo;ingresso), i due buffer delle uscite fisse (ADR-023) e '
       'il blocco B (uscita variabile). È l&rsquo;oggetto da giudicare.</p>')
-    A(figure("../schematic/gain_block.svg", "Schema del blocco di guadagno"))
+    A(figure("gain_block.svg", "Schema del blocco di guadagno"))
     A(h2("s2"))
-    A(figure("../schematic/preamp_blocks.svg", "Diagramma a blocchi del preamplificatore"))
+    A(figure("preamp_blocks.svg", "Diagramma a blocchi del preamplificatore"))
 
     # --- 3 punti di lavoro ---
     A(h2("s3"))
@@ -1806,6 +1811,9 @@ def main():
     M["decks"] = [os.path.join(TB, d) for d in DECKS]
     for deck in M["decks"]:
         provenance(deck)
+    for name in SCHEMATICS:
+        if not os.path.isfile(os.path.join(SCHEM, name)):
+            refuse(f"schema mancante: {rel(os.path.join(SCHEM, name))}")
 
     if FAILURES:
         print("RIFIUTATO: il dossier non coincide con la propria evidenza.", file=sys.stderr)
@@ -1835,6 +1843,9 @@ def main():
         with open(os.path.join(HERE, name), "w") as f:
             f.write(body)
         print(f"   scritto {name} ({len(body)} byte)")
+    for name in SCHEMATICS:
+        shutil.copyfile(os.path.join(SCHEM, name), os.path.join(HERE, name))
+        print(f"   copiato {name} da {rel(SCHEM)}/")
     with open(os.path.join(HERE, "index.html"), "w") as f:
         f.write(page)
     print(f"   scritto index.html ({len(page)} byte)")
