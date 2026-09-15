@@ -122,6 +122,16 @@ set t = .txt
 set units = degrees
 
 echo "########## Zout at the jack, load removed, both gain modes ##########"
+* *** LA SORGENTE SPENTA (L13, 2026-09-15) ***
+* Fino a L13 questa sezione NON azzerava @vsrc[acmag]: VSRC restava a 1 V AC
+* e v(JACK) sommava alla caduta dovuta a 1 A iniettato il segnale amplificato
+* dal blocco. Nessun errore, rc 0. La firma stava nei numeri: za1k valeva
+* 1,0355 / 1,4704 / 3,2621 ohm a 0 / +3 / +10 dB - cioe' il guadagno del modo
+* per 1 V, piatto in frequenza - mentre il nodo di un buffer identico, a
+* sorgente spenta, da' 0,0386 ohm (tb_uscite_fisse.cir, L17). Presente dal
+* 2026-09-09 (za1k 1,03692). Numeri prima e dopo:
+* docs/preamp/data/2026-09-15/L13/, report 2026-09-15-L13-e4-tre-uscite.md.
+alter @vsrc[acmag] = 0
 alter rload = 1G
 alter @iout[acmag] = 1
 foreach mode 0 3 10
@@ -157,6 +167,7 @@ foreach mode 0 3 10
 end
 alter @iout[acmag] = 0
 alter rload = 100k
+alter @vsrc[acmag] = 1
 
 echo "########## PSRR (input source silenced) ##########"
 alter @vsrc[acmag] = 0

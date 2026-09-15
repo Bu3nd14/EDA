@@ -1,0 +1,245 @@
+--- sabotaggio a: e4, rc 1, sigle fallite 'DFG', attese 'FG' -> COME ATTESO
+uscita / modi         celle  Re(Z)max  Re(Z)1k min..max      |Z|1k min..max        nodo 1k min..max       disp Re(Z)max
+main 0db                 15   61.0495   47.0313.. 48.0305   57.9449.. 58.7597  0.03864..1.03563  9.991e-01
+main 3db                 15   61.4843   47.0465.. 48.4654   57.9539.. 59.1141  0.05487..1.47057  1.419e+00
+main 10db                15   63.2755   47.1092.. 50.2567   57.9914.. 60.5872  0.12169..3.26235  3.147e+00
+fix1 0db+3db+10db        45   54.1311   48.0332.. 48.0332   58.7666.. 58.7666  1.03564..1.03564  0.000e+00
+fix2 0db+3db+10db        45   54.1311   48.0332.. 48.0332   58.7666.. 58.7666  1.03564..1.03564  0.000e+00
+
+RIFIUTATO: 319 controlli falliti, sigle DFG
+  D: ('fix1', '0', '0', '0db') nodo del blocco 1.036 ohm
+  D: ('fix2', '0', '0', '0db') nodo del blocco 1.036 ohm
+  D: ('fix1', '0', '0', '3db') nodo del blocco 1.036 ohm
+  D: ('fix2', '0', '0', '3db') nodo del blocco 1.036 ohm
+  D: ('fix1', '0', '0', '10db') nodo del blocco 1.036 ohm
+  D: ('fix2', '0', '0', '10db') nodo del blocco 1.036 ohm
+  D: ('fix1', '0', '25', '0db') nodo del blocco 1.036 ohm
+  D: ('fix2', '0', '25', '0db') nodo del blocco 1.036 ohm
+  D: ('fix1', '0', '25', '3db') nodo del blocco 1.036 ohm
+  D: ('fix2', '0', '25', '3db') nodo del blocco 1.036 ohm
+  D: ('fix1', '0', '25', '10db') nodo del blocco 1.036 ohm
+  D: ('fix2', '0', '25', '10db') nodo del blocco 1.036 ohm
+  D: ('fix1', '0', '50', '0db') nodo del blocco 1.036 ohm
+  D: ('fix2', '0', '50', '0db') nodo del blocco 1.036 ohm
+  D: ('fix1', '0', '50', '3db') nodo del blocco 1.036 ohm
+  D: ('fix2', '0', '50', '3db') nodo del blocco 1.036 ohm
+  D: ('main', '0', '50', '10db') nodo del blocco 1.685 ohm
+  D: ('fix1', '0', '50', '10db') nodo del blocco 1.036 ohm
+  D: ('fix2', '0', '50', '10db') nodo del blocco 1.036 ohm
+  D: ('fix1', '0', '75', '0db') nodo del blocco 1.036 ohm
+  D: ('fix2', '0', '75', '0db') nodo del blocco 1.036 ohm
+  D: ('main', '0', '75', '3db') nodo del blocco 1.114 ohm
+  D: ('fix1', '0', '75', '3db') nodo del blocco 1.036 ohm
+  D: ('fix2', '0', '75', '3db') nodo del blocco 1.036 ohm
+  D: ('main', '0', '75', '10db') nodo del blocco 2.471 ohm
+  ... e altri 294
+--- sabotaggio b: e4, rc 1, sigle fallite 'DG', attese 'D' -> COME ATTESO
+uscita / modi         celle  Re(Z)max  Re(Z)1k min..max      |Z|1k min..max        nodo 1k min..max       disp Re(Z)max
+main 0db                 15    0.0363    0.0362..  0.0362    0.0386..  0.0386  0.03864..0.03864  7.070e-05
+main 3db                 15    0.0632    0.0514..  0.0514    0.0549..  0.0549  0.05485..0.05487  1.015e-04
+main 10db                15    0.1915    0.1140..  0.1141    0.1216..  0.1217  0.12162..0.12169  2.400e-04
+fix1 0db+3db+10db        45   53.1318   47.0339.. 47.0339   57.9515.. 57.9515  0.03864..0.03864  0.000e+00
+fix2 0db+3db+10db        45   53.1318   47.0339.. 47.0339   57.9515.. 57.9515  0.03864..0.03864  0.000e+00
+
+RIFIUTATO: 135 controlli falliti, sigle DG
+  D: ('main', '0', '0', '0db') Re(Z) 1 kHz 0.03617 < 47 ohm: la sonda non e' al jack
+  D: ('main', '0', '0', '0db') |Z| 20 Hz 0.03618: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '0', '0', '3db') Re(Z) 1 kHz 0.05139 < 47 ohm: la sonda non e' al jack
+  D: ('main', '0', '0', '3db') |Z| 20 Hz 0.05137: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '0', '0', '10db') Re(Z) 1 kHz 0.1141 < 47 ohm: la sonda non e' al jack
+  D: ('main', '0', '0', '10db') |Z| 20 Hz 0.1139: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '0', '25', '0db') Re(Z) 1 kHz 0.03617 < 47 ohm: la sonda non e' al jack
+  D: ('main', '0', '25', '0db') |Z| 20 Hz 0.03618: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '0', '25', '3db') Re(Z) 1 kHz 0.05139 < 47 ohm: la sonda non e' al jack
+  D: ('main', '0', '25', '3db') |Z| 20 Hz 0.05136: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '0', '25', '10db') Re(Z) 1 kHz 0.1141 < 47 ohm: la sonda non e' al jack
+  D: ('main', '0', '25', '10db') |Z| 20 Hz 0.1139: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '0', '50', '0db') Re(Z) 1 kHz 0.03617 < 47 ohm: la sonda non e' al jack
+  D: ('main', '0', '50', '0db') |Z| 20 Hz 0.03617: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '0', '50', '3db') Re(Z) 1 kHz 0.05138 < 47 ohm: la sonda non e' al jack
+  D: ('main', '0', '50', '3db') |Z| 20 Hz 0.05136: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '0', '50', '10db') Re(Z) 1 kHz 0.1141 < 47 ohm: la sonda non e' al jack
+  D: ('main', '0', '50', '10db') |Z| 20 Hz 0.1139: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '0', '75', '0db') Re(Z) 1 kHz 0.03617 < 47 ohm: la sonda non e' al jack
+  D: ('main', '0', '75', '0db') |Z| 20 Hz 0.03617: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '0', '75', '3db') Re(Z) 1 kHz 0.05138 < 47 ohm: la sonda non e' al jack
+  D: ('main', '0', '75', '3db') |Z| 20 Hz 0.05136: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '0', '75', '10db') Re(Z) 1 kHz 0.114 < 47 ohm: la sonda non e' al jack
+  D: ('main', '0', '75', '10db') |Z| 20 Hz 0.1139: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '0', '100', '0db') Re(Z) 1 kHz 0.03616 < 47 ohm: la sonda non e' al jack
+  ... e altri 110
+--- sabotaggio c0: e4, rc 1, sigle fallite 'A', attese 'A' -> COME ATTESO
+
+RIFIUTATO: 46 controlli falliti, sigle A
+  A: 180 righe 'Error' nel log
+  A: guadagno vuoto in ('0', '0', '0db')
+  A: guadagno vuoto in ('0', '0', '3db')
+  A: guadagno vuoto in ('0', '0', '10db')
+  A: guadagno vuoto in ('0', '25', '0db')
+  A: guadagno vuoto in ('0', '25', '3db')
+  A: guadagno vuoto in ('0', '25', '10db')
+  A: guadagno vuoto in ('0', '50', '0db')
+  A: guadagno vuoto in ('0', '50', '3db')
+  A: guadagno vuoto in ('0', '50', '10db')
+  A: guadagno vuoto in ('0', '75', '0db')
+  A: guadagno vuoto in ('0', '75', '3db')
+  A: guadagno vuoto in ('0', '75', '10db')
+  A: guadagno vuoto in ('0', '100', '0db')
+  A: guadagno vuoto in ('0', '100', '3db')
+  A: guadagno vuoto in ('0', '100', '10db')
+  A: guadagno vuoto in ('6', '0', '0db')
+  A: guadagno vuoto in ('6', '0', '3db')
+  A: guadagno vuoto in ('6', '0', '10db')
+  A: guadagno vuoto in ('6', '25', '0db')
+  A: guadagno vuoto in ('6', '25', '3db')
+  A: guadagno vuoto in ('6', '25', '10db')
+  A: guadagno vuoto in ('6', '50', '0db')
+  A: guadagno vuoto in ('6', '50', '3db')
+  A: guadagno vuoto in ('6', '50', '10db')
+  ... e altri 21
+--- sabotaggio c: e4, rc 1, sigle fallite 'C', attese 'C' -> COME ATTESO
+uscita / modi         celle  Re(Z)max  Re(Z)1k min..max      |Z|1k min..max        nodo 1k min..max       disp Re(Z)max
+main 0db                 15   60.0504   47.0313.. 47.0313   57.9449.. 57.9449  0.03864..0.03864  0.000e+00
+main 3db                 15   60.0656   47.0465.. 47.0465   57.9539.. 57.9539  0.05485..0.05487  1.000e-04
+main 10db                15   60.1281   47.1092.. 47.1092   57.9913.. 57.9914  0.12162..0.12167  1.000e-04
+fix1 0db+3db+10db        45   53.1318   47.0339.. 47.0339   57.9515.. 57.9515  0.03864..0.03864  0.000e+00
+fix2 0db+3db+10db        45   53.1318   47.0339.. 47.0339   57.9515.. 57.9515  0.03864..0.03864  0.000e+00
+
+RIFIUTATO: 36 controlli falliti, sigle C
+  C: trim 0 att 0 0db: -0.011 dB, atteso < -100 (cursore a massa)
+  C: trim 0 att 0 3db: 3.035 dB, atteso < -100 (cursore a massa)
+  C: trim 0 att 0 10db: 9.956 dB, atteso < -100 (cursore a massa)
+  C: trim 0 att 25 0db: -0.011 dB, atteso -12.041 +/- 0.15
+  C: trim 0 att 25 3db: 3.035 dB, atteso -8.991 +/- 0.15
+  C: trim 0 att 25 10db: 9.956 dB, atteso -2.071 +/- 0.15
+  C: trim 0 att 50 0db: -0.011 dB, atteso -6.021 +/- 0.15
+  C: trim 0 att 50 3db: 3.035 dB, atteso -2.971 +/- 0.15
+  C: trim 0 att 50 10db: 9.956 dB, atteso 3.949 +/- 0.15
+  C: trim 0 att 75 0db: -0.011 dB, atteso -2.499 +/- 0.15
+  C: trim 0 att 75 3db: 3.035 dB, atteso 0.551 +/- 0.15
+  C: trim 0 att 75 10db: 9.956 dB, atteso 7.471 +/- 0.15
+  C: trim 6 att 0 0db: -6.014 dB, atteso < -100 (cursore a massa)
+  C: trim 6 att 0 3db: -2.968 dB, atteso < -100 (cursore a massa)
+  C: trim 6 att 0 10db: 3.953 dB, atteso < -100 (cursore a massa)
+  C: trim 6 att 25 0db: -6.014 dB, atteso -18.044 +/- 0.15
+  C: trim 6 att 25 3db: -2.968 dB, atteso -14.994 +/- 0.15
+  C: trim 6 att 25 10db: 3.953 dB, atteso -8.074 +/- 0.15
+  C: trim 6 att 50 0db: -6.014 dB, atteso -12.024 +/- 0.15
+  C: trim 6 att 50 3db: -2.968 dB, atteso -8.974 +/- 0.15
+  C: trim 6 att 50 10db: 3.953 dB, atteso -2.054 +/- 0.15
+  C: trim 6 att 75 0db: -6.014 dB, atteso -8.502 +/- 0.15
+  C: trim 6 att 75 3db: -2.968 dB, atteso -5.452 +/- 0.15
+  C: trim 6 att 75 10db: 3.953 dB, atteso 1.468 +/- 0.15
+  C: trim 12 att 0 0db: -11.950 dB, atteso < -100 (cursore a massa)
+  ... e altri 11
+--- sabotaggio d: e4, rc 1, sigle fallite 'DEFG', attese 'DF' -> COME ATTESO
+uscita / modi         celle  Re(Z)max  Re(Z)1k min..max      |Z|1k min..max        nodo 1k min..max       disp Re(Z)max
+main 0db                 15  2599.1700    0.0010..2599.1600    0.0010..2599.1600  0.00100..2598.42000  2.599e+03
+main 3db                 15  2599.1800    0.0010..2599.1600    0.0010..2599.1600  0.00142..3689.73000  2.599e+03
+main 10db                15  2599.2000    0.0010..2599.1600    0.0010..2599.1600  0.00315..8185.60000  2.599e+03
+fix1 0db+3db+10db        45   53.1318   47.0339.. 47.0339   57.9515.. 57.9515  0.03864..0.03864  0.000e+00
+fix2 0db+3db+10db        45   53.1318   47.0339.. 47.0339   57.9515.. 57.9515  0.03864..0.03864  0.000e+00
+
+RIFIUTATO: 120 controlli falliti, sigle DEFG
+  D: ('main', '0', '0', '0db') Re(Z) 1 kHz 0.001 < 47 ohm: la sonda non e' al jack
+  D: ('main', '0', '0', '0db') |Z| 20 Hz 0.001: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '0', '0', '3db') Re(Z) 1 kHz 0.001 < 47 ohm: la sonda non e' al jack
+  D: ('main', '0', '0', '3db') |Z| 20 Hz 0.001: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '0', '0', '10db') Re(Z) 1 kHz 0.001 < 47 ohm: la sonda non e' al jack
+  D: ('main', '0', '0', '10db') |Z| 20 Hz 0.001: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '0', '25', '0db') nodo del blocco 1871 ohm
+  D: ('main', '0', '25', '3db') nodo del blocco 2657 ohm
+  D: ('main', '0', '25', '10db') nodo del blocco 5894 ohm
+  D: ('main', '0', '50', '0db') nodo del blocco 2493 ohm
+  D: ('main', '0', '50', '3db') nodo del blocco 3540 ohm
+  D: ('main', '0', '50', '10db') nodo del blocco 7854 ohm
+  D: ('main', '0', '75', '0db') nodo del blocco 1871 ohm
+  D: ('main', '0', '75', '3db') nodo del blocco 2657 ohm
+  D: ('main', '0', '75', '10db') nodo del blocco 5894 ohm
+  D: ('main', '0', '100', '0db') Re(Z) 1 kHz 0.1372 < 47 ohm: la sonda non e' al jack
+  D: ('main', '0', '100', '0db') |Z| 20 Hz 0.1372: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '0', '100', '3db') Re(Z) 1 kHz 0.1372 < 47 ohm: la sonda non e' al jack
+  D: ('main', '0', '100', '3db') |Z| 20 Hz 0.1372: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '0', '100', '10db') Re(Z) 1 kHz 0.1372 < 47 ohm: la sonda non e' al jack
+  D: ('main', '0', '100', '10db') |Z| 20 Hz 0.1372: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '6', '0', '0db') Re(Z) 1 kHz 0.001 < 47 ohm: la sonda non e' al jack
+  D: ('main', '6', '0', '0db') |Z| 20 Hz 0.001: il 4,7 uF non e' nel percorso misurato
+  D: ('main', '6', '0', '3db') Re(Z) 1 kHz 0.001 < 47 ohm: la sonda non e' al jack
+  D: ('main', '6', '0', '3db') |Z| 20 Hz 0.001: il 4,7 uF non e' nel percorso misurato
+  ... e altri 95
+--- sabotaggio e: e4, rc 1, sigle fallite 'DG', attese 'D' -> COME ATTESO
+uscita / modi         celle  Re(Z)max  Re(Z)1k min..max      |Z|1k min..max        nodo 1k min..max       disp Re(Z)max
+main 0db                 15   60.0504   47.0313.. 47.0313   57.9449.. 57.9449  0.03864..0.03864  0.000e+00
+main 3db                 15   60.0656   47.0465.. 47.0465   57.9539.. 57.9539  0.05485..0.05487  1.000e-04
+main 10db                15   60.1281   47.1092.. 47.1092   57.9913.. 57.9914  0.12162..0.12169  1.000e-04
+fix1 0db+3db+10db        45   53.1318   47.0339.. 47.0339   57.9515.. 57.9515  0.03864..0.03864  0.000e+00
+fix2 0db+3db+10db        45   -0.0000   -0.0000.. -0.0000    0.0000..  0.0000  0.03864..0.03864  2.000e-20
+
+RIFIUTATO: 135 controlli falliti, sigle DG
+  D: ('fix2', '0', '0', '0db') Re(Z) 1 kHz -4.77e-12 < 47 ohm: la sonda non e' al jack
+  D: ('fix2', '0', '0', '0db') |Z| 20 Hz 1.289e-13: il 4,7 uF non e' nel percorso misurato
+  D: ('fix2', '0', '0', '3db') Re(Z) 1 kHz -4.77e-12 < 47 ohm: la sonda non e' al jack
+  D: ('fix2', '0', '0', '3db') |Z| 20 Hz 1.289e-13: il 4,7 uF non e' nel percorso misurato
+  D: ('fix2', '0', '0', '10db') Re(Z) 1 kHz -4.77e-12 < 47 ohm: la sonda non e' al jack
+  D: ('fix2', '0', '0', '10db') |Z| 20 Hz 1.289e-13: il 4,7 uF non e' nel percorso misurato
+  D: ('fix2', '0', '25', '0db') Re(Z) 1 kHz -4.77e-12 < 47 ohm: la sonda non e' al jack
+  D: ('fix2', '0', '25', '0db') |Z| 20 Hz 1.289e-13: il 4,7 uF non e' nel percorso misurato
+  D: ('fix2', '0', '25', '3db') Re(Z) 1 kHz -4.77e-12 < 47 ohm: la sonda non e' al jack
+  D: ('fix2', '0', '25', '3db') |Z| 20 Hz 1.289e-13: il 4,7 uF non e' nel percorso misurato
+  D: ('fix2', '0', '25', '10db') Re(Z) 1 kHz -4.77e-12 < 47 ohm: la sonda non e' al jack
+  D: ('fix2', '0', '25', '10db') |Z| 20 Hz 1.289e-13: il 4,7 uF non e' nel percorso misurato
+  D: ('fix2', '0', '50', '0db') Re(Z) 1 kHz -4.77e-12 < 47 ohm: la sonda non e' al jack
+  D: ('fix2', '0', '50', '0db') |Z| 20 Hz 1.289e-13: il 4,7 uF non e' nel percorso misurato
+  D: ('fix2', '0', '50', '3db') Re(Z) 1 kHz -4.77e-12 < 47 ohm: la sonda non e' al jack
+  D: ('fix2', '0', '50', '3db') |Z| 20 Hz 1.289e-13: il 4,7 uF non e' nel percorso misurato
+  D: ('fix2', '0', '50', '10db') Re(Z) 1 kHz -4.77e-12 < 47 ohm: la sonda non e' al jack
+  D: ('fix2', '0', '50', '10db') |Z| 20 Hz 1.289e-13: il 4,7 uF non e' nel percorso misurato
+  D: ('fix2', '0', '75', '0db') Re(Z) 1 kHz -4.77e-12 < 47 ohm: la sonda non e' al jack
+  D: ('fix2', '0', '75', '0db') |Z| 20 Hz 1.289e-13: il 4,7 uF non e' nel percorso misurato
+  D: ('fix2', '0', '75', '3db') Re(Z) 1 kHz -4.77e-12 < 47 ohm: la sonda non e' al jack
+  D: ('fix2', '0', '75', '3db') |Z| 20 Hz 1.289e-13: il 4,7 uF non e' nel percorso misurato
+  D: ('fix2', '0', '75', '10db') Re(Z) 1 kHz -4.77e-12 < 47 ohm: la sonda non e' al jack
+  D: ('fix2', '0', '75', '10db') |Z| 20 Hz 1.289e-13: il 4,7 uF non e' nel percorso misurato
+  D: ('fix2', '0', '100', '0db') Re(Z) 1 kHz -4.77e-12 < 47 ohm: la sonda non e' al jack
+  ... e altri 110
+--- sabotaggio f: 2g, rc 1, sigle fallite '', attese '' -> COME ATTESO
+   cf.cir:174: 'rrg10b' is not a device of this deck
+   cf.cir:179: 'rrg10b' is not a device of this deck
+   cf.cir:184: 'rrg10b' is not a device of this deck
+   cf.cir:115: XB port RG10 -> BRG10, which no other element of this deck connects
+   3 MISSING, 1 DANGLING: cf.cir (42 citations, 0 noise vectors, 90 devices)
+--- sabotaggio g: e4, rc 1, sigle fallite 'C', attese 'C' -> COME ATTESO
+uscita / modi         celle  Re(Z)max  Re(Z)1k min..max      |Z|1k min..max        nodo 1k min..max       disp Re(Z)max
+main 0db                 15   60.0504   47.0313.. 47.0313   57.9449.. 57.9449  0.03864..0.03864  0.000e+00
+main 3db                 15   60.0504   47.0313.. 47.0313   57.9449.. 57.9449  0.03864..0.03864  0.000e+00
+main 10db                15   60.1129   47.0940.. 47.0940   57.9822.. 57.9823  0.10544..0.10549  0.000e+00
+fix1 0db+3db+10db        45   53.1318   47.0339.. 47.0339   57.9515.. 57.9515  0.03864..0.03864  0.000e+00
+fix2 0db+3db+10db        45   53.1318   47.0339.. 47.0339   57.9515.. 57.9515  0.03864..0.03864  0.000e+00
+
+RIFIUTATO: 24 controlli falliti, sigle C
+  C: trim 0 att 25 3db: -12.069 dB, atteso -8.991 +/- 0.15
+  C: trim 0 att 25 10db: -3.343 dB, atteso -2.071 +/- 0.15
+  C: trim 0 att 50 3db: -6.053 dB, atteso -2.971 +/- 0.15
+  C: trim 0 att 50 10db: 2.672 dB, atteso 3.949 +/- 0.15
+  C: trim 0 att 75 3db: -2.526 dB, atteso 0.551 +/- 0.15
+  C: trim 0 att 75 10db: 6.199 dB, atteso 7.471 +/- 0.15
+  C: trim 0 att 100 3db: -0.011 dB, atteso 3.050 +/- 0.15
+  C: trim 0 att 100 10db: 8.714 dB, atteso 9.970 +/- 0.15
+  C: trim 6 att 25 3db: -18.068 dB, atteso -14.994 +/- 0.15
+  C: trim 6 att 25 10db: -9.343 dB, atteso -8.074 +/- 0.15
+  C: trim 6 att 50 3db: -12.054 dB, atteso -8.974 +/- 0.15
+  C: trim 6 att 50 10db: -3.328 dB, atteso -2.054 +/- 0.15
+  C: trim 6 att 75 3db: -8.527 dB, atteso -5.452 +/- 0.15
+  C: trim 6 att 75 10db: 0.198 dB, atteso 1.468 +/- 0.15
+  C: trim 6 att 100 3db: -6.014 dB, atteso -2.953 +/- 0.15
+  C: trim 6 att 100 10db: 2.711 dB, atteso 3.967 +/- 0.15
+  C: trim 12 att 25 3db: -24.005 dB, atteso -20.930 +/- 0.15
+  C: trim 12 att 25 10db: -15.280 dB, atteso -14.010 +/- 0.15
+  C: trim 12 att 50 3db: -17.991 dB, atteso -14.910 +/- 0.15
+  C: trim 12 att 50 10db: -9.265 dB, atteso -7.990 +/- 0.15
+  C: trim 12 att 75 3db: -14.464 dB, atteso -11.388 +/- 0.15
+  C: trim 12 att 75 10db: -5.739 dB, atteso -4.468 +/- 0.15
+  C: trim 12 att 100 3db: -11.950 dB, atteso -8.889 +/- 0.15
+  C: trim 12 att 100 10db: -3.225 dB, atteso -1.969 +/- 0.15
+
+ESITO: 8 sabotaggi su 8 rifiutati come attesi

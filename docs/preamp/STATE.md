@@ -11,16 +11,56 @@ realtà, il progetto non è ripartibile.
 | | |
 |---|---|
 | Ultimo aggiornamento | **2026-09-15** |
-| Ultimo lotto chiuso | **L34** — le decisioni del 2026-09-15 diventano requisiti: ADR-028 (comandi sul frontale, LED a pannello), ADR-029 (ingombro 450 × 130 × 367 mm), ADR-030 (guadagno interbloccato dal mute, subordinato a L29); apre NC-032; nessun numero simulato. Prima: **L33** — le etichette di provenienza dell'LSK489, chiude NC-031 |
-| **Prossimo lotto** | **L13** — E4 sulle tre uscite e a manopola che gira, NC-008 (mandato in «Prossimo passo concreto») |
+| Ultimo lotto chiuso | **L13** — E4 sulle tre uscite e a manopola che gira: conforme ovunque (Re(Z) ≤ 60,13 Ω, dispersione col volume ≤ 1e-4 Ω); chiude NC-008. Trovato che la Zout pubblicata conteneva il segnale: apre NC-033. Prima: **L34** — le decisioni del 2026-09-15 diventano requisiti, apre NC-032 |
+| **Prossimo lotto** | **L20** — quanto il progetto dipende da I_DSS, NC-013 (mandato in «Prossimo passo concreto») |
 | Non conformità | **15 aperte, 2 bloccanti** |
 | Le bloccanti | NC-004 · NC-017 (Fase 4) |
-| Suite | `run_tests.sh` **9 passed / 0 failed** a fine L34, lotto di sola documentazione |
+| Suite | `run_tests.sh` **9 passed / 0 failed** a fine L13 (il 2g e il 2h coprono il deck nuovo) |
 
 ## Diario degli ultimi lotti
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L13 — E4 sulle tre uscite e a manopola che gira (2026-09-15)
+
+**Chiude NC-008, apre NC-033.** Report: `reports/2026-09-15-L13-e4-tre-uscite.md`.
+Dati: `data/2026-09-15/L13/`. Nessun valore del circuito cambia, nessuna ADR.
+
+- **La baseline, rifatta sui file.**
+  - Era coperta solo la fissa 1 (L17, Re(Z) 53,13 Ω).
+  - La fissa 2 non aveva dati.
+  - La principale aveva una sola `RSRC`, niente trim né attenuatore.
+- **Un difetto vecchio di una settimana, trovato leggendo i log.** La sezione Zout
+  di `tb_zout_psrr_noise.cir` lasciava `VSRC` a 1 V AC.
+  - La firma: al nodo del blocco `za1k` = 1,0355 / 1,4704 / 3,2621 Ω, cioè il
+    guadagno del modo.
+  - Rieseguito identico a L27 e corretto: al jack 1 kHz **57,945** Ω invece di
+    58,76; al nodo **0,0386** Ω. PSRR e rumore identici byte per byte.
+  - Il dossier pubblica le cifre vecchie: **NC-033**, lotto **L37**.
+    Limitazione **#28**.
+- **Il deck: nuovo, non esteso.** `tb_e4_uscite.cir` porta la catena intera in
+  subckt: A, F1, F2, trim, attenuatore, B. Il flat ospita un blocco solo (#24), e
+  il volume è una resistenza di sorgente vera, non una `RSRC`.
+  - Matrice: 45 celle (trim × attenuatore × modo) × 3 uscite, un jack per volta
+    a sorgente spenta.
+  - Più il controllo positivo del guadagno in ogni cella.
+- **Il verdetto su E4: conforme su tutte e tre le uscite.**
+  - Re(Z) max 20 Hz–20 kHz **60,05 / 60,07 / 60,13 Ω** sulla principale e
+    **53,13 Ω** sulle fisse, a 20 Hz, dove pesa lo scarico.
+  - Dispersione su trim × attenuatore **≤ 1e-4 Ω**, contro la soglia di 1 Ω
+    scritta come lettura del lotto.
+  - FIX1 riproduce L17 a tutte le cifre.
+- **Otto sabotaggi, 8 su 8 rifiutati come attesi**, guardando quale controllo
+  cade.
+  - Il primo «attenuatore scollegato» era stato rifiutato per la ragione
+    sbagliata: segnale zero, `vdb(0)` → `Error`, celle vuote. Il controllo
+    positivo non era mai stato esercitato.
+  - Rifatto come «attenuatore scavalcato», cade sul controllo positivo soltanto.
+    La sua tabella Zout è identica a quella vera.
+
+Suite **9 passed / 0 failed**. **15 voci aperte, 2 bloccanti.** Prossimo:
+**L20**.
 
 ### L34 — le decisioni del 2026-09-15 diventano requisiti (2026-09-15)
 
@@ -796,7 +836,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 |---|---|---|---|---|
 | L11 | **Mute e corto sulle uscite: misurare e rimediare.** Prima le ADR delle decisioni dell'utente del 2026-09-13. **ADR-021**: mute tenibile **a tempo indefinito**; ciascuna uscita regge un corto al connettore a tempo indefinito, requisito scritto **come risultato** (limiti termici e SOA, a regime e sul transitorio d'intervento, tecnica libera); classe B ammessa. **ADR-022**: operazionali e microcontrollore fuori dal percorso del segnale ma ammessi nel circuito, con tre condizioni. Poi la baseline sulla topologia di oggi; se non regge, la tecnica si sceglie coi numeri. Divisibile in L11a/L11b | M | **NC-001** (bloccante) | **fatto** — conforme senza protezione; apre NC-028 |
 | L12 | **Portare blocco A e blocco B sopra i 60°.** Cambia natura con **ADR-019**: non più solo «misura coi valori veri», ma **rimedio** — il blocco A sta a 41,98° e il blocco B a 0 dB con cavo a 56,46°, contro una soglia di 60°. Le strade (più compensazione, meno guadagno d'anello, rete d'isolamento diversa) costano tutte a un altro requisito e vanno confrontate coi numeri | M | **NC-002**, **NC-021** (bloccanti) | **fatto** — ADR-024 (la sonda è il cavo al jack), ADR-025 (C_f 330 pF) |
-| L13 | **E4 sulle tre uscite e a manopola che gira.** Estendere `tb_zout_psrr_noise.cir` alle due uscite fisse e a tre posizioni dell'attenuatore | S | NC-008 | da fare |
+| L13 | **E4 sulle tre uscite e a manopola che gira.** Estendere `tb_zout_psrr_noise.cir` alle due uscite fisse e a tre posizioni dell'attenuatore | S | NC-008, apre **NC-033** | **fatto** — deck nuovo `tb_e4_uscite.cir` (catena intera, 45 celle × 3 uscite) invece dell'estensione: Re(Z) ≤ 60,13 Ω, dispersione ≤ 1e-4 Ω; la Zout di `tb_zout_psrr_noise.cir` misurata dal 2026-09-09 con la sorgente accesa, corretta; 8 sabotaggi su 8 |
 | L14 | **Le tre correzioni di testo.** KPI del margine di fase qualificato, i due commenti di cascode allineati, lo scarto ADR-014 riferito a 1 kHz | XS | NC-003, NC-006, NC-007 | **fatto** |
 | L15 | **Il vincolo su E3 scritto dove verrà letto** — in `REQUIREMENTS.md`, «Nota su E3», non in ADR-011 | XS | NC-005 (metà: il vincolo; la misura è L16) | **fatto** |
 | L16 | **Il trim entra nel progetto.** Dimensionarlo in `circuits/preamp/` coi due vincoli insieme — attenuazione richiesta da ADR-015 e la «Nota su E3» (min \|Zin\| 20 Hz–20 kHz ≥ 100 kΩ in tutte e tre le posizioni; R1 + R2 = 100 kΩ non basta, `R_IN` sta in parallelo) — e misurarlo. Chiude anche NC-005. **Decisioni dell'utente del 2026-09-14: trim a relè, uno per ingresso, meglio coi bistabili se possibile.** Allineare F2 («a ponticello») a relè, senza ADR; la ADR del trim (ADR-027) è di L16. Il valore del trim deve restare all'uscita dal mute (F8). La cifra unica di margine di NC-009 si sceglie qui e si pubblica in L32 | S/M | **NC-009**, NC-005, **NC-023** | **fatto** — ADR-027 (un solo trim sul ramo variabile, bistabili G6KU-2F-Y, LED, permissivo K6); NC-005 e NC-023 chiuse, NC-009 aperta per L32 |
@@ -821,6 +861,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L34 | **Le decisioni del 2026-09-15 diventano requisiti.** Da una sessione di domande dell'utente: **ADR-028** (comandi sul frontale, LED a pannello cablati), **ADR-029** (ingombro del telaio 450 × 130 × 367 mm), **ADR-030** (guadagno interbloccato dal mute con la strada B, subordinato a L29); in `REQUIREMENTS.md` F3 con «RCA», F10, F11, P8, note su F5 e su «jack», una riga in V2 | XS/S | apre **NC-032**, aggiorna NC-028 | **fatto** — nessun numero simulato; le cifre del bump a caldo sono calcolate ed etichettate |
 | L35 | **Comandi e LED a pannello nel sorgente** (ADR-028). Header di cablaggio al posto dei LED del trim sulla scheda (`trim.py`); comando del guadagno sul rotativo a 3 posizioni, cablato perché K5 non sia mai comandato senza K1 (ADR-026); interruttore di mute combinato col temporizzatore d'accensione; LED rosso di mute, letto da un contatto che dica lo stato; `check_relay_safe_state.py` esteso. **Dopo L29 e L36**: il comando del guadagno si cabla una volta sola | S/M | **NC-032** | da fare |
 | L36 | **Il guadagno interbloccato dal mute** (ADR-030, strada B). **Solo se L29 lo giustifica**, altrimenti «superata». Due relè ausiliari con autoritenuta su K1/K5; la corsa al rilascio del mute (scambio di K6 contro rilascio delle bobine) simulata e chiusa; il 2e esteso al guadagno; tre LED dello stato vero dai poli liberi degli ausiliari; budget delle bobine (~169 mA fuori mute a +10 dB, a 5 V) consegnato all'alimentatore. Se la corsa si chiude bene, rivalutare la stessa strada per il trim | M | parte di **NC-028** | da fare — **dipende da L29** |
+| L37 | **E4 nel dossier.** `build_dossier.py` legge la Zout da `data/2026-09-14/L27/dopo/tb_zout_psrr_noise/`, misurata con la sorgente accesa (NC-033): KPI 58,76 Ω, tabella con 1,0355 Ω «al nodo OUT», nota E4/E8, riepilogo «≤ 60,5851 Ω». Puntarlo ai dati di L13 (`tb_e4_uscite` sulle tre uscite e `tb_zout_psrr_noise` corretto), pubblicare la costanza col volume e le fisse, rifiutare la Zout di L27, annotare in coda `data/2026-09-09/README.md`. I report datati non si toccano | XS/S | NC-033 | da fare |
 
 **NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
 riesecuzione di `tb_noise_breakdown.cir` coi modelli veri. È il caso
@@ -2872,24 +2913,27 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L13 — E4 sulle tre uscite e a manopola che gira.** Chiude **NC-008**
-(minore). Lotto **S**. Il mandato completo è in `NEXT-SESSION.md`.
+**L20 — Quanto il progetto dipende da I_DSS.** Chiude **NC-013** (maggiore).
+Lotto **S**. Il mandato completo è in `NEXT-SESSION.md`.
 
 **Perché adesso.**
-- Non aspetta nessuno. Gli altri sì: L29 una soglia dell'utente su V2, L30
-  l'alimentatore, L28 un documento del costruttore o una ADR (prima di G2).
-- Il mandato di L33 non lo contava fra gli aperti, e nemmeno L20: nella tabella
-  dei lotti sono entrambi «da fare».
+- Non aspetta nessuno. Gli altri sì: L28 un documento del costruttore o una ADR
+  (prima di G2), L29 una soglia dell'utente su V2, L36 e L35 aspettano L29, L30
+  l'alimentatore.
+- L37 (NC-033, E4 nel dossier) non aspetta nessuno neppure lui, e viene dopo.
 
 **Dove parte.**
-- **NC-008 cita i dati del 2026-09-09**: THAT320, C_f 22 pF, due guadagni.
-  L'evidenza va riletta sulla topologia di oggi (L27, L16), non copiata.
-- **Una parte forse è già coperta.** L17 ha misurato E4 su una fissa
-  (`tb_uscite_fisse`, `data/2026-09-14/L17/`: Re(Z) al jack ≤ 53,13 Ω). Resta
-  da verificare cosa manca: l'altra fissa, i tre modi di L27, e la clausola
-  «costante con la posizione del volume», che nessun dato esercita.
-- **È una misura**: nessun valore del circuito cambia. Coi segnaposto
-  (NC-017), e la provenienza si scrive accanto al numero.
+- **Oggi nessuna cifra simulata usa `LSK489A`**: ogni deck istanzia il segnaposto
+  `LSK489X` (L33). Il primo passo è misurare **il segnaposto** contro la finestra
+  del datasheet, alle condizioni di L7, perché dice quanto valgono le cifre del
+  progetto fino a oggi.
+- **Poi il modello del costruttore ai due estremi** di NC-013: com'è, con
+  2,59 mA, e con `Vto` portato al tipico di 5,5 mA. Punto di lavoro, rumore e,
+  se i numeri lo chiedono, V1.
+- **Nessun file generato e nessun file di `models/` si ritocca.** Come
+  istanziare `LSK489A` nel blocco si decide coi file.
+- **Il 2h cadrà** su un deck che include `models/jfet/lsk489.lib` e ne copia
+  l'intestazione da un altro deck. È voluto: la frase va riscritta vera.
 
 ### Quello che il repo ti consegna già
 
@@ -2900,7 +2944,7 @@ sulla carta.
   modelli la legge dagli `.include`. Nove sabotaggi, tutti rifiutati. Rigenerarlo
   dopo un lotto che cambia i dati è un lotto a sé.
 
-- **La suite è a 9 blocchi**, 9 passed a fine L33.
+- **La suite è a 9 blocchi**, 9 passed a fine L13.
   - Il **2e** conosce MUTE, GAIN, PERMIT, TRIM e SPIA, e prova sulla netlist
     l'interblocco del trim (F8);
   - il **2f** asserisce tre guadagni, i rami in parallelo e le attenuazioni del
@@ -2915,15 +2959,17 @@ sulla carta.
   - K7, K8 trim; K9, K10 spie.
 
   Budget delle bobine: 126,6 mA a 5 V, in mute e fuori (ADR-027).
-- **I conteggi**: 15 voci aperte, 2 bloccanti (NC-032 aperta da L34).
+- **I conteggi**: 15 voci aperte, 2 bloccanti. L13 ha chiuso NC-008 e aperto
+  NC-033.
+- **E4 è misurata su tutto** (L13): `tb_e4_uscite.cir`, tre uscite × 45 celle,
+  e `tb_zout_psrr_noise.cir` con la Zout a sorgente spenta. Il dossier pubblica
+  ancora le cifre vecchie: L37.
 - **Da L34, requisiti nuovi che il circuito non soddisfa ancora**: F10 e F11
   (comandi e LED a pannello, NC-032), P8 (ingombro del telaio). E ADR-030, che
-  si realizza solo se L29 lo giustifica. Nessuno tocca E4.
+  si realizza solo se L29 lo giustifica.
 
 **Poi**, nell'ordine:
-- **L20** (NC-013, S): quanto il progetto dipende da I_DSS. Nota di L33: oggi
-  nessuna cifra simulata usa il modello `LSK489A`, quindi è anche la prima volta
-  che quel modello entra in un deck del blocco.
+- **L37** (NC-033, XS/S): E4 nel dossier, sui dati di L13. Non aspetta nessuno.
 - **L28** (SS dell'LSK489, NC-027) va fatto prima di G2.
 - **L29** (NC-028, **esteso da L34**, ora M) aspetta una soglia dell'utente su
   V2, che si può chiedere in qualsiasi momento. È **sul cammino critico**: dal
@@ -3045,8 +3091,13 @@ Da non ricercare di nuovo.
    il margine sale a **+6,58 dB** (metrica M1, NC-009).
 2. **E4 contro E8 a 20 Hz.** Con accoppiamento capacitivo la |Zout| al
    jack a 20 Hz è ~1,7 kΩ (è la reattanza del 4,7 µF). A 1 kHz è
-   58,8 Ω. E4 letta alla lettera non è soddisfacibile a 20 Hz da nessun
-   circuito con condensatore d'uscita.
+   **57,94 Ω** a 0 dB, misurata a sorgente spenta in L13. Il 58,8 Ω scritto qui
+   fino a L13 conteneva 1 V di segnale (NC-033, limitations #28). E4 letta alla
+   lettera non è soddisfacibile a 20 Hz da nessun circuito con condensatore
+   d'uscita. Il requisito la risolve già: «misurata escludendo la reattanza del
+   condensatore». L13 la legge come Re(Z) al jack: ≤ **60,13 Ω** sulla
+   principale, a 20 Hz, dove pesa lo scarico da 220 kΩ, e ≤ **53,13 Ω** sulle
+   fisse.
 
 ## Domande aperte
 
