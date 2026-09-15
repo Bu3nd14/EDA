@@ -10,17 +10,66 @@ realtà, il progetto non è ripartibile.
 
 | | |
 |---|---|
-| Ultimo aggiornamento | **2026-09-14** |
-| Ultimo lotto chiuso | **L16** — il trim entra nel progetto: ADR-027 (un solo trim sul ramo variabile, 845 / 464 / 464 Ω, bistabili G6KU-2F-Y con LED, permissivo K6 dal mute), NC-005 e NC-023 chiuse |
-| **Prossimo lotto** | **L32** — il dossier rigenerato sui dati di L27 e L16 (mandato in «Prossimo passo concreto») |
-| Non conformità | **15 aperte, 2 bloccanti** |
+| Ultimo aggiornamento | **2026-09-15** |
+| Ultimo lotto chiuso | **L32** — il dossier rigenerato sui dati di L27 e L16: tre modi, V1 al minimo della spazzata (61,63°, buffer delle fisse), NC-009 pubblicata come **M1 +6,58 dB**, provenienza dei modelli letta dai deck; apre NC-031 |
+| **Prossimo lotto** | **L31** — i vettori di rumore morti di `tb_noise_vectors.cir`, NC-030 (mandato in «Prossimo passo concreto») |
+| Non conformità | **16 aperte, 2 bloccanti** |
 | Le bloccanti | NC-004 · NC-017 (Fase 4) |
-| Suite | `run_tests.sh` **8 passed / 0 failed** |
+| Suite | `run_tests.sh` **8 passed / 0 failed** a fine L16; alla chiusura di L32 la riesegue `chunk_close.sh` |
 
 ## Diario degli ultimi lotti
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L32 — il dossier rigenerato sui dati di L27 e L16 (2026-09-15)
+
+**Chiude la metà «dossier» di NC-009** (criterio 2), apre **NC-031**. Report:
+`reports/2026-09-15-L32-dossier.md`. Nessun dato nuovo: il dossier impagina
+`data/2026-09-14/L27/dopo/` e `data/2026-09-14/L16/dopo/`.
+
+- **Il builder riscritto.**
+  - Legge solo le due radici vigenti; un percorso del 2026-09-09 lo fa rifiutare.
+  - Tre modi ovunque, 15 sezioni; nuove quelle su trim ed E3, E5, V2, V3 e P7.
+  - Le tabelle `echo` si confrontano **riga per riga** con le `print` o le `meas`
+    del log; una cella vuota o una riga mancante è un rifiuto.
+  - La cifra di NC-009 si confronta con `headroom_nc009.py`, lanciato sugli
+    stessi CSV.
+  - La **provenienza dei modelli** è letta dagli `.include` di ogni deck, non
+    dichiarata.
+- **V1 come la vuole ADR-024**: minimo della spazzata al jack, blocco A col
+  cablaggio ≤ 1 nF, KPI riferita a 60°. Figura nuova: margine contro capacità
+  del cavo.
+  - Blocco B 61,803 / 69,773 / 102,980°, agli spigoli 61,422 / 68,644°;
+  - blocco A col trim 63,495°;
+  - **il minimo del prodotto è il buffer delle fisse, 61,632°**, non il blocco B.
+- **NC-009**: **M1 +6,58 dB** (+10 dB, trim −6 dB), +0,58 dB a trim 0; M2 e M3
+  solo etichettate.
+- **Le altre cifre**:
+  - E3 121,068 kΩ con 68 pF, identica nelle tre posizioni;
+  - E5 della catena ≤ 4,918 µV, pavimento senza 1/f;
+  - P7: Tj massima 81,8 °C, 0 righe ascoltabili su 398 fuori classe A;
+  - V2: 10 finestre su 10 nell'inviluppo del +10 dB.
+- **Verificato da fuori**: `v1_trim.py`, `toll_L16.py` e `headroom_nc009.py`
+  rieseguiti danno le stesse cifre che la pagina stampa.
+- **Nove controlli fatti fallire** su copie di scratch: valore alterato, cella
+  vuota, riga tolta, `att1k` alterato, metrica M1 alterata, spettro scalato del
+  5 %, percorso del 2026-09-09, include dei segnaposto tolto. Tutti rc 1, nessun
+  file scritto; il caso intatto passa.
+  - **Il primo sabotaggio di M1 non ha fatto cadere niente**, e non per un buco
+    del controllo: alterava il bordo inferiore della finestra, e M1 prende il
+    bordo di modulo minore, che in tutti e tre i modi è il superiore. Rifatto sul
+    bordo superiore: rifiutato.
+- **Trovato, NC-031** (minore). I README di L12, L27 e L16 e tredici deck dicono
+  che l'LSK489 simulato è quello del costruttore. I deck istanziano invece
+  `LSK489X`, segnaposto con `KF=0`, e nessuno include `models/jfet/lsk489.lib`.
+  - Nei dati di oggi l'unico modello del costruttore è l'**LS352**;
+  - **nessun dispositivo simulato ha rumore 1/f**.
+  - Lotto **L33**.
+- **Ambiente**: a metà sessione `/usr/bin/python3` e `git` hanno cominciato a
+  uscire 69 per la licenza Xcode non accettata. Il builder, che usa solo la
+  stdlib, è stato eseguito col Python del venv.
+- **16 voci aperte, 2 bloccanti.** Prossimo: **L31**.
 
 ### L16 — il trim entra nel progetto (2026-09-14)
 
@@ -617,7 +666,8 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L29 | **Il gradino al rilascio del mute.** Oggi il rilascio con segnale porta sul jack il condensatore caricato dalla musica: **5,37 V** a +10 dB, 1,79 V a 0 dB, 1,72 V sulle fisse, τ 0,32 s. **Il contatto prima del condensatore**, simulato in scratch dopo L11, toglie quel gradino ma ne mette uno **pari all'offset del blocco** (14-104 mV simulati, più fino a 63 mV di dispersione LSK489) **a ogni mute, accensione compresa**, e il volume non lo riduce (numeri e stima d'udibilità in NC-028). **Prima una soglia dell'utente su V2**; poi il confronto misurato, con un deck **versionato**, fra: contatto prima + offset abbassato (bilanciamento, coppie selezionate), rilascio lento, mute in serie, sequenza di rilascio. P7 va rimisurata per la posizione scelta | S/M | NC-028 | da fare |
 | L30 | **Il calore del telaio con otto blocchi.** A riposo la scheda audio dissipa 6,45 W (0,806 W per blocco, L17) contro i 3-4 W che P5 prevede per l'apparecchio intero. Stima termica del telaio con l'alimentatore; poi o P5 aggiornato al numero vero, o ventilazione e montaggio progettati con una ADR, o ADR-021 riaperta se i 60 °C non reggono. Va col lotto dell'alimentatore | S | NC-029 | da fare |
 | L31 | **I vettori di rumore di `tb_noise_vectors.cir`.** Il deck cita `onoise_q123`, `onoise_r121`, `onoise_jq110`, `onoise_jq111`, dispositivi che non esistono più; il `wrdata` si ferma e non scrive niente, con rc 0. Rinominarli dall'include generato ed estendere `check_deck_refs.py` ai nomi `onoise_*`/`inoise_*`, facendolo fallire sul deck di oggi | XS | NC-030 | da fare |
-| L32 | **Il dossier rigenerato sui dati di oggi. Subito dopo L16.** `build_dossier.py` legge ancora `data/2026-09-09`: THAT320, C_f 22 pF, due soli guadagni. Va esteso ai tre modi (0 / +3 / +10 dB) e puntato ai dati di L27 e L16, coi margini di V1 al minimo della spazzata (ADR-024), la cifra unica di headroom che L16 sceglie per NC-009 e la «KPI riferita a 60°» rimasta da L19. Accanto a ogni numero, la provenienza dei modelli ancora segnaposto (NC-004, NC-017). **Nessun avviso di obsolescenza**: il dossier lo legge solo l'utente (deciso il 2026-09-14) | S | NC-009 (la metà del dossier) | da fare |
+| L32 | **Il dossier rigenerato sui dati di oggi. Subito dopo L16.** `build_dossier.py` legge ancora `data/2026-09-09`: THAT320, C_f 22 pF, due soli guadagni. Va esteso ai tre modi (0 / +3 / +10 dB) e puntato ai dati di L27 e L16, coi margini di V1 al minimo della spazzata (ADR-024), la cifra unica di headroom che L16 sceglie per NC-009 e la «KPI riferita a 60°» rimasta da L19. Accanto a ogni numero, la provenienza dei modelli ancora segnaposto (NC-004, NC-017). **Nessun avviso di obsolescenza**: il dossier lo legge solo l'utente (deciso il 2026-09-14) | S | NC-009 (la metà del dossier), apre **NC-031** | **fatto** — tre modi, V1 al minimo della spazzata, M1 +6,58 dB, provenienza letta dagli `.include`; nove controlli fatti fallire |
+| L33 | **Le etichette di provenienza dell'LSK489.** I README di `data/2026-09-14/` (L12, L27, L16) e i commenti di tredici deck (dodici col commento di L22, più `tb_trim.cir`) dicono che l'LSK489 simulato è il modello del costruttore; i deck istanziano `LSK489X`, segnaposto con `KF=0`, e nessuno include `models/jfet/lsk489.lib`. Correggere le frasi dei deck (i README datati si precisano con una nota, non si riscrivono) e decidere se un guardiano debba confrontare la provenienza dichiarata con quella degli `.include` | XS | NC-031 | da fare |
 
 **NC-004** non ha un lotto proprio: la chiudono **L6-L7** più una
 riesecuzione di `tb_noise_breakdown.cir` coi modelli veri. È il caso
@@ -2658,30 +2708,33 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L32 — il dossier rigenerato sui dati di oggi.** Chiude la metà «dossier» di
-**NC-009** e il residuo di L19 (le KPI riferite a 60°). Lotto **S**. Il mandato
-completo è in `NEXT-SESSION.md`.
+**L31 — i vettori di rumore di `tb_noise_vectors.cir`.** Chiude **NC-030**
+(minore). Lotto **XS**. Il mandato completo è in `NEXT-SESSION.md`.
 
 **Perché adesso.**
-- **Il dossier racconta un altro circuito**: `build_dossier.py` legge ancora
-  `data/2026-09-09` (THAT320, C_f 22 pF, due guadagni). L'utente ha deciso di
-  rifarlo subito dopo L16.
-- **Da L16 ogni riga di V1 ha una misura**, e NC-009 ha una cifra con la sua
-  metrica: **M1 +6,58 dB** a +10 dB col trim a −6 dB.
+- È l'unico deck versionato che oggi **non scrive dati**: cita vettori di
+  dispositivi che non esistono più, il `wrdata` si ferma, ngspice esce 0.
+- È il lotto più piccolo fra gli aperti, e i due che lo seguono per dimensione
+  aspettano altro: L29 una soglia dell'utente, L30 l'alimentatore.
 
 **Dove parte.**
-- **Dati vigenti**: `data/2026-09-14/L27/dopo/` e `data/2026-09-14/L16/dopo/`,
-  coi loro README.
-- **V1 al minimo della spazzata** (ADR-024):
-  - blocco B col trim: 61,80° / 69,77° / 102,98°, agli spigoli 61,42° / 68,64°;
-  - blocco A col partitore: 63,50°;
-  - buffer delle fisse: 61,63°.
-- **Il trim** (ADR-027): E3 121,1 kΩ con 68 pF in ogni posizione; E5 della
-  catena ≤ 4,92 µV.
-- **Accanto a ogni numero**: quali modelli sono ancora segnaposto (NC-004,
-  NC-017).
+- **L'errore**: `data/2026-09-14/L27/dopo/tb_noise_vectors/tb_noise_vectors.log`,
+  riga 485, `Error: no such vector onoise_q123`.
+- **I nomi morti**: `onoise_q123`, `onoise_r121`, `onoise_jq110`, `onoise_jq111`.
+  Nell'include di oggi il VAS è Q122, lo specchio Q121A/B, i JFET JQ110A/B.
+- **Perché nessuno l'ha visto**: `scripts/check_deck_refs.py` (blocco 2g) controlla
+  `@nome[…]` e `alter`, non i vettori che `noise` costruisce (#27, «Cosa non vede»).
+- **Il riscontro**: `tb_noise_breakdown.cir` stampa la ripartizione per dispositivo
+  a 1 kHz e funziona.
 
 ### Quello che il repo ti consegna già
+
+- **Il dossier è rigenerato** (L32). `build_dossier.py` legge
+  `data/2026-09-14/L27/dopo/` e `L16/dopo/` e rifiuta ogni percorso del
+  2026-09-09. Confronta le tabelle `echo` riga per riga con le `print` o le `meas`
+  del log, e la cifra di NC-009 con `headroom_nc009.py`. La provenienza dei
+  modelli la legge dagli `.include`. Nove sabotaggi, tutti rifiutati. Rigenerarlo
+  dopo un lotto che cambia i dati è un lotto a sé.
 
 - **La suite è a 8 blocchi**, 8 passed a fine L16.
   - Il **2e** conosce MUTE, GAIN, PERMIT, TRIM e SPIA, e prova sulla netlist
@@ -2694,10 +2747,11 @@ completo è in `NEXT-SESSION.md`.
   - K7, K8 trim; K9, K10 spie.
 
   Budget delle bobine: 126,6 mA a 5 V, in mute e fuori (ADR-027).
-- **I conteggi**: 15 voci aperte, 2 bloccanti.
+- **I conteggi**: 16 voci aperte, 2 bloccanti.
 
 **Poi**, nell'ordine:
-- **L31** (NC-030, XS): i vettori di rumore morti di `tb_noise_vectors.cir`.
+- **L33** (NC-031, XS): le etichette di provenienza dell'LSK489 nei README dei dati
+  e nei commenti dei deck.
 - **L29** (NC-028) aspetta una soglia dell'utente su V2, e si può chiedere in
   qualsiasi momento.
 - **L30** (NC-029) va col lotto dell'alimentatore e del telaio.

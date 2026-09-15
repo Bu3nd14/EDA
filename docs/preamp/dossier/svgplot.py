@@ -11,10 +11,14 @@ arrivano gia' calcolate da build_dossier.py, che le legge dai CSV.
 
 import math
 
-# Palette: distinguibile anche in scala di grigi (le due modalita' di
-# guadagno differiscono per tinta, le due varianti per luminosita').
+# Palette: distinguibile anche in scala di grigi (le tre modalita' di
+# guadagno differiscono per tinta, le varianti per luminosita' e tratteggio).
+# L32 (ADR-026): il +3 dB prende il verde, a luminosita' intermedia fra
+# il blu del 0 dB e il rosso del +10 dB.
 C_0DB = "#1f5c99"
 C_0DB_ALT = "#7fb3e0"
+C_3DB = "#2e7d4f"
+C_3DB_ALT = "#86c29c"
 C_10DB = "#a8452a"
 C_10DB_ALT = "#e09880"
 C_REQ = "#888888"

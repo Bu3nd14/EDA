@@ -675,6 +675,27 @@ una ADR nuova che superi ADR-015: non si fa modificandola.
 
 **Resta aperta**, maggiore, per il dossier (L32) e per il punto 3.
 
+**Stato dopo L32 (2026-09-15).** Criterio 1 **soddisfatto**, 2 **soddisfatto**,
+3 **metà**. Report: `reports/2026-09-15-L32-dossier.md`.
+
+2. **Il dossier pubblica una cifra sola, con la sua metrica**
+   (`dossier/index.html`, «Escursione e headroom»):
+   - **M1 +6,58 dB** a +10 dB col trim a −6 dB, con la definizione scritta
+     accanto;
+   - +0,58 dB col trim a 0 dB, come caso raggiungibile per errore;
+   - M2 e M3 compaiono solo in una tabella secondaria, etichettate (+6,79 e
+     +6,55 dB a trim −6).
+
+   La cifra è **ricalcolata** dai CSV di `data/2026-09-14/L16/dopo/tb_dc_headroom/`
+   con le attenuazioni di `tb_trim_e3.csv`. Il builder la confronta con
+   `headroom_nc009.py`, lanciato sugli stessi file, su nove celle (tre modi × tre
+   posizioni del trim), e rifiuta oltre l'arrotondamento. Una metrica alterata
+   nel builder è stata rifiutata. Il paragrafo del dossier che rimandava lo
+   0,75 dB di STATE.md non esiste più.
+
+**Resta aperta**, maggiore, per il solo punto 3: la legenda di pannello o la
+documentazione d'uso di ADR-015.
+
 ### NC-011 — Il PSRR del rail positivo non vincola nessuno
 
 | | |
@@ -2086,6 +2107,55 @@ poggia su questo file.
    `inoise_<dispositivo>`, e farlo fallire sul deck di oggi.
 
 Lotto **L31** (XS).
+
+### NC-031 — La provenienza dichiarata dell'LSK489 non è quella simulata
+
+| | |
+|---|---|
+| Requisito | **V4** (la provenienza del modello accanto a ogni cifra) · ADR-013 · letta insieme a **NC-004** e **NC-017** |
+| Severità | **minore** |
+| Aperta da | `reports/2026-09-15-L32-dossier.md` |
+| Stato | aperta |
+
+**Evidenza.** Da L32, che ricava la provenienza dagli `.include` invece di
+leggerla dai commenti.
+- **Cosa si simula.** `circuits/preamp/gain_block.py:325-326` istanzia
+  `LSK489X`. Il modello è definito **solo** in
+  `spice/preamp/placeholder_devices.lib:55-56`: Shichman-Hodges scritto a mano,
+  `KF=0`.
+- **Il modello del costruttore** sta in `models/jfet/lsk489.lib` e si chiama
+  `LSK489A`. Nessun file di `spice/`, `circuits/` o `scripts/` lo include, se non
+  la ricetta di `validate_models.py`.
+- **Cosa si dichiara.**
+  - I README di `data/2026-09-14/L12/`, `L27/` e `L16/`: «segnaposto più LS352 e
+    LSK489 vendor».
+  - Dodici deck di `spice/preamp/tb/` portano il commento di L22 «the only real
+    device model in this deck besides the LSK489». Sono `tb_ac`, `tb_bias_sweep`,
+    `tb_dc_headroom`, `tb_loop`, `tb_loop_blockA`, `tb_noise_breakdown`,
+    `tb_noise_vectors`, `tb_op`, `tb_switch_v2`, `tb_switch_v2_counterfactual`,
+    `tb_v3_overload` e `tb_zout_psrr_noise`.
+  - `tb_trim.cir:43` dice «KF = 0 but on the LSK489».
+
+**Cosa cambia, e cosa no.**
+- **Nessun numero cambia.** Cambia cosa si crede di un numero: nei dati di oggi
+  l'unico modello del costruttore è l'LS352, e **nessun dispositivo simulato ha
+  rumore 1/f**, JFET compresi.
+- NC-004 dice «nel repo solo l'LSK489 ha rumore 1/f». È vero della libreria, non
+  delle simulazioni.
+- Il modello d'angolo di NC-013 non entra ancora in nessuna cifra simulata.
+
+**Perché minore.** Nessun verdetto poggia sulla frase. Il dossier, da L32, scrive
+la provenienza ricavata dagli `.include`, e quella è giusta.
+
+**Cosa serve per chiuderla.**
+1. Correggere i commenti dei tredici deck.
+2. Precisare i tre README datati con una nota che non ne riscriva il testo.
+3. Decidere se un guardiano debba confrontare la provenienza dichiarata con
+   quella degli `.include`, e in quel caso farlo fallire sullo stato di oggi.
+
+La sostituzione vera del modello nel circuito resta la Fase 4 (NC-017).
+
+Lotto **L33** (XS).
 
 ## Voci chiuse
 
