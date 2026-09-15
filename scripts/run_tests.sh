@@ -221,6 +221,9 @@ echo "-- 2g. every device a testbench names exists, every block contact node is 
 # L27: it also refuses a relay-contact node of the gain block (RG, RG10) that a
 # deck leaves on a single terminal - ngspice runs that too, and an unmodified
 # deck's "10db" mode printed +3 dB with exit code 0.
+# L31: and every per-device noise vector (onoise_<device>) a deck names - a
+# dead one stops the wrdata with exit code 0, and tb_noise_vectors.cir wrote no
+# data for that reason from L22 to L31 (NC-030).
 decks=("${(@f)$(find "$ROOT/spice" -path '*/tb/*.cir' -type f 2>/dev/null | sort)}")
 if [ ${#decks[@]} -eq 0 ] || [ -z "${decks[1]}" ]; then
     echo "   MISSING: nessun deck trovato sotto spice/*/tb/" >&2

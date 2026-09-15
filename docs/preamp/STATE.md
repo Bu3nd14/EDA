@@ -11,16 +11,57 @@ realtà, il progetto non è ripartibile.
 | | |
 |---|---|
 | Ultimo aggiornamento | **2026-09-15** |
-| Ultimo lotto chiuso | **L32b** — gli schemi del dossier copiati accanto alla pagina, perché si vedano in ogni visualizzatore. Prima: **L32** — il dossier rigenerato sui dati di L27 e L16: tre modi, V1 al minimo della spazzata (61,63°, buffer delle fisse), NC-009 pubblicata come **M1 +6,58 dB**, provenienza dei modelli letta dai deck; apre NC-031 |
-| **Prossimo lotto** | **L31** — i vettori di rumore morti di `tb_noise_vectors.cir`, NC-030 (mandato in «Prossimo passo concreto») |
-| Non conformità | **16 aperte, 2 bloccanti** |
+| Ultimo lotto chiuso | **L31** — i vettori di rumore di `tb_noise_vectors.cir`: il 2g esteso ai nomi `onoise_*`/`inoise_*` e fatto cadere sul deck di allora (4 nomi morti), i vettori rinominati con una mappa per nodi (e tre nomi vivi erano già il dispositivo sbagliato), 2 righe di dati, quadratura = spettro; chiude NC-030. Prima: **L32b** — gli schemi del dossier copiati accanto alla pagina |
+| **Prossimo lotto** | **L33** — le etichette di provenienza dell'LSK489, NC-031 (mandato in «Prossimo passo concreto») |
+| Non conformità | **15 aperte, 2 bloccanti** |
 | Le bloccanti | NC-004 · NC-017 (Fase 4) |
-| Suite | `run_tests.sh` **8 passed / 0 failed** a fine L16; alla chiusura di L32 la riesegue `chunk_close.sh` |
+| Suite | `run_tests.sh` **8 passed / 0 failed** a fine L31. A metà L31, col 2g esteso e il deck non ancora corretto, 7 / 1 sul 2g: voluto |
 
 ## Diario degli ultimi lotti
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L31 — i vettori di rumore di `tb_noise_vectors.cir` (2026-09-15)
+
+**Chiude NC-030.** Report: `reports/2026-09-15-L31-vettori-di-rumore.md`. Dati:
+`data/2026-09-15/L31/`. Nessun valore del circuito toccato, dossier non
+rigenerato.
+
+- **Baseline**: il deck di `main` rieseguito dà una riga
+  `Error: no such vector onoise_q123`, rc 0, JSON a 0 righe.
+- **Prima il guardiano.** `check_deck_refs.py` controlla ogni
+  `onoise_<x>`/`inoise_<x>` fuori da commenti e virgolette: circuito
+  (`spectrum`, `total`), `let`, dispositivo, o dispositivo più sotto-sorgente.
+  - I suffissi sono letti con un **deck sonda**: nel log i nomi sono troncati a
+    15 caratteri (`d102_ids` è `d102_idsw`).
+  - Sul deck di allora **rc 1, esattamente 4 MISSING**; `run_tests.sh` 7 / 1 sul
+    2g.
+  - Nessun falso allarme sugli altri 16 deck, né sui 16 di `6748fbc`
+    (pre-L27).
+  - **13 sabotaggi su 13** come attesi.
+- **Trovato: tre nomi vivi erano già sbagliati** (#22, secondo modo). La
+  mappa per **nodi** dall'include di L4 a quello di oggi dà:
+  - q123 → Q121B, q122 → Q121A;
+  - r121 → R120, r120 → R119, r138 → R136;
+  - jq110/jq111 → JQ110A/B.
+
+  `onoise_q122`, `r120` e `r138` avrebbero scritto il VAS, l'altra
+  degenerazione e R_g. Il suggerimento «VAS Q122» del mandato portava lì.
+- **I dati**: 0 righe `Error`, CSV di 2 righe. A 1 kHz, **pavimento senza
+  1/f**:
+  - quadratura dei 42 totali 8,605323e-09 = `onoise_spectrum`;
+  - gli 8 scritti sono i primi 8, 85,21 % della potenza (R_f da sola 33,51 %);
+  - spettro identico a `tb_noise_breakdown` B di L27.
+- **Il riscontro fatto cadere** sul deck di `main`: 7 colonne su 10 rifiutate.
+  Coi nomi vecchi, `onoise_r138` avrebbe scritto 1,09e-12 invece di 4,98e-09.
+- **Una premessa del mandato non era vera**: `tb_noise_breakdown.cir` non stampa
+  la ripartizione per dispositivo (log: `No. of Data Rows : 2`). Anche «Perché
+  minore» di NC-030 lo dava per fatto.
+- **Osservato, fuori lotto**: `testbenches/01_op.cir` ha un `wrdata` con
+  percorso assoluto, quindi il 2b lanciato da un worktree scrive e legge in
+  `/Users/roberto/EDA/results/`.
+- **15 voci aperte, 2 bloccanti.** Prossimo: **L33**.
 
 ### L32b — gli schemi del dossier si vedono (2026-09-15)
 
@@ -688,7 +729,7 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L28 | **SS dell'LSK489 definito per l'LSK489.** Un documento del costruttore che dica cosa sono i pin 3 e 7 di *questa* parte — o una ADR che accetti l'istruzione dell'LSK389 in forza della compatibilità dichiarata. Prima di G2 | XS/S | NC-027 | da fare |
 | L29 | **Il gradino al rilascio del mute.** Oggi il rilascio con segnale porta sul jack il condensatore caricato dalla musica: **5,37 V** a +10 dB, 1,79 V a 0 dB, 1,72 V sulle fisse, τ 0,32 s. **Il contatto prima del condensatore**, simulato in scratch dopo L11, toglie quel gradino ma ne mette uno **pari all'offset del blocco** (14-104 mV simulati, più fino a 63 mV di dispersione LSK489) **a ogni mute, accensione compresa**, e il volume non lo riduce (numeri e stima d'udibilità in NC-028). **Prima una soglia dell'utente su V2**; poi il confronto misurato, con un deck **versionato**, fra: contatto prima + offset abbassato (bilanciamento, coppie selezionate), rilascio lento, mute in serie, sequenza di rilascio. P7 va rimisurata per la posizione scelta | S/M | NC-028 | da fare |
 | L30 | **Il calore del telaio con otto blocchi.** A riposo la scheda audio dissipa 6,45 W (0,806 W per blocco, L17) contro i 3-4 W che P5 prevede per l'apparecchio intero. Stima termica del telaio con l'alimentatore; poi o P5 aggiornato al numero vero, o ventilazione e montaggio progettati con una ADR, o ADR-021 riaperta se i 60 °C non reggono. Va col lotto dell'alimentatore | S | NC-029 | da fare |
-| L31 | **I vettori di rumore di `tb_noise_vectors.cir`.** Il deck cita `onoise_q123`, `onoise_r121`, `onoise_jq110`, `onoise_jq111`, dispositivi che non esistono più; il `wrdata` si ferma e non scrive niente, con rc 0. Rinominarli dall'include generato ed estendere `check_deck_refs.py` ai nomi `onoise_*`/`inoise_*`, facendolo fallire sul deck di oggi | XS | NC-030 | da fare |
+| L31 | **I vettori di rumore di `tb_noise_vectors.cir`.** Il deck cita `onoise_q123`, `onoise_r121`, `onoise_jq110`, `onoise_jq111`, dispositivi che non esistono più; il `wrdata` si ferma e non scrive niente, con rc 0. Rinominarli dall'include generato ed estendere `check_deck_refs.py` ai nomi `onoise_*`/`inoise_*`, facendolo fallire sul deck di oggi | XS | NC-030 | **fatto** — 2g esteso e fatto cadere (4 nomi morti), mappa per nodi (tre nomi vivi erano già sbagliati), quadratura = spettro |
 | L32 | **Il dossier rigenerato sui dati di oggi. Subito dopo L16.** `build_dossier.py` legge ancora `data/2026-09-09`: THAT320, C_f 22 pF, due soli guadagni. Va esteso ai tre modi (0 / +3 / +10 dB) e puntato ai dati di L27 e L16, coi margini di V1 al minimo della spazzata (ADR-024), la cifra unica di headroom che L16 sceglie per NC-009 e la «KPI riferita a 60°» rimasta da L19. Accanto a ogni numero, la provenienza dei modelli ancora segnaposto (NC-004, NC-017). **Nessun avviso di obsolescenza**: il dossier lo legge solo l'utente (deciso il 2026-09-14) | S | NC-009 (la metà del dossier), apre **NC-031** | **fatto** — tre modi, V1 al minimo della spazzata, M1 +6,58 dB, provenienza letta dagli `.include`; nove controlli fatti fallire |
 | L33 | **Le etichette di provenienza dell'LSK489.** I README di `data/2026-09-14/` (L12, L27, L16) e i commenti di tredici deck (dodici col commento di L22, più `tb_trim.cir`) dicono che l'LSK489 simulato è il modello del costruttore; i deck istanziano `LSK489X`, segnaposto con `KF=0`, e nessuno include `models/jfet/lsk489.lib`. Correggere le frasi dei deck (i README datati si precisano con una nota, non si riscrivono) e decidere se un guardiano debba confrontare la provenienza dichiarata con quella degli `.include` | XS | NC-031 | da fare |
 | L32b | **Gli schemi del dossier si vedono.** Segnalazione dell'utente dopo L32: schema a blocchi e schema del blocco mancavano, perché `index.html` li collegava da `../schematic/`. Il builder li copia accanto alla pagina e rifiuta se mancano | XS | — | **fatto** |
@@ -2732,24 +2773,26 @@ sulla carta.
 
 ## Prossimo passo concreto
 
-**L31 — i vettori di rumore di `tb_noise_vectors.cir`.** Chiude **NC-030**
-(minore). Lotto **XS**. Il mandato completo è in `NEXT-SESSION.md`.
+**L33 — le etichette di provenienza dell'LSK489.** Chiude **NC-031** (minore).
+Lotto **XS**. Il mandato completo è in `NEXT-SESSION.md`.
 
 **Perché adesso.**
-- È l'unico deck versionato che oggi **non scrive dati**: cita vettori di
-  dispositivi che non esistono più, il `wrdata` si ferma, ngspice esce 0.
-- È il lotto più piccolo fra gli aperti, e i due che lo seguono per dimensione
-  aspettano altro: L29 una soglia dell'utente, L30 l'alimentatore.
+- È il lotto più piccolo fra gli aperti.
+- Gli altri aspettano altro: L29 una soglia dell'utente, L30 l'alimentatore,
+  L28 va fatto prima di G2.
 
 **Dove parte.**
-- **L'errore**: `data/2026-09-14/L27/dopo/tb_noise_vectors/tb_noise_vectors.log`,
-  riga 485, `Error: no such vector onoise_q123`.
-- **I nomi morti**: `onoise_q123`, `onoise_r121`, `onoise_jq110`, `onoise_jq111`.
-  Nell'include di oggi il VAS è Q122, lo specchio Q121A/B, i JFET JQ110A/B.
-- **Perché nessuno l'ha visto**: `scripts/check_deck_refs.py` (blocco 2g) controlla
-  `@nome[…]` e `alter`, non i vettori che `noise` costruisce (#27, «Cosa non vede»).
-- **Il riscontro**: `tb_noise_breakdown.cir` stampa la ripartizione per dispositivo
-  a 1 kHz e funziona.
+- **Cosa si simula**: `gain_block.py` istanzia `LSK489X`, segnaposto con `KF=0`
+  in `spice/preamp/placeholder_devices.lib`. Nessun deck include
+  `models/jfet/lsk489.lib`.
+- **Cosa si dichiara**: il commento di L22 in dodici deck, `tb_trim.cir`, e i
+  README di `data/2026-09-14/` (L12, L27, L16). Sono conti di NC-031: **vanno
+  rifatti**, non copiati.
+- **Cosa c'è già**: `build_dossier.py` ricava la provenienza dagli `.include`
+  (L32). Il README di L31 la dichiara già giusta.
+- **Da decidere**: se un guardiano debba confrontare la provenienza dichiarata
+  con quella degli `.include`. Se sì, va fatto cadere prima di correggere le
+  frasi.
 
 ### Quello che il repo ti consegna già
 

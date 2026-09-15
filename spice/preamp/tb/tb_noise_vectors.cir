@@ -35,23 +35,43 @@ print all
 * PERCHE' NON `wrdata ... all`: `print all` qui elenca 172 vettori, cioe'
 * 344 colonne intestate col0..col343 - un file che nessuno puo' piu'
 * interpretare. Si scrivono i due totali piu' i contributori dominanti,
-* e SOLO i totali per dispositivo (mai onoise_q123_rb accanto a
-* onoise_q123: sarebbe contato due volte). Sommano in quadratura a
-* onoise_spectrum - verificato sul log: sqrt(somma dei quadrati) = 1.16e-08
-* contro 1.215e-08.
+* e SOLO i totali per dispositivo (mai onoise_q121b_rb accanto a
+* onoise_q121b: sarebbe contato due volte). La somma in quadratura di TUTTI
+* i totali per dispositivo e' onoise_spectrum; quanto ne portano gli otto
+* scritti qui lo misura docs/preamp/data/2026-09-15/L31/esplorazione/
+* script/riscontro.py.
+*
+* I NOMI (L31, NC-030). Da L22 a L31 questa riga citava onoise_q123,
+* onoise_r121, onoise_jq110 e onoise_jq111, dispositivi che non esistevano
+* piu': "Error: no such vector", il wrdata si fermava, nessun dato, rc 0.
+* E tre nomi VIVI erano gia' sbagliati (limitations #22, secondo modo):
+* onoise_q122, onoise_r120 e onoise_r138, scritti in L4 per il diodo dello
+* specchio, la sua degenerazione e R_f, oggi sono il VAS, l'altra
+* degenerazione e R_g. I nomi qui sotto vengono da una mappa per NODI
+* dall'include di L4 a quello di oggi (L31/esplorazione/mappa.txt), non da
+* un elenco: se il blocco si rinumera, si rifa' la mappa.
+*   specchio, uscita    NHI NMIRI NME2   q123  -> q121b
+*   specchio, diodo     NMIRI NMIRI NME1 q122  -> q121a
+*   R_f                 OUT FB           r138  -> r136
+*   degenerazione usc.  VPLUS NME2       r121  -> r120
+*   degenerazione diodo VPLUS NME1       r120  -> r119
+*   sorgente            SRCN IN          rsrc
+*   coppia d'ingresso   D1N G1 S1 / D2N G2 S2   jq110 / jq111 -> jq110a / jq110b
+* Il blocco 2g di run_tests.sh ora rifiuta un onoise_<dispositivo> morto;
+* un nome vivo sbagliato continua a non vederlo.
 *
 * COLONNE: 2 righe (1000 e 1001 Hz) e, per ogni vettore, una COPPIA
 * (frequenza, valore). Le colonne PARI sono la frequenza ripetuta; i dati
 * sono le DISPARI, in quest'ordine:
-*   col1 onoise_spectrum   col3 inoise_spectrum   col5 onoise_q123
-*   col7 onoise_q122       col9 onoise_r138      col11 onoise_r121
-*  col13 onoise_r120      col15 onoise_rsrc      col17 onoise_jq110
-*  col19 onoise_jq111
+*   col1 onoise_spectrum   col3 inoise_spectrum   col5 onoise_q121b
+*   col7 onoise_q121a      col9 onoise_r136      col11 onoise_r120
+*  col13 onoise_r119      col15 onoise_rsrc      col17 onoise_jq110a
+*  col19 onoise_jq110b
 *
-* ATTENZIONE: sono numeri da MODELLI SEGNAPOSTO. Non sono una cifra di
-* rumore credibile e non vanno nel dossier finche' non ci sono i modelli
-* vendor (ADR-013, lotti L6-L7).
+* ATTENZIONE: sono numeri da MODELLI SEGNAPOSTO, con KF = 0: un pavimento
+* senza rumore 1/f (NC-004, NC-031). Non sono una cifra di rumore
+* credibile e non vanno nel dossier.
 * ---------------------------------------------------------------------
-wrdata tb_noise_vectors_wrdata.txt onoise_spectrum inoise_spectrum onoise_q123 onoise_q122 onoise_r138 onoise_r121 onoise_r120 onoise_rsrc onoise_jq110 onoise_jq111
+wrdata tb_noise_vectors_wrdata.txt onoise_spectrum inoise_spectrum onoise_q121b onoise_q121a onoise_r136 onoise_r120 onoise_r119 onoise_rsrc onoise_jq110a onoise_jq110b
 .endc
 .end

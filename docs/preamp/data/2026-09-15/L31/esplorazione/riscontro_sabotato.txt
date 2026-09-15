@@ -1,0 +1,45 @@
+== 1. il log e i dati ==
+   [ok] righe con 'Error' nel log: 0
+   [ok] righe di dati nel CSV: 2
+
+== 2. CSV contro log, 1000 Hz (10 vettori) ==
+   [ok] colonne nel CSV: 20 (attese 20)
+   [ok] col1  onoise_spectrum  csv 8.6053231e-09  log 8.605323e-09
+   [ok] col3  inoise_spectrum  csv 8.6173593e-09  log 8.617359e-09
+   [FALLITO] col5  onoise_q123      csv 2.4334520e-09  log None
+   [FALLITO] col7  onoise_q122      csv 2.1172746e-09  log 1.474384e-09
+   [FALLITO] col9  onoise_r138      csv 4.9817691e-09  log 1.086543e-12
+   [FALLITO] col11 onoise_r121      csv 2.7743476e-09  log None
+   [FALLITO] col13 onoise_r120      csv 2.7711920e-09  log 2.774348e-09
+   [ok] col15 onoise_rsrc      csv 2.6660479e-09  log 2.666048e-09
+   [FALLITO] col17 onoise_jq110     csv 1.6377416e-09  log None
+   [FALLITO] col19 onoise_jq111     csv 1.6463808e-09  log None
+
+== 3. un totale per ogni dispositivo che fa rumore ==
+   [ok] 42 totali nel log, 42 dispositivi R/D/Q/J nell'include e nel deck; mancano [], in piu' []
+
+== 4. quadratura ==
+   [ok] sqrt(somma dei quadrati di 42 totali) = 8.605323e-09, onoise_spectrum = 8.605323e-09, scarto +5.6e-08
+
+== 5. classifica a 1 kHz (quota della potenza di rumore) ==
+    1. r136     4.9818e-09 V/sqrt(Hz)  33.51 %
+    2. r120     2.7743e-09 V/sqrt(Hz)  10.39 %  <- scritto
+    3. r119     2.7712e-09 V/sqrt(Hz)  10.37 %
+    4. rsrc     2.6660e-09 V/sqrt(Hz)   9.60 %  <- scritto
+    5. q121b    2.4335e-09 V/sqrt(Hz)   8.00 %
+    6. q121a    2.1173e-09 V/sqrt(Hz)   6.05 %
+    7. jq110b   1.6464e-09 V/sqrt(Hz)   3.66 %
+    8. jq110a   1.6377e-09 V/sqrt(Hz)   3.62 %
+    9. q122     1.4744e-09 V/sqrt(Hz)   2.94 %  <- scritto
+   10. r111     1.2922e-09 V/sqrt(Hz)   2.25 %
+   11. r112     1.2922e-09 V/sqrt(Hz)   2.25 %
+   12. r109     1.2863e-09 V/sqrt(Hz)   2.23 %
+   [FALLITO] i 8 dispositivi scritti sono i primi 8: False; quota 22.93 % della potenza
+
+== 6. contro tb_noise_breakdown, configurazione B (L27) ==
+   [ok] onoise_spectrum: 8.605323e-09 qui, 8.60532300e-09 nel breakdown a 1002.3745 Hz, scarto +0.00e+00
+   [ok] inoise_spectrum: 8.617359e-09 qui, 8.61735912e-09 nel breakdown a 1002.3745 Hz, scarto -1.39e-08
+
+PAVIMENTO senza 1/f: modelli segnaposto con KF = 0 (NC-004, NC-031).
+
+8 FALLITI

@@ -47,6 +47,32 @@ WHAT IT CANNOT SEE: a citation of a device that EXISTS but is the wrong one.
 After L22, tb_bias_sweep.cir swept `r130`, which had become the other leg of
 the Vbe multiplier - a live name, so this check passes it. Only comparing a
 deck's numbers before and after a renumbering catches that (limitations #22).
+L31 found three more in tb_noise_vectors.cir: `onoise_q122`, `onoise_r120`
+and `onoise_r138` were written in L4 for the mirror diode, its degeneration
+resistor and R_f; today those names are the VAS, the other degeneration
+resistor and R_g. Only a mapping by nodes showed it.
+
+WHAT IT ALSO CHECKS (L31): PER-DEVICE NOISE VECTORS
+---------------------------------------------------
+A `noise` analysis builds one vector per device, `onoise_<device>`, plus one
+per noise source inside it, `onoise_<device>_<source>`. A deck that names a
+device which is gone - `wrdata ... onoise_q123` - gets
+
+    Error: no such vector onoise_q123
+
+and the wrdata writes NOTHING, with exit code 0. tb_noise_vectors.cir wrote
+no data from L22 to L31 that way (NC-030), and the citation check above did
+not see it: a vector name is not `@name[...]`.
+
+So every `onoise_<x>` / `inoise_<x>` outside comments and outside "quoted
+strings" (echo headers of CSV files, like tb_uscite_fisse's onoise_total_v)
+must be one of:
+  * a vector of the whole circuit: onoise_spectrum, onoise_total, ...;
+  * a vector the deck defines itself with `let`;
+  * <device>, or <device>_<source> with a source suffix ngspice really
+    builds. The suffixes were READ from ngspice 47 with a probe deck (one R,
+    D, Q, J with every parasitic set, `display`), not written from memory:
+    the log truncates names to 15 characters (d102_ids is d102_idsw).
 
 WHAT IT ALSO CHECKS (L27): NODES THE BLOCK LEAVES DANGLING
 ----------------------------------------------------------
@@ -82,6 +108,17 @@ SUBCKT = re.compile(r"^\s*\.subckt\s+(\S+)\s+(.*)$", re.IGNORECASE)
 # (circuits/preamp/spice_export.py writes R C D with 2 nodes, Q J with 3).
 # Anything else inside a block file is refused rather than guessed.
 NODE_COUNT = {"r": 2, "c": 2, "l": 2, "d": 2, "q": 3, "j": 3}
+# L31: per-device noise vectors (see the docstring).
+NOISE = re.compile(r"\b[oi]noise_([A-Za-z0-9_]+)")
+LET = re.compile(r"^\s*let\s+([A-Za-z][A-Za-z0-9_]*)\s*=", re.IGNORECASE)
+QUOTED = re.compile(r'"[^"]*"')
+# Vectors of the whole circuit, not of a device.
+NOISE_CIRCUIT = {"spectrum", "total"}
+# Per-source suffixes ngspice 47 builds, read with a probe deck in L31:
+#   R  1overf thermal          D  1overf 1overfsw id idsw rs rsw
+#   Q  1overf ib ic rb rc re   J  1overf id rd rs
+NOISE_SOURCE = {"1overf", "1overfsw", "thermal", "id", "idsw", "rs", "rsw",
+                "rd", "ib", "ic", "rb", "rc", "re"}
 
 
 def logical_lines(text):
@@ -142,6 +179,37 @@ def cited_names(path):
         if m:
             out.append((n, m.group(1)))
     return out
+
+
+def noise_citations(path):
+    """Noise vectors a deck names, and the vectors it defines with `let`.
+
+    Quoted strings are dropped first: an `echo "...,onoise_total_v"` writes a
+    CSV header, it does not read a vector.
+    """
+    text = path.read_text(encoding="utf-8", errors="replace")
+    cites, lets = [], set()
+    first = True
+    for n, line in logical_lines(text):
+        if first:            # line 1 of a .cir is always the title
+            first = False
+            if n == 1:
+                continue
+        m = LET.match(line)
+        if m:
+            lets.add(m.group(1).lower())
+        for m in NOISE.finditer(QUOTED.sub("", line)):
+            cites.append((n, m.group(0), m.group(1).lower()))
+    return cites, lets
+
+
+def noise_vector_exists(vector, rest, devices, lets):
+    """rest is what follows `onoise_`: a circuit vector, a device, or a
+    device plus one of the source suffixes ngspice builds."""
+    if vector.lower() in lets or rest in NOISE_CIRCUIT or rest in devices:
+        return True
+    dev, _, source = rest.rpartition("_")
+    return bool(dev) and dev in devices and source in NOISE_SOURCE
 
 
 def block_nodes(path, line_no, line):
@@ -277,18 +345,25 @@ def main(argv):
             print(f"UNREADABLE: {e}")
             return 2
         cites = cited_names(deck)
-        cited_total += len(cites)
+        noise, lets = noise_citations(deck)
+        cited_total += len(cites) + len(noise)
         bad = [(n, c) for n, c in cites
                if c.split(".")[-1].lower() not in names]
+        bad_noise = [(n, v) for n, v, rest in noise
+                     if not noise_vector_exists(v, rest, names, lets)]
         for n, c in bad:
             print(f"   {deck.name}:{n}: '{c}' is not a device of this deck")
+        for n, v in bad_noise:
+            print(f"   {deck.name}:{n}: noise vector '{v}' names no device "
+                  f"of this deck - the wrdata stops, exit code 0 (NC-030)")
         for f in dangling:
             print(f"   {f}")
-        missing += len(bad) + len(dangling)
-        status = ("OK" if not (bad or dangling)
-                  else f"{len(bad)} MISSING, {len(dangling)} DANGLING")
+        n_bad = len(bad) + len(bad_noise)
+        missing += n_bad + len(dangling)
+        status = ("OK" if not (n_bad or dangling)
+                  else f"{n_bad} MISSING, {len(dangling)} DANGLING")
         print(f"   {status}: {deck.name} ({len(cites)} citations, "
-              f"{len(names)} devices)")
+              f"{len(noise)} noise vectors, {len(names)} devices)")
     if cited_total == 0:
         # A checker that finds nothing to check and exits 0 is decorative.
         print("   no device citations found in any deck - refusing to pass")

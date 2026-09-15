@@ -46,6 +46,11 @@ solo trim, fra il blocco A e l'attenuatore, a relè bistabili con LED e
 permissivo dal mute — e l'ha misurato e provato sulla netlist: **chiude NC-005 e
 NC-023**, e dà a NC-009 la sua cifra con la metrica, che resta da pubblicare
 nel dossier (L32).
+**L32** (2026-09-15) ha rigenerato il dossier sui dati di L27 e L16 e, leggendo
+la provenienza dagli `.include`, ha **aperto NC-031**. **L31** (2026-09-15) ha
+esteso il blocco 2g ai vettori di rumore per dispositivo, l'ha fatto cadere sul
+deck di allora, e ha rinominato i vettori con una mappa per nodi: **chiude
+NC-030**.
 **15 voci aperte, 2 bloccanti.**
 L'accesso a G1 non è concesso finché NC-004 e NC-017 restano aperte.
 
@@ -2077,7 +2082,7 @@ Lotto **L30**.
 | Requisito | **V4** (le misure con la loro provenienza) · la disciplina di `docs/limitations.md` #22 |
 | Severità | **minore** |
 | Aperta da | `reports/2026-09-14-L27-terzo-livello-di-guadagno.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-15 da L31** — vedi «Chiusura» in fondo alla voce e «Voci chiuse» |
 
 **Evidenza.** `data/2026-09-14/L27/dopo/tb_noise_vectors/tb_noise_vectors.log`,
 riga 485: `Error: no such vector onoise_q123`.
@@ -2107,6 +2112,38 @@ poggia su questo file.
    `inoise_<dispositivo>`, e farlo fallire sul deck di oggi.
 
 Lotto **L31** (XS).
+
+**Chiusura (L31, 2026-09-15).** Report `reports/2026-09-15-L31-vettori-di-rumore.md`,
+dati `data/2026-09-15/L31/`.
+1. **Il guardiano, prima della correzione.**
+   - `check_deck_refs.py` controlla ora ogni `onoise_<x>`/`inoise_<x>` fuori da
+     commenti e virgolette. I suffissi di sotto-sorgente sono letti da un deck
+     sonda.
+   - Sul deck di `main`: **rc 1, esattamente 4 MISSING** (q123, r121, jq110,
+     jq111), e `run_tests.sh` 7 passed / 1 failed sul 2g.
+   - Nessun falso allarme sugli altri 16 deck, né sui 16 deck pre-L27.
+   - 13 sabotaggi su 13 come attesi.
+2. **I nomi, da una mappa per nodi** dall'include di L4 a quello di oggi
+   (`esplorazione/mappa.txt`), non da un elenco:
+   - q123 → Q121B e q122 → Q121A (specchio);
+   - r121 → R120 e r120 → R119 (degenerazione);
+   - r138 → R136 (R_f);
+   - jq110 / jq111 → JQ110A / JQ110B.
+
+   **Tre nomi vivi erano già sbagliati** (#22, secondo modo): `onoise_q122`,
+   `onoise_r120` e `onoise_r138` avrebbero scritto il VAS, l'altra degenerazione
+   e R_g. L'«Evidenza» sopra non lo diceva; il 2g non li vede.
+3. **I dati.** Log con **0** righe `Error`, CSV con **2 righe** e 20 colonne. A
+   1 kHz, come pavimento senza 1/f:
+   - la quadratura dei 42 totali per dispositivo dà 8,605323e-09 contro
+     `onoise_spectrum` 8,605323e-09;
+   - gli 8 dispositivi scritti sono i primi 8 della classifica, con l'85,21 %
+     della potenza;
+   - lo spettro coincide con `tb_noise_breakdown` B di L27.
+4. **Una frase di questa voce non era vera**: «la ripartizione del rumore per
+   dispositivo è anche in `tb_noise_breakdown.cir`». Quel deck la calcola e la
+   distrugge senza stamparla; il suo log dice solo `No. of Data Rows : 2`. La
+   severità non cambia: nessun verdetto poggiava su nessuno dei due.
 
 ### NC-031 — La provenienza dichiarata dell'LSK489 non è quella simulata
 
@@ -2158,6 +2195,17 @@ La sostituzione vera del modello nel circuito resta la Fase 4 (NC-017).
 Lotto **L33** (XS).
 
 ## Voci chiuse
+
+**NC-030 — `tb_noise_vectors.cir` non scrive dati: cita vettori di rumore di
+dispositivi che non esistono più** (minore). **CHIUSA il 2026-09-15 da L31.**
+- Il **2g** controlla ora i nomi `onoise_*`/`inoise_*`. È stato fatto cadere sul
+  deck di allora (4 MISSING) e su 13 sabotaggi, senza falsi allarmi.
+- **Vettori rinominati con una mappa per nodi**; tre nomi vivi erano già il
+  dispositivo sbagliato (#22).
+- 0 righe `Error`, 2 righe di dati, quadratura dei 42 totali = spettro.
+
+Il testo completo della voce resta sopra, con la sua «Chiusura». Report:
+`reports/2026-09-15-L31-vettori-di-rumore.md`.
 
 **NC-023 — Il trim non ha interlock col mute, e il trim non esiste ancora**
 (maggiore). **CHIUSA il 2026-09-14 da L16.**
