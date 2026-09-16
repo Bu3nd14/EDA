@@ -10,9 +10,9 @@ realtà, il progetto non è ripartibile.
 
 | | |
 |---|---|
-| Ultimo aggiornamento | **2026-09-15** |
+| Ultimo aggiornamento | **2026-09-16** |
 | Ultimo lotto chiuso | **L38** — le risposte del 2026-09-15 diventano requisiti. **ADR-032**: V2 ≤ 100 µV di picco 20 Hz–20 kHz al jack delle tre uscite, per gradino, residuo in mute e taglio della musica, accensione e spegnimento compresi, col metodo di misura. **ADR-033**: LED dai relè spia. **ADR-034**: moltiplicatore di Vbe accoppiato col rame (un ponte galvanico sarebbe un corto: il tab è su VP). **NC-028 sale a bloccante.** Prima: **L37** — E4 nel dossier, chiude NC-033 |
-| **Prossimo lotto** | **L29a IN CORSO, SOSPESO il 2026-09-15** sul ramo `worktree-l29a-v2-mute` (pushato, NON mergiato): leggi la voce di diario «L29a — in corso» qui sotto prima di ogni altra cosa. L29 è diviso: L29a = strumento + confronto delle varianti; L29b = ADR-030, accensione/spegnimento, P7, ADR, sorgente |
+| **Prossimo lotto** | **L29a IN CORSO, SOSPESO il 2026-09-16** sul ramo **`l29a-ripresa`** (pushato, NON mergiato), worktree `.claude/worktrees/l29a-ripresa`: leggi la voce di diario «L29a — ripresa del 2026-09-16» qui sotto prima di ogni altra cosa. **NON rimuovere quel worktree: le forme d'onda stanno solo lì.** L29 è diviso: L29a = strumento + confronto delle varianti; L29b = ADR-030, accensione/spegnimento, P7, ADR, sorgente |
 | Non conformità | **13 aperte, 3 bloccanti** |
 | Le bloccanti | NC-004 · NC-017 (Fase 4) · NC-028 (L29) |
 | Suite | `run_tests.sh` **10 passed / 0 failed** a fine L38, eseguita dal worktree (2i compreso: `gain_block.py` ha ricevuto solo un commento, nessuna rigenerazione) |
@@ -22,7 +22,45 @@ realtà, il progetto non è ripartibile.
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
 
-### L29a — in corso, sospeso per il cap dei token (2026-09-15)
+### L29a — ripresa del 2026-09-16, sospesa di nuovo per il cap dei token
+
+**Non chiuso. Nessun verdetto sulle varianti, NC-028 invariata (aperta, bloccante).**
+Ramo `l29a-ripresa`, worktree `.claude/worktrees/l29a-ripresa`.
+
+**Fatto, versionato e pushato.**
+- **Domande all'utente e risposte → ADR-035** (C per differenza dei residui del fit
+  dal riferimento; soglia di C 1 mV, A e B 100 µV; trap e non gear; rampa da 3 s nel
+  graduale). `REQUIREMENTS.md` V2 aggiornato.
+- **`v2_metodo.py`**: C2 come verdetto, C1 diagnostica, soglie per grandezza, cache dei
+  residui. **22 controlli, 11 sabotaggi su 11** (`data/2026-09-16/L29a/strumento/`).
+- **Difetto trovato e corretto**: `vntol=1e-9` rendeva varianti e graduale NON
+  eseguibili (~41 ore per una cella senza segnale). Ora `vntol=1e-6 abstol=1e-12`,
+  verificato che le cifre non cambiano entro l'1 % e il pavimento resta uguale
+  (`data/2026-09-16/L29a/tolleranze/`). È il motivo per cui ieri erano «fermati».
+- **Pavimento di C2 misurato** (`data/2026-09-16/L29a/corse/pavimento.csv`): principale
+  1 kHz 0,57–0,80 mV (C1 1,22 mV), 20 Hz 9,8 µV, **20 kHz 1,08 mV → cella NON
+  decidibile**; fisse 180–326 µV.
+- **Report, sezioni 1–5**: `reports/2026-09-16-L29a-metodo-v2-e-varianti.md`.
+
+**Le corse, NON ANALIZZATE (per scelta dell'utente, cap dei token).**
+- `results/l29a_varianti/`: **completo e verificato** — 87 `.dat`, 87 righe di
+  manifesto, nessun file mancante, 0 errori nel log. Exit 0.
+- `results/l29a_graduale/`: **in corso** al momento della sospensione (~42/108).
+  Alla ripresa verificare che sia finito: `.dat` contro righe del manifesto, exit
+  code, errori nel log. Se è stato interrotto, rilanciarlo.
+- `results/` è ignorato da git: **le forme d'onda esistono solo in questo worktree.**
+
+**Prossimo passo, nell'ordine.**
+1. Verificare il graduale come sopra.
+2. `v2_metodo.py analizza results/l29a_varianti/tb_v2_mute_varianti_manifest.csv
+   results/l29a_varianti docs/preamp/data/2026-09-16/L29a/corse/varianti.csv`, idem
+   per il graduale; poi `riassumi`. ~4 s per cella.
+3. Report sezione 6+ (verdetti per variante, leggendo il pavimento accanto a ogni C2;
+   la principale a 20 kHz non ha verdetto di C), NC-028 aggiornata (resta aperta e
+   bloccante se L29a si ferma al confronto), riga L29a/L29b nella tabella dei lotti,
+   `NEXT-SESSION.md` per L29b, PR, `chunk_close.sh L29a`.
+
+### L29a — in corso, sospeso per il cap dei token (2026-09-15) — SUPERATA dalla voce sopra
 
 **Non chiuso. Nessun verdetto, nessun report, NC-028 invariata.** Si riprende dal
 ramo `worktree-l29a-v2-mute` (in un worktree nuovo: `git worktree add … origin/worktree-l29a-v2-mute`).
