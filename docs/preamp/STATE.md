@@ -22,6 +22,46 @@ realtà, il progetto non è ripartibile.
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
 
+### L29b — IN CORSO, interrotto a fine token (2026-09-16): la tecnica del mute graduale è cambiata due volte
+
+**Non chiuso. Nessuna cifra di V2 sull'elemento reale. NC-028 resta aperta e bloccante.**
+Lavoro sul ramo `worktree-L29b`, **non mergiato**. Dati: `data/2026-09-16/L29b/`. ADR nuove:
+**ADR-037** (superata) e **ADR-038**.
+
+- **Divisione.** Il caso peggiore di V2 (guadagno col criterio 3 di ADR-030, trim, LSK489,
+  accensione e spegnimento) è **L29c**.
+- **Scratch 1, `capacita_da_aperto/`.** Un elemento solo in serie al jack non rispetta B con
+  nessuna capacità fisica: 2 pF lasciano passare 10,4 mV a 1 kHz e 206 mV a 20 kHz sulla
+  principale.
+- **Scratch 2, `sequenza_ideale/`.** Serie più derivazione graduale da ~1 s ritrovano le cifre
+  ideali di ADR-036 anche con 50 pF.
+- **ADR-037** (scelta dell'utente): MOSFET DMN6040SVT contrapposti con driver VOM1271, al jack.
+  Poi:
+  - il VOM1271 portato in ngspice (`models/optocoupler/vom1271.lib`, due modifiche);
+  - **trappola**: col LED senza percorso in continua l'op fallisce in silenzio e l'AC vede la
+    coppia aperta come 71 Ω;
+  - **il modello del MOSFET non ha regione sottosoglia** e il datasheet non la pubblica.
+    L'utente ha approvato un modello con la sottosoglia **dichiarata come ipotesi**
+    (`models/mosfet_n/dmn6040svt_sottosoglia.lib`);
+  - rampe calcolate da 7–10 s per verso;
+  - il banco con le coppie reali **non converge** alle tolleranze di V2
+    (`coppie_reali_convergenza/`).
+- **Ricerca in rete, chiesta dall'utente.**
+  - Nessuno fa un mute con musica a 100 µV / 1 mV al jack. L'industria muta a monte, sul volume.
+  - ESP: i MOSFET flottanti «can't be recommended»; le LDR hanno «very low distortion».
+  - TI SLEA044: 10,7–21,4 mV ai morsetti del diffusore, ≈ 0,5–1,0 mV al jack (calcolo).
+- **ADR-038, scelta dell'utente («Opzione 1 più ipotesi 1»).**
+  - Mute graduale **a monte**: LDR VTL5C4 in serie e verso massa all'ingresso del blocco A.
+  - Relè al jack tenuto: si chiude solo a musica spenta.
+  - **Guadagno e trim si cambiano solo col jack a massa**: il condensatore si ricarica in
+    0,22 ms e il rilascio dà pV (L11). L36 decide la forma.
+- **Ultimo passo, non verificato.** `models/optocoupler/vtl5c4_comportamentale.lib`, generato
+  da `vtl5c4_modello/genera_modello.py`: curve digitalizzate a pixel ed estrapolazioni
+  dichiarate. **La sua prova (`prova_modello.cir`) è stata interrotta senza cifre**: supera i
+  300 s, e forse il `tran 1m 10.2` col limite di passo è troppo fitto.
+
+**Da dove si riprende**: `NEXT-SESSION.md` su questo ramo.
+
 ### L29a — il metodo di V2 reso misurabile, e il confronto delle varianti di mute (2026-09-16)
 
 **NC-028 resta aperta e bloccante.** Report: `reports/2026-09-16-L29a-metodo-v2-e-varianti.md`.
