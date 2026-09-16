@@ -66,6 +66,7 @@ Costa un commento. È il collegamento dall'artefatto al ragionamento, ed
 | [029](ADR-029-ingombro-del-telaio.md) | Ingombro del telaio: l'impronta del Technics SU-9070, alto 3U | accettata |
 | [030](ADR-030-guadagno-interbloccato-dal-mute.md) | Il cambio di guadagno interbloccato dal mute: monostabili con autoritenuta, solo se la misura lo giustifica | accettata — criterio 3 al caso peggiore da ADR-032, LED precisati da ADR-033 |
 | [031](ADR-031-lsk489-gruppo-b-e-tolleranza-idss.md) | Il JFET d'ingresso è l'LSK489B, e il progetto tollera l'intera finestra di I_DSS del gruppo B | accettata |
-| [032](ADR-032-soglia-v2-al-jack.md) | V2 ha una soglia: al jack, 100 µV di picco in banda, nel caso peggiore, per il gradino, il residuo in mute e il taglio della musica | accettata |
+| [032](ADR-032-soglia-v2-al-jack.md) | V2 ha una soglia: al jack, 100 µV di picco in banda, nel caso peggiore, per il gradino, il residuo in mute e il taglio della musica | accettata — C precisata da ADR-035 (differenza dal riferimento, soglia 1 mV) |
 | [033](ADR-033-led-dai-rele-spia-guasto-accettato.md) | I LED del trim restano sui relè spia K9 e K10: il guasto di un solo relè è un caso noto e accettato | accettata |
 | [034](ADR-034-moltiplicatore-vbe-accoppiato-col-rame.md) | Il moltiplicatore di Vbe si accoppia al transistor d'uscita col rame del PCB, non con la fascetta | accettata |
+| [035](ADR-035-c-differenza-dal-riferimento-e-soglia.md) | C si misura per differenza dalla corsa di riferimento, e ha una soglia propria di 1 mV | accettata |

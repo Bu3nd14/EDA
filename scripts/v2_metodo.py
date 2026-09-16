@@ -62,6 +62,13 @@ import sys
 
 FS = 96000.0
 SOGLIA = 100e-6
+# La soglia di C e' separata da quella di A e B (ADR-035, decisa dall'utente il
+# 2026-09-16). Ragione, coi numeri di L29a: C confronta il residuo di un fit col
+# suo pavimento, e il pavimento del metodo con musica a 1 kHz a fondo scala sta
+# fra 0,4 e 0,7 mV - sopra i 100 uV. A e B restano a 100 uV perche' li' la
+# risoluzione c'e' davvero (A senza segnale misura a pV, a 20 Hz a 8,5 uV;
+# B misura 20 mV). Provvisoria finche' i modelli sono segnaposto (NC-017).
+SOGLIA_C = 1e-3
 FINESTRA_C = 0.010
 # 10 ms esatti = 960 campioni a 96 kHz: 10 periodi interi a 1 kHz, 200 a 20 kHz.
 # La finestra non ha un campione centrale; il fit si valuta al campione i con
@@ -73,7 +80,15 @@ USCITE = ("MAINJACK", "FIXJACK1", "FIXJACK2")
 SABOTA = set()
 SABOTAGGI = ("senza_filtro", "hp_primo_ordine", "rif_sfasato", "senza_fit",
              "fit_perfetto", "freq_sbagliata", "lineare",
-             "senza_diradamento", "canale_cieco")
+             "senza_diradamento", "canale_cieco",
+             "c2_senza_riferimento", "soglia_unica")
+
+
+def soglia_di(grandezza):
+    """La soglia della grandezza: 1 mV per C, 100 uV per A e B (ADR-035)."""
+    if "soglia_unica" in SABOTA:
+        return SOGLIA
+    return SOGLIA_C if grandezza.startswith("C") else SOGLIA
 
 
 # --------------------------------------------------------------- filtro ----
@@ -280,6 +295,62 @@ def c_picchi(x, f, eventi, durata=0.0):
     return out, cond
 
 
+def c2_picchi(x_ev, x_rif, f, eventi, durata=0.0):
+    """C2 - il VERDETTO di C (ADR-035, scelta dell'utente il 2026-09-16).
+
+        C2(t) = [v_ev(t) - tono_fit_ev(t)] - [v_rif(t) - tono_fit_rif(t)]
+
+    cioe' la differenza dei residui del fit fra la corsa con l'evento e la
+    corsa di riferimento, sulla stessa griglia a 96 kHz, filtrata dopo.
+
+    PERCHE' NON LA DIFFERENZA CRUDA. Una differenza v_ev - v_rif respingerebbe
+    OGNI mute, anche uno infinitamente lento: un mute toglie per forza volt di
+    musica, e quel residuo sta alla frequenza del tono, non a 1/T, quindi il
+    passa-alto a 20 Hz non lo tocca. E' esattamente il problema che il fit di
+    ADR-032 esisteva per evitare. Sottraendo invece i due RESIDUI: la
+    distorsione di regime, identica nelle due corse, si cancella; una
+    dissolvenza lenta resta dentro il fit e passa; un taglio netto sopravvive.
+
+    PERCHE' NON SERVE FITTARE LE ARMONICHE QUI. La differenza dal riferimento
+    cancella OGNI contenuto di regime, non le prime venti armoniche soltanto:
+    sottrae piu' di quanto un fit armonico sottrarrebbe. Il fit armonico resta
+    come diagnostica nel sottocomando `armoniche`.
+
+    Il riferimento e' quello di A: tiene dall'inizio lo stato FINALE
+    dell'evento. La finestra straddle l'evento, quindi i ~20 ms prima non si
+    cancellano: per questo il pavimento di C2 si MISURA (celle pav_nullo_*) e
+    si riporta accanto a ogni verdetto, invece di assumerlo nullo.
+    """
+    return c2_da_residui(residuo_c(x_ev, f), residuo_c(x_rif, f), eventi, durata,
+                         len(x_rif))
+
+
+def c2_da_residui(res_ev, res_rif, eventi, durata=0.0, n_rif=0):
+    """Il nucleo di C2, sui residui gia' calcolati: `analizza` li tiene in cache
+    perche' ogni riferimento serve a piu' eventi e a tre uscite."""
+    r_ev, i0, i1, cond_ev = res_ev
+    r_rif, j0, j1, cond_rf = res_rif
+    if "c2_senza_riferimento" in SABOTA:
+        # C2 ricade su C1: la distorsione di regime torna nel residuo
+        r_rif, j0, j1, cond_rf = [0.0] * (n_rif or len(r_rif)), i0, i1, 1.0
+    if "rif_sfasato" in SABOTA:
+        r_rif = [r_rif[0]] + r_rif[:-1]
+    n = min(len(r_ev), len(r_rif))
+    i0 = max(i0, j0)
+    i1 = min(i1, j1, n)
+    d = [r_ev[i] - r_rif[i] for i in range(n)]
+    y = filtra(d, i0)
+    out = []
+    for te in eventi:
+        a = max(int(round((te - 0.020) * FS)), i0)
+        b = min(int(round((te + durata + 0.200) * FS)), i1)
+        if b <= a:
+            out.append((None, None))
+            continue
+        out.append(picco(y, a, b))
+    return out, max(cond_ev, cond_rf)
+
+
 # --------------------------------------------------------------- A e B ----
 def a_picco(ev, rif, t_ev, t_stop):
     if "rif_sfasato" in SABOTA:
@@ -448,6 +519,48 @@ def autotest():
     verifica("T8 canale: due deck uguali nel blocco passano", canali_identici([d1, d2]), "")
     verifica("T8 canale: un valore diverso nel blocco cade", not canali_identici([d1, d3]), "")
 
+    # T9 - C2 cancella la distorsione di REGIME, C1 no. E' la ragione per cui
+    # C2 e' il verdetto (ADR-035): con h2 a 900 uV su una corsa senza nessun
+    # evento, C1 la conta tutta e boccerebbe un circuito fermo.
+    n = int(1.6 * FS)
+    f = 1000.0
+    rif_d = [a + b for a, b in zip(tono(n, 12.0, f), tono(n, 900e-6, 2 * f, 0.7))]
+    ev_d = list(rif_d)
+    pk1, _ = c_picchi(ev_d, f, [1.0])
+    v1 = pk1[0][0]
+    pk2, _ = c2_picchi(ev_d, rif_d, f, [1.0])
+    v2 = pk2[0][0]
+    verifica("T9 C1 conta la distorsione di regime (h2 900 uV) >= 500 uV", v1 >= 500e-6,
+             "C1 = %.3g V" % v1)
+    verifica("T9 C2 la cancella: corsa identica al riferimento = 0", v2 == 0.0,
+             "C2 = %.3g V" % v2)
+
+    # T10 - C2 di una dissolvenza a coseno rialzato da 3 s, 12 V pk, 1 kHz:
+    # passa la soglia di C. E' la rampa aggiunta al deck graduale.
+    def c2_dissolvenza(f, T, forma, amp, t0=0.4):
+        m = int((t0 + T + 0.4) * FS)
+        base = tono(m, amp, f, fase=math.pi / 2 - 2 * math.pi * f * t0)
+        env = inviluppo(m, t0, T, forma)
+        ev = [a * b for a, b in zip(base, env)]
+        pk, cnd = c2_picchi(ev, base, f, [t0], durata=T)
+        return pk[0][0], cnd
+
+    v, cond = c2_dissolvenza(1000.0, 3.0, "coseno", 12.0)
+    verifica("T10 C2 dissolvenza 3 s a coseno, 12 V pk, 1 kHz passa (<= 1 mV)",
+             v is not None and v <= SOGLIA_C, "%.3g V (cond %.3g)" % (v, cond))
+
+    # T11 - C2 di un taglio netto a 12 V cade, alle tre frequenze
+    for f in (20.0, 1000.0, 20000.0):
+        v, cond = c2_dissolvenza(f, 0.0, "netto", 12.0)
+        verifica("T11 C2 taglio netto, 12 V pk, %g Hz cade" % f,
+                 v is not None and v > 100 * SOGLIA_C, "%.3g V" % v)
+
+    # T12 - le soglie sono due, e sono quelle di ADR-035
+    verifica("T12 soglia di C = 1 mV, di A e B = 100 uV",
+             soglia_di("C") == 1e-3 and soglia_di("C2_rel") == 1e-3
+             and soglia_di("A") == 100e-6 and soglia_di("B1") == 100e-6,
+             "C %.3g V, A %.3g V" % (soglia_di("C"), soglia_di("A")))
+
     nf = esiti.count(False)
     print("# %d controlli, %d caduti" % (len(esiti), nf))
     return 1 if nf else 0
@@ -612,15 +725,39 @@ def analizza(manifest, datadir, outpath):
         cache[k] = (cols, tend)
         ordine.append(k)
         while len(ordine) > 6:
-            del cache[ordine.pop(0)]
+            vecchia = ordine.pop(0)
+            del cache[vecchia]
+            for kk in [q for q in rordine if q[0] == vecchia]:
+                rordine.remove(kk)
+                del rcache[kk]
         return cache[k]
+
+    # I residui del fit costano quanto tutto il resto messo insieme, e C2 di
+    # ogni cella ne vuole tre (la cella, il riferimento dell'inserzione, quello
+    # del rilascio) per ognuna delle tre uscite. Senza questa cache un
+    # manifesto da ~200 corse impiega ore: i riferimenti verrebbero rifatti per
+    # ogni evento. Stessa disciplina LRU di `cache`.
+    rcache = {}
+    rordine = []
+
+    def residuo_di(nome, k, x, f):
+        key = (nome, k)
+        if key in rcache:
+            rordine.remove(key)
+            rordine.append(key)
+            return rcache[key]
+        rcache[key] = residuo_c(x, f)
+        rordine.append(key)
+        while len(rordine) > 18:
+            del rcache[rordine.pop(0)]
+        return rcache[key]
 
     righe = []
 
     def scrivi(c, gr, u, v, i, fin, nota):
         if v is None:
             esito = "n/d"
-        elif v > SOGLIA:
+        elif v > soglia_di(gr):
             esito = "SOPRA"
         elif fin is not None and fin < DURATA_A - 1e-9:
             esito = "sotto, finestra corta: non accetta"
@@ -658,6 +795,16 @@ def analizza(manifest, datadir, outpath):
                 rcols, _ = dati(per_nome[c["rif_ins"]])
                 v, i, fin = a_picco(x, rcols[k], t_ins, min(t_ins + DURATA_A, t_fine))
                 scrivi(c, "A_pav", u, v, i, fin, "contro %s" % c["rif_ins"])
+                # e lo stesso evento nullo letto come C2: e' il pavimento del
+                # VERDETTO di C, quello che va riportato accanto a ogni C2
+                if amp > 0:
+                    ev = [te for te in (t_ins,) if 0.3 < te < t_fine]
+                    if ev:
+                        pk, cond = c2_picchi(x, rcols[k], f, ev)
+                        for te, (v2, i2) in zip(ev, pk):
+                            scrivi(c, "C2_pav", u, v2, i2, None,
+                                   "pavimento di C2 contro %s, cond %.3g"
+                                   % (c["rif_ins"], cond))
                 continue
             if tipo != "evento":
                 continue
@@ -674,10 +821,27 @@ def analizza(manifest, datadir, outpath):
                 scrivi(c, "B2", u, v, i, None, "mute da t_ins+t_grad+20 ms a t_rel")
             if amp > 0:
                 ev = [te for te in (t_ins, t_rel) if 0.3 < te < t_fine]
+                # C1: il fit della sola fondamentale, com'e' in ADR-032.
+                # DIAGNOSTICA, non piu' il verdetto: porta dentro tutta la
+                # distorsione di regime del circuito (h2 da solo vale 887 uV
+                # su una corsa mai in mute, L29a).
                 pk, cond = c_picchi(x, f, ev, tg)
-                for nome_te, te, (v, i) in zip(("C_ins", "C_rel"), ev, pk):
-                    nm = "C_ins" if te == t_ins else "C_rel"
-                    scrivi(c, nm, u, v, i, None, "cond %.3g" % cond)
+                for te, (v, i) in zip(ev, pk):
+                    nm = "C1_ins" if te == t_ins else "C1_rel"
+                    scrivi(c, nm, u, v, i, None, "diagnostica, cond %.3g" % cond)
+                # C2: il VERDETTO (ADR-035). Stesso riferimento di A.
+                res_ev = residuo_di(c["cella"], k, x, f)
+                for nm, te, rif_k in (("C2_ins", t_ins, "rif_ins"),
+                                      ("C2_rel", t_rel, "rif_rel")):
+                    rn = c.get(rif_k, "-")
+                    if rn in ("", "-") or not (0.3 < te < t_fine):
+                        continue
+                    rcols, _ = dati(per_nome[rn])
+                    res_rf = residuo_di(rn, k, rcols[k], f)
+                    pk2, cond2 = c2_da_residui(res_ev, res_rf, [te], tg)
+                    v2, i2 = pk2[0]
+                    scrivi(c, nm, u, v2, i2, None,
+                           "riferimento %s, cond %.3g" % (rn, cond2))
     with open(outpath, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["cella", "variante", "f_hz", "amp", "gm", "rl", "grandezza", "uscita",
@@ -690,9 +854,12 @@ def analizza(manifest, datadir, outpath):
 def riassumi(ingressi, out):
     """Dalle tabelle di analizza: per variante x carico x grandezza x uscita il
     picco massimo e la cella che lo produce; poi il verdetto per variante.
-    A = A_ins, A_rel; B = B1, B2 (riportate anche separate); C = C_ins, C_rel.
-    Una variante e' RESPINTA se una sola riga A, B o C sta SOPRA; non e' mai
-    'conforme' da qui: lo screening non copre la matrice di V2."""
+    A = A_ins, A_rel; B = B1, B2 (riportate anche separate); C = C2_ins, C2_rel.
+    Una variante e' RESPINTA se una sola riga A, B o C sta SOPRA la soglia
+    della sua grandezza (100 uV per A e B, 1 mV per C - ADR-035); non e' mai
+    'conforme' da qui: lo screening non copre la matrice di V2.
+    C1 e i pavimenti (A_pav, C_pav, C2_pav) sono DIAGNOSTICI: entrano nella
+    tabella ma non nel verdetto."""
     righe = []
     for p in ingressi:
         with open(p) as f:
@@ -700,7 +867,9 @@ def riassumi(ingressi, out):
     grp = {}
     for r in righe:
         g = r["grandezza"]
-        base = {"A_ins": "A", "A_rel": "A", "C_ins": "C", "C_rel": "C"}.get(g, g)
+        base = {"A_ins": "A", "A_rel": "A",
+                "C2_ins": "C", "C2_rel": "C",
+                "C1_ins": "C1", "C1_rel": "C1"}.get(g, g)
         if not r["picco_V"]:
             continue
         chiave = (r["variante"], r["rl"], base, r["uscita"])
@@ -715,9 +884,9 @@ def riassumi(ingressi, out):
             w.writerow(list(k) + ["%.4g" % v, cella, g, es])
     verd = {}
     for (var, rl, base, u), (v, cella, g, es) in grp.items():
-        if base in ("A", "B1", "B2", "C") and v > SOGLIA:
+        if base in ("A", "B1", "B2", "C") and v > soglia_di(base):
             verd.setdefault(var, []).append("%s %s %s %.3g V (%s)" % (base, u, rl, v, cella))
-    print("# verdetto dello screening - SIMULATO; soglia 100 uV")
+    print("# verdetto dello screening - SIMULATO; A e B 100 uV, C 1 mV (ADR-035)")
     for var in sorted({k[0] for k in grp}):
         if var == "nessuna":
             continue

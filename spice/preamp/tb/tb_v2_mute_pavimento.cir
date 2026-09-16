@@ -87,7 +87,11 @@ tb_v2_mute_pavimento.cir - V2 al jack (ADR-032): i pavimenti del metodo sulla ca
 .include @REPO@/spice/preamp/gain_block.subckt
 
 * >>> CANALE - identico nei tre deck tb_v2_mute_*.cir (v2_metodo.py canale)
-.options reltol=1e-6 vntol=1e-9 abstol=1e-15
+* TOLLERANZE (L29a, ripresa 2026-09-16): vedi il blocco esteso in
+* tb_v2_mute_varianti.cir. vntol=1e-9 rendeva il deck non eseguibile (41 ore
+* per una cella senza segnale); vntol=1e-6 la fa in 5,5 s e le cifre non
+* cambiano - verificato, data/2026-09-16/L29a/tolleranze/.
+.options reltol=1e-6 vntol=1e-6 abstol=1e-12
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15
 

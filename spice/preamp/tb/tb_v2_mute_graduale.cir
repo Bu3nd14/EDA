@@ -23,7 +23,7 @@ tb_v2_mute_graduale.cir - V2 al jack (ADR-032): il rilascio lento e il mute grad
 *       bleeder lato condensatore 220 k / 470 k
 *
 * LE CELLE (per posizione e per carico, 100 k e 10 k su tutte e tre le uscite),
-* +10 dB, manopola al massimo, T = 20 ms, 200 ms, 1 s:
+* +10 dB, manopola al massimo, T = 20 ms, 200 ms, 1 s, 3 s:
 *   _bmT       CON MUSICA, 2,7 V RMS a 1 kHz, fase pi/2: la rampa d'inserzione
 *              parte a 1,0 s; quella di rilascio a 1,0 + T + 0,1 s; la corsa
 *              finisce 2 s dopo la fine del rilascio
@@ -46,7 +46,11 @@ tb_v2_mute_graduale.cir - V2 al jack (ADR-032): il rilascio lento e il mute grad
 .include @REPO@/spice/preamp/gain_block.subckt
 
 * >>> CANALE - identico nei tre deck tb_v2_mute_*.cir (v2_metodo.py canale)
-.options reltol=1e-6 vntol=1e-9 abstol=1e-15
+* TOLLERANZE (L29a, ripresa 2026-09-16): vedi il blocco esteso in
+* tb_v2_mute_varianti.cir. vntol=1e-9 rendeva il deck non eseguibile (41 ore
+* per una cella senza segnale); vntol=1e-6 la fa in 5,5 s e le cifre non
+* cambiano - verificato, data/2026-09-16/L29a/tolleranze/.
+.options reltol=1e-6 vntol=1e-6 abstol=1e-12
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15
 
@@ -245,11 +249,15 @@ destroy all
 *       11 b20 1 s | 12 b20mai | 13 b20sempre   (solo 100 k)
 foreach g 1 2 3 4
 foreach rlk 100 10
-foreach kind 1 2 3 4 5 6 7 8 9 10 11 12 13
+foreach kind 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
   set salta = 0
+* solo le celle a 20 Hz (11,12,13) girano al solo 100 k; 14 e 15 sono le
+* rampe da 3 s e vogliono entrambi i carichi come 1..6 (L29a, ripresa)
   if $kind > 10
-    if $rlk = 10
-      set salta = 1
+    if $kind < 14
+      if $rlk = 10
+        set salta = 1
+      end
     end
   end
   if $salta = 0
@@ -359,17 +367,21 @@ foreach kind 1 2 3 4 5 6 7 8 9 10 11 12 13
     set srel = "_lzmai"
     set isev = 1
   end
+* i quattro riferimenti sono lunghi quanto la cella piu' lunga che servono:
+* con la rampa da 3 s (kind 14/15) _bm* passa da 5,1 a 9,1 s e _lz* da 7,0 a
+* 11,0 s. Un riferimento piu' corto della cella troncherebbe la finestra di A
+* e di C2 senza dirlo (L29a, ripresa)
   if $kind = 7
     set ti = 1000
     set tr = 2000
-    set tf = 5.1
+    set tf = 9.1
     set tag = "_bmmai"
     set tipo = "rif_mai"
   end
   if $kind = 8
     set ti = -1
     set tr = 1000
-    set tf = 5.1
+    set tf = 9.1
     set tag = "_bmsempre"
     set tipo = "rif_sempre"
   end
@@ -377,7 +389,7 @@ foreach kind 1 2 3 4 5 6 7 8 9 10 11 12 13
     set amp = 0
     set ti = 1000
     set tr = 2000
-    set tf = 7.0
+    set tf = 11.0
     set tag = "_lzmai"
     set tipo = "rif_mai"
   end
@@ -385,7 +397,7 @@ foreach kind 1 2 3 4 5 6 7 8 9 10 11 12 13
     set amp = 0
     set ti = -1
     set tr = 1000
-    set tf = 7.0
+    set tf = 11.0
     set tag = "_lzsempre"
     set tipo = "rif_sempre"
   end
@@ -415,6 +427,33 @@ foreach kind 1 2 3 4 5 6 7 8 9 10 11 12 13
     set tf = 5.1
     set tag = "_b20sempre"
     set tipo = "rif_sempre"
+  end
+* ---- la rampa da 3 s, decisa dall'utente il 2026-09-16 (L29a, ripresa) ----
+* Con rampa efficace ~3/13 di T valgono ~700 ms, ancora lontani dai >10 s che
+* il fit di C chiederebbe a 1 kHz (caratterizza_C_960.txt): servono a misurare
+* la legge 1/T su un quarto punto, non a raggiungere la conformita'.
+* Stessa geometria di kind 3 e 6: tr = ti + tg + 0,1 con musica, 3,0 + tg
+* senza; tf = tr + tg + 2.
+  if $kind = 14
+    set tg = 3.0
+    set ti = 1.0
+    set tr = 4.1
+    set tf = 9.1
+    set tag = "_bm3s"
+    set sins = "_bmsempre"
+    set srel = "_bmmai"
+    set isev = 1
+  end
+  if $kind = 15
+    set tg = 3.0
+    set amp = 0
+    set ti = 1.0
+    set tr = 6.0
+    set tf = 11.0
+    set tag = "_lz3s"
+    set sins = "_lzsempre"
+    set srel = "_lzmai"
+    set isev = 1
   end
   if $isev = 1
     set tipo = "evento"

@@ -1,0 +1,70 @@
+-- senza sabotaggi: exit 0
+# autotest di v2_metodo.py - cifre CALCOLATE su segnali sintetici, nessun circuito
+# sabotaggi attivi: nessuno
+OK   T1 gradino 104 mV = 0.1109 V (calcolo_v2)                  0.110857 V
+OK   T1 rampa 104 mV/500 ms = 0.0007547 V (calcolo_v2)          0.000754674 V
+OK   T2 A di un gradino da 1 mV sotto 12 V a 1 kHz = 1 mV x 1.0659 0.00106593 V
+OK   T3 A con evento identico al riferimento = 0                0 V
+OK   T4 dissolvenza di 10 s, 3,82 V pk, 1000 Hz passa C         4.8e-05 V (cond 1)
+OK   T4 dissolvenza di 10 s, 3,82 V pk, 20000 Hz passa C        4.45e-06 V (cond 1)
+     LIMITE DEL METODO: dissolvenza di 5 s, 12 V pk, 20 Hz: C = 0.0027 V (cond 7.22)
+OK   T5 taglio netto, 12 V pk, 20 Hz cade su C                  9.05 V
+OK   T5 taglio netto, 12 V pk, 1000 Hz cade su C                6.71 V
+OK   T5 taglio netto, 12 V pk, 20000 Hz cade su C               4.18 V
+OK   T6 tono stazionario 12 V a 20 Hz: residuo del fit <= 1 uV  1.45e-12 V, numero di condizione 7.225
+     numero di condizione del fit a 1000 Hz: 1
+     numero di condizione del fit a 20000 Hz: 1
+OK   T7 ricampionamento 12 V 1000 Hz, passi <= 1e-05 s: errore <= 10 uV 4.4e-06 V
+OK   T7 ricampionamento 12 V 20000 Hz, passi <= 5e-07 s: errore <= 10 uV 4.59e-06 V
+     ricampionamento 20000 Hz con passi da 1e-05 s: errore 0.569 V (informativo)
+OK   T8 canale: due deck uguali nel blocco passano              
+OK   T8 canale: un valore diverso nel blocco cade               
+OK   T9 C1 conta la distorsione di regime (h2 900 uV) >= 500 uV C1 = 0.000898 V
+OK   T9 C2 la cancella: corsa identica al riferimento = 0       C2 = 0 V
+OK   T10 C2 dissolvenza 3 s a coseno, 12 V pk, 1 kHz passa (<= 1 mV) 0.000503 V (cond 1)
+OK   T11 C2 taglio netto, 12 V pk, 20 Hz cade                   9.05 V
+OK   T11 C2 taglio netto, 12 V pk, 1000 Hz cade                 6.71 V
+OK   T11 C2 taglio netto, 12 V pk, 20000 Hz cade                4.18 V
+OK   T12 soglia di C = 1 mV, di A e B = 100 uV                  C 0.001 V, A 0.0001 V
+# 21 controlli, 0 caduti
+
+-- sabotaggio senza_filtro       exit 1, 2 controlli caduti: OK
+     CADE T1 gradino 104 mV = 0.1109 V (calcolo_v2)                  0.104 V
+     CADE T1 rampa 104 mV/500 ms = 0.0007547 V (calcolo_v2)          0.104 V
+-- sabotaggio hp_primo_ordine    exit 1, 2 controlli caduti: OK
+     CADE T1 gradino 104 mV = 0.1109 V (calcolo_v2)                  0.111001 V
+     CADE T1 rampa 104 mV/500 ms = 0.0007547 V (calcolo_v2)          0.00165521 V
+-- sabotaggio rif_sfasato        exit 1, 3 controlli caduti: OK
+     CADE T2 A di un gradino da 1 mV sotto 12 V a 1 kHz = 1 mV x 1.0659 0.833732 V
+     CADE T3 A con evento identico al riferimento = 0                0.833 V
+     CADE T9 C2 la cancella: corsa identica al riferimento = 0       C2 = 0.000118 V
+-- sabotaggio senza_fit          exit 1, 4 controlli caduti: OK
+     CADE T4 dissolvenza di 10 s, 3,82 V pk, 1000 Hz passa C         3.82 V (cond 1)
+     CADE T4 dissolvenza di 10 s, 3,82 V pk, 20000 Hz passa C        2.7 V (cond 1)
+     CADE T6 tono stazionario 12 V a 20 Hz: residuo del fit <= 1 uV  12 V, numero di condizione 1
+     CADE T10 C2 dissolvenza 3 s a coseno, 12 V pk, 1 kHz passa (<= 1 mV) 12 V (cond 1)
+-- sabotaggio fit_perfetto       exit 1, 7 controlli caduti: OK
+     CADE T5 taglio netto, 12 V pk, 20 Hz cade su C                  0 V
+     CADE T5 taglio netto, 12 V pk, 1000 Hz cade su C                0 V
+     CADE T5 taglio netto, 12 V pk, 20000 Hz cade su C               0 V
+     CADE T9 C1 conta la distorsione di regime (h2 900 uV) >= 500 uV C1 = 0 V
+     CADE T11 C2 taglio netto, 12 V pk, 20 Hz cade                   0 V
+     CADE T11 C2 taglio netto, 12 V pk, 1000 Hz cade                 0 V
+     CADE T11 C2 taglio netto, 12 V pk, 20000 Hz cade                0 V
+-- sabotaggio freq_sbagliata     exit 1, 4 controlli caduti: OK
+     CADE T4 dissolvenza di 10 s, 3,82 V pk, 1000 Hz passa C         0.0785 V (cond 1.02)
+     CADE T4 dissolvenza di 10 s, 3,82 V pk, 20000 Hz passa C        2.7 V (cond 1)
+     CADE T6 tono stazionario 12 V a 20 Hz: residuo del fit <= 1 uV  0.0154 V, numero di condizione 7.075
+     CADE T10 C2 dissolvenza 3 s a coseno, 12 V pk, 1 kHz passa (<= 1 mV) 0.247 V (cond 1.02)
+-- sabotaggio lineare            exit 1, 2 controlli caduti: OK
+     CADE T7 ricampionamento 12 V 1000 Hz, passi <= 1e-05 s: errore <= 10 uV 0.00578 V
+     CADE T7 ricampionamento 12 V 20000 Hz, passi <= 5e-07 s: errore <= 10 uV 0.0059 V
+-- sabotaggio senza_diradamento  exit 1, 2 controlli caduti: OK
+     CADE T7 ricampionamento 12 V 1000 Hz, passi <= 1e-05 s: errore <= 10 uV 3.06 V
+     CADE T7 ricampionamento 12 V 20000 Hz, passi <= 5e-07 s: errore <= 10 uV 0.105 V
+-- sabotaggio canale_cieco       exit 1, 1 controlli caduti: OK
+     CADE T8 canale: un valore diverso nel blocco cade               
+-- sabotaggio c2_senza_riferimento exit 1, 1 controlli caduti: OK
+     CADE T9 C2 la cancella: corsa identica al riferimento = 0       C2 = 0.000898 V
+-- sabotaggio soglia_unica       exit 1, 1 controlli caduti: OK
+     CADE T12 soglia di C = 1 mV, di A e B = 100 uV                  C 0.0001 V, A 0.0001 V

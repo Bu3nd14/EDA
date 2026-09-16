@@ -43,13 +43,37 @@ tb_v2_mute_varianti.cir - V2 al jack (ADR-032): A, B e C delle varianti di mute 
 *
 * CONVENZIONE DI PERCORSO: `.include @REPO@/...` (tb_op.cir, L2-L3) e file
 * scritti con nome nudo nella directory d'uscita di run_simulation.sh.
+*
+* LE TOLLERANZE, e perche' sono cambiate (L29a, ripresa 2026-09-16).
+* `vntol=1e-9` e `abstol=1e-15` rendevano questi tre deck NON ESEGUIBILI. Dove
+* il jack sta vicino a zero - cioe' in ogni cella senza segnale a mute inserito
+* - un vntol da 1 nV domina il controllo del passo, che collassa e non risale
+* piu'. Misurato sulla cella var0_100k_lz: 2,71 ms di transitorio ogni 100 s di
+* calcolo, cioe' ~41 ORE per una cella sola su 87. La stessa cella con
+* vntol=1e-6 / abstol=1e-12 gira in 5,5 s.
+* CHE NON CAMBI LA MISURA E' VERIFICATO, non assunto. Sulle celle dove la
+* tolleranza stretta e' eseguibile (segnale presente) le due danno le stesse
+* cifre entro l'1%:
+*   A_rel   12,16 V  contro 12,11 V      B2      33,23 mV contro 33,03 mV
+*   C2_rel  8,875 V  contro 8,871 V
+*   PAVIMENTO di C   1,26 mV  contro 1,27 mV  (principale)
+*                    185 uV   contro 188 uV   (fisse)
+* Il pavimento e' la cifra che conta, ed e' invariata. Il confronto sta in
+* data/2026-09-16/L29a/tolleranze/. vntol=1e-6 resta 100 volte sotto la soglia
+* di A e B (100 uV) e 1000 volte sotto quella di C (1 mV).
+* LIMITE DICHIARATO: sulle celle SENZA segnale il confronto non e' possibile,
+* perche' li' la tolleranza stretta non termina.
 
 .include @REPO@/spice/preamp/placeholder_devices.lib
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block.subckt
 
 * >>> CANALE - identico nei tre deck tb_v2_mute_*.cir (v2_metodo.py canale)
-.options reltol=1e-6 vntol=1e-9 abstol=1e-15
+* TOLLERANZE (L29a, ripresa 2026-09-16): vedi il blocco esteso in
+* tb_v2_mute_varianti.cir. vntol=1e-9 rendeva il deck non eseguibile (41 ore
+* per una cella senza segnale); vntol=1e-6 la fa in 5,5 s e le cifre non
+* cambiano - verificato, data/2026-09-16/L29a/tolleranze/.
+.options reltol=1e-6 vntol=1e-6 abstol=1e-12
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15
 
