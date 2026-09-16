@@ -1,6 +1,6 @@
 # ADR-037 — Il mute graduale reale: MOSFET contrapposti con driver fotovoltaico, in serie e verso massa, col relè NC tenuto
 
-Data: 2026-09-16 · Stato: accettata
+Data: 2026-09-16 · Stato: superata da ADR-038 (il mute graduale si fa a monte, con LDR; lo stesso giorno, prima di qualsiasi misura di V2)
 
 ## Contesto
 
