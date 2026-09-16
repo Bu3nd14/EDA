@@ -3,7 +3,7 @@
 **Documento vivo.** Riscritto quando i requisiti cambiano. Ogni modifica
 sostanziale deve avere una ADR corrispondente in `decisions/`.
 
-Ultimo aggiornamento: 2026-09-16 (L29a: C di V2 per differenza dal riferimento e soglia di C a 1 mV, A e B invariati — ADR-035; L38: V2 con soglia e metodo di misura, Nota su F5, Aperti — ADR-032; L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
+Ultimo aggiornamento: 2026-09-16 (L29a: C di V2 per differenza dal riferimento e soglia di C a 1 mV, A e B invariati — ADR-035; A di V2 solo senza segnale — ADR-036; L38: V2 con soglia e metodo di misura, Nota su F5, Aperti — ADR-032; L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
 
 Le motivazioni non stanno qui: stanno nelle ADR referenziate e nel
 report `reports/2026-09-08-analisi-catena.md`.
@@ -431,6 +431,12 @@ cifra **calcolata**, un limite superiore.
     fronte: lo spike da 2,2 µs di NC-028 non si dà per artefatto finché non è
     modellato.
 - **A — il gradino.**
+  - **A si giudica solo senza segnale (ADR-036, 2026-09-16).** Con la musica
+    presente la differenza dal riferimento contiene la musica stessa
+    nell'istante della commutazione — misurata a 12,7 V sulla principale per
+    ogni variante e ogni rampa, anche con una dissolvenza di 3 s — e non è un
+    verdetto. Con musica decide **C**, che contiene anche il gradino della carica
+    del condensatore. A con musica resta come diagnostica.
   - La grandezza è d(t) = v_jack(corsa con l'evento) − v_jack(corsa di
     riferimento). Il riferimento tiene dall'inizio lo **stato finale**: mai in
     mute, sempre in mute, o già al guadagno d'arrivo. Stessa sorgente, stessa

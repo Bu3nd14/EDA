@@ -26,8 +26,9 @@ OK   T11 C2 taglio netto, 12 V pk, 20 Hz cade                   9.05 V
 OK   T11 C2 taglio netto, 12 V pk, 1000 Hz cade                 6.71 V
 OK   T11 C2 taglio netto, 12 V pk, 20000 Hz cade                4.18 V
 OK   T13 C2 di un rilascio graduale da 3 s passa (<= 1 mV)      0.000503 V (cond 1)
+OK   T14 A con musica e' diagnostica, A senza segnale e' verdetto con musica -> A_musica, senza -> A
 OK   T12 soglia di C = 1 mV, di A e B = 100 uV                  C 0.001 V, A 0.0001 V
-# 22 controlli, 0 caduti
+# 23 controlli, 0 caduti
 
 -- sabotaggio senza_filtro       exit 1, 2 controlli caduti: OK
      CADE T1 gradino 104 mV = 0.1109 V (calcolo_v2)                  0.104 V
@@ -71,3 +72,5 @@ OK   T12 soglia di C = 1 mV, di A e B = 100 uV                  C 0.001 V, A 0.0
      CADE T9 C2 la cancella: corsa identica al riferimento = 0       C2 = 0.000898 V
 -- sabotaggio soglia_unica       exit 1, 1 controlli caduti: OK
      CADE T12 soglia di C = 1 mV, di A e B = 100 uV                  C 0.0001 V, A 0.0001 V
+-- sabotaggio a_con_musica       exit 1, 1 controlli caduti: OK
+     CADE T14 A con musica e' diagnostica, A senza segnale e' verdetto con musica -> A, senza -> A

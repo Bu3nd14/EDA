@@ -81,7 +81,27 @@ SABOTA = set()
 SABOTAGGI = ("senza_filtro", "hp_primo_ordine", "rif_sfasato", "senza_fit",
              "fit_perfetto", "freq_sbagliata", "lineare",
              "senza_diradamento", "canale_cieco",
-             "c2_senza_riferimento", "soglia_unica")
+             "c2_senza_riferimento", "soglia_unica", "a_con_musica")
+
+
+def base_di(grandezza, amp):
+    """La grandezza del verdetto a cui una riga di `analizza` appartiene.
+
+    A CON MUSICA NON E' UN VERDETTO (ADR-036, decisione dell'utente del
+    2026-09-16). Col riferimento che tiene lo stato finale, la differenza
+    contiene la musica stessa nell'istante della commutazione: L29a l'ha
+    misurata a 12,7 V sulla principale e 4,03 V sulle fisse per OGNI variante e
+    OGNI rampa, da 20 ms a 3 s. Quindi A decide solo senza segnale; con musica
+    decide C2, che contiene anche il gradino della carica del condensatore (il
+    fit non ha termine continuo). A con musica resta in tabella come
+    diagnostica, col nome "A_musica".
+    """
+    if grandezza in ("A_ins", "A_rel"):
+        if amp > 0 and "a_con_musica" not in SABOTA:
+            return "A_musica"
+        return "A"
+    return {"C2_ins": "C", "C2_rel": "C",
+            "C1_ins": "C1", "C1_rel": "C1"}.get(grandezza, grandezza)
 
 
 def soglia_di(grandezza):
@@ -574,6 +594,12 @@ def autotest():
     verifica("T13 C2 di un rilascio graduale da 3 s passa (<= 1 mV)",
              v_r is not None and v_r <= SOGLIA_C, "%.3g V (cond %.3g)" % (v_r, cond_r))
 
+    # T14 - A con musica non entra nel verdetto, A senza segnale si' (ADR-036)
+    verifica("T14 A con musica e' diagnostica, A senza segnale e' verdetto",
+             base_di("A_rel", 3.818) == "A_musica" and base_di("A_ins", 0.0) == "A"
+             and base_di("C2_rel", 3.818) == "C",
+             "con musica -> %s, senza -> %s" % (base_di("A_rel", 3.818), base_di("A_ins", 0.0)))
+
     # T12 - le soglie sono due, e sono quelle di ADR-035
     verifica("T12 soglia di C = 1 mV, di A e B = 100 uV",
              soglia_di("C") == 1e-3 and soglia_di("C2_rel") == 1e-3
@@ -873,7 +899,8 @@ def analizza(manifest, datadir, outpath):
 def riassumi(ingressi, out):
     """Dalle tabelle di analizza: per variante x carico x grandezza x uscita il
     picco massimo e la cella che lo produce; poi il verdetto per variante.
-    A = A_ins, A_rel; B = B1, B2 (riportate anche separate); C = C2_ins, C2_rel.
+    A = A_ins, A_rel SOLO senza segnale (ADR-036: con musica e' "A_musica",
+    diagnostica); B = B1, B2 (riportate anche separate); C = C2_ins, C2_rel.
     Una variante e' RESPINTA se una sola riga A, B o C sta SOPRA la soglia
     della sua grandezza (100 uV per A e B, 1 mV per C - ADR-035); non e' mai
     'conforme' da qui: lo screening non copre la matrice di V2.
@@ -886,9 +913,7 @@ def riassumi(ingressi, out):
     grp = {}
     for r in righe:
         g = r["grandezza"]
-        base = {"A_ins": "A", "A_rel": "A",
-                "C2_ins": "C", "C2_rel": "C",
-                "C1_ins": "C1", "C1_rel": "C1"}.get(g, g)
+        base = base_di(g, float(r["amp"] or 0))
         if not r["picco_V"]:
             continue
         chiave = (r["variante"], r["rl"], base, r["uscita"])
