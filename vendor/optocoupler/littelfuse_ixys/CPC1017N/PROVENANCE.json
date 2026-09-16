@@ -1,0 +1,51 @@
+{
+  "part_name": "CPC1017N (single-pole, normally-open, 4-lead SOP OptoMOS solid-state relay / integrated PhotoMOS)",
+  "vendor_name": "Littelfuse, Inc. (IXYS Integrated Circuits Division - acquired by Littelfuse; datasheet still branded 'IXYS Integrated Circuits Division')",
+  "device_class": "optocoupler",
+  "product_page": "https://www.littelfuse.com/products/power-semiconductors-control-ics/solid-state-relays/optomos-relays/normally-open-relays/1-form-a/cpc1017n",
+  "date_obtained": "2026-09-16",
+  "lotto": "L29b (subagent task: mute graduale, famiglia C - confronto con PhotoMOS integrato)",
+  "obtained_by": "AI agent (Claude Sonnet 5, subagent session in worktree L29b) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "littelfuse.com's own asset host returned HTTP 403 to plain curl in this session (www.littelfuse.com/assetdocs/...). The file was instead downloaded with plain curl from TTI, Inc.'s distributor-hosted mirror (www.tti.com/content/dam/ttiinc/manufacturers/littelfuse/Products/pdf/CPC1017N_series_datasheet.pdf), which DID respond directly. This IS a distributor mirror, not the manufacturer's own host - flagged explicitly, same situation as the VTL5C4 datasheet in this same lotto. The PDF content itself is unambiguously the manufacturer's own document: title metadata 'CPC1017N_R07_1.indd', author 'PParsons', and every page footer reads 'INTEGRATED CIRCUITS DIVISION ... www.ixysic.com'.",
+  "verification_gap": "PDF metadata title says 'CPC1017N_R07_1.indd' (revision R07) but the page-footer text printed on the document itself says 'DS-CPC1017N-R08' (revision R08) - a small internal inconsistency in the PDF's own production metadata vs. its printed content, not something this session can resolve without another copy to compare against. Treated as revision R08 (the printed, human-readable marking) for citation purposes.",
+  "license_notes": "Manufacturer datasheet, redistributed here unmodified for engineering traceability only (byte-for-byte as served by TTI's own CDN). Copyright remains Littelfuse, Inc. / IXYS Integrated Circuits Division.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "CPC1017N_series_datasheet.pdf",
+      "role": "datasheet",
+      "url": "https://www.tti.com/content/dam/ttiinc/manufacturers/littelfuse/Products/pdf/CPC1017N_series_datasheet.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 125230,
+      "pages": 6,
+      "sha256": "944daaca3b6b52dd3c649453965cf80436a98fa1ee6c8abd1a1a812e85ae687e",
+      "local_filename": "CPC1017N_series_datasheet.pdf",
+      "renamed": false
+    }
+  ],
+  "lifecycle_warning_read_first": "QUESTA PARTE E' IN LAST TIME BUY. DigiKey (controllato il 2026-09-16, https://www.digikey.com/en/products/detail/littelfuse-inc/CPC1017N/555063) mostra 18753 pz a magazzino e $2.02 a pezzo singolo, MA lo stato di ciclo di vita e' 'Last Time Buy' con data limite d'ordine 11/11/2026 (fra circa due mesi da questa sessione). Lo stesso vale per il fratello di famiglia a corrente piu' alta CPC1002N (Digikey, 6713 pz, $3.12, stessa data 11/11/2026), controllato lo stesso giorno. Riportata qui SOLO come termine di paragone per la famiglia C (richiesto esplicitamente dal committente 'a titolo di confronto, UN PhotoMOS integrato'), NON come scelta per una nuova progettazione: una parte in last-time-buy non e' una soluzione praticabile per il preamplificatore secondo il criterio esplicito del compito ('un pezzo obsoleto o non ottenibile non e' una soluzione').",
+  "why_this_file": "Famiglia C, confronto: PhotoMOS integrato (LDR+LED sostituiti da fotoaccoppiatore + coppia MOSFET gia' integrata in un solo package) contro la soluzione discreta driver-fotovoltaico-piu'-MOSFET-esterni scelta con VOM1271+DMN6040SVT.",
+  "what_was_read": {
+    "page": "pagina 1 (Product summary, Pin Configuration) e pagina 2 (Absolute Maximum Ratings, Electrical Characteristics)",
+    "key_numbers_transcribed_verbatim": {
+      "blocking_voltage_VP": "60 V",
+      "load_current_continuous": "100 mArms/mADC, IF=2mA",
+      "load_current_peak": "+-350 mAP, t=10ms",
+      "on_resistance_max": "16 Ohm, IL=100mA, misurato entro 1s dall'accensione",
+      "off_state_leakage_max": "1 uA, VL=60V (cioe' alla piena tensione di targa, non a ~20V: il datasheet non da un punto intermedio)",
+      "turn_on_time_max": "10 ms, IF=5mA, VL=10V",
+      "turn_off_time_max": "10 ms",
+      "output_capacitance_Cout_typ": "25 pF, VL=50V, f=1MHz",
+      "input_output_capacitance_typ": "1 pF",
+      "LED_current_to_activate_typ": "0.4 mA typ / 1 mA max, IL=100mA",
+      "LED_current_to_deactivate_min": "0.3 mA",
+      "LED_forward_voltage": "0.9 a 1.4 V, IF=5mA",
+      "reverse_input_current_max": "10 uA, VR=5V",
+      "isolation_voltage": "1500 Vrms",
+      "operating_temperature": "-40 a +85 C",
+      "package": "4-lead SOP"
+    },
+    "note": "Nessun dato di distorsione/linearita' e' pubblicato. Nessun coefficiente di temperatura per Ron o per la corrente di perdita e' pubblicato. Il grafico a istogramma 'Typical On-Resistance Distribution' (N=50 pezzi, pagina 3) mostra una distribuzione stretta centrata verso 7.0-7.2 Ohm, ben sotto il massimo di targa di 16 Ohm - letto dal grafico, non da una tabella numerica, quindi riportato solo come osservazione qualitativa e non come specifica."
+  }
+}

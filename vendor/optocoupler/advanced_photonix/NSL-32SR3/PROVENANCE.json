@@ -1,0 +1,46 @@
+{
+  "part_name": "NSL-32SR3 (CdS photocell / LED optocoupler, axial, 60 Ω nominal ON-resistance grade)",
+  "vendor_name": "Advanced Photonix, Inc.",
+  "device_class": "optocoupler",
+  "product_page": "https://www.advancedphotonix.com/our-products/optocouplers-optoisolators/nsl-32sr3",
+  "date_obtained": "2026-09-16",
+  "lotto": "L29b (subagent task: mute graduale, famiglia A - fotoresistenza optoaccoppiata)",
+  "obtained_by": "AI agent (Claude Sonnet 5, subagent session in worktree L29b) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from Advanced Photonix's own document host (advancedphotonix.com/media/...), not from a distributor mirror. The file is byte-for-byte as served; nothing was converted, re-saved or edited.",
+  "license_notes": "Manufacturer datasheet, redistributed here unmodified for engineering traceability only. Copyright remains Advanced Photonix, Inc.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "ds-nsl-32sr3.pdf",
+      "role": "datasheet",
+      "url": "https://www.advancedphotonix.com/media/pages/our-products/optocouplers-optoisolators/nsl-32sr3/122c52f29c-1718287447/ds-nsl-32sr3.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 1281220,
+      "pages": 3,
+      "sha256": "85691c1b3c89a7477625b15a23be3d5988fef72ba32673dd4fd0cb5284653128",
+      "local_filename": "ds-nsl-32sr3.pdf",
+      "renamed": false
+    }
+  ],
+  "revision_note": "Footer of every page reads 'DS NSL-32SR3 Rev. C'. No other revision is published on the manufacturer's page; this is the current revision as of the obtain date.",
+  "why_this_file": "docs/preamp/... mute graduale (famiglia A, candidato fotoresistenza optoaccoppiata LDR+LED per l'elemento a conduttanza graduale in serie/derivazione). Verificato acquistabile presso Digikey (part NSL-32SR3, 7924 pz a magazzino, $4.11 a pezzo singolo scendendo a $1.83260 da 5000 pz, stato 'Active', controllato il 2026-09-16 via pagina prodotto DigiKey https://www.digikey.com/en/products/detail/advanced-photonix/NSL-32SR3/5039793).",
+  "what_was_read": {
+    "page": "pagina 1 (tabella 'Absolute Maximum Ratings' e 'Typical Electro-Optical Specifications'), pagina 2 (dimensioni meccaniche, package assiale)",
+    "key_numbers_transcribed_verbatim": {
+      "Ron_at_If_20mA": "60 Ω max (tabella COUPLED, riga 'On Resistance', If=20mA)",
+      "Ron_at_If_5mA": "150 Ω typ (stessa tabella, If=5mA)",
+      "Roff_10s_after_If_0": "25 MΩ min (riga 'Off Resistance')",
+      "Vmax_cell_peak_AC_or_DC": "60 V (riga 'Max. Cell Voltage', COUPLED->PHOTOCELL)",
+      "rise_time_TR": "5 ms typ, per raggiungere il 63% della conduttanza finale",
+      "decay_time_TD": "10 ms typ, tempo per tornare a 100 kΩ dopo rimozione di If=5mA",
+      "cell_temp_coefficient": "0.7 %/°C typ, con If>=5mA",
+      "LED_IF_max": "25 mA",
+      "LED_VF_at_20mA": "2.5 V max",
+      "isolation_voltage": "2000 V",
+      "power_dissipation": "50 mW, derating lineare a zero a 75 °C",
+      "operating_temperature": "-40 °C a +75 °C"
+    },
+    "note": "Nessun dato di distorsione o linearita' e' pubblicato in questo datasheet (solo la dicitura marketing 'Low Distortion' in prima pagina, senza cifra numerica: NON usata come dato quantitativo)."
+  }
+}

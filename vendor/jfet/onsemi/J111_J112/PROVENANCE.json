@@ -1,0 +1,49 @@
+{
+  "part_name": "J111, J112 (N-channel JFET chopper transistors, TO-92)",
+  "vendor_name": "onsemi (ON Semiconductor)",
+  "device_class": "jfet",
+  "product_page": "https://www.onsemi.com/products/discrete-power-modules/jfets/j111",
+  "date_obtained": "2026-09-16",
+  "lotto": "L29b (subagent task: mute graduale, famiglia B - JFET come interruttore analogico)",
+  "obtained_by": "AI agent (Claude Sonnet 5, subagent session in worktree L29b) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "onsemi.com blocks direct curl (Akamai bot-check, HTTP 403 on every attempt from this session). Retrieved instead through the WebFetch tool, which fetched https://www.onsemi.com/pdf/datasheet/j111-d.pdf and cached the raw PDF bytes locally; that cached file was then copied byte-for-byte into this vendor directory (verified: 7 pages, PDF metadata intact, no re-save through any PDF editor). This is effectively the manufacturer's own host, reached via a tool with a different network path than curl in this sandbox - NOT a distributor mirror.",
+  "license_notes": "Manufacturer datasheet, redistributed here unmodified for engineering traceability only. Copyright remains onsemi / Semiconductor Components Industries, LLC.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "j111-d.pdf",
+      "role": "datasheet",
+      "url": "https://www.onsemi.com/pdf/datasheet/j111-d.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 167470,
+      "pages": 7,
+      "sha256": "cb3b3c84d65010284531b232c6ef2d8499b637aa7aa1fbd2556ae208d5fa3b3c",
+      "local_filename": "j111-d.pdf",
+      "renamed": false
+    }
+  ],
+  "revision_note": "Footer: 'Publication Order Number: J111/D', '(c) Semiconductor Components Industries, LLC, 2006', 'March, 2006 - Rev. 2'. SUPERSEDED for current designs by the newer combined publication MMBFJ113/D Rev. 5 (March 2023), which covers J111/J112/J113 (TO-92) AND MMBFJ111/MMBFJ112/MMBFJ113 (SOT-23) in one document - see vendor/jfet/onsemi/MMBFJ111_112_113/. This older Rev.2 copy is kept because it is what onsemi's own /pdf/datasheet/ URL for 'j111-d.pdf' still serves as of 2026-09-16, and its electrical characteristics table is IDENTICAL in the values transcribed (rDS(on), VGS(off), IGSS, capacitances) to the newer publication, so no discrepancy exists between the two revisions for the numbers actually used.",
+  "why_this_file": "Famiglia B del mute graduale: JFET usato come interruttore analogico in serie/derivazione, Rds(on) bassa. J112 verificato acquistabile e a magazzino presso DigiKey (9939 pz, $0.56 a pezzo singolo, stato 'Active', controllato il 2026-09-16 via https://www.digikey.com/en/products/detail/onsemi/J112/1048969, DigiKey part J112FS-ND). J111 (TO-92) risultava invece 0 pz a magazzino presso DigiKey lo stesso giorno, con riassortimento previsto per dicembre 2026 (stato comunque 'Active', non EOL) - vedi stessa fonte per J111: https://www.digikey.com/en/products/detail/onsemi/J111/1048984.",
+  "what_was_read": {
+    "page": "pagina 2 (unica tabella elettrica: 'ELECTRICAL CHARACTERISTICS')",
+    "key_numbers_transcribed_verbatim": {
+      "rDS_on_J111_max": "30 Ohm, VDS=0.1 Vdc",
+      "rDS_on_J112_max": "50 Ohm, VDS=0.1 Vdc",
+      "VGS_off_J111": "-3.0 a -10 Vdc, a VDS=5.0 Vdc, ID=1.0 mAdc",
+      "VGS_off_J112": "-1.0 a -5.0 Vdc, stesse condizioni",
+      "V_BR_GSS_min": "35 Vdc, a IG=-1.0 mAdc",
+      "IGSS_max": "-1.0 nAdc, a VGS=-15 Vdc",
+      "ID_off_max": "1.0 nAdc, a VDS=5.0 Vdc, VGS=-10 Vdc",
+      "IDSS_min_J111": "20 mAdc, VDS=15 Vdc",
+      "IDSS_min_J112": "5.0 mAdc, VDS=15 Vdc",
+      "Cdg_on_plus_Csg_on_max": "28 pF, VDS=VGS=0, f=1.0 MHz",
+      "Cdg_off_max": "5.0 pF, VGS=-10 Vdc, f=1.0 MHz",
+      "Csg_off_max": "5.0 pF, VGS=-10 Vdc, f=1.0 MHz",
+      "PD_max": "350 mW @ TA=25C, derate 2.8 mW/C",
+      "Tj_Tstg": "-65 a +150 C",
+      "package": "TO-92, CASE 29-11 STYLE 5"
+    },
+    "note": "Non pubblicato in questo datasheet: nessun coefficiente di temperatura di rDS(on) o di VGS(off), nessuna cifra di distorsione/linearita'. Il documento non specifica la corrente di perdita a ~20V esplicitamente (solo ID(off) a VDS=5V): a VDS piu' alta il datasheet non da un numero, quindi 'non pubblicato' per quel punto specifico."
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "part_name": "VOM1271 (photovoltaic MOSFET driver with integrated fast turn-off, SOP-4)",
+  "vendor_name": "Vishay Semiconductors (Vishay Intertechnology)",
+  "device_class": "optocoupler",
+  "product_page": "https://www.vishay.com/en/product/83469/",
+  "date_obtained": "2026-09-16",
+  "lotto": "L29b (subagent task: mute graduale, famiglia C - coppia MOSFET back-to-back con driver fotovoltaico)",
+  "obtained_by": "AI agent (Claude Sonnet 5, subagent session in worktree L29b) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "The datasheet PDF (vom1271.pdf) was retrieved through the WebFetch tool from https://www.vishay.com/docs/83469/vom1271.pdf, which cached the raw PDF bytes locally; that cache was copied byte-for-byte here. The SPICE model zip (spicemodelvom1271.zip) WAS downloaded directly with plain curl from https://www.vishay.com/docs/80045/spicemodelvom1271.zip - Vishay's own document host did NOT block curl (unlike onsemi, Farnell, Newark, Mouser and diodes.com, which did in this session). Both are the manufacturer's own host (vishay.com), not a distributor mirror.",
+  "license_notes": "Manufacturer datasheet and manufacturer-published SPICE (LTspice-flavoured PSpice) subcircuit, redistributed here unmodified for engineering traceability only. Copyright remains Vishay Intertechnology (the .lib file's own header says 'Copyright VISHAY, Inc. 2018 All Rights Reserved').",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "vom1271.pdf",
+      "role": "datasheet",
+      "url": "https://www.vishay.com/docs/83469/vom1271.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 166091,
+      "pages": 7,
+      "sha256": "224bc07fd9de81b1f48ef9f64e907572a9f17f25455e2a99535216aadcdf7009",
+      "local_filename": "vom1271.pdf",
+      "renamed": false
+    },
+    {
+      "original_filename": "spicemodelvom1271.zip",
+      "role": "spice_model",
+      "url": "https://www.vishay.com/docs/80045/spicemodelvom1271.zip",
+      "served_content_type": "application/zip",
+      "bytes": 1781,
+      "sha256": "26068383385886a11afe31c32bd517a3e89a46d686612db7f58e6e4bf97077dc",
+      "local_filename": "spicemodelvom1271.zip",
+      "renamed": false,
+      "zip_contents": [
+        {"name": "VOM1271.lib", "role": "SPICE subcircuit, dated 23.10.2024 per its own header, Copyright Vishay 2018"},
+        {"name": "VOM1271.asy", "role": "LTspice schematic symbol (.asy), not a SPICE netlist - decorative/graphical only"}
+      ],
+      "note_on_leaving_zip_unextracted": "The zip is kept as the vendor original, UNEXTRACTED, per vendor/README.md ('vendor originals go in vendor/ untouched'). Its contents were inspected read-only with `unzip -o` into a scratch /tmp directory outside this repo, never written back over the frozen zip."
+    }
+  ],
+  "revision_note": "Datasheet footer: 'Rev. 1.9, 08-Aug-2023', 'Document Number: 83469'. No separate revision marking is printed inside VOM1271.lib beyond the '23.10.2024' date in its header comment; that date is LATER than the datasheet's own revision date, i.e. the SPICE model was updated more recently than the last datasheet text revision found by this session - not investigated further.",
+  "why_this_file": "Famiglia C del mute graduale: driver fotovoltaico per pilotare due MOSFET N in configurazione back-to-back (gate isolato che si carica lentamente tramite la fotocorrente, niente alimentazione secondaria dedicata). Disponibilita' NON confermata con un numero di magazzino verificato in questa sessione: le ricerche mostrano VOM1271T quotato su Mouser e su una pagina 'Product Highlight' DigiKey, ma i tentativi automatici di aprire le pagine prodotto DigiKey/Mouser per VOM1271T sono falliti (timeout ripetuti) prima che si potesse leggere una cifra di stock reale. Va trattata come DISPONIBILITA' NON VERIFICATA finche' qualcuno non riesce ad aprire la pagina prodotto e leggere stock/prezzo reali.",
+  "what_was_read": {
+    "page": "pagina 1 (Absolute Maximum Ratings) e pagina 2 (Electrical Characteristics, Switching Characteristics)",
+    "key_numbers_transcribed_verbatim": {
+      "IF_max_continuous": "50 mA",
+      "VR_max": "5 V",
+      "VF_at_10mA": "1.2 a 1.6 V (typ 1.4 V)",
+      "Voc_at_IF_5mA": "8.1 V typ",
+      "Voc_at_IF_10mA": "7.8 a 8.4 V typ (min 7.8, typ 8.4)",
+      "Voc_at_IF_20mA": "8.7 V typ",
+      "Voc_at_IF_30mA": "8.9 V typ",
+      "Isc_at_IF_5mA": "7.0 uA typ",
+      "Isc_at_IF_10mA": "6.0 a 15.0 uA (min 6.0, typ 15.0)",
+      "Isc_at_IF_20mA": "30.0 uA typ",
+      "Isc_at_IF_30mA": "47.0 uA typ",
+      "ton_typ": "53 us, CL=200 pF, IF=20 mA",
+      "toff_typ": "65 us, PW=2 ms, duty cycle 50%",
+      "VISO_max": "3750 VRMS (UL1577), transient 6000 Vpeak, ripetitivo 707 Vpeak",
+      "Tamb_operating": "-40 a +100 C",
+      "Tstg": "-40 a +125 C",
+      "package": "SOP-4"
+    },
+    "spice_model_content_verbatim": "Vedi vendor/optocoupler/vishay/VOM1271/spicemodelvom1271.zip -> VOM1271.lib: sottocircuito a 4 pin (A, K, +Iout, -Iout) che usa un diodo D1 (modello TS8510VA) in serie a un sensore di corrente Vsense, una sorgente di corrente pilotata G1 con guadagno 0.0015 A/A verso il nodo di uscita attraverso una rete RC (R1=10k, C1=160p) che modella il ritardo/rampa di apertura del fotovoltaico, e uno switch a controllo di tensione S1 (modello FastTurnOff, Ron=100Meg/Roff=1, soglia 521mV) pilotato da un secondo ramo RC (R2=10, C3=10u) che modella il circuito di turn-off rapido integrato dichiarato nel datasheet. Usa primitive tipiche LTspice/PSpice (SW, CSW, W).",
+    "note": "NON VERIFICATO: se ngspice accetta questo file cosi' com'e'. Le primitive S (switch a controllo di tensione) e W (switch a controllo di corrente, usata per W1) sono supportate da ngspice ma con sintassi di modello (.model ... SW / .model ... CSW) che puo' differire in dettaglio da PSpice/LTspice; nessun run di ngspice e' stato eseguito su questo file in questa sessione. Chiunque lo porti in models/ deve verificarlo con uno smoke test PRIMA di fidarsi di un risultato di simulazione che lo usa. Nessuna cifra di distorsione o linearita' e' pubblicata nel datasheet per questo componente."
+  }
+}

@@ -1,0 +1,56 @@
+* dmn6040svt.lib - Diodes Incorporated DMN6040SVT, 60V N-channel MOSFET (TSOT26).
+* VENDOR MODEL, EXTRACTED FROM A MULTI-PART VENDOR LIBRARY - not modified.
+* See models/mosfet_n/dmn6040svt.provenance.json and
+* vendor/mosfet_n/diodes_inc/DMN6040SVT/PROVENANCE.json for the full chain.
+*
+* USAGE:
+*   .include models/mosfet_n/dmn6040svt.lib
+*   M1 drain gate source source DMN6040SVT
+*
+* Diodes Inc. publishes ALL of its discrete MOSFETs' SPICE models bundled
+* into one single 2 MB text file ("MOSFET Master Table.spice.txt", 69451
+* lines, frozen unmodified at
+* vendor/mosfet_n/diodes_inc/DMN6040SVT/MOSFET-Master-Table.spice.txt).
+* Per vendor/README.md, extracting one subcircuit from a multi-part vendor
+* library belongs here in models/, not as an edit to the frozen original.
+* The block below (lines 23687-23711 of the vendor file) was copied
+* VERBATIM, character for character - nothing renamed, reordered or
+* rounded. It is bracketed by the vendor's own comment banner
+* ("*---------- DMN6040SVT Spice Model ----------" / footer
+* "*Diodes Spice Model v1.1 Last Revised 2021/12/10").
+*
+* This is a plain SPICE3 LEVEL=3 MOSFET model (no LTspice-only or
+* PSpice-only primitives), so it should be directly usable by ngspice -
+* BUT THAT HAS NOT BEEN RUN in this session. No entry exists yet in
+* scripts/validate_models.py's TEST_REGISTRY; see the provenance sidecar
+* for what a follow-up check should confirm before this model backs any
+* THD/leakage number quoted for the mute design.
+*
+*---------- DMN6040SVT Spice Model ----------
+.SUBCKT DMN6040SVT 10 20 30
+* TERMINALS : D G S
+* MODEL FORMAT : SPICE3
+* Editor : J
+M1 1 2 3 3 NMOS L = 1E-006 W = 1E-006
+RD 10 1 0.037
+RS 30 3 0.0001
+RG 20 2 1.44
+CGS 2 3 1.11E-009
+EGD 12 0 2 1 1
+VFB 14 0 0
+FFB 2 1 VFB 1
+CGD 13 14 6.69E-010
+R1 13 0 1
+D1 12 13 DLIM
+DDG 15 14 DCGD
+R2 12 15 1
+D2 15 0 DLIM
+DSD 3 10 DSUB
+.MODEL NMOS NMOS LEVEL = 3 VMAX = 1E+005 ETA = 0 VTO = 2.48
++ TOX = 1E-007 NSUB = 1E+016 KP = 57 U0 = 400 KAPPA = 0.2 IS = 0
+.MODEL DCGD D CJO = 3.33E-010 VJ = 0.595 M = 0.544
+.MODEL DSUB D IS = 2.65E-009 N = 1.438 RS = 0.005498 BV = 68.93
++ CJO = 1.81E-010 VJ = 0.9 M = 0.7426 XTI = 0 TT = 1.05E-008
+.MODEL DLIM D IS = 0.0001
+.ENDS
+*Diodes Spice Model v1.1 Last Revised 2021/12/10
