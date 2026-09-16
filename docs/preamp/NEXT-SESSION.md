@@ -1,153 +1,129 @@
-# Prompt per la sessione successiva — L29b
+# Prompt per la sessione successiva — L29b, ripresa (mute graduale a monte con LDR)
 
-Riprendo il progetto del preamplificatore hi-fi in questo repository. Il
-lavoro è organizzato in LOTTI PICCOLI: questa sessione ne fa **UNO — L29b** — e
+Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è
+organizzato in LOTTI PICCOLI: questa sessione **riprende L29b**, che è rimasto a metà, e
 si ferma. Non iniziarne un secondo.
 
-## Cosa è cambiato col lotto precedente
+## ATTENZIONE: il lavoro sta su un ramo non mergiato
 
-**L29 è stato diviso, e la prima metà (L29a) ha misurato le varianti di mute col
-metodo di V2.** Report: `reports/2026-09-16-L29a-metodo-v2-e-varianti.md`.
+- Ramo **`worktree-L29b`**, pushato su origin. **`main` non lo contiene.**
+- Il worktree era `/Users/roberto/EDA/.claude/worktrees/L29b`. Se non esiste più, rientra
+  dal ramo:
+  `git worktree add .claude/worktrees/L29b worktree-L29b`
+  e lavora lì (EnterWorktree con `path`).
+- Verifica prima di tutto: `git log --oneline -12` sul ramo deve mostrare i commit
+  «L29b (in corso)».
 
-**Il metodo di V2 è cambiato due volte, con l'utente.**
-- **ADR-035 — C.** C sottraeva la sola fondamentale e contava la distorsione del
-  circuito (h2 = 887 µV senza nessun evento). Ora C è la **differenza dei residui
-  del fit** fra la corsa con l'evento e il riferimento, con soglia **1 mV**. A e B
-  restano a **100 µV**. Il pavimento di C2 sulla principale a 1 kHz vale
-  0,57–0,80 mV; **a 20 kHz sulla principale 1,08 mV: quella cella non è
-  decidibile.**
-- **ADR-036 — A.** Con musica la differenza dal riferimento contiene la musica
-  stessa (12,7 V per ogni variante e ogni rampa). **A si giudica solo senza
-  segnale; con musica decide C.**
-- `scripts/v2_metodo.py` applica tutto: `analizza`, `riassumi`, 23 controlli, 12
-  sabotaggi (`autotest`, `sabotaggi`).
+## Cosa è successo nella sessione interrotta (2026-09-16)
 
-**Il risultato, e la scelta dell'utente (ADR-036).**
-- Nessuna variante rispetta A, B e C. Nessun contatto netto rispetta C.
-- **«Per ora» il mute di progetto è graduale e in serie, con rampa da 3 s**,
-  accettato con C fuori soglia sulla principale: 2,93–3,05 mV; fisse 0,83–0,87 mV,
-  gradino senza segnale a pV, residuo a µV.
-- **Le attese uditive sono scritte in ADR-036**, e vanno lette.
-- **È un elemento IDEALE in un deck** (`tb_v2_mute_graduale.cir`, posizione `g4`):
-  una conduttanza log-lineare da 1e-12 a 10 S. Nessun circuito reale esiste.
+Leggi la voce **«L29b — IN CORSO»** in cima al diario di `STATE.md`. In breve:
 
-**NC-028 resta aperta e bloccante**, aggiornata. Voci: **13 aperte, 3 bloccanti**
-(NC-004, NC-017, NC-028).
+1. L29b è stato **diviso**: il caso peggiore di V2 è **L29c**.
+2. **ADR-037**: MOSFET contrapposti con driver fotovoltaico al jack. Scelta dell'utente,
+   poi **superata** nella stessa sessione:
+   - il modello del MOSFET non ha regione sottosoglia;
+   - rampe calcolate da 7–10 s;
+   - il banco non converge alle tolleranze di V2.
+3. Una **ricerca in rete**, chiesta dall'utente, ha trovato che l'industria muta a monte e
+   che nessuno punta a soglie come le nostre.
+4. **ADR-038**, decisione dell'utente («Opzione 1 più ipotesi 1»):
+   - **mute graduale a monte**: LDR VTL5C4 in serie e verso massa all'ingresso del
+     blocco A;
+   - **relè NC al jack tenuto**: si chiude solo a musica spenta;
+   - **guadagno e trim si cambiano solo col jack a massa**;
+   - un'unica variabile di profondità, reversibile se l'utente inverte il mute a metà.
+5. Ultimo passo: `models/optocoupler/vtl5c4_comportamentale.lib`, **mai eseguito con
+   successo**. La prova è stata interrotta senza cifre.
 
-**Una trappola pagata in L29a, già dentro i deck**: `vntol=1e-9` collassa il passo
-nelle celle senza segnale a mute inserito (~41 ore per una cella). I tre deck
-`tb_v2_mute_*.cir` usano `vntol=1e-6 abstol=1e-12`, verificato che non cambia le
-cifre (`data/2026-09-16/L29a/tolleranze/`). **Un deck nuovo del mute deve fare lo
-stesso**, e dichiararlo.
+## Leggi PRIMA, in quest'ordine
 
-## Leggi PRIMA, in quest'ordine, e non saltare
+1. **`CLAUDE.md`**.
+2. **`docs/preamp/STATE.md`**: la voce L29b in cima al diario, le righe L29b, L29c e L36.
+3. **`docs/preamp/decisions/ADR-038-mute-graduale-ldr-a-monte.md`** per intero; ADR-037
+   (superata) solo per il contesto; ADR-036, ADR-035, ADR-032.
+4. **`docs/preamp/REQUIREMENTS.md`**: V2 per intero, E3, E5, F5 con la sua nota, F6, F8,
+   P7.
+5. **`docs/preamp/NONCOMPLIANCE.md`**: NC-028.
+6. **I dati di L29b**, `docs/preamp/data/2026-09-16/L29b/`: i README di ogni cartella, e
+   `vtl5c4_modello/genera_modello.py`.
 
-1. **`CLAUDE.md`**: ambiente, percorsi assoluti, trappole silenziose, chiusura.
-2. **`docs/preamp/STATE.md`**: la riga **L29b** della tabella dei lotti e la voce di
-   diario **L29a**.
-3. **`docs/preamp/REQUIREMENTS.md`**: **V2 per intero**; la «Nota su F5»; F6; P7 e la
-   «Nota su P7».
-4. **`docs/preamp/decisions/`**:
-   - **ADR-036** per intero, attese uditive comprese;
-   - **ADR-035**, **ADR-032**;
-   - **ADR-030**, il criterio 3, nel caso peggiore;
-   - **ADR-012** e **ADR-021**: il mute in serie cambia lo stato sicuro;
-   - **ADR-027** §5, la sequenza d'accensione.
-5. **`docs/preamp/NONCOMPLIANCE.md`**: **NC-028 per intero**.
-6. **Il lavoro di L29a**:
-   - `scripts/v2_metodo.py` (la docstring elenca i sottocomandi);
-   - `spice/preamp/tb/tb_v2_mute_graduale.cir` e gli altri due `tb_v2_mute_*`;
-   - `data/2026-09-16/L29a/corse/serie_3s.csv`.
+## IL LAVORO CHE RESTA, in ordine
 
-## IL LOTTO: L29b — il mute graduale in serie reale, e il resto di L29
+1. **Far girare `vtl5c4_modello/prova_modello.cir`** e confrontarlo coi punti digitalizzati
+   (`tabelle.py`): statica a 0,2 / 1 / 10 / 40 mA; spegnimento da 40 mA a 105, 305, 689 ms;
+   10 s.
+   - La corsa superava i 300 s: prova `tran` con passo più largo, e lanciala in
+     background.
+   - Se il modello non riproduce la sua fonte, correggi il generatore, **non il .lib**.
+   - Poi la voce in `validate_models.py --check-provenance`, e aggiorna `notes` nella
+     provenance.
+2. **Scratch col metodo di V2 sulla catena intera.** Tolti gli elementi ideali, due LDR per
+   canale all'ingresso del blocco A, comando dei LED ideale, relè al jack alla profondità
+   completa.
+   - Tolleranze del blocco CANALE: `vntol=1e-6 abstol=1e-12`. Se non converge,
+     **dillo**, non allentare in silenzio.
+   - Misura:
+     - C della dissolvenza a 1 kHz sulle tre uscite, col pavimento;
+     - C alla chiusura del relè a 20 kHz (ADR-038 stima 0,57 mV);
+     - il carico minimo sulla sorgente durante la dissolvenza (ipotesi ≥ 10 kΩ, serie
+       alta prima che la derivazione scenda);
+     - l'inversione a metà.
+3. **Con i numeri, torna dall'utente** se la dissolvenza è molto peggiore dell'ideale di
+   ADR-036, o se le tolleranze non tengono.
+4. **Il sorgente.** In `circuits/preamp/preamp_audio.py`:
+   - LDR, comando dei LED fuori dal percorso del segnale (ADR-022) e la variabile di
+     profondità;
+   - il relè al jack che segue la profondità completa;
+   - poi netlist, disegni (2d), diagramma a blocchi (2f) e `check_relay_safe_state.py`,
+     fatto fallire prima di fidarsene.
+5. **Il deck versionato** `spice/preamp/tb/tb_v2_mute_ldr.cir`:
+   - lo stesso blocco CANALE (`v2_metodo.py canale`);
+   - tre uscite, 10 e 100 kΩ, 20 Hz / 1 kHz / 20 kHz, A senza segnale, B, C2 col pavimento;
+   - corse lunghe in background, con `save`.
+6. **E3 ed E5 con la LDR in serie; P7 riletto** (ADR-038: a mute inserito gli stadi d'uscita
+   non hanno segnale).
+7. **L'esito.** NC-028 resta aperta (manca L29c) e si aggiorna. Report datato.
 
-### Cosa fare
+Se non entra in una sessione, **dividi di nuovo** (L29b / L29b2) in `STATE.md` e chiudine
+uno.
 
-1. **L'elemento graduale reale, in serie.** La tecnica è libera (ADR-021): JFET,
-   fotoaccoppiatore o altro. Deve tenere, al jack, le cifre dell'elemento ideale
-   o dire di quanto se ne allontana. Una scelta di tecnica è un'ADR nuova che
-   **precisa ADR-012 e ADR-021**, che non si riscrivono.
-2. **Misurarlo col metodo di V2**, con un deck versionato:
-   - tre uscite, carichi 10 e 100 kΩ, contatti e fronti dichiarati;
-   - **1 kHz, 20 Hz con la rampa da 3 s, e 20 kHz** — le due ultime mancano;
-   - A senza segnale, B, C2; il pavimento accanto a ogni C2.
-3. **Il caso peggiore di V2 che L29a non ha coperto**:
-   - passaggi di guadagno 0↔+3, +3↔+10, 0↔+10 dB, e il **criterio 3 di ADR-030**
-     (cambio a caldo contro cambio sotto mute seguito dal rilascio) — da cui dipende
-     **L36**;
-   - trim nelle tre posizioni; dispersione LSK489 fino a ±20 mV;
-   - **accensione e spegnimento**, con le rampe dei rail.
-4. **P7** per la posizione in serie.
-5. **Lo stato sicuro**: ADR-012 vuole il jack a massa a macchina spenta. Col mute
-   in serie va riletto, con `check_relay_safe_state.py`.
-6. **L'esito.** NC-028 **si chiude solo quando il rimedio è nel sorgente e misurato.**
-   Se L29b si ferma prima, la voce resta aperta e lo si scrive.
+## I vincoli
 
-### I vincoli
-
-- **Il metodo di V2 non si cambia in silenzio.** Una modifica è una domanda
-  all'utente e un'ADR. Se il metodo non separa i casi che L29b incontra, lo si dice
-  all'utente.
-- **L29b è M/L.** Se non entra in una sessione, dividilo in L29b e L29c nella
-  tabella di `STATE.md`, e chiudine uno.
-- **Se rigeneri il blocco**, il 2i cade finché il derivato non si rigenera
-  (`scripts/derive_jfet_variant.py`).
-- **Le corse sono lunghe**: il graduale ha richiesto circa tre ore. Lanciale in
-  background, con `save`, e **aspetta l'utente quando lo chiede**.
+- **Il metodo di V2 non si cambia in silenzio.**
+- **Il modello VTL5C4 è comportamentale**: ogni cifra porta «modello comportamentale dal
+  datasheet, con estrapolazione dichiarata». NC-028 non si chiude su un deck solo.
+- **Trappole già pagate in L29b**:
+  - un LED pilotato solo da un generatore di corrente senza percorso DC fa fallire l'op, e
+    ngspice non dà errore;
+  - un nodo flottante di source si pompa al picco del segnale;
+  - `reltol` ≥ 1e-5 o `abstol` ≥ 1e-9 sono più larghi di B e di C.
+- **Nessun cambio di tecnica senza l'utente**: ADR-038 è la sua decisione.
 
 ## Cosa NON accettare
 
-- **Una cifra su `v(OUT)`**, o senza il metodo di V2.
-- **A con musica usata come verdetto** (ADR-036).
-- **Un C2 sotto il proprio pavimento presentato come misura**, o un verdetto di C a
-  20 kHz sulla principale, dove il pavimento sta sopra la soglia.
-- **Un elemento ideale** presentato come circuito reale.
-- **Una variante «conforme»** su una sola uscita, frequenza o carico.
-- **Una stima calcolata presentata come misurata.**
-- **NC-028 chiusa** con un rimedio che esiste solo in un deck.
+- Una cifra su `v(OUT)`, o senza il metodo di V2.
+- Un modello che non riproduce i punti da cui è stato generato.
+- **Tolleranze allentate senza una verifica** che le cifre non cambino.
+- NC-028 chiusa con un rimedio che esiste solo in un deck.
 
 ## NON fa parte di questo lotto
 
-- **L36**: l'interblocco del guadagno. **L35**: comandi e LED a pannello.
-- **L28** (NC-027), **L30** (NC-029).
-- **Il dossier.**
-- **La sostituzione dei modelli nel circuito** (Fase 4, NC-017).
-- **Non toccare i file già in `vendor/`.**
+- **L29c** (caso peggiore), **L36** (forma dell'interblocco del guadagno), **L35**, L28,
+  L30, il dossier.
+- Non toccare i file già in `vendor/`.
 
 ## Come lavoriamo
 
-- **Verifica invece di fidarti**, anche dei numeri qui sopra.
-- **Un controllo mai fatto fallire non è un controllo.**
-- **Niente cifre non eseguite.**
-- **Un lotto per volta, mai due agenti in parallelo.**
-- **Fai quello che l'utente chiede, non di più.** Se dice di aspettare, si aspetta:
-  niente commit, niente modifiche, niente chiusure non richieste.
-- **Lavora in un worktree.** Gli script zsh si lanciano da soli, non in comandi
-  composti.
-  - `git` dentro un `python -c` viene rifiutato; anche `python` con un heredoc e
-    `awk` con un programma inline: scrivi lo script su file e lancialo;
-  - comandi con **variabili di shell** vengono rifiutati nel worktree: usa percorsi
-    letterali, `grep -A <n>` o uno script su file;
-  - in zsh `--include=*.md` va quotato; `echo "===="` fallisce (usa `---`);
-  - un `| tail` restituisce l'exit code di `tail`;
-  - se il classificatore dei permessi va in timeout, il comando non è partito:
-    rilancialo.
-- **Scipy non c'è nel venv**: i filtri sono stdlib, con `/usr/bin/python3`.
-- **Trappole di ngspice già pagate**: `pwl()` dentro una sorgente B accetta solo
-  punti letterali; senza `save` una corsa da 7 s supera i GB; a 20 kHz serve TMAX
-  ≈ 0,5 µs; `vntol=1e-9` blocca le celle senza segnale.
-- **Se `/usr/bin/python3` o `git` escono 69** con «You have not agreed to the
-  Xcode license agreements», serve `sudo xcodebuild -license` dall'utente.
+- Verifica invece di fidarti. Niente cifre non eseguite. Un lotto per volta.
+- Gli script zsh si lanciano da soli; `git` e comandi con variabili di shell composte
+  vengono rifiutati nel worktree: comandi semplici e separati, script su file.
+- **Scipy non c'è**: stdlib con `/usr/bin/python3`.
 
 ## CHIUSURA
 
-Non è una lista da ricordare, è uno script che rifiuta. Nell'ordine:
-
-1. aggiorna `docs/preamp/STATE.md` segnando il lotto **fatto** e il successivo
-   come prossimo;
-2. **riscrivi QUESTO file per il lotto successivo**: se il titolo nomina ancora
-   L29b, lo script rifiuta;
-3. committa, pusha, apri la PR;
-4. `/bin/zsh scripts/chunk_close.sh L29b`;
-5. rimuovi il worktree coi due comandi che lo script stampa;
-6. **fermati.**
+1. `STATE.md` con L29b **fatto** e il successivo come prossimo.
+2. Riscrivi QUESTO file per il lotto successivo.
+3. Commit, push, PR.
+4. `/bin/zsh scripts/chunk_close.sh L29b`.
+5. Rimuovi il worktree coi comandi che lo script stampa.
+6. **Fermati.**

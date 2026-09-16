@@ -1,0 +1,34 @@
+car.cir - L29b scratch: VOM1271 + coppia DMN6040SVT contrapposta, caratterizzazione
+.include /Users/roberto/EDA/.claude/worktrees/L29b/models/optocoupler/vom1271.lib
+.include /Users/roberto/EDA/.claude/worktrees/L29b/models/mosfet_n/dmn6040svt.lib
+.options reltol=1e-6 vntol=1e-6 abstol=1e-12
+
+* LED pilotato in corrente
+ILED 0 LA DC 0
+XU LA 0 G S VOM1271
+RGS G S 1MEG
+* coppia contrapposta: source comuni, gate comuni
+XM1 A G S DMN6040SVT
+XM2 B G S DMN6040SVT
+VA A 0 DC 0 AC 1
+VB B 0 DC 1m
+
+.control
+* 1) Vgs e corrente della coppia (Vds totale 1 mV) contro I_LED
+dc ILED 0 20m 50u
+let rpair = -1m/i(vb)
+wrdata /Users/roberto/.claude/jobs/c42646c7/tmp/vom/dc_iled.txt v(g,s) rpair
+let ig = v(g,s)
+print v(g,s)[0] v(g,s)[40] v(g,s)[100] v(g,s)[200] v(g,s)[400]
+print rpair[400] rpair[200] rpair[100]
+destroy all
+* 2) capacita' della coppia aperta: I_LED = 0, AC con B a massa AC
+alter vb dc = 0
+op
+print v(g,s) v(s)
+ac dec 5 20 20k
+let yc = mag(i(vb))/(2*3.14159265*frequency)
+print yc[0] yc[10] yc[15]
+destroy all
+.endc
+.end

@@ -1,0 +1,23 @@
+t5.cir - nodi interni in AC
+.include /Users/roberto/EDA/.claude/worktrees/L29b/models/optocoupler/vom1271.lib
+.include /Users/roberto/EDA/.claude/worktrees/L29b/models/mosfet_n/dmn6040svt.lib
+ILED 0 LA DC 0
+XU LA 0 G S VOM1271
+RGS G S 1MEG
+XM1 A G S DMN6040SVT
+XM2 B G S DMN6040SVT
+VA A 0 DC 0 AC 1
+VB B 0 DC 0
+.control
+ac lin 1 1k 1k
+display
+let x1 = mag(v(xm1.1))
+let x2 = mag(v(xm1.3))
+let x3 = mag(v(xu.n004))
+let x4 = mag(v(la))
+let x5 = mag(i(vb))
+let x6 = mag(v(xm1.2))
+let x7 = mag(v(xu.n005))
+print x1 x2 x3 x4 x5 x6 x7
+.endc
+.end

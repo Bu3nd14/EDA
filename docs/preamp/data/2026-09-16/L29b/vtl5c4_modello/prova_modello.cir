@@ -1,0 +1,58 @@
+prova_modello.cir - il modello VTL5C4 riproduce i punti digitalizzati? (statica e spegnimento)
+.include ../../../../../../models/optocoupler/vtl5c4_comportamentale.lib
+.options reltol=1e-6 abstol=1e-15
+
+* statica: quattro curve, LED in corrente, cella su 1 mV
+IA 0 AA DC 1m
+XA AA 0 CA 0 VTL5C4_A
+VCA CA 0 DC 1m
+IB 0 AB DC 1m
+XB AB 0 CB 0 VTL5C4_B
+VCB CB 0 DC 1m
+IC1 0 AC DC 1m
+XC AC 0 CC 0 VTL5C4_C
+VCC CC 0 DC 1m
+ID 0 AD DC 1m
+XD AD 0 CD 0 VTL5C4_D
+VCD CD 0 DC 1m
+
+* dinamica: curva B, 40 mA poi spento a t = 0,1 s
+IDYN 0 ADY PWL(0 40m 0.1 40m 0.1001 0 20 0)
+XDY ADY 0 CDY 0 VTL5C4_B
+VCDY CDY 0 DC 1m
+
+.control
+echo "--- statica: R (ohm) a I_LED = 0,2 / 1 / 10 / 40 mA, curve A B C D"
+foreach i 0.2m 1m 10m 40m
+  alter ia dc = $i
+  alter ib dc = $i
+  alter ic1 dc = $i
+  alter id dc = $i
+  op
+  let ra = -1m/i(vca)
+  let rb = -1m/i(vcb)
+  let rc = -1m/i(vcc)
+  let rd = -1m/i(vcd)
+  print ra rb rc rd
+  destroy all
+end
+alter ia dc = 1m
+echo "--- statica B a 1 uA e 10 uA (estrapolazione dichiarata)"
+alter ib dc = 1u
+op
+let rb = -1m/i(vcb)
+print rb
+alter ib dc = 10u
+op
+let rb = -1m/i(vcb)
+print rb
+destroy all
+echo "--- spegnimento B da 40 mA: R a 105, 305, 689 ms e 10 s dopo"
+tran 1m 10.2 0 1m
+let rdy = -1m/i(vcdy)
+meas tran r105 find rdy at=0.205
+meas tran r305 find rdy at=0.405
+meas tran r689 find rdy at=0.789
+meas tran r10s find rdy at=10.1
+.endc
+.end

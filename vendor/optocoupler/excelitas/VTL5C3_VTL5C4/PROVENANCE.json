@@ -1,0 +1,55 @@
+{
+  "part_name": "VTL5C3, VTL5C4 (axial vactrol: LED + CdS photoresistor optocoupler)",
+  "vendor_name": "Excelitas Technologies (datasheet content originally authored by PerkinElmer Optoelectronics, PDF Author metadata field literally says 'PerkinElmer'; the optoelectronics business was later sold to and is now published by Excelitas Technologies, whose name and address appear in the page footer)",
+  "device_class": "optocoupler",
+  "product_page": "no live Excelitas-hosted product/datasheet page could be found (see 'obtained_from' and 'verification_gap' below)",
+  "date_obtained": "2026-09-16",
+  "lotto": "L29b (subagent task: mute graduale, famiglia A - fotoresistenza optoaccoppiata)",
+  "obtained_by": "AI agent (Claude Sonnet 5, subagent session in worktree L29b) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl from Farnell's document host (www.farnell.com/datasheets/1498851.pdf). This is a DISTRIBUTOR-HOSTED MIRROR, not the manufacturer's own site: repeated attempts to reach an Excelitas-hosted copy (excelitas.com product/category pages, direct guesses) failed or were blocked (see below). The PDF content itself carries Excelitas' own footer on every page ('Excelitas Technologies, 10900 Page Ave., St. Louis, MO 63132 USA ... Web: www.excelitas.com') and PDF metadata Author='PerkinElmer', Title='Low Cost Axial Vactrols - VTL5C3, 5C4', so the content is the manufacturer's own datasheet text even though the copy in this repo was fetched from a distributor's server.",
+  "verification_gap": "Could NOT confirm current stock/price for VTL5C4 at Mouser, Digikey or TME: automated fetches to Newark, Farnell (uk/it), Mouser and Synthrotek all either returned HTTP 403 (bot-blocked) or timed out during this session (2026-09-16). Newark/Farnell (element14 group) list the part under SKUs '43F888' (VTL5C4, Newark US) and '1466222' (VTL5C4, Farnell UK/IT) per web search result titles, and DigiKey/Mouser do not appear to list VTL5C4 at all in web search results (only VTL5C3/VTL5C1/etc. show scattered distributor hits, and several hits are hobbyist/music resellers - Synthrotek, Xvive, Aion FX, Reverb, Tindie - which are NOT the distributors this task asked to verify against). This part's live availability is therefore UNVERIFIED and must not be treated as confirmed.",
+  "license_notes": "Manufacturer-authored datasheet content, redistributed here unmodified for engineering traceability only (byte-for-byte as served by Farnell's own CDN; nothing converted, re-saved or edited). Copyright remains Excelitas Technologies / PerkinElmer.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "1498851.pdf",
+      "role": "datasheet",
+      "url": "https://www.farnell.com/datasheets/1498851.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 99930,
+      "pages": 2,
+      "sha256": "4ec8f3432c2d15d9854a32886fcc6b945732dddd8815b2603abdddc9571a2caa",
+      "local_filename": "vtl5c3-vtl5c4-vactrol.pdf",
+      "renamed": true,
+      "rename_note": "Renamed from the numeric Farnell asset id '1498851.pdf' to a descriptive name. File CONTENT is unmodified - the sha256 above is the hash of exactly what the server sent."
+    }
+  ],
+  "revision_note": "PDF metadata: CreationDate 2000-06-09, ModDate 2011-02-23. Page footer page numbers '45'/'46' show this 2-page datasheet is an excerpt bound into a larger PerkinElmer/Excelitas optoelectronics catalogue; no separate revision code is printed on the page itself beyond those catalogue page numbers.",
+  "why_this_file": "docs/preamp/... mute graduale (famiglia A, secondo candidato fotoresistenza optoaccoppiata LDR+LED, per confronto con NSL-32SR3).",
+  "what_was_read": {
+    "page": "pagina 1 (unica pagina dati elettrici: 'ABSOLUTE MAXIMUM RATINGS' e 'ELECTRO-OPTICAL CHARACTERISTICS', tabella con righe VTL5C3 e VTL5C4)",
+    "key_numbers_transcribed_verbatim": {
+      "VTL5C4_Ron_at_If_1mA_typ": "1.2 kΩ",
+      "VTL5C4_Ron_at_If_10mA_typ": "125 Ω",
+      "VTL5C4_Ron_at_If_40mA_typ": "75 Ω",
+      "VTL5C4_Rdark_at_10s_min": "400 MΩ",
+      "VTL5C4_cell_voltage_max": "50 V (riga 'Cell Voltage: ... 50V (VTL5C4)')",
+      "VTL5C4_turn_on_63pct_typ": "6.0 ms",
+      "VTL5C4_turn_off_decay_to_100kohm_max": "1.5 s",
+      "VTL5C3_Ron_at_If_1mA_typ": "30 kΩ",
+      "VTL5C3_Ron_at_If_10mA_typ": "5 Ω",
+      "VTL5C3_Ron_at_If_40mA_typ": "1.5 Ω",
+      "VTL5C3_Rdark_at_10s_min": "10 MΩ",
+      "VTL5C3_cell_voltage_max": "250 V",
+      "output_cell_capacitance": "5.0 pF (comune, non specificato se a quale tensione: il datasheet non lo dice)",
+      "input_output_coupling_capacitance": "0.5 pF",
+      "cell_power_max": "175 mW, derating 3.9 mW/°C sopra 30 °C",
+      "LED_current_max": "40 mA, derating 0.9 mA/°C sopra 30 °C",
+      "LED_Vf_at_20mA": "2.0 V max, 1.65 V typ",
+      "isolation_voltage": "2500 VRMS @ 70% umidita' relativa",
+      "storage_operating_temperature": "-40 °C a +75 °C"
+    },
+    "note": "Nessun coefficiente di temperatura della Ron e nessuna cifra di distorsione/linearita' sono pubblicati per VTL5C3/VTL5C4 in questo datasheet (a differenza del NSL-32SR3, che pubblica un coefficiente cella e la dicitura 'Low Distortion' senza numero). Il tempo di decadimento VTL5C4 (1.5 s, tipico per light-adapt) e' compatibile in ordine di grandezza con la rampa di mute richiesta di 3 s, ma il datasheet non descrive alcuna legge di comando a rampa: la costante di tempo dipende dal generatore di corrente LED usato a monte, non pubblicata qui."
+  }
+}

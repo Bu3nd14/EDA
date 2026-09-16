@@ -1,0 +1,12 @@
+{
+  "canonical_file": "mmbfj112.lib",
+  "device_class": "jfet",
+  "origin": "vendor_derived",
+  "vendor_source_path": "vendor/jfet/onsemi/MMBFJ111_112_113/mmbfj111_mmbfj112_mmbfj113 (pspice model).lib",
+  "vendor_source_sha256": "6a8f76d5ab85a55290e002e0524bb62e0b781e14a23e7e2e10396d3294eb829d",
+  "date_created": "2026-09-16",
+  "author": "AI agent (Claude Sonnet 5, subagent session in worktree L29b) on behalf of roberto.carmeli@gmail.com",
+  "changes": "NONE electrically. The vendor .lib was copied verbatim (all three .MODEL NJF cards for MMBFJ111/112/113, plus its own comment banners) into this file with only cosmetic additions: a header block explaining usage and provenance was prepended as SPICE comments (lines starting with '*'), which SKiDL/ngspice ignore. No parameter value was rounded, reordered or renamed. Diff against the vendor file is comment-only.",
+  "reason": "Family B of the mute-graduale subtask (L29b): a real, currently-buyable, low-Rds(on) JFET usable as a series/shunt analog switch element. This is the FIRST manufacturer SPICE model in this repo that was downloaded directly as a .lib file rather than hand-transcribed from a PDF (contrast with models/jfet/lsk489.lib, which Linear Systems only publishes inside a PDF).",
+  "notes": "UNTESTED: no ngspice run was performed against this file in this session, and no entry exists yet in scripts/validate_models.py's TEST_REGISTRY, so validate_models.py will report it as SKIPPED (a coverage gap, not a failure) rather than PASSED. Adding a TEST_REGISTRY entry requires editing scripts/validate_models.py, which was out of scope for this subagent task (restricted to vendor/ and models/ only). Whoever wires this model into a testbench should: (1) confirm ngspice accepts BETATCE and VTOTC without dying (the LSK489 precedent in this same repo shows ngspice's JFET model does accept some PSpice-only parameters, with a warning, but that does not guarantee it accepts THESE two - not checked here); (2) cross-check rDS(on)/VGS(off)/IDSS against the datasheet's own table (vendor/jfet/onsemi/MMBFJ111_112_113/mmbfj113-d.pdf, page 2) the way L7 did for lsk489.lib, since ADR-013's precedent in this repo is to not trust a vendor SPICE model's stated parameters against its own datasheet without measuring. No distortion/noise claim should be drawn from this model beyond what KF/AF encode - the datasheet publishes no distortion figures at all for this device."
+}

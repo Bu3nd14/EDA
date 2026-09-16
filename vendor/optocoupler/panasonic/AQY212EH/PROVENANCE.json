@@ -1,0 +1,53 @@
+{
+  "part_name": "AQY212EH (PhotoMOS GE DIP4, 1 Form A, 60 V / 550 mA)",
+  "vendor_name": "Panasonic Industry Co., Ltd. (Electromechanical Control Business Division)",
+  "device_class": "optocoupler",
+  "product_page": "https://industry.panasonic.com/global/en/products/control/relay/photomos/number/aqy212eh",
+  "date_obtained": "2026-09-16",
+  "lotto": "L29b (subagent task: mute graduale, famiglia C - confronto con PhotoMOS integrato)",
+  "obtained_by": "AI agent (Claude Sonnet 5, subagent session in worktree L29b) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "industry.panasonic.com serves its datasheets through a JavaScript-driven download page with no directly guessable static URL; repeated attempts (direct guesses, LCSC mirror, Mouser mirror, AllDatasheet, curl and WebFetch) either returned a wrapper HTML page, an HTTP 403, or timed out. The actual PDF was located by asking WebFetch to read the DigiKey PRODUCT PAGE (not the datasheet link directly) and report the exact datasheet href embedded in that page's markup, which resolved to DigiKey's own document CDN (mm.digikey.com/Volume0/opasdata/...). That URL responded directly to plain curl. The PDF's own metadata (Author: 'Panasonic Industry', footer 'Panasonic Industry Co., Ltd. 2026') confirms the content is the manufacturer's own document; DigiKey's CDN is nonetheless a DISTRIBUTOR-hosted copy, not Panasonic's own host - flagged explicitly, same situation as VTL5C4 and CPC1017N in this lotto.",
+  "license_notes": "Manufacturer datasheet, redistributed here unmodified for engineering traceability only (byte-for-byte as served). Copyright remains Panasonic Industry Co., Ltd. (footer: 'Panasonic Industry Co., Ltd. 2026').",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "semi_eng_ge1a_aqy21_e.pdf",
+      "role": "datasheet (covers the whole AQY21x family: AQY210EH, AQY211EH, AQY212EH, AQY214EH, AQY216EH)",
+      "url": "https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/8522/semi_eng_ge1a_aqy21_e.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 671127,
+      "pages": 19,
+      "sha256": "d329b97293228ccd6b5cce0b5622fbea1e18bda0df64fce606a5bb804f45fbf4",
+      "local_filename": "semi_eng_ge1a_aqy21_e.pdf",
+      "renamed": false
+    }
+  ],
+  "revision_note": "Footer on every page: 'ASCTB126E 202601', PDF metadata Keywords 'Issued Date: January 01,2026', CreationDate 2025-12-08. Current as of this obtain date (2026-09-16).",
+  "why_this_file": "Famiglia C, confronto esplicitamente richiesto: PhotoMOS integrato (LDR+LED sostituiti da un fotoaccoppiatore + coppia MOSFET gia' dentro un solo package DIP4) contro la soluzione discreta driver-fotovoltaico-piu'-MOSFET-esterni. AQY212EH verificato acquistabile e a magazzino presso DigiKey: 2971 pz, $1.84 a pezzo singolo, stato 'Active' (NON last-time-buy, a differenza del CPC1017N/CPC1002N scaricati per lo stesso confronto), controllato il 2026-09-16 via https://www.digikey.com/en/products/detail/panasonic-industry/AQY212EH/512405.",
+  "what_was_read": {
+    "page": "pagina 1 (Absolute maximum ratings) e pagina 2 (Electrical characteristics), colonna 'AQY212EH ( A )'",
+    "key_numbers_transcribed_verbatim": {
+      "load_voltage_peak_AC": "60 V",
+      "continuous_load_current": "0.55 A (peak AC, DC)",
+      "peak_load_current_100ms": "1.5 A",
+      "LED_forward_current_max": "50 mA",
+      "LED_reverse_voltage_max": "5 V",
+      "I_O_isolation_voltage": "5000 Vrms",
+      "operating_temperature": "-40 a +85 C",
+      "storage_temperature": "-40 a +100 C",
+      "junction_temperature_max": "125 C",
+      "LED_operate_current_IFon": "1.2 mA typ, 3.0 mA max, 0.4 mA min, IL=Max",
+      "LED_turn_off_current_IFoff": "1.1 mA typ",
+      "LED_dropout_voltage_VF": "1.25 V typ (1.14 V a IF=5mA), 1.5 V max, IF=50mA",
+      "on_resistance_Ron": "0.85 Ohm typ, 2.5 Ohm max (entro 1s), IF=5mA, IL=Max",
+      "off_state_leakage_ILeak_max": "1 uA, IF=0mA, VL=Max (cioe' a 60V, non a ~20V: non pubblicato un punto intermedio)",
+      "turn_on_time_Ton": "1 ms typ, 4 ms max, IF=5mA / IL=Max",
+      "turn_off_time_Toff": "0.05 ms typ, 1.0 ms max",
+      "IO_capacitance_Ciso": "0.8 pF typ, 1.5 pF max, f=1MHz, VB=0V",
+      "initial_IO_isolation_resistance_min": "1000 Mohm, 500 VDC",
+      "package": "DIP4 (GE)"
+    },
+    "note": "Nessuna cifra di distorsione o linearita' e' pubblicata per questo dispositivo. Nessun coefficiente di temperatura per Ron e' pubblicato in queste due pagine (il documento ha 19 pagine totali; solo le prime due, quelle con le tabelle elettriche della famiglia AQY21x, sono state lette in dettaglio in questa sessione - le pagine restanti, non lette, contengono presumibilmente grafici caratteristici e dati meccanici/di packaging per l'intera famiglia AQY21x/AQW21x)."
+  }
+}
