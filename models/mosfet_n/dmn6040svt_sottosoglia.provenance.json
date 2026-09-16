@@ -1,0 +1,12 @@
+{
+  "canonical_file": "dmn6040svt_sottosoglia.lib",
+  "device_class": "mosfet_n",
+  "origin": "authored",
+  "vendor_source_path": null,
+  "vendor_source_sha256": null,
+  "date_created": "2026-09-16",
+  "author": "Claude Opus 5 (sessione L29b, worktree L29b) per roberto.carmeli@gmail.com",
+  "changes": "N/A - authored from scratch, not derived from any vendor file. Il sottocircuito DMN6040SVT_SUB include per nome il modello del costruttore (models/mosfet_n/dmn6040svt.lib, vendor_derived) senza copiarne ne' modificarne il testo, e aggiunge in parallelo uno spostamento della soglia (parametro vth) e una corrente sottosoglia (parametri s, it).",
+  "reason": "L29b, ADR-037: il modello del costruttore e' un LEVEL 3 senza NFS, senza regione sottosoglia, e il datasheet non la pubblica; il mute graduale vive in quella regione. Modello approvato dall'utente il 2026-09-16 («approvo il modello e il concetto»), con la regione sottosoglia DICHIARATA COME IPOTESI e NC-028 che non si chiude su di esso.",
+  "notes": "IPOTESI, NON DATI: s (pendenza sottosoglia, V/decade) non e' pubblicata; si fa variare fra 0,08 e 0,12 V/dec. vth e' il VGS(th) del datasheet a ID = 250 uA (1..3 V a 25 C; Fig. 10 circa 2,0 V tipici, circa -4 mV/C) e si fa variare. Forma EKV simmetrica con corpo sul source, effetto body trascurato; nessuna dipendenza dalla temperatura dentro il modello (la temperatura entra solo come scelta di vth e s). Eseguito in ngspice 47 (docs/preamp/data/2026-09-16/L29b/driver_e_mosfet/subw.cir): a vth = 2,0 V e Vds = 5 V, Id = 250 uA a Vgs = 2,0 V e una decade ogni 0,1 V fino al pavimento di perdita del costruttore (2,65 nA a 5 V; ~50 nS a Vds = 10 mV, dalla conduttanza a polarizzazione nulla del diodo di corpo, IS = 2,65 nA); simmetrico con Vds negativa. Nessun rumore modellato."
+}

@@ -1,0 +1,43 @@
+* dmn6040svt_sottosoglia.lib - DMN6040SVT con una regione sottosoglia DICHIARATA COME IPOTESI.
+* L29b, ADR-037. Approvato dall'utente il 2026-09-16: «approvo il modello e il concetto».
+*
+* PERCHE' ESISTE. Il blocco del costruttore (models/mosfet_n/dmn6040svt.lib) e'
+* un LEVEL 3 senza NFS: sotto VTO = 2,48 V il canale e' spento del tutto, e a
+* Vds = 10 mV la conduttanza salta da ~45 nS a 0,70 S fra 2,45 e 2,50 V
+* (docs/preamp/data/2026-09-16/L29b/driver_e_mosfet/). Il mute graduale vive
+* proprio li': da -60 dB a 0 dB al jack la conduttanza attraversa ~1e-8..1e-3 S.
+* Il datasheet (DS35562 Rev. 12-2) non pubblica la regione: Fig. 4 e' lineare
+* in ampere.
+*
+* COSA FA. Non tocca il modello del costruttore, lo INCLUDE per nome:
+*   1. un generatore in serie al gate sposta la soglia: a Vgs esterna = vth il
+*      gate interno vale 2,48 V, il VTO del costruttore. vth e' il VGS(th) del
+*      datasheet (1..3 V a 25 C, ID = 250 uA; Fig. 10: ~2,0 V tipici, circa
+*      -4 mV/C) - un PARAMETRO, non un valore misurato;
+*   2. un generatore di corrente drain-source aggiunge la conduzione sottosoglia,
+*      simmetrica fra drain e source (forma EKV con corpo sul source, effetto
+*      body trascurato):
+*        I = it * ( 10^((min(Vgs',VT)-VT)/s) - 10^((min(Vgd',VT)-VT)/s) )
+*      con Vgs', Vgd' riferite al gate interno e VT = 2,48 V. A Vgs = vth e Vds
+*      grande vale it = 250 uA, il punto di definizione di VGS(th). Per Vds
+*      piccola la conduttanza e' it * ln10 / s * 10^((Vgs'-VT)/s); per Vds >> s
+*      la corrente satura: la non linearita' del canale durante la rampa c'e'.
+*      s e' la pendenza sottosoglia in V per decade: IPOTESI, tipicamente
+*      n * 59 mV a 25 C con n fra ~1,3 e ~2, cioe' 0,08-0,12 V/dec.
+*   Sopra VT il termine sottosoglia si ferma a it e il canale del costruttore,
+*   da 0,7 S in su, domina.
+*
+* NON E' UN MODELLO DEL COSTRUTTORE. Ogni cifra ricavata da qui porta
+* l'etichetta «ipotesi sulla regione sottosoglia non pubblicata», e NC-028 non
+* si chiude su di essa (ADR-037, decisione dell'utente del 2026-09-16).
+*
+* USO:
+*   .include models/mosfet_n/dmn6040svt.lib
+*   .include models/mosfet_n/dmn6040svt_sottosoglia.lib
+*   X1 drain gate source DMN6040SVT_SUB params: vth=2.0 s=0.1
+
+.subckt DMN6040SVT_SUB d g s params: vth=2.0 s=0.1 it=250u
+VSH gi g DC {2.48 - vth}
+XV d gi s DMN6040SVT
+BSUB d s I = {it}*(pow(10, (min(V(gi,s), 2.48) - 2.48)/{s}) - pow(10, (min(V(gi,d), 2.48) - 2.48)/{s}))
+.ends
