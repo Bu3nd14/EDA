@@ -78,6 +78,11 @@ spia) e **ADR-034** (il moltiplicatore di Vbe accoppiato col rame del PCB). La
 soglia rende **NC-028 decidibile**, e sulla misura versionata di L11 il verdetto
 è **negativo**: la voce sale a **bloccante**, come NC-002 in L26. NC-009 e NC-019
 restano aperte, aggiornate.
+**L29a** (2026-09-16) ha reso misurabile il metodo di V2 (**ADR-035**: C per
+differenza dal riferimento, soglia 1 mV; **ADR-036**: A solo senza segnale) e ha
+misurato le varianti di mute: nessuna rispetta A, B e C insieme. L'utente ha
+scelto «per ora» il mute graduale in serie da 3 s. Il rimedio esiste solo in un
+deck: **NC-028 resta aperta e bloccante**, aggiornata.
 **13 voci aperte, 3 bloccanti.**
 L'accesso a G1 non è concesso finché NC-004, NC-017 e NC-028 restano aperte.
 
@@ -2238,6 +2243,40 @@ bloccante.**
   «rilascio soft a resistenza variabile» dell'utente. Il criterio 3 di ADR-030 si
   legge nel caso peggiore (ADR-032).
 - **Chi**: **L29**. La voce resta aperta finché la misura non c'è.
+
+**AGGIORNATA IL 2026-09-16, da L29a: il confronto misurato col metodo di V2, e la
+scelta dell'utente. La voce RESTA APERTA E BLOCCANTE.**
+
+- **Il metodo, reso misurabile prima di misurare.** C sottraeva la sola
+  fondamentale e contava la distorsione del circuito (h2 = 887 µV su una corsa mai
+  in mute): **ADR-035** misura C per differenza dei residui dal riferimento, con
+  soglia di 1 mV. A con musica misurava la musica stessa (12,7 V per ogni variante
+  e ogni rampa): **ADR-036**, A si giudica solo senza segnale.
+- **Le cifre di questa voce, rifatte con un deck versionato**
+  (`reports/2026-09-16-L29a-metodo-v2-e-varianti.md`, contatti a 100 mΩ con fronte
+  e rimbalzi, tre uscite, carichi 10 e 100 kΩ):
+  - contatto **dopo** il condensatore (oggi): residuo a mute inserito **20,1 mV**,
+    taglio con musica **8,87 V**;
+  - contatto **prima**: gradino d'offset **111 mV** (erano 104 mV scratch),
+    residuo 19,7 mV, taglio 7,08 V;
+  - **entrambi i lati**: gradino 111 mV; **serie**, **serie più jack** e
+    **sequenza**: gradino e residuo sotto soglia, taglio ≈ 7,1 V.
+  - **Nessun contatto netto rispetta C.**
+- **Il mute graduale** (elemento ideale, rampe 20 ms–3 s): in derivazione C resta
+  fermo a 0,32–0,42 V; **in serie** scende come 1/T fino a **2,93–3,05 mV** sulla
+  principale e **0,83–0,87 mV** sulle fisse con la rampa da 3 s, con gradino a pV e
+  residuo a µV.
+- **La scelta dell'utente (ADR-036)**: «per ora» il mute di progetto è **graduale
+  e in serie, con rampa da 3 s**, accettato con C fuori soglia sulla principale.
+  Le attese uditive sono scritte in ADR-036.
+- **Perché la voce non si chiude.** Il rimedio esiste solo in un deck, con un
+  elemento ideale, e NC-028 non si chiude con un rimedio che esiste solo in un
+  deck. Mancano inoltre: C a 20 Hz con la rampa da 3 s e a 20 kHz; il caso
+  peggiore di V2 (guadagno, trim, LSK489, accensione e spegnimento); P7 e lo stato
+  sicuro di ADR-012 col mute in serie.
+- **Cosa serve per chiuderla, da L29a.** L'elemento graduale reale in serie nel
+  sorgente, misurato col metodo di V2 su tre uscite, due carichi, 20 Hz, 1 kHz e
+  20 kHz; poi P7 e ADR-012 riletti. **Chi**: **L29b**.
 
 
 ### NC-029 — Con i buffer delle fisse la dissipazione a riposo raddoppia, e P5 non la copre

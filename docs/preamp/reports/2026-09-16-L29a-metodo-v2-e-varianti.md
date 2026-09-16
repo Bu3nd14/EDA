@@ -185,3 +185,145 @@ Per confronto, il pavimento di **A** con musica a 1 kHz vale **0,68–0,70 mV**
 sulla principale e 0,22 mV sulle fisse: sopra i 100 µV di A. Anche per A, con
 musica a 1 kHz, valgono solo i **rifiuti**. Senza segnale e a 20 Hz A misura
 benissimo (9,5 µV a 20 Hz, picovolt senza segnale).
+
+## 6. Le varianti a contatto (`tb_v2_mute_varianti.cir`)
+
+87 corse, **completo e verificato**: 87 `.dat`, 87 righe di manifesto, nessun file
+mancante, 0 errori nel log, exit 0. Analisi: `corse/varianti.csv`, riassunto
+`corse/varianti_riassunto.csv`. **SIMULATO.**
+
+**Prima una scoperta sul metodo: A con musica non misura un gradino.** Su ogni
+variante la cella con musica dà A ≈ **11,8–12,8 V** sulla principale e
+**3,7–4,1 V** sulle fisse. È il picco del segnale al jack, 12,07 V, passato dal
+filtro: col riferimento che tiene lo stato finale, nell'istante della commutazione
+una corsa suona e l'altra no. La controprova è nel graduale (§7): anche una
+dissolvenza di 3 s dà 12,7 V. Portata all'utente: **ADR-036**, A si giudica solo
+senza segnale. Le tabelle sotto seguono quella regola.
+
+Uscita principale, 100 kΩ; a 10 kΩ le cifre coincidono entro pochi per cento.
+
+| Variante | A senza segnale | B1, residuo a mute | C2 con musica | Esito |
+|---|---|---|---|---|
+| v0 dopo il condensatore (oggi) | 22 pV ✓ | **20,1 mV** ✗ | **8,87 V** (10,4 V sullo zero) ✗ | respinta |
+| v1 prima | **111 mV** ✗ | **19,7 mV** ✗ | **7,08 V** ✗ | respinta |
+| v2 entrambi i lati | **111 mV** ✗ | 76 µV ✓ | **7,18 V** ✗ | respinta |
+| v3 prima, offset annullato | 80 nV ✓ | **19,8 mV** ✗ | **7,07 V** ✗ | respinta |
+| v4 serie | 16 pV ✓ | 1,65 µV ✓ | **7,10 V** ✗ | respinta |
+| v5 serie + jack | 20 pV ✓ | 2,4 pV ✓ | **7,10 V** ✗ | respinta |
+| v6 sequenza | 32 µV ✓ | 21 nV ✓ | **7,10 V** ✗ | respinta |
+
+Sulle fisse la graduatoria è la stessa, scalata col guadagno: gradino d'offset di
+v1 e v2 35 mV, C2 fra 2,2 e 3,4 V.
+
+- **Il gradino d'offset del contatto prima del condensatore è confermato**:
+  111 mV sulla principale, contro i 104 mV simulati in scratch dopo L11 (NC-028).
+- **Tutti i contatti netti cadono su C**, come ADR-032 aveva previsto: la musica
+  sparisce o ricompare di colpo. Nessun contatto netto può rispettare C.
+- **B2 non è una lettura pulita con un mute da 100 ms.** Su v2, v4, v5 e v6 B2
+  vale ≈ 7 mV mentre B1 della stessa variante sta a µV o meno: la finestra di B2
+  comincia 20 ms dopo l'inserzione e il filtro sta ancora smaltendo il taglio.
+  Il verdetto non ne dipende, perché C2 respinge tutte le varianti.
+
+## 7. Il mute graduale (`tb_v2_mute_graduale.cir`)
+
+108 corse, **completo e verificato** allo stesso modo. Analisi:
+`corse/graduale.csv`, riassunto `corse/graduale_riassunto.csv`. Elemento
+**ideale**: conduttanza log-lineare da 1e-12 a 10 S; la dissolvenza efficace è
+circa 3/13 della rampa. **SIMULATO.**
+
+**C2 con musica, 1 kHz, 100 kΩ**:
+
+| Posizione | 20 ms | 200 ms | 1 s | 3 s |
+|---|---|---|---|---|
+| g1 al jack | 3,34 V | 420 mV | 321 mV | 318 mV |
+| g2 prima del condensatore | 3,33 V | 456 mV | 382 mV | 381 mV |
+| g3 prima, offset annullato | 3,26 V | 481 mV | 416 mV | 415 mV |
+| **g4 serie, principale** | 3,07 V | 111 mV | 7,7–8,0 mV | **2,93–3,02 mV** |
+| **g4 serie, fisse** | 983 mV | 35 mV | 2,4–2,5 mV | **0,84–0,87 mV** |
+
+- **Solo in serie una rampa più lenta aiuta**, e C scende circa come 1/T. In
+  derivazione C resta fermo a 0,32–0,42 V oltre 1 s, e B2 a mute inserito vale
+  ≈ 20 mV.
+- **A senza segnale, graduale prima del condensatore**: il gradino d'offset scende
+  con la rampa — **68 mV** (20 ms), **10 mV** (200 ms), **636 µV** (1 s),
+  **72 µV** (3 s, sotto soglia). Con l'offset annullato resta a nV.
+- **A 20 Hz** esiste solo la rampa da 1 s, a 100 kΩ: serie 62 mV sulla principale
+  e 20 mV sulle fisse, derivazione 88–368 mV. **Nessuna cella a 20 kHz.**
+- **A con musica** vale 12,7 V (12,8 V a 20 Hz) per **ogni** posizione e **ogni**
+  rampa: è la controprova di §6.
+
+**Nessuna posizione e nessuna rampa rispetta A, B e C insieme.**
+
+## 8. Le decisioni dell'utente — ADR-036 — e cosa aspettarsi all'ascolto
+
+Portate all'utente con le cifre di §6 e §7. Le sue risposte:
+
+1. **A si giudica solo senza segnale; con musica decide C.** «Come misurare seguo
+   il tuo consiglio». `v2_metodo.py` (`base_di`) tiene A con musica come
+   diagnostica, `A_musica`; controllo T14 e sabotaggio `a_con_musica` (23
+   controlli, 12 sabotaggi su 12).
+2. **Per ora si accetta il mute graduale in serie con rampa da 3 s**, con C fuori
+   soglia sulla principale. «per ora usiamo (ii), accettiamo la serie da 3s».
+
+**La variante accettata, su tre uscite e due carichi** (`corse/serie_3s.csv`):
+
+| Grandezza | Principale 100 k / 10 k | Fisse 100 k / 10 k | Soglia | Esito |
+|---|---|---|---|---|
+| A senza segnale | 16 / 13 pV | 13 / 4 pV | 100 µV | ✓ |
+| B1 e B2 | 1,65 / 0,23 µV | 0,63 / 0,075 µV | 100 µV | ✓ |
+| C2 a 1 kHz | **2,93–3,02 / 2,93–3,05 mV** | 0,84–0,87 / 0,83–0,86 mV | 1 mV | **✗ principale**, ✓ fisse |
+| C2 a 20 Hz | 62 mV, **rampa 1 s** | 20 mV, rampa 1 s | 1 mV | ✗ — 3 s non misurata |
+| C2 a 20 kHz | non misurato | non misurato | 1 mV | — |
+
+Il C2 della principale sta 3,7–5,4 volte sopra il suo pavimento: è una misura.
+Seguendo 1/T servirebbero circa 9 s di rampa per stare sotto 1 mV: **calcolato**.
+
+### Cosa aspettarsi all'ascolto
+
+Documentato per esteso in **ADR-036**, «Cosa aspettarsi all'ascolto». In breve,
+con cifre **calcolate** con la formula di NC-028 (limite superiore grossolano):
+
+- **Il gesto**: il mute non taglia, dissolve. La rampa dura 3 s, la dissolvenza
+  udibile circa **0,7 s**, come un abbassamento rapido del volume.
+- **Senza musica e a mute inserito: silenzio.** Gradino d'offset a pV, residuo a
+  µV. Niente «tump».
+- **Il botto di oggi sparisce**: in serie il condensatore d'uscita non si carica
+  con la musica.
+- **Durante la dissolvenza, sulla principale, 2,93–3,05 mV di C**: non un clic, ma
+  la parte della dissolvenza che non è perfettamente liscia, sopra la musica e non
+  nel silenzio. Al livello della prova (12 V di picco al jack) ≈ **63 dB SPL** di
+  picco; a un livello d'ascolto normale, 30–40 volte meno, **≈ 31–34 dB SPL**
+  (stima), mascherato dalla musica che sta cambiando di volume.
+- **Uscite fisse: 0,83–0,87 mV, sotto soglia.** In dB non si calcola: il guadagno
+  di Singxer e Stax non è noto.
+- **Le incognite**: i bassi (20 Hz con la rampa da 3 s mai misurati; con 1 s
+  ≈ 89 dB SPL calcolati, attenuati da orecchio e diffusori in misura non
+  quantificata); i 20 kHz; **l'elemento reale**, che nel deck è ideale; i modelli
+  segnaposto. **L'ascolto del prototipo resta l'arbitro.**
+
+## 9. Cosa resta aperto
+
+- **NC-028 resta aperta e bloccante.** La scelta c'è, il rimedio no: esiste solo in
+  un deck, con un elemento ideale. Si chiude quando il mute graduale in serie è un
+  circuito reale nel sorgente, misurato col metodo di V2.
+- **A L29b**, come da ADR-036:
+  - l'elemento graduale reale, nel sorgente, e la sua misura;
+  - **C a 20 Hz con la rampa da 3 s**, e una cella a 20 kHz;
+  - il caso peggiore di V2 non coperto qui: passaggi di guadagno e criterio 3 di
+    ADR-030, trim, dispersione dell'LSK489, accensione e spegnimento;
+  - **P7** per la posizione in serie;
+  - lo **stato sicuro** di ADR-012 col mute in serie, e
+    `check_relay_safe_state.py`: un cambio è un'ADR nuova.
+- **Il pavimento diffuso** di C resta non attribuito (§1.2).
+
+## Dati
+
+`data/2026-09-16/L29a/`:
+- `strumento/autotest_e_sabotaggi.txt` — 23 controlli, 12 sabotaggi;
+- `tolleranze/` — la prova che `vntol=1e-6` non cambia la misura;
+- `corse/pavimento.csv`, `varianti.csv`, `graduale.csv` e i `_riassunto.csv`;
+- `corse/serie_3s.csv` — la variante accettata;
+- i manifesti dei tre deck.
+
+Le forme d'onda (`.dat`, diversi GB) non sono versionate: si rigenerano dai tre
+deck con `run_simulation.sh`, in circa tre ore di calcolo.
