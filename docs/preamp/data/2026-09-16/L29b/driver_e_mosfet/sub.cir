@@ -1,0 +1,12 @@
+sub.cir - DMN6040SVT (modello del costruttore): Id contro Vgs a Vds = 10 mV, c'e' conduzione sottosoglia?
+.include /Users/roberto/EDA/.claude/worktrees/L29b/models/mosfet_n/dmn6040svt.lib
+.options reltol=1e-6 abstol=1e-15 gmin=1e-15
+XM1 D G 0 DMN6040SVT
+VD D 0 DC 10m
+VG G 0 DC 0
+.control
+dc VG 1.8 3.2 0.05
+let g = -i(vd)/10m
+print v(g) g
+.endc
+.end

@@ -1,0 +1,12 @@
+{
+  "canonical_file": "vom1271.lib",
+  "device_class": "optocoupler",
+  "origin": "vendor_derived",
+  "vendor_source_path": "vendor/optocoupler/vishay/VOM1271/spicemodelvom1271.zip",
+  "vendor_source_sha256": "26068383385886a11afe31c32bd517a3e89a46d686612db7f58e6e4bf97077dc",
+  "date_created": "2026-09-16",
+  "author": "Claude Opus 5 (sessione L29b, worktree L29b) per roberto.carmeli@gmail.com",
+  "changes": "Copia di VOM1271.lib estratto dallo zip del costruttore (lo zip in vendor/ resta intatto; sha256 del .lib estratto 108486080d99b85e1d500c0e9858bcfb8903f173756aeaef8f98bec5ff17d580, fine riga CRLF convertite in LF). Due modifiche, entrambe per ngspice 47, nient'altro: (1) 'D2 +Iout -Iout PD n=13' diventa 'D2 +Iout -Iout PD13' con '.model PD13 D(IS=8.377E-12 N=22.5173 RS=208 IKF=9)', cioe' PD con N x 13 e RS x 13. In LTspice `n` sull'istanza del diodo e' un moltiplicatore serie; ngspice lo rifiuta con 'unknown parameter (n)'. La lettura e' controllata sul datasheet: Voc = 13 x 1,7321 x 25,85 mV x ln(15e-6/8,377e-12) = 8,38 V contro 8,4 V tipici a IF = 10 mA. (2) la direttiva '.backanno', sola annotazione LTspice senza effetto elettrico, e' commentata: ngspice la rifiuta come 'unimplemented dot command'. Aggiunta un'intestazione di commento.",
+  "reason": "L29b, ADR-037: il driver fotovoltaico del mute graduale a MOSFET contrapposti. Il modello del costruttore e' l'unica fonte della legge Isc = 1,5e-3 x I_LED e del circuito di spegnimento rapido.",
+  "notes": "ESEGUITO in ngspice 47 in L29b (docs/preamp/data/2026-09-16/L29b/driver_e_mosfet/): con 1 MOhm fra gate e source e la coppia DMN6040SVT, Vgs = 2,97 / 6,66 / 7,94 / 8,60 V a I_LED = 2 / 5 / 10 / 20 mA. TRAPPOLA SILENZIOSA: con l'anodo del LED senza percorso in continua (solo un generatore di corrente a 0 A) il punto di lavoro non converge (gmin e source stepping falliti, ripiego sul 'transient op') e l'AC successiva linearizza la coppia di MOSFET aperta come ~71 ohm resistivi invece che ~258 pF: nessun errore. Con 1 uA nel LED, o 1 MOhm dall'anodo a massa, converge e la coppia e' capacitiva. Il modello descrive un dispositivo tipico (nota del costruttore): Isc minima 6,0 uA a 10 mA contro 15 uA tipici, e la dispersione non e' nel modello. Nessun rumore modellato."
+}
