@@ -46,7 +46,7 @@ Costa un commento. È il collegamento dall'artefatto al ragionamento, ed
 | [009](ADR-009-niente-telecomando.md) | Niente telecomando: attenuatore a scatti, nessun MCU | accettata — clausola MCU superata da ADR-022 |
 | [010](ADR-010-telaio-unico.md) | Telaio unico con alimentatore a bordo | accettata |
 | [011](ADR-011-trim-per-ingresso.md) | Trim di livello per ingresso | superata da ADR-027 |
-| [012](ADR-012-rele-di-mute.md) | Relè di mute su tutte le uscite | accettata — durata superata da ADR-021 |
+| [012](ADR-012-rele-di-mute.md) | Relè di mute su tutte le uscite | accettata — durata superata da ADR-021; il relè resta come stato sicuro dietro il mute graduale, precisata da ADR-037 |
 | [013](ADR-013-jfet-ingresso-lsk489.md) | JFET d'ingresso: LSK489 | accettata — gruppo precisato da ADR-031 |
 | [014](ADR-014-cascode-ingresso.md) | Cascode sulla coppia d'ingresso | accettata |
 | [015](ADR-015-rail-15v.md) | Rail a ±15 V, non ±18 V | accettata |
@@ -55,7 +55,7 @@ Costa un commento. È il collegamento dall'artefatto al ragionamento, ed
 | [018](ADR-018-specchio-ingresso-ls352.md) | Lo specchio d'ingresso è un LS352, degenerazione da 47 a 220 Ω | accettata |
 | [019](ADR-019-margine-di-fase-trim-interbloccato-tre-guadagni.md) | Margine di fase minimo 60°, trim interbloccato col mute, tre livelli di guadagno | accettata — sonda precisata da ADR-024, permissivo da ADR-027 |
 | [020](ADR-020-quota-ripple-alimentazione.md) | Quota del ripple d'alimentazione nel budget di E5: 1 µV RMS | accettata |
-| [021](ADR-021-mute-e-corto-sulle-uscite.md) | Mute tenibile a tempo indefinito, e ogni uscita regge un corto | accettata — precisata da ADR-023 |
+| [021](ADR-021-mute-e-corto-sulle-uscite.md) | Mute tenibile a tempo indefinito, e ogni uscita regge un corto | accettata — precisata da ADR-023; il «mute come è cablato» cambia con ADR-037 |
 | [022](ADR-022-integrati-fuori-dal-percorso-del-segnale.md) | Operazionali e microcontrollore fuori dal percorso del segnale | accettata |
 | [023](ADR-023-classe-a-sui-percorsi-ascoltabili.md) | Classe A su ogni percorso ascoltabile, e un buffer per ogni uscita fissa | accettata |
 | [024](ADR-024-sonda-capacitiva-cavo-al-jack.md) | La sonda capacitiva di V1 è il cavo: al jack, ogni cavo fino a 4,7 nF; il blocco A col suo cablaggio | accettata |
@@ -70,4 +70,5 @@ Costa un commento. È il collegamento dall'artefatto al ragionamento, ed
 | [033](ADR-033-led-dai-rele-spia-guasto-accettato.md) | I LED del trim restano sui relè spia K9 e K10: il guasto di un solo relè è un caso noto e accettato | accettata |
 | [034](ADR-034-moltiplicatore-vbe-accoppiato-col-rame.md) | Il moltiplicatore di Vbe si accoppia al transistor d'uscita col rame del PCB, non con la fascetta | accettata |
 | [035](ADR-035-c-differenza-dal-riferimento-e-soglia.md) | C si misura per differenza dalla corsa di riferimento, e ha una soglia propria di 1 mV | accettata |
-| [036](ADR-036-a-senza-segnale-e-mute-graduale-in-serie.md) | A si giudica senza segnale; il mute è graduale e in serie, rampa da 3 s, accettato con C fuori soglia sulla principale | accettata |
+| [036](ADR-036-a-senza-segnale-e-mute-graduale-in-serie.md) | A si giudica senza segnale; il mute è graduale e in serie, rampa da 3 s, accettato con C fuori soglia sulla principale | accettata — la «serie» diventa serie più derivazione graduale, precisata da ADR-037 |
+| [037](ADR-037-mute-graduale-a-mosfet-contrapposti.md) | Il mute graduale reale: MOSFET contrapposti con driver fotovoltaico, in serie e verso massa, col relè NC tenuto; circa 4 s per operazione | accettata |
