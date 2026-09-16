@@ -1,0 +1,281 @@
+.control
+set d = .dat
+* solo i vettori usati: senza, ngspice tiene ogni nodo e una corsa da 7 s supera i GB
+save v(mainjack) v(fixjack1) v(fixjack2) v(main_a) v(fix1) v(fix2)
+echo "cella,file,variante,f_hz,amp,gm,rl,t_ins,t_rel,t_fine,tmax,tipo,rif_ins,rif_rel" > tb_v2_mute_varianti_manifest.csv
+echo "blocco,offset_prima_V,offset_dopo_V,compensazione_V" > tb_v2_mute_varianti_offset.csv
+
+* +10 dB, 1 kHz, fase pi/2: gli eventi a 1,0 / 1,1 / 3,0 s cadono sul picco
+alter rrgb = 0.1
+alter rrg10b = 0.1
+alter vfrq dc = 1000
+alter vphs dc = 1.5707963267948966
+
+* ---- v3: l'offset in continua annullato, tre giri di .op ----
+op
+let x = v(main_a)
+set ob0 = "$&x"
+let x = v(fix1)
+set of10 = "$&x"
+let x = v(fix2)
+set of20 = "$&x"
+let x = v(main_a)/3.148
+set scb = "$&x"
+let x = v(fix1)
+set sc1 = "$&x"
+let x = v(fix2)
+set sc2 = "$&x"
+destroy all
+alter vosb dc = $scb
+alter vosf1 dc = $sc1
+alter vosf2 dc = $sc2
+op
+let x = $scb + v(main_a)/3.148
+set scb = "$&x"
+let x = $sc1 + v(fix1)
+set sc1 = "$&x"
+let x = $sc2 + v(fix2)
+set sc2 = "$&x"
+destroy all
+alter vosb dc = $scb
+alter vosf1 dc = $sc1
+alter vosf2 dc = $sc2
+op
+let x = $scb + v(main_a)/3.148
+set scb = "$&x"
+let x = $sc1 + v(fix1)
+set sc1 = "$&x"
+let x = $sc2 + v(fix2)
+set sc2 = "$&x"
+destroy all
+alter vosb dc = $scb
+alter vosf1 dc = $sc1
+alter vosf2 dc = $sc2
+op
+let x = v(main_a)
+set ob1 = "$&x"
+let x = v(fix1)
+set of11 = "$&x"
+let x = v(fix2)
+set of21 = "$&x"
+echo "MAIN_A,$ob0,$ob1,$scb" >> tb_v2_mute_varianti_offset.csv
+echo "FIX1,$of10,$of11,$sc1" >> tb_v2_mute_varianti_offset.csv
+echo "FIX2,$of20,$of21,$sc2" >> tb_v2_mute_varianti_offset.csv
+destroy all
+
+foreach v 0 1 2 3 4 5 6
+foreach rlk 100 10
+foreach kind 1 2 3 4 5 6 7 8 9
+  set salta = 0
+  if $kind > 6
+    if $v > 0
+      set salta = 1
+    end
+    if $rlk = 10
+      set salta = 1
+    end
+  end
+  if $salta = 0
+  * ---- tutto a riposo ----
+  alter vtijk dc = 1000
+  alter vtrjk dc = 2000
+  alter vtipre dc = 1000
+  alter vtrpre dc = 2000
+  alter vtiser dc = 1000
+  alter vtrser dc = 2000
+  alter vtisel dc = 1000
+  alter vtrsel dc = 2000
+  alter rbym = 1m
+  alter rby1 = 1m
+  alter rby2 = 1m
+  alter rbcm = 1e12
+  alter rbc1 = 1e12
+  alter rbc2 = 1e12
+  alter vosb dc = 0
+  alter vosf1 dc = 0
+  alter vosf2 dc = 0
+  alter vphs dc = 1.5707963267948966
+  if $rlk = 100
+    alter rldm = 100k
+    alter rld1 = 100k
+    alter rld2 = 100k
+    set rl = "_100k"
+    set rlv = "100k"
+  else
+    alter rldm = 10k
+    alter rld1 = 10k
+    alter rld2 = 10k
+    set rl = "_10k"
+    set rlv = "10k"
+  end
+  * ---- la cella ----
+  set amp = 3.818
+  set tf = 3.1
+  set mti = 1.0
+  set mtr = 1.1
+  set rins = "-"
+  set rrel = "-"
+  set isev = 0
+  if $kind = 1
+    set ti = 1.0
+    set tr = 1.1
+    set tag = "_bm"
+    set tipo = "evento"
+    set isev = 1
+    set rins = "var$v$rl"
+    set rrel = "var$v$rl"
+    set sins = "_bmsempre"
+    set srel = "_bmmai"
+  end
+  if $kind = 2
+    set ti = 1000
+    set tr = 2000
+    set tag = "_bmmai"
+    set tipo = "rif_mai"
+  end
+  if $kind = 3
+    set ti = -1
+    set tr = 1000
+    set tag = "_bmsempre"
+    set tipo = "rif_sempre"
+  end
+  if $kind = 4
+    set ti = 1.0
+    set tr = 3.0
+    set amp = 0
+    set tf = 5.0
+    set mtr = 3.0
+    set tag = "_lz"
+    set tipo = "evento"
+    set isev = 1
+    set rins = "var$v$rl"
+    set rrel = "var$v$rl"
+    set sins = "_lzsempre"
+    set srel = "_lzmai"
+  end
+  if $kind = 5
+    set ti = 1000
+    set tr = 2000
+    set amp = 0
+    set tf = 5.0
+    set mtr = 3.0
+    set tag = "_lzmai"
+    set tipo = "rif_mai"
+  end
+  if $kind = 6
+    set ti = -1
+    set tr = 1000
+    set amp = 0
+    set tf = 5.0
+    set mtr = 3.0
+    set tag = "_lzsempre"
+    set tipo = "rif_sempre"
+  end
+  if $kind = 7
+    set ti = 1.0
+    set tr = 1.1
+    set tag = "_bmzero"
+    set tipo = "evento"
+    set isev = 1
+    set rins = "var$v$rl"
+    set rrel = "var$v$rl"
+    set sins = "_bmzerosempre"
+    set srel = "_bmzeromai"
+    alter vphs dc = 0
+  end
+  if $kind = 8
+    set ti = 1000
+    set tr = 2000
+    set tag = "_bmzeromai"
+    set tipo = "rif_mai"
+    alter vphs dc = 0
+  end
+  if $kind = 9
+    set ti = -1
+    set tr = 1000
+    set tag = "_bmzerosempre"
+    set tipo = "rif_sempre"
+    alter vphs dc = 0
+  end
+  alter vamp dc = $amp
+  * ---- la variante ----
+  if $v = 0
+    set nm = "v0_dopo"
+    alter vtijk dc = $ti
+    alter vtrjk dc = $tr
+  end
+  if $v = 1
+    set nm = "v1_prima"
+    alter vtipre dc = $ti
+    alter vtrpre dc = $tr
+  end
+  if $v = 2
+    set nm = "v2_entrambi"
+    alter vtipre dc = $ti
+    alter vtrpre dc = $tr
+    alter vtijk dc = $ti
+    alter vtrjk dc = $tr
+  end
+  if $v = 3
+    set nm = "v3_prima_offset_zero"
+    alter vtipre dc = $ti
+    alter vtrpre dc = $tr
+    alter vosb dc = $scb
+    alter vosf1 dc = $sc1
+    alter vosf2 dc = $sc2
+  end
+  if $v = 4
+    set nm = "v4_serie"
+    alter vtiser dc = $ti
+    alter vtrser dc = $tr
+    alter rbym = 1e12
+    alter rby1 = 1e12
+    alter rby2 = 1e12
+    alter rbcm = 220k
+    alter rbc1 = 470k
+    alter rbc2 = 470k
+  end
+  if $v = 5
+    set nm = "v5_serie_e_jack"
+    alter vtiser dc = $ti
+    alter vtrser dc = $tr
+    alter vtijk dc = $ti
+    alter vtrjk dc = $tr
+    alter rbym = 1e12
+    alter rby1 = 1e12
+    alter rby2 = 1e12
+    alter rbcm = 220k
+    alter rbc1 = 470k
+    alter rbc2 = 470k
+  end
+  if $v = 6
+    set nm = "v6_sequenza"
+    alter vtijk dc = $ti
+    alter vtrjk dc = $tr
+    let x = $ti - 0.05
+    set tsi = "$&x"
+    let x = $tr + 0.05
+    set tsr = "$&x"
+    alter vtisel dc = $tsi
+    alter vtrsel dc = $tsr
+    let x = $mti - 0.05
+    set mti = "$&x"
+    let x = $mtr + 0.05
+    set mtr = "$&x"
+  end
+  set cell = "var$v$rl$tag"
+  tran 10u $tf 0 10u
+  wrdata $cell$d v(mainjack) v(fixjack1) v(fixjack2)
+  if $isev = 1
+    echo "$cell,$cell$d,$nm,1000,$amp,10,$rlv,$mti,$mtr,$tf,10e-6,$tipo,$rins$sins,$rrel$srel" >> tb_v2_mute_varianti_manifest.csv
+  else
+    echo "$cell,$cell$d,$nm,1000,$amp,10,$rlv,$mti,$mtr,$tf,10e-6,$tipo,-,-" >> tb_v2_mute_varianti_manifest.csv
+  end
+  destroy all
+  end
+end
+end
+end
+.endc
+
+.end

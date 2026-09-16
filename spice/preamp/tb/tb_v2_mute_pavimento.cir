@@ -1,0 +1,369 @@
+tb_v2_mute_pavimento.cir - V2 al jack (ADR-032): i pavimenti del metodo sulla catena intera, prima di ogni verdetto (L29a, NC-028)
+* Prima riga = titolo (docs/limitations.md #10).
+*
+* COSA MISURA. Nessuna variante di mute: solo quanto il METODO di V2 vede quando
+* al jack non succede niente. Due pavimenti, che decidono se il metodo separa i
+* casi che L29a incontra:
+*  1. PAVIMENTO NUMERICO DI A: due corse identiche con TMAX diverso. La loro
+*     differenza, filtrata come A, e' l'errore del solutore. Deve stare molto
+*     sotto 100 uV (obiettivo <= 10 uV), altrimenti A misura ngspice.
+*  2. PAVIMENTO DI C: C su una corsa mai in mute. Il fit toglie solo la
+*     fondamentale: la distorsione del blocco resta nel residuo.
+* L'analisi e' scripts/v2_metodo.py analizza, sul manifesto scritto qui.
+*
+* IL CANALE (blocco CANALE sotto, identico in tb_v2_mute_pavimento, _varianti e
+* _graduale; `v2_metodo.py canale` lo verifica). E' quello di
+* tb_mute_corto.cir (L11, L17), con i nodi e i contatti del metodo di V2:
+*   blocco A -> attenuatore -> blocco B -> 47 R -> 4.7 u -> MAINJACK
+*   blocco A -> buffer F1 -> 47 R -> 4.7 u -> FIXJACK1
+*   blocco A -> buffer F2 -> 47 R -> 4.7 u -> FIXJACK2
+* I nomi dei jack sono quelli di V2 e di preamp_audio.py, non JM/J1/J2.
+* Ogni blocco e' gain_block.subckt (generato, mai toccato a mano). Il subckt
+* porta R113 = 1 MEG sull'ingresso anche su B e sui buffer: 0,25 % sul cursore,
+* ~1 ohm sui buffer (come tb_mute_corto.cir). Il TRIM non c'e': la catena va
+* dal blocco A all'attenuatore diretta (trim a 0 dB), dichiarato.
+*
+* CARICHI (V2): RLDM, RLD1, RLD2 alterati INSIEME a 10 k o 100 k. I bleeder
+* 220 k (principale) e 470 k (fisse) restano.
+*
+* CONTATTI (V2: 100 mohm, <= 3 ms, fronte e rimbalzi dichiarati). Ogni contatto
+* e' una conduttanza comportamentale  I = V * 10^(-12 + 13*s),  s in [0, 1]:
+* s = 0 aperto (1e-12 S), s = 1 chiuso (10 S = 100 mohm, il massimo del G6K,
+* vendor/relays/omron/G6K/en-g6k.pdf, Characteristics). Lo stato s di ogni
+* posizione x nasce in due passi:
+*   1. BSxR, lo schema a gradini:
+*      contatto netto (NMHx = 1): alla chiusura due riaperture entro 0,52 ms
+*        (chiuso 0-150 us, aperto 150-300, chiuso 300-450, aperto 450-520,
+*        chiuso); all'apertura una richiusura entro 0,6 ms (aperto 0-400 us,
+*        chiuso 400-600, aperto). Le durate stanno dentro il grafico "Must
+*        Operate and Must Release Bounce Time Distribution" del G6K (pag. 5,
+*        campione G6K-2G, 50 rele', 23 C): rimbalzo all'intervento fino a
+*        ~0,55 ms, al rilascio fino a ~0,8 ms. La FORMA dei rimbalzi e' ASSUNTA.
+*        t_ins e t_rel sono il PRIMO TOCCO del contatto: i <= 3 ms fra comando
+*        e contatto contano solo nelle sequenze;
+*      elemento graduale (NMHx = 0): rampa lineare di s in NTGx secondi, quindi
+*        G log-lineare fra 1e-12 S e 10 S. Elemento IDEALE, senza tecnica: dice
+*        che profilo serve, non e' un rimedio.
+*      I punti di pwl() sono letterali: ngspice rifiuta {param} dentro una pwl
+*      che non e' l'intera espressione ("only *literal* points").
+*   2. RSx + CSx, il FRONTE: un RC da 1 k e 4,55 nF, tau 4,55 us, cioe' 10 us
+*      dal 10 al 90 % di s. Per la sensibilita' si altera CSx (0,455 nF = 1 us,
+*      45,5 nF = 100 us). Il datasheet non da' la durata del fronte (V2).
+* Posizioni, abilitate per variante dalle sole sorgenti DC di controllo:
+*   JK   shunt al jack (MAINJACK, FIXJACKk): il mute di oggi;
+*   PRE  shunt fra i 47 ohm e il 4,7 uF (MAIN_A, FIXk);
+*   SER  serie fra il 4,7 uF (nodo MAINC, FIXCk) e il jack, APERTO quando s = 1.
+*        Senza la variante in serie il ponte RBYx = 1 mohm lo cortocircuita
+*        (1 mohm contro 100 k di carico; contro i 47 ohm di uno shunt al jack
+*        sposta B di 2e-5). Con la variante: RBYx = 1e12, e il bleeder lato
+*        condensatore RBCx passa da 1e12 a 220 k / 470 k;
+*   SEL  il selettore d'ingresso, in serie prima del blocco A, APERTO quando
+*        s = 1; normalmente chiuso, 100 mohm anche a riposo.
+* Le tre uscite condividono comando e forma del contatto (un solo MUTE_CMD in
+* preamp_audio.py).
+*
+* SORGENTE. Il K11 (< 1.5 ohm). Tono V(NAMP) sin(2 pi V(NFRQ) t + V(NPHS)),
+* 3.818 V pk = 2.7 V RMS = E6 = il tono di prova di C. Entra con un inviluppo a
+* coseno rialzato di V(NTEN) s, perche' un tono acceso di colpo carica i 4,7 uF
+* e lascia al jack una scarica di tau 0,32 s che non e' dell'evento.
+*
+* OFFSET. VOSA, VOSB, VOSF1, VOSF2 in serie agli ingressi dei quattro blocchi,
+* 0 V: servono alle varianti (offset abbassato, dispersione LSK489).
+*
+* NUMERICA. reltol 1e-6, vntol 1e-9, abstol 1e-15 (il default reltol 1e-3 su
+* 12 V vale ~mV). TMAX per corsa nel manifesto. tran senza tstart (#26). Le
+* forme d'onda escono in .dat, che il secondo passaggio di run_simulation.sh
+* non converte (#25): nessuna tabella echo ha il nome di un wrdata.
+*
+* PROVVISORIO SUI MODELLI: tutto tranne LS352 e' segnaposto, LSK489 compreso
+* (LSK489X in placeholder_devices.lib, KF=0; NC-017, NC-031). L'offset
+* sistematico e la distorsione, quindi il pavimento di C, dipendono da loro.
+*
+* CONVENZIONE DI PERCORSO: `.include @REPO@/...` (tb_op.cir, L2-L3) e file
+* scritti con nome nudo nella directory d'uscita di run_simulation.sh.
+
+.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block.subckt
+
+* >>> CANALE - identico nei tre deck tb_v2_mute_*.cir (v2_metodo.py canale)
+* TOLLERANZE (L29a, ripresa 2026-09-16): vedi il blocco esteso in
+* tb_v2_mute_varianti.cir. vntol=1e-9 rendeva il deck non eseguibile (41 ore
+* per una cella senza segnale); vntol=1e-6 la fa in 5,5 s e le cifre non
+* cambiano - verificato, data/2026-09-16/L29a/tolleranze/.
+.options reltol=1e-6 vntol=1e-6 abstol=1e-12
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+
+* ---- sorgente con inviluppo d'entrata ----
+VAMP NAMP 0 DC 3.818
+VFRQ NFRQ 0 DC 1000
+VPHS NPHS 0 DC 0
+VTEN NTEN 0 DC 0.3
+BSRC SRC 0 V = V(NAMP) * sin(6.283185307179586*V(NFRQ)*time + V(NPHS))
++ * (0.5 - 0.5*cos(3.141592653589793*min(time/V(NTEN), 1)))
+RSRC SRC SELA 1.5
+
+* ---- stati dei contatti: t_ins, t_rel, durata graduale, netto(1)/graduale(0) ----
+VTIJK NTIJK 0 DC 1000
+VTRJK NTRJK 0 DC 2000
+VTGJK NTGJK 0 DC 1
+VMHJK NMHJK 0 DC 1
+BSJKR SJKR 0 V = V(NMHJK)
++ * pwl(time - V(NTIJK), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ * pwl(time - V(NTRJK), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
++ + (1 - V(NMHJK)) * min(max((time - V(NTIJK))/V(NTGJK), 0), 1)
++ * (1 - min(max((time - V(NTRJK))/V(NTGJK), 0), 1))
+RSJK SJKR SJK 1k
+CSJK SJK 0 4.55n
+VTIPRE NTIPRE 0 DC 1000
+VTRPRE NTRPRE 0 DC 2000
+VTGPRE NTGPRE 0 DC 1
+VMHPRE NMHPRE 0 DC 1
+BSPRER SPRER 0 V = V(NMHPRE)
++ * pwl(time - V(NTIPRE), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ * pwl(time - V(NTRPRE), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
++ + (1 - V(NMHPRE)) * min(max((time - V(NTIPRE))/V(NTGPRE), 0), 1)
++ * (1 - min(max((time - V(NTRPRE))/V(NTGPRE), 0), 1))
+RSPRE SPRER SPRE 1k
+CSPRE SPRE 0 4.55n
+VTISER NTISER 0 DC 1000
+VTRSER NTRSER 0 DC 2000
+VTGSER NTGSER 0 DC 1
+VMHSER NMHSER 0 DC 1
+BSSERR SSERR 0 V = V(NMHSER)
++ * pwl(time - V(NTISER), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ * pwl(time - V(NTRSER), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
++ + (1 - V(NMHSER)) * min(max((time - V(NTISER))/V(NTGSER), 0), 1)
++ * (1 - min(max((time - V(NTRSER))/V(NTGSER), 0), 1))
+RSSER SSERR SSER 1k
+CSSER SSER 0 4.55n
+VTISEL NTISEL 0 DC 1000
+VTRSEL NTRSEL 0 DC 2000
+VTGSEL NTGSEL 0 DC 1
+VMHSEL NMHSEL 0 DC 1
+BSSELR SSELR 0 V = V(NMHSEL)
++ * pwl(time - V(NTISEL), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ * pwl(time - V(NTRSEL), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
++ + (1 - V(NMHSEL)) * min(max((time - V(NTISEL))/V(NTGSEL), 0), 1)
++ * (1 - min(max((time - V(NTRSEL))/V(NTGSEL), 0), 1))
+RSSEL SSELR SSEL 1k
+CSSEL SSEL 0 4.55n
+
+* ---- selettore d'ingresso: serie, s = 1 vuol dire APERTO ----
+BSEL SELA INA I = V(SELA,INA) * pow(10, -12 + 13*(1 - V(SSEL)))
+
+* ---------------- BLOCCO A: guadagno 1, R_g non montata ------------------
+VOSA INA INAX DC 0
+XA INAX OUTA FBA RGA RG10A VPLUS VMINUS GAINBLOCK
+RRGA RGA 0 1G
+CRGA RGA 0 15p
+RRG10A RG10A 0 1G
+CRG10A RG10A 0 15p
+
+* Attenuatore da 10 k: RATTT a 1 mohm = manopola al massimo.
+RATTT OUTA W 1m
+RATTB W 0 10k
+
+* ---------------- BUFFER DELLE FISSE (ADR-023): guadagno 1 ---------------
+VOSF1 OUTA F1IN DC 0
+XF1 F1IN OUTF1 FBF1 RGF1 RG10F1 VPLUS VMINUS GAINBLOCK
+RRGF1 RGF1 0 1G
+CRGF1 RGF1 0 15p
+RRG10F1 RG10F1 0 1G
+CRG10F1 RG10F1 0 15p
+VOSF2 OUTA F2IN DC 0
+XF2 F2IN OUTF2 FBF2 RGF2 RG10F2 VPLUS VMINUS GAINBLOCK
+RRGF2 RGF2 0 1G
+CRGF2 RGF2 0 15p
+RRG10F2 RG10F2 0 1G
+CRG10F2 RG10F2 0 15p
+
+RSEP1 OUTF1 FIX1 47
+BPRE1 FIX1 0 I = V(FIX1) * pow(10, -12 + 13*V(SPRE))
+CFIX1 FIX1 FIXC1 4.7u
+RBC1 FIXC1 0 1e12
+RBY1 FIXC1 FIXJACK1 1m
+BSER1 FIXC1 FIXJACK1 I = V(FIXC1,FIXJACK1) * pow(10, -12 + 13*(1 - V(SSER)))
+BJK1 FIXJACK1 0 I = V(FIXJACK1) * pow(10, -12 + 13*V(SJK))
+RBL1 FIXJACK1 0 470k
+RLD1 FIXJACK1 0 100k
+
+RSEP2 OUTF2 FIX2 47
+BPRE2 FIX2 0 I = V(FIX2) * pow(10, -12 + 13*V(SPRE))
+CFIX2 FIX2 FIXC2 4.7u
+RBC2 FIXC2 0 1e12
+RBY2 FIXC2 FIXJACK2 1m
+BSER2 FIXC2 FIXJACK2 I = V(FIXC2,FIXJACK2) * pow(10, -12 + 13*(1 - V(SSER)))
+BJK2 FIXJACK2 0 I = V(FIXJACK2) * pow(10, -12 + 13*V(SJK))
+RBL2 FIXJACK2 0 470k
+RLD2 FIXJACK2 0 100k
+
+* ---------------- BLOCCO B: 0 / +3 / +10 dB, due rele' su R_g ------------
+* Contatto aperto = 1 G + 15 pF, chiuso = alter ... = 0.1 (ADR-026):
+*   0 dB   rrgb = 1G    rrg10b = 1G
+*   +3 dB  rrgb = 0.1   rrg10b = 1G
+*   +10 dB rrgb = 0.1   rrg10b = 0.1
+VOSB W WB DC 0
+XB WB OUTB FBB RGB RG10B VPLUS VMINUS GAINBLOCK
+RRGB RGB 0 1G
+CRGB RGB 0 15p
+RRG10B RG10B 0 1G
+CRG10B RG10B 0 15p
+RISOM OUTB MAIN_A 47
+BPREM MAIN_A 0 I = V(MAIN_A) * pow(10, -12 + 13*V(SPRE))
+COUTM MAIN_A MAINC 4.7u
+RBCM MAINC 0 1e12
+RBYM MAINC MAINJACK 1m
+BSERM MAINC MAINJACK I = V(MAINC,MAINJACK) * pow(10, -12 + 13*(1 - V(SSER)))
+BJKM MAINJACK 0 I = V(MAINJACK) * pow(10, -12 + 13*V(SJK))
+RBLM MAINJACK 0 220k
+RLDM MAINJACK 0 100k
+* <<< CANALE
+
+* ---- EVENTO NULLO, fuori dal canale e scollegato da esso ----
+* Uno stato di contatto con lo stesso schema e lo stesso RC di fronte dei
+* contatti veri, che non tocca nessun nodo del canale. Quando commuta (VTDUM,
+* VTDUM2 a un istante < 1000 s) costringe il solutore agli stessi passi corti
+* di un evento vero, ma il circuito resta identico: la differenza con la corsa
+* senza evento e' il pavimento numerico di A. La differenza fra due TMAX
+* (celle pav_num con "contro ... 10u/5u") e' invece la sensibilita' al passo,
+* e sovrastima: lontano dall'evento l'errore di fase cresce con ritmi diversi.
+VTDUM NTDUM 0 DC 1000
+VTDUM2 NTDUM2 0 DC 1000
+BDUMR NDUMR 0 V = pwl(time - V(NTDUM), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 1e4,1)
++ * pwl(time - V(NTDUM2), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
+RDUM NDUMR NDUM 1k
+CDUM NDUM 0 4.55n
+
+.control
+set d = .dat
+echo "cella,file,variante,f_hz,amp,gm,rl,t_ins,t_rel,t_fine,tmax,tipo,rif_ins,rif_rel" > tb_v2_mute_pavimento_manifest.csv
+
+* Nessun contatto commuta in nessuna corsa: tutti gli stati restano ai valori
+* del canale (t_ins 1000 s). Le celle pav_num leggono A fra due corse IDENTICHE
+* che differiscono solo per TMAX; le rif_mai danno il pavimento di C agli
+* istanti t_ins e t_rel del manifesto (gli stessi delle celle di _varianti).
+* Sonda di durata, 1,5 s a +10 dB, 1 kHz, 100 k, TMAX 10 us: 12,7 s di calcolo.
+
+* ---- +10 dB, 100 k: la distorsione piu' alta e l'uscita piu' grande ----
+alter rrgb = 0.1
+alter rrg10b = 0.1
+
+alter vfrq dc = 1000
+tran 10u 3 0 10u
+rusage time
+wrdata p_mai_1k_10u$d v(mainjack) v(fixjack1) v(fixjack2)
+echo "p_mai_1k_10u,p_mai_1k_10u.dat,nessuna,1000,3.818,10,100k,1.0,1.1,3.0,10e-6,rif_mai,-,-" >> tb_v2_mute_pavimento_manifest.csv
+destroy all
+tran 5u 3 0 5u
+wrdata p_mai_1k_5u$d v(mainjack) v(fixjack1) v(fixjack2)
+echo "p_mai_1k_5u,p_mai_1k_5u.dat,nessuna,1000,3.818,10,100k,1.0,1.1,3.0,5e-6,rif_mai,-,-" >> tb_v2_mute_pavimento_manifest.csv
+echo "pav_num_1k,p_mai_1k_5u.dat,nessuna,1000,3.818,10,100k,1.0,3.0,3.0,5e-6,pav_num,p_mai_1k_10u,-" >> tb_v2_mute_pavimento_manifest.csv
+destroy all
+
+alter vfrq dc = 20
+tran 10u 3 0 10u
+wrdata p_mai_20_10u$d v(mainjack) v(fixjack1) v(fixjack2)
+echo "p_mai_20_10u,p_mai_20_10u.dat,nessuna,20,3.818,10,100k,1.0,1.1,3.0,10e-6,rif_mai,-,-" >> tb_v2_mute_pavimento_manifest.csv
+destroy all
+tran 5u 3 0 5u
+wrdata p_mai_20_5u$d v(mainjack) v(fixjack1) v(fixjack2)
+echo "p_mai_20_5u,p_mai_20_5u.dat,nessuna,20,3.818,10,100k,1.0,1.1,3.0,5e-6,rif_mai,-,-" >> tb_v2_mute_pavimento_manifest.csv
+echo "pav_num_20,p_mai_20_5u.dat,nessuna,20,3.818,10,100k,1.0,3.0,3.0,5e-6,pav_num,p_mai_20_10u,-" >> tb_v2_mute_pavimento_manifest.csv
+destroy all
+
+* 20 kHz: TMAX 0,5 us (autotest T7: con 10 us il ricampionamento sbaglia di 0,57 V)
+alter vfrq dc = 20000
+tran 0.5u 0.7 0 0.5u
+rusage time
+wrdata p_mai_20k_05u$d v(mainjack) v(fixjack1) v(fixjack2)
+echo "p_mai_20k_05u,p_mai_20k_05u.dat,nessuna,20000,3.818,10,100k,0.45,0.5,0.7,0.5e-6,rif_mai,-,-" >> tb_v2_mute_pavimento_manifest.csv
+destroy all
+tran 0.25u 0.7 0 0.25u
+wrdata p_mai_20k_025u$d v(mainjack) v(fixjack1) v(fixjack2)
+echo "p_mai_20k_025u,p_mai_20k_025u.dat,nessuna,20000,3.818,10,100k,0.45,0.5,0.7,0.25e-6,rif_mai,-,-" >> tb_v2_mute_pavimento_manifest.csv
+echo "pav_num_20k,p_mai_20k_025u.dat,nessuna,20000,3.818,10,100k,0.45,0.7,0.7,0.25e-6,pav_num,p_mai_20k_05u,-" >> tb_v2_mute_pavimento_manifest.csv
+destroy all
+
+* ---- +10 dB, 10 k: il carico piu' pesante ----
+alter vfrq dc = 1000
+alter rldm = 10k
+alter rld1 = 10k
+alter rld2 = 10k
+tran 10u 1.5 0 10u
+wrdata p_mai_1k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
+echo "p_mai_1k_10k,p_mai_1k_10k.dat,nessuna,1000,3.818,10,10k,1.0,1.1,1.5,10e-6,rif_mai,-,-" >> tb_v2_mute_pavimento_manifest.csv
+destroy all
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+
+* ---- 0 dB, 100 k ----
+alter rrgb = 1G
+alter rrg10b = 1G
+tran 10u 1.5 0 10u
+wrdata p_mai_1k_0db$d v(mainjack) v(fixjack1) v(fixjack2)
+echo "p_mai_1k_0db,p_mai_1k_0db.dat,nessuna,1000,3.818,0,100k,1.0,1.1,1.5,10e-6,rif_mai,-,-" >> tb_v2_mute_pavimento_manifest.csv
+destroy all
+
+* ---- EVENTO NULLO: il pavimento numerico di A, +10 dB, 100 k ----
+alter rrgb = 0.1
+alter rrg10b = 0.1
+alter vfrq dc = 1000
+alter vtdum dc = 1.0
+alter vtdum2 dc = 1.1
+tran 10u 3 0 10u
+wrdata p_nullo_1k_10u$d v(mainjack) v(fixjack1) v(fixjack2)
+echo "pav_nullo_1k_10u,p_nullo_1k_10u.dat,nessuna,1000,3.818,10,100k,1.0,3.0,3.0,10e-6,pav_num,p_mai_1k_10u,-" >> tb_v2_mute_pavimento_manifest.csv
+destroy all
+tran 5u 3 0 5u
+wrdata p_nullo_1k_5u$d v(mainjack) v(fixjack1) v(fixjack2)
+echo "pav_nullo_1k_5u,p_nullo_1k_5u.dat,nessuna,1000,3.818,10,100k,1.0,3.0,3.0,5e-6,pav_num,p_mai_1k_5u,-" >> tb_v2_mute_pavimento_manifest.csv
+destroy all
+
+* sensibilita' a reltol: la stessa coppia a reltol 1e-7
+option reltol=1e-7
+alter vtdum dc = 1000
+alter vtdum2 dc = 1000
+tran 10u 3 0 10u
+rusage time
+wrdata p_mai_1k_r7$d v(mainjack) v(fixjack1) v(fixjack2)
+echo "p_mai_1k_r7,p_mai_1k_r7.dat,nessuna,1000,3.818,10,100k,1.0,1.1,3.0,10e-6,rif_mai,-,-" >> tb_v2_mute_pavimento_manifest.csv
+destroy all
+alter vtdum dc = 1.0
+alter vtdum2 dc = 1.1
+tran 10u 3 0 10u
+wrdata p_nullo_1k_r7$d v(mainjack) v(fixjack1) v(fixjack2)
+echo "pav_nullo_1k_r7,p_nullo_1k_r7.dat,nessuna,1000,3.818,10,100k,1.0,3.0,3.0,10e-6,pav_num,p_mai_1k_r7,-" >> tb_v2_mute_pavimento_manifest.csv
+destroy all
+option reltol=1e-6
+
+alter vfrq dc = 20
+tran 10u 3 0 10u
+wrdata p_nullo_20_10u$d v(mainjack) v(fixjack1) v(fixjack2)
+echo "pav_nullo_20_10u,p_nullo_20_10u.dat,nessuna,20,3.818,10,100k,1.0,3.0,3.0,10e-6,pav_num,p_mai_20_10u,-" >> tb_v2_mute_pavimento_manifest.csv
+destroy all
+
+alter vfrq dc = 20000
+alter vtdum dc = 0.45
+alter vtdum2 dc = 0.5
+tran 0.5u 0.7 0 0.5u
+wrdata p_nullo_20k_05u$d v(mainjack) v(fixjack1) v(fixjack2)
+echo "pav_nullo_20k_05u,p_nullo_20k_05u.dat,nessuna,20000,3.818,10,100k,0.45,0.7,0.7,0.5e-6,pav_num,p_mai_20k_05u,-" >> tb_v2_mute_pavimento_manifest.csv
+destroy all
+
+* 10 k: l'evento nullo contro p_mai_1k_10k (finestra 0,5 s)
+alter vfrq dc = 1000
+alter vtdum dc = 1.0
+alter vtdum2 dc = 1.1
+alter rldm = 10k
+alter rld1 = 10k
+alter rld2 = 10k
+tran 10u 1.5 0 10u
+wrdata p_nullo_1k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
+echo "pav_nullo_1k_10k,p_nullo_1k_10k.dat,nessuna,1000,3.818,10,10k,1.0,1.5,1.5,10e-6,pav_num,p_mai_1k_10k,-" >> tb_v2_mute_pavimento_manifest.csv
+destroy all
+.endc
+
+.end

@@ -1,0 +1,39 @@
+tb_v2_mute_varianti.cir - V2 al jack (ADR-032): A, B e C delle varianti di mute di NC-028, screening sulla catena intera (L29a)
+* Prima riga = titolo (docs/limitations.md #10).
+*
+* COSA MISURA. Per ogni variante di mute di NC-028, le celle di V2 che piu'
+* probabilmente la fanno cadere. Una sola cella sopra 100 uV basta a RESPINGERE
+* una variante (il caso peggiore e' l'unione delle celle); nessuna cella di
+* questo deck basta ad ACCETTARLA. L'analisi e' scripts/v2_metodo.py analizza.
+*
+* LE VARIANTI (indice v nei nomi dei file):
+*   v0  dopo il condensatore, com'e' oggi: shunt al jack (JK)
+*   v1  prima del condensatore: shunt fra i 47 ohm e il 4,7 uF (PRE)
+*   v2  entrambi i lati: PRE + JK, stesso istante
+*   v3  prima, con l'offset ABBASSATO: PRE, e VOSB, VOSF1, VOSF2 che annullano
+*       l'offset in continua di MAIN_A, FIX1, FIX2 (tre giri di .op a +10 dB,
+*       tabella tb_v2_mute_varianti_offset.csv). E' l'offset residuo ideale,
+*       0 V: se cade questa, cade ogni offset reale
+*   v4  in serie: SER aperto a mute inserito, ponte RBYx aperto, bleeder lato
+*       condensatore 220 k / 470 k
+*   v5  in serie piu' shunt al jack dopo di lui: SER + JK, stesso istante
+*   v6  sequenza col segnale azzerato a monte: il selettore d'ingresso (SEL)
+*       apre 50 ms prima dell'inserzione di JK e richiude 50 ms dopo il suo
+*       rilascio. t_ins / t_rel del manifesto sono quelli del selettore
+* Le varianti "rilascio lento" e "mute graduale" sono in tb_v2_mute_graduale.cir.
+*
+* LE CELLE (per variante e per carico, 100 k e 10 k su tutte e tre le uscite):
+*   _bm        mute breve CON MUSICA: 2,7 V RMS a 1 kHz, +10 dB, manopola al
+*              massimo; inserzione a 1,0 s e rilascio a 1,1 s, entrambi SUL
+*              PICCO del segnale (fase pi/2: 1,0 e 1,1 s sono periodi interi);
+*              3,1 s, cosi' la finestra di A dopo il rilascio e' di 2 s
+*   _bmmai     riferimento: stessa sorgente, mai in mute
+*   _bmsempre  riferimento: stessa sorgente, sempre in mute
+*   _lz        mute LUNGO SENZA SEGNALE: inserzione a 1,0 s, rilascio a 3,0 s,
+*              5 s; e' il gradino d'offset
+*   _lzmai, _lzsempre  i riferimenti senza segnale
+* Piu', solo v0 a 100 k, _bmzero: il mute breve sullo ZERO del segnale, per
+* rileggere i 5,37 V di L11 al jack giusto e coi contatti a 100 mohm.
+* A dopo l'inserzione del mute breve ha 0,1 s di finestra: e' un limite
+* inferiore, che respinge e non accetta.
+*

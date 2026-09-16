@@ -1,0 +1,11 @@
+# Residuo di C per un tono che si dissolve in T - CALCOLATO sul metodo, nessun circuito
+# picco filtrato per 1 V di picco di tono; e' lineare nell'ampiezza.
+# T_min = durata minima che passa 100 uV, per 12,07 V pk (principale a +10 dB) e 3,82 V pk (fisse)
+# finestra del fit: 960 campioni a 96 kHz
+forma,f_hz,T0.01,T0.02,T0.05,T0.1,T0.2,T0.5,T1,T2,T5,T10,Tmin_12V,Tmin_3V82
+coseno,20,0.135,0.0529,0.0203,0.0105,0.0055,0.00224,0.00113,0.000563,0.000225,0.000113,oltre 10 s,oltre 10 s
+coseno,1000,0.13,0.0433,0.00801,0.00207,0.000639,0.000252,0.000126,6.29e-05,2.52e-05,1.26e-05,oltre 10 s,<= 5 s
+coseno,20000,0.0916,0.0306,0.00564,0.00145,0.000368,6.26e-05,1.86e-05,6.83e-06,2.39e-06,1.17e-06,<= 2 s,<= 1 s
+lineare,20,0.0851,0.0693,0.0312,0.0157,0.00784,0.00314,0.00157,0.000784,0.000314,0.000157,oltre 10 s,oltre 10 s
+lineare,1000,0.125,0.0624,0.025,0.0125,0.00625,0.0025,0.00125,0.000625,0.00025,0.000125,oltre 10 s,oltre 10 s
+lineare,20000,0.0871,0.0435,0.0174,0.00871,0.00435,0.00174,0.000871,0.000435,0.000174,8.71e-05,oltre 10 s,oltre 10 s

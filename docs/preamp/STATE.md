@@ -10,17 +10,55 @@ realtà, il progetto non è ripartibile.
 
 | | |
 |---|---|
-| Ultimo aggiornamento | **2026-09-15** |
-| Ultimo lotto chiuso | **L38** — le risposte del 2026-09-15 diventano requisiti. **ADR-032**: V2 ≤ 100 µV di picco 20 Hz–20 kHz al jack delle tre uscite, per gradino, residuo in mute e taglio della musica, accensione e spegnimento compresi, col metodo di misura. **ADR-033**: LED dai relè spia. **ADR-034**: moltiplicatore di Vbe accoppiato col rame (un ponte galvanico sarebbe un corto: il tab è su VP). **NC-028 sale a bloccante.** Prima: **L37** — E4 nel dossier, chiude NC-033 |
-| **Prossimo lotto** | **L29** — il gradino, il residuo e il taglio al jack, misurati col metodo di V2 (mandato in «Prossimo passo concreto») |
+| Ultimo aggiornamento | **2026-09-16** |
+| Ultimo lotto chiuso | **L29a** — il metodo di V2 reso misurabile e il confronto delle varianti di mute. **ADR-035**: C per differenza dei residui dal riferimento, soglia 1 mV. **ADR-036**: A solo senza segnale; «per ora» il mute è **graduale in serie con rampa da 3 s**, accettato con C fuori soglia sulla principale (2,93–3,05 mV), con le attese uditive. Deck resi eseguibili (`vntol`). **NC-028 resta aperta e bloccante**: il rimedio esiste solo in un deck. Prima: **L38** — le risposte del 2026-09-15 diventano requisiti (ADR-032, ADR-033, ADR-034) |
+| **Prossimo lotto** | **L29b** — il mute graduale in serie diventa un circuito reale nel sorgente e si misura col metodo di V2 (20 Hz con rampa da 3 s, 20 kHz), più il caso peggiore di V2 (guadagno e criterio 3 di ADR-030, trim, LSK489, accensione e spegnimento), P7 e lo stato sicuro di ADR-012 col mute in serie. Prompt in `NEXT-SESSION.md` |
 | Non conformità | **13 aperte, 3 bloccanti** |
-| Le bloccanti | NC-004 · NC-017 (Fase 4) · NC-028 (L29) |
-| Suite | `run_tests.sh` **10 passed / 0 failed** a fine L38, eseguita dal worktree (2i compreso: `gain_block.py` ha ricevuto solo un commento, nessuna rigenerazione) |
+| Le bloccanti | NC-004 · NC-017 (Fase 4) · NC-028 (L29b) |
+| Suite | `run_tests.sh` **10 passed / 0 failed** a fine L29a, eseguita dal worktree |
 
 ## Diario degli ultimi lotti
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L29a — il metodo di V2 reso misurabile, e il confronto delle varianti di mute (2026-09-16)
+
+**NC-028 resta aperta e bloccante.** Report: `reports/2026-09-16-L29a-metodo-v2-e-varianti.md`.
+Dati: `data/2026-09-16/L29a/` (quelli parziali del 2026-09-15 restano sotto
+`data/2026-09-15/L29a/`). ADR nuove: **ADR-035**, **ADR-036**.
+
+- **Il metodo non separava i casi, detto all'utente prima di misurare.**
+  - C sottraeva la sola fondamentale: h2 = 887 µV su una corsa mai in mute. →
+    **ADR-035**: C per differenza dei residui del fit dal riferimento, soglia
+    **1 mV**, A e B a 100 µV. Pavimento di C2 sulla principale a 1 kHz 0,57–0,80 mV
+    (C1 1,22 mV); **a 20 kHz 1,08 mV, cella non decidibile**.
+  - A con musica misurava la musica stessa (12,7 V per ogni variante e ogni rampa,
+    anche 3 s). → **ADR-036**: A si giudica solo senza segnale.
+  - Il pavimento diffuso di C resta non attribuito (due spiegazioni falsificate).
+- **I deck di varianti e graduale non erano eseguibili.** `vntol=1e-9` collassava il
+  passo nelle celle senza segnale a mute inserito: ~41 ore per una cella su 87. Con
+  `vntol=1e-6 abstol=1e-12` la stessa cella gira in 5,5 s; sulle celle confrontabili
+  le cifre coincidono entro l'1 % e il pavimento non cambia (`tolleranze/`). È il
+  motivo per cui nella sessione precedente erano «fermati».
+- **Misurato** (87 + 108 + 18 corse, tutte complete, 0 errori).
+  - **Nessun contatto netto rispetta C** (6,9–10,4 V con musica). Il contatto prima
+    del condensatore lascia **111 mV** d'offset; oggi il residuo a mute è 20 mV.
+  - **Mute graduale in derivazione**: C fermo a 0,32–0,42 V anche con rampa da 3 s.
+  - **Mute graduale in serie, rampa 3 s**: A senza segnale ≤ 16 pV, B ≤ 1,65 µV, C
+    **2,93–3,05 mV** sulla principale (fuori soglia) e **0,83–0,87 mV** sulle fisse.
+    20 Hz solo con rampa da 1 s (62 mV); 20 kHz non misurato.
+- **Decisioni dell'utente (ADR-036).** A solo senza segnale, «seguo il tuo
+  consiglio». «Per ora» il mute di progetto è graduale in serie da 3 s, accettato
+  con C fuori soglia sulla principale. **Le attese uditive sono scritte in ADR-036**:
+  dissolvenza udibile ~0,7 s, silenzio senza musica, niente botto al rilascio,
+  ≈ 31–34 dB SPL di residuo a un livello d'ascolto normale (stima, mascherato dalla
+  musica); incognite nei bassi, a 20 kHz e sull'elemento reale.
+- **Strumento**: `scripts/v2_metodo.py`, 23 controlli, **12 sabotaggi su 12**.
+- **Perché NC-028 non si chiude**: il rimedio esiste solo in un deck, con un elemento
+  ideale. → **L29b**.
+- Le forme d'onda (diversi GB) non sono versionate: si rigenerano dai deck in circa
+  tre ore.
 
 ### L38 — le risposte del 2026-09-15 diventano requisiti (2026-09-15)
 
@@ -1011,7 +1049,8 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L26 | **I tre requisiti nuovi dell'utente diventano ADR-019**: margine di fase minimo **60° ovunque**, trim abilitato dal mute con **interlock elettrico**, guadagni **0 / +3 / +10 dB** con riposo a 0 dB | XS/S | **NC-012** (chiude), apre NC-021…NC-023 | **fatto** |
 | L27 | **Il terzo livello di guadagno entra nel progetto.** Dimensionare il secondo ramo commutato verso massa (ADR-004 conservata: si commuta R_g, mai R_f; a relè diseccitati **0 dB**), decidere relè e poli col budget di corrente delle bobine, estendere i dodici deck da due modalità a tre e l'asserzione del diagramma a blocchi | M | **NC-022**, apre **NC-030** | **fatto** — ADR-026 (due rami di R_g in parallelo, K1 + K5) |
 | L28 | **SS dell'LSK489 definito per l'LSK489.** Un documento del costruttore che dica cosa sono i pin 3 e 7 di *questa* parte — o una ADR che accetti l'istruzione dell'LSK389 in forza della compatibilità dichiarata. Prima di G2 | XS/S | NC-027 | da fare |
-| L29 | **Il gradino al rilascio del mute.** Oggi il rilascio con segnale porta sul jack il condensatore caricato dalla musica: **5,37 V** a +10 dB, 1,79 V a 0 dB, 1,72 V sulle fisse, τ 0,32 s. **Il contatto prima del condensatore**, simulato in scratch dopo L11, toglie quel gradino ma ne mette uno **pari all'offset del blocco** (14-104 mV simulati, più fino a 63 mV di dispersione LSK489) **a ogni mute, accensione compresa**, e il volume non lo riduce (numeri e stima d'udibilità in NC-028). **La soglia c'è da L38: V2 in `REQUIREMENTS.md` e ADR-032.** Vale ≤ 100 µV di picco, filtrato 20 Hz–20 kHz, al jack delle tre uscite, carichi 10 e 100 kΩ, contatti a 100 mΩ. Si applica ad A, il gradino (differenza da una corsa di riferimento); a B, il residuo a mute inserito; a C, il taglio della musica (tono meno ricostruzione su 10 ms). Accensione **e spegnimento** compresi. **Il metodo di V2 si segue alla lettera**, e un deck che non lo segue non verifica V2. **Il cambio a caldo calcolato (6–114 mV) non rispetta la soglia**: L29 lo deve **confermare misurando**, non assumere. Nessuna cifra di oggi sta sotto soglia. Il residuo in mute di 4 mV p-p era simulato con contatti a 0,01 Ω, dieci volte meglio del massimo del datasheet. Con la musica presente un contatto netto difficilmente rispetta C: il confronto deve includere un **mute graduale**, il «rilascio soft» dell'utente. Poi il confronto misurato, con un deck **versionato**, fra: contatto prima + offset abbassato (bilanciamento, coppie selezionate), rilascio lento, mute in serie, sequenza di rilascio. P7 va rimisurata per la posizione scelta. **Esteso da L34 (ADR-030)**: per ogni variante di mute, **cambio di guadagno a caldo contro cambio sotto mute seguito dal rilascio**, misurati sul jack e non su `v(OUT)`; transitorio ≥ 2 s (τ 0,32 s); passaggi 0↔+3, +3↔+10 e 0↔+10 dB, con e senza segnale, commutazione sul picco e sullo zero; dispersione LSK489 iniettata (±8 mV tipici, ±20 mV massimi) in più posizioni dell'attenuatore; rimbalzi dei contatti e break-before-make del rotativo; carichi 100 kΩ e 10 kΩ. **Dal confronto dipende L36** | M/L | NC-028 | da fare |
+| L29a | **Il metodo di V2 e il confronto delle varianti di mute** (L29 diviso). Strumento versionato del metodo, deck versionati del mute sulla catena intera, confronto delle varianti di NC-028 e del mute graduale. **ADR-035** (C per differenza dal riferimento, soglia 1 mV) e **ADR-036** (A solo senza segnale; mute graduale in serie da 3 s accettato «per ora», con le attese uditive) | M/L | NC-028 | **fatto** — nessuna variante rispetta A, B e C; scelta la serie da 3 s; NC-028 resta aperta e bloccante |
+| L29b | **Il mute graduale in serie reale, e il resto di L29.** L'elemento graduale reale in serie nel sorgente (ADR nuova che precisa ADR-012 e ADR-021), misurato col metodo di V2 su tre uscite e due carichi, **20 Hz con rampa da 3 s** e **20 kHz**; il caso peggiore di V2: passaggi di guadagno e criterio 3 di ADR-030 (da cui dipende **L36**), trim, dispersione LSK489, accensione e spegnimento; **P7** per la posizione in serie; lo stato sicuro di ADR-012 e `check_relay_safe_state.py`. Chiude NC-028 se il rimedio reale regge | M/L | NC-028 | da fare |
 | L30 | **Il calore del telaio con otto blocchi.** A riposo la scheda audio dissipa 6,45 W (0,806 W per blocco, L17) contro i 3-4 W che P5 prevede per l'apparecchio intero. Stima termica del telaio con l'alimentatore; poi o P5 aggiornato al numero vero, o ventilazione e montaggio progettati con una ADR, o ADR-021 riaperta se i 60 °C non reggono. Va col lotto dell'alimentatore | S | NC-029 | da fare |
 | L31 | **I vettori di rumore di `tb_noise_vectors.cir`.** Il deck cita `onoise_q123`, `onoise_r121`, `onoise_jq110`, `onoise_jq111`, dispositivi che non esistono più; il `wrdata` si ferma e non scrive niente, con rc 0. Rinominarli dall'include generato ed estendere `check_deck_refs.py` ai nomi `onoise_*`/`inoise_*`, facendolo fallire sul deck di oggi | XS | NC-030 | **fatto** — 2g esteso e fatto cadere (4 nomi morti), mappa per nodi (tre nomi vivi erano già sbagliati), quadratura = spettro |
 | L32 | **Il dossier rigenerato sui dati di oggi. Subito dopo L16.** `build_dossier.py` legge ancora `data/2026-09-09`: THAT320, C_f 22 pF, due soli guadagni. Va esteso ai tre modi (0 / +3 / +10 dB) e puntato ai dati di L27 e L16, coi margini di V1 al minimo della spazzata (ADR-024), la cifra unica di headroom che L16 sceglie per NC-009 e la «KPI riferita a 60°» rimasta da L19. Accanto a ogni numero, la provenienza dei modelli ancora segnaposto (NC-004, NC-017). **Nessun avviso di obsolescenza**: il dossier lo legge solo l'utente (deciso il 2026-09-14) | S | NC-009 (la metà del dossier), apre **NC-031** | **fatto** — tre modi, V1 al minimo della spazzata, M1 +6,58 dB, provenienza letta dagli `.include`; nove controlli fatti fallire |

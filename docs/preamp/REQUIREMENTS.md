@@ -3,7 +3,7 @@
 **Documento vivo.** Riscritto quando i requisiti cambiano. Ogni modifica
 sostanziale deve avere una ADR corrispondente in `decisions/`.
 
-Ultimo aggiornamento: 2026-09-15 (L38: V2 con soglia e metodo di misura, Nota su F5, Aperti — ADR-032; L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
+Ultimo aggiornamento: 2026-09-16 (L29a: C di V2 per differenza dal riferimento e soglia di C a 1 mV, A e B invariati — ADR-035; A di V2 solo senza segnale — ADR-036; L38: V2 con soglia e metodo di misura, Nota su F5, Aperti — ADR-032; L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
 
 Le motivazioni non stanno qui: stanno nelle ADR referenziate e nel
 report `reports/2026-09-08-analisi-catena.md`.
@@ -398,11 +398,11 @@ misurato e i modelli che non sono ancora tutti veri.
 
 Comportamento dinamico durante e dopo ogni commutazione.
 
-**SOGLIA DI ACCETTAZIONE (ADR-032, dall'utente il 2026-09-15)**: **≤ 100 µV di
-picco, filtrato 20 Hz–20 kHz, al jack di ognuna delle tre uscite, in ogni
-condizione**, accensione e spegnimento compresi. Sotto i 20 Hz nessun limite oltre
-il filtro. Il caso peggiore sostituisce l'uso reale. La soglia vale per tre
-grandezze:
+**SOGLIA DI ACCETTAZIONE (ADR-032, dall'utente il 2026-09-15; C precisata da
+ADR-035 il 2026-09-16)**: **≤ 100 µV di picco per A e B, ≤ 1 mV per C**,
+filtrato 20 Hz–20 kHz, al jack di ognuna delle tre uscite, in ogni condizione,
+accensione e spegnimento compresi. Sotto i 20 Hz nessun limite oltre il filtro.
+Il caso peggiore sostituisce l'uso reale. La soglia vale per tre grandezze:
 - **A — il gradino** che una commutazione lascia al jack;
 - **B — il residuo**: la musica che arriva al jack a mute inserito;
 - **C — il taglio**: la musica che sparisce o ricompare di colpo quando un contatto
@@ -431,6 +431,12 @@ cifra **calcolata**, un limite superiore.
     fronte: lo spike da 2,2 µs di NC-028 non si dà per artefatto finché non è
     modellato.
 - **A — il gradino.**
+  - **A si giudica solo senza segnale (ADR-036, 2026-09-16).** Con la musica
+    presente la differenza dal riferimento contiene la musica stessa
+    nell'istante della commutazione — misurata a 12,7 V sulla principale per
+    ogni variante e ogni rampa, anche con una dissolvenza di 3 s — e non è un
+    verdetto. Con musica decide **C**, che contiene anche il gradino della carica
+    del condensatore. A con musica resta come diagnostica.
   - La grandezza è d(t) = v_jack(corsa con l'evento) − v_jack(corsa di
     riferimento). Il riferimento tiene dall'inizio lo **stato finale**: mai in
     mute, sempre in mute, o già al guadagno d'arrivo. Stessa sorgente, stessa
@@ -442,16 +448,35 @@ cifra **calcolata**, un limite superiore.
     la fine della discesa.
 - **B — il residuo.** v_jack filtrato **per tutta la durata del mute inserito**,
   fuori dalla finestra di A. Col segnale di prova sotto.
-- **C — il taglio.**
+- **C — il taglio.** *(metodo e soglia riscritti da **ADR-035**, 2026-09-16: il
+  fit della sola fondamentale contava anche la distorsione di regime del
+  circuito, che su una corsa mai in mute vale già 887 µV di sola h2.)*
   - **Tono di prova** da 2,7 V RMS alla sorgente, a 20 Hz, 1 kHz e 20 kHz.
-  - Il residuo è v_jack meno il tono ricostruito **a frequenza nota su una
-    finestra scorrevole di 10 ms**: seno più coseno, senza termine continuo.
-    Poi si filtra.
+  - La grandezza del verdetto è la **differenza dei residui del fit** fra la
+    corsa con l'evento e la corsa di riferimento:
+
+    ```
+    C2(t) = [v_jack,ev(t) − tono_fit,ev(t)] − [v_jack,rif(t) − tono_fit,rif(t)]
+    ```
+
+    sulla stessa griglia uniforme a 96 kHz, filtrata dopo. Il tono ricostruito è
+    a frequenza nota su una **finestra scorrevole di 10 ms**: seno più coseno,
+    senza termine continuo. Il riferimento è quello di A — tiene dall'inizio lo
+    **stato finale** dell'evento.
+  - **Non** la differenza cruda `v_ev − v_rif`: respingerebbe ogni mute, anche
+    uno infinitamente lento, perché il residuo sta alla frequenza del tono e il
+    passa-alto non lo tocca.
   - Si guarda attraverso ogni inserzione e ogni rilascio.
   - Una dissolvenza più lenta di 10 ms resta nel tono ricostruito, un taglio più
-    rapido nel residuo.
+    rapido nel residuo. **Quanto più lenta**: il residuo scende solo come 1/T, e
+    a 1 kHz una rampa lineare da 10 s lascia ancora 1,5 mV (ADR-035).
   - A 20 Hz la finestra copre un quinto di periodo: chi misura verifica il
     condizionamento del fit e lo dichiara.
+  - **Il pavimento di C2 si misura** (celle a evento nullo) e si riporta accanto
+    a ogni verdetto. Un valore sotto il proprio pavimento **non è una misura**:
+    si dichiara non decidibile, non conforme.
+  - Il fit della sola fondamentale (**C1**) e la scomposizione in armoniche
+    restano come **diagnostica**, e non concorrono al verdetto.
 - **Il caso peggiore da coprire**:
   - con e senza segnale, commutando sul picco e sullo zero;
   - ogni passaggio di guadagno, 0↔+3, +3↔+10 e 0↔+10 dB, nei due versi;

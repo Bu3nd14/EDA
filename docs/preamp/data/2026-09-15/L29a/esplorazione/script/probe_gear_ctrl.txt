@@ -1,0 +1,19 @@
+.control
+set d = .dat
+save v(mainjack) v(fixjack1) v(fixjack2)
+alter rrgb = 0.1
+alter rrg10b = 0.1
+option method=gear
+tran 10u 2.2 0 10u
+rusage time
+wrdata g_mai$d v(mainjack) v(fixjack1) v(fixjack2)
+destroy all
+alter vtdum dc = 1.0
+alter vtdum2 dc = 1.1
+tran 10u 2.2 0 10u
+rusage time
+wrdata g_nullo$d v(mainjack) v(fixjack1) v(fixjack2)
+destroy all
+.endc
+
+.end
