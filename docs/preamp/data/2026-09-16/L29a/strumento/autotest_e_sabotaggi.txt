@@ -25,8 +25,9 @@ OK   T10 C2 dissolvenza 3 s a coseno, 12 V pk, 1 kHz passa (<= 1 mV) 0.000503 V 
 OK   T11 C2 taglio netto, 12 V pk, 20 Hz cade                   9.05 V
 OK   T11 C2 taglio netto, 12 V pk, 1000 Hz cade                 6.71 V
 OK   T11 C2 taglio netto, 12 V pk, 20000 Hz cade                4.18 V
+OK   T13 C2 di un rilascio graduale da 3 s passa (<= 1 mV)      0.000503 V (cond 1)
 OK   T12 soglia di C = 1 mV, di A e B = 100 uV                  C 0.001 V, A 0.0001 V
-# 21 controlli, 0 caduti
+# 22 controlli, 0 caduti
 
 -- sabotaggio senza_filtro       exit 1, 2 controlli caduti: OK
      CADE T1 gradino 104 mV = 0.1109 V (calcolo_v2)                  0.104 V
@@ -38,11 +39,12 @@ OK   T12 soglia di C = 1 mV, di A e B = 100 uV                  C 0.001 V, A 0.0
      CADE T2 A di un gradino da 1 mV sotto 12 V a 1 kHz = 1 mV x 1.0659 0.833732 V
      CADE T3 A con evento identico al riferimento = 0                0.833 V
      CADE T9 C2 la cancella: corsa identica al riferimento = 0       C2 = 0.000118 V
--- sabotaggio senza_fit          exit 1, 4 controlli caduti: OK
+-- sabotaggio senza_fit          exit 1, 5 controlli caduti: OK
      CADE T4 dissolvenza di 10 s, 3,82 V pk, 1000 Hz passa C         3.82 V (cond 1)
      CADE T4 dissolvenza di 10 s, 3,82 V pk, 20000 Hz passa C        2.7 V (cond 1)
      CADE T6 tono stazionario 12 V a 20 Hz: residuo del fit <= 1 uV  12 V, numero di condizione 1
      CADE T10 C2 dissolvenza 3 s a coseno, 12 V pk, 1 kHz passa (<= 1 mV) 12 V (cond 1)
+     CADE T13 C2 di un rilascio graduale da 3 s passa (<= 1 mV)      12 V (cond 1)
 -- sabotaggio fit_perfetto       exit 1, 7 controlli caduti: OK
      CADE T5 taglio netto, 12 V pk, 20 Hz cade su C                  0 V
      CADE T5 taglio netto, 12 V pk, 1000 Hz cade su C                0 V
@@ -51,11 +53,12 @@ OK   T12 soglia di C = 1 mV, di A e B = 100 uV                  C 0.001 V, A 0.0
      CADE T11 C2 taglio netto, 12 V pk, 20 Hz cade                   0 V
      CADE T11 C2 taglio netto, 12 V pk, 1000 Hz cade                 0 V
      CADE T11 C2 taglio netto, 12 V pk, 20000 Hz cade                0 V
--- sabotaggio freq_sbagliata     exit 1, 4 controlli caduti: OK
+-- sabotaggio freq_sbagliata     exit 1, 5 controlli caduti: OK
      CADE T4 dissolvenza di 10 s, 3,82 V pk, 1000 Hz passa C         0.0785 V (cond 1.02)
      CADE T4 dissolvenza di 10 s, 3,82 V pk, 20000 Hz passa C        2.7 V (cond 1)
      CADE T6 tono stazionario 12 V a 20 Hz: residuo del fit <= 1 uV  0.0154 V, numero di condizione 7.075
      CADE T10 C2 dissolvenza 3 s a coseno, 12 V pk, 1 kHz passa (<= 1 mV) 0.247 V (cond 1.02)
+     CADE T13 C2 di un rilascio graduale da 3 s passa (<= 1 mV)      0.247 V (cond 1.02)
 -- sabotaggio lineare            exit 1, 2 controlli caduti: OK
      CADE T7 ricampionamento 12 V 1000 Hz, passi <= 1e-05 s: errore <= 10 uV 0.00578 V
      CADE T7 ricampionamento 12 V 20000 Hz, passi <= 5e-07 s: errore <= 10 uV 0.0059 V

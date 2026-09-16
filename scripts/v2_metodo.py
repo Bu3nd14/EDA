@@ -555,6 +555,25 @@ def autotest():
         verifica("T11 C2 taglio netto, 12 V pk, %g Hz cade" % f,
                  v is not None and v > 100 * SOGLIA_C, "%.3g V" % v)
 
+    # T13 - C2 al RILASCIO, col riferimento "mai in mute". Prima dell'evento le
+    # due corse sono in stati DIVERSI per costruzione: quella con l'evento e' in
+    # mute, il riferimento suona. La finestra di C2 comincia 20 ms prima
+    # dell'evento, quindi quei 20 ms entrano nel picco. Il fit toglie il tono da
+    # entrambe, percio' cio' che resta non e' il segnale ma la DISTORSIONE del
+    # riferimento: qui, su un tono sintetico senza distorsione, dev'essere
+    # trascurabile. Sul circuito vero vale il pavimento di C (~1,2 mV sulla
+    # principale), ed e' la ragione per cui il pavimento si riporta accanto a
+    # ogni C2 invece di essere assunto nullo.
+    m = int((0.4 + 3.0 + 0.4) * FS)
+    f = 1000.0
+    rif_r = tono(m, 12.0, f, fase=math.pi / 2 - 2 * math.pi * f * 0.4)
+    env_out = inviluppo(m, 0.4, 3.0, "coseno")
+    ev_r = [a * (1.0 - b) for a, b in zip(rif_r, env_out)]   # dissolvenza in salita
+    pk_r, cond_r = c2_picchi(ev_r, rif_r, f, [0.4], durata=3.0)
+    v_r = pk_r[0][0]
+    verifica("T13 C2 di un rilascio graduale da 3 s passa (<= 1 mV)",
+             v_r is not None and v_r <= SOGLIA_C, "%.3g V (cond %.3g)" % (v_r, cond_r))
+
     # T12 - le soglie sono due, e sono quelle di ADR-035
     verifica("T12 soglia di C = 1 mV, di A e B = 100 uV",
              soglia_di("C") == 1e-3 and soglia_di("C2_rel") == 1e-3
