@@ -1,0 +1,15 @@
+cella,file,variante,f_hz,amp,gm,rl,t_ins,t_rel,t_fine,tmax,tipo,rif_ins,rif_rel,t_grad
+mai,mai.dat,rif,1000,3.818,10,100k,1.0,6.5,13.5,1e-05,rif_mai,-,-,0.0
+sempre,sempre.dat,rif,1000,3.818,10,100k,1.0,6.5,13.5,1e-05,rif_sempre,-,-,0.0
+ev,ev.dat,ldr_v3_td4,1000,3.818,10,100k,1.0,6.5,13.5,1e-05,evento,sempre,mai,4.5
+norele,norele.dat,rif,1000,3.818,10,100k,1.0,6.5,13.5,1e-05,rif_seq,-,-,0.0
+rele,ev.dat,rele_contro_norele,1000,3.818,10,100k,5.5,6.5,13.5,1e-05,evento,norele,norele,0.0
+inv,inv.dat,inversione_d75,1000,3.818,10,100k,1.0,4.0,10.0,1e-05,evento,sempre,mai,3.0
+pav0,mai7u.dat,pavimento,1000,3.818,10,100k,1.0,1000,13.5,7e-06,pav_num,mai,-,0.0
+pav1,mai7u.dat,pavimento,1000,3.818,10,100k,5.5,1000,13.5,7e-06,pav_num,mai,-,0.0
+pav2,mai7u.dat,pavimento,1000,3.818,10,100k,6.5,1000,13.5,7e-06,pav_num,mai,-,0.0
+pav3,mai7u.dat,pavimento,1000,3.818,10,100k,4.0,1000,13.5,7e-06,pav_num,mai,-,0.0
+lzmai,lzmai.dat,rif,1000,0,10,100k,1.0,6.5,13.5,1e-05,rif_mai,-,-,0.0
+lzsempre,lzsempre.dat,rif,1000,0,10,100k,1.0,6.5,13.5,1e-05,rif_sempre,-,-,0.0
+lzev,lzev.dat,ldr_v3_td4,1000,0,10,100k,1.0,6.5,13.5,1e-05,evento,lzsempre,lzmai,4.5
+lzrele,lzev.dat,rele_contro_norele,1000,0,10,100k,5.5,6.5,13.5,1e-05,evento,lzsempre,lzmai,0.0
