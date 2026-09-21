@@ -22,6 +22,9 @@ import sys
 
 D = sys.argv[1]
 R_IN = 1e6
+MAN = {r["cella"]: r for r in __import__("csv").DictReader(open(os.path.join(D, "manifest.csv")))}
+T_REL = float(MAN["ev"]["t_rel"])
+T_FINE = float(MAN["ev"]["t_fine"])
 
 
 def leggi(nome, colonne):
@@ -60,7 +63,8 @@ for cella in ("ev", "norele", "inv", "lzev"):
           "ipotesi ADR-038 >= 10 k: %s; E3 >= 100 k: %s"
           % (cella, zl[i], t[i], dep[i], 10 ** xs[i], 10 ** xp[i],
              "si'" if zl[i] >= 1e4 else "NO", "si'" if zl[i] >= 1e5 else "NO"))
-    for t0 in (1.0, 1.3, 1.6, 2.0, 2.5, 3.0, 3.5, 4.0, 4.05, 5.0, 5.5, 6.0, 7.0, 7.7, 8.0, 9.0, 10.0, 12.0):
+    griglia = [0.5 * k for k in range(2, int(2 * t[-1]) + 1)] + [float(MAN["rele"]["t_ins"]), T_REL]
+    for t0 in sorted(set(griglia)):
         if t0 <= t[-1]:
             print("   t = %5.2f  d = %.3f  R_s = %9.4g  R_p = %9.4g  carico = %9.4g"
                   % (t0, a_istante(t, dep, t0), 10 ** a_istante(t, xs, t0),
@@ -86,6 +90,6 @@ def ampiezza(t, y, t0, T=0.010):
     return math.hypot(A, B)
 
 
-for t0 in (4.5, 5.2, 6.0, 7.0, 7.5, 7.7, 7.8, 7.9, 8.0, 8.1, 8.3, 8.6, 9.0, 9.5, 10.0, 10.5, 11.0, 11.9):
+for t0 in [T_REL - 0.5] + [T_REL + 0.1 * k for k in range(0, int(10 * (T_FINE - T_REL)) - 1)]:
     ae, am = ampiezza(te, me, t0), ampiezza(tm, mm, t0)
-    print("t = %5.2f  ev %.5g V  mai %.5g V  ->  %+.3f dB" % (t0, ae, am, 20 * math.log10(ae / am) if ae > 0 else float("-inf")))
+    print("t = %6.2f  ev %.5g V  mai %.5g V  ->  %+.3f dB" % (t0, ae, am, 20 * math.log10(ae / am) if ae > 0 else float("-inf")))
