@@ -2,7 +2,7 @@
 """Scratch L29b: il mute graduale a monte con due LDR VTL5C4 sulla catena intera,
 col metodo di V2 (ADR-038). Non e' il deck versionato.
 
-Uso:  /usr/bin/python3 build.py OUTDIR [TD=3] [v2|v1]   ->  OUTDIR/ldr1k.cir, poi  ngspice -b ldr1k.cir
+Uso:  /usr/bin/python3 build.py OUTDIR [TD=3] [v3|v2|v1]   ->  OUTDIR/ldr1k.cir, poi  ngspice -b ldr1k.cir
       (i .dat e il manifesto si scrivono in OUTDIR; le forme d'onda non si versionano)
 
 IL CANALE e' il blocco "* >>> CANALE" ... "* <<< CANALE" di
@@ -51,8 +51,21 @@ L.insert(1, ".include %s/models/optocoupler/vtl5c4_comportamentale.lib" % R)
 ION = 20e-3       # corrente del LED acceso
 IMIN = 0.2e-6     # v1: sotto, buio per la curva B (genera_modello.py: buio da 0,19 uA)
 IRIP = 10e-9      # v2: riposo dei LED, sotto il ginocchio del buio
-RITARDO_RELE = 0.5 if PROFILO == "v2" else 0.05
-if PROFILO == "v2":
+V1 = PROFILO == "v1"
+RITARDO_RELE = 0.05 if V1 else 0.5
+if PROFILO == "v3":
+    # v3 (scelta dell'utente il 2026-09-21, dopo v2): la serie in tre tratti log-lineari.
+    # Il tratto che costa livello e' R_s da ~10 k a ~2 M contro R_IN = 1 M (all'inserzione
+    # il calo fino a -6 dB, al rilascio la risalita dal plateau): deve andare piu' lento
+    # dello spegnimento naturale della cella (2,4-3,3 decadi/s, v2 Td 3 e 5 s identiche a
+    # 5,35 mV). Curva B: 10 k a 0,206 mA (dato), ~2 M a 4,5 uA (ESTRAPOLATO, pendenza del
+    # primo tratto -1,52).
+    COMANDO = [
+        "BILS 0 ALS I = pow(10, pwl(V(DEP), 0,%.4f, 0.1,%.4f, 0.45,%.4f, 0.5,%.4f, 1,%.4f))"
+        % tuple(__import__("math").log10(i) for i in (ION, 0.2e-3, 4.5e-6, IRIP, IRIP)),
+        "BILP 0 ALP I = %g * pow(%g, min(max((V(DEP) - 0.5)/0.5, 0), 1))" % (IRIP, ION / IRIP),
+    ]
+elif PROFILO == "v2":
     COMANDO = [
         "BILS 0 ALS I = %g * pow(%g, min(max(1 - V(DEP)/0.45, 0), 1))" % (IRIP, ION / IRIP),
         "BILP 0 ALP I = %g * pow(%g, min(max((V(DEP) - 0.5)/0.5, 0), 1))" % (IRIP, ION / IRIP),
@@ -93,8 +106,8 @@ L += [
 
 TI = 1.0
 T_RELE = TI + TD + RITARDO_RELE
-TR = T_RELE + 1.0 if PROFILO == "v2" else 5.0        # 1 s di rele' chiuso: B2
-TF = TR + TD + 3.0 if PROFILO == "v2" else 12.0      # 3 s dopo il rilascio: la ripresa
+TR = 5.0 if V1 else T_RELE + 1.0        # 1 s di rele' chiuso: B2
+TF = 12.0 if V1 else TR + TD + 3.0      # 3 s dopo il rilascio: la ripresa
 
 
 def corsa(nome, amp, ti, tr, rele_on, rele_off, tf, tmax=10e-6, stati=False):
@@ -123,18 +136,18 @@ L += corsa("sempre", A, -10, 1000, -10, 1000, TF)
 L += [riga("sempre", "sempre", "rif", A, TI, TR, TF, 10e-6, "rif_sempre")]
 # l'evento: inserzione a TI, rele' a TI+TD+50 ms, rilascio a TR (rele' aperto a TR)
 L += corsa("ev", A, TI, TR, T_RELE, TR, TF, stati=True)
-TG = TD + RITARDO_RELE if PROFILO == "v2" else TD + 0.1   # C2 e B2 coprono tutta la sequenza
-L += [riga("ev", "ev", "ldr_%s_td%g" % (PROFILO, TD) if PROFILO == "v2" else "ldr_td3", A, TI, TR, TF, 10e-6, "evento", "sempre", "mai", TG)]
+TG = TD + 0.1 if V1 else TD + RITARDO_RELE   # C2 e B2 coprono tutta la sequenza
+L += [riga("ev", "ev", "ldr_td3" if V1 else "ldr_%s_td%g" % (PROFILO, TD), A, TI, TR, TF, 10e-6, "evento", "sempre", "mai", TG)]
 # lo stesso evento senza rele': la differenza e' il rele' soltanto
 L += corsa("norele", A, TI, TR, 1000, 2000, TF, stati=True)
 L += [riga("norele", "norele", "rif", A, TI, TR, TF, 10e-6, "rif_seq")]
 L += [riga("rele", "ev", "rele_contro_norele", A, T_RELE, TR, TF, 10e-6, "evento", "norele", "norele", 0.0)]
 # inversione a meta': il rilascio comincia a meta' della rampa della derivazione
-DINV = 0.75 if PROFILO == "v2" else 0.6
+DINV = 0.6 if V1 else 0.75
 TINV = TI + DINV * TD
-TFI = TINV + DINV * TD + 3.0 if PROFILO == "v2" else 8.6
+TFI = 8.6 if V1 else TINV + DINV * TD + 3.0
 L += corsa("inv", A, TI, TINV, 1000, 2000, TFI, stati=True)
-L += [riga("inv", "inv", "inversione_d%02d" % round(100 * DINV) if PROFILO == "v2" else "inversione_d06", A, TI, TINV, TFI, 10e-6, "evento", "sempre", "mai", DINV * TD)]
+L += [riga("inv", "inv", "inversione_d06" if V1 else "inversione_d%02d" % round(100 * DINV), A, TI, TINV, TFI, 10e-6, "evento", "sempre", "mai", DINV * TD)]
 # pavimento di C2: la corsa mai in mute con un altro TMAX, letta come C2 contro "mai"
 L += corsa("mai7u", A, 1000, 2000, 1000, 2000, TF, tmax=7e-6)
 for k, t in enumerate((TI, T_RELE, TR, TINV)):
@@ -145,7 +158,7 @@ L += [riga("lzmai", "lzmai", "rif", 0, TI, TR, TF, 10e-6, "rif_mai")]
 L += corsa("lzsempre", 0, -10, 1000, -10, 1000, TF)
 L += [riga("lzsempre", "lzsempre", "rif", 0, TI, TR, TF, 10e-6, "rif_sempre")]
 L += corsa("lzev", 0, TI, TR, T_RELE, TR, TF, stati=True)
-L += [riga("lzev", "lzev", "ldr_%s_td%g" % (PROFILO, TD) if PROFILO == "v2" else "ldr_td3", 0, TI, TR, TF, 10e-6, "evento", "lzsempre", "lzmai", TG)]
+L += [riga("lzev", "lzev", "ldr_td3" if V1 else "ldr_%s_td%g" % (PROFILO, TD), 0, TI, TR, TF, 10e-6, "evento", "lzsempre", "lzmai", TG)]
 L += [riga("lzrele", "lzev", "rele_contro_norele", 0, T_RELE, TR, TF, 10e-6, "evento", "lzsempre", "lzmai", 0.0)]
 L += [".endc", ".end"]
 os.makedirs(OUT, exist_ok=True)
