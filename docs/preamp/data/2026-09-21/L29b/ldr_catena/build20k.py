@@ -2,7 +2,8 @@
 """Scratch L29b: il rele' al jack a 20 kHz, a mute LDR inserito (ADR-038 lo stima a
 0,57 mV sulla principale). Non e' il deck versionato.
 
-Uso:  /usr/bin/python3 build20k.py OUTDIR   ->  OUTDIR/rele20k.cir
+Uso:  /usr/bin/python3 build20k.py OUTDIR [RS_CHIUSURA RS_APERTURA]  ->  OUTDIR/rele20k.cir
+      (le resistenze della serie agli istanti del rele', da post.py; predefinite: v1)
 
 La sequenza intera non si rifa' col passo da 0,5 us che 20 kHz chiede (L29a:
 tb_v2_mute_pavimento.cir, 0,7 s, TMAX 0,5 us e 0,25 us per il pavimento). Si prende
@@ -19,6 +20,8 @@ import sys
 
 R = os.path.abspath(os.path.join(os.path.dirname(__file__), *[".."] * 6))
 OUT = os.path.abspath(sys.argv[1])
+RS_C = float(sys.argv[2]) if len(sys.argv) > 2 else 5.756e5
+RS_A = float(sys.argv[3]) if len(sys.argv) > 3 else 1.372e6
 TB = os.path.join(R, "spice", "preamp", "tb", "tb_v2_mute_graduale.cir")
 righe = open(TB).read().splitlines()
 fine = next(i for i, r in enumerate(righe) if r.startswith("* <<< CANALE"))
@@ -27,13 +30,13 @@ L[0] = "rele20k.cir - L29b scratch: rele' al jack a 20 kHz, LDR a stato fermo"
 L += [
     "* ---- L29b: le LDR a stato fermo, fuori dal blocco CANALE ----",
     "RSRC2 SRC SRCX 1.5",
-    "RLS SRCX SELA 5.756e5",
+    "RLS SRCX SELA %g" % RS_C,
     "CLS SRCX SELA 5p",
     "RLP INA 0 88.32",
     "CLP INA 0 5p",
 ]
 MAN = os.path.join(OUT, "manifest.csv")
-TI, TF, A = 0.3, 0.7, 3.818
+TI, TF, A = 0.45, 0.7, 3.818   # v2_metodo accetta eventi solo per t > 0,3 s, stretto (L29a: 0,45)
 L += [
     ".control",
     "set d = .dat",
@@ -66,7 +69,7 @@ L += [riga("c_ev", "c_ev", "chiusura_rele", TI, 1000, 0.5e-6, "evento", "c_rif",
       riga("c_rif", "c_rif", "rif", TI, 1000, 0.5e-6, "rif_mai"),
       riga("c_pav", "c_pav", "pavimento", TI, 1000, 0.25e-6, "pav_num", "c_rif")]
 # apertura: LDR allo stato di 5,00 s; il rele' chiuso da t = 0 si apre a TI
-L += ["alter rls = 1.372e6"]
+L += ["alter rls = %g" % RS_A]
 L += corsa("a_ev", -1, TI, 0.5e-6) + corsa("a_rif", 1000, 2000, 0.5e-6) + corsa("a_pav", 1000, 2000, 0.25e-6)
 L += [riga("a_ev", "a_ev", "apertura_rele", 1000, TI, 0.5e-6, "evento", "-", "a_rif"),
       riga("a_rif", "a_rif", "rif", TI, 1000, 0.5e-6, "rif_mai"),
