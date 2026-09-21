@@ -1130,6 +1130,166 @@ wrdata {csv} vdb(pri_p) vdb(sec_p)
 
 
 # ---------------------------------------------------------------------
+# L29b - the mute-graduale candidates (ADR-037, then ADR-038). Single op
+# with one instance per point: the VTL5C4 behavioural model does NOT
+# converge through a sequence of `alter` + `op` (each op starts from the
+# previous solution and log10 of the LED current throws it off), while
+# every op from scratch converges (docs/preamp/data/2026-09-16/L29b/
+# vtl5c4_modello/verifica_statica.py).
+# ---------------------------------------------------------------------
+
+def tb_mmbfj112(model_file):
+    csv = os.path.join(SCRATCH_DIR, "jfet_mmbfj112.csv")
+    cir = f"""* validate mmbfj112.lib (IDSS, rDS(on), pinch-off)
+.include {model_file}
+Vd1 d1 0 DC 15
+J1 d1 0 0 MMBFJ112
+I2 0 d2 DC 100u
+J2 d2 0 0 MMBFJ112
+Vd3 d3 0 DC 5
+Vg3 g3 0 DC -5
+J3 d3 g3 0 MMBFJ112
+.control
+op
+wrdata {csv} i(Vd1) v(d2) i(Vd3)
+.endc
+.end
+"""
+    def check(rows):
+        if len(rows) != 1:
+            return False, f"expected 1 op-point row, got {len(rows)}"
+        idss = abs(rows[0]["y0"])
+        rds = rows[0]["y1"] / 100e-6
+        i_off = abs(rows[0]["y2"])
+        # ngspice ignores ISR/ALPHA/VK (PSpice-only) with a warning; the
+        # channel is the vendor's: rDS = 1/(2 BETA |VTO|) = 59.5 ohm. That is
+        # ABOVE the datasheet's own 50 ohm maximum - a vendor model/datasheet
+        # mismatch (ADR-013 precedent), recorded, not hidden. Checked here:
+        # ngspice runs the model as written, and IDSS/pinch-off are in spec.
+        rds_model = 1 / (2 * 5.002e-3 * 1.68)
+        ok = idss >= 5e-3 and close(rds, rds_model, rel=0.02) and i_off < 1e-9
+        msg = (f"IDSS={idss*1e3:.2f}mA (>=5 datasheet), rDS(on)={rds:.1f}ohm (model "
+               f"1/(2*BETA*|VTO|)={rds_model:.1f}; DEVIATION: datasheet max 50), "
+               f"I(Vgs=-5V)={i_off:.2e}A")
+        return ok, msg if ok else msg + " - not as expected"
+    return cir, csv, 3, check
+
+
+def tb_dmn6040svt(model_file):
+    csv = os.path.join(SCRATCH_DIR, "mosfet_dmn6040svt.csv")
+    cir = f"""* validate dmn6040svt.lib (VGS(th) window, RDS(on))
+.include {model_file}
+Va a 0 DC 1.0
+X1 a a 0 DMN6040SVT
+Vb b 0 DC 3.0
+X2 b b 0 DMN6040SVT
+Vg g 0 DC 4.5
+I3 0 d3 DC 4
+X3 d3 g 0 DMN6040SVT
+.control
+op
+wrdata {csv} i(Va) i(Vb) v(d3)
+.endc
+.end
+"""
+    def check(rows):
+        if len(rows) != 1:
+            return False, f"expected 1 op-point row, got {len(rows)}"
+        i1 = abs(rows[0]["y0"])
+        i3 = abs(rows[0]["y1"])
+        rds = rows[0]["y2"] / 4
+        # datasheet: VGS(th) 1..3 V at VDS=VGS, ID=250uA; RDS(on) <= 60 mohm at 4.5 V, 4 A
+        ok = i1 < 250e-6 < i3 and 0 < rds <= 0.060
+        msg = f"ID(VGS=VDS=1V)={i1:.2e}A, ID(3V)={i3:.2e}A (250uA in between), RDS(on)@4.5V,4A={rds*1e3:.1f}mohm (<=60)"
+        return ok, msg if ok else msg + " - not as expected"
+    return cir, csv, 3, check
+
+
+def tb_dmn6040svt_sub(model_file):
+    csv = os.path.join(SCRATCH_DIR, "mosfet_dmn6040svt_sub.csv")
+    # the hypothesis wraps the vendor subckt (see its USO): both are included
+    vendor = os.path.join(os.path.dirname(model_file), "dmn6040svt.lib")
+    cir = f"""* validate dmn6040svt_sottosoglia.lib (declared subthreshold hypothesis)
+.include {vendor}
+.include {model_file}
+V1 d1 0 DC 5
+Vg1 g1 0 DC 2.0
+X1 d1 g1 0 DMN6040SVT_SUB
+V2 d2 0 DC 5
+Vg2 g2 0 DC 1.9
+X2 d2 g2 0 DMN6040SVT_SUB
+.control
+op
+wrdata {csv} i(V1) i(V2)
+.endc
+.end
+"""
+    def check(rows):
+        if len(rows) != 1:
+            return False, f"expected 1 op-point row, got {len(rows)}"
+        i_th = abs(rows[0]["y0"])
+        ratio = abs(rows[0]["y1"]) / i_th if i_th else 0
+        # the hypothesis as declared: it=250u at vth=2.0 V, s=0.1 V/decade
+        ok = close(i_th, 250e-6, rel=0.02) and 0.08 < ratio < 0.125
+        msg = f"ID(VGS=vth=2.0V)={i_th*1e6:.1f}uA (250), ID(1.9V)/ID(2.0V)={ratio:.3f} (0.1: one decade per s)"
+        return ok, msg if ok else msg + " - not as expected"
+    return cir, csv, 2, check
+
+
+def tb_vom1271(model_file):
+    csv = os.path.join(SCRATCH_DIR, "opto_vom1271.csv")
+    cir = f"""* validate vom1271.lib (photovoltaic output at IF = 10 mA)
+.include {model_file}
+I1 0 a1 DC 10m
+X1 a1 0 p1 0 VOM1271
+R1 p1 0 1G
+I2 0 a2 DC 10m
+X2 a2 0 p2 0 VOM1271
+V2 p2 0 DC 0
+.control
+op
+wrdata {csv} v(p1) i(V2)
+.endc
+.end
+"""
+    def check(rows):
+        if len(rows) != 1:
+            return False, f"expected 1 op-point row, got {len(rows)}"
+        voc = rows[0]["y0"]
+        isc = abs(rows[0]["y1"])
+        # datasheet at IF = 10 mA: Voc 8.4 V typ, Isc 15 uA typ (6.0 uA min)
+        ok = close(voc, 8.4, rel=0.05) and close(isc, 15e-6, rel=0.10)
+        msg = f"Voc={voc:.3f}V (8.4 typ), Isc={isc*1e6:.2f}uA (15 typ) at IF=10mA"
+        return ok, msg if ok else msg + " - not as expected"
+    return cir, csv, 2, check
+
+
+def tb_vtl5c4(model_file):
+    csv = os.path.join(SCRATCH_DIR, "opto_vtl5c4.csv")
+    pts = [("B", 1.051e-3, 1020), ("B", 10.53e-3, 121), ("A", 38.701e-3, 60), ("B", 1e-9, 400e6)]
+    inst = "\n".join(f"I{k} 0 a{k} DC {i:g}\nX{k} a{k} 0 c{k} 0 VTL5C4_{c}\nV{k} c{k} 0 DC 1m"
+                     for k, (c, i, _) in enumerate(pts))
+    cir = f"""* validate vtl5c4_comportamentale.lib (points it was generated from)
+.include {model_file}
+{inst}
+.control
+op
+wrdata {csv} {" ".join(f"i(V{k})" for k in range(len(pts)))}
+.endc
+.end
+"""
+    def check(rows):
+        if len(rows) != 1:
+            return False, f"expected 1 op-point row, got {len(rows)}"
+        rs = [1e-3 / abs(rows[0][f"y{k}"]) for k in range(len(pts))]
+        # digitized datasheet points (genera_modello.py) and the declared 400 Mohm dark
+        ok = all(close(r, ref, rel=0.01) for r, (_, _, ref) in zip(rs, pts))
+        msg = ", ".join(f"{c}@{i*1e3:g}mA={r:.4g}ohm ({ref:g})" for r, (c, i, ref) in zip(rs, pts))
+        return ok, msg if ok else msg + " - not as expected"
+    return cir, csv, len(pts), check
+
+
+# ---------------------------------------------------------------------
 # Registry: relative path (from MODELS_DIR) -> builder function
 # ---------------------------------------------------------------------
 
@@ -1153,6 +1313,12 @@ def build_registry():
     reg["bjt_npn/mje15032.lib"] = lambda p: tb_mje15032(p)
     reg["bjt_pnp/mje15033.lib"] = lambda p: tb_mje15033(p)
     reg["diodes/1n4148.lib"] = lambda p: tb_1n4148(p)
+    # L29b - mute-graduale candidates (ADR-037 superseded, ADR-038 LDR).
+    reg["jfet/mmbfj112.lib"] = lambda p: tb_mmbfj112(p)
+    reg["mosfet_n/dmn6040svt.lib"] = lambda p: tb_dmn6040svt(p)
+    reg["mosfet_n/dmn6040svt_sottosoglia.lib"] = lambda p: tb_dmn6040svt_sub(p)
+    reg["optocoupler/vom1271.lib"] = lambda p: tb_vom1271(p)
+    reg["optocoupler/vtl5c4_comportamentale.lib"] = lambda p: tb_vtl5c4(p)
     reg["opamp/generic_opamp.lib"] = lambda p: tb_opamp(p)
     reg["subckt_generic/generic_transformer.lib"] = lambda p: tb_transformer(p)
     return reg

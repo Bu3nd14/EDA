@@ -17,11 +17,15 @@ bassa alla piu' alta resistenza a 1 mA, e si usano come INVILUPPO: A e D sono gl
 CIO' CHE NON E' PUBBLICATO, E COSA SI IPOTIZZA (tutto dichiarato nel .lib):
 - sotto la corrente piu' bassa leggibile di ogni curva: la pendenza log-log del primo
   tratto, fino alla resistenza al buio di 400 Mohm (minimo del datasheet a 10 s);
-- lo spegnimento come funzione del solo stato log10(R): tassi letti sulla curva a 40 mA
-  fino a ~80 kohm, poi un tasso di 0,40 decadi/s, il piu' lento compatibile con «400 Mohm
+- lo spegnimento come funzione del solo stato log10(R): tasso costante fra i punti letti
+  sulla curva a 40 mA fino a ~80 kohm, poi un tasso di 0,397 decadi/s, il piu' lento compatibile con «400 Mohm
   minimi 10 s dopo»: e' la scelta PESSIMISTICA per il residuo del mute;
-- l'accensione come primo ordine su log10(R) con tau = 3 ms (letto: 2,2 ms a 40 mA,
-  3,6 ms a 10 mA);
+- l'accensione: nel tratto pubblicato (da ~1,5 ms) e' un primo ordine su log10(R), tau
+  2,6 ms a 40 mA e 3,6 ms a 10 mA (minimi quadrati sui punti letti, fit_accensione); tau
+  interpolato fra le due correnti sul regime log10(R) e tenuto costante fuori. Estrapolato
+  a t = 0 il tratto parte 1,2-1,5 decadi sopra il regime, non dal buio: il salto dal buio
+  fin li' non e' pubblicato e si modella con tau_rapido = 2 us (IPOTESI; nel mute il LED
+  e' comandato a rampa di secondi, e questo tratto non pesa);
 - nessuna dipendenza della cella dalla tensione (distorsione) e nessun rumore;
 - LED: diodo con N = 2 e IS tale che Vf = 1,65 V a 20 mA (tipico del datasheet);
 - capacita' della cella 5,0 pF e d'accoppiamento ingresso-uscita 0,5 pF (datasheet pag. 45).
@@ -45,9 +49,30 @@ CURVE = {
 }
 XDARK = math.log10(400e6)
 
-# spegnimento: (log10 R, decadi/s) dai tratti della curva a 40 mA
-OFF = [(1.8, 12.5), (3.3, 4.65), (3.5, 3.6), (3.68, 3.3), (3.84, 3.13), (3.99, 2.9),
-       (4.13, 2.76), (4.33, 2.55), (4.57, 2.46), (4.79, 2.41), (4.95, 2.41), (5.25, 0.40), (9.0, 0.40)]
+# spegnimento. Punti a pixel della curva a 40 mA (tabelle.py, off40): (x_px, y_px).
+# Il tasso (decadi/s) e' COSTANTE fra due punti consecutivi e vale Delta log10R / Delta t:
+# cosi' l'integrale ripercorre i punti per costruzione. (L29b, prima versione: tassi scelti a
+# mano con log(tasso) interpolato fra nodi; ritardava di ~0,25 decadi, 567 contro 1555 ohm a
+# 105 ms, e non riproduceva la fonte.) Il primo tratto parte dal regime a 40 mA della curva B
+# (66 ohm, il datasheet non dice quale curva): il primo punto leggibile e' a 105 ms.
+# Oltre l'ultimo punto (~80 kohm a 689 ms) il tasso costante che porta a 400 Mohm a 10,0 s:
+# il piu' lento compatibile col minimo del datasheet, scelta PESSIMISTICA per il residuo.
+TX0, TPX = 52.5, 123.8
+OFF40_PX = [(182, 360), (240, 326), (305, 295.5), (365, 270.5), (430, 244), (490, 222),
+            (553, 199.5), (677, 159), (790, 123), (905, 87.5)]
+OFF_PUNTI = [(0.0, math.log10(66))] + [((x - TX0) / TPX * 0.1, 5 - (y - 72.5) / 159.0)
+                                       for x, y in OFF40_PX]
+OFF_PUNTI.append((10.0, math.log10(400e6)))
+EPS = 1e-4                                   # larghezza del gradino fra due tassi, in decadi
+
+
+def tabella_off():
+    tassi = [(b[1] - a[1]) / (b[0] - a[0]) for a, b in zip(OFF_PUNTI, OFF_PUNTI[1:])]
+    tab = [(1.0, tassi[0])]
+    for i, r in enumerate(tassi):
+        x_a, x_b = OFF_PUNTI[i][1], OFF_PUNTI[i + 1][1]
+        tab += [(x_a + EPS, r), (x_b - EPS, r)]
+    return tab + [(9.0, tassi[-1])]
 
 
 def tabella(pts):
@@ -57,6 +82,38 @@ def tabella(pts):
     s1 = (lx[-1][1] - lx[-2][1]) / (lx[-1][0] - lx[-2][0])
     fine = (2.5, lx[-1][1] + s1 * (2.5 - lx[-1][0]))
     return [(-9.0, XDARK), (x_buio, XDARK)] + lx + [fine]
+
+
+# accensione. Punti a pixel (tabelle.py, on40 e on10): (x_px, y_px), 123,8 px per 1 ms.
+ON_PX = {40.0: [(240, 467), (305, 488.5), (365, 502.5), (430, 515.5), (490, 525.5), (553, 535.5),
+                (610, 542.5)],
+         10.0: [(305, 403), (365, 420), (430, 436), (490, 446.5), (610, 465.5), (677, 476.5),
+                (740, 486.5), (790, 490.5), (905, 500)]}
+TAU_RAPIDO = 2e-6                    # il fit mette D0 a t = 0: il salto deve finire in pochi us
+
+
+def regime_B(i_ma):
+    """log10(R) a regime sulla curva B, interpolata in log-log (la curva dello spegnimento).
+    40 mA sta appena oltre l'ultimo punto letto (38,7 mA): si prolunga l'ultimo tratto."""
+    lx = [(math.log10(i), math.log10(r)) for i, r in CURVE["B"]]
+    x = math.log10(i_ma)
+    for (xa, ya), (xb, yb) in zip(lx, lx[1:]):
+        if xa <= x <= xb or (xb, yb) == lx[-1]:          # oltre l'ultimo: ultimo tratto, come tabella()
+            return ya + (yb - ya) * (x - xa) / (xb - xa)
+
+
+def fit_accensione():
+    """Per ogni corrente: (regime log10R, tau s, D0 decadi) col fit ln(x - regime) = ln D0 - t/tau."""
+    out = []
+    for i_ma, pxs in sorted(ON_PX.items()):
+        xf = regime_B(i_ma)
+        pts = [((x - TX0) / TPX * 1e-3, math.log(5 - (y - 72.5) / 159.0 - xf)) for x, y in pxs]
+        n = len(pts)
+        mt = sum(t for t, _ in pts) / n
+        my = sum(y for _, y in pts) / n
+        b = sum((t - mt) * (y - my) for t, y in pts) / sum((t - mt) ** 2 for t, _ in pts)
+        out.append((xf, -1 / b, math.exp(my - b * mt)))
+    return sorted(out)
 
 
 def pwl(pts):
@@ -70,10 +127,10 @@ testa = '''* vtl5c4_comportamentale.lib - Excelitas VTL5C4, modello COMPORTAMENT
 * DA DATI PUBBLICATI (datasheet pag. 45-46, letti a pixel):
 *   R(I_LED) statica fra ~0,1-0,6 mA e 40 mA, quattro curve A..D (inviluppo delle condizioni
 *   di adattamento e temperatura pubblicate); spegnimento da 40 mA fino a ~80 kohm;
-*   accensione (tau ~2-4 ms); C cella 5,0 pF; C ingresso-uscita 0,5 pF; LED Vf 1,65 V a 20 mA.
+*   accensione (tau 2,6-3,6 ms nel tratto pubblicato); C cella 5,0 pF; C ingresso-uscita 0,5 pF; LED Vf 1,65 V a 20 mA.
 * IPOTESI DICHIARATE (non pubblicate):
 *   - sotto la corrente minima leggibile: pendenza del primo tratto fino a 400 Mohm;
-*   - spegnimento oltre ~80 kohm a 0,40 decadi/s, il minimo compatibile con 400 Mohm a 10 s
+*   - spegnimento oltre ~80 kohm a 0,397 decadi/s, il minimo compatibile con 400 Mohm a 10 s
 *     (pessimistico per il residuo); tasso funzione del solo log10(R);
 *   - nessuna distorsione della cella, nessun rumore, nessuna memoria della luce oltre la curva.
 * Ogni cifra ricavata da qui porta l'etichetta «modello comportamentale dal datasheet, con
@@ -95,7 +152,12 @@ for k, pts in CURVE.items():
         "VSEN nl k DC 0",
         "* stato: log10(R) della cella, su 1 F",
         "BXT xt 0 V = pwl(log10(max(abs(i(VSEN))*1000, 1e-9)), %s)" % pwl(tab),
-        "BDX 0 xs I = min((V(xt) - V(xs))/3m, pow(10, pwl(V(xs), %s)))" % pwl([(x, math.log10(r)) for x, r in OFF]),
+        "* accensione: tau e salto rapido oltre D0 funzione del regime; spegnimento: tasso letto",
+        "BTAU tau 0 V = pwl(V(xt), %s)" % ", ".join("%.4f,%.6g" % (xf, tau) for xf, tau, _ in fit_accensione()),
+        "BD0 d0 0 V = pwl(V(xt), %s)" % pwl([(xf, d0) for xf, _, d0 in fit_accensione()]),
+        "BDX 0 xs I = V(xt) >= V(xs) ? min((V(xt) - V(xs))/V(tau), pow(10, pwl(V(xs), %s)))"
+        " : (V(xt) - V(xs))/V(tau) - max(V(xs) - V(xt) - V(d0), 0)/%g"
+        % (pwl([(x, math.log10(r)) for x, r in tabella_off()]), TAU_RAPIDO),
         "CXS xs 0 1 IC=%.4f" % XDARK,
         "RXS xs 0 1e12",
         "BCELL c1 c2 I = V(c1,c2) / pow(10, V(xs))",
@@ -108,5 +170,7 @@ for k, pts in CURVE.items():
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 open(OUT, "w").write(testa + "\n".join(corpo) + "\n")
 print("scritto", OUT)
+for xf, tau, d0 in fit_accensione():
+    print("accensione: regime log10R %.4f  tau %.3f ms  D0 %.3f decadi" % (xf, tau * 1e3, d0))
 for k, pts in CURVE.items():
     print(k, "buio da log10(I_mA) = %.3f" % tabella(pts)[1][0])
