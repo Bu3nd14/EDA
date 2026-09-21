@@ -1,129 +1,115 @@
-# Prompt per la sessione successiva — L29b, ripresa (mute graduale a monte con LDR)
+# Prompt per la sessione successiva — L29b2 (il mute LDR nel sorgente, e il rilascio reso decidibile)
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è
-organizzato in LOTTI PICCOLI: questa sessione **riprende L29b**, che è rimasto a metà, e
-si ferma. Non iniziarne un secondo.
+organizzato in LOTTI PICCOLI: questa sessione fa **L29b2** e si ferma. Non iniziarne un
+secondo.
 
-## ATTENZIONE: il lavoro sta su un ramo non mergiato
+## Da dove si parte
 
-- Ramo **`worktree-L29b`**, pushato su origin. **`main` non lo contiene.**
-- Il worktree era `/Users/roberto/EDA/.claude/worktrees/L29b`. Se non esiste più, rientra
-  dal ramo:
-  `git worktree add .claude/worktrees/L29b worktree-L29b`
-  e lavora lì (EnterWorktree con `path`).
-- Verifica prima di tutto: `git log --oneline -12` sul ramo deve mostrare i commit
-  «L29b (in corso)».
+Il lotto precedente ha chiuso la **misura** del mute graduale a monte con due LDR
+VTL5C4 (ADR-038). La decisione è dell'utente: il **sorgente** è di questo lotto.
 
-## Cosa è successo nella sessione interrotta (2026-09-16)
-
-Leggi la voce **«L29b — IN CORSO»** in cima al diario di `STATE.md`. In breve:
-
-1. L29b è stato **diviso**: il caso peggiore di V2 è **L29c**.
-2. **ADR-037**: MOSFET contrapposti con driver fotovoltaico al jack. Scelta dell'utente,
-   poi **superata** nella stessa sessione:
-   - il modello del MOSFET non ha regione sottosoglia;
-   - rampe calcolate da 7–10 s;
-   - il banco non converge alle tolleranze di V2.
-3. Una **ricerca in rete**, chiesta dall'utente, ha trovato che l'industria muta a monte e
-   che nessuno punta a soglie come le nostre.
-4. **ADR-038**, decisione dell'utente («Opzione 1 più ipotesi 1»):
-   - **mute graduale a monte**: LDR VTL5C4 in serie e verso massa all'ingresso del
-     blocco A;
-   - **relè NC al jack tenuto**: si chiude solo a musica spenta;
-   - **guadagno e trim si cambiano solo col jack a massa**;
-   - un'unica variabile di profondità, reversibile se l'utente inverte il mute a metà.
-5. Ultimo passo: `models/optocoupler/vtl5c4_comportamentale.lib`, **mai eseguito con
-   successo**. La prova è stata interrotta senza cifre.
+- **Il modello** `models/optocoupler/vtl5c4_comportamentale.lib` è verificato contro i
+  punti del datasheet. È comportamentale, con un'estrapolazione dichiarata sopra ~10 kΩ.
+  **Si corregge solo dal generatore**,
+  `docs/preamp/data/2026-09-16/L29b/vtl5c4_modello/genera_modello.py`, mai a mano.
+- **Il profilo del comando dei LED da portare nel sorgente** è **v3, con Td = 6 s**
+  (scelta dell'utente):
+  - la profondità `d` è un'unica variabile reversibile, da 0 a 1 in Td;
+  - **serie**: 20 mA → 0,2 mA per d da 0 a 0,1, poi **0,2 mA → 4,5 µA** per d da 0,1 a
+    0,45, poi 10 nA a d = 0,5. È log-lineare a tratti;
+  - **derivazione**: 10 nA → 20 mA, log-lineare, per d da 0,5 a 1;
+  - **10 nA di riposo** su entrambi i LED;
+  - **il relè al jack** si chiude 0,5 s dopo d = 1 e si apre all'inizio del rilascio.
+- **Cosa è misurato** (1 kHz, 100 kΩ, scratch):
+  - C2 d'inserzione **2,56 / 0,62 mV** (principale / fisse), contro un pavimento di
+    0,68 / 0,22 mV;
+  - A ≤ 0,03 µV, B2 0,29 µV;
+  - relè 0,07 mV a 1 kHz e 0,56 mV a 20 kHz;
+  - carico sulla sorgente ≥ 714 kΩ.
+- **Cosa NON è decidibile**: il rilascio e l'inversione. Con le LDR attive il pavimento
+  numerico di C2 sale a **4,6–7,2 mV** sulla principale (1,9–2,3 sulle fisse). Succede
+  nella coda del rilascio, a livello pieno, con la serie accesa e la derivazione che si
+  fa buia. Il meccanismo non è attribuito.
 
 ## Leggi PRIMA, in quest'ordine
 
-1. **`CLAUDE.md`**.
-2. **`docs/preamp/STATE.md`**: la voce L29b in cima al diario, le righe L29b, L29c e L36.
-3. **`docs/preamp/decisions/ADR-038-mute-graduale-ldr-a-monte.md`** per intero; ADR-037
-   (superata) solo per il contesto; ADR-036, ADR-035, ADR-032.
-4. **`docs/preamp/REQUIREMENTS.md`**: V2 per intero, E3, E5, F5 con la sua nota, F6, F8,
-   P7.
-5. **`docs/preamp/NONCOMPLIANCE.md`**: NC-028.
-6. **I dati di L29b**, `docs/preamp/data/2026-09-16/L29b/`: i README di ogni cartella, e
-   `vtl5c4_modello/genera_modello.py`.
+1. **`CLAUDE.md`**, **`docs/limitations.md`**.
+2. **`docs/preamp/STATE.md`**: la voce L29b del diario e le righe L29b2, L29c e L36.
+3. **`docs/preamp/reports/2026-09-21-L29b-mute-ldr-misura.md`** per intero.
+4. **`docs/preamp/data/2026-09-21/L29b/ldr_catena/README.md`** e `build.py`: il banco,
+   i profili, il pavimento.
+5. **`docs/preamp/data/2026-09-16/L29b/vtl5c4_modello/README.md`**: il modello e le tre
+   trappole.
+6. **ADR-038** per intero; ADR-036, ADR-035, ADR-032, ADR-012, ADR-021, ADR-022.
+7. **`docs/preamp/REQUIREMENTS.md`**: V2 per intero, E3, E5, F6, P7.
+8. **`docs/preamp/NONCOMPLIANCE.md`**: NC-028, l'aggiornamento del 2026-09-21.
 
-## IL LAVORO CHE RESTA, in ordine
+## IL LAVORO, in ordine
 
-1. **Far girare `vtl5c4_modello/prova_modello.cir`** e confrontarlo coi punti digitalizzati
-   (`tabelle.py`): statica a 0,2 / 1 / 10 / 40 mA; spegnimento da 40 mA a 105, 305, 689 ms;
-   10 s.
-   - La corsa superava i 300 s: prova `tran` con passo più largo, e lanciala in
-     background.
-   - Se il modello non riproduce la sua fonte, correggi il generatore, **non il .lib**.
-   - Poi la voce in `validate_models.py --check-provenance`, e aggiorna `notes` nella
-     provenance.
-2. **Scratch col metodo di V2 sulla catena intera.** Tolti gli elementi ideali, due LDR per
-   canale all'ingresso del blocco A, comando dei LED ideale, relè al jack alla profondità
-   completa.
-   - Tolleranze del blocco CANALE: `vntol=1e-6 abstol=1e-12`. Se non converge,
-     **dillo**, non allentare in silenzio.
-   - Misura:
-     - C della dissolvenza a 1 kHz sulle tre uscite, col pavimento;
-     - C alla chiusura del relè a 20 kHz (ADR-038 stima 0,57 mV);
-     - il carico minimo sulla sorgente durante la dissolvenza (ipotesi ≥ 10 kΩ, serie
-       alta prima che la derivazione scenda);
-     - l'inversione a metà.
-3. **Con i numeri, torna dall'utente** se la dissolvenza è molto peggiore dell'ideale di
-   ADR-036, o se le tolleranze non tengono.
-4. **Il sorgente.** In `circuits/preamp/preamp_audio.py`:
-   - LDR, comando dei LED fuori dal percorso del segnale (ADR-022) e la variabile di
-     profondità;
-   - il relè al jack che segue la profondità completa;
-   - poi netlist, disegni (2d), diagramma a blocchi (2f) e `check_relay_safe_state.py`,
-     fatto fallire prima di fidarsene.
-5. **Il deck versionato** `spice/preamp/tb/tb_v2_mute_ldr.cir`:
+1. **Il pavimento di C2 con le LDR.**
+   - Capire perché due corse nello stesso stato fisico differiscono di ~6,5 mV sulla
+     principale nella coda del rilascio.
+   - Gli strumenti sono `ldr_catena/c2curva.py` e `c2spettro.py`.
+   - Candidati da falsificare, uno per volta:
+     - il passo (TMAX 5 e 2 µs);
+     - la forma del modello (`BDX` con `min()`, la tabella a gradini dello spegnimento);
+     - `method=gear`, **ma solo se** il metodo di V2 e l'utente lo consentono (il blocco
+       CANALE non si tocca in silenzio).
+   - Poi il **rilascio** e l'**inversione** del profilo v3 Td 6 s, ciascuno col suo
+     pavimento misurato su tutta la sequenza, non solo all'evento.
+   - Se il pavimento non scende sotto la soglia, **dillo all'utente** prima di andare
+     avanti.
+2. **Il sorgente**, in `circuits/preamp/preamp_audio.py`:
+   - due LDR per canale;
+   - il comando dei LED fuori dal percorso del segnale (ADR-022);
+   - la variabile di profondità;
+   - il relè al jack che segue la profondità completa.
+
+   Un commento con l'ADR su ogni valore non ovvio. Poi netlist, disegni (2d), diagramma a
+   blocchi (2f) e `check_relay_safe_state.py`, **fatto prima fallire** con un sabotaggio.
+3. **Il deck versionato** `spice/preamp/tb/tb_v2_mute_ldr.cir`:
    - lo stesso blocco CANALE (`v2_metodo.py canale`);
-   - tre uscite, 10 e 100 kΩ, 20 Hz / 1 kHz / 20 kHz, A senza segnale, B, C2 col pavimento;
+   - tre uscite, 10 e 100 kΩ, 20 Hz / 1 kHz / 20 kHz;
+   - A senza segnale, B, C2 con il **suo** pavimento;
    - corse lunghe in background, con `save`.
-6. **E3 ed E5 con la LDR in serie; P7 riletto** (ADR-038: a mute inserito gli stadi d'uscita
-   non hanno segnale).
-7. **L'esito.** NC-028 resta aperta (manca L29c) e si aggiorna. Report datato.
+4. **E3** ed **E5** con la LDR in serie (E5: 88 Ω di serie, più l'accoppiamento
+   LED–cella di 0,5 pF). **P7 riletto**: a mute inserito gli stadi d'uscita non hanno
+   segnale.
+5. **L'esito.** NC-028 resta aperta (manca L29c) e si aggiorna. Report datato.
 
-Se non entra in una sessione, **dividi di nuovo** (L29b / L29b2) in `STATE.md` e chiudine
-uno.
+Se non entra in una sessione, **dividi di nuovo** in `STATE.md` e chiudine una parte.
 
 ## I vincoli
 
-- **Il metodo di V2 non si cambia in silenzio.**
-- **Il modello VTL5C4 è comportamentale**: ogni cifra porta «modello comportamentale dal
-  datasheet, con estrapolazione dichiarata». NC-028 non si chiude su un deck solo.
-- **Trappole già pagate in L29b**:
-  - un LED pilotato solo da un generatore di corrente senza percorso DC fa fallire l'op, e
-    ngspice non dà errore;
-  - un nodo flottante di source si pompa al picco del segnale;
-  - `reltol` ≥ 1e-5 o `abstol` ≥ 1e-9 sono più larghi di B e di C.
-- **Nessun cambio di tecnica senza l'utente**: ADR-038 è la sua decisione.
-
-## Cosa NON accettare
-
-- Una cifra su `v(OUT)`, o senza il metodo di V2.
-- Un modello che non riproduce i punti da cui è stato generato.
-- **Tolleranze allentate senza una verifica** che le cifre non cambino.
-- NC-028 chiusa con un rimedio che esiste solo in un deck.
+- **Il metodo di V2 non si cambia in silenzio.** Il pavimento si misura e si riporta
+  accanto a ogni C2. Un valore sotto il pavimento non è una misura.
+- **Ogni cifra sulla LDR** porta «modello comportamentale dal datasheet, con
+  estrapolazione dichiarata».
+- **Trappole già pagate:**
+  - un LED senza percorso DC fa fallire l'op in silenzio;
+  - `alter` + `op` in sequenza non convergono col modello della LDR;
+  - col trapezio, un gradino sul LED fa oscillare la corrente della cella;
+  - un gradino di corrente del LED della derivazione salta dentro un nodo a 1 MΩ
+    (A in mV);
+  - `analizza` accetta eventi solo per t > 0,3 s;
+  - `awk` col locale italiano non legge i `.dat`: si usa Python.
+- **Nessun cambio di tecnica senza l'utente**: ADR-038 e il profilo v3 sono sue scelte.
+- Gli script zsh si lanciano da soli. `git` e i comandi con variabili di shell composte
+  vengono rifiutati nel worktree: comandi semplici e separati, script su file. **Scipy
+  non c'è**: stdlib con `/usr/bin/python3`.
 
 ## NON fa parte di questo lotto
 
-- **L29c** (caso peggiore), **L36** (forma dell'interblocco del guadagno), **L35**, L28,
-  L30, il dossier.
-- Non toccare i file già in `vendor/`.
-
-## Come lavoriamo
-
-- Verifica invece di fidarti. Niente cifre non eseguite. Un lotto per volta.
-- Gli script zsh si lanciano da soli; `git` e comandi con variabili di shell composte
-  vengono rifiutati nel worktree: comandi semplici e separati, script su file.
-- **Scipy non c'è**: stdlib con `/usr/bin/python3`.
+- **L29c** (caso peggiore), **L36** (forma dell'interblocco del guadagno), L35, L28, L30,
+  il dossier.
+- I file in `vendor/` non si toccano.
 
 ## CHIUSURA
 
-1. `STATE.md` con L29b **fatto** e il successivo come prossimo.
+1. `STATE.md` con L29b2 **fatto** e il successivo come prossimo.
 2. Riscrivi QUESTO file per il lotto successivo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L29b`.
+4. `/bin/zsh scripts/chunk_close.sh L29b2`.
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**
