@@ -74,6 +74,17 @@ Ogni cifra ricavata da `models/optocoupler/vtl5c4_comportamentale.lib` porta l'e
   `method=gear`.
   - **Da tenere d'occhio sulla catena**, che usa il trapezio. Lì il LED è comandato a
     rampa e non a gradino.
+- **Una divisione per un nodo che al punto di lavoro parte da 0 V.**
+  - Nella prima stesura dell'accensione, `BDX` divideva per `V(tau)`. Nel Newton del
+    punto di lavoro il nodo parte da 0 V: la divisione dava NaN ("trouble with
+    x1:dled"), e l'`op` falliva **a seconda del percorso**.
+  - Una cella verso massa convergeva. La stessa cella in serie a 1 MΩ (l'ingresso del
+    blocco A) non convergeva mai, con nessuna tolleranza e con nessuna polarizzazione.
+  - **Rimedio**: `max(V(tau), 1e-4)`, che non cambia nulla alla soluzione (τ ≥ 2,7 ms).
+  - Scrivere invece τ e D0 dentro `BDX`, come `pwl` annidati, **cambiava l'accensione**
+    (1 Ω invece di 330 Ω), e quella strada è stata scartata.
+  - La ricetta di `validate_models.py` ha un'istanza in serie a 1 MΩ. Tolta la
+    protezione, la ricetta cade: provato.
 - **La prova originale `prova_modello.cir`** (rimossa) superava i 300 s per il
   `tran 1m 10.2 0 1m`. Con `tmax` = 5 ms, lo spegnimento fino a 10,2 s gira in meno di
   un secondo.

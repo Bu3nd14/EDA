@@ -142,6 +142,8 @@ testa = '''* vtl5c4_comportamentale.lib - Excelitas VTL5C4, modello COMPORTAMENT
 * corrente del LED a t = 0 (CXS aperto, BDX nullo per xs = xt). IC=8,6 conta solo con uic.
 '''
 
+TAU_PWL = "pwl(V(xt), %s)" % ", ".join("%.4f,%.6g" % (xf, tau) for xf, tau, _ in fit_accensione())
+D0_PWL = "pwl(V(xt), %s)" % pwl([(xf, d0) for xf, _, d0 in fit_accensione()])
 corpo = []
 for k, pts in CURVE.items():
     tab = tabella(pts)
@@ -152,11 +154,15 @@ for k, pts in CURVE.items():
         "VSEN nl k DC 0",
         "* stato: log10(R) della cella, su 1 F",
         "BXT xt 0 V = pwl(log10(max(abs(i(VSEN))*1000, 1e-9)), %s)" % pwl(tab),
-        "* accensione: tau e salto rapido oltre D0 funzione del regime; spegnimento: tasso letto",
-        "BTAU tau 0 V = pwl(V(xt), %s)" % ", ".join("%.4f,%.6g" % (xf, tau) for xf, tau, _ in fit_accensione()),
-        "BD0 d0 0 V = pwl(V(xt), %s)" % pwl([(xf, d0) for xf, _, d0 in fit_accensione()]),
-        "BDX 0 xs I = V(xt) >= V(xs) ? min((V(xt) - V(xs))/V(tau), pow(10, pwl(V(xs), %s)))"
-        " : (V(xt) - V(xs))/V(tau) - max(V(xs) - V(xt) - V(d0), 0)/%g"
+        "* accensione: tau e salto rapido oltre D0 funzione del regime; spegnimento: tasso letto.",
+        "* La divisione per V(tau) e' protetta da max(.., 1e-4): nel Newton del punto di lavoro",
+        "* il nodo parte da 0 V e la divisione dava NaN, con l'op che falliva a seconda del",
+        "* percorso (L29b, 2026-09-21: cella in serie a 1 M). Alla soluzione tau >= 2,7 ms: nulla",
+        "* cambia. (Scrivere tau e D0 dentro BDX come pwl annidati cambiava l'accensione.)",
+        "BTAU tau 0 V = %s" % TAU_PWL,
+        "BD0 d0 0 V = %s" % D0_PWL,
+        "BDX 0 xs I = V(xt) >= V(xs) ? min((V(xt) - V(xs))/max(V(tau), 1e-4), pow(10, pwl(V(xs), %s)))"
+        " : (V(xt) - V(xs))/max(V(tau), 1e-4) - max(V(xs) - V(xt) - V(d0), 0)/%g"
         % (pwl([(x, math.log10(r)) for x, r in tabella_off()]), TAU_RAPIDO),
         "CXS xs 0 1 IC=%.4f" % XDARK,
         "RXS xs 0 1e12",

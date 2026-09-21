@@ -1269,9 +1269,16 @@ def tb_vtl5c4(model_file):
     pts = [("B", 1.051e-3, 1020), ("B", 10.53e-3, 121), ("A", 38.701e-3, 60), ("B", 1e-9, 400e6)]
     inst = "\n".join(f"I{k} 0 a{k} DC {i:g}\nX{k} a{k} 0 c{k} 0 VTL5C4_{c}\nV{k} c{k} 0 DC 1m"
                      for k, (c, i, _) in enumerate(pts))
+    # plus one cell in series with 1 Mohm (the block-A input, ADR-038): with tau
+    # on its own node, starting at 0 V, that op failed with NaN until the
+    # division was guarded (L29b, 2026-09-21). Here it makes the whole op fail.
     cir = f"""* validate vtl5c4_comportamentale.lib (points it was generated from)
 .include {model_file}
 {inst}
+I9 0 a9 DC 20m
+X9 a9 0 c9 d9 VTL5C4_B
+V9 c9 0 DC 1m
+R9 d9 0 1MEG
 .control
 op
 wrdata {csv} {" ".join(f"i(V{k})" for k in range(len(pts)))}
