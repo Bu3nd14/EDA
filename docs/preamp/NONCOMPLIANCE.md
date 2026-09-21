@@ -83,6 +83,13 @@ differenza dal riferimento, soglia 1 mV; **ADR-036**: A solo senza segnale) e ha
 misurato le varianti di mute: nessuna rispetta A, B e C insieme. L'utente ha
 scelto «per ora» il mute graduale in serie da 3 s. Il rimedio esiste solo in un
 deck: **NC-028 resta aperta e bloccante**, aggiornata.
+**L29b** (2026-09-16 e 2026-09-21) ha portato il mute a monte con LDR (ADR-038) su un
+modello verificato, e l'ha misurato sulla catena.
+- C2 d'inserzione 2,56 mV sulla principale e 0,62 mV sulle fisse; A, B, il relè ed E3
+  nei limiti.
+- Il rilascio non è decidibile, perché il pavimento numerico con le LDR sale a mV.
+
+**NC-028 resta aperta e bloccante**, aggiornata. Il sorgente è di L29b2.
 **13 voci aperte, 3 bloccanti.**
 L'accesso a G1 non è concesso finché NC-004, NC-017 e NC-028 restano aperte.
 
@@ -2277,6 +2284,33 @@ scelta dell'utente. La voce RESTA APERTA E BLOCCANTE.**
 - **Cosa serve per chiuderla, da L29a.** L'elemento graduale reale in serie nel
   sorgente, misurato col metodo di V2 su tre uscite, due carichi, 20 Hz, 1 kHz e
   20 kHz; poi P7 e ADR-012 riletti. **Chi**: **L29b**.
+
+**AGGIORNATA IL 2026-09-21, da L29b: il mute graduale a monte con LDR (ADR-038),
+misurato sulla catena. La voce RESTA APERTA E BLOCCANTE.**
+(`reports/2026-09-21-L29b-mute-ldr-misura.md`)
+
+- **L'elemento reale ha un modello verificato.**
+  - VTL5C4 comportamentale dal datasheet, corretto nel generatore finché non ha
+    riprodotto i punti letti: statica 0,02 %, spegnimento 1,4 %, accensione 3,16 %.
+  - L'estrapolazione ad alta resistenza resta **un'ipotesi dichiarata**.
+- **Misurato, scratch a 1 kHz e 100 kΩ, profilo v3 con Td = 6 s** (scelta dell'utente).
+  Principale / fisse:
+  - **C2 d'inserzione 2,56 / 0,62 mV**: sotto l'ideale di L29a (2,93 / 0,85 mV). Le fisse
+    sono **sotto soglia**, la principale no;
+  - **A** senza segnale ≤ 0,03 µV, **B2** 0,29 µV;
+  - **relè al jack**: 0,07 mV a 1 kHz, e **0,56 mV** a 20 kHz, in chiusura, sotto soglia;
+  - **carico sulla sorgente** ≥ 714 kΩ (E3 ≥ 100 kΩ).
+- **Il rilascio non è decidibile.** Con le LDR attive, il pavimento numerico di C2 sale a
+  **4,6–7,2 mV** sulla principale nella coda del rilascio (misurato con TMAX 7 contro
+  10 µs). È più alto del C2 del rilascio stesso.
+- **Cosa manca per chiuderla:**
+  - il pavimento capito o abbassato, e il rilascio e l'inversione decidibili;
+  - 20 Hz, 20 kHz e 10 kΩ sulla dissolvenza;
+  - il rimedio nel **sorgente** e nel deck versionato, con E3, E5 e P7 riletti. **Chi**:
+    **L29b2**;
+  - il caso peggiore. **Chi**: **L29c**.
+- **C2 d'inserzione sulla principale resta fuori soglia** (2,56 mV contro 1 mV), come
+  l'ideale che ADR-036 aveva accettato «per ora».
 
 
 ### NC-029 — Con i buffer delle fisse la dissipazione a riposo raddoppia, e P5 non la copre

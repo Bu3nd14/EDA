@@ -1,0 +1,65 @@
+{
+  "part_name": "DMN6040SVT (60 V N-channel enhancement mode MOSFET, TSOT26)",
+  "vendor_name": "Diodes Incorporated",
+  "device_class": "mosfet_n",
+  "product_page": "https://www.diodes.com/part/view/DMN6040SVT",
+  "date_obtained": "2026-09-16",
+  "lotto": "L29b (subagent task: mute graduale, famiglia C - coppia MOSFET back-to-back con driver fotovoltaico)",
+  "obtained_by": "AI agent (Claude Sonnet 5, subagent session in worktree L29b) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with plain curl directly from Diodes Incorporated's own asset host (www.diodes.com/assets/... and www.diodes.com/productcollection/...), not from a distributor mirror. diodes.com's main product/store pages ARE behind a Cloudflare bot-check that blocked curl (HTTP 403, 'Just a moment...' challenge page) in this session, but its static asset URLs (/assets/Datasheets/... and /productcollection/spicemodels/...) were NOT behind that challenge and served the real files directly. Both files are byte-for-byte as served; nothing was converted, re-saved or edited.",
+  "license_notes": "Manufacturer datasheet and manufacturer-published SPICE model (bundled in Diodes Inc's own multi-part 'MOSFET Master Table' file), redistributed here unmodified for engineering traceability only. Copyright remains Diodes Incorporated.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "DMN6040SVT.pdf",
+      "role": "datasheet",
+      "url": "https://www.diodes.com/assets/Datasheets/DMN6040SVT.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 561084,
+      "pages": 8,
+      "sha256": "a735f58efe821fe7e5bb8ef7e4344705d38cb45522d294c53e6d2121af4a7b19",
+      "local_filename": "DMN6040SVT.pdf",
+      "renamed": false
+    },
+    {
+      "original_filename": "MOSFET Master Table.spice.txt",
+      "role": "spice_model (multi-part library, contains models for MANY Diodes Inc MOSFETs, not just this one)",
+      "url": "https://www.diodes.com/productcollection/spicemodels/8360/MOSFET-Master-Table.spice.txt?eid=58",
+      "served_content_type": "text/plain",
+      "bytes": 2097710,
+      "sha256": "c8ed45dd583080b2412db9f10ab4e9c1eb5c4b4225b18ba5db26956cb726ae15",
+      "local_filename": "MOSFET-Master-Table.spice.txt",
+      "renamed": false,
+      "note": "This is a SINGLE large text file (69451 lines) that Diodes Inc. publishes as its combined SPICE model download for its entire discrete MOSFET catalogue - it is not specific to DMN6040SVT. The relevant subcircuit, '.SUBCKT DMN6040SVT 10 20 30' at line 23688 (and its footer comment 'Diodes Spice Model v1.1 Last Revised 2021/12/10'), is the one this part's provenance chain relies on. Per vendor/README.md, 'extracting a single model from a multi-part library' is exactly the case for making a models/ curated copy rather than editing this frozen original."
+    }
+  ],
+  "revision_note": "Datasheet footer: 'Document number: DS35562 Rev. 12 - 2', 'April 2026'. This is a genuinely recent revision (dated a few months before this obtain date), current as of 2026-09-16. The SPICE subcircuit's own footer comment says 'Last Revised 2021/12/10, v1.1' - it predates the current datasheet revision by several years; the electrical parameters transcribed below were cross-referenced only against the DATASHEET, not against the SPICE model's internal parameters (no cross-check was performed to confirm the .MODEL NMOS LEVEL=3 parameters reproduce the datasheet's published RDS(ON)/VGS(th) numbers in simulation - flagged as unverified).",
+  "why_this_file": "Famiglia C del mute graduale: MOSFET N a bassa Rds(on) con Vds>=40-60V per la coppia back-to-back pilotata dal driver fotovoltaico VOM1271 (o equivalente). Verificato acquistabile e a magazzino presso DigiKey per l'ordinabile a bobina DMN6040SVT-7: 2220 pz, $0.98 a pezzo singolo (Cut Tape/Digi-Reel), $0.21969 a 3000 pz (Tape&Reel), stato 'Active', controllato il 2026-09-16 via https://www.digikey.com/en/products/detail/diodes-incorporated/DMN6040SVT-7/2918406. Nota: il lead time standard dichiarato dal costruttore era 32 settimane il giorno del controllo - segnalato perche' rilevante per un piano di approvvigionamento, non perche' comprometta la disponibilita' attuale.",
+  "what_was_read": {
+    "page": "pagina 2 (Maximum Ratings, Thermal Characteristics) e pagina 3 (Electrical Characteristics: OFF/ON CHARACTERISTICS, DYNAMIC CHARACTERISTICS)",
+    "key_numbers_transcribed_verbatim": {
+      "BVDSS": "60 V, VGS=0, ID=250uA",
+      "VGS_max": "+-20 V",
+      "ID_continuous_25C_VGS10V": "5.0 A",
+      "VGS_th": "1 a 3 V, VDS=VGS, ID=250uA",
+      "RDS_on_at_VGS_10V_ID_4p3A": "30 typ / 44 max mOhm",
+      "RDS_on_at_VGS_4p5V_ID_4A": "35 typ / 60 max mOhm",
+      "IDSS_max": "100 nA, VDS=60V, VGS=0",
+      "IGSS_max": "+-100 nA, VGS=+-20V, VDS=0",
+      "Ciss_typ": "1287 pF, VDS=25V, VGS=0, f=1.0MHz",
+      "Coss_typ": "57 pF, stesse condizioni",
+      "Crss_typ": "44 pF, stesse condizioni",
+      "Qg_at_VGS_10V": "22.4 nC typ, VDS=30V, ID=4.3A",
+      "Qg_at_VGS_4p5V": "10.4 nC typ",
+      "Qgs": "4.9 nC typ",
+      "Qgd": "3.0 nC typ",
+      "VSD_body_diode": "0.7 typ / 1.2 max V, VGS=0, IS=1A",
+      "trr_body_diode": "18 ns typ, IS=4.3A, di/dt=100A/us",
+      "Tj_Tstg": "-55 a +150 C",
+      "package": "TSOT26 (6 pin: D1,D2,G3 / S4,D5,D6 - piu' pin di drain per ridurre la resistenza di package)"
+    },
+    "spice_model_verbatim_subckt": ".SUBCKT DMN6040SVT 10 20 30 (D G S) - M1 NMOS LEVEL=3 VTO=2.48 KP=57 U0=400 KAPPA=0.2 TOX=1E-7 NSUB=1E16 VMAX=1E5 ETA=0, con RD=0.037 Ohm, RS=0.0001 Ohm, RG=1.44 Ohm, CGS=1.11nF, CGD modellato tramite una rete non lineare (EGD/FFB/CGD/D1/D2 con modelli DLIM e DCGD) invece di un condensatore fisso, e un diodo di corpo esplicito DSD (modello DSUB, BV=68.93V) da source a drain.",
+    "note": "NON VERIFICATO in questa sessione: nessun run di ngspice e' stato eseguito per confrontare l'RDS(on) o le capacita' del modello SPICE con i valori di targa del datasheet. Nessuna cifra di distorsione/linearita' e' pubblicata nel datasheet per questo MOSFET (atteso: e' un dispositivo di potenza generico, non un dispositivo audio)."
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "part_name": "J111/J112/J113 (TO-92) and MMBFJ111/MMBFJ112/MMBFJ113 (SOT-23) - N-channel JFET switch family",
+  "vendor_name": "onsemi (ON Semiconductor)",
+  "device_class": "jfet",
+  "product_page": "https://www.onsemi.com/products/discrete-power-modules/jfets/mmbfj112",
+  "date_obtained": "2026-09-16",
+  "lotto": "L29b (subagent task: mute graduale, famiglia B - JFET come interruttore analogico)",
+  "obtained_by": "AI agent (Claude Sonnet 5, subagent session in worktree L29b) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "onsemi.com blocks direct curl from this sandbox (Akamai bot-check, HTTP 403 on every plain curl attempt to both the datasheet PDF and the .lib model URL). Both files were retrieved instead through the WebFetch tool, which fetches over a different network path and cached the raw bytes locally; those cached files were then copied byte-for-byte into this vendor directory with no re-save, re-encoding or edit of any kind. This is the manufacturer's own document host (www.onsemi.com/download/...), not a distributor mirror.",
+  "license_notes": "Manufacturer datasheet and manufacturer-published PSpice model, redistributed here unmodified for engineering traceability only. Copyright remains onsemi / Semiconductor Components Industries, LLC.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "mmbfj113-d.pdf",
+      "role": "datasheet",
+      "url": "https://www.onsemi.com/download/data-sheet/pdf/mmbfj113-d.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 239668,
+      "pages": 9,
+      "sha256": "d485608b7e036cba4d9258cbbb7c604780a86a2715a2e0e608a1dfa12c03a7fa",
+      "local_filename": "mmbfj113-d.pdf",
+      "renamed": false
+    },
+    {
+      "original_filename": "mmbfj111_mmbfj112_mmbfj113 (pspice model).lib",
+      "role": "spice_model",
+      "url": "https://www.onsemi.com/download/models/lib/mmbfj111_mmbfj112_mmbfj113%20(pspice%20model).lib",
+      "served_content_type": "application/octet-stream (served as text/plain by onsemi; WebFetch reported application/octet-stream for the cached copy)",
+      "bytes": 1609,
+      "sha256": "6a8f76d5ab85a55290e002e0524bb62e0b781e14a23e7e2e10396d3294eb829d",
+      "local_filename": "mmbfj111_mmbfj112_mmbfj113 (pspice model).lib",
+      "renamed": false,
+      "content_summary": "Three .MODEL NJF cards (MMBFJ111, MMBFJ112, MMBFJ113), plain SPICE3-style JFET Level-1 parameters (VTO, BETA, BETATCE, RD, RS, LAMBDA, IS, ISR, ALPHA, VK, CGD, CGS, M, PB, FC, KF, AF, VTOTC). File's own footer: 'Creation: Feb.-07-2022 Rev 1.1, onsemi'."
+    }
+  ],
+  "revision_note": "Datasheet publication order number MMBFJ113/D, footer 'March, 2023 - Rev. 5'. This single document covers BOTH package families (TO-92: J111/J112/J113; SOT-23: MMBFJ111/MMBFJ112/MMBFJ113) and states they share the same die ('Sourced from Process 51'). It SUPERSEDES the older, TO-92-only J111/D Rev.2 (2006) copy kept at vendor/jfet/onsemi/J111_J112/ - the electrical characteristics table is numerically identical between the two revisions for every value this repo transcribed.",
+  "why_this_file": "Famiglia B del mute graduale (JFET come elemento a conduttanza graduale in serie/derivazione). MMBFJ112 (SOT-23, SMT) verificato acquistabile e ampiamente a magazzino presso DigiKey: 48131 pz, $0.49 a pezzo singolo, stato 'Active', controllato il 2026-09-16 via https://www.digikey.com/en/products/detail/onsemi/MMBFJ112/965409. Questo e' il PRIMO modello SPICE del costruttore reale reperito per questo lotto (a differenza del transcritto-a-mano LSK489 gia' nel repo, questo e' un file .lib scaricato direttamente, non ricopiato a mano da un PDF).",
+  "what_was_read": {
+    "page": "pagina 1 (Absolute Maximum Ratings, Thermal Characteristics) e pagina 2 (Electrical Characteristics: OFF CHARACTERISTICS, ON CHARACTERISTICS, SMALL SIGNAL CHARACTERISTICS)",
+    "key_numbers_transcribed_verbatim": {
+      "V_BR_GSS_min": "-35 V, IG=-1.0 mA, VDS=0",
+      "IGSS_max": "-1.0 nA, VGS=-15V, VDS=0",
+      "VGS_off_111": "-3.0 a -10.0 V",
+      "VGS_off_112": "-1.0 a -5.0 V",
+      "VGS_off_113": "-0.5 a -3.0 V",
+      "ID_off_max": "1.0 nA, VDS=5.0V, VGS=-10V",
+      "IDSS_min_111": "20 mA, VDS=15V, VGS=0",
+      "IDSS_min_112": "5.0 mA",
+      "IDSS_min_113": "2.0 mA",
+      "rDS_on_max_111": "30 Ohm, VDS<=0.1V, VGS=0",
+      "rDS_on_max_112": "50 Ohm",
+      "rDS_on_max_113": "100 Ohm",
+      "Cdg_on_plus_Csg_on_max": "28 pF, VDS=0, VGS=0, f=1.0MHz",
+      "Cdg_off_max": "5.0 pF, VDS=0, VGS=-10V, f=1.0MHz",
+      "PD_max_MMBFJ_SOT23": "350 mW, derate 2.8 mW/C (Note 4)",
+      "PD_max_TO92": "625 mW, derate 5.0 mW/C (Note 3)",
+      "Tj_range": "-55 to 150 C (this document; the older J111/D said -65 to +150 C for the TO-92 - a real, small discrepancy between the two revisions, NOT reconciled here, flagged for whoever integrates the model into the topology)"
+    },
+    "spice_model_params_verbatim": "Vedi il file .lib stesso, riportato per intero in questo PROVENANCE per comodita': MMBFJ111 Vto=-2.750 Beta=4.852E-3 Betatce=-0.46 Rd=Rs=0.334 Lambda=3.98E-3 Is=181.3E-15 Isr=1.747E-12 Alpha=2.543E-6 Vk=152.20 Cgd=6.992E-12 Cgs=3.567E-12 M=0.45314 Pb=1.444 Fc=0.5 Kf=16.860E-27 Af=1.1208E-3 Vtotc=-2.10E-3; MMBFJ112 identico tranne Vto=-1.680 Beta=5.002E-3 Rd=Rs=0.0334; MMBFJ113 Vto=-0.825 Beta=1.052E-2 Rd=Rs=0.334 Vtotc=-1.75E-3.",
+    "note": "NON VERIFICATO in questa sessione: se ngspice accetta senza avvisi tutti i parametri di questo modello (in particolare Betatce e Vtotc, gia' visti come parametri PSpice extra anche nel modello LSK489 - li' ngspice li accettava; qui non e' stato eseguito alcun run di ngspice per confermarlo). Nessuna cifra di distorsione o linearita' e' pubblicata in questo datasheet."
+  }
+}

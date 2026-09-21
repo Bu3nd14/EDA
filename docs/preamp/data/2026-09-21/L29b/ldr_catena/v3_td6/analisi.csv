@@ -1,0 +1,118 @@
+cella,variante,f_hz,amp,gm,rl,grandezza,uscita,picco_V,t_picco_s,finestra_s,esito,nota
+mai,rif,1000,3.818,10,100k,C_pav,MAINJACK,0.001232,1.001229,,SOPRA,"pavimento di C a 1.000 s, cond 1"
+mai,rif,1000,3.818,10,100k,C_pav,MAINJACK,0.001237,8.532198,,SOPRA,"pavimento di C a 8.500 s, cond 1"
+mai,rif,1000,3.818,10,100k,C_pav,FIXJACK1,0.0001812,1.017698,,sotto,"pavimento di C a 1.000 s, cond 1"
+mai,rif,1000,3.818,10,100k,C_pav,FIXJACK1,0.00019,8.532198,,sotto,"pavimento di C a 8.500 s, cond 1"
+mai,rif,1000,3.818,10,100k,C_pav,FIXJACK2,0.0001812,1.017698,,sotto,"pavimento di C a 1.000 s, cond 1"
+mai,rif,1000,3.818,10,100k,C_pav,FIXJACK2,0.00019,8.532198,,sotto,"pavimento di C a 8.500 s, cond 1"
+sempre,rif,1000,3.818,10,100k,B1,MAINJACK,5.762e-08,3.179167,,sotto,"riferimento sempre in mute, da 0,5 s"
+sempre,rif,1000,3.818,10,100k,B1,FIXJACK1,1.831e-08,2.322167,,sotto,"riferimento sempre in mute, da 0,5 s"
+sempre,rif,1000,3.818,10,100k,B1,FIXJACK2,1.831e-08,16.916167,,sotto,"riferimento sempre in mute, da 0,5 s"
+ev,ldr_v3_td6,1000,3.818,10,100k,A_ins,MAINJACK,12.71,1.000021,2.000,SOPRA,riferimento sempre
+ev,ldr_v3_td6,1000,3.818,10,100k,A_rel,MAINJACK,12.71,8.500021,2.000,SOPRA,riferimento mai
+ev,ldr_v3_td6,1000,3.818,10,100k,B2,MAINJACK,2.855e-07,7.529365,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+ev,ldr_v3_td6,1000,3.818,10,100k,C1_ins,MAINJACK,0.002559,2.353969,,SOPRA,"diagnostica, cond 1"
+ev,ldr_v3_td6,1000,3.818,10,100k,C1_rel,MAINJACK,0.004727,14.731760,,SOPRA,"diagnostica, cond 1"
+ev,ldr_v3_td6,1000,3.818,10,100k,C2_ins,MAINJACK,0.002559,2.353969,,SOPRA,"riferimento sempre, cond 1"
+ev,ldr_v3_td6,1000,3.818,10,100k,C2_rel,MAINJACK,0.006891,15.195698,,SOPRA,"riferimento mai, cond 1"
+ev,ldr_v3_td6,1000,3.818,10,100k,A_ins,FIXJACK1,4.033,1.000021,2.000,SOPRA,riferimento sempre
+ev,ldr_v3_td6,1000,3.818,10,100k,A_rel,FIXJACK1,4.033,8.500021,2.000,SOPRA,riferimento mai
+ev,ldr_v3_td6,1000,3.818,10,100k,B2,FIXJACK1,9.845e-08,7.527365,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+ev,ldr_v3_td6,1000,3.818,10,100k,C1_ins,FIXJACK1,0.0006175,2.353958,,sotto,"diagnostica, cond 1"
+ev,ldr_v3_td6,1000,3.818,10,100k,C1_rel,FIXJACK1,0.001288,14.731760,,SOPRA,"diagnostica, cond 1"
+ev,ldr_v3_td6,1000,3.818,10,100k,C2_ins,FIXJACK1,0.0006175,2.353958,,sotto,"riferimento sempre, cond 1"
+ev,ldr_v3_td6,1000,3.818,10,100k,C2_rel,FIXJACK1,0.002192,15.195698,,SOPRA,"riferimento mai, cond 1"
+ev,ldr_v3_td6,1000,3.818,10,100k,A_ins,FIXJACK2,4.033,1.000021,2.000,SOPRA,riferimento sempre
+ev,ldr_v3_td6,1000,3.818,10,100k,A_rel,FIXJACK2,4.033,8.500021,2.000,SOPRA,riferimento mai
+ev,ldr_v3_td6,1000,3.818,10,100k,B2,FIXJACK2,9.845e-08,7.527365,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+ev,ldr_v3_td6,1000,3.818,10,100k,C1_ins,FIXJACK2,0.0006175,2.353958,,sotto,"diagnostica, cond 1"
+ev,ldr_v3_td6,1000,3.818,10,100k,C1_rel,FIXJACK2,0.001288,14.731760,,SOPRA,"diagnostica, cond 1"
+ev,ldr_v3_td6,1000,3.818,10,100k,C2_ins,FIXJACK2,0.0006175,2.353958,,sotto,"riferimento sempre, cond 1"
+ev,ldr_v3_td6,1000,3.818,10,100k,C2_rel,FIXJACK2,0.002192,15.195698,,SOPRA,"riferimento mai, cond 1"
+rele,rele_contro_norele,1000,3.818,10,100k,A_ins,MAINJACK,0.0001248,7.501458,1.000,SOPRA,riferimento norele
+rele,rele_contro_norele,1000,3.818,10,100k,A_rel,MAINJACK,6.533e-05,8.500438,2.000,sotto,riferimento norele
+rele,rele_contro_norele,1000,3.818,10,100k,B2,MAINJACK,2.855e-07,7.529365,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+rele,rele_contro_norele,1000,3.818,10,100k,C1_ins,MAINJACK,6.678e-05,7.500302,,sotto,"diagnostica, cond 1"
+rele,rele_contro_norele,1000,3.818,10,100k,C1_rel,MAINJACK,5.642e-05,8.500396,,sotto,"diagnostica, cond 1"
+rele,rele_contro_norele,1000,3.818,10,100k,C2_ins,MAINJACK,6.679e-05,7.500302,,sotto,"riferimento norele, cond 1"
+rele,rele_contro_norele,1000,3.818,10,100k,C2_rel,MAINJACK,5.649e-05,8.500396,,sotto,"riferimento norele, cond 1"
+rele,rele_contro_norele,1000,3.818,10,100k,A_ins,FIXJACK1,3.967e-05,7.501458,1.000,"sotto, finestra corta: non accetta",riferimento norele
+rele,rele_contro_norele,1000,3.818,10,100k,A_rel,FIXJACK1,2.073e-05,8.500438,2.000,sotto,riferimento norele
+rele,rele_contro_norele,1000,3.818,10,100k,B2,FIXJACK1,9.845e-08,7.527365,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+rele,rele_contro_norele,1000,3.818,10,100k,C1_ins,FIXJACK1,2.121e-05,7.500302,,sotto,"diagnostica, cond 1"
+rele,rele_contro_norele,1000,3.818,10,100k,C1_rel,FIXJACK1,1.794e-05,8.500396,,sotto,"diagnostica, cond 1"
+rele,rele_contro_norele,1000,3.818,10,100k,C2_ins,FIXJACK1,2.121e-05,7.500302,,sotto,"riferimento norele, cond 1"
+rele,rele_contro_norele,1000,3.818,10,100k,C2_rel,FIXJACK1,1.796e-05,8.500396,,sotto,"riferimento norele, cond 1"
+rele,rele_contro_norele,1000,3.818,10,100k,A_ins,FIXJACK2,3.967e-05,7.501458,1.000,"sotto, finestra corta: non accetta",riferimento norele
+rele,rele_contro_norele,1000,3.818,10,100k,A_rel,FIXJACK2,2.073e-05,8.500438,2.000,sotto,riferimento norele
+rele,rele_contro_norele,1000,3.818,10,100k,B2,FIXJACK2,9.845e-08,7.527365,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+rele,rele_contro_norele,1000,3.818,10,100k,C1_ins,FIXJACK2,2.121e-05,7.500302,,sotto,"diagnostica, cond 1"
+rele,rele_contro_norele,1000,3.818,10,100k,C1_rel,FIXJACK2,1.794e-05,8.500396,,sotto,"diagnostica, cond 1"
+rele,rele_contro_norele,1000,3.818,10,100k,C2_ins,FIXJACK2,2.121e-05,7.500302,,sotto,"riferimento norele, cond 1"
+rele,rele_contro_norele,1000,3.818,10,100k,C2_rel,FIXJACK2,1.796e-05,8.500396,,sotto,"riferimento norele, cond 1"
+inv,inversione_d75,1000,3.818,10,100k,A_ins,MAINJACK,12.71,1.000021,2.000,SOPRA,riferimento sempre
+inv,inversione_d75,1000,3.818,10,100k,A_rel,MAINJACK,10.86,7.277510,2.000,SOPRA,riferimento mai
+inv,inversione_d75,1000,3.818,10,100k,B2,MAINJACK,0,5.520000,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+inv,inversione_d75,1000,3.818,10,100k,C1_ins,MAINJACK,0.004295,5.502979,,SOPRA,"diagnostica, cond 1"
+inv,inversione_d75,1000,3.818,10,100k,C1_rel,MAINJACK,0.006635,7.280531,,SOPRA,"diagnostica, cond 1"
+inv,inversione_d75,1000,3.818,10,100k,C2_ins,MAINJACK,0.004295,5.502979,,SOPRA,"riferimento sempre, cond 1"
+inv,inversione_d75,1000,3.818,10,100k,C2_rel,MAINJACK,0.007362,7.280510,,SOPRA,"riferimento mai, cond 1"
+inv,inversione_d75,1000,3.818,10,100k,A_ins,FIXJACK1,4.033,1.000021,2.000,SOPRA,riferimento sempre
+inv,inversione_d75,1000,3.818,10,100k,A_rel,FIXJACK1,3.447,7.277510,2.000,SOPRA,riferimento mai
+inv,inversione_d75,1000,3.818,10,100k,B2,FIXJACK1,0,5.520000,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+inv,inversione_d75,1000,3.818,10,100k,C1_ins,FIXJACK1,0.001353,5.502979,,SOPRA,"diagnostica, cond 1"
+inv,inversione_d75,1000,3.818,10,100k,C1_rel,FIXJACK1,0.002108,7.280531,,SOPRA,"diagnostica, cond 1"
+inv,inversione_d75,1000,3.818,10,100k,C2_ins,FIXJACK1,0.001353,5.502979,,SOPRA,"riferimento sempre, cond 1"
+inv,inversione_d75,1000,3.818,10,100k,C2_rel,FIXJACK1,0.002154,7.280521,,SOPRA,"riferimento mai, cond 1"
+inv,inversione_d75,1000,3.818,10,100k,A_ins,FIXJACK2,4.033,1.000021,2.000,SOPRA,riferimento sempre
+inv,inversione_d75,1000,3.818,10,100k,A_rel,FIXJACK2,3.447,7.277510,2.000,SOPRA,riferimento mai
+inv,inversione_d75,1000,3.818,10,100k,B2,FIXJACK2,0,5.520000,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+inv,inversione_d75,1000,3.818,10,100k,C1_ins,FIXJACK2,0.001353,5.502979,,SOPRA,"diagnostica, cond 1"
+inv,inversione_d75,1000,3.818,10,100k,C1_rel,FIXJACK2,0.002108,7.280531,,SOPRA,"diagnostica, cond 1"
+inv,inversione_d75,1000,3.818,10,100k,C2_ins,FIXJACK2,0.001353,5.502979,,SOPRA,"riferimento sempre, cond 1"
+inv,inversione_d75,1000,3.818,10,100k,C2_rel,FIXJACK2,0.002154,7.280521,,SOPRA,"riferimento mai, cond 1"
+pav0,pavimento,1000,3.818,10,100k,A_pav,MAINJACK,0.0006046,1.571219,2.000,SOPRA,contro mai
+pav0,pavimento,1000,3.818,10,100k,C2_pav,MAINJACK,0.0005708,1.117781,,sotto,"pavimento di C2 contro mai, cond 1"
+pav0,pavimento,1000,3.818,10,100k,A_pav,FIXJACK1,0.000191,1.879229,2.000,SOPRA,contro mai
+pav0,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK1,0.0001795,1.117781,,sotto,"pavimento di C2 contro mai, cond 1"
+pav0,pavimento,1000,3.818,10,100k,A_pav,FIXJACK2,0.000191,1.879229,2.000,SOPRA,contro mai
+pav0,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK2,0.0001795,1.117781,,sotto,"pavimento di C2 contro mai, cond 1"
+pav1,pavimento,1000,3.818,10,100k,A_pav,MAINJACK,0.0006068,9.185229,2.000,SOPRA,contro mai
+pav1,pavimento,1000,3.818,10,100k,C2_pav,MAINJACK,0.0005741,7.507781,,sotto,"pavimento di C2 contro mai, cond 1"
+pav1,pavimento,1000,3.818,10,100k,A_pav,FIXJACK1,0.0001919,9.185229,2.000,SOPRA,contro mai
+pav1,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK1,0.0001806,7.507781,,sotto,"pavimento di C2 contro mai, cond 1"
+pav1,pavimento,1000,3.818,10,100k,A_pav,FIXJACK2,0.0001919,9.185229,2.000,SOPRA,contro mai
+pav1,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK2,0.0001806,7.507781,,sotto,"pavimento di C2 contro mai, cond 1"
+pav2,pavimento,1000,3.818,10,100k,A_pav,MAINJACK,0.00685,10.459802,2.000,SOPRA,contro mai
+pav2,pavimento,1000,3.818,10,100k,C2_pav,MAINJACK,0.0005255,8.589781,,sotto,"pavimento di C2 contro mai, cond 1"
+pav2,pavimento,1000,3.818,10,100k,A_pav,FIXJACK1,0.002174,10.459802,2.000,SOPRA,contro mai
+pav2,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK1,0.0001652,8.589781,,sotto,"pavimento di C2 contro mai, cond 1"
+pav2,pavimento,1000,3.818,10,100k,A_pav,FIXJACK2,0.002174,10.459802,2.000,SOPRA,contro mai
+pav2,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK2,0.0001652,8.589781,,sotto,"pavimento di C2 contro mai, cond 1"
+pav3,pavimento,1000,3.818,10,100k,A_pav,MAINJACK,0.0005998,6.939229,2.000,SOPRA,contro mai
+pav3,pavimento,1000,3.818,10,100k,C2_pav,MAINJACK,0.0005145,5.500271,,sotto,"pavimento di C2 contro mai, cond 1"
+pav3,pavimento,1000,3.818,10,100k,A_pav,FIXJACK1,0.0001896,6.939229,2.000,SOPRA,contro mai
+pav3,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK1,0.0001616,5.500271,,sotto,"pavimento di C2 contro mai, cond 1"
+pav3,pavimento,1000,3.818,10,100k,A_pav,FIXJACK2,0.0001896,6.939229,2.000,SOPRA,contro mai
+pav3,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK2,0.0001616,5.500271,,sotto,"pavimento di C2 contro mai, cond 1"
+lzsempre,rif,1000,0,10,100k,B1,MAINJACK,2.62e-14,7.807427,,sotto,"riferimento sempre in mute, da 0,5 s"
+lzsempre,rif,1000,0,10,100k,B1,FIXJACK1,8.276e-15,9.468542,,sotto,"riferimento sempre in mute, da 0,5 s"
+lzsempre,rif,1000,0,10,100k,B1,FIXJACK2,8.697e-15,9.889594,,sotto,"riferimento sempre in mute, da 0,5 s"
+lzev,ldr_v3_td6,1000,0,10,100k,A_ins,MAINJACK,1.361e-08,2.362354,2.000,sotto,riferimento lzsempre
+lzev,ldr_v3_td6,1000,0,10,100k,A_rel,MAINJACK,3.326e-08,9.823177,2.000,sotto,riferimento lzmai
+lzev,ldr_v3_td6,1000,0,10,100k,B2,MAINJACK,1.024e-08,7.520000,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+lzev,ldr_v3_td6,1000,0,10,100k,A_ins,FIXJACK1,4.322e-09,2.362354,2.000,sotto,riferimento lzsempre
+lzev,ldr_v3_td6,1000,0,10,100k,A_rel,FIXJACK1,1.055e-08,9.823167,2.000,sotto,riferimento lzmai
+lzev,ldr_v3_td6,1000,0,10,100k,B2,FIXJACK1,7.9e-09,7.520000,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+lzev,ldr_v3_td6,1000,0,10,100k,A_ins,FIXJACK2,4.322e-09,2.362365,2.000,sotto,riferimento lzsempre
+lzev,ldr_v3_td6,1000,0,10,100k,A_rel,FIXJACK2,1.055e-08,9.823104,2.000,sotto,riferimento lzmai
+lzev,ldr_v3_td6,1000,0,10,100k,B2,FIXJACK2,7.9e-09,7.520000,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+lzrele,rele_contro_norele,1000,0,10,100k,A_ins,MAINJACK,2.754e-08,7.500188,1.000,"sotto, finestra corta: non accetta",riferimento lzsempre
+lzrele,rele_contro_norele,1000,0,10,100k,A_rel,MAINJACK,3.326e-08,9.823177,2.000,sotto,riferimento lzmai
+lzrele,rele_contro_norele,1000,0,10,100k,B2,MAINJACK,1.024e-08,7.520000,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+lzrele,rele_contro_norele,1000,0,10,100k,A_ins,FIXJACK1,2.132e-08,7.500188,1.000,"sotto, finestra corta: non accetta",riferimento lzsempre
+lzrele,rele_contro_norele,1000,0,10,100k,A_rel,FIXJACK1,1.055e-08,9.823167,2.000,sotto,riferimento lzmai
+lzrele,rele_contro_norele,1000,0,10,100k,B2,FIXJACK1,7.9e-09,7.520000,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+lzrele,rele_contro_norele,1000,0,10,100k,A_ins,FIXJACK2,2.132e-08,7.500188,1.000,"sotto, finestra corta: non accetta",riferimento lzsempre
+lzrele,rele_contro_norele,1000,0,10,100k,A_rel,FIXJACK2,1.055e-08,9.823104,2.000,sotto,riferimento lzmai
+lzrele,rele_contro_norele,1000,0,10,100k,B2,FIXJACK2,7.9e-09,7.520000,,sotto,mute da t_ins+t_grad+20 ms a t_rel

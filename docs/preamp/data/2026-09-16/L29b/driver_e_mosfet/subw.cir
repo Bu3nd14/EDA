@@ -1,0 +1,19 @@
+subw.cir - il modello con la sottosoglia dichiarata: Id contro Vgs a Vds = 5 V e 10 mV
+.include /Users/roberto/EDA/.claude/worktrees/L29b/models/mosfet_n/dmn6040svt.lib
+.include /Users/roberto/EDA/.claude/worktrees/L29b/models/mosfet_n/dmn6040svt_sottosoglia.lib
+.options reltol=1e-6 abstol=1e-15 gmin=1e-15
+X1 D1 G 0 DMN6040SVT_SUB params: vth=2.0 s=0.1
+VD1 D1 0 DC 5
+X2 D2 G 0 DMN6040SVT_SUB params: vth=2.0 s=0.1
+VD2 D2 0 DC 10m
+X3 D3 G 0 DMN6040SVT_SUB params: vth=2.0 s=0.1
+VD3 D3 0 DC -10m
+VG G 0 DC 0
+.control
+dc VG 0.9 2.6 0.1
+let i5 = -i(vd1)
+let g10 = -i(vd2)/10m
+let gneg = -i(vd3)/(-10m)
+print v(g) i5 g10 gneg
+.endc
+.end

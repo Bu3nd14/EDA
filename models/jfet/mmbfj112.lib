@@ -1,0 +1,72 @@
+* mmbfj112.lib - onsemi MMBFJ112 (SOT-23) / J112 (TO-92), N-channel JFET.
+* VENDOR MODEL, DOWNLOADED DIRECTLY (NOT hand-transcribed from a PDF, unlike
+* models/jfet/lsk489.lib). See models/jfet/mmbfj112.provenance.json for the
+* full chain and vendor/jfet/onsemi/MMBFJ111_112_113/PROVENANCE.json for how
+* the file was obtained (onsemi.com blocks curl in this sandbox; retrieved
+* via WebFetch, which reaches the same manufacturer URL through a different
+* network path - not a distributor mirror).
+*
+* USAGE:
+*   .include models/jfet/mmbfj112.lib
+*   J1 drain gate source MMBFJ112
+*
+* This file also carries the MMBFJ111 and MMBFJ113 model cards from the same
+* vendor .lib (all three share the die, differing only in VGS(off)/IDSS
+* threshold), kept together because the vendor shipped them together and
+* separating them would be an edit, not a copy.
+*
+* WHAT DIFFERS FROM THE VENDOR FILE: nothing electrical. The vendor's own
+* three .MODEL lines are reproduced VERBATIM below, byte-for-byte from
+* vendor/jfet/onsemi/MMBFJ111_112_113/mmbfj111_mmbfj112_mmbfj113 (pspice model).lib
+* (sha256 6a8f76d5ab85a55290e002e0524bb62e0b781e14a23e7e2e10396d3294eb829d).
+* Comment banners ('*$', '*----...') were kept; nothing was rounded,
+* reordered or renamed.
+*
+* NOT VERIFIED IN THIS SESSION: no ngspice run was performed on this file.
+* Unlike lsk489.lib, there is no cross-check against the datasheet's own
+* rDS(on)/VGS(off)/IDSS numbers here, and no entry exists yet in
+* scripts/validate_models.py's TEST_REGISTRY (adding one is out of this
+* task's scope: it required only adding files under vendor/ and models/).
+* Betatce and Vtotc are PSpice temperature-coefficient refinements; the
+* LSK489 case in this repo showed ngspice accepts extra PSpice-only JFET
+* parameters silently on some and with a warning on others - which applies
+* here has NOT been checked. Treat this file as UNTESTED until a
+* testbench entry is added and run.
+*
+*$
+*************** Discrete N-Channel Switch Electrical Model *********************
+* Product: MMBFJ112 / MMBFJ111 / MMBFJ113
+* Package: TO-92 / SOT-23
+*-------------------------------------------------------------------------------
+.MODEL MMBFJ111 NJF
++ VTO=-2.750          N=1                   BETA=4.852E-003
++ BETATCE=-0.46       RD=0.334              RS=0.334
++ LAMBDA=0.00398      IS=181.30E-15         ISR=1.7470E-12
++ ALPHA=2.5430E-6     VK=152.20             CGD=6.9920E-12
++ CGS=3.567E-12       M=0.45314             PB=1.4440
++ FC=0.5              KF=16.860E-27         AF=1.1208E-3
++ VTOTC=-2.10E-3
+*
+*$
+.MODEL MMBFJ112 NJF
++ VTO=-1.6800         N=1                   BETA=5.002E-003
++ BETATCE=-0.46       RD=0.0334             RS=0.0334
++ LAMBDA=0.00398      IS=181.30E-15         ISR=1.7470E-12
++ ALPHA=2.5430E-6     VK=152.20             CGD=6.9920E-12
++ CGS=3.567E-12       M=0.45314             PB=1.4440
++ FC=0.5              KF=16.860E-27         AF=1.1208E-3
++ VTOTC=-2.10E-3
+*
+*$
+.MODEL MMBFJ113 NJF
++ VTO=-0.8250         N=1                   BETA=1.052E-002
++ BETATCE=-0.46       RD=0.334              RS=0.334
++ LAMBDA=0.00398      IS=181.30E-15         ISR=1.7470E-12
++ ALPHA=2.5430E-6     VK=152.20             CGD=6.9920E-12
++ CGS=3.567E-12       M=0.45314             PB=1.4440
++ FC=0.5              KF=16.860E-27         AF=1.1208E-3
++ VTOTC=-1.75E-3
+*--------------------------------------------------------------------------------
+* Creation: Feb.-07-2022  Rev 1.1
+* onsemi
+*$
