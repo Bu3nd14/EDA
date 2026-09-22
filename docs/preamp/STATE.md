@@ -60,6 +60,13 @@ il trim, con LED: la forma di L36 è decisa dall'utente).
   - **S ≤ 7,2 dB** a 20 Hz e 1 kHz (inserzione 7,2, rilascio ≤ 5,3, inversione ≤ 3,0);
   - a 20 kHz @S20STATE@;
   - A ≤ 3,9 µV, B2 ≤ 10 µV.
+- **La VTL5C4 dell'Excelitas è fuori produzione** (tutta la serie VTL, ultimo ordine
+  2015, secondo le fonti trovate il 2026-09-22). Esiste una **riedizione Xvive**, VTL5C4
+  compresa, col datasheet ospitato da rivenditori (Aion FX, Synthrotek) e gli stessi
+  valori tipici. È la condizione «Da riaprire se» di ADR-038, con una via d'uscita.
+  **Prima di G2** (giro componenti, L9): datasheet Xvive dalla fonte; confronto delle
+  curve con quelle Excelitas del modello; se differiscono, il modello si rigenera dal
+  generatore; stock confermato.
 - **Trappole nuove**:
   - limitations #30 (`wrdata`) e #31 (`pwl()` estrapola);
   - le corse a 20 kHz con TMAX 0,5 µs valgono @TEMPI20KDIARIO@;
