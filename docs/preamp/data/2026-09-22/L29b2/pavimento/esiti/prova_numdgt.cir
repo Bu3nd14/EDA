@@ -1,0 +1,10 @@
+prova numdgt
+V1 a 0 SIN(0 1 1k)
+R1 a 0 1k
+.control
+tran 7u 10.00003 10 7u
+wrdata def.dat v(a)
+set numdgt=15
+wrdata n15.dat v(a)
+.endc
+.end

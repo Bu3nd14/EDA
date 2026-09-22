@@ -10,8 +10,10 @@ SAME function, gain_block(), is called for every block - eight times since
 L17 (ADR-023). There is no second topology to validate, and no place for the
 channels or the outputs to drift apart.
 
-                 IN_L -> [BLOCK A] -+-> [BUFFER F1] -> 47R -> 4.7u -> FIXED OUT 1 (Singxer)
-                (buffer, gain 1)    +-> [BUFFER F2] -> 47R -> 4.7u -> FIXED OUT 2 (Stax)
+   IN_L -> LDR_S -+-> [BLOCK A] -+-> [BUFFER F1] -> 47R -> 4.7u -> FIXED OUT 1 (Singxer)
+    (ADR-038)   LDR_P  (buffer,  +-> [BUFFER F2] -> 47R -> 4.7u -> FIXED OUT 2 (Stax)
+                  |    gain 1)
+                 GND
                                     +-> [TRIM 0/-6/-12 dB] -> attenuator (off board, 10k stepped)
                                            (trim.py, K7/K8)          |
                                                                      v
@@ -42,6 +44,10 @@ WHAT IS DELIBERATELY NOT HERE
    here, because they are in the signal path and change Zout, plus the mute
    COMMAND net, because the trim's permissive hangs on it. The coil drive, the
    delay and the rail-collapse detector belong to psu-engineer.
+ - The DRIVE of the graduated mute's LEDs (ADR-038, L29b2): two current
+   sources and the depth generator. Only the cells (in the signal path) and
+   the J3 harness to the LEDs are here; the contract the drive must honour
+   is written next to J3 below (profile v4, Td = 6 s, ADR-039, ADR-040).
 
 Run:
   /Users/roberto/EDA/env/venv/bin/python3 <this file>
@@ -146,8 +152,32 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole):
     _n[0] = 60
     inconn = Part("Connector_Generic", "Conn_01x02", value=f"IN_{ch}",
                   footprint=FP_CONN2, ref=f"J{base + 1}")
-    inconn[1] += a["IN"]
+    in_src = Net(f"{ch}_IN_SRC")
+    inconn[1] += in_src
     inconn[2] += gnd
+
+    # ---- the graduated mute, UPSTREAM (ADR-038, L29b2) --------------------
+    # Two opto-coupled photoresistors (Excelitas VTL5C4) per channel at block
+    # A's input: one IN SERIES from the connector to block A, one TO GROUND on
+    # block A's input, next to R_IN = 1 MOhm (gain_block.py). Block A feeds
+    # all three outputs, so one point per channel fades them all; and there is
+    # no DC here (the input is referred to ground by R_IN), which is what ESP
+    # asks of a mute ("no DC along with the signal", ADR-038).
+    # The LEDs are driven from ground, OUTSIDE the signal path (ADR-022): only
+    # the cells (pins 3-4) touch these nets; the LEDs go to the harness J3 in
+    # the caller. The part is NOT confirmed at a distributor (ADR-038, before
+    # G2). Every figure on it comes from
+    # models/optocoupler/vtl5c4_comportamentale.lib: "modello comportamentale
+    # dal datasheet, con estrapolazione dichiarata" (docs/preamp/reports/
+    # 2026-09-21-L29b-mute-ldr-misura.md, 2026-09-22-L29b2-*.md).
+    ls = Part("Isolator", "VTL5C", value=f"VTL5C4 LDR_S_{ch}",
+              footprint="OptoDevice:PerkinElmer_VTL5C", ref=f"U{base + 1}")
+    ls[3] += in_src
+    ls[4] += a["IN"]
+    lp = Part("Isolator", "VTL5C", value=f"VTL5C4 LDR_P_{ch}",
+              footprint="OptoDevice:PerkinElmer_VTL5C", ref=f"U{base + 2}")
+    lp[3] += a["IN"]
+    lp[4] += gnd
 
     # ---- attenuator harness (off-board rotary, F4/ADR-009) --------------
     # Since L16 (ADR-027) its top pin is NOT block A's output: it is the COM
@@ -276,7 +306,7 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole):
     k_gain[K_NO1 if k_pole == 0 else K_NO2] += gnd
     k_gain10[K_COM1 if k_pole == 0 else K_COM2] += b["RG10"]
     k_gain10[K_NO1 if k_pole == 0 else K_NO2] += gnd
-    return a, b
+    return a, b, ls, lp
 
 
 if __name__ == "__main__":
@@ -342,6 +372,44 @@ if __name__ == "__main__":
     for ch, base, pole in (("L", 100, 0), ("R", 300, 1)):
         chans[ch] = channel(ch, base, VP, VM, GND, K_GAIN, K_GAIN10,
                             mute_lists, K_TRIM, pole)
+
+    # ---- the LDR command harness, J3 (ADR-038, ADR-022; L29b2) -----------
+    # The LEDs of the SAME function are in SERIES across the two channels
+    # (series cell L then R, shunt cell L then R): one current source per
+    # function, so the channels cannot fade at different speeds from a drive
+    # mismatch - what is left is the parts' own spread, which is L29c's.
+    # The drive is OFF THIS BOARD, like the mute timer: a current source per
+    # string, cathode end to GND at the source (psu-engineer / L35).
+    # THE CONTRACT the drive must honour - profile v4 with Td = 6 s, the
+    # user's choice of 2026-09-22 (ADR-039, ADR-040; Td from L29b):
+    #   one depth d in [0, 1], reversible, 0 -> 1 in Td = 6 s on insertion
+    #   and back from wherever it is on release (a half-way reversal
+    #   retraces the same path, ADR-038 point 3);
+    #   series string, log-linear by segments: 20 mA at d = 0 -> 0.2 mA at
+    #     d = 0.1 -> 4.5 uA at d = 0.45 -> 0.19 uA at d = 0.75 (the dark
+    #     knee, curve B) -> 10 nA at d = 0.8 and beyond. The segment down to
+    #     the knee is slow ON PURPOSE: on release the cell turns on as fast
+    #     as its LED, and v3's 10 nA -> 4.5 uA in 0.3 s put a 30 dB jump in
+    #     100 ms on the jack (limit 20 dB, ADR-040); v4 makes it 4 dB;
+    #   shunt string: 10 nA up to d = 0.5 -> 20 mA at d = 1, log-linear;
+    #   10 nA of idle current on BOTH strings, never 0: it sits below the
+    #     dark knee (0.19 uA, curve B) but the anode never jumps from 0 V,
+    #     which through the 0.5 pF LED-cell coupling had put 4.8 mV into a
+    #     1 MOhm node (profile v1, L29b);
+    #   the jack relays follow the FULL depth: MUTE_CMD de-energises (jacks
+    #     grounded, ADR-012) 0.5 s after d = 1 and re-energises at the start
+    #     of the release, before d moves. 0.5 s because the series cell
+    #     darkens slowly: 50 ms left it at 576 kOhm and C2 at 1.05 mV (L29b).
+    j3 = Part("Connector_Generic", "Conn_01x04", value="LDR_CMD",
+              footprint="Connector_PinHeader_2.54mm:"
+                        "PinHeader_1x04_P2.54mm_Vertical", ref="J3")
+    for fn, pin_a, pin_k, idx in (("S", 1, 2, 2), ("P", 3, 4, 3)):
+        left, right = chans["L"][idx], chans["R"][idx]
+        # VTL5C symbol: pin 2 = LED anode (+), pin 1 = LED cathode (-).
+        j3[pin_a] += left[2]
+        left[1] += Net(f"LDR_{fn}_MID")
+        right[2] += left[1]
+        j3[pin_k] += right[1]
 
     # Wire the mute contacts. mute_lists[i] holds, per output pair,
     # [jack_node_L, connector_pin_L, jack_node_R, connector_pin_R].

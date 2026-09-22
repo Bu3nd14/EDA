@@ -90,6 +90,13 @@ modello verificato, e l'ha misurato sulla catena.
 - Il rilascio non è decidibile, perché il pavimento numerico con le LDR sale a mV.
 
 **NC-028 resta aperta e bloccante**, aggiornata. Il sorgente è di L29b2.
+**L29b2** (2026-09-22) ha messo le LDR nel sorgente (ADR-039) e reso decidibile il
+rilascio. Il pavimento di mV era l'arrotondamento del tempo scritto da `wrdata`
+(limitations #30). Col profilo v3, rilascio e inversione sono **fuori soglia**
+(3,41 e 7,36 mV di C2). Poi l'utente ha dato il criterio (ADR-040): il taglio si giudica sul
+salto di livello, ≤ 20 dB in 100 ms, e C2 diventa diagnostica. Con la v4 il salto massimo
+vale 7,2 dB in tutta la matrice; A, B, E3, E5 e P7 reggono. **NC-028 resta aperta e
+bloccante**, aggiornata: manca L29c, dopo la Fase 4 (L39).
 **13 voci aperte, 3 bloccanti.**
 L'accesso a G1 non è concesso finché NC-004, NC-017 e NC-028 restano aperte.
 
@@ -2311,6 +2318,34 @@ misurato sulla catena. La voce RESTA APERTA E BLOCCANTE.**
   - il caso peggiore. **Chi**: **L29c**.
 - **C2 d'inserzione sulla principale resta fuori soglia** (2,56 mV contro 1 mV), come
   l'ideale che ADR-036 aveva accettato «per ora».
+
+**AGGIORNATA IL 2026-09-22, da L29b2: il mute LDR nel sorgente, e il taglio giudicato sul
+salto di livello. La voce RESTA APERTA E BLOCCANTE.**
+(`reports/2026-09-22-L29b2-mute-ldr-sorgente.md`)
+
+- **Il pavimento «con le LDR attive» non era del circuito.** `wrdata` scrive il tempo con
+  9 cifre significative (100 ns sopra 10 s); con `set numdgt=15` il pavimento di C2 vale
+  ≤ 31 µV lungo tutta la sequenza (`docs/limitations.md` #30).
+- **Il criterio è cambiato, per decisione dell'utente (ADR-040).** Il taglio con musica
+  si giudica su **S, il salto di livello: ≤ 20 dB in 100 ms**, sopra −70 dB. Il dato è il
+  pseudo-mute del Technics, che all'utente non ha mai dato fastidio. **C2 è diagnostica**:
+  a 20 Hz nessuna dissolvenza sotto ~14 s la soddisfa, e sulla principale la distorsione
+  della catena ne vale da sola 0,65–0,96 mV.
+- **Il profilo è la v4** (ADR-039, ADR-040): la v3 salta di 29,7 dB al rilascio a 20 Hz.
+- **Nel sorgente** (ADR-039): U101/U102 e U301/U302, il comando su J3 fuori dal segnale.
+  2e, 2f e 2g lo asseriscono, e sono stati fatti fallire.
+- **Misurato col deck versionato** `tb_v2_mute_ldr.cir` e la v4: tre uscite; 20 Hz e 1 kHz a
+  10 e 100 kΩ; 20 kHz a 100 kΩ (scelta dell'utente). Modello comportamentale dal
+  datasheet, con estrapolazione dichiarata:
+  - **S ≤ 7,2 dB** (inserzione 7,2, rilascio ≤ 6,1, inversione ≤ 3,0);
+  - **A ≤ 3,9 µV** senza segnale, **B2 ≤ 10 µV**;
+  - il relè al jack: S = 0, taglia sotto −70 dB;
+  - pavimento di C2 ≤ 59 µV.
+- **E3** ≥ 111,6 kΩ ed **E5** ≤ 4,957 µV con le celle (`tb_e3_e5_ldr.cir`). **P7** regge
+  per ragionamento.
+- **Il guadagno si interblocca col mute come il trim** (ADR-041). L36 lo realizza.
+- **Cosa manca per chiuderla**: il caso peggiore, **L29c**. Viene dopo la Fase 4 (**L39**),
+  per decisione dell'utente, perché dipende dai modelli.
 
 
 ### NC-029 — Con i buffer delle fisse la dissipazione a riposo raddoppia, e P5 non la copre

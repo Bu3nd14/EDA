@@ -669,3 +669,59 @@ costruttore **com'è pubblicato**, qualunque `Vto` giri davvero.
 - una variante che **rimette** i valori di partenza deve ridare la prima cella
   per cella: prova che le alterazioni precedenti non restano appese;
 - il deck dice nell'intestazione che il modello è alterato, e dove.
+
+## 30. `wrdata` scrive il tempo con 9 cifre significative, e fra due corse l'arrotondamento diventa un segnale
+
+Scoperto in L29b2 (`docs/preamp/data/2026-09-22/L29b2/pavimento/`).
+
+Col default, `wrdata` scrive **ogni** colonna col formato `%.8e`, il tempo
+compreso: 9 cifre significative. Il tempo si risolve quindi a **10 ns fino a
+10 s e a 100 ns oltre**. L'errore non si vede in una corsa sola; si vede
+quando si **sottraggono due corse con griglie di passo diverse**, cioè
+esattamente quello che fa C2 di V2 (ADR-035). Su una sinusoide l'arrotondamento
+vale fino a A·ω·δt per corsa e fino al doppio nella differenza:
+
+- a 1 kHz, 12 V di picco sulla principale, sopra 10 s: fino a **~7,5 mV**;
+  misurati **4,6–7,2 mV** in L29b, presi per «pavimento con le LDR attive»;
+- sotto 10 s, dieci volte meno: **~0,7 mV**, dell'ordine del pavimento
+  «diffuso, non attribuito» di C2 in L29a (0,51–0,80 mV).
+
+Niente avvisa: ngspice esce 0, `v2_metodo.py` legge i numeri che trova, e due
+corse con la **stessa** griglia (corse identiche fino a un evento) danno 0
+esatto, così il difetto sembra dipendere dalla fisica dell'evento. La prova che
+lo inchioda: la sorgente ideale `BSRC = f(time)`, identica per costruzione
+nelle due corse, dava da sola **2,2 mV** di C2 nella coda; con
+`set numdgt=15` **1 µV**, e la principale da 6,9 mV a **3 µV**. TMAX 5 µs
+contro 10 µs non cambia niente (6,2 mV).
+
+**Regola operativa**:
+- ogni deck che scrive forme d'onda da sottrarre fra loro mette
+  `set numdgt=15` nel `.control`, **prima** di ogni `wrdata`;
+- il blocco CANALE non c'entra: `numdgt` è una variabile di `.control` e non
+  tocca il circuito né le tolleranze;
+- una sonda che lo tiene onesto costa una colonna: salvare anche la sorgente
+  ideale e leggerne la C2 fra le due corse. Dev'essere di µV.
+
+## 31. `pwl()` in una sorgente B **estrapola linearmente** fuori dai punti, non tiene il valore d'estremo
+
+Scoperto in L29b2, costruendo il simulatore veloce della LDR
+(`docs/preamp/data/2026-09-22/L29b2/transizione/`).
+
+Con i punti (1, 10) e (2, 20), `B1 y 0 V = pwl(V(x), 1,10, 2,20)` in ngspice 47
+dà **0** a x = 0, **50** a x = 5 e **−30** a x = −3: prolunga il primo e l'ultimo
+segmento. Chi scrive una tabella pensando che fuori dall'intervallo valga il
+valore d'estremo ottiene un'altra funzione, senza errori né avvisi.
+
+Nel modello della VTL5C4 (`models/optocoupler/vtl5c4_comportamentale.lib`)
+`BTAU` e `BD0` hanno due soli punti, in xt da 1,81 a 2,10. Dal buio (xt = 8,6)
+valgono per estrapolazione τ ≈ 23 ms e d0 ≈ 6,9, non i 3,6 ms e 1,46 del punto
+più alto. Il modello è stato verificato **così** contro il datasheet in L29b
+(accensione dal buio entro il 3,16 %), quindi le sue cifre restano valide.
+Quello che non vale è leggere la tabella come se si fermasse ai capi.
+
+**Regola operativa**:
+- una tabella `pwl()` che deve tenere il valore ai capi si scrive con
+  `min(max(x, x1), xn)` sull'argomento;
+- chi rifà un modello fuori da ngspice (un simulatore veloce, un foglio di
+  calcolo) deve estrapolare allo stesso modo, e tararsi contro ngspice;
+  `transizione/sur.py` lo fa, e la taratura lo prova (0,002 decadi).

@@ -1,115 +1,106 @@
-# Prompt per la sessione successiva — L29b2 (il mute LDR nel sorgente, e il rilascio reso decidibile)
+# Prompt per la sessione successiva — L39 (Fase 4: i modelli del costruttore nel progetto)
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è
-organizzato in LOTTI PICCOLI: questa sessione fa **L29b2** e si ferma. Non iniziarne un
+organizzato in LOTTI PICCOLI: questa sessione fa **L39** e si ferma. Non iniziarne un
 secondo.
+
+## Perché adesso
+
+**Decisione dell'utente del 2026-09-22: la Fase 4 prima di L29c.** Il caso peggiore di V2
+(L29c) dipende dai modelli: l'offset del blocco B (−14,2 mV coi modelli del costruttore
+contro −16,6 coi segnaposto, ADR-030), la dispersione, e il fondo di distorsione della
+catena, che sulla principale vale 0,65–0,96 mV di C2 coi segnaposto. Misurarlo coi
+segnaposto vorrebbe dire rifarlo. Scoprire tardi un problema dei modelli veri, peggio,
+vorrebbe dire rifare molti lotti o toccare la topologia: i MJE sono gli stadi d'uscita.
 
 ## Da dove si parte
 
-Il lotto precedente ha chiuso la **misura** del mute graduale a monte con due LDR
-VTL5C4 (ADR-038). La decisione è dell'utente: il **sorgente** è di questo lotto.
-
-- **Il modello** `models/optocoupler/vtl5c4_comportamentale.lib` è verificato contro i
-  punti del datasheet. È comportamentale, con un'estrapolazione dichiarata sopra ~10 kΩ.
-  **Si corregge solo dal generatore**,
-  `docs/preamp/data/2026-09-16/L29b/vtl5c4_modello/genera_modello.py`, mai a mano.
-- **Il profilo del comando dei LED da portare nel sorgente** è **v3, con Td = 6 s**
-  (scelta dell'utente):
-  - la profondità `d` è un'unica variabile reversibile, da 0 a 1 in Td;
-  - **serie**: 20 mA → 0,2 mA per d da 0 a 0,1, poi **0,2 mA → 4,5 µA** per d da 0,1 a
-    0,45, poi 10 nA a d = 0,5. È log-lineare a tratti;
-  - **derivazione**: 10 nA → 20 mA, log-lineare, per d da 0,5 a 1;
-  - **10 nA di riposo** su entrambi i LED;
-  - **il relè al jack** si chiude 0,5 s dopo d = 1 e si apre all'inizio del rilascio.
-- **Cosa è misurato** (1 kHz, 100 kΩ, scratch):
-  - C2 d'inserzione **2,56 / 0,62 mV** (principale / fisse), contro un pavimento di
-    0,68 / 0,22 mV;
-  - A ≤ 0,03 µV, B2 0,29 µV;
-  - relè 0,07 mV a 1 kHz e 0,56 mV a 20 kHz;
-  - carico sulla sorgente ≥ 714 kΩ.
-- **Cosa NON è decidibile**: il rilascio e l'inversione. Con le LDR attive il pavimento
-  numerico di C2 sale a **4,6–7,2 mV** sulla principale (1,9–2,3 sulle fisse). Succede
-  nella coda del rilascio, a livello pieno, con la serie accesa e la derivazione che si
-  fa buia. Il meccanismo non è attribuito.
+- **Da L25 tutti e sette i dispositivi attivi hanno il modello del costruttore in
+  `models/`**, con la provenienza e le ricette di `validate_models.py` (48/48). Di
+  **NC-017** resta la sola sostituzione nel progetto.
+- **I segnaposto** stanno in `spice/preamp/placeholder_devices.lib`: `LSK489X`,
+  `NSS2N5551`, `PSS2N5401`, `PTHAT320`, `NMJE15032`, `PMJE15033`, `D1N4148`, tutti con
+  KF = 0. Li includono **25 deck**. Il modello dell'LS352 è già del costruttore
+  (`models/bjt_pnp/ls350.lib`).
+- **I nomi da mappare** (`models/`): `LSK489A` (lsk489.lib), `MMBT5551`, `MMBT5401`,
+  `Qmje15032`, `Qmje15033`, e in `1n4148.lib` un modello chiamato **`D1N914`**.
+  Quest'ultimo va capito prima di usarlo: vedi limitations #17 e #20, dove il costruttore
+  serve un modello sotto il nome di un'altra parte.
+- **I nomi si scrivono nel sorgente**: `circuits/preamp/gain_block.py` passa il nome del
+  modello a `spice_export.py` (`Q(...)`, `sx.spice_dev(...)`), e da lì si generano
+  `spice/preamp/gain_block.subckt` e `gain_block_flat.inc`. Il sorgente istanzia ancora
+  «2N5551 / 2N5401»: **ADR-017** ha cambiato costruttore e package (MMBT). La topologia
+  sta solo nel sorgente (AGENTS.md): il blocco generato non si edita a mano.
+- **Il JFET è del gruppo B** (ADR-031), mentre il modello del costruttore è l'LSK489A.
+  La variante è già derivata da `scripts/derive_jfet_variant.py`
+  (`spice/preamp/derived/gain_block_flat_lsk489a.inc`, L20, blocco 2i). Leggi come L20
+  sposta `Vto` e come lo verifica (limitations #29).
 
 ## Leggi PRIMA, in quest'ordine
 
-1. **`CLAUDE.md`**, **`docs/limitations.md`**.
-2. **`docs/preamp/STATE.md`**: la voce L29b del diario e le righe L29b2, L29c e L36.
-3. **`docs/preamp/reports/2026-09-21-L29b-mute-ldr-misura.md`** per intero.
-4. **`docs/preamp/data/2026-09-21/L29b/ldr_catena/README.md`** e `build.py`: il banco,
-   i profili, il pavimento.
-5. **`docs/preamp/data/2026-09-16/L29b/vtl5c4_modello/README.md`**: il modello e le tre
-   trappole.
-6. **ADR-038** per intero; ADR-036, ADR-035, ADR-032, ADR-012, ADR-021, ADR-022.
-7. **`docs/preamp/REQUIREMENTS.md`**: V2 per intero, E3, E5, F6, P7.
-8. **`docs/preamp/NONCOMPLIANCE.md`**: NC-028, l'aggiornamento del 2026-09-21.
+1. **`CLAUDE.md`** e **`docs/limitations.md`**, in particolare #17, #20, #22, #24, #27,
+   #29, #30 e #31.
+2. **`docs/preamp/STATE.md`**: le voci L25, L20, L24 e L29b2 del diario, e le righe L39,
+   L29c e L36.
+3. **ADR-013, ADR-016, ADR-017, ADR-018, ADR-031**; poi ADR-019 (V1), ADR-020 (E5),
+   ADR-023 (classe A), ADR-030 (offset), ADR-040 (S).
+4. **`docs/preamp/NONCOMPLIANCE.md`**: NC-017, NC-004, NC-013, NC-020, NC-024, NC-025,
+   NC-031.
+5. I report di L25 e di L20.
 
 ## IL LAVORO, in ordine
 
-1. **Il pavimento di C2 con le LDR.**
-   - Capire perché due corse nello stesso stato fisico differiscono di ~6,5 mV sulla
-     principale nella coda del rilascio.
-   - Gli strumenti sono `ldr_catena/c2curva.py` e `c2spettro.py`.
-   - Candidati da falsificare, uno per volta:
-     - il passo (TMAX 5 e 2 µs);
-     - la forma del modello (`BDX` con `min()`, la tabella a gradini dello spegnimento);
-     - `method=gear`, **ma solo se** il metodo di V2 e l'utente lo consentono (il blocco
-       CANALE non si tocca in silenzio).
-   - Poi il **rilascio** e l'**inversione** del profilo v3 Td 6 s, ciascuno col suo
-     pavimento misurato su tutta la sequenza, non solo all'evento.
-   - Se il pavimento non scende sotto la soglia, **dillo all'utente** prima di andare
-     avanti.
-2. **Il sorgente**, in `circuits/preamp/preamp_audio.py`:
-   - due LDR per canale;
-   - il comando dei LED fuori dal percorso del segnale (ADR-022);
-   - la variabile di profondità;
-   - il relè al jack che segue la profondità completa.
+1. **La mappa segnaposto → costruttore**, per ogni dispositivo. Con la provenienza, e con
+   ciò che il modello del costruttore **non** ha: 1/f, dispersione, deviazioni già
+   registrate dal proprio datasheet (NC-013, NC-020, NC-024, NC-025).
+2. **La sostituzione nel sorgente** (`gain_block.py`, `spice_export.py` se serve), poi il
+   blocco rigenerato, e il derivato rigenerato (2i). Un commento con l'ADR su ogni scelta
+   non ovvia.
+3. **I deck.** Ogni deck che include i segnaposto passa ai modelli del costruttore. Si
+   aggiornano le intestazioni: il blocco 2h confronta ciò che un deck **dice** di simulare
+   con ciò che include.
+4. **La regressione, cifra per cifra, prima e dopo**, in una tabella:
+   - punto di lavoro e classe A in ogni blocco (ADR-023);
+   - V1, margine di fase ≥ 60° ovunque (ADR-019);
+   - E2–E5 (E5 resta un pavimento senza 1/f: dirlo);
+   - V3, P7;
+   - l'offset del blocco B (ADR-030);
+   - A, B e S di V2 su una cella di `tb_v2_mute_ldr.cir` a 1 kHz, col fondo di
+     distorsione di C2 accanto.
 
-   Un commento con l'ADR su ogni valore non ovvio. Poi netlist, disegni (2d), diagramma a
-   blocchi (2f) e `check_relay_safe_state.py`, **fatto prima fallire** con un sabotaggio.
-3. **Il deck versionato** `spice/preamp/tb/tb_v2_mute_ldr.cir`:
-   - lo stesso blocco CANALE (`v2_metodo.py canale`);
-   - tre uscite, 10 e 100 kΩ, 20 Hz / 1 kHz / 20 kHz;
-   - A senza segnale, B, C2 con il **suo** pavimento;
-   - corse lunghe in background, con `save`.
-4. **E3** ed **E5** con la LDR in serie (E5: 88 Ω di serie, più l'accoppiamento
-   LED–cella di 0,5 pF). **P7 riletto**: a mute inserito gli stadi d'uscita non hanno
-   segnale.
-5. **L'esito.** NC-028 resta aperta (manca L29c) e si aggiorna. Report datato.
+   **Ogni cifra che cambia oltre la sua soglia apre o aggiorna una NC.** Se una richiede
+   una modifica di topologia, **fermati e dillo all'utente** prima di toccarla.
+5. **L'esito**: NC-017 si chiude se la sostituzione è completa e la regressione regge;
+   NC-004 si aggiorna. Report datato.
 
-Se non entra in una sessione, **dividi di nuovo** in `STATE.md` e chiudine una parte.
+**Se non entra in una sessione, dividi**: prima la sostituzione e la regressione di
+punto di lavoro, V1 ed E5; poi il resto. Scrivilo in `STATE.md`.
 
 ## I vincoli
 
-- **Il metodo di V2 non si cambia in silenzio.** Il pavimento si misura e si riporta
-  accanto a ogni C2. Un valore sotto il pavimento non è una misura.
-- **Ogni cifra sulla LDR** porta «modello comportamentale dal datasheet, con
-  estrapolazione dichiarata».
-- **Trappole già pagate:**
-  - un LED senza percorso DC fa fallire l'op in silenzio;
-  - `alter` + `op` in sequenza non convergono col modello della LDR;
-  - col trapezio, un gradino sul LED fa oscillare la corrente della cella;
-  - un gradino di corrente del LED della derivazione salta dentro un nodo a 1 MΩ
-    (A in mV);
-  - `analizza` accetta eventi solo per t > 0,3 s;
-  - `awk` col locale italiano non legge i `.dat`: si usa Python.
-- **Nessun cambio di tecnica senza l'utente**: ADR-038 e il profilo v3 sono sue scelte.
+- **`set numdgt=15`** in ogni deck che scrive forme d'onda da sottrarre (#30).
+- **Tempi**: le corse di V2 a 20 kHz con TMAX 0,5 µs valgono ore. Qui non servono: la
+  regressione di V2 è a 1 kHz.
+- **Nessun cambio di topologia senza l'utente.**
+- I file in `vendor/` non si toccano; i modelli in `models/` si cambiano solo col loro
+  processo (provenienza, `validate_models.py`).
 - Gli script zsh si lanciano da soli. `git` e i comandi con variabili di shell composte
-  vengono rifiutati nel worktree: comandi semplici e separati, script su file. **Scipy
-  non c'è**: stdlib con `/usr/bin/python3`.
+  vengono rifiutati nel worktree: comandi semplici e separati, script su file. Scipy non
+  c'è; numpy c'è nel venv 3.13. `pkill -f` sul nome di uno script zsh prende anche i
+  suoi subshell; `pgrep` con `\|` non vuol dire «oppure».
 
 ## NON fa parte di questo lotto
 
-- **L29c** (caso peggiore), **L36** (forma dell'interblocco del guadagno), L35, L28, L30,
-  il dossier.
-- I file in `vendor/` non si toccano.
+- **L29c** (il caso peggiore di V2: viene subito dopo), L36, L35, L28 (i pin SS: la
+  ricerca la fa l'utente), L30, il dossier.
 
 ## CHIUSURA
 
-1. `STATE.md` con L29b2 **fatto** e il successivo come prossimo.
-2. Riscrivi QUESTO file per il lotto successivo.
+1. `STATE.md` con L39 **fatto** e L29c come prossimo.
+2. Riscrivi QUESTO file per L29c, partendo dalla bozza
+   `docs/preamp/data/2026-09-22/L29b2/bozza_prompt_L29c.md` aggiornata ai modelli del
+   costruttore.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L29b2`.
+4. `/bin/zsh scripts/chunk_close.sh L39`.
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**

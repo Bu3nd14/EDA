@@ -1,0 +1,11 @@
+cella,file,variante,f_hz,amp,gm,rl,t_ins,t_rel,t_fine,tmax,tipo,rif_ins,rif_rel,t_grad
+mai_20k_100k,mai_20k_100k.dat,rif,20000,3.818,10,100k,1.0,8.5,17.5,5e-07,rif_mai,-,-,0.0
+sempre_20k_100k,sempre_20k_100k.dat,rif,20000,3.818,10,100k,1.0,8.5,17.5,5e-07,rif_sempre,-,-,0.0
+ev_20k_100k,ev_20k_100k.dat,ldr_v4_td6,20000,3.818,10,100k,1.0,8.5,17.5,5e-07,evento,sempre_20k_100k,mai_20k_100k,6.5
+norele_20k_100k,norele_20k_100k.dat,rif,20000,3.818,10,100k,1.0,8.5,17.5,5e-07,rif_seq,-,-,0.0
+rele_20k_100k,ev_20k_100k.dat,rele_contro_norele,20000,3.818,10,100k,7.5,8.5,17.5,5e-07,evento,norele_20k_100k,norele_20k_100k,0.0
+inv_20k_100k,inv_20k_100k.dat,inversione_d75,20000,3.818,10,100k,1.0,5.5,13.0,5e-07,evento,sempre_20k_100k,mai_20k_100k,4.5
+pav_ev0_20k_100k,evp_20k_100k.dat,pavimento,20000,3.818,10,100k,1.0,1000,17.5,3.5e-07,pav_num,ev_20k_100k,-,0.0
+pav_ev1_20k_100k,evp_20k_100k.dat,pavimento,20000,3.818,10,100k,7.5,1000,17.5,3.5e-07,pav_num,ev_20k_100k,-,0.0
+pav_ev2_20k_100k,evp_20k_100k.dat,pavimento,20000,3.818,10,100k,8.5,1000,17.5,3.5e-07,pav_num,ev_20k_100k,-,0.0
+pav_inv_20k_100k,invp_20k_100k.dat,pavimento,20000,3.818,10,100k,5.5,1000,13.0,3.5e-07,pav_num,inv_20k_100k,-,0.0

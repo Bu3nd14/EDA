@@ -29,6 +29,11 @@ scritte da `wrdata` nei deck spice/preamp/tb/tb_v2_mute_*.cir:
   termine continuo) su una finestra scorrevole CENTRATA di 10 ms, poi filtrato;
   picco in [t_evento - 20 ms, t_evento + 200 ms] per ogni inserzione e rilascio.
   Il numero di condizione della matrice 2x2 del fit si stampa e si dichiara.
+  Dal 2026-09-22 (ADR-040) C2 e' DIAGNOSTICA, non verdetto;
+- S (ADR-040, il verdetto del taglio con musica): il livello del tono al jack,
+  dall'ampiezza del fit su max(10 ms, un periodo), in dB sotto il pieno della
+  corsa di riferimento, tenuto a -70 dB; S = la variazione massima in 100 ms,
+  nella stessa finestra di C. Soglia 20 dB (il pseudo-mute del Technics).
 
 SOTTOCOMANDI
 ------------
@@ -51,7 +56,7 @@ SOTTOCOMANDI
                               errore dello strumento sulla griglia vera di
                               ngspice: un seno esatto sugli istanti del .dat.
 
-Soglia: 100 uV di picco (ADR-032). Ogni cifra e' SIMULATA se viene da un .dat,
+Soglie: 100 uV di picco per A e B (ADR-032), 20 dB in 100 ms per S (ADR-040). Ogni cifra e' SIMULATA se viene da un .dat,
 CALCOLATA se viene da autotest/caratterizza: le intestazioni lo dicono.
 """
 import csv
@@ -75,13 +80,30 @@ FINESTRA_C = 0.010
 # la finestra [i-480, i+480). --campioni 961 riproduce la prima stesura
 # (dispari, centrata), e caratterizza la usa come sensibilita' dichiarata.
 CAMPIONI_C = int(round(FINESTRA_C * FS))
+# S - IL SALTO DI LIVELLO, il verdetto del taglio con musica (ADR-040, decisione
+# dell'utente del 2026-09-22). Il dato: il Technics che il preamp sostituisce ha un
+# pseudo-mute che cala di 20 dB di colpo, con la musica attiva, e all'utente non ha
+# mai dato fastidio. Da qui la soglia: il livello del tono al jack non cambia piu' di
+# 20 dB in 100 ms. C2 resta come DIAGNOSTICA: a 20 Hz una dissolvenza a coseno ideale
+# lo tiene sotto 1 mV solo oltre ~14 s, e sulla principale la distorsione di regime
+# della catena (modelli segnaposto) ne vale da sola 0,65-0,96 mV (L29b2).
+# - il livello: l'ampiezza del tono dal fit a + b su una finestra di max(10 ms, un
+#   periodo), in dB sotto il livello pieno della corsa di riferimento;
+# - sotto PAVIMENTO_S non si conta (il livello si tiene a -70 dB): li' la musica e'
+#   inudibile e la scala in dB esplode. -70 dB e 100 ms sono una proposta di L29b2,
+#   dichiarata in ADR-040; i 20 dB sono dell'utente.
+SOGLIA_S = 20.0
+FINESTRA_S = 0.100
+PAVIMENTO_S = -70.0
+PASSO_S = 96               # un campione di livello ogni ms
 DURATA_A = 2.0
 USCITE = ("MAINJACK", "FIXJACK1", "FIXJACK2")
 SABOTA = set()
 SABOTAGGI = ("senza_filtro", "hp_primo_ordine", "rif_sfasato", "senza_fit",
              "fit_perfetto", "freq_sbagliata", "lineare",
              "senza_diradamento", "canale_cieco",
-             "c2_senza_riferimento", "soglia_unica", "a_con_musica")
+             "c2_senza_riferimento", "soglia_unica", "a_con_musica",
+             "s_senza_pavimento", "s_soglia_di_c")
 
 
 def base_di(grandezza, amp):
@@ -100,15 +122,67 @@ def base_di(grandezza, amp):
         if amp > 0 and "a_con_musica" not in SABOTA:
             return "A_musica"
         return "A"
-    return {"C2_ins": "C", "C2_rel": "C",
+    # ADR-040: il verdetto del taglio con musica e' S; C2 e' diagnostica come C1.
+    return {"C2_ins": "C2", "C2_rel": "C2", "S_ins": "S", "S_rel": "S",
             "C1_ins": "C1", "C1_rel": "C1"}.get(grandezza, grandezza)
 
 
 def soglia_di(grandezza):
-    """La soglia della grandezza: 1 mV per C, 100 uV per A e B (ADR-035)."""
+    """La soglia della grandezza: 20 dB in 100 ms per S (ADR-040), 1 mV per C
+    (ADR-035, oggi diagnostica), 100 uV per A e B."""
     if "soglia_unica" in SABOTA:
         return SOGLIA
+    if grandezza.startswith("S"):
+        return SOGLIA_C if "s_soglia_di_c" in SABOTA else SOGLIA_S
     return SOGLIA_C if grandezza.startswith("C") else SOGLIA
+
+
+def ampiezza(x, f, t_da=0.0, t_a=None):
+    """Ampiezza del tono (V di picco) dal fit a + b, finestra di max(10 ms, un periodo),
+    un valore ogni PASSO_S campioni fra t_da e t_a; ritorna (indici, ampiezze)."""
+    n = len(x)
+    nw = max(CAMPIONI_C, int(round(FS / f)))
+    h = nw // 2
+    w = 2 * math.pi * f / FS
+    a0 = max(int(t_da * FS), 0)
+    a1 = n if t_a is None else min(int(t_a * FS), n)
+    lo_i, hi_i = max(a0 - h, 0), min(a1 + nw, n)
+    ps = [0.0] * (hi_i - lo_i + 1)
+    pc, pss, psc, pcc = list(ps), list(ps), list(ps), list(ps)
+    s1 = s2 = s3 = s4 = s5 = 0.0
+    for j, i in enumerate(range(lo_i, hi_i)):
+        si, ci, xi = math.sin(w * i), math.cos(w * i), x[i]
+        s1 += si * si
+        s2 += si * ci
+        s3 += ci * ci
+        s4 += xi * si
+        s5 += xi * ci
+        pss[j + 1], psc[j + 1], pcc[j + 1], ps[j + 1], pc[j + 1] = s1, s2, s3, s4, s5
+    idx, amp = [], []
+    for i in range(max(a0, lo_i + h), min(a1, hi_i - (nw - h)), PASSO_S):
+        lo, hi = i - h - lo_i, i - h - lo_i + nw
+        Sss, Ssc, Scc = pss[hi] - pss[lo], psc[hi] - psc[lo], pcc[hi] - pcc[lo]
+        Sxs, Sxc = ps[hi] - ps[lo], pc[hi] - pc[lo]
+        det = Sss * Scc - Ssc * Ssc
+        a = (Sxs * Scc - Sxc * Ssc) / det
+        b = (Sxc * Sss - Sxs * Ssc) / det
+        idx.append(i)
+        amp.append(math.hypot(a, b))
+    return idx, amp
+
+
+def salto_db(idx, amp, a_pieno):
+    """S: la variazione massima di livello (dB) in FINESTRA_S, col livello tenuto a
+    PAVIMENTO_S sotto il pieno. Ritorna (dB, indice del campione d'inizio)."""
+    pav = -300.0 if "s_senza_pavimento" in SABOTA else PAVIMENTO_S
+    L = [max(20 * math.log10(max(a, 1e-30) / a_pieno), pav) for a in amp]
+    k = int(round(FINESTRA_S * FS / PASSO_S))
+    best, ib = 0.0, None
+    for j in range(len(L) - k):
+        dl = abs(L[j + k] - L[j])
+        if dl > best:
+            best, ib = dl, idx[j]
+    return best, ib
 
 
 # --------------------------------------------------------------- filtro ----
@@ -597,7 +671,7 @@ def autotest():
     # T14 - A con musica non entra nel verdetto, A senza segnale si' (ADR-036)
     verifica("T14 A con musica e' diagnostica, A senza segnale e' verdetto",
              base_di("A_rel", 3.818) == "A_musica" and base_di("A_ins", 0.0) == "A"
-             and base_di("C2_rel", 3.818) == "C",
+             and base_di("C2_rel", 3.818) == "C2" and base_di("S_rel", 3.818) == "S",
              "con musica -> %s, senza -> %s" % (base_di("A_rel", 3.818), base_di("A_ins", 0.0)))
 
     # T12 - le soglie sono due, e sono quelle di ADR-035
@@ -605,6 +679,40 @@ def autotest():
              soglia_di("C") == 1e-3 and soglia_di("C2_rel") == 1e-3
              and soglia_di("A") == 100e-6 and soglia_di("B1") == 100e-6,
              "C %.3g V, A %.3g V" % (soglia_di("C"), soglia_di("A")))
+
+    # T15-T19 - S, il salto di livello (ADR-040)
+    for f in (20.0, 1000.0, 20000.0):
+        n = int(1.2 * FS)
+        x = tono(n, 12.0, f)
+        x = [v * (0.1 if i / FS >= 0.6 else 1.0) for i, v in enumerate(x)]   # -20 dB di colpo
+        ii, aa = ampiezza(x, f, 0.3, 1.0)
+        vs, _ = salto_db(ii, aa, 12.0)
+        verifica("T15 gradino di -20 dB (il Technics), %g Hz: S = 20 dB" % f,
+                 abs(vs - 20.0) < 0.3, "%.3f dB" % vs)
+    n = int(1.2 * FS)
+    x = tono(n, 12.0, 1000.0)
+    x = [v * (10 ** (-1.5) if i / FS >= 0.6 else 1.0) for i, v in enumerate(x)]
+    ii, aa = ampiezza(x, 1000.0, 0.3, 1.0)
+    vs, _ = salto_db(ii, aa, 12.0)
+    verifica("T16 gradino di -30 dB cade su S (soglia 20 dB)", vs > soglia_di("S_ins"),
+             "%.3f dB" % vs)
+    n = int(7.0 * FS)
+    x = tono(n, 12.0, 1000.0)
+    x = [v * 10 ** (-min(max(i / FS - 0.5, 0.0), 6.0) * 10.0 / 20) for i, v in enumerate(x)]
+    ii, aa = ampiezza(x, 1000.0, 0.3, 6.8)
+    vs, _ = salto_db(ii, aa, 12.0)
+    verifica("T17 dissolvenza uniforme di 60 dB in 6 s: S = 1 dB", abs(vs - 1.0) < 0.05,
+             "%.3f dB" % vs)
+    n = int(1.2 * FS)
+    x = tono(n, 12.0, 1000.0)
+    x = [v * (10 ** (-100 / 20) if i / FS >= 0.6 else 10 ** (-75 / 20)) for i, v in enumerate(x)]
+    ii, aa = ampiezza(x, 1000.0, 0.3, 1.0)
+    vs, _ = salto_db(ii, aa, 12.0)
+    verifica("T18 da -75 a -100 dB: sotto il pavimento di -70 dB, S = 0", vs == 0.0,
+             "%.3f dB" % vs)
+    verifica("T19 soglia di S = 20 dB, e S e' il verdetto (ADR-040)",
+             soglia_di("S_rel") == 20.0 and base_di("S_ins", 3.818) == "S",
+             "%.3g" % soglia_di("S_rel"))
 
     nf = esiti.count(False)
     print("# %d controlli, %d caduti" % (len(esiti), nf))
@@ -887,6 +995,24 @@ def analizza(manifest, datadir, outpath):
                     v2, i2 = pk2[0]
                     scrivi(c, nm, u, v2, i2, None,
                            "riferimento %s, cond %.3g" % (rn, cond2))
+                # S: il VERDETTO del taglio con musica (ADR-040). Il livello pieno e'
+                # quello della corsa di riferimento del rilascio (mai in mute, o la
+                # sequenza senza rele'), al 95 percentile: e' pieno quasi ovunque.
+                rn_p = c.get("rif_rel", "-")
+                if rn_p in ("", "-"):
+                    rn_p = c.get("rif_ins", "-")
+                if rn_p not in ("", "-"):
+                    rcols_p, _ = dati(per_nome[rn_p])
+                    _, ap = ampiezza(rcols_p[k], f, 0.3, t_fine)
+                    a_pieno = sorted(ap)[int(0.95 * (len(ap) - 1))]
+                    for nm, te in (("S_ins", t_ins), ("S_rel", t_rel)):
+                        if not (0.3 < te < t_fine):
+                            continue
+                        ii, aa = ampiezza(x, f, te - 0.020, min(te + tg + 0.200, t_fine))
+                        vs, js = salto_db(ii, aa, a_pieno)
+                        scrivi(c, nm, u, vs, js, None,
+                               "dB in %g ms sopra %g dB; pieno %.4g V da %s"
+                               % (FINESTRA_S * 1e3, PAVIMENTO_S, a_pieno, rn_p))
     with open(outpath, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["cella", "variante", "f_hz", "amp", "gm", "rl", "grandezza", "uscita",
@@ -900,12 +1026,12 @@ def riassumi(ingressi, out):
     """Dalle tabelle di analizza: per variante x carico x grandezza x uscita il
     picco massimo e la cella che lo produce; poi il verdetto per variante.
     A = A_ins, A_rel SOLO senza segnale (ADR-036: con musica e' "A_musica",
-    diagnostica); B = B1, B2 (riportate anche separate); C = C2_ins, C2_rel.
-    Una variante e' RESPINTA se una sola riga A, B o C sta SOPRA la soglia
-    della sua grandezza (100 uV per A e B, 1 mV per C - ADR-035); non e' mai
-    'conforme' da qui: lo screening non copre la matrice di V2.
-    C1 e i pavimenti (A_pav, C_pav, C2_pav) sono DIAGNOSTICI: entrano nella
-    tabella ma non nel verdetto."""
+    diagnostica); B = B1, B2 (riportate anche separate); S = S_ins, S_rel.
+    Una variante e' RESPINTA se una sola riga A, B o S sta SOPRA la soglia
+    della sua grandezza (100 uV per A e B, 20 dB in 100 ms per S - ADR-040); non
+    e' mai 'conforme' da qui: lo screening non copre la matrice di V2.
+    C1, C2 (dal 2026-09-22, ADR-040) e i pavimenti (A_pav, C_pav, C2_pav) sono
+    DIAGNOSTICI: entrano nella tabella ma non nel verdetto."""
     righe = []
     for p in ingressi:
         with open(p) as f:
@@ -928,9 +1054,9 @@ def riassumi(ingressi, out):
             w.writerow(list(k) + ["%.4g" % v, cella, g, es])
     verd = {}
     for (var, rl, base, u), (v, cella, g, es) in grp.items():
-        if base in ("A", "B1", "B2", "C") and v > soglia_di(base):
+        if base in ("A", "B1", "B2", "S") and v > soglia_di(base):
             verd.setdefault(var, []).append("%s %s %s %.3g V (%s)" % (base, u, rl, v, cella))
-    print("# verdetto dello screening - SIMULATO; A e B 100 uV, C 1 mV (ADR-035)")
+    print("# verdetto dello screening - SIMULATO; A e B 100 uV, S 20 dB in 100 ms (ADR-040); C2 diagnostica")
     for var in sorted({k[0] for k in grp}):
         if var == "nessuna":
             continue

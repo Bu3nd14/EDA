@@ -3,7 +3,7 @@
 **Documento vivo.** Riscritto quando i requisiti cambiano. Ogni modifica
 sostanziale deve avere una ADR corrispondente in `decisions/`.
 
-Ultimo aggiornamento: 2026-09-16 (L29a: C di V2 per differenza dal riferimento e soglia di C a 1 mV, A e B invariati — ADR-035; A di V2 solo senza segnale — ADR-036; L38: V2 con soglia e metodo di misura, Nota su F5, Aperti — ADR-032; L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
+Ultimo aggiornamento: 2026-09-22 (L29b2: V2, il taglio con musica si giudica sul salto di livello S ≤ 20 dB in 100 ms, C2 diventa diagnostica — ADR-040; L29a: C di V2 per differenza dal riferimento e soglia di C a 1 mV, A e B invariati — ADR-035; A di V2 solo senza segnale — ADR-036; L38: V2 con soglia e metodo di misura, Nota su F5, Aperti — ADR-032; L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
 
 Le motivazioni non stanno qui: stanno nelle ADR referenziate e nel
 report `reports/2026-09-08-analisi-catena.md`.
@@ -399,14 +399,22 @@ misurato e i modelli che non sono ancora tutti veri.
 Comportamento dinamico durante e dopo ogni commutazione.
 
 **SOGLIA DI ACCETTAZIONE (ADR-032, dall'utente il 2026-09-15; C precisata da
-ADR-035 il 2026-09-16)**: **≤ 100 µV di picco per A e B, ≤ 1 mV per C**,
-filtrato 20 Hz–20 kHz, al jack di ognuna delle tre uscite, in ogni condizione,
-accensione e spegnimento compresi. Sotto i 20 Hz nessun limite oltre il filtro.
-Il caso peggiore sostituisce l'uso reale. La soglia vale per tre grandezze:
+ADR-035 il 2026-09-16; il taglio giudicato da S con ADR-040 il 2026-09-22)**:
+**≤ 100 µV di picco per A e B**, filtrato 20 Hz–20 kHz, e **S ≤ 20 dB in 100 ms**,
+al jack di ognuna delle tre uscite, in ogni condizione, accensione e spegnimento
+compresi. Sotto i 20 Hz nessun limite oltre il filtro. Il caso peggiore sostituisce
+l'uso reale. Le grandezze del verdetto:
 - **A — il gradino** che una commutazione lascia al jack;
 - **B — il residuo**: la musica che arriva al jack a mute inserito;
-- **C — il taglio**: la musica che sparisce o ricompare di colpo quando un contatto
-  commuta.
+- **S — il salto di livello**: quanto cambia, in 100 ms, il livello della musica al
+  jack quando un mute la toglie o la rimette (ADR-040). **20 dB sono il pseudo-mute
+  del Technics** che il preamp sostituisce, che cala di colpo con la musica attiva e
+  all'utente non ha mai dato fastidio.
+
+**C — il taglio misurato come residuo del fit** (ADR-035) resta, con la soglia di
+1 mV come riferimento, **ma è diagnostica** dal 2026-09-22: a 20 Hz nessuna
+dissolvenza sotto ~14 s la soddisfa, nemmeno ideale, e sulla principale la distorsione
+di regime della catena ne vale da sola 0,65–0,96 mV coi modelli segnaposto (L29b2).
 
 Alla soglia corrispondono ≈ 33 dB SPL di picco a 1 m con la formula di NC-028: una
 cifra **calcolata**, un limite superiore.
@@ -448,7 +456,15 @@ cifra **calcolata**, un limite superiore.
     la fine della discesa.
 - **B — il residuo.** v_jack filtrato **per tutta la durata del mute inserito**,
   fuori dalla finestra di A. Col segnale di prova sotto.
-- **C — il taglio.** *(metodo e soglia riscritti da **ADR-035**, 2026-09-16: il
+- **S — il salto di livello** (ADR-040). Tono di prova come per C.
+  - Il **livello** è l'ampiezza del fit seno + coseno a frequenza nota su una
+    finestra di max(10 ms, un periodo), in dB sotto il livello pieno della corsa di
+    riferimento del rilascio (95° percentile). Sotto **−70 dB** si tiene a −70 dB.
+  - **S** è la variazione massima del livello in **100 ms**, nella finestra di C,
+    attraverso ogni inserzione, rilascio e inversione.
+  - 100 ms e −70 dB sono una proposta di L29b2, dichiarata in ADR-040; i 20 dB sono
+    dell'utente. Strumento: `scripts/v2_metodo.py`, righe `S_ins` e `S_rel`.
+- **C — il taglio** (diagnostica dal 2026-09-22, ADR-040). *(metodo e soglia riscritti da **ADR-035**, 2026-09-16: il
   fit della sola fondamentale contava anche la distorsione di regime del
   circuito, che su una corsa mai in mute vale già 887 µV di sola h2.)*
   - **Tono di prova** da 2,7 V RMS alla sorgente, a 20 Hz, 1 kHz e 20 kHz.
