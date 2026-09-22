@@ -255,18 +255,20 @@ else
 fi
 echo
 
-echo "-- 2i. a derived block include is the current derivation of the generated one --"
-# L20 (NC-013): the gain block on the vendor LSK489A is
-# spice/preamp/derived/gain_block_flat_lsk489a.inc, derived by
-# scripts/derive_jfet_variant.py from the generated gain_block_flat.inc - the
-# model name of the two JFET lines and nothing else. A derived file goes stale
-# silently at the next topology change, and the decks that include it would
-# simulate yesterday's block. Made to fail on a hand-edited copy and on sources
-# with one and with three LSK489X lines: see docs/preamp/data/2026-09-15/L20/.
-out=$(/usr/bin/python3 "$ROOT/scripts/derive_jfet_variant.py" "$ROOT" --check 2>&1)
+echo "-- 2i. no canonical deck and no generated block simulates a placeholder model --"
+# L39 (NC-017): the gain block and every deck of spice/*/tb/ moved from the
+# hand-written models of spice/preamp/placeholder_devices.lib to the
+# manufacturer models of models/. The library stays, because the dated decks
+# under docs/preamp/data/ include it; nothing else would stop a copied header
+# or a retyped model name from bringing a placeholder back, and ngspice would
+# simulate it without a word. Until L39 this block checked the JFET variant of
+# scripts/derive_jfet_variant.py (L20), retired now that the generated block
+# names LSK489A itself. Made to fail on main before L39 (49 findings) and on
+# 7 sabotaged copies: see docs/preamp/data/2026-09-22/L39/sabotaggi/.
+out=$(/usr/bin/python3 "$ROOT/scripts/check_no_placeholders.py" "$ROOT" 2>&1)
 rc=$?
 echo "$out"
-report "derived block includes match the generated block" $rc
+report "no canonical deck or generated block simulates a placeholder" $rc
 echo
 
 echo "== run_tests.sh SUMMARY: $n_pass passed, $n_fail failed =="

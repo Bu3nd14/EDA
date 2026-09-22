@@ -5,8 +5,9 @@ tb_v2_mute_ldr.cir - V2 al jack col mute graduale a monte: due LDR VTL5C4 all'in
 *
 * IL MODELLO DELLE CELLE e' comportamentale dal datasheet, con estrapolazione dichiarata
 * sopra ~10 kOhm (models/optocoupler/vtl5c4_comportamentale.lib, curva B per entrambe).
-* Ogni cifra di questo deck porta quell'etichetta. Il resto e' come nei deck di V2: tutto
-* tranne LS352 e' segnaposto, LSK489 compreso (NC-017, NC-031).
+* Ogni cifra di questo deck porta quell'etichetta. Il resto e' come nei deck di V2: da
+* L39 (NC-017) ogni dispositivo attivo e' il modello del costruttore in models/, e solo
+* l'LSK489A ha KF (1/f). [Riga cambiata in L39: fino a L29b2 diceva segnaposto.]
 *
 * IL PROFILO v4. Serie, log-lineare a tratti in d: 0.02 A a d = 0; 0.0002 A a d = 0.1; 4.5e-06 A a d = 0.45; 1.9e-07 A a d = 0.75; 1e-08 A a d = 0.8; 1e-08 A a d = 1.
 * Derivazione: 10 nA fino a d = 0,5, poi log-lineare fino a 20 mA a d = 1. d va da 0 a 1
@@ -20,7 +21,12 @@ tb_v2_mute_ldr.cir - V2 al jack col mute graduale a monte: due LDR VTL5C4 all'in
 * tb_v2_mute_ldr_manifest.csv; nessun wrdata lo nomina, #25). t_grad = Td + 0,5 s.
 * CONVENZIONE DI PERCORSO: `.include @REPO@/...` (tb_op.cir, L2-L3).
 
-.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block.subckt
 .include @REPO@/models/optocoupler/vtl5c4_comportamentale.lib

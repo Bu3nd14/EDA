@@ -44,15 +44,16 @@ tb_mute_corto.cir - mute tenuto e corto su ciascuna uscita, coi buffer delle fis
 * Classe A <=> icmin_q132 > 0 E icmax_q133 < 0.
 *
 * NOMI DEI DISPOSITIVI letti da gain_block.subckt di oggi, non da G0:
-*   Q132 NMJE15032 (NPN d'uscita)   Q133 PMJE15033 (PNP d'uscita)
+*   Q132 Qmje15032 (NPN d'uscita)   Q133 Qmje15033 (PNP d'uscita)
 *   Q122 VAS   Q125 carico VAS   Q127 moltiplicatore Vbe   Q106 coda
 *   Q117/Q118 cascode   Q121A/B LS352   JQ110A/B LSK489
 *   R134/R135 22 ohm d'emettitore   R130/R131 10 ohm di base
 *   R123/R126 91 ohm di VAS e carico VAS
 * Il `@q134` citato da NC-001 e da G0 NON esiste piu' (rinumerazioni L22/L10).
 *
-* PROVVISORIO SUI MODELLI: tutto tranne LS352 e' segnaposto, LSK489 compreso
-* (LSK489X in placeholder_devices.lib, KF=0; NC-017, NC-031). Le correnti di
+* MODELLI (L39, NC-017): ogni dispositivo attivo e' il modello del costruttore
+* in models/ - LSK489A, MMBT5551, MMBT5401, LS350, Qmje15032, Qmje15033, D1N914.
+* Solo l'LSK489A ha KF (1/f); nessun modello porta la dispersione. Le correnti di
 * corto le fissano il carico e la corrente di pilotaggio, quindi h_FE conta
 * (NC-024).
 *
@@ -62,7 +63,12 @@ tb_mute_corto.cir - mute tenuto e corto su ciascuna uscita, coi buffer delle fis
 * tb_mute_corto.json con rows: 0; i transitori li converte il secondo
 * passaggio, le tabelle sono .csv scritte da echo e non vengono toccate.
 
-.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block.subckt
 

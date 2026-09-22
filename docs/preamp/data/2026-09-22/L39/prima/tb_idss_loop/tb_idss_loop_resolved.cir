@@ -1,0 +1,137 @@
+tb_idss_loop.cir - L20: loop gain and phase margin of BLOCK B at 0 dB with the vendor JFET model, at four I_DSS
+* First line is a title (docs/limitations.md #10).
+*
+* WHY (L20, NC-013). The input JFET enters the loop gain. At a fixed drain
+* current gm = 2*sqrt(Beta*I_D) does not depend on Vto, and the cascode holds
+* V_DG, so I_DSS alone should barely move the margin. Changing the model is a
+* different matter: the vendor model has Cgd 3.19 pF against 1.1 pF, Beta 2.2m
+* against 2.0m, Rs 30 against 10. This deck measures both on the cells where V1
+* is tightest for block B: 0 dB, attenuator source up to 2.611 k (L16), probe at
+* the jack (ADR-024), cable swept to 4.7 nF, loads 100 k and 10 k.
+*
+* THE MODELS. The input pair here is LSK489A, the vendor model of
+* models/jfet/lsk489.lib, included untouched. The mirror LS352 is the vendor
+* model of models/bjt_pnp/ls350.lib. Every other device is a hand-written model
+* of spice/preamp/placeholder_devices.lib, KF = 0 (irrelevant to an AC loop).
+*
+* THE BLOCK is spice/preamp/derived/gain_block_flat_lsk489a.inc: the generated
+* gain_block_flat.inc with the model name of its two JFET lines changed by
+* scripts/derive_jfet_variant.py; block 2i of run_tests.sh keeps it current.
+*
+* VARIANTS, via `altermod` inside .control on the vendor model. The Vto are the
+* declared values of docs/preamp/data/2026-09-15/L20/esplorazione/
+* vto_dichiarati.csv; the I_DSS they give is measured there and by the probe of
+* tb_idss_op_noise.cir (V_DG = 15 V, V_GS = 0, 25 C):
+*   a_come_e   as published, Vto -1.130 V   I_DSS  2.593 mA
+*   b_min      Vto -2.086 V                 I_DSS  8.005 mA   Beta unchanged
+*   b_tip      Vto -2.557 V                 I_DSS 11.499 mA
+*   b_max      Vto -2.976 V                 I_DSS 14.997 mA
+*   xa         every parameter set to those of the hand-written model the
+*              generated block names: the POSITIVE CONTROL. Its rows must equal
+*              docs/preamp/data/2026-09-14/L16/dopo/tb_loop/tb_loop_margini.csv
+*              (mode 0db, pos 1): same deck, same circuit, same numbers.
+* A wrong model name in `altermod` prints one Error line and changes nothing: the
+* log must contain no line with "Error". The showmod lines print, per variant,
+* the parameters the input pair really simulates.
+*
+* METHOD - as tb_loop.cir. Voltage injection at the inverting JFET gate: the
+* generated gate stopper R109 is opened (1 G) and re-created as RBRK + VINJ.
+* T = V(FB)/V(G2); the phase margin is |ph(T)| where |T| = 1. At 10 Hz |T| is
+* ~72.3 dB: a different value means the deck is not measuring the block (#24).
+* Node VSRCN, not SRC (#24). RG and RG10 terminated as open contacts (#27).
+*
+* TABLE tb_idss_loop_margini.csv, written by echo; no wrdata uses that name
+* (#25). Columns: var, rsrc, pos (1 = jack), cprobe, fcross_hz, pm_deg,
+* tdb_10hz, rload.
+
+.include /Users/roberto/EDA/.claude/worktrees/L39/spice/preamp/placeholder_devices.lib
+.include /Users/roberto/EDA/.claude/worktrees/L39/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L39/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L39/spice/preamp/derived/gain_block_flat_lsk489a.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN VSRCN 0 DC 0
+RSRCB VSRCN IN 1m
+
+* The two gain-relay contact nodes (ADR-026), both OPEN: 0 dB.
+CSTRAY   RG   0 15p
+RRG      RG   0 1G
+CSTRAY10 RG10 0 15p
+RRG10    RG10 0 1G
+
+* loop break, substituting for the generated 100 ohm gate stopper R109
+RBRK FB NBRK 100
+VINJ NBRK G2 DC 0 AC 1
+
+* BLOCK B output network + cable, as tb_loop.cir. CNODE stays at 1 fF.
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+CCABLE JACK 0 1f
+CNODE  OUT 0 1f
+
+.control
+alter r109 = 1G
+set units = degrees
+echo "var,rsrc,pos,cprobe,fcross_hz,pm_deg,tdb_10hz,rload" > tb_idss_loop_margini.csv
+foreach v 1 2 3 4 5
+  if $v = 1
+    set lbl = "a_come_e"
+  end
+  if $v = 2
+    set lbl = "b_min"
+    altermod lsk489a vto = -2.086
+  end
+  if $v = 3
+    set lbl = "b_tip"
+    altermod lsk489a vto = -2.557
+  end
+  if $v = 4
+    set lbl = "b_max"
+    altermod lsk489a vto = -2.976
+  end
+  if $v = 5
+    set lbl = "xa"
+    altermod lsk489a vto = -1.5
+    altermod lsk489a beta = 2.0e-3
+    altermod lsk489a lambda = 0.010
+    altermod lsk489a is = 1e-14
+    altermod lsk489a rd = 10
+    altermod lsk489a rs = 10
+    altermod lsk489a cgs = 2.9e-12
+    altermod lsk489a cgd = 1.1e-12
+    altermod lsk489a pb = 0.8
+    altermod lsk489a fc = 0.5
+    altermod lsk489a kf = 0
+    altermod lsk489a af = 1
+    altermod lsk489a betatce = 0
+    altermod lsk489a vtotc = 0
+    altermod lsk489a nlev = 0
+    altermod lsk489a gdsnoi = 1
+  end
+  echo "=== variant $lbl: the model the input pair simulates ==="
+  showmod jq110a : vto beta lambda is rd rs cgs cgd pb fc kf
+  foreach rl 100k 10k
+    alter rload = $rl
+    foreach rs 1m 1k 2.5k 2.571k 2.611k
+      alter rsrcb = $rs
+      foreach cab 1f 47p 100p 220p 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+        alter ccable = $cab
+        ac dec 100 1 100meg
+        let T = v(fb)/v(g2)
+        let Tdb = db(T)
+        let Tph = ph(T)
+        meas ac fcross when Tdb=0
+        meas ac pmarg find Tph when Tdb=0
+        meas ac tdc find Tdb at=10
+        echo "$lbl,$rs,1,$cab,$&fcross,$&pmarg,$&tdc,$rl" >> tb_idss_loop_margini.csv
+        destroy all
+      end
+    end
+  end
+end
+.endc
+
+.end

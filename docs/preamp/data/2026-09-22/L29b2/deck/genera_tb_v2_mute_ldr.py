@@ -80,8 +80,9 @@ H = [
     "*",
     "* IL MODELLO DELLE CELLE e' comportamentale dal datasheet, con estrapolazione dichiarata",
     "* sopra ~10 kOhm (models/optocoupler/vtl5c4_comportamentale.lib, curva B per entrambe).",
-    "* Ogni cifra di questo deck porta quell'etichetta. Il resto e' come nei deck di V2: tutto",
-    "* tranne LS352 e' segnaposto, LSK489 compreso (NC-017, NC-031).",
+    "* Ogni cifra di questo deck porta quell'etichetta. Il resto e' come nei deck di V2: da",
+    "* L39 (NC-017) ogni dispositivo attivo e' il modello del costruttore in models/, e solo",
+    "* l'LSK489A ha KF (1/f). [Riga cambiata in L39: fino a L29b2 diceva segnaposto.]",
     "*",
     "* IL PROFILO %s. Serie, log-lineare a tratti in d: %s." % (
         PROFILO, "; ".join("%g A a d = %g" % (i, d) for d, i in SERIE)),

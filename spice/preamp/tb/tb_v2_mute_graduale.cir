@@ -34,14 +34,20 @@ tb_v2_mute_graduale.cir - V2 al jack (ADR-032): il rilascio lento e il mute grad
 *              condensatore si carica di piu' (fase pi/2: 1,0 s e 2,1 s sono
 *              periodi interi), coi suoi due riferimenti _b20mai, _b20sempre
 *
-* PROVVISORIO SUI MODELLI: tutto tranne LS352 e' segnaposto, LSK489 compreso
-* (LSK489X in placeholder_devices.lib, KF=0; NC-017, NC-031). L'offset
+* MODELLI (L39, NC-017): ogni dispositivo attivo e' il modello del costruttore
+* in models/ - LSK489A, MMBT5551, MMBT5401, LS350, Qmje15032, Qmje15033, D1N914.
+* Solo l'LSK489A ha KF (1/f); nessun modello porta la dispersione. L'offset
 * sistematico e la distorsione, quindi il pavimento di C, dipendono da loro.
 *
 * CONVENZIONE DI PERCORSO: `.include @REPO@/...` (tb_op.cir, L2-L3) e file
 * scritti con nome nudo nella directory d'uscita di run_simulation.sh.
 
-.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block.subckt
 

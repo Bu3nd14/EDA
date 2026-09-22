@@ -1,0 +1,75 @@
+tb_bias_sweep.cir - find the Vbe-multiplier resistor that centres Iq on 15 mA
+* Sweeps R128 (the collector-base leg of the bias spreader) and reports the
+* resulting Class A quiescent current, measured as the current in R134 (the
+* NPN output emitter resistor). The hand calculation got this wrong twice;
+* this deck is the arbiter.
+* NOTE: the winning value must then be written back into
+* circuits/preamp/gain_block.py - that file, not this deck, is the topology.
+
+.include /Users/roberto/EDA/.claude/worktrees/L39/spice/preamp/placeholder_devices.lib
+* L22: the input current mirror is no longer a placeholder. It is an
+* LS352 (ADR-018) and this is its VENDOR model - the only one in this
+* deck. L33 (NC-031): the LSK489 is not a vendor model here. Its halves
+* are LSK489X, a hand-written placeholder with KF=0; the vendor model
+* models/jfet/lsk489.lib is included by no deck (Fase 4, NC-017). Every
+* OTHER device here is a hand-written placeholder too, and none has 1/f.
+.include /Users/roberto/EDA/.claude/worktrees/L39/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L39/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN IN 0 DC 0
+
+CSTRAY RG 0 15p
+CSTRAY10 RG10 0 15p
+RLEAK  RG 0 1G
+RLEAK10 RG10 0 1G
+
+RISO  OUT OUTA 47
+COUT  OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD JACK 0 100k
+
+.control
+* --- wrdata (L5): un file PER ITERAZIONE ------------------------------
+* CONVENZIONE DEI NOMI PARAMETRIZZATI (decisa in L5, vale per tutti e 6 i
+* deck con ciclo). Un `$var` in un nome di file NON si chiude da solo:
+* ngspice fa entrare nel nome della variabile anche `.`, `-` e `_`, quindi
+* `wrdata x_$rval.txt` cerca la variabile "rval.txt", non la trova, e
+* scrive un file chiamato "x_". Misurato, non dedotto (sonda in L5).
+* Un `$` invece TERMINA il nome, quindi la forma che funziona e' quella
+* di due variabili adiacenti: `$rval$t` con `t` = ".txt".
+*
+* PERCHE' DENTRO IL CICLO: ogni `op` crea un plot nuovo (op1...op7). Un
+* `wrdata` fuori dal ciclo scriverebbe solo la settima iterazione e la
+* curva Iq(R128) - il senso di questo deck - andrebbe persa.
+*
+* PERCHE' I `let`: `@r134[i]` e `@q132[ic]` sono parametri di DISPOSITIVO,
+* non vettori del plot, e `wrdata` vuole vettori. Il `let` ne prende uno
+* snapshot nel plot corrente.
+*
+* COLONNE: un `wrdata` da `.op` scrive UNA riga e, per ogni vettore, una
+* COPPIA (scale, valore). Lo scale di un plot `op` non significa niente:
+* i dati sono le colonne DISPARI, in quest'ordine:
+*   col1 = iq (A, corrente in R134)   col3 = ic134 (A)
+*   col5 = v(NX)                      col7 = v(NY)
+* Il valore di R128 non e' una colonna: e' nel NOME del file.
+*
+* NOTA: nessun file si chiama tb_bias_sweep_wrdata.txt, quindi il percorso
+* primario di run_simulation.sh non trova nulla, avvisa, e scrive un
+* tb_bias_sweep.json con rows: 0. E' atteso: i 7 file veri li converte il
+* SECONDO passaggio, che guarda i file prodotti e non il testo del deck.
+* ---------------------------------------------------------------------
+set t = .txt
+foreach rval 1500 1600 1650 1690 1740 1780 1870
+  alter r128 = $rval
+  op
+  echo "R128 = $rval ohm"
+  print @r134[i] @q132[ic] v(nx) v(ny)
+  let iq = @r134[i]
+  let ic134 = @q132[ic]
+  wrdata tb_bias_sweep_$rval$t iq ic134 v(nx) v(ny)
+end
+.endc
+
+.end

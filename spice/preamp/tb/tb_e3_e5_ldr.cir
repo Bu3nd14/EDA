@@ -47,8 +47,8 @@ tb_e3_e5_ldr.cir - L29b2: E3 ed E5 col mute graduale a monte (due LDR VTL5C4 all
 * e' un requisito sul comando, non una misura del comando.
 *
 * NODI: i blocchi e le celle sono sottocircuiti (limitations #24); RG / RG10
-* terminati (#27). Il rumore e' un PAVIMENTO: KF = 0 su ogni modello (NC-004,
-* NC-031).
+* terminati (#27). Il rumore e' un PAVIMENTO: da L39 i modelli sono del
+* costruttore, ma solo l'LSK489A porta KF; gli altri non hanno 1/f (NC-004).
 *
 * TABELLE (echo; nessun wrdata le nomina, #25):
 *   tb_e3_e5_ldr_e3.csv   stato,pos,csel,rs_ohm,rp_ohm,zmin_ohm,z20_ohm,z1k_ohm,z20k_ohm
@@ -56,7 +56,12 @@ tb_e3_e5_ldr.cir - L29b2: E3 ed E5 col mute graduale a monte (due LDR VTL5C4 all
 *   tb_e3_e5_ldr_cio.csv  lato,mode,hmax,hint_v,ea_max_nv
 * Convenzione dei percorsi: tb_op.cir (L2).
 
-.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
 * L22: lo specchio d'ingresso e' un LS352 (ADR-018).
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block.subckt

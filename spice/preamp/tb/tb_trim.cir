@@ -40,15 +40,20 @@ tb_trim.cir - L16: the common trim on the variable-output branch. Attenuation, E
 *
 * Both blocks are subcircuits: no node of this deck can collide with a node of
 * a block (limitations #24). Every RG/RG10 port is terminated (#27).
-* NOISE IS A FLOOR (KF = 0 on every model, the LSK489's LSK489X placeholder
-* too: NC-004, NC-031).
+* NOISE IS A FLOOR (since L39 only the LSK489A carries KF; no other model
+* has 1/f: NC-004).
 *
 * TABLES (echo; no wrdata writes these names, #25):
 *   tb_trim_e3.csv  cand,r1,r2,r3,pos,csel,zmin_ohm,z20_ohm,z1k_ohm,z20k_ohm,att1k_db
 *   tb_trim_e5.csv  cand,pos,mode,att,rsrc,onoise_uv
 * Path convention: tb_op.cir (L2).
 
-.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
 * L22: the input current mirror is an LS352 (ADR-018), vendor model.
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block.subckt

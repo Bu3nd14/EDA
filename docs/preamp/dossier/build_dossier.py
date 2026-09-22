@@ -320,9 +320,15 @@ def verdict(ok, yes="conforme", no="non conforme"):
 # LSK489A (L20): the vendor model of models/jfet/lsk489.lib. Without this line a
 # deck simulating it names a part "LSK489A" that no comment says, and the claims
 # about "LSK489" read as claims about a part the deck does not simulate.
+# L39 (NC-017): the manufacturer models the source instantiates since Fase 4.
+# The part of MMBT5551/MMBT5401 is the MMBT, not the 2N (ADR-017); D1N914 is
+# onsemi's model of the 1N4148 DO-35 (docs/limitations.md #20). The placeholder
+# names stay: the dated decks under docs/preamp/data/ still simulate them.
 PART = {"LSK489X": "LSK489", "LSK489A": "LSK489", "LS350": "LS352", "NSS2N5551": "2N5551",
         "PSS2N5401": "2N5401", "NMJE15032": "MJE15032", "PMJE15033": "MJE15033",
-        "D1N4148": "1N4148"}
+        "D1N4148": "1N4148",
+        "MMBT5551": "MMBT5551", "MMBT5401": "MMBT5401", "QMJE15032": "MJE15032",
+        "QMJE15033": "MJE15033", "D1N914": "1N4148"}
 PLACEHOLDER_LIB = "spice/preamp/placeholder_devices.lib"
 
 
