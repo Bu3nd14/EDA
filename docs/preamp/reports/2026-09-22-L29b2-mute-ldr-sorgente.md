@@ -266,17 +266,37 @@ fisse e i due carichi coincidono entro l'1 %:
 
 | | 20 Hz | 1 kHz | 20 kHz, 100 kΩ | Soglia |
 |---|---|---|---|---|
-| **S inserzione** | 7,2 dB | 7,2 dB | @S20I@ | 20 dB |
-| **S rilascio** | 4,1 dB | 5,3 dB | @S20R@ | 20 dB |
-| **S inversione** (ins. / ril.) | 2,9 / 2,2 dB | 3,0 / 2,2 dB | @S20V@ | 20 dB |
-| A senza segnale | ≤ 3,9 µV | (senza segnale, una volta per carico) | — | 100 µV |
-| B2 | ≤ 10 µV | ≤ 0,32 µV | @B20@ | 100 µV |
-| C2 (diagnostica), il peggiore | 10,0 mV (inversione) | 5,0 mV (inversione) | @C20@ | (1 mV) |
-| pavimento di C2 | ≤ 0,3 µV | ≤ 7,8 µV | @P20@ | — |
+| **S inserzione** | 7,2 dB | 7,2 dB | 6,6 dB | 20 dB |
+| **S rilascio** | 4,1 dB | 5,3 dB | 6,1 dB | 20 dB |
+| **S inversione** (ins. / ril.) | 2,9 / 2,2 dB | 3,0 / 2,2 dB | 2,3 / 1,0 dB | 20 dB |
+| A senza segnale (una corsa per carico, tutte le manovre) | ≤ 3,9 µV | ≤ 3,9 µV | — | 100 µV |
+| relè al jack: S; C2 (diagnostica) | 0 dB; 0,091 mV | 0 dB; 0,067 mV | 0 dB; 0,30 mV | 20 dB |
+| B2 | ≤ 10 µV | ≤ 0,32 µV | ≤ 1,1 µV | 100 µV |
+| C2 (diagnostica), il peggiore | 10,0 mV (inversione) | 5,0 mV (inversione) | 23 mV (21 mV già a 5 ms dall'inserzione: fondo del metodo, §3) | (1 mV) |
+| pavimento di C2 | ≤ 0,3 µV | ≤ 7,8 µV | ≤ 59 µV | — |
+
+**Tempi misurati.** Una corsa a 20 kHz (TMAX 0,5 µs, 17,5 s simulati) ha richiesto **circa
+4 ore**, con 7 in parallelo su 10 core (`matrice_v4/tempi_20k.txt`). Il ritmo dei primi
+minuti è molto più alto, e porta fuori strada; un'analisi Python in parallelo lo
+dimezza.
 
 ## 9. Verdetto
 
-@VERDETTO@
+- **La v4 regge il criterio di ADR-040 in tutta la matrice misurata**: tre uscite; 10 e
+  100 kΩ a 20 Hz e 1 kHz; 100 kΩ a 20 kHz. Il salto massimo vale **7,2 dB in 100 ms**
+  contro 20; A ≤ 3,9 µV e B ≤ 10 µV contro 100 µV. Il relè al jack non taglia mai
+  musica sopra −70 dB.
+- **E3 ed E5 reggono** con le celle nel sorgente; **P7 regge** per ragionamento.
+- **La v3 non regge**: salta di 29,7 dB al rilascio a 20 Hz.
+- **C2 resta sopra 1 mV** (diagnostica): 5–23 mV, soprattutto all'inversione e a 20 kHz.
+  La causa è il metodo stesso (§3): pendenza a 20 Hz, e fondo della distorsione contro
+  il riferimento.
+- **NC-028 resta aperta e bloccante**: manca il caso peggiore, cioè guadagno e trim
+  sotto mute, dispersione, accensione e spegnimento. Viene **dopo la Fase 4 (L39)**, per
+  decisione dell'utente, perché dipende dai modelli.
+- **Ogni cifra sulla LDR** porta l'etichetta «modello comportamentale dal datasheet, con
+  estrapolazione dichiarata». La VTL5C4 dell'Excelitas è fuori produzione; la riedizione
+  Xvive è da verificare prima di G2 (STATE.md).
 
 ## 10. Cosa non è stato fatto, e perché
 
