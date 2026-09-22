@@ -669,3 +669,35 @@ costruttore **com'è pubblicato**, qualunque `Vto` giri davvero.
 - una variante che **rimette** i valori di partenza deve ridare la prima cella
   per cella: prova che le alterazioni precedenti non restano appese;
 - il deck dice nell'intestazione che il modello è alterato, e dove.
+
+## 30. `wrdata` scrive il tempo con 9 cifre significative, e fra due corse l'arrotondamento diventa un segnale
+
+Scoperto in L29b2 (`docs/preamp/data/2026-09-22/L29b2/pavimento/`).
+
+Col default, `wrdata` scrive **ogni** colonna col formato `%.8e`, il tempo
+compreso: 9 cifre significative. Il tempo si risolve quindi a **10 ns fino a
+10 s e a 100 ns oltre**. L'errore non si vede in una corsa sola; si vede
+quando si **sottraggono due corse con griglie di passo diverse**, cioè
+esattamente quello che fa C2 di V2 (ADR-035). Su una sinusoide l'arrotondamento
+vale fino a A·ω·δt per corsa e fino al doppio nella differenza:
+
+- a 1 kHz, 12 V di picco sulla principale, sopra 10 s: fino a **~7,5 mV**;
+  misurati **4,6–7,2 mV** in L29b, presi per «pavimento con le LDR attive»;
+- sotto 10 s, dieci volte meno: **~0,7 mV**, dell'ordine del pavimento
+  «diffuso, non attribuito» di C2 in L29a (0,51–0,80 mV).
+
+Niente avvisa: ngspice esce 0, `v2_metodo.py` legge i numeri che trova, e due
+corse con la **stessa** griglia (corse identiche fino a un evento) danno 0
+esatto, così il difetto sembra dipendere dalla fisica dell'evento. La prova che
+lo inchioda: la sorgente ideale `BSRC = f(time)`, identica per costruzione
+nelle due corse, dava da sola **2,2 mV** di C2 nella coda; con
+`set numdgt=15` **1 µV**, e la principale da 6,9 mV a **3 µV**. TMAX 5 µs
+contro 10 µs non cambia niente (6,2 mV).
+
+**Regola operativa**:
+- ogni deck che scrive forme d'onda da sottrarre fra loro mette
+  `set numdgt=15` nel `.control`, **prima** di ogni `wrdata`;
+- il blocco CANALE non c'entra: `numdgt` è una variabile di `.control` e non
+  tocca il circuito né le tolleranze;
+- una sonda che lo tiene onesto costa una colonna: salvare anche la sorgente
+  ideale e leggerne la C2 fra le due corse. Dev'essere di µV.

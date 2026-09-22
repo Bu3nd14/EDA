@@ -107,7 +107,11 @@ SUBCKT = re.compile(r"^\s*\.subckt\s+(\S+)\s+(.*)$", re.IGNORECASE)
 # Terminal count by element letter, for the generated block files only
 # (circuits/preamp/spice_export.py writes R C D with 2 nodes, Q J with 3).
 # Anything else inside a block file is refused rather than guessed.
-NODE_COUNT = {"r": 2, "c": 2, "l": 2, "d": 2, "q": 3, "j": 3}
+NODE_COUNT = {"r": 2, "c": 2, "l": 2, "d": 2, "q": 3, "j": 3,
+              # L29b2: the VTL5C4 behavioural model (models/optocoupler/) is the
+              # first included subckt with a current sensor (V) and behavioural
+              # sources (B), both two-terminal. Any other type still refuses.
+              "v": 2, "b": 2}
 # L31: per-device noise vectors (see the docstring).
 NOISE = re.compile(r"\b[oi]noise_([A-Za-z0-9_]+)")
 LET = re.compile(r"^\s*let\s+([A-Za-z][A-Za-z0-9_]*)\s*=", re.IGNORECASE)

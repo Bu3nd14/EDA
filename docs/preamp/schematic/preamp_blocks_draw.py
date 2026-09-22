@@ -103,6 +103,29 @@ def same(refs, what):
 # Zin del blocco A: la resistenza d'ingresso, una per canale (E3 >= 100 kOhm).
 ZIN = same(["R113", "R313"], "resistenza d'ingresso blocco A")
 
+# Il mute graduale a monte (ADR-038, L29b2): due LDR per canale. Il valore
+# porta la parte e il ruolo ("VTL5C4 LDR_S_L"); qui si confronta la parte, e
+# si asserisce che la serie stia fra il connettore d'ingresso e il nodo di
+# R_IN e la derivazione fra quel nodo e GND. Lo stesso lo asserisce, per
+# intento e con i sabotaggi, scripts/check_relay_safe_state.py (blocco 2e).
+_ldr = {r: VAL[r].split() for r in ("U101", "U102", "U301", "U302")}
+assert all(p[0] == "VTL5C4" for p in _ldr.values()), f"LDR diverse: {_ldr}"
+assert [_ldr[r][1] for r in ("U101", "U102", "U301", "U302")] == [
+    "LDR_S_L", "LDR_P_L", "LDR_S_R", "LDR_P_R"], f"ruoli delle LDR: {_ldr}"
+_pins = {}
+for _chunk in re.split(r"\(net\s*\(code", _src.split("(nets", 1)[-1])[1:]:
+    _nm = re.search(r'\(name "([^"]*)"\)', _chunk).group(1)
+    for _m in re.finditer(r'\(ref "([^"]+)"\)\s*\(pin "([^"]+)"\)', _chunk):
+        _pins[(_m.group(1), _m.group(2))] = _nm
+for _s, _p, _j, _rin in (("U101", "U102", "J101", "R113"),
+                         ("U301", "U302", "J301", "R313")):
+    _node = _pins[(_rin, "1")]
+    assert {_pins[(_s, "3")], _pins[(_s, "4")]} == {_pins[(_j, "1")], _node}, (
+        f"{_s}: la serie non sta fra {_j} e il nodo di R_IN ({_node})")
+    assert {_pins[(_p, "3")], _pins[(_p, "4")]} == {_node, "GND"}, (
+        f"{_p}: la derivazione non va dal nodo di R_IN a GND")
+LDR_S = LDR_P = _ldr["U101"][0]
+
 # Resistenze d'isolamento d'uscita, 3 per canale (47 Ohm, addendum di ADR-008;
 # da L17 le due delle fisse stanno dopo il proprio buffer, T5/ADR-023).
 RISO = same(["R161", "R164", "R261", "R361", "R364", "R461"], "isolamento uscite")
@@ -438,8 +461,14 @@ arrow(5.0, Y, 6.3, Y)
 box(9.0, Y, 5.2, 2.7,
     ["SELETTORE", "a relè", "ADR-009"], head_size=10)
 # Da L16 (ADR-027) il trim non sta qui: e' uno solo, sul ramo dell'uscita
-# variabile, sulla riga YA piu' sotto. Il selettore va dritto al blocco A.
-arrow(11.6, Y, 19.8, Y)
+# variabile, sulla riga YA piu' sotto. Da L29b2 (ADR-038) fra il selettore e
+# il blocco A sta il mute graduale: una LDR in serie e una verso massa, sul
+# nodo di R_IN. Il comando dei LED e' fuori dal segnale (ADR-022), sulla J3.
+wire(11.6, Y, 12.4, Y)
+series(14.0, Y, f"LDR serie {LDR_S}", w=3.2)
+wire(15.6, Y, 17.6, Y)
+shunt_to_gnd(17.6, Y, f"LDR {LDR_P}", "mute graduale")
+arrow(17.6, Y, 19.8, Y)
 box(23.0, Y, 5.6, 3.4,
     ["BLOCCO A", "guadagno 1 (0 dB)", f"Zin {R_ZIN}",
      "coppia JFET cascodata"], head_size=11)
@@ -587,6 +616,7 @@ txt((8.5, 1.15), "selettore d'ingresso.  Non è in preamp_audio.py:\n"
 
 dashed_frame(16.2, 0.5, 30.0, 2.4, "SCHEDA AUDIO (P4)")
 txt((23.1, 1.15), "blocchi A, B e 2 buffer ×2 canali, trim, contatti di mute,\n"
+                  "LDR del mute graduale (comando dei LED fuori scheda, J3),\n"
                   f"{len(VAL)} componenti — preamp_audio.py + trim.py",
     size=8, color=DIM)
 

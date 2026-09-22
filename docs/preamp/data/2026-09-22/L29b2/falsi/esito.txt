@@ -1,0 +1,36 @@
+== F2.net rc=1
+[1;35mAssertionError[0m: [35mU102: la derivazione non va dal nodo di R_IN a GND[0m
+== F3.net rc=1
+[1;35mAssertionError[0m: [35mU101: la serie non sta fra J101 e il nodo di R_IN (AL_IN)[0m
+== /Users/roberto/.claude/jobs/925322f6/tmp/old.net rc=1
+[1;35mKeyError[0m: [35m'U101'[0m
+2e F1 rc=1
+2e F2 rc=1
+2e F3 rc=1
+2e main-senza-LDR rc=1
+== F1 (generazione rc=0)
+FALLITO: 1 problemi
+  U101: il LED (pin 2) sta sulla rete AL_IN, che tocca R108.1, R113.1, U101.4, U102.3. ADR-022: il comando dei LED sta fuori dal percorso del segnale, e un LED su una rete di segnale porta il comando dentro un nodo a 1 MOhm.
+rc=0  (pipe: vedi riga FALLITO/OK)
+== F2 (generazione rc=0)
+FALLITO: 1 problemi
+  U102 (derivazione, canale L): la cella deve andare dal nodo di R_IN (AL_IN) a GND; sta su ['L_IN_SRC', 'GND'].
+rc=0  (pipe: vedi riga FALLITO/OK)
+== F3 (generazione rc=0)
+FALLITO: 1 problemi
+  U101 (serie, canale L): la cella deve stare fra il connettore IN_L e il nodo di R_IN = 1M (l'ingresso del blocco A); sta su ['AL_IN', 'MORTO']. ADR-038: un punto per canale che silenzia tutte e tre le uscite.
+rc=0  (pipe: vedi riga FALLITO/OK)
+== F0: netlist di main, senza LDR
+== nuova
+rc=0
+OK: ogni rele' si guasta nel verso che le ADR richiedono (mute -> uscite a massa, guadagno -> R_g flottante), e il trim si comanda solo a mute inserito (F8); le LDR del mute graduale stanno dove ADR-038 le vuole, col comando fuori dal segnale.
+
+== 2g (check_deck_refs.py), L29b2: NODE_COUNT esteso a V e B per il modello VTL5C4
+s1 = tb_e3_e5_ldr.cir con 'alter rldrx' (dispositivo inesistente)
+   s1.cir:213: 'rldrx' is not a device of this deck
+   1 MISSING, 0 DANGLING: s1.cir (55 citations, 1 noise vectors, 97 devices)
+rc=1
+s2 = tb_v2_mute_ldr.cir con il catodo di XLS su un nodo morto
+   s2.cir:175: XLS port K -> NMORTO, which no other element of this deck connects
+   0 MISSING, 1 DANGLING: s2.cir (9 citations, 0 noise vectors, 158 devices)
+rc=1

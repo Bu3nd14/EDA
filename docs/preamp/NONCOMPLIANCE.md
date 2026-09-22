@@ -90,6 +90,12 @@ modello verificato, e l'ha misurato sulla catena.
 - Il rilascio non è decidibile, perché il pavimento numerico con le LDR sale a mV.
 
 **NC-028 resta aperta e bloccante**, aggiornata. Il sorgente è di L29b2.
+**L29b2** (2026-09-22) ha messo le LDR nel sorgente (ADR-039) e reso decidibile il
+rilascio. Il pavimento di mV era l'arrotondamento del tempo scritto da `wrdata`
+(limitations #30). Col profilo v3, rilascio e inversione sono **fuori soglia**
+(3,41 e 7,36 mV sulla principale). La proposta v4 porta il rilascio a 1,47 mV e aspetta
+la decisione dell'utente. E3, E5 e P7 reggono. **NC-028 resta aperta e bloccante**,
+aggiornata.
 **13 voci aperte, 3 bloccanti.**
 L'accesso a G1 non è concesso finché NC-004, NC-017 e NC-028 restano aperte.
 
@@ -2311,6 +2317,43 @@ misurato sulla catena. La voce RESTA APERTA E BLOCCANTE.**
   - il caso peggiore. **Chi**: **L29c**.
 - **C2 d'inserzione sulla principale resta fuori soglia** (2,56 mV contro 1 mV), come
   l'ideale che ADR-036 aveva accettato «per ora».
+
+**AGGIORNATA IL 2026-09-22, da L29b2: il mute LDR nel sorgente, e il rilascio reso
+decidibile. La voce RESTA APERTA E BLOCCANTE.**
+(`reports/2026-09-22-L29b2-mute-ldr-sorgente.md`)
+
+- **Il pavimento «con le LDR attive» non era del circuito.** `wrdata` scrive il tempo
+  con 9 cifre significative, cioè a 100 ns sopra t = 10 s, e fra due corse con griglie
+  diverse l'arrotondamento dava 4,6–7,2 mV di C2. Con `set numdgt=15` il pavimento lungo
+  tutta la sequenza vale **≤ 31 µV** (`docs/limitations.md` #30). Il metodo di V2 non
+  cambia.
+- **Profilo v3, Td 6 s**, 1 kHz, 100 kΩ, modello comportamentale dal datasheet con
+  estrapolazione dichiarata. Principale / fisse:
+  - inserzione **2,50 / 0,60 mV**;
+  - **rilascio 3,41 / 0,88 mV**;
+  - **inversione a d = 0,75: 7,36 / 2,15 mV**;
+  - relè 0,067 / 0,057 mV; A ≤ 33 nV; B2 0,29 µV; carico ≥ 714 kΩ.
+
+  Rilascio e inversione sono **decidibili e fuori soglia** sulla principale.
+  L'inversione lo è anche sulle fisse. Il meccanismo è misurato: al rilascio la cella in
+  serie si accende alla velocità del LED, e il livello va da −62 a −26 dB in 150 ms.
+- **Una proposta non adottata, la v4**: rilascio 1,47 / 0,30 mV, inversione
+  5,01 / 1,40 mV, il resto invariato. Il profilo è dell'utente: **aspetta la sua
+  decisione**. Aspetta anche un comando con accelerazione limitata, perché l'inversione
+  ha uno spigolo all'istante in cui d cambia verso.
+- **Nel sorgente** (ADR-039): U101/U102 e U301/U302, il comando su J3 fuori dal segnale,
+  il contratto del comando accanto a J3. 2e e 2f li asseriscono, e sono stati fatti
+  fallire su tre sabotaggi e sulla netlist senza LDR.
+- **E3** ≥ 111,6 kΩ ed **E5** ≤ 4,957 µV con le celle (`tb_e3_e5_ldr.cir`): conformi.
+  **P7** regge per ragionamento: a mute inserito gli stadi d'uscita non hanno segnale,
+  un caso meno severo di quello misurato in L17.
+- **Il deck versionato** `tb_v2_mute_ldr.cir`: tre uscite, 10 e 100 kΩ, 20 Hz / 1 kHz /
+  20 kHz. L'esito è nel report, §7.1.
+- **Cosa manca per chiuderla:**
+  - C2 di inserzione, rilascio e inversione sotto 1 mV sulla principale, oppure una
+    decisione dell'utente che li accetti come ADR-036 fece «per ora»;
+  - la scelta del profilo (v3 o v4, e l'accelerazione limitata). **Chi**: l'utente;
+  - il caso peggiore. **Chi**: **L29c**.
 
 
 ### NC-029 — Con i buffer delle fisse la dissipazione a riposo raddoppia, e P5 non la copre
