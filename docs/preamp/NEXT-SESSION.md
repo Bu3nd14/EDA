@@ -1,98 +1,106 @@
-# Prompt per la sessione successiva — L29c (il caso peggiore di V2 col mute reale)
+# Prompt per la sessione successiva — L39 (Fase 4: i modelli del costruttore nel progetto)
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è
-organizzato in LOTTI PICCOLI: questa sessione fa **L29c** e si ferma. Non iniziarne un
+organizzato in LOTTI PICCOLI: questa sessione fa **L39** e si ferma. Non iniziarne un
 secondo.
+
+## Perché adesso
+
+**Decisione dell'utente del 2026-09-22: la Fase 4 prima di L29c.** Il caso peggiore di V2
+(L29c) dipende dai modelli: l'offset del blocco B (−14,2 mV coi modelli del costruttore
+contro −16,6 coi segnaposto, ADR-030), la dispersione, e il fondo di distorsione della
+catena, che sulla principale vale 0,65–0,96 mV di C2 coi segnaposto. Misurarlo coi
+segnaposto vorrebbe dire rifarlo. Scoprire tardi un problema dei modelli veri, peggio,
+vorrebbe dire rifare molti lotti o toccare la topologia: i MJE sono gli stadi d'uscita.
 
 ## Da dove si parte
 
-L29b2 ha chiuso il mute graduale a monte **nel sorgente** e ha cambiato il criterio del
-taglio, per scelta dell'utente.
-- **Il criterio (ADR-040).** Il taglio con musica si giudica su **S, il salto di
-  livello: ≤ 20 dB in 100 ms**, contato sopra −70 dB. Il dato è dell'utente: il
-  pseudo-mute del Technics cala di 20 dB di colpo e non gli ha mai dato fastidio.
-  **C2 è diagnostica**: si calcola e si riporta, non decide. A e B restano a 100 µV,
-  A senza segnale. Lo strumento è `scripts/v2_metodo.py`, righe `S_ins` e `S_rel`.
-- **Il profilo del comando dei LED è la v4** (ADR-039, ADR-040). Serie: 20 mA → 0,2 mA
-  (d 0–0,1) → 4,5 µA (0,45) → **0,19 µA (0,75)** → 10 nA (0,8). Derivazione: 10 nA →
-  20 mA log-lineare su d 0,5–1. Td = 6 s, 10 nA di riposo, relè 0,5 s dopo d = 1. Il
-  contratto sta accanto a J3 in `circuits/preamp/preamp_audio.py`.
-- **Il deck versionato** `spice/preamp/tb/tb_v2_mute_ldr.cir` è **generato** da
-  `docs/preamp/data/2026-09-22/L29b2/deck/genera_tb_v2_mute_ldr.py`. Non si edita a
-  mano. Si divide con `data/2026-09-22/L29b2/pavimento/dividi.py` e si corre in
-  parallelo.
-- **Cosa è misurato con la v4** (modello comportamentale dal datasheet, con
-  estrapolazione dichiarata): S ≤ 7,2 dB a 20 Hz e 1 kHz su tre uscite e due carichi;
-  20 kHz a 100 kΩ nel report di L29b2; A ≤ 3,9 µV, B2 ≤ 10 µV; E3 ≥ 111,6 kΩ,
-  E5 ≤ 4,957 µV.
+- **Da L25 tutti e sette i dispositivi attivi hanno il modello del costruttore in
+  `models/`**, con la provenienza e le ricette di `validate_models.py` (48/48). Di
+  **NC-017** resta la sola sostituzione nel progetto.
+- **I segnaposto** stanno in `spice/preamp/placeholder_devices.lib`: `LSK489X`,
+  `NSS2N5551`, `PSS2N5401`, `PTHAT320`, `NMJE15032`, `PMJE15033`, `D1N4148`, tutti con
+  KF = 0. Li includono **25 deck**. Il modello dell'LS352 è già del costruttore
+  (`models/bjt_pnp/ls350.lib`).
+- **I nomi da mappare** (`models/`): `LSK489A` (lsk489.lib), `MMBT5551`, `MMBT5401`,
+  `Qmje15032`, `Qmje15033`, e in `1n4148.lib` un modello chiamato **`D1N914`**.
+  Quest'ultimo va capito prima di usarlo: vedi limitations #17 e #20, dove il costruttore
+  serve un modello sotto il nome di un'altra parte.
+- **I nomi si scrivono nel sorgente**: `circuits/preamp/gain_block.py` passa il nome del
+  modello a `spice_export.py` (`Q(...)`, `sx.spice_dev(...)`), e da lì si generano
+  `spice/preamp/gain_block.subckt` e `gain_block_flat.inc`. Il sorgente istanzia ancora
+  «2N5551 / 2N5401»: **ADR-017** ha cambiato costruttore e package (MMBT). La topologia
+  sta solo nel sorgente (AGENTS.md): il blocco generato non si edita a mano.
+- **Il JFET è del gruppo B** (ADR-031), mentre il modello del costruttore è l'LSK489A.
+  La variante è già derivata da `scripts/derive_jfet_variant.py`
+  (`spice/preamp/derived/gain_block_flat_lsk489a.inc`, L20, blocco 2i). Leggi come L20
+  sposta `Vto` e come lo verifica (limitations #29).
 
 ## Leggi PRIMA, in quest'ordine
 
-1. **`CLAUDE.md`**, **`docs/limitations.md`**, in particolare **#30** (`set numdgt=15`
-   prima di ogni `wrdata`) e **#31** (`pwl()` estrapola).
-2. **`docs/preamp/STATE.md`**: la voce L29b2 del diario e le righe L29c e L36.
-3. **`docs/preamp/reports/2026-09-22-L29b2-mute-ldr-sorgente.md`** per intero.
-4. **ADR-040**, **ADR-041**, **ADR-039**, **ADR-038**; poi ADR-030 (criterio 3), ADR-032, ADR-035,
-   ADR-036.
-5. **`docs/preamp/REQUIREMENTS.md`**: V2 per intero, col caso peggiore.
-6. **`docs/preamp/NONCOMPLIANCE.md`**: NC-028, l'aggiornamento del 2026-09-22.
+1. **`CLAUDE.md`** e **`docs/limitations.md`**, in particolare #17, #20, #22, #24, #27,
+   #29, #30 e #31.
+2. **`docs/preamp/STATE.md`**: le voci L25, L20, L24 e L29b2 del diario, e le righe L39,
+   L29c e L36.
+3. **ADR-013, ADR-016, ADR-017, ADR-018, ADR-031**; poi ADR-019 (V1), ADR-020 (E5),
+   ADR-023 (classe A), ADR-030 (offset), ADR-040 (S).
+4. **`docs/preamp/NONCOMPLIANCE.md`**: NC-017, NC-004, NC-013, NC-020, NC-024, NC-025,
+   NC-031.
+5. I report di L25 e di L20.
 
-## IL LAVORO
+## IL LAVORO, in ordine
 
-Il caso peggiore di V2, col mute reale (le LDR della v4 più il relè al jack), dal
-testo di V2:
-1. **I passaggi di guadagno** 0↔+3, +3↔+10, 0↔+10 dB nei due versi, **sotto mute**,
-   seguiti dal rilascio. Guadagno e trim si cambiano solo col jack a massa (ADR-038), e
-   la forma è decisa: **interblocco da premere come il trim**, niente mute automatico,
-   LED anche per il guadagno (ADR-041). L36 la realizza dopo L29c.
-   È il **criterio 3 di ADR-030**, da cui dipende **L36**: il cambio sotto mute e il
-   rilascio devono dare A e S nei limiti.
-2. **Il trim** nelle tre posizioni, con lo stesso schema.
-3. **La dispersione dell'LSK489** fino a ±20 mV, in più posizioni dell'attenuatore.
-4. **Mute breve e mute di almeno 2 s**. Il rilascio dopo un mute lungo parte dalla
-   serie più buia.
-5. **Accensione e spegnimento** con le rampe dei rail (A contro il regime, sorgente a
-   zero).
-6. **Le celle A–D** del modello della LDR: la dispersione delle parti, per canale.
+1. **La mappa segnaposto → costruttore**, per ogni dispositivo. Con la provenienza, e con
+   ciò che il modello del costruttore **non** ha: 1/f, dispersione, deviazioni già
+   registrate dal proprio datasheet (NC-013, NC-020, NC-024, NC-025).
+2. **La sostituzione nel sorgente** (`gain_block.py`, `spice_export.py` se serve), poi il
+   blocco rigenerato, e il derivato rigenerato (2i). Un commento con l'ADR su ogni scelta
+   non ovvia.
+3. **I deck.** Ogni deck che include i segnaposto passa ai modelli del costruttore. Si
+   aggiornano le intestazioni: il blocco 2h confronta ciò che un deck **dice** di simulare
+   con ciò che include.
+4. **La regressione, cifra per cifra, prima e dopo**, in una tabella:
+   - punto di lavoro e classe A in ogni blocco (ADR-023);
+   - V1, margine di fase ≥ 60° ovunque (ADR-019);
+   - E2–E5 (E5 resta un pavimento senza 1/f: dirlo);
+   - V3, P7;
+   - l'offset del blocco B (ADR-030);
+   - A, B e S di V2 su una cella di `tb_v2_mute_ldr.cir` a 1 kHz, col fondo di
+     distorsione di C2 accanto.
 
-Poi l'esito: **NC-028 si chiude** se A, B e S reggono in tutta la matrice; altrimenti
-resta aperta con le celle che cadono. Report datato.
+   **Ogni cifra che cambia oltre la sua soglia apre o aggiorna una NC.** Se una richiede
+   una modifica di topologia, **fermati e dillo all'utente** prima di toccarla.
+5. **L'esito**: NC-017 si chiude se la sostituzione è completa e la regressione regge;
+   NC-004 si aggiorna. Report datato.
 
-**Se non entra in una sessione, dividi** in `STATE.md` e chiudine una parte.
+**Se non entra in una sessione, dividi**: prima la sostituzione e la regressione di
+punto di lavoro, V1 ed E5; poi il resto. Scrivilo in `STATE.md`.
 
 ## I vincoli
 
-- **I tempi veri a 20 kHz.** Una corsa di 17,5 s con TMAX 0,5 µs vale **8–15 ore**, non
-  2: il ritmo dei primi minuti inganna. Pianificale prima, e parlane con l'utente se
-  servono. RAM: ~0,5 GB l'una a un quarto della corsa, e cresce coi punti salvati (stima ~2 GB a
-  fine corsa); con 24 GB, 7 in parallelo su 10 core hanno retto.
 - **`set numdgt=15`** in ogni deck che scrive forme d'onda da sottrarre (#30).
-- **Il pavimento di C2 si misura e si riporta** anche se C2 è diagnostica.
-- **Ogni cifra sulla LDR** porta «modello comportamentale dal datasheet, con
-  estrapolazione dichiarata».
-- **Trappole già pagate:**
-  - un LED senza percorso DC fa fallire l'op in silenzio (il 10 M del banco);
-  - col trapezio un gradino sul LED fa oscillare la cella: i comandi sono log-lineari;
-  - `analizza` accetta eventi solo per t > 0,3 s;
-  - `awk` col locale italiano non legge i `.dat`: si usa Python;
-  - **`pkill -f` sul nome di uno script zsh prende anche i suoi subshell**;
-  - **`pgrep` con `\|` non vuol dire «oppure»**: controlla i processi con `ps`.
-- **Nessun cambio di tecnica o di criterio senza l'utente.**
+- **Tempi**: le corse di V2 a 20 kHz con TMAX 0,5 µs valgono ore. Qui non servono: la
+  regressione di V2 è a 1 kHz.
+- **Nessun cambio di topologia senza l'utente.**
+- I file in `vendor/` non si toccano; i modelli in `models/` si cambiano solo col loro
+  processo (provenienza, `validate_models.py`).
 - Gli script zsh si lanciano da soli. `git` e i comandi con variabili di shell composte
   vengono rifiutati nel worktree: comandi semplici e separati, script su file. Scipy non
-  c'è; numpy c'è nel venv 3.13.
+  c'è; numpy c'è nel venv 3.13. `pkill -f` sul nome di uno script zsh prende anche i
+  suoi subshell; `pgrep` con `\|` non vuol dire «oppure».
 
 ## NON fa parte di questo lotto
 
-- **L36** (la forma dell'interblocco del guadagno), L35, L28, L30, il dossier.
-- Rifare i deck di L29a con `numdgt=15`.
-- I file in `vendor/` non si toccano.
+- **L29c** (il caso peggiore di V2: viene subito dopo), L36, L35, L28 (i pin SS: la
+  ricerca la fa l'utente), L30, il dossier.
 
 ## CHIUSURA
 
-1. `STATE.md` con L29c **fatto** e il successivo come prossimo.
-2. Riscrivi QUESTO file per il lotto successivo.
+1. `STATE.md` con L39 **fatto** e L29c come prossimo.
+2. Riscrivi QUESTO file per L29c, partendo dalla bozza
+   `docs/preamp/data/2026-09-22/L29b2/bozza_prompt_L29c.md` aggiornata ai modelli del
+   costruttore.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L29c`.
+4. `/bin/zsh scripts/chunk_close.sh L39`.
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**
