@@ -27,7 +27,7 @@ tb_uscite_fisse.cir - E4 (Zout) ed E5 (rumore) sulle uscite fisse coi buffer (L1
 *   solo blocco A al suo nodo d'uscita con la sorgente da 430 ohm.
 *
 * *** IL RUMORE E' UN PAVIMENTO, NON UNA PREVISIONE *** (tb_zout_psrr_noise):
-* KF = 0 in ogni segnaposto, nessun rumore 1/f.
+* da L39 solo l'LSK489A porta KF; fuori dalla coppia d'ingresso nessun 1/f.
 *
 * NOISE E PLOT: ogni `noise` e' seguita da `destroy all`, altrimenti il
 * `setplot noise2` della successiva legge il plot vecchio (limitations #10).
@@ -35,7 +35,12 @@ tb_uscite_fisse.cir - E4 (Zout) ed E5 (rumore) sulle uscite fisse coi buffer (L1
 * Nessun file si chiama tb_uscite_fisse_wrdata.txt: run_simulation.sh avvisa
 * e converte i .txt al secondo passaggio. Le tabelle sono .csv da echo.
 
-.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block.subckt
 

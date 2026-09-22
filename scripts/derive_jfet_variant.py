@@ -3,6 +3,13 @@
 derive_jfet_variant.py - the gain block with a different model on its input
 JFETs, DERIVED from the generated include, never edited by hand.
 
+RETIRED IN L39 (NC-017). Since L39 circuits/preamp/gain_block.py writes LSK489A
+itself, so the generated block has no LSK489X line and this script exits 2 on
+it. The derived file is removed, the decks include gain_block_flat.inc, and
+block 2i of run_tests.sh is scripts/check_no_placeholders.py. The script stays
+because the dated data of L20 (docs/preamp/data/2026-09-15/L20/) cite it, and
+it still runs on the generated block of any commit before L39.
+
 WHY THIS EXISTS (L20, NC-013)
 -----------------------------
 circuits/preamp/gain_block.py writes the model name of the two LSK489 halves

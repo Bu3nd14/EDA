@@ -27,13 +27,18 @@ tb_loop_bufferfissa.cir - loop gain of a FIXED-OUTPUT BUFFER (L17, ADR-023)
 *
 * VERDICT (L12, ADR-024): pos 1 counts - the cable at the jack, minimum over the
 * whole sweep, which lies between 2.2 and 3.3 nF (hence the 1.5n/2.7n/3.3n points
-* added in L12). Pos 2 is information. PROVISIONAL - placeholder device models.
+* added in L12). Pos 2 is information. Manufacturer device models since L39.
 *
 * Nessun file si chiama tb_loop_bufferfissa_wrdata.txt: run_simulation.sh
 * avvisa, e converte i .txt al secondo passaggio. La tabella e' un .csv
 * scritto da echo.
 
-.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block_flat.inc
 

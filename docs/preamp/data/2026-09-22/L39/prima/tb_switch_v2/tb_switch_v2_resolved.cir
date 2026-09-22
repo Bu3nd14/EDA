@@ -1,0 +1,120 @@
+tb_switch_v2.cir - V2: the feedback loop must never open during gain switching, three levels, two bouncing relays
+* Models BOTH gain relays of ADR-026 as real contacts with real bounce:
+*   K1 (SREL,   R_g3 leg on RG)    and   K5 (SREL10, R_g10 leg on RG10)
+* each make with 3 bounces over 0.7 ms, each break with 2 bounces over 0.4 ms.
+* RON = 50 mohm, ROFF = 1e12 ohm - i.e. a genuinely open contact, not a
+* convenient large resistor.
+*
+* THE SEQUENCE (L27). Every transition the 3-position selector can command,
+* and the two orders a real pair of relays can take on the direct 0 <-> +10:
+*    0 -  5 ms   0 dB
+*    5 ms        K1 makes                  0  -> +3
+*   15 ms        K5 makes                  +3 -> +10
+*   25 ms        K5 breaks                 +10 -> +3
+*   35 ms        K1 breaks                 +3 -> 0
+*   44.7 ms      K5 makes, K1 at 45 ms     0  -> +10, K5 FIRST: the bounce
+*                                          passes through K5-alone, +8.73 dB -
+*                                          the coil-fault state of ADR-026
+*   60 ms        K1 breaks, K5 at 60.3 ms  +10 -> 0, K1 FIRST: K5-alone again
+*   70 ms        end
+*
+* THE CLAIM UNDER TEST (ADR-004 + V2): because the relays switch R_g legs to
+* ground and R_f is hard-wired, the loop stays closed in EVERY contact state.
+* The falsifiable prediction: v(OUT) stays inside the +10 dB envelope at all
+* times, never approaches a rail, and settles within a few loop time
+* constants after each bounce. The windows below measure each steady level
+* separately, so the transitions can be compared with the +10 dB envelope.
+*
+* The counterfactual (the arrangement ADR-004 rejected) is in
+* tb_switch_v2_counterfactual.cir - run both, they are only meaningful
+* together.
+
+.include /Users/roberto/EDA/.claude/worktrees/L39/spice/preamp/placeholder_devices.lib
+* L22: the input current mirror is no longer a placeholder. It is an
+* LS352 (ADR-018) and this is its VENDOR model - the only one in this
+* deck. L33 (NC-031): the LSK489 is not a vendor model here. Its halves
+* are LSK489X, a hand-written placeholder with KF=0; the vendor model
+* models/jfet/lsk489.lib is included by no deck (Fase 4, NC-017). Every
+* OTHER device here is a hand-written placeholder too, and none has 1/f.
+.include /Users/roberto/EDA/.claude/worktrees/L39/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L39/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VSRC SRCN 0 DC 0 SIN(0 0.5 1k)
+RSRC SRCN IN 430
+
+* --- the two gain relay contacts ---
+.model RLYSW SW(RON=0.05 ROFF=1E12 VT=2.5 VH=0.5)
+SREL RG NRG CTRL 0 RLYSW
+RCONT NRG 0 0.001
+CSTRAY RG 0 15p
+VCTRL CTRL 0 PWL(0 0 4.999m 0 5.000m 5 5.200m 5 5.201m 0 5.400m 0
++ 5.401m 5 5.600m 5 5.601m 0 5.700m 0 5.701m 5
++ 34.999m 5 35.000m 0 35.200m 0 35.201m 5 35.400m 5 35.401m 0
++ 44.999m 0 45.000m 5 45.200m 5 45.201m 0 45.400m 0 45.401m 5
++ 45.600m 5 45.601m 0 45.700m 0 45.701m 5
++ 59.999m 5 60.000m 0 60.200m 0 60.201m 5 60.400m 5 60.401m 0 70m 0)
+
+SREL10 RG10 NRG10 CTRL10 0 RLYSW
+RCONT10 NRG10 0 0.001
+CSTRAY10 RG10 0 15p
+VCTRL10 CTRL10 0 PWL(0 0 14.999m 0 15.000m 5 15.200m 5 15.201m 0 15.400m 0
++ 15.401m 5 15.600m 5 15.601m 0 15.700m 0 15.701m 5
++ 24.999m 5 25.000m 0 25.200m 0 25.201m 5 25.400m 5 25.401m 0
++ 44.699m 0 44.700m 5 44.900m 5 44.901m 0 45.100m 0 45.101m 5
++ 45.300m 5 45.301m 0 45.400m 0 45.401m 5
++ 60.299m 5 60.300m 0 60.500m 0 60.501m 5 60.700m 5 60.701m 0 70m 0)
+
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+
+.control
+* Table name tb_switch_v2_finestre.csv: no wrdata writes it (limitations #25).
+* No tstart on the tran: every meas window lies inside 0-70 ms (#26).
+tran 2u 70m 0 2u
+wrdata tb_switch_v2_wrdata.txt v(OUT) v(JACK) v(NX) v(NY) v(CTRL) v(FB) v(CTRL10)
+let vmax = maximum(v(OUT))
+let vmin = minimum(v(OUT))
+let nxmax = maximum(v(NX))
+let nymin = minimum(v(NY))
+echo "extremes over the whole 70 ms, including every bounce burst:"
+print vmax vmin nxmax nymin
+* steady levels, each window well after the preceding bounce burst
+meas tran s0max  MAX v(out) from=1m  to=5m
+meas tran s0min  MIN v(out) from=1m  to=5m
+meas tran s3max  MAX v(out) from=9m  to=15m
+meas tran s3min  MIN v(out) from=9m  to=15m
+meas tran s10max MAX v(out) from=19m to=25m
+meas tran s10min MIN v(out) from=19m to=25m
+meas tran s10bmax MAX v(out) from=50m to=60m
+meas tran s10bmin MIN v(out) from=50m to=60m
+* transition windows: bounce burst plus settling
+meas tran t03max  MAX v(out) from=5m    to=9m
+meas tran t03min  MIN v(out) from=5m    to=9m
+meas tran t310max MAX v(out) from=15m   to=19m
+meas tran t310min MIN v(out) from=15m   to=19m
+meas tran t103max MAX v(out) from=25m   to=29m
+meas tran t103min MIN v(out) from=25m   to=29m
+meas tran t30max  MAX v(out) from=35m   to=39m
+meas tran t30min  MIN v(out) from=35m   to=39m
+meas tran t010max MAX v(out) from=44.5m to=50m
+meas tran t010min MIN v(out) from=44.5m to=50m
+meas tran t100max MAX v(out) from=60m   to=70m
+meas tran t100min MIN v(out) from=60m   to=70m
+echo "finestra,vmax,vmin" > tb_switch_v2_finestre.csv
+echo "regime_0db,$&s0max,$&s0min" >> tb_switch_v2_finestre.csv
+echo "regime_3db,$&s3max,$&s3min" >> tb_switch_v2_finestre.csv
+echo "regime_10db,$&s10max,$&s10min" >> tb_switch_v2_finestre.csv
+echo "regime_10db_bis,$&s10bmax,$&s10bmin" >> tb_switch_v2_finestre.csv
+echo "trans_0_3,$&t03max,$&t03min" >> tb_switch_v2_finestre.csv
+echo "trans_3_10,$&t310max,$&t310min" >> tb_switch_v2_finestre.csv
+echo "trans_10_3,$&t103max,$&t103min" >> tb_switch_v2_finestre.csv
+echo "trans_3_0,$&t30max,$&t30min" >> tb_switch_v2_finestre.csv
+echo "trans_0_10_k5_prima,$&t010max,$&t010min" >> tb_switch_v2_finestre.csv
+echo "trans_10_0_k1_prima,$&t100max,$&t100min" >> tb_switch_v2_finestre.csv
+.endc
+
+.end

@@ -2,16 +2,28 @@ tb_noise_breakdown.cir - which devices actually make the noise (E5)
 * Single-frequency noise summary at 1 kHz so ngspice prints the per-device
 * contribution table, plus the integrated 20 Hz - 20 kHz totals for the five
 * configurations that matter (L27 added E, the +3 dB mode of ADR-026).
-* REMINDER: placeholder_devices.lib has KF = 0 everywhere. There is NO 1/f
-* noise in any of this. These are thermal + shot noise only, i.e. a FLOOR.
+* REMINDER: since L39 the models are the manufacturer's, and only the
+* LSK489A carries KF. 1/f noise is on the input pair and nowhere else: for
+* every other device these are thermal + shot noise only, i.e. a FLOOR.
 
-.include @REPO@/spice/preamp/placeholder_devices.lib
-* L22: the input current mirror is no longer a placeholder. It is an
-* LS352 (ADR-018) and this is its VENDOR model - the only one in this
-* deck. L33 (NC-031): the LSK489 is not a vendor model here. Its halves
-* are LSK489X, a hand-written placeholder with KF=0; the vendor model
-* models/jfet/lsk489.lib is included by no deck (Fase 4, NC-017). Every
-* OTHER device here is a hand-written placeholder too, and none has 1/f.
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+* L39 (NC-017): every active device in this deck is a vendor model from
+* models/, each next to its .provenance.json:
+*   LSK489   - vendor model LSK489A, the published corner sample (I_DSS
+*              2.59 mA, below the group-B window of ADR-031)
+*   LS352    - vendor model LS350 (ADR-018), included on the next line
+*   MMBT5551 - vendor model, Diodes Inc. (ADR-017)
+*   MMBT5401 - vendor model, Diodes Inc. (ADR-017)
+*   MJE15032 - vendor model Qmje15032, onsemi (NC-024, NC-025)
+*   MJE15033 - vendor model Qmje15033, onsemi (NC-025)
+*   1N4148   - vendor model D1N914, onsemi (docs/limitations.md #20)
+* Only the LSK489A carries KF: 1/f noise is on the input pair and nowhere
+* else. No model carries part-to-part spread.
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block_flat.inc
 
@@ -55,7 +67,7 @@ destroy all
 *  - la sezione per dispositivo a 1 kHz qui sopra: e' gia' il lavoro di
 *    tb_noise_vectors.cir (L4). Due file per lo stesso dato divergono.
 *  - gli integrati onoise_total/inoise_total: sono scalari, restano
-*    stampati nel log, e la cifra credibile arrivera' con i modelli vendor.
+*    stampati nel log. Da L39 vengono dai modelli del costruttore.
 *
 * COLONNE (301 righe, 20 Hz - 20 kHz, 100 punti/decade). Per ogni vettore
 * una COPPIA (frequenza, valore): le colonne PARI sono la frequenza
@@ -69,9 +81,9 @@ destroy all
 * tb_noise_breakdown.json con rows: 0. E' atteso: i 5 file veri li
 * converte il SECONDO passaggio, che guarda i file prodotti.
 *
-* ATTENZIONE DI MERITO: KF = 0 su ogni dispositivo segnaposto, quindi qui
-* NON c'e' rumore 1/f. E' un pavimento termico+shot, non una previsione, e
-* per questo non va nel dossier finche' non ci sono i modelli vendor.
+* ATTENZIONE DI MERITO: da L39 i modelli sono del costruttore, ma solo
+* l'LSK489A porta KF. Fuori dalla coppia d'ingresso qui NON c'e' rumore 1/f:
+* e' un pavimento termico+shot, non una previsione (NC-004).
 * ---------------------------------------------------------------------
 set t = .txt
 echo "===== integrated totals, 20 Hz - 20 kHz ====="

@@ -11,13 +11,16 @@ tb_idss_op_noise.cir - L20: the gain block at five I_DSS of its input JFET, oper
 * THE MODELS. The input pair here is LSK489A, the vendor model of
 * models/jfet/lsk489.lib, included untouched, and it has 1/f noise (Kf =
 * 0.0009f, Af = 1). The mirror LS352 is the vendor model of
-* models/bjt_pnp/ls350.lib, without KF. Every other device is a hand-written
-* model of spice/preamp/placeholder_devices.lib with KF = 0. So every noise
-* figure here is a FLOOR WITHOUT FLICKER for every device but the input pair.
+* models/bjt_pnp/ls350.lib, without KF. Since L39 (NC-017) every other device
+* is a vendor model of models/ too (MMBT5551, MMBT5401, Qmje15032, Qmje15033,
+* D1N914), none with KF; until L39 they were the hand-written models of
+* placeholder_devices.lib. So every noise figure here is a FLOOR WITHOUT
+* FLICKER for every device but the input pair.
 *
-* THE BLOCK is spice/preamp/derived/gain_block_flat_lsk489a.inc: the generated
-* gain_block_flat.inc with the model name of its two JFET lines changed by
-* scripts/derive_jfet_variant.py; block 2i of run_tests.sh keeps it current.
+* THE BLOCK is the generated spice/preamp/gain_block_flat.inc. Until L39 it was
+* a copy derived by scripts/derive_jfet_variant.py with LSK489A on its two JFET
+* lines; since L39 the generated block names LSK489A itself, and the derivation
+* is retired.
 *
 * VARIANTS, via `altermod` inside .control on the vendor model, in this order.
 * The Vto are the declared values of
@@ -63,10 +66,14 @@ tb_idss_op_noise.cir - L20: the gain block at five I_DSS of its input JFET, oper
 *                                 col1 onoise_spectrum, col3 inoise_spectrum
 *                                 [V/sqrt(Hz)]; even columns = frequency
 
-.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/models/jfet/lsk489.lib
-.include @REPO@/spice/preamp/derived/gain_block_flat_lsk489a.inc
+.include @REPO@/spice/preamp/gain_block_flat.inc
 
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15

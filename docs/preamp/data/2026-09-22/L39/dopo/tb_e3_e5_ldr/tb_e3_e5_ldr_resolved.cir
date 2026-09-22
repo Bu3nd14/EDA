@@ -1,0 +1,332 @@
+tb_e3_e5_ldr.cir - L29b2: E3 ed E5 col mute graduale a monte (due LDR VTL5C4 all'ingresso del blocco A, ADR-038)
+* Prima riga = titolo (docs/limitations.md #10).
+*
+* COSA SI PROVA (L29b2, ADR-038 "Da misurare": E3, E5 e l'accoppiamento
+* LED-cella). La catena di tb_trim.cir, trim candidato 2 (845 / 464 / 464, il
+* candidato di progetto, ADR-027), con davanti al blocco A le due celle di
+* circuits/preamp/preamp_audio.py:
+*
+*   VSRC --RSRC-- SRCX --[LDR serie, U101]-- AIN --[blocco A]-- ...
+*                                             |
+*                                        [LDR derivazione, U102] -- 0
+*                                             |
+*                                        R_IN 1 M (dentro il blocco)
+*
+* IL MODELLO DELLE CELLE: models/optocoupler/vtl5c4_comportamentale.lib,
+* comportamentale dal datasheet, con estrapolazione dichiarata sopra ~10 kOhm.
+* Ogni cifra di questo deck porta quell'etichetta. Il modello NON HA RUMORE
+* (lo dichiara la sua intestazione): per E5 la cella in serie si sostituisce
+* con un resistore del suo valore di lavoro, che ha il rumore termico; il
+* rumore in eccesso di una fotoresistenza reale (1/f, fotoconduttivo) non e'
+* modellato da nessuna parte ed e' da misurare sul prototipo.
+*
+* E3 (REQUIREMENTS, "Nota su E3"): |Zin| minima 20 Hz - 20 kHz al connettore,
+* cioe' al nodo SRCX, in ogni posizione del trim; CSEL come in tb_trim.cir.
+* Tre stati delle celle, dal punto di lavoro reale del modello:
+*   gioco  d = 0: serie 20 mA (~88 ohm, curva B), derivazione 10 nA (400 M)
+*   mute   d = 1: serie 10 nA (400 M), derivazione 20 mA (~88 ohm)
+*   meta'  serie 4,5 uA (~2 M, il fondo del tratto lento del profilo v3) e
+*          derivazione 10 nA: il carico piu' basso che la sorgente vede nel
+*          tratto in cui la serie e' gia' alta
+* Il minimo lungo la SEQUENZA (in transitorio) e' di post.py sui dati di V2.
+*
+* E5 (<= 9,90 uV, tb_trim.cir: E5 meno le quote da 1 uV di ADR-020 e ADR-022).
+* Stato di gioco. La serie come resistore: 88,3 ohm (curva B a 20 mA, dal punto
+* di lavoro: la corsa lo stampa e lo confronta) e 118 ohm (curva D, la piu'
+* resistiva delle quattro, dalla tabella del modello a 20 mA). La derivazione
+* resta il modello, a 400 M: il suo rumore termico vede il nodo chiuso dalla
+* sorgente e dalla serie. Posizioni del trim 0 / 6 / 12, modi 0 / 3 / 10 dB,
+* attenuatore al massimo e a meta' corsa, sorgente 1,5 e 430 ohm. Riferimento
+* "senza LDR": la serie a 1 mohm.
+*
+* L'ACCOPPIAMENTO LED-CELLA, 0,5 pF (ADR-038 "Rumore", ADR-022). Il comando dei
+* LED e' fuori scheda e non e' progettato: il suo rumore non si conosce. Il
+* deck misura allora la TRASFERENZA |V(jack) / V(anodo)| con un generatore AC
+* da 1 V dietro 0,5 pF sul lato sorgente della serie e sul nodo AIN, e ne
+* ricava la densita' piatta massima all'anodo per restare dentro 1 uV al jack:
+* e' un requisito sul comando, non una misura del comando.
+*
+* NODI: i blocchi e le celle sono sottocircuiti (limitations #24); RG / RG10
+* terminati (#27). Il rumore e' un PAVIMENTO: KF = 0 su ogni modello (NC-004,
+* NC-031).
+*
+* TABELLE (echo; nessun wrdata le nomina, #25):
+*   tb_e3_e5_ldr_e3.csv   stato,pos,csel,rs_ohm,rp_ohm,zmin_ohm,z20_ohm,z1k_ohm,z20k_ohm
+*   tb_e3_e5_ldr_e5.csv   ldr,rs_ohm,pos,mode,att,rsrc,onoise_uv
+*   tb_e3_e5_ldr_cio.csv  lato,mode,hmax,hint_v,ea_max_nv
+* Convenzione dei percorsi: tb_op.cir (L2).
+
+.include /Users/roberto/EDA/.claude/worktrees/L39/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L39/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L39/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L39/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L39/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L39/models/diodes/1n4148.lib
+* L22: lo specchio d'ingresso e' un LS352 (ADR-018).
+.include /Users/roberto/EDA/.claude/worktrees/L39/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L39/spice/preamp/gain_block.subckt
+.include /Users/roberto/EDA/.claude/worktrees/L39/models/optocoupler/vtl5c4_comportamentale.lib
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+
+* --- la sorgente selezionata e cio' che il selettore aggiunge ---
+VSRC  VSN 0 DC 0 AC 1
+RSRC  VSN SRCX 1.5
+CSEL  SRCX 0 1f
+
+* --- il mute graduale a monte: le due celle e il loro comando (ADR-038) ---
+* LED comandati da generatori di corrente, catodo a massa; 10 M dall'anodo a
+* massa: un LED col solo generatore non ha percorso in continua e l'op fallisce
+* in silenzio (trappola di L29b). Il 10 M e' del banco, non della scheda.
+ILS  0 ALS DC 20m
+RALS ALS 0 10MEG
+ILP  0 ALP DC 10n
+RALP ALP 0 10MEG
+XLS  ALS 0 SRCX AIN VTL5C4_B
+XLP  ALP 0 AIN 0 VTL5C4_B
+* per E5: la serie come resistore (aperta a 1 T fuori da E5)
+RLDRS SRCX AIN 1e12
+
+* --- l'accoppiamento LED-cella, per la trasferenza (spento fuori da quella) ---
+VINJ NINJ 0 DC 0 AC 0
+CINJS NINJ SRCX 1e-30
+CINJP NINJ AIN 1e-30
+
+* --- blocco A, guadagno 1, ramo del rele' non montato ---
+XA AIN AOUT AFB ARG ARG10 VPLUS VMINUS GAINBLOCK
+RARG   ARG   0 1G
+RARG10 ARG10 0 1G
+
+* --- il trim, candidato 2 (ADR-027) ---
+RL1 AOUT TAP6 845
+RL2 TAP6 TAP12 464
+RL3 TAP12 0 464
+RT1R AOUT ATOP 0.1
+CT1R AOUT ATOP 15p
+RT1S T2C ATOP 1G
+CT1S T2C ATOP 15p
+RT2R TAP6 T2C 0.1
+CT2R TAP6 T2C 15p
+RT2S TAP12 T2C 1G
+CT2S TAP12 T2C 15p
+CWIRE ATOP 0 100p
+
+* --- l'attenuatore a scatti da 10 k ---
+RATTH ATOP BIN 1m
+RATTL BIN 0 10k
+
+* --- blocco B, 0 / +3 / +10 dB ---
+XB BIN BOUT BFB BRG BRG10 VPLUS VMINUS GAINBLOCK
+CSTB    BRG   0 15p
+RRGB    BRG   0 1G
+CSTB10  BRG10 0 15p
+RRG10B  BRG10 0 1G
+
+RISO   BOUT BOUTA 47
+COUT   BOUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+
+.control
+* ============ il valore di lavoro della serie (curva B, 20 mA) ============
+op
+let rsb = 10^v(xls.xs)
+echo "punto di lavoro: serie curva B a 20 mA = $&rsb ohm (atteso 88,3 dalla tabella)"
+destroy all
+
+* ============================== E3 ==============================
+echo "stato,pos,csel,rs_ohm,rp_ohm,zmin_ohm,z20_ohm,z1k_ohm,z20k_ohm" > tb_e3_e5_ldr_e3.csv
+alter rsrc = 1m
+foreach st 1 2 3
+  if $st = 1
+    set sn = "gioco"
+    alter ils dc = 20m
+    alter ilp dc = 10n
+  end
+  if $st = 2
+    set sn = "mute"
+    alter ils dc = 10n
+    alter ilp dc = 20m
+  end
+  if $st = 3
+    set sn = "meta"
+    alter ils dc = 4.5u
+    alter ilp dc = 10n
+  end
+  foreach pos 0 6 12
+    if $pos = 0
+      alter rt1r = 0.1
+      alter rt1s = 1G
+      alter rt2r = 0.1
+      alter rt2s = 1G
+    end
+    if $pos = 6
+      alter rt1r = 1G
+      alter rt1s = 0.1
+      alter rt2r = 0.1
+      alter rt2s = 1G
+    end
+    if $pos = 12
+      alter rt1r = 1G
+      alter rt1s = 0.1
+      alter rt2r = 1G
+      alter rt2s = 0.1
+    end
+    foreach cs 1f 22p 68p
+      alter csel = $cs
+      op
+      let rsv = 10^v(xls.xs)
+      let rpv = 10^v(xlp.xs)
+      set rsvs = "$&rsv"
+      set rpvs = "$&rpv"
+      ac dec 50 20 20k
+      let zmag = mag(v(srcx)/(-i(vsrc)))
+      meas ac zmin min zmag from=20 to=20000
+      meas ac z20 find zmag at=20
+      meas ac z1k find zmag at=1000
+      meas ac z20k find zmag at=20000
+      echo "E3 stato=$sn pos=$pos csel=$cs"
+      print zmin
+      echo "$sn,$pos,$cs,$rsvs,$rpvs,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_e5_ldr_e3.csv
+      destroy all
+    end
+  end
+end
+alter csel = 1f
+alter ils dc = 20m
+alter ilp dc = 10n
+
+* ============================== E5 ==============================
+* La serie diventa il resistore RLDRS; la cella in serie si spegne (10 nA ->
+* 400 M in parallelo, trascurabile). "nessuna": RLDRS a 1 mohm.
+echo "ldr,rs_ohm,pos,mode,att,rsrc,onoise_uv" > tb_e3_e5_ldr_e5.csv
+alter ils dc = 10n
+foreach lc 0 1 2
+  if $lc = 0
+    set ln = "nessuna"
+    set rsl = "1m"
+  end
+  if $lc = 1
+    set ln = "curvaB"
+    set rsl = "88.3"
+  end
+  if $lc = 2
+    set ln = "curvaD"
+    set rsl = "118"
+  end
+  alter rldrs = $rsl
+  foreach pos 0 6 12
+    if $pos = 0
+      alter rt1r = 0.1
+      alter rt1s = 1G
+      alter rt2r = 0.1
+      alter rt2s = 1G
+    end
+    if $pos = 6
+      alter rt1r = 1G
+      alter rt1s = 0.1
+      alter rt2r = 0.1
+      alter rt2s = 1G
+    end
+    if $pos = 12
+      alter rt1r = 1G
+      alter rt1s = 0.1
+      alter rt2r = 1G
+      alter rt2s = 0.1
+    end
+    foreach mode 0 3 10
+      if $mode = 0
+        set gm = "0db"
+        alter rrgb = 1G
+        alter rrg10b = 1G
+      end
+      if $mode = 3
+        set gm = "3db"
+        alter rrgb = 0.1
+        alter rrg10b = 1G
+      end
+      if $mode = 10
+        set gm = "10db"
+        alter rrgb = 0.1
+        alter rrg10b = 0.1
+      end
+      foreach at 1 2
+        if $at = 1
+          set ga = "max"
+          alter ratth = 1m
+          alter rattl = 10k
+        end
+        if $at = 2
+          set ga = "mid"
+          alter ratth = 5k
+          alter rattl = 5k
+        end
+        foreach rs 1.5 430
+          alter rsrc = $rs
+          noise v(JACK) VSRC dec 50 20 20000 1
+          setplot noise2
+          let onu = onoise_total*1e6
+          echo "E5 ldr=$ln pos=$pos mode=$gm att=$ga rsrc=$rs"
+          print onu
+          echo "$ln,$rsl,$pos,$gm,$ga,$rs,$&onu" >> tb_e3_e5_ldr_e5.csv
+          destroy all
+        end
+      end
+    end
+  end
+end
+alter rldrs = 1e12
+alter ils dc = 20m
+alter ratth = 1m
+alter rattl = 10k
+alter rsrc = 1.5
+alter rt1r = 0.1
+alter rt1s = 1G
+alter rt2r = 0.1
+alter rt2s = 1G
+
+* ================= l'accoppiamento LED-cella, 0,5 pF =================
+* Trasferenza dall'anodo al jack, stato di gioco, attenuatore al massimo.
+* ea_max_nv = 1 uV / sqrt(integrale |H|^2 df, 20 Hz - 20 kHz): la densita'
+* piatta massima all'anodo per 1 uV al jack (la quota di ADR-022).
+echo "lato,mode,hmax,hint_v,ea_max_nv" > tb_e3_e5_ldr_cio.csv
+alter vsrc ac = 0
+alter vinj ac = 1
+foreach lato 1 2
+  if $lato = 1
+    set lt = "serie_lato_sorgente"
+    alter cinjs = 0.5p
+    alter cinjp = 1e-30
+  end
+  if $lato = 2
+    set lt = "nodo_AIN"
+    alter cinjs = 1e-30
+    alter cinjp = 0.5p
+  end
+  foreach mode 0 10
+    if $mode = 0
+      set gm = "0db"
+      alter rrgb = 1G
+      alter rrg10b = 1G
+    end
+    if $mode = 10
+      set gm = "10db"
+      alter rrgb = 0.1
+      alter rrg10b = 0.1
+    end
+    ac lin 2000 20 20k
+    let h = mag(v(jack))
+    let h2 = h*h
+    meas ac hmax max h from=20 to=20000
+    let hintv = sqrt(mean(h2)*19980)
+    let eamax = 1e-6/hintv*1e9
+    echo "CIO lato=$lt mode=$gm"
+    print hmax hintv eamax
+    echo "$lt,$gm,$&hmax,$&hintv,$&eamax" >> tb_e3_e5_ldr_cio.csv
+    destroy all
+  end
+end
+.endc
+
+.end

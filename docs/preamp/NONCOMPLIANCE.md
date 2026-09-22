@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-09-15** (creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-09-22** (creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -97,8 +97,15 @@ rilascio. Il pavimento di mV era l'arrotondamento del tempo scritto da `wrdata`
 salto di livello, ≤ 20 dB in 100 ms, e C2 diventa diagnostica. Con la v4 il salto massimo
 vale 7,2 dB in tutta la matrice; A, B, E3, E5 e P7 reggono. **NC-028 resta aperta e
 bloccante**, aggiornata: manca L29c, dopo la Fase 4 (L39).
-**13 voci aperte, 3 bloccanti.**
-L'accesso a G1 non è concesso finché NC-004, NC-017 e NC-028 restano aperte.
+**L39** (2026-09-22) ha messo i modelli del costruttore nel sorgente e in tutti i
+25 deck, e ha rifatto la regressione cifra per cifra. T7 è soddisfatto nel
+progetto: **chiude NC-017** (decisione dell'utente: la voce misura T7, e V1 va in
+una voce sua). La regressione regge su E2–E5, V3, P7, classe A e V2, ma **V1
+cade** su ogni istanza a guadagno unitario: **apre NC-034** (bloccante). La
+corrente di riposo d'uscita sale del 40 %: **apre NC-035**. Aggiorna NC-004,
+NC-024 e NC-025.
+**14 voci aperte, 3 bloccanti.**
+L'accesso a G1 non è concesso finché NC-004, NC-028 e NC-034 restano aperte.
 
 ---
 
@@ -417,6 +424,15 @@ non blocca**, come `AGENTS.md` prescrive), poi una riesecuzione di
 coi 10 µV di E5 nel caso peggiore (blocco B a +10 dB, sorgente 2,5 kΩ), e
 la provenienza di ogni modello dichiarata accanto alla cifra, come V4
 richiede.
+
+**AGGIORNATA IL 2026-09-22 da L39.** Tutti i dispositivi simulati sono modelli del
+costruttore, ma **solo l'LSK489A porta KF**: nessun 1/f fuori dalla coppia
+d'ingresso, e nessuna dispersione. E5 peggiore **5,050 µV** (era 4,957,
+`tb_e3_e5_ldr.cir`, +10 dB, 430 Ω, curva D), contro 9,95 µV: resta un
+**pavimento**, e la voce resta aperta per il rumore 1/f di specchio e VAS. Per
+V4 il `.four` di `tb_v3_overload.cir` è ora una cifra **di modello**; il fondo di
+distorsione della catena a 1 kHz scende da 0,96 a 0,27 mV (C_pav di V2, principale).
+Né l'una né l'altra sono una misura.
 
 ### NC-010 — Le uscite fisse non sono isolate: un apparecchio spento a valle porta il Blocco A in Classe B
 
@@ -1339,7 +1355,7 @@ alcun pin di substrato.
 | Requisito | **T7** (ADR-016) · **E5 / V4** via **NC-004** · ADR-013 (la regola di provenienza dei modelli) |
 | Severità | **bloccante** — alzata il 2026-09-10 |
 | Aperta da | `reports/2026-09-10-L8-parti-nuove.md` |
-| Stato | aperta — **estesa il 2026-09-10** da 2N5401/2N5551 a **tutti** i dispositivi attivi |
+| Stato | **CHIUSA il 2026-09-22 da L39** — vedi «Chiusura» in fondo alla voce e «Voci chiuse». Era stata estesa il 2026-09-10 da 2N5401/2N5551 a **tutti** i dispositivi attivi |
 
 **AGGIORNATA IL 2026-09-10, e la voce ha cambiato dimensione.** Nasceva
 come «mancano i modelli di due parti». Con **ADR-016** l'utente ha posto la
@@ -1483,6 +1499,31 @@ produzione con modello del costruttore, si applica la clausola «Da
 riaprire se» di ADR-016: o si rilassa T7 per quella funzione **con la
 lacuna dichiarata accanto a ogni numero che ne dipende**, o si cambia
 topologia per non aver bisogno di quel dispositivo.
+
+**Chiusura (2026-09-22, L39).** Report:
+`reports/2026-09-22-L39-modelli-costruttore.md`. Dati: `data/2026-09-22/L39/`.
+
+1. **Il sorgente istanzia i modelli del costruttore.** `gain_block.py`:
+   `LSK489A`, `MMBT5551` (×6), `MMBT5401`, `Qmje15032`, `Qmje15033`, `D1N914`
+   (×2), più `LS350` da L22. Le parti diventano MMBT5551/MMBT5401 in SOT-23
+   (ADR-017). Nel blocco generato cambiano **solo i nomi dei modelli**, 12 righe:
+   nessun nodo, nessun valore (diff in `data/2026-09-22/L39/`).
+2. **I 25 deck** includono i sei file di `models/` al posto di
+   `placeholder_devices.lib`, con le intestazioni riscritte: il **2h** li passa
+   tutti. Il derivato di L20 è ritirato: il blocco generato nomina già `LSK489A`.
+3. **Il 2i nuovo** (`scripts/check_no_placeholders.py`) rifiuta un deck o un
+   blocco che torni a un segnaposto: 49 violazioni sul `main` di prima, 6
+   sabotaggi presi su 6, un commento ignorato, la libreria assente rifiutata.
+4. **La regressione** (`data/2026-09-22/L39/prima/` contro `dopo/`): E2, E3, E4,
+   E5, V3, P7, classe A e V2 reggono. **V1 no**: 55,55° sul blocco B a 0 dB,
+   57,93° sul blocco A, 54,92° sul buffer → **NC-034**. La corrente di riposo
+   d'uscita va da 14,6 a 20,4 mA → **NC-035**.
+
+**Perché si chiude con V1 fuori soglia.** Decisione dell'utente del 2026-09-22:
+la voce misura T7, e T7 è soddisfatto. Ciò che i modelli veri rivelano del
+circuito è una non conformità contro il requisito che tocca, non contro T7.
+Restano dichiarate accanto a ogni cifra le lacune dei modelli: 1/f solo
+sull'LSK489A (NC-004), nessuna dispersione, NC-020, NC-024, NC-025.
 
 ### NC-018 — Il codice nomina due OPN che il costruttore marca *Obsolete*
 
@@ -1900,6 +1941,11 @@ questa corrente, sapendo che il punto di lavoro reale è **14,71 mA** —
 nulla e il modello dice 75,73. Oppure accettare lo scarto con una ADR che ne
 dichiari l'effetto.
 
+**AGGIORNATA IL 2026-09-22 da L39.** Coi modelli nel progetto il punto di lavoro
+dell'uscita è **20,29 mA** (Q132), non 14,71: la Vbe dei MJE vale 0,566/0,539 V
+contro 0,662 dei segnaposto (**NC-035**). La classe A migliora, ma la dipendenza
+dall'h_FE resta da quantificare: nessun modello porta la dispersione.
+
 ### NC-025 — La f_T di entrambi i modelli MJE sta sotto il minimo del datasheet, letta come il datasheet la definisce
 
 | | |
@@ -1965,6 +2011,12 @@ cifra in alta frequenza, che poggia su dispositivi che il modello descrive
 **più lenti** del garantito. Se il polo dominante si sposta abbastanza da
 mettere in discussione il Miller da 470 pF, ADR-017 prevede già che il valore
 di compensazione si ridecida con una ADR propria.
+
+**AGGIORNATA IL 2026-09-22 da L39.** Fatto il primo passo: coi modelli nel progetto
+V1 cade di 5,5–7° su ogni istanza a guadagno unitario (**NC-034**). È esattamente
+il caso previsto sopra: C_f non aiuta a 0 dB, il Miller da 470 pF sì. Quanta parte
+della caduta venga dalla f_T bassa dei MJE non è stato separato: resta da fare in
+L40, accanto alla scelta del valore.
 
 ### NC-026 — Il disegno a blocchi non è rigenerabile da L22: le sue asserzioni non girano da un giorno
 
@@ -2658,7 +2710,93 @@ evidenza `data/2026-09-15/L37/`.
    dei due dalla copia del builder, cade l'altro da solo. 10 casi su 10 come
    attesi. Limitazione #28 corretta in coda.
 
+### NC-034 — Coi modelli del costruttore V1 cade su ogni istanza a guadagno unitario
+
+| | |
+|---|---|
+| Requisito | **V1**, soglia 60° ovunque (**ADR-019**), cella di **ADR-024** |
+| Severità | **bloccante** |
+| Aperta da | `reports/2026-09-22-L39-modelli-costruttore.md` |
+| Stato | aperta |
+
+**Evidenza.** Stessi deck, stesse celle, prima (segnaposto) e dopo (modelli del
+costruttore), `data/2026-09-22/L39/margini.csv`:
+
+| Istanza | Cella del minimo | Prima | Dopo | Contro 60° |
+|---|---|---|---|---|
+| blocco B, 0 dB | 2,611 kΩ, 3,3 nF al jack, 100 k | 61,80° | **55,55°** | **−4,45°** |
+| blocco B, +3 dB | idem | 69,77° | 63,90° | conforme |
+| blocco B, +10 dB | 2,611 kΩ, 4,7 nF | 102,98° | 100,19° | conforme |
+| blocco A (cablaggio ≤ 1 nF) | 430 Ω, 1 nF | 63,36° | **57,93°** | **−2,07°** |
+| buffer delle fisse | 50 k, 3,3 nF al jack | 61,63° | **54,92°** | **−5,08°** |
+| blocco B 0 dB, gruppo B di I_DSS | 8,0 / 11,5 / 15 mA | 62,71–62,80° | 55,76–55,87° | −4,1…−4,2° |
+
+Il guadagno d'anello a 10 Hz sale da 72,4 a 81,4 dB; il crossover a 0 dB resta
+intorno a 0,89 MHz. La dispersione col gruppo B resta ≤ 0,3°.
+
+È la stessa forma di **NC-021** (chiusa in L12 da ADR-025 con C_f 330 pF),
+riaperta dai modelli veri e più ampia. ADR-025 non si riscrive.
+
+**Esplorazione, nessun valore cambiato** (`data/2026-09-22/L39/esplorazione/`, sul
+blocco B; la prima riga ridà 55,55°, e una `print` conferma il bersaglio degli
+`alter`):
+- **C_f** (C137) da 330 pF a 1 nF: 55,6 → 54,8° a 0 dB. Non aiuta: con R_g aperta
+  la controreazione è già totale.
+- **Miller** (C124) da 470 pF: 560 p 57,58°, 680 p 59,26°, **820 p 60,70°**, 1 nF
+  62,08°. Il crossover a vuoto scende da 889 a 520 kHz (820 p).
+
+**La direzione, dall'utente (2026-09-22)**: «non sono convinto che ci serva quasi
+un megaherz di banda passante a 0 dB, preferisco rispettare i margini di fase e
+ridurre la banda passante o alzare il guadagno fino a 1,5 dB».
+
+**Cosa serve per chiuderla** (L40): una ADR che scelga fra banda ridotta (Miller)
+e guadagno minimo fino a +1,5 dB; poi V1 ≥ 60° su blocco A, blocco B nei tre modi e
+buffer, con la regressione di L39 rifatta (slew e V3, E2, risposta, V2), e la
+quota di caduta dovuta alla f_T dei MJE (NC-025) separata.
+
+### NC-035 — Coi modelli del costruttore la corrente di riposo d'uscita sale del 40 %
+
+| | |
+|---|---|
+| Requisito | classe A (**ADR-003**, **ADR-023**) · **P5** / **NC-029** (dissipazione a riposo) · il valore select-on-test del moltiplicatore di Vbe |
+| Severità | **maggiore** |
+| Aperta da | `reports/2026-09-22-L39-modelli-costruttore.md` |
+| Stato | aperta |
+
+**Evidenza.** `tb_op.cir`: I_C di Q132/Q133 da **14,56 a 20,29 / 20,40 mA**. La Vbe
+dei MJE vale 0,566 / 0,539 V contro 0,662 dei segnaposto, e il 1,69 kΩ del
+moltiplicatore era stato spazzato sui segnaposto (il sorgente lo diceva: «MUST be
+re-swept when the vendor models arrive»). Risweepato (`tb_bias_sweep.cir`): da
+1,5 a 1,87 kΩ la corrente va da **17,3 a 23,2 mA**; i 14,7 mA di progetto stanno
+sotto 1,5 kΩ, fuori dallo sweep. Correnti di rail per blocco 26,4 / 27,4 →
+32,6 / 33,6 mA.
+
+**Cosa non si rompe**: la classe A migliora (percorso ascoltabile, corrente
+minima da 14,5 a 20,2 mA); P7 regge (MJE peggiore 0,362 W contro 1,04 W); V3 regge.
+
+**Cosa pesa**: la dissipazione a riposo di ogni blocco (NC-029), il budget di
+corrente dell'alimentatore, e che il valore di progetto del moltiplicatore non
+corrisponde più alla corrente dichiarata.
+
+**Cosa serve per chiuderla**: decidere la corrente di riposo (tenere ~15 mA con un
+nuovo valore, o accettare ~20 mA con una ADR), estendere lo sweep sotto 1,5 kΩ, e
+ridare il budget termico e di corrente. Da fare in L40 con la compensazione:
+la corrente d'uscita tocca anche i poli dello stadio d'uscita.
+
 ## Voci chiuse
+
+**NC-017 — Sei dispositivi attivi su sette non hanno un modello SPICE del
+costruttore** (bloccante). **CHIUSA il 2026-09-22 da L39.**
+- I sette dispositivi attivi simulati sono modelli del costruttore da `models/`,
+  nel sorgente e in tutti i 25 deck; il blocco generato cambia solo nei nomi dei
+  modelli.
+- Il **2i** nuovo rifiuta il ritorno di un segnaposto: 49 violazioni sul `main`
+  di prima, 6 sabotaggi su 6.
+- La regressione ha aperto **NC-034** (V1) e **NC-035** (corrente di riposo): la
+  voce si chiude su T7, per decisione dell'utente.
+
+Il testo completo della voce resta sopra, con la sua «Chiusura». Report:
+`reports/2026-09-22-L39-modelli-costruttore.md`.
 
 **NC-033 — La Zout di E4 pubblicata contiene il segnale** (minore). **CHIUSA il
 2026-09-15 da L37.**

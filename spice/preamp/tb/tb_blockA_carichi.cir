@@ -33,12 +33,13 @@ tb_blockA_carichi.cir - apparecchio spento a valle di una fissa: chi esce dalla 
 * picco, trascurabile sulle correnti d'uscita.
 *
 * NOMI DEI DISPOSITIVI letti da gain_block.subckt di oggi:
-*   Q132 NMJE15032 (NPN d'uscita)   Q133 PMJE15033 (PNP d'uscita)
+*   Q132 Qmje15032 (NPN d'uscita)   Q133 Qmje15033 (PNP d'uscita)
 * Nei dati del 2026-09-09 compare Q134: e' lo stesso dispositivo prima delle
 * rinumerazioni L22/L10.
 *
-* PROVVISORIO SUI MODELLI: tutto tranne LS352 e' segnaposto, LSK489 compreso
-* (LSK489X in placeholder_devices.lib, KF=0; NC-017, NC-031). Nessuna cifra di
+* MODELLI (L39, NC-017): ogni dispositivo attivo e' il modello del costruttore
+* in models/ - LSK489A, MMBT5551, MMBT5401, LS350, Qmje15032, Qmje15033, D1N914.
+* Solo l'LSK489A ha KF (1/f); nessun modello porta la dispersione. Nessuna cifra di
 * distorsione va ricavata da qui.
 *
 * CONVENZIONE DI PERCORSO: `.include @REPO@/...` e file scritti con nome nudo.
@@ -46,7 +47,12 @@ tb_blockA_carichi.cir - apparecchio spento a valle di una fissa: chi esce dalla 
 * e scrive un json con rows: 0, e converte i .txt al secondo passaggio. Le
 * tabelle sono .csv scritte da echo, che il secondo passaggio non tocca.
 
-.include @REPO@/spice/preamp/placeholder_devices.lib
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block.subckt
 

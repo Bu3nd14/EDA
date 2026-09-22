@@ -101,7 +101,7 @@ for _tool in list(skidl.lib_search_paths):
 # P6: everything through-hole on generous pitch so the user can swap signal
 # capacitors and critical resistors with an iron, not a desoldering station.
 FP_R = "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal"
-FP_TO92 = "Package_TO_SOT_THT:TO-92_Inline"
+FP_SOT23 = "Package_TO_SOT_SMD:SOT-23"   # MMBT5551/MMBT5401, ADR-017 (L39)
 FP_TO220 = "Package_TO_SOT_THT:TO-220-3_Vertical"
 FP_SOIC8 = "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"
 FP_DO35 = "Diode_THT:D_DO-35_SOD27_P7.62mm_Horizontal"
@@ -240,7 +240,10 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
         sx.spice_dev(c, "C", ["1", "2"], val)
         return c
 
-    def Q(kind, val, model, c, b, e, fp=FP_TO92):
+    # Default package SOT-23: every Q without fp= is an MMBT5551/MMBT5401, the
+    # die ADR-017 kept in the package that has a manufacturer model (Diodes
+    # Inc., models/bjt_npn/mmbt5551.lib, models/bjt_pnp/mmbt5401.lib). L39.
+    def Q(kind, val, model, c, b, e, fp=FP_SOT23):
         i[0] += 1
         sym = "Q_NPN" if kind == "npn" else "Q_PNP"
         q = Part("Device", sym, value=val, footprint=fp, ref=f"Q{i[0]}")
@@ -255,7 +258,10 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
         d = Part("Device", "D", value=val, footprint=fp, ref=f"D{i[0]}")
         d["A"] += a
         d["K"] += k
-        sx.spice_dev(d, "D", ["A", "K"], "D1N4148")
+        # D1N914 IS the 1N4148 DO-35 model: onsemi files the 1N4148 under the
+        # 1N914 document, and its "1n4148.lib" URL serves the SOD-323 1N4148WT
+        # (docs/limitations.md #20, ADR-016/ADR-017, models/diodes/1n4148.lib).
+        sx.spice_dev(d, "D", ["A", "K"], "D1N914")
         return d
 
     # ========================================================================
@@ -281,7 +287,7 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # ========================================================================
     # Tail current sink: 4.0 mA => 2.0 mA per JFET half.
     # R = (1.2 V - Vbe)/4 mA = 0.55/4m = 137 Ohm (E96).
-    Q("npn", "2N5551", "NSS2N5551", SRC, NREF, NTE)
+    Q("npn", "MMBT5551", "MMBT5551", SRC, NREF, NTE)
     R("137", NTE, VM)
 
     # ADR-013: ONE LSK489 monolithic dual - and, since L10, ONE Part.
@@ -328,8 +334,12 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     jp["5"] += S2         # S2 -> its own source degeneration
     # Two SPICE elements from one Part: JQ<n>A and JQ<n>B (spice_dev suffix,
     # L22). Node order is SPICE's D G S.
-    sx.spice_dev(jp, "J", ["2", "4", "1"], "LSK489X", suffix="A")
-    sx.spice_dev(jp, "J", ["6", "8", "5"], "LSK489X", suffix="B")
+    # LSK489A is the manufacturer's model AS PUBLISHED (ADR-013, T7): a corner
+    # sample, I_DSS 2.59 mA, below the group-B window the part is bought in
+    # (ADR-031). Group-B figures move Vto with altermod in tb_idss_*.cir;
+    # ADR-031 measured that I_DSS moves only V_GS here. L39.
+    sx.spice_dev(jp, "J", ["2", "4", "1"], "LSK489A", suffix="A")
+    sx.spice_dev(jp, "J", ["6", "8", "5"], "LSK489A", suffix="B")
     R(R_SDEG, S1, SRC)
     R(R_SDEG, S2, SRC)
     if r_in:
@@ -346,8 +356,8 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # The one above the NON-INVERTING JFET drives the mirror OUTPUT; the one
     # above the FEEDBACK JFET drives the mirror DIODE. That assignment - not
     # the other one - is what makes the global feedback negative.
-    Q("npn", "2N5551", "NSS2N5551", NHI, NCASC, D1N)     # -> mirror output
-    Q("npn", "2N5551", "NSS2N5551", NMIRI, NCASC, D2N)   # -> mirror diode
+    Q("npn", "MMBT5551", "MMBT5551", NHI, NCASC, D1N)     # -> mirror output
+    Q("npn", "MMBT5551", "MMBT5551", NMIRI, NCASC, D2N)   # -> mirror diode
 
     # Current-mirror load, matched monolithic PNP pair.
     #
@@ -428,7 +438,7 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # an asymmetric clip pumps a DC component into the output coupling
     # capacitor which then takes seconds to bleed off through the load.
     NVE = n("NVE")
-    Q("pnp", "2N5401", "PSS2N5401", NX, NHI, NVE)
+    Q("pnp", "MMBT5401", "MMBT5401", NX, NHI, NVE)
     R("91", VP, NVE)
 
     # Miller compensation - the dominant pole of the whole amplifier.
@@ -440,7 +450,7 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # VAS load: current sink off the same reference string as the tail.
     # 0.55 V / 6 mA = 91.7 -> 91 Ohm (E96).
     NVLE = n("NVLE")
-    Q("npn", "2N5551", "NSS2N5551", NY, NREF, NVLE)
+    Q("npn", "MMBT5551", "MMBT5551", NY, NREF, NVLE)
     R("91", NVLE, VM)
 
     # ========================================================================
@@ -468,7 +478,7 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # NO trimmer, deliberately: with 22 Ohm emitter resistors a 50 mV Vbe
     # spread moves Iq by only +/-1.1 mA, and a trimmer with an open wiper is
     # a thermal-runaway mechanism. R(NBB-NY) is select-on-test if needed.
-    Q("npn", "2N5551", "NSS2N5551", NX, NBB, NY)
+    Q("npn", "MMBT5551", "MMBT5551", NX, NBB, NY)
     R("1.69k", NX, NBB)
     R("1.00k", NBB, NY)
 
@@ -495,8 +505,11 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # full scale), so they must be rated >= 0.27 W at 60 C.
     R("10", NX, NBN)
     R("10", NY, NBP)
-    Q("npn", "MJE15032", "NMJE15032", VP, NBN, NEN, fp=FP_TO220)
-    Q("pnp", "MJE15033", "PMJE15033", VM, NBP, NEP, fp=FP_TO220)
+    # Qmje15032/Qmje15033: onsemi's model names, left as served (ADR-017,
+    # models/bjt_npn/mje15032.lib). Both miss their datasheet f_T minimum and
+    # the NPN its h_FE minimum (NC-024, NC-025): figures from them carry that.
+    Q("npn", "MJE15032", "Qmje15032", VP, NBN, NEN, fp=FP_TO220)
+    Q("pnp", "MJE15033", "Qmje15033", VM, NBP, NEP, fp=FP_TO220)
     R("22", NEN, OUT)
     R("22", NEP, OUT)
 
@@ -567,105 +580,62 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 # ============================================================================
 
 # ============================================================================
-# SIMULATED RESULTS - Fase 2 draft, 2026-09-08
+# SIMULATED RESULTS - L39, 2026-09-22, ON THE MANUFACTURER MODELS (NC-017)
 # Every number below came out of a deck in spice/preamp/tb/, not out of a
-# calculation. Re-run them all when the vendor models land (Fase 4).
-# Provenance of the device models: spice/preamp/placeholder_devices.lib,
-# HAND-AUTHORED PLACEHOLDERS. See the caveats in each testbench header.
+# calculation: docs/preamp/data/2026-09-22/L39/dopo/ (and prima/ for the same
+# decks on the hand-written placeholders, until L39). Report:
+# docs/preamp/reports/2026-09-22-L39-modelli-costruttore.md.
+# Models: LSK489A (published corner sample, I_DSS 2.59 mA), MMBT5551, MMBT5401,
+# LS350, Qmje15032, Qmje15033, D1N914 - all from models/. Only the LSK489A has
+# KF; no model has spread. The MJE miss their datasheet f_T (NC-025) and the
+# MJE15032 its h_FE (NC-024); the LS352 f_T sits 35 % low (NC-020).
 #
-#   OPERATING POINT (tb_op.cir) - RE-MEASURED IN L22 with the LS352 mirror
-#   in place of the THAT320. Every OTHER device here is still a placeholder,
-#   so these are still provisional - but the mirror line is not.
-#     LSK489 halves     2.211 / 2.163 mA, gm 4.39 / 4.34 mS
-#     tail sink          4.374 mA
-#     cascode NPNs       2.193 / 2.145 mA
-#     LS352 mirror       2.134 / 2.136 mA, Vbe 0.7028 / 0.7026 V,
-#                        internal Vbc +0.493 / +0.369 V (the second is the
-#                        output half, and it is the number that says how far
-#                        from the knee it sits - see the mirror section)
-#     VAS (2N5401)       6.443 mA
-#     VAS load sink      6.443 mA
-#     output pair       14.56 mA
-#     output DC offset  -16.6 mV   (was -11.8 mV with the THAT320)
+#   OPERATING POINT (tb_op.cir), before -> after L39
+#     LSK489 halves     2.211/2.163 -> 2.282/2.238 mA, gm 4.57/4.52 mS
+#     tail sink          4.374 -> 4.520 mA
+#     VAS (MMBT5401)     6.443 -> 6.797 mA
+#     output pair       14.56 -> 20.29 / 20.40 mA   *** +40 % - NC-035 ***
+#                       Vbe of the MJE 0.662 -> 0.566 / 0.539 V: the 1.69k of
+#                       the Vbe multiplier was swept on the placeholders, and
+#                       on these models 1.5k-1.87k gives 17.3-23.2 mA.
+#     rail currents     26.4 / 27.4 -> 32.6 / 33.6 mA per block
+#     output DC offset  -16.6 -> -15.45 mV
 #
-#   HEADROOM (tb_dc_headroom.cir)
-#     +10 dB clipping   +13.16 / -14.00 V  => 13.16 V pk = 9.31 V RMS usable
-#     0 dB CM ceiling   JFET Vds >= 2 V up to Vin = +6.75 V; gain holds to
-#                       +9.43 V. Negative side has no limit inside the rails.
+#   LOOP - V1 (ADR-019, >= 60 deg; ADR-024 cell: cable at the jack, min over
+#   0-4.7 nF, every V1 source, 100 k and 10 k; block A harness <= 1 nF)
+#     block B 0 dB    61.80 -> 55.55 deg   *** BELOW 60 - NC-034 ***
+#     block B +3 dB   69.77 -> 63.90 deg
+#     block B +10 dB 102.98 -> 100.19 deg
+#     block A         63.36 -> 57.93 deg   *** BELOW 60 - NC-034 ***
+#     buffer          61.63 -> 54.92 deg   *** BELOW 60 - NC-034 ***
+#     loop gain at 10 Hz 72.4 -> 81.4 dB; crossover at 0 dB ~0.89 MHz.
+#     C_f does not help at 0 dB (R_g open, feedback already total); the Miller
+#     C124 at 820 p gives 60.70 deg on block B at 0 dB with the crossover at
+#     520 kHz (data/2026-09-22/L39/esplorazione/). User, 2026-09-22: phase
+#     margin first, bandwidth may drop, or up to +1.5 dB of gain. L40.
 #
-#   LOOP (tb_loop.cir, tb_loop_blockA.cir, tb_loop_bufferfissa.cir; C_f 330 p)
-#     Verdicts by ADR-024 - cable at the jack, minimum over 0-4.7 nF, every V1
-#     source, 100 k and 10 k loads; block A with its harness <= 1 nF.
-#     Block B on the three-level network of ADR-026 (data/2026-09-14/L27/dopo/):
-#     block B 0 dB   loop gain 72.4 dB, crossover 929 kHz, PM 70.2 deg bare,
-#                    61.8 deg worst (attenuator at mid-rotation, 3.3 nF),
-#                    61.4 deg at the tolerance corners
-#     block B +3 dB  loop gain 69.1 dB, crossover 915 kHz, PM 77.4 deg bare,
-#                    69.8 deg worst (2.8 nF), 68.7 deg at the corners
-#     block B +10 dB loop gain 61.9 dB, crossover 527 kHz, PM 109.8 deg bare,
-#                    103.0 deg worst
-#     block A        PM 63.4 deg worst (430 ohm source, 1 nF of harness), L12
-#     buffer         PM 61.6 deg worst (Stax, 2.7 nF), L12
-#     *** THE WORSE MODE IS 0 dB, WHICH IS THE NORMAL MODE. V1 was right to
-#         ask for both. ***
+#   RESPONSE (tb_ac.cir): 1 kHz gain -0.007 / +3.039 / +9.959 dB (E2 holds);
+#     -3 dB at 0 dB from 2.12 to 2.45 MHz.
+#   Zout (tb_e4_uscite.cir): Re(Z) max at the jack 60.04 ohm main, 53.12 ohm
+#     fixed (E4 < 100 ohm); at the block node 0.027 ohm (0 dB).
+#   PSRR (tb_zout_psrr_noise.cir), from V+ at 0 dB: 78.0 / 59.5 / 39.5 dB at
+#     100 Hz / 1 kHz / 10 kHz (was 72.1 / 59.6 / 39.8). From V- up to 9 dB lower
+#     than before at 10-100 kHz, still >= 53 dB.
+#   NOISE (tb_noise_breakdown.cir), 20 Hz-20 kHz: 1.18 / 1.23 / 1.49 uV at 0 dB,
+#     4.28 uV at +10 dB (2.5 kOhm); E5 worst 5.05 uV (tb_e3_e5_ldr.cir). 1/f only
+#     on the input pair: still a floor (NC-004).
+#   E3 (tb_e3_e5_ldr.cir): worst 110.7 kOhm (>= 100 kOhm).
+#   V3 (tb_v3_overload.cir): clips +13.23 / -13.79 V, back inside 5 % of its
+#     linear envelope in 1.07 us, DC at the jack +3.2 mV.
+#   P7 (tb_mute_corto.cir): worst MJE 0.362 W (1.04 W allowed), worst MMBT
+#     92.6 mW (310 mW in SOT-23). Class A holds on every listening path.
+#   V2 - GAIN RELAYS (tb_switch_v2.cir): envelope +1.526 / -1.624 V, as before.
+#     Mute (tb_v2_mute_ldr.cir, 1 kHz, 100 k, main): S 7.16 / 5.32 dB, A <=
+#     3.75 uV; chain distortion floor of C (C_pav) 0.96 -> 0.27 mV.
 #
-#   RESPONSE (tb_ac.cir)
-#     -3 dB   0.493 Hz / 2.12 MHz (0 dB), 537 kHz (+3 dB), 183 kHz (+10 dB),
-#             1.5 ohm source (L27); 1 kHz gain -0.009 / +3.037 / +9.958 dB
-#             (L12: C_f 330 p, ADR-025, took +10 dB from 333 kHz to 183 kHz)
-#     ADR-014 CLAIM UNDER TEST: 20 kHz response referred to 1 kHz changes by
-#     0.0001 dB between attenuator Zout = 0 and 2.5 kOhm. ADR-014 predicted
-#     -0.42 dB at 20 kHz WITHOUT a cascode. The cascode does what it was
-#     specified to do, with four orders of magnitude to spare.
-#
-#   Zout (tb_zout_psrr_noise.cir)
-#     at the amplifier node: 1.04 ohm (0 dB) / 3.26 ohm (+10 dB), flat to 20 kHz
-#     at the jack:           58.8 ohm @1 kHz, 48.0 ohm @20 kHz  -> E4 met
-#                            1693 ohm @20 Hz - that is the 4.7 uF reactance,
-#                            not a source impedance. E4 read literally fails
-#                            at 20 Hz for ANY capacitor-coupled output; see
-#                            the report.
-#
-#   PSRR (same deck, bigger is better; LS352 topology, data/2026-09-13, L18)
-#     from V+   72.1 / 59.6 / 39.8 dB at 100 Hz / 1 kHz / 10 kHz  (0 dB mode)
-#               62.2 / 49.6 / 29.8 dB                             (+10 dB)
-#     from V-   84.3 / 97.7 / 96.2 dB and 74.4 / 87.8 / 86.2 dB
-#     THE POSITIVE RAIL IS THE WEAK ONE, by ~30 dB, and it is structural: the
-#     mirror emitters and the VAS emitter both stand on V+. The negative rail
-#     is quiet because every current source down there is referenced to V-
-#     AND BYPASSED TO V- (see the bias-reference comment above).
-#     -> psu-engineer: the ripple budget is ADR-020 - 1 uV RMS at the output,
-#        both rails, 20 Hz-20 kHz; per-tone limits in REQUIREMENTS.md, E5.
-#
-#   NOISE, 20 Hz - 20 kHz unweighted (tb_noise_breakdown.cir)
-#     0 dB   1.68 uV (1 ohm source) / 1.72 uV (430 ohm) / 1.91 uV (2.5 kOhm)
-#     +10 dB 5.70 uV (2.5 kOhm source) - the worst single-block case
-#     L27, LS352 topology: +3 dB 2.01 uV and +10 dB 4.23 uV (2.5 kOhm source)
-#     Dominant contributors at 1 kHz: the CURRENT MIRROR, not the JFETs.
-#       THAT320 pair ~5.3 and ~5.0 nV/rtHz, R_f (1.5k) 4.98 nV/rtHz, the two
-#       47 ohm mirror degeneration resistors 4.85 nV/rtHz each, JFETs 1.6.
-#     NO 1/f NOISE IS PRESENT (KF = 0 in every placeholder model). This is a
-#     floor, not a prediction.
-#
-#   V2 - GAIN RELAYS (tb_switch_v2.cir + _counterfactual.cir), L27
-#     Both relays bouncing (RON 50 mohm, ROFF 1e12, 3 bounces make / 2 break),
-#     0 -> +3 -> +10 -> +3 -> 0 dB and 0 <-> +10 dB with the contacts skewed:
-#       output stays inside +1.522 / -1.626 V, which IS the +10 dB envelope,
-#       in every transition window. It never leaves that band.
-#     Counterfactual - the arrangement ADR-004 rejected, relay in series with
-#     R_f: opening that contact drives the output to -13.77 V, 1.2 V from the
-#     rail. That is the number ADR-004 was protecting against.
-#
-#   V3 - OVERLOAD RECOVERY (tb_v3_overload.cir)
-#     5.6 dB of overdrive (8 V pk in, +10 dB): clips at +13.26 / -13.79 V and
-#     returns to within 5 % of its linear envelope in under 1 us. No latch-up,
-#     no sticking, DC back to +3 mV at the jack.
-#
-#   THD: NOT MEASURED, AND NOT MEASURABLE HERE. tb_v3_overload.cir prints
-#     0.00084 % at 1.57 V pk. THAT NUMBER IS MEANINGLESS. It is what a
-#     hand-authored Gummel-Poon model with invented IS/BF/VAF/TF produces;
-#     distortion lives entirely in the parts of a model that were guessed.
-#     No distortion figure exists for this design until vendor models do.
+#   THD: tb_v3_overload.cir prints a .four figure. Since L39 it is a MODEL
+#     figure of manufacturer models that miss parts of their own datasheet and
+#     carry no spread - not a measurement and not V4 evidence on its own.
 # ============================================================================
 
 if __name__ == "__main__":
@@ -697,7 +667,10 @@ if __name__ == "__main__":
             "  +3 dB  RG to 0,   RG10 open\n"
             "  +10 dB RG to 0,   RG10 to 0\n"
             "Leaving either port unterminated is NOT an open contact.\n"
-            "Device models are PLACEHOLDERS - see placeholder_devices.lib."
+            "Device models: manufacturer models from models/ (L39, NC-017) -\n"
+            "LSK489A lsk489.lib, MMBT5551 mmbt5551.lib, MMBT5401 mmbt5401.lib,\n"
+            "LS350 ls350.lib, Qmje15032 mje15032.lib, Qmje15033 mje15033.lib,\n"
+            "D1N914 1n4148.lib. Include them; none is included here."
         ),
     )
     subpath = os.path.join(outdir, "gain_block.subckt")

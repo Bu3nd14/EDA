@@ -50,13 +50,24 @@ tb_e4_uscite.cir - L13: E4 (Zout) sulle tre uscite, nei tre modi, in ogni posizi
 * Il verdetto non sta qui: docs/preamp/data/2026-09-15/L13/esplorazione/script/e4.py
 * confronta la tabella col log e la giudica.
 
-.include @REPO@/spice/preamp/placeholder_devices.lib
-* L22: the input current mirror is no longer a placeholder. It is an
-* LS352 (ADR-018) and this is its VENDOR model - the only one in this
-* deck. L33 (NC-031): the LSK489 is not a vendor model here. Its halves
-* are LSK489X, a hand-written placeholder with KF=0; the vendor model
-* models/jfet/lsk489.lib is included by no deck (Fase 4, NC-017). Every
-* OTHER device here is a hand-written placeholder too, and none has 1/f.
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+* L39 (NC-017): every active device in this deck is a vendor model from
+* models/, each next to its .provenance.json:
+*   LSK489   - vendor model LSK489A, the published corner sample (I_DSS
+*              2.59 mA, below the group-B window of ADR-031)
+*   LS352    - vendor model LS350 (ADR-018), included on the next line
+*   MMBT5551 - vendor model, Diodes Inc. (ADR-017)
+*   MMBT5401 - vendor model, Diodes Inc. (ADR-017)
+*   MJE15032 - vendor model Qmje15032, onsemi (NC-024, NC-025)
+*   MJE15033 - vendor model Qmje15033, onsemi (NC-025)
+*   1N4148   - vendor model D1N914, onsemi (docs/limitations.md #20)
+* Only the LSK489A carries KF: 1/f noise is on the input pair and nowhere
+* else. No model carries part-to-part spread.
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block.subckt
 

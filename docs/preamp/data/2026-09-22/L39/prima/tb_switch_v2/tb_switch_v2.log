@@ -1,0 +1,91 @@
+warning, model type mismatch in line
+    q121a nmiri nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: tb_switch_v2.cir - v2: the feedback loop must never open during gain switching, three levels, two bouncing relays
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+nref                                  -13.7002
+vminus                                     -15
+ncasc                                  9.88658
+nx                                    0.973022
+nhi                                    13.6993
+out                                 -0.0165756
+fb                                  -0.0165756
+vplus                                       15
+nrefm                                 -14.3501
+d1n                                     9.2086
+g1                                 5.13811e-09
+s1                                     0.46932
+d2n                                    9.20928
+g2                                  -0.0165756
+s2                                    0.464444
+src                                    0.24819
+nte                                   -14.3964
+nmiri                                  13.8238
+nme1                                   14.5293
+nme2                                    14.529
+nve                                    14.4085
+ny                                    -1.00618
+nvle                                  -14.4094
+nbb                                  -0.299093
+nbn                                   0.971456
+nen                                   0.307131
+nbp                                   -1.00462
+nep                                  -0.340282
+in                                 4.16831e-09
+rg                                  -0.0165756
+rg10                                -0.0165756
+srcn                                         0
+nrg                               -1.65756e-17
+ctrl                                         0
+nrg10                             -1.65756e-17
+ctrl10                                       0
+outa                                -0.0165756
+jack                                         0
+vctrl10#branch                               0
+vctrl#branch                                 0
+vsrc#branch                        9.69375e-12
+vmm#branch                           0.0273855
+vpp#branch                          -0.0263623
+
+ Reference value :  4.32650e-02
+No. of Data Rows : 35804
+extremes over the whole 70 ms, including every bounce burst:
+vmax = 1.521779e+00
+vmin = -1.62627e+00
+nxmax = 2.520506e+00
+nymin = -2.62530e+00
+s0max               =  4.83065e-01 at=  4.25008e-03
+s0min               =  -5.16218e-01 at=  1.75008e-03
+s3max               =  6.85950e-01 at=  1.42502e-02
+s3min               =  -7.33029e-01 at=  9.75017e-03
+s10max              =  1.52176e+00 at=  1.92518e-02
+s10min              =  -1.62625e+00 at=  2.27518e-02
+s10bmax             =  1.52178e+00 at=  5.92514e-02
+s10bmin             =  -1.62627e+00 at=  5.07514e-02
+t03max              =  6.85950e-01 at=  8.25017e-03
+t03min              =  -7.33032e-01 at=  5.75017e-03
+t310max             =  1.52176e+00 at=  1.62518e-02
+t310min             =  -1.62626e+00 at=  1.57498e-02
+t103max             =  1.52176e+00 at=  2.52519e-02
+t103min             =  -7.33028e-01 at=  2.87500e-02
+t30max              =  6.85952e-01 at=  3.52502e-02
+t30min              =  -5.16211e-01 at=  3.57510e-02
+t010max             =  1.52178e+00 at=  4.92514e-02
+t010min             =  -1.62627e+00 at=  4.57514e-02
+t100max             =  1.52178e+00 at=  6.02515e-02
+t100min             =  -1.36570e+00 at=  6.07006e-02
+Note: Simulation executed from .control section 
