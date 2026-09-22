@@ -47,7 +47,7 @@ WHAT IS DELIBERATELY NOT HERE
  - The DRIVE of the graduated mute's LEDs (ADR-038, L29b2): two current
    sources and the depth generator. Only the cells (in the signal path) and
    the J3 harness to the LEDs are here; the contract the drive must honour
-   is written next to J3 below (profile v3, Td = 6 s, ADR-039).
+   is written next to J3 below (profile v4, Td = 6 s, ADR-039, ADR-040).
 
 Run:
   /Users/roberto/EDA/env/venv/bin/python3 <this file>
@@ -380,13 +380,17 @@ if __name__ == "__main__":
     # mismatch - what is left is the parts' own spread, which is L29c's.
     # The drive is OFF THIS BOARD, like the mute timer: a current source per
     # string, cathode end to GND at the source (psu-engineer / L35).
-    # THE CONTRACT the drive must honour - the user's profile v3 with
-    # Td = 6 s (reports/2026-09-21-L29b-mute-ldr-misura.md, ADR-039):
+    # THE CONTRACT the drive must honour - profile v4 with Td = 6 s, the
+    # user's choice of 2026-09-22 (ADR-039, ADR-040; Td from L29b):
     #   one depth d in [0, 1], reversible, 0 -> 1 in Td = 6 s on insertion
     #   and back from wherever it is on release (a half-way reversal
     #   retraces the same path, ADR-038 point 3);
     #   series string, log-linear by segments: 20 mA at d = 0 -> 0.2 mA at
-    #     d = 0.1 -> 4.5 uA at d = 0.45 -> 10 nA at d = 0.5 and beyond;
+    #     d = 0.1 -> 4.5 uA at d = 0.45 -> 0.19 uA at d = 0.75 (the dark
+    #     knee, curve B) -> 10 nA at d = 0.8 and beyond. The segment down to
+    #     the knee is slow ON PURPOSE: on release the cell turns on as fast
+    #     as its LED, and v3's 10 nA -> 4.5 uA in 0.3 s put a 30 dB jump in
+    #     100 ms on the jack (limit 20 dB, ADR-040); v4 makes it 4 dB;
     #   shunt string: 10 nA up to d = 0.5 -> 20 mA at d = 1, log-linear;
     #   10 nA of idle current on BOTH strings, never 0: it sits below the
     #     dark knee (0.19 uA, curve B) but the anode never jumps from 0 V,

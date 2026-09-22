@@ -1,4 +1,4 @@
-# ADR-039 — Il mute graduale a LDR entra nel sorgente: due celle per canale, i LED in serie fra i canali su un cablaggio proprio, e il profilo v3 da 6 s come contratto del comando
+# ADR-039 — Il mute graduale a LDR entra nel sorgente: due celle per canale, i LED in serie fra i canali su un cablaggio proprio, e il profilo v4 da 6 s come contratto del comando
 
 Data: 2026-09-22 · Stato: accettata
 
@@ -30,12 +30,12 @@ funzione sono in serie fra i due canali**: serie L poi serie R, derivazione L po
 derivazione R. È una scelta di L29b2, non dell'utente.
 
 **3. Il contratto del comando**, fuori scheda come il temporizzatore del mute
-(psu-engineer / L35). È il **profilo v3 con Td = 6 s**, scelta dell'utente del
-2026-09-21:
+(psu-engineer / L35). È il **profilo v4 con Td = 6 s**: Td è la scelta dell'utente del
+2026-09-21, il profilo v4 la sua scelta del 2026-09-22 (ADR-040), al posto della v3:
 - una sola profondità d ∈ [0, 1], reversibile: da 0 a 1 in 6 s all'inserzione, e
   indietro alla stessa velocità da dove si trova;
 - **serie**, log-lineare a tratti: 20 mA a d = 0, 0,2 mA a d = 0,1, 4,5 µA a
-  d = 0,45, 10 nA a d = 0,5 e oltre;
+  d = 0,45, **0,19 µA a d = 0,75** (il ginocchio del buio), 10 nA a d = 0,8 e oltre;
 - **derivazione**: 10 nA fino a d = 0,5, poi log-lineare fino a 20 mA a d = 1;
 - **10 nA di riposo** su entrambe le stringhe, mai zero;
 - il **relè al jack** (`MUTE_CMD` diseccitato, jack a massa, ADR-012) si chiude
@@ -44,8 +44,9 @@ derivazione R. È una scelta di L29b2, non dell'utente.
   (`tb_e3_e5_ldr.cir`, per 1 µV al jack attraverso gli 0,5 pF LED–cella). Con un
   generatore di corrente è largo: a 10 nA la resistenza dinamica del LED è
   ~5 MΩ, quindi 130 pA/√Hz di rumore di corrente;
-- il comando **non ha ancora accelerazione limitata**: un'inversione a metà cambia
-  il verso di d di colpo (vedi «Da riaprire se»).
+- il comando **non ha accelerazione limitata**: un'inversione a metà cambia il verso
+  di d di colpo. Col criterio di ADR-040 non serve (l'inversione della v4 salta di
+  3 dB in 100 ms); resta un margine disponibile (vedi «Da riaprire se»).
 
 ## Perché
 
@@ -57,21 +58,24 @@ derivazione R. È una scelta di L29b2, non dell'utente.
   profondità, il temporizzatore e il comando dei relè stanno insieme fuori scheda
   (ADR-012, `preamp_audio.py`, «cosa non è qui»). Mettere sulla scheda audio solo
   le celle tiene il comando lontano dal segnale, com'è scritto in ADR-022.
-- **Il profilo v3** è la scelta dell'utente sulle cifre di v2 (report L29b §2.1). Con
-  il tempo scritto a 16 cifre (`docs/limitations.md` #30), a 1 kHz e 100 kΩ
-  (principale / fisse), sempre col modello comportamentale dal datasheet con
-  estrapolazione dichiarata:
-  - C2 d'inserzione **2,50 / 0,60 mV**;
-  - rilascio **3,41 / 0,88 mV**;
-  - inversione a d = 0,75 **7,36 / 2,15 mV**;
-  - relè 0,067 / 0,057 mV;
-  - A ≤ 33 nV, B2 0,29 µV;
-  - carico sulla sorgente ≥ 714 kΩ lungo la sequenza.
+- **La v4 al posto della v3.** Al rilascio la cella in serie si accende alla velocità
+  del LED: con la v3 il tratto 10 nA → 4,5 µA (d da 0,5 a 0,45) portava il livello da
+  −62 a −26 dB in 150 ms (`data/2026-09-22/L29b2/v3_td6_nd15/stati_ev.txt`). La v4
+  distende quel tratto fino al ginocchio del buio. Sulla catena, a 1 kHz e 100 kΩ, col
+  tempo scritto a 16 cifre (`docs/limitations.md` #30) e il modello comportamentale
+  dal datasheet con estrapolazione dichiarata:
 
-  Il pavimento di C2 lungo tutta la sequenza vale ≤ 31 µV. Rilascio e inversione sono
-  **fuori soglia**, e la ragione è misurata: al rilascio la cella in serie si
-  accende alla velocità del LED, e il tratto 10 nA → 4,5 µA (d da 0,5 a 0,45) porta
-  il livello da −62 a −26 dB in 150 ms (`data/2026-09-22/L29b2/v3_td6_nd15/stati_ev.txt`).
+  | Principale / fisse | v3 | v4 |
+  |---|---|---|
+  | salto in 100 ms (ADR-040): inserzione / rilascio / inversione | 7 / **30** / 7 dB | 7 / 4 / 3 dB |
+  | C2 (diagnostica): inserzione | 2,50 / 0,60 mV | 2,50 / 0,60 mV |
+  | C2: rilascio | 3,41 / 0,88 mV | 1,47 / 0,30 mV |
+  | C2: inversione a d = 0,75 | 7,36 / 2,15 mV | 5,01 / 1,40 mV |
+  | relè; A; B2 | 0,067 mV; ≤ 33 nV; 0,29 µV | uguali |
+  | carico minimo sulla sorgente | 714 kΩ | 714 kΩ |
+
+  La sovrapposizione con la derivazione (d da 0,5 a 0,75) avviene con R_s ≥ 2 MΩ: la
+  sorgente non vede mai un carico basso (ADR-038 punto 3).
 - **E3 ed E5** reggono con le celle nel sorgente (`tb_e3_e5_ldr.cir`):
   - |Zin| ≥ 111,6 kΩ con 68 pF, in gioco, in mute e a metà, in ogni posizione del
     trim;
@@ -84,22 +88,18 @@ derivazione R. È una scelta di L29b2, non dell'utente.
 - **Il comando dei LED sulla scheda audio**: porta il generatore e la sua
   alimentazione accanto al nodo a 1 MΩ, contro ADR-022, e anticipa il progetto del
   temporizzatore, che non è di questo lotto.
-- **Il profilo v4** (proposta di L29b2, misurata e non adottata: la scelta del profilo
-  è dell'utente, ADR-038). Serie come v3 fino a 4,5 µA a d = 0,45, poi fino a 0,19 µA
-  a d = 0,75 e 10 nA a d = 0,8:
-  - rilascio **1,47 / 0,30 mV**;
-  - inserzione, relè, A, B e carico invariati;
-  - inversione 5,01 / 1,40 mV.
-
-  È scritta qui perché si ritrovi, non perché sia stata scartata: si aspetta la
-  decisione dell'utente.
+- **Il profilo v3** (scelta dell'utente del 2026-09-21, report L29b): al rilascio salta
+  di 30 dB in 100 ms, oltre i 20 dB di ADR-040. Resta generabile nel deck per
+  confronto.
+- **Un profilo progettato per C2 ≤ 1 mV** (ricerca di L29b2, `transizione/`): non
+  realizzabile in 6 s coi limiti di spegnimento della cella; superato da ADR-040.
 
 ## Da riaprire se
 
-- L'utente sceglie un altro profilo: la v4, o un comando con **accelerazione
-  limitata** all'inversione. In v4 il picco dell'inversione cade all'istante
-  dell'inversione (t = 5,502 s), dove d cambia verso di colpo. Cambia il contratto
-  al punto 3 e il profilo di `tb_v2_mute_ldr.cir`, non le celle.
+- Serve margine sul salto: un comando con **accelerazione limitata** all'inversione
+  (in v4 il picco di C2 dell'inversione cade all'istante in cui d cambia verso,
+  t = 5,502 s). Cambia il contratto al punto 3 e il profilo di `tb_v2_mute_ldr.cir`,
+  non le celle.
 - La VTL5C4 non si trova (ADR-038). Serve una parte con due canali e una curva
   pubblicata; il simbolo e il footprint cambiano.
 - La tensione di conformità del comando non basta per due LED in serie. Allora le

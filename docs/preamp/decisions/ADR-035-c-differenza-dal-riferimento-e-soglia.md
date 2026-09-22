@@ -1,6 +1,6 @@
 # ADR-035 — C si misura per differenza dalla corsa di riferimento, e ha una soglia propria di 1 mV
 
-Data: 2026-09-16 · Stato: accettata
+Data: 2026-09-16 · Stato: accettata — come verdetto del taglio superata da ADR-040 (salto di livello ≤ 20 dB in 100 ms); C2 resta come diagnostica
 
 ## Contesto
 

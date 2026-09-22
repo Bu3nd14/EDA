@@ -1,4 +1,4 @@
-tb_v2_mute_ldr.cir - V2 al jack col mute graduale a monte: due LDR VTL5C4 all'ingresso del blocco A, profilo v3 Td 6 s (ADR-038, L29b2, NC-028)
+tb_v2_mute_ldr.cir - V2 al jack col mute graduale a monte: due LDR VTL5C4 all'ingresso del blocco A, profilo v4 Td 6 s (ADR-038, L29b2, NC-028)
 * Prima riga = titolo (docs/limitations.md #10).
 * GENERATO da docs/preamp/data/2026-09-22/L29b2/deck/genera_tb_v2_mute_ldr.py: non si
 * edita a mano. L'intestazione del generatore dice cosa c'e' dentro e come si corre.
@@ -8,7 +8,7 @@ tb_v2_mute_ldr.cir - V2 al jack col mute graduale a monte: due LDR VTL5C4 all'in
 * Ogni cifra di questo deck porta quell'etichetta. Il resto e' come nei deck di V2: tutto
 * tranne LS352 e' segnaposto, LSK489 compreso (NC-017, NC-031).
 *
-* IL PROFILO v3. Serie, log-lineare a tratti in d: 0.02 A a d = 0; 0.0002 A a d = 0.1; 4.5e-06 A a d = 0.45; 1e-08 A a d = 0.5; 1e-08 A a d = 1.
+* IL PROFILO v4. Serie, log-lineare a tratti in d: 0.02 A a d = 0; 0.0002 A a d = 0.1; 4.5e-06 A a d = 0.45; 1.9e-07 A a d = 0.75; 1e-08 A a d = 0.8; 1e-08 A a d = 1.
 * Derivazione: 10 nA fino a d = 0,5, poi log-lineare fino a 20 mA a d = 1. d va da 0 a 1
 * in Td = 6 s dall'inserzione e torna indietro con la stessa velocita' da dove si trova.
 * Rele' al jack chiuso a t_ins + Td + 0,5 s, aperto a t_rel.
@@ -165,7 +165,7 @@ VTR NTR 0 DC 2000
 VTD NTD 0 DC 6
 BDIN DIN 0 V = min(max((time - V(NTI))/V(NTD), 0), 1)
 BDEP DEP 0 V = time < V(NTR) ? V(DIN) : max(min(max((V(NTR) - V(NTI))/V(NTD), 0), 1) - (time - V(NTR))/V(NTD), 0)
-BILS 0 ALS I = pow(10, pwl(V(DEP), 0,-1.6990, 0.1,-3.6990, 0.45,-5.3468, 0.5,-8.0000, 1,-8.0000))
+BILS 0 ALS I = pow(10, pwl(V(DEP), 0,-1.6990, 0.1,-3.6990, 0.45,-5.3468, 0.75,-6.7212, 0.8,-8.0000, 1,-8.0000))
 BILP 0 ALP I = 1e-08 * pow(2e+06, min(max((V(DEP) - 0.5)/0.5, 0), 1))
 * 10 M dall'anodo a massa: un LED col solo generatore non ha percorso in continua e l'op
 * fallisce in silenzio (trappola di L29b). E' del banco, non della scheda.
@@ -222,7 +222,7 @@ tran 1e-05 17.5 0 1e-05
 wrdata ev_20_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 wrdata ev_20_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "ev_20_100k,ev_20_100k.dat,ldr_v3_td6,20,3.818,10,100k,1.0,8.5,17.5,1e-05,evento,sempre_20_100k,mai_20_100k,6.5" >> tb_v2_mute_ldr_manifest.csv
+echo "ev_20_100k,ev_20_100k.dat,ldr_v4_td6,20,3.818,10,100k,1.0,8.5,17.5,1e-05,evento,sempre_20_100k,mai_20_100k,6.5" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20
 alter vti dc = 1.0
@@ -299,7 +299,7 @@ tran 1e-05 17.5 0 1e-05
 wrdata ev_1k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 wrdata ev_1k_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "ev_1k_100k,ev_1k_100k.dat,ldr_v3_td6,1000,3.818,10,100k,1.0,8.5,17.5,1e-05,evento,sempre_1k_100k,mai_1k_100k,6.5" >> tb_v2_mute_ldr_manifest.csv
+echo "ev_1k_100k,ev_1k_100k.dat,ldr_v4_td6,1000,3.818,10,100k,1.0,8.5,17.5,1e-05,evento,sempre_1k_100k,mai_1k_100k,6.5" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 1000
 alter vti dc = 1.0
@@ -376,7 +376,7 @@ tran 5e-07 17.5 0 5e-07
 wrdata ev_20k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 wrdata ev_20k_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "ev_20k_100k,ev_20k_100k.dat,ldr_v3_td6,20000,3.818,10,100k,1.0,8.5,17.5,5e-07,evento,sempre_20k_100k,mai_20k_100k,6.5" >> tb_v2_mute_ldr_manifest.csv
+echo "ev_20k_100k,ev_20k_100k.dat,ldr_v4_td6,20000,3.818,10,100k,1.0,8.5,17.5,5e-07,evento,sempre_20k_100k,mai_20k_100k,6.5" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20000
 alter vti dc = 1.0
@@ -453,7 +453,7 @@ tran 1e-05 17.5 0 1e-05
 wrdata lzev_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 wrdata lzev_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "lzev_100k,lzev_100k.dat,ldr_v3_td6,1000,0,10,100k,1.0,8.5,17.5,1e-05,evento,lzsempre_100k,lzmai_100k,6.5" >> tb_v2_mute_ldr_manifest.csv
+echo "lzev_100k,lzev_100k.dat,ldr_v4_td6,1000,0,10,100k,1.0,8.5,17.5,1e-05,evento,lzsempre_100k,lzmai_100k,6.5" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 0
 alter vfrq dc = 1000
 alter vti dc = 1.0
@@ -499,7 +499,7 @@ tran 1e-05 17.5 0 1e-05
 wrdata ev_20_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 wrdata ev_20_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "ev_20_10k,ev_20_10k.dat,ldr_v3_td6,20,3.818,10,10k,1.0,8.5,17.5,1e-05,evento,sempre_20_10k,mai_20_10k,6.5" >> tb_v2_mute_ldr_manifest.csv
+echo "ev_20_10k,ev_20_10k.dat,ldr_v4_td6,20,3.818,10,10k,1.0,8.5,17.5,1e-05,evento,sempre_20_10k,mai_20_10k,6.5" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20
 alter vti dc = 1.0
@@ -576,7 +576,7 @@ tran 1e-05 17.5 0 1e-05
 wrdata ev_1k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 wrdata ev_1k_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "ev_1k_10k,ev_1k_10k.dat,ldr_v3_td6,1000,3.818,10,10k,1.0,8.5,17.5,1e-05,evento,sempre_1k_10k,mai_1k_10k,6.5" >> tb_v2_mute_ldr_manifest.csv
+echo "ev_1k_10k,ev_1k_10k.dat,ldr_v4_td6,1000,3.818,10,10k,1.0,8.5,17.5,1e-05,evento,sempre_1k_10k,mai_1k_10k,6.5" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 1000
 alter vti dc = 1.0
@@ -653,7 +653,7 @@ tran 5e-07 17.5 0 5e-07
 wrdata ev_20k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 wrdata ev_20k_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "ev_20k_10k,ev_20k_10k.dat,ldr_v3_td6,20000,3.818,10,10k,1.0,8.5,17.5,5e-07,evento,sempre_20k_10k,mai_20k_10k,6.5" >> tb_v2_mute_ldr_manifest.csv
+echo "ev_20k_10k,ev_20k_10k.dat,ldr_v4_td6,20000,3.818,10,10k,1.0,8.5,17.5,5e-07,evento,sempre_20k_10k,mai_20k_10k,6.5" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20000
 alter vti dc = 1.0
@@ -730,7 +730,7 @@ tran 1e-05 17.5 0 1e-05
 wrdata lzev_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 wrdata lzev_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "lzev_10k,lzev_10k.dat,ldr_v3_td6,1000,0,10,10k,1.0,8.5,17.5,1e-05,evento,lzsempre_10k,lzmai_10k,6.5" >> tb_v2_mute_ldr_manifest.csv
+echo "lzev_10k,lzev_10k.dat,ldr_v4_td6,1000,0,10,10k,1.0,8.5,17.5,1e-05,evento,lzsempre_10k,lzmai_10k,6.5" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 0
 alter vfrq dc = 1000
 alter vti dc = 1.0

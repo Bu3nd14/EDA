@@ -2,7 +2,7 @@
 """L29b2: genera spice/preamp/tb/tb_v2_mute_ldr.cir, il deck VERSIONATO di V2 col mute
 graduale a monte con due LDR VTL5C4 (ADR-038). Il deck non si edita a mano: si rigenera.
 
-Uso:  /usr/bin/python3 genera_tb_v2_mute_ldr.py [PROFILO=v3] [TD=6] [USCITA=<repo>/spice/preamp/tb/tb_v2_mute_ldr.cir]
+Uso:  /usr/bin/python3 genera_tb_v2_mute_ldr.py [PROFILO=v4] [TD=6] [USCITA=<repo>/spice/preamp/tb/tb_v2_mute_ldr.cir]
 
 Poi, per correrlo (le corse sono lunghe: in parallelo, una per processo):
       sed "s|@REPO@|<repo>|g" tb_v2_mute_ldr.cir > DIR/ldr.cir
@@ -25,9 +25,10 @@ COSA C'E' DENTRO
   A senza segnale (lz*) una volta per carico: non dipende dalla frequenza.
 - TMAX: 10 us a 20 Hz e 1 kHz; 0,5 us a 20 kHz (tb_v2_mute_pavimento.cir, L29a).
 
-I PROFILI. v3 e' la scelta dell'utente del 2026-09-21 (report L29b), ed e' il default. v4 e'
-una PROPOSTA di L29b2, misurata e non adottata: la serie da 4,5 uA scende al ginocchio del buio
-(0,19 uA) fino a d = 0,75 invece che a 10 nA gia' a d = 0,5 (C2 di rilascio 3,41 -> 1,47 mV).
+I PROFILI. v4 e' il default: proposta di L29b2, ADOTTATA dall'utente il 2026-09-22 col criterio
+del salto in dB (ADR-040). La serie da 4,5 uA scende al ginocchio del buio (0,19 uA) fino a
+d = 0,75 invece che a 10 nA gia' a d = 0,5: al rilascio il salto passa da 30 a 4 dB in 100 ms.
+v3 (la scelta dell'utente del 2026-09-21, report L29b) resta generabile per confronto.
 """
 import math
 import os
@@ -35,7 +36,7 @@ import sys
 
 QUI = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(QUI, *[".."] * 6))
-PROFILO = sys.argv[1] if len(sys.argv) > 1 else "v3"
+PROFILO = sys.argv[1] if len(sys.argv) > 1 else "v4"
 TD = float(sys.argv[2]) if len(sys.argv) > 2 else 6.0
 USCITA = (sys.argv[3] if len(sys.argv) > 3
           else os.path.join(REPO, "spice", "preamp", "tb", "tb_v2_mute_ldr.cir"))
@@ -54,7 +55,7 @@ if PROFILO == "v3":
 elif PROFILO == "v4":
     SERIE = [(0, ION), (0.1, 0.2e-3), (0.45, 4.5e-6), (0.75, 0.19e-6), (0.8, IRIP), (1, IRIP)]
 else:
-    sys.exit("profilo sconosciuto: %s (v3 = scelta dell'utente, v4 = proposta L29b2)" % PROFILO)
+    sys.exit("profilo sconosciuto: %s (v4 = di progetto, ADR-040; v3 = L29b, per confronto)" % PROFILO)
 BILS = "BILS 0 ALS I = pow(10, pwl(V(DEP), %s))" % ", ".join(
     "%g,%.4f" % (d, lg(i)) for d, i in SERIE)
 BILP = "BILP 0 ALP I = %g * pow(%g, min(max((V(DEP) - 0.5)/0.5, 0), 1))" % (IRIP, ION / IRIP)

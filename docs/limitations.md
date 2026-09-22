@@ -701,3 +701,27 @@ contro 10 µs non cambia niente (6,2 mV).
   tocca il circuito né le tolleranze;
 - una sonda che lo tiene onesto costa una colonna: salvare anche la sorgente
   ideale e leggerne la C2 fra le due corse. Dev'essere di µV.
+
+## 31. `pwl()` in una sorgente B **estrapola linearmente** fuori dai punti, non tiene il valore d'estremo
+
+Scoperto in L29b2, costruendo il simulatore veloce della LDR
+(`docs/preamp/data/2026-09-22/L29b2/transizione/`).
+
+Con i punti (1, 10) e (2, 20), `B1 y 0 V = pwl(V(x), 1,10, 2,20)` in ngspice 47
+dà **0** a x = 0, **50** a x = 5 e **−30** a x = −3: prolunga il primo e l'ultimo
+segmento. Chi scrive una tabella pensando che fuori dall'intervallo valga il
+valore d'estremo ottiene un'altra funzione, senza errori né avvisi.
+
+Nel modello della VTL5C4 (`models/optocoupler/vtl5c4_comportamentale.lib`)
+`BTAU` e `BD0` hanno due soli punti, in xt da 1,81 a 2,10. Dal buio (xt = 8,6)
+valgono per estrapolazione τ ≈ 23 ms e d0 ≈ 6,9, non i 3,6 ms e 1,46 del punto
+più alto. Il modello è stato verificato **così** contro il datasheet in L29b
+(accensione dal buio entro il 3,16 %), quindi le sue cifre restano valide.
+Quello che non vale è leggere la tabella come se si fermasse ai capi.
+
+**Regola operativa**:
+- una tabella `pwl()` che deve tenere il valore ai capi si scrive con
+  `min(max(x, x1), xn)` sull'argomento;
+- chi rifà un modello fuori da ngspice (un simulatore veloce, un foglio di
+  calcolo) deve estrapolare allo stesso modo, e tararsi contro ngspice;
+  `transizione/sur.py` lo fa, e la taratura lo prova (0,002 decadi).
