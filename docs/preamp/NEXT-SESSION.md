@@ -32,7 +32,7 @@ taglio, per scelta dell'utente.
    prima di ogni `wrdata`) e **#31** (`pwl()` estrapola).
 2. **`docs/preamp/STATE.md`**: la voce L29b2 del diario e le righe L29c e L36.
 3. **`docs/preamp/reports/2026-09-22-L29b2-mute-ldr-sorgente.md`** per intero.
-4. **ADR-040**, **ADR-039**, **ADR-038**; poi ADR-030 (criterio 3), ADR-032, ADR-035,
+4. **ADR-040**, **ADR-041**, **ADR-039**, **ADR-038**; poi ADR-030 (criterio 3), ADR-032, ADR-035,
    ADR-036.
 5. **`docs/preamp/REQUIREMENTS.md`**: V2 per intero, col caso peggiore.
 6. **`docs/preamp/NONCOMPLIANCE.md`**: NC-028, l'aggiornamento del 2026-09-22.
@@ -41,8 +41,10 @@ taglio, per scelta dell'utente.
 
 Il caso peggiore di V2, col mute reale (le LDR della v4 più il relè al jack), dal
 testo di V2:
-1. **I passaggi di guadagno** 0↔+3, +3↔+10, 0↔+10 dB nei due versi, **sotto mute**
-   (ADR-038: guadagno e trim si cambiano solo col jack a massa), seguiti dal rilascio.
+1. **I passaggi di guadagno** 0↔+3, +3↔+10, 0↔+10 dB nei due versi, **sotto mute**,
+   seguiti dal rilascio. Guadagno e trim si cambiano solo col jack a massa (ADR-038), e
+   la forma è decisa: **interblocco da premere come il trim**, niente mute automatico,
+   LED anche per il guadagno (ADR-041). L36 la realizza dopo L29c.
    È il **criterio 3 di ADR-030**, da cui dipende **L36**: il cambio sotto mute e il
    rilascio devono dare A e S nei limiti.
 2. **Il trim** nelle tre posizioni, con lo stesso schema.

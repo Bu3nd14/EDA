@@ -3,7 +3,9 @@
 Lotto **L29b2**. **NC-028 resta aperta e bloccante**: manca il caso peggiore, **L29c**.
 Dati: `data/2026-09-22/L29b2/`. ADR nuove: **ADR-039** (le LDR nel sorgente) e
 **ADR-040** (il taglio con musica si giudica sul salto di livello, ≤ 20 dB in 100 ms;
-il profilo del mute è la v4).
+il profilo del mute è la v4). E **ADR-041**, a lotto quasi chiuso: il cambio di guadagno
+si interblocca col mute come il trim, niente mute automatico, LED anche per il
+guadagno (parole dell'utente: «interlock al mute, come TRIM, nessuna invenzione»).
 
 **In breve.**
 - Il pavimento di mV «con le LDR attive» era l'arrotondamento del tempo scritto da
