@@ -22,6 +22,28 @@ realtà, il progetto non è ripartibile.
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
 
+### L29c — il caso peggiore di V2 col mute reale (2026-09-23) — IN CORSO
+
+**Il piano delle corse, scritto prima di lanciare** (mandato di `NEXT-SESSION.md`). Dati:
+`data/2026-09-23/L29c/`. Banco nuovo, **generato**: `spice/preamp/tb/tb_v2_casopeggiore.cir`
+da `data/2026-09-23/L29c/deck/genera_tb_v2_casopeggiore.py`. Blocco CANALE intatto
+(`v2_metodo.py canale` OK su 3 deck), 2g OK. Aggiunte fuori dal blocco: contatti K1/K5 che
+commutano nel tempo, trim (scala di `trim.py` fra OUTA e l'attenuatore), VOS, sonda JPRB,
+rail con `alter @vpp[pwl]` (sonda: funziona su una sorgente DC).
+
+1. **Cella di riferimento di L40**, rifatta: `riferimento/`.
+2. **Controfattuale**: il banco nuovo con le aggiunte neutre deve ridare la cella di L40
+   (`controfattuale/`, 11 corse, ~7 min).
+3. **Tre corse a 20 kHz** (100 k, TMAX 0,5 µs, ~4 h, lanciate per prime):
+   `g10mai_20k`, `gm0x10_20k` (0→+10 sotto mute), `mh2_20k` (mute di 2 s).
+4. **87 corse veloci** (1 kHz, 20 Hz, senza segnale; 1 619 s simulati, ~1 h su 7 processi):
+   punto 1, i sei passaggi di guadagno sotto mute e a caldo (criterio 3 di ADR-030);
+   punto 4, inversioni a d = 0,25/0,5/0,75, relè tenuto 0,1/1/2/20 s; punto 2, i sei
+   passaggi di trim sotto mute. Carico 100 k; 10 k sulla cella peggiore.
+5. **Dopo, sui risultati di 1, 2 e 4**: punto 3 (VOS ±20 mV × gruppo B × attenuatore),
+   punto 5 (accensione e spegnimento, ipotesi dichiarate nel generatore), punto 6 (curve
+   A/D della LDR). Se non entrano, **si divide**: L29c = punti 1 e 4, L29d = il resto.
+
 ### L40 — V1 coi modelli del costruttore (2026-09-23)
 
 **Chiude NC-034 e NC-035; aggiorna NC-025 e NC-029.** ADR nuova: **ADR-042**. Report:
