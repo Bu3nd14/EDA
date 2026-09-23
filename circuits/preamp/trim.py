@@ -89,7 +89,7 @@ KU_COM2, KU_RESET2, KU_SET2 = "6", "7", "5"
 # see it (block A is in front), and the Thevenin it adds to block B's source
 # (at most 442 ohm, -> 2.611 k instead of 2.5 k at mid-travel) cost V1 0.026
 # deg (tb_loop.cir, L16). The heaviest load on block A is 1.51 k at 0 dB:
-# 3.82 V peak of E6 draws 2.5 mA from a 15 mA class A stage.
+# 3.82 V peak of E6 draws 2.5 mA from a ~20 mA class A stage (ADR-042).
 R1_TRIM, R2_TRIM, R3_TRIM = "845", "464", "464"
 
 # LED current limiter from VRELAY, sized for VRELAY = 5 V (~2 mA in a red LED).

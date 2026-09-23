@@ -18,6 +18,22 @@ famiglia ha una variante di controllo che ridà le cifre di L39/dopo.
 
 Runner: `script/esegui.sh <fase> <deck>...` (o `-f lista.txt`), 8 in parallelo.
 
+**Fase B, dopo la decisione dell'utente (ADR-042: C124 1 nF, R128 invariato).**
+
+| Percorso | Cosa | Script |
+|---|---|---|
+| `prima/` | i 21 deck veloci (`script/deck_veloci.txt`) e la cella V2 1 kHz/100 k sul `main` di L39 (C124 470 p), corsi in questa sessione prima di rigenerare; `gain_block_*_L39.*` è il blocco di prima | `esegui.sh`, `v2_cella.sh` |
+| `dopo/` | gli stessi, sul blocco rigenerato (C124 1 nF) | idem |
+| `prima_idss/`, `dopo_idss/` | ADR-031: V1 del blocco A e del buffer nel gruppo B di I_DSS (`altermod`, #29) | `idss_istanze.py` |
+| `confronto_grezzo.csv`, `margini.csv` | ogni cifra prima/dopo; V1 per istanza | `confronta.py`, `margini.py`, `mosse.py` (cosa si muove oltre una soglia) |
+| — | P7, classe A, V3, V2 | `p7.py`, `classe_a.py`, `v3.py`, `v2_riassunto.py` |
+| — | i limiti per tono di ADR-020 dal PSRR vigente (riproduce L18 dai suoi CSV) | `limiti_psrr.py` |
+
+Gli script di L39 (`confronta.py`, `margini.py`, `p7.py`, `classe_a.py`, `v3.py`, `cura.py`)
+sono copiati senza modifiche al codice. **Tolto prima del commit** con `script/cura.py
+--togli`: le forme d'onda di `prima/` e `dopo/` e i `.dat` di V2 (10 GB). Tutti i
+riassunti sono stati rieseguiti dopo la pulizia, con le stesse cifre.
+
 Due trappole trovate per strada, da riportare nel report:
 - un corpo di `if` lasciato **vuoto** in `.control` (i `wrdata` commentati) fa
   uscire ngspice con **rc 139** a fine corsa, a tabelle complete: `varianti.py`

@@ -1,0 +1,96 @@
+warning, model type mismatch in line
+    q121a nmiri nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: tb_uscite_fisse.cir - e4 (zout) ed e5 (rumore) sulle uscite fisse coi buffer (l17, adr-023)
+
+Warning: Model issue on line 122 :
+  .model lsk489a njf(beta=2.2m betatce=-.5 rd=11 rs=30 lambda=4.3m vto=-1. ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+unrecognized parameter (mj) - ignored
+
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Note: True gmin stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+########## E4: Zout al jack J1, carico tolto ##########
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 81
+z20                 =  1.69361e+03
+z1k                 =  5.79320e+01
+z20k                =  4.70372e+01
+zr20                =  5.31186e+01
+zr1k                =  4.70207e+01
+zr20k               =  4.70238e+01
+zn20                =  2.29278e-02
+zn1k                =  3.66412e-02
+zn20k               =  5.72460e-01
+zrmax               =  5.31186e+01 at=  2.00000e+01
+z20 = 1.693609e+03
+z1k = 5.793197e+01
+z20k = 4.703715e+01
+zr20 = 5.311856e+01
+zr1k = 4.702067e+01
+zr20k = 4.702379e+01
+zn20 = 2.292777e-02
+zn1k = 3.664120e-02
+zn20k = 5.724596e-01
+zrmax = 5.311856e+01
+########## E5: rumore al jack J1, catena A -> F1, 20 Hz - 20 kHz ##########
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+J1  RSRC=1
+onoise_total = 1.651778e-06
+inoise_total = 1.659661e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+J1  RSRC=430
+onoise_total = 1.693825e-06
+inoise_total = 1.702638e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+J1  RSRC=2500
+onoise_total = 1.883116e-06
+inoise_total = 1.896823e-06
+########## scomposizione: il solo blocco A, al suo nodo d'uscita ##########
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+OUTA  RSRC=430
+onoise_total = 1.229502e-06
+inoise_total = 1.230003e-06
+Note: Simulation executed from .control section 
