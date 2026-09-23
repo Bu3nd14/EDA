@@ -47,7 +47,9 @@ nominati = {r[k] for r in rows for k in ("rif_ins", "rif_rel")}
 gruppi = [chiusura(list(v)) for v in eventi.values()]
 soli = [r for r in rows if r["tipo"] not in ("evento", "pav_num")]
 gruppi.append(soli)
-wd = os.path.join(datadir, "_analisi_par")
+# una cartella di lavoro per manifesto: due analisi sulla stessa directory di dati non si
+# sovrascrivono i gruppi
+wd = os.path.join(datadir, "_analisi_par_" + os.path.splitext(os.path.basename(man))[0])
 os.makedirs(wd, exist_ok=True)
 proc = []
 for k, g in enumerate(gruppi):

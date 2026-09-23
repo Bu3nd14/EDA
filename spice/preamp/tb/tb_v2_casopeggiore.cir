@@ -1642,40 +1642,6 @@ wrdata gm0x3_lz_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(m
 destroy all
 echo "gm0x3_lz_i,gm0x3_lz.dat,ldr_v4_td6_BB,1000,0,0a3,100k,1.0,8.0,19.0,1e-05,evento,g0sempre_lz,g0mai_lz,6.5,1,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
 echo "gm0x3_lz_c,gm0x3_lz.dat,ldr_v4_td6_BB,1000,0,0a3,100k,8.0,10.0,19.0,1e-05,evento,g3sempre_lz,g3mai_lz,0.0,1,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
-alter vamp dc = 0
-alter vfrq dc = 1000
-alter rldm = 100k
-alter rld1 = 100k
-alter rld2 = 100k
-alter vti dc = 1000
-alter vtr dc = 2000
-alter vtijk dc = 1000
-alter vtrjk dc = 2000
-alter vosa dc = 0
-alter vosb dc = 0
-alter vosf1 dc = 0
-alter vosf2 dc = 0
-alter ratth = 1m
-alter rattb = 10k
-alter rl1 = 845
-alter cwire = 100p
-alter vk1i dc = 0
-alter vk1t dc = 1.000000
-alter vk5i dc = 0
-alter vk5t dc = 1000.000000
-alter vt1ri dc = 1
-alter vt1rt dc = 1000.000000
-alter vt1si dc = 0
-alter vt1st dc = 1000.000000
-alter vt2ri dc = 1
-alter vt2rt dc = 1000.000000
-alter vt2si dc = 0
-alter vt2st dc = 1000.000000
-tran 1e-05 3.5 0 1e-05
-wrdata gc0x3_lz$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata gc0x3_lz_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
-destroy all
-echo "gc0x3_lz,gc0x3_lz.dat,caldo,1000,0,0a3,100k,1.0,1000,3.5,1e-05,evento,g3mai_lz,-,0.0,1,A_ins" >> tb_v2_casopeggiore_manifest.csv
 * ---- 1: 3 -> 0 dB sotto mute, lz ----
 alter vamp dc = 0
 alter vfrq dc = 1000
@@ -1712,40 +1678,6 @@ wrdata gm3x0_lz_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(m
 destroy all
 echo "gm3x0_lz_i,gm3x0_lz.dat,ldr_v4_td6_BB,1000,0,3a0,100k,1.0,8.0,19.0,1e-05,evento,g3sempre_lz,g3mai_lz,6.5,1,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
 echo "gm3x0_lz_c,gm3x0_lz.dat,ldr_v4_td6_BB,1000,0,3a0,100k,8.0,10.0,19.0,1e-05,evento,g0sempre_lz,g0mai_lz,0.0,1,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
-alter vamp dc = 0
-alter vfrq dc = 1000
-alter rldm = 100k
-alter rld1 = 100k
-alter rld2 = 100k
-alter vti dc = 1000
-alter vtr dc = 2000
-alter vtijk dc = 1000
-alter vtrjk dc = 2000
-alter vosa dc = 0
-alter vosb dc = 0
-alter vosf1 dc = 0
-alter vosf2 dc = 0
-alter ratth = 1m
-alter rattb = 10k
-alter rl1 = 845
-alter cwire = 100p
-alter vk1i dc = 1
-alter vk1t dc = 1.000000
-alter vk5i dc = 0
-alter vk5t dc = 1000.000000
-alter vt1ri dc = 1
-alter vt1rt dc = 1000.000000
-alter vt1si dc = 0
-alter vt1st dc = 1000.000000
-alter vt2ri dc = 1
-alter vt2rt dc = 1000.000000
-alter vt2si dc = 0
-alter vt2st dc = 1000.000000
-tran 1e-05 3.5 0 1e-05
-wrdata gc3x0_lz$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata gc3x0_lz_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
-destroy all
-echo "gc3x0_lz,gc3x0_lz.dat,caldo,1000,0,3a0,100k,1.0,1000,3.5,1e-05,evento,g0mai_lz,-,0.0,1,A_ins" >> tb_v2_casopeggiore_manifest.csv
 * ---- 1: 3 -> 10 dB sotto mute, lz ----
 alter vamp dc = 0
 alter vfrq dc = 1000
@@ -1782,40 +1714,6 @@ wrdata gm3x10_lz_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(
 destroy all
 echo "gm3x10_lz_i,gm3x10_lz.dat,ldr_v4_td6_BB,1000,0,3a10,100k,1.0,8.0,19.0,1e-05,evento,g3sempre_lz,g3mai_lz,6.5,1,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
 echo "gm3x10_lz_c,gm3x10_lz.dat,ldr_v4_td6_BB,1000,0,3a10,100k,8.0,10.0,19.0,1e-05,evento,g10sempre_lz,g10mai_lz,0.0,1,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
-alter vamp dc = 0
-alter vfrq dc = 1000
-alter rldm = 100k
-alter rld1 = 100k
-alter rld2 = 100k
-alter vti dc = 1000
-alter vtr dc = 2000
-alter vtijk dc = 1000
-alter vtrjk dc = 2000
-alter vosa dc = 0
-alter vosb dc = 0
-alter vosf1 dc = 0
-alter vosf2 dc = 0
-alter ratth = 1m
-alter rattb = 10k
-alter rl1 = 845
-alter cwire = 100p
-alter vk1i dc = 1
-alter vk1t dc = 1000.000000
-alter vk5i dc = 0
-alter vk5t dc = 1.000000
-alter vt1ri dc = 1
-alter vt1rt dc = 1000.000000
-alter vt1si dc = 0
-alter vt1st dc = 1000.000000
-alter vt2ri dc = 1
-alter vt2rt dc = 1000.000000
-alter vt2si dc = 0
-alter vt2st dc = 1000.000000
-tran 1e-05 3.5 0 1e-05
-wrdata gc3x10_lz$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata gc3x10_lz_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
-destroy all
-echo "gc3x10_lz,gc3x10_lz.dat,caldo,1000,0,3a10,100k,1.0,1000,3.5,1e-05,evento,g10mai_lz,-,0.0,1,A_ins" >> tb_v2_casopeggiore_manifest.csv
 * ---- 1: 10 -> 3 dB sotto mute, lz ----
 alter vamp dc = 0
 alter vfrq dc = 1000
@@ -1852,40 +1750,6 @@ wrdata gm10x3_lz_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(
 destroy all
 echo "gm10x3_lz_i,gm10x3_lz.dat,ldr_v4_td6_BB,1000,0,10a3,100k,1.0,8.0,19.0,1e-05,evento,g10sempre_lz,g10mai_lz,6.5,1,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
 echo "gm10x3_lz_c,gm10x3_lz.dat,ldr_v4_td6_BB,1000,0,10a3,100k,8.0,10.0,19.0,1e-05,evento,g3sempre_lz,g3mai_lz,0.0,1,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
-alter vamp dc = 0
-alter vfrq dc = 1000
-alter rldm = 100k
-alter rld1 = 100k
-alter rld2 = 100k
-alter vti dc = 1000
-alter vtr dc = 2000
-alter vtijk dc = 1000
-alter vtrjk dc = 2000
-alter vosa dc = 0
-alter vosb dc = 0
-alter vosf1 dc = 0
-alter vosf2 dc = 0
-alter ratth = 1m
-alter rattb = 10k
-alter rl1 = 845
-alter cwire = 100p
-alter vk1i dc = 1
-alter vk1t dc = 1000.000000
-alter vk5i dc = 1
-alter vk5t dc = 1.000000
-alter vt1ri dc = 1
-alter vt1rt dc = 1000.000000
-alter vt1si dc = 0
-alter vt1st dc = 1000.000000
-alter vt2ri dc = 1
-alter vt2rt dc = 1000.000000
-alter vt2si dc = 0
-alter vt2st dc = 1000.000000
-tran 1e-05 3.5 0 1e-05
-wrdata gc10x3_lz$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata gc10x3_lz_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
-destroy all
-echo "gc10x3_lz,gc10x3_lz.dat,caldo,1000,0,10a3,100k,1.0,1000,3.5,1e-05,evento,g3mai_lz,-,0.0,1,A_ins" >> tb_v2_casopeggiore_manifest.csv
 * ---- 1: 0 -> 10 dB sotto mute, lz ----
 alter vamp dc = 0
 alter vfrq dc = 1000
@@ -1922,40 +1786,6 @@ wrdata gm0x10_lz_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(
 destroy all
 echo "gm0x10_lz_i,gm0x10_lz.dat,ldr_v4_td6_BB,1000,0,0a10,100k,1.0,8.0,19.0,1e-05,evento,g0sempre_lz,g0mai_lz,6.5,1,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
 echo "gm0x10_lz_c,gm0x10_lz.dat,ldr_v4_td6_BB,1000,0,0a10,100k,8.0,10.0,19.0,1e-05,evento,g10sempre_lz,g10mai_lz,0.0,1,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
-alter vamp dc = 0
-alter vfrq dc = 1000
-alter rldm = 100k
-alter rld1 = 100k
-alter rld2 = 100k
-alter vti dc = 1000
-alter vtr dc = 2000
-alter vtijk dc = 1000
-alter vtrjk dc = 2000
-alter vosa dc = 0
-alter vosb dc = 0
-alter vosf1 dc = 0
-alter vosf2 dc = 0
-alter ratth = 1m
-alter rattb = 10k
-alter rl1 = 845
-alter cwire = 100p
-alter vk1i dc = 0
-alter vk1t dc = 1.000300
-alter vk5i dc = 0
-alter vk5t dc = 1.000000
-alter vt1ri dc = 1
-alter vt1rt dc = 1000.000000
-alter vt1si dc = 0
-alter vt1st dc = 1000.000000
-alter vt2ri dc = 1
-alter vt2rt dc = 1000.000000
-alter vt2si dc = 0
-alter vt2st dc = 1000.000000
-tran 1e-05 3.5 0 1e-05
-wrdata gc0x10_lz$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata gc0x10_lz_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
-destroy all
-echo "gc0x10_lz,gc0x10_lz.dat,caldo,1000,0,0a10,100k,1.0,1000,3.5,1e-05,evento,g10mai_lz,-,0.0,1,A_ins" >> tb_v2_casopeggiore_manifest.csv
 * ---- 1: 10 -> 0 dB sotto mute, lz ----
 alter vamp dc = 0
 alter vfrq dc = 1000
@@ -1992,40 +1822,6 @@ wrdata gm10x0_lz_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(
 destroy all
 echo "gm10x0_lz_i,gm10x0_lz.dat,ldr_v4_td6_BB,1000,0,10a0,100k,1.0,8.0,19.0,1e-05,evento,g10sempre_lz,g10mai_lz,6.5,1,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
 echo "gm10x0_lz_c,gm10x0_lz.dat,ldr_v4_td6_BB,1000,0,10a0,100k,8.0,10.0,19.0,1e-05,evento,g0sempre_lz,g0mai_lz,0.0,1,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
-alter vamp dc = 0
-alter vfrq dc = 1000
-alter rldm = 100k
-alter rld1 = 100k
-alter rld2 = 100k
-alter vti dc = 1000
-alter vtr dc = 2000
-alter vtijk dc = 1000
-alter vtrjk dc = 2000
-alter vosa dc = 0
-alter vosb dc = 0
-alter vosf1 dc = 0
-alter vosf2 dc = 0
-alter ratth = 1m
-alter rattb = 10k
-alter rl1 = 845
-alter cwire = 100p
-alter vk1i dc = 1
-alter vk1t dc = 1.000000
-alter vk5i dc = 1
-alter vk5t dc = 1.000300
-alter vt1ri dc = 1
-alter vt1rt dc = 1000.000000
-alter vt1si dc = 0
-alter vt1st dc = 1000.000000
-alter vt2ri dc = 1
-alter vt2rt dc = 1000.000000
-alter vt2si dc = 0
-alter vt2st dc = 1000.000000
-tran 1e-05 3.5 0 1e-05
-wrdata gc10x0_lz$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata gc10x0_lz_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
-destroy all
-echo "gc10x0_lz,gc10x0_lz.dat,caldo,1000,0,10a0,100k,1.0,1000,3.5,1e-05,evento,g0mai_lz,-,0.0,1,A_ins" >> tb_v2_casopeggiore_manifest.csv
 alter vamp dc = 0
 alter vfrq dc = 1000
 alter rldm = 100k
@@ -8283,8 +8079,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1 15 1.01 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1 -15 1.01 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1 15 1.01 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.01 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1 1 1.01 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r10s_d0$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -8321,8 +8117,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1 15 1.01 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1 -15 1.01 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1 15 1.01 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.01 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1 1 1.01 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r10s_d5$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -8359,8 +8155,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1 15 1.01 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1 -15 1.01 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1 15 1.01 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.01 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1 1 1.01 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r10s_d20$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -8397,8 +8193,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1 15 1.01 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1 -15 1.01 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1 15 1.01 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.01 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1 1 1.01 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r10s_d100$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -8473,8 +8269,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1.05 15 1.06 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1 -15 1.01 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1.05 15 1.06 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.01 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1.05 1 1.06 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r10p_d0$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -8511,8 +8307,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1.05 15 1.06 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1 -15 1.01 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1.05 15 1.06 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.01 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1.05 1 1.06 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r10p_d5$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -8549,8 +8345,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1.05 15 1.06 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1 -15 1.01 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1.05 15 1.06 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.01 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1.05 1 1.06 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r10p_d20$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -8587,8 +8383,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1.05 15 1.06 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1 -15 1.01 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1.05 15 1.06 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.01 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1.05 1 1.06 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r10p_d100$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -8663,8 +8459,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1 15 1.01 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1.05 -15 1.06 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1 15 1.01 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1.05 -15 1.06 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1 1 1.01 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r10m_d0$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -8701,8 +8497,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1 15 1.01 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1.05 -15 1.06 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1 15 1.01 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1.05 -15 1.06 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1 1 1.01 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r10m_d5$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -8739,8 +8535,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1 15 1.01 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1.05 -15 1.06 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1 15 1.01 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1.05 -15 1.06 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1 1 1.01 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r10m_d20$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -8777,8 +8573,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1 15 1.01 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1.05 -15 1.06 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1 15 1.01 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1.05 -15 1.06 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1 1 1.01 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r10m_d100$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -8853,8 +8649,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1 15 1.3 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1 -15 1.3 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1 15 1.3 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.3 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1 1 1.3 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r300s_d0$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -8891,8 +8687,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1 15 1.3 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1 -15 1.3 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1 15 1.3 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.3 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1 1 1.3 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r300s_d5$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -8929,8 +8725,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1 15 1.3 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1 -15 1.3 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1 15 1.3 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.3 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1 1 1.3 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r300s_d20$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -8967,8 +8763,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1 15 1.3 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1 -15 1.3 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1 15 1.3 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.3 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1 1 1.3 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r300s_d100$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -9043,8 +8839,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1.05 15 1.35 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1 -15 1.3 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1.05 15 1.35 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.3 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1.05 1 1.35 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r300p_d0$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -9081,8 +8877,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1.05 15 1.35 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1 -15 1.3 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1.05 15 1.35 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.3 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1.05 1 1.35 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r300p_d5$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -9119,8 +8915,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1.05 15 1.35 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1 -15 1.3 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1.05 15 1.35 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.3 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1.05 1 1.35 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r300p_d20$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -9157,8 +8953,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1.05 15 1.35 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1 -15 1.3 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1.05 15 1.35 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.3 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1.05 1 1.35 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r300p_d100$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -9233,8 +9029,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1 15 1.3 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1.05 -15 1.35 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1 15 1.3 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1.05 -15 1.35 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1 1 1.3 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r300m_d0$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -9271,8 +9067,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1 15 1.3 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1.05 -15 1.35 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1 15 1.3 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1.05 -15 1.35 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1 1 1.3 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r300m_d5$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -9309,8 +9105,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1 15 1.3 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1.05 -15 1.35 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1 15 1.3 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1.05 -15 1.35 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1 1 1.3 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r300m_d20$d v(mainjack) v(fixjack1) v(fixjack2)
@@ -9347,8 +9143,8 @@ alter vt2ri dc = 1
 alter vt2rt dc = 1000.000000
 alter vt2si dc = 0
 alter vt2st dc = 1000.000000
-alter @vpp[pwl] = [ 0 15 1 15 1.3 0 1000 0 ]
-alter @vmm[pwl] = [ 0 -15 1.05 -15 1.35 0 1000 0 ]
+alter @vpp[pwl] = [ 0 15 1 15 1.3 1m 1000 1m ]
+alter @vmm[pwl] = [ 0 -15 1.05 -15 1.35 -1m 1000 -1m ]
 alter @vpwl[pwl] = [ 0 1 1 1 1.3 0 1000 0 ]
 tran 1e-05 3.5 0 1e-05
 wrdata off_r300m_d100$d v(mainjack) v(fixjack1) v(fixjack2)

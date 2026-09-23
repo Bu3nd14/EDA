@@ -12,6 +12,11 @@ Uso:
                             di questo banco in posizione neutra: devono ridare la cella di L40
   --matrice curve           il punto 6: gli eventi del mute (inversioni, rele' 1 e 2 s) con le curve
                             date da --curve, a 1 kHz, 20 Hz e senza segnale, coi loro riferimenti
+  --matrice caldo           il cambio di guadagno A CALDO (criterio 3 di ADR-030), coi suoi
+                            riferimenti, in un deck a parte: K1 e K5 hanno anche il contatto
+                            comportamentale del blocco (fronte 4,55 us), che commuta al posto
+                            dell'interruttore nativo. Con l'interruttore netto il cambio a caldo
+                            che muove K5 si ferma su 'Timestep too small' a un rimbalzo.
   --curve B B               le curve della VTL5C4 per la cella in serie e quella in derivazione
                             (A = resistenza piu' bassa ... D = piu' alta). Il deck versionato e'
                             B B, come tb_v2_mute_ldr.cir; le altre si generano nei dati di L29c.
@@ -58,7 +63,7 @@ import os
 QUI = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(QUI, *[".."] * 6))
 ap = argparse.ArgumentParser()
-ap.add_argument("--matrice", default="l29c", choices=("l29c", "controfattuale", "curve"))
+ap.add_argument("--matrice", default="l29c", choices=("l29c", "controfattuale", "curve", "caldo"))
 ap.add_argument("--curve", nargs=2, default=("B", "B"), metavar=("SERIE", "DERIV"))
 ap.add_argument("--uscita", default=os.path.join(REPO, "spice", "preamp", "tb", "tb_v2_casopeggiore.cir"))
 ARG = ap.parse_args()
@@ -119,12 +124,28 @@ def contatto(n, a, b, cpar):
 
 
 CONTATTI = ("K1", "K5", "T1R", "T1S", "T2R", "T2S")
+
+
+def gemello(n, a):
+    """Il contatto comportamentale del blocco (BSJKR: pwl coi rimbalzi, 1 k + 4,55 nF, conduttanza
+    log-lineare fino a 10 S), in parallelo all'interruttore nativo. Solo nel deck 'caldo'."""
+    m = n + "B"
+    return [
+        "V%sI N%sI 0 DC 0" % (m, m),
+        "V%sT N%sT 0 DC 1000" % (m, m),
+        "B%sR S%sR 0 V = (1 - V(N%sI)) * pwl(time - V(N%sT), %s)" % (m, m, m, m, MAKE),
+        "+ + V(N%sI) * pwl(time - V(N%sT), %s)" % (m, m, BREAK),
+        "R%sS S%sR S%s 1k" % (m, m, m),
+        "C%sS S%s 0 4.55n" % (m, m),
+        "B%s %s 0 I = V(%s) * pow(10, -12 + 13*V(S%s))" % (m, a, a, m),
+    ]
 AGGIUNTE = (
     ["* ---- L29c: i contatti del guadagno, in parallelo a RRGB / RRG10B del blocco ----",
      "* interruttore nativo: 0,1 ohm chiuso (il massimo del G6K), 1 T aperto; soglia 0,5 V sulla",
      "* pwl 0/1 dei rimbalzi, isteresi 0,25 V",
      ".model SWK SW(RON=0.1 ROFF=1e12 VT=0.5 VH=0.25)"]
     + contatto("K1", "RGB", "0", False) + contatto("K5", "RG10B", "0", False)
+    + (gemello("K1", "RGB") + gemello("K5", "RG10B") if ARG.matrice == "caldo" else [])
     + ["* ---- L29c: il trim (ADR-027, trim.py candidato 2) fra OUTA e l'attenuatore ----",
        "* RATTT del blocco si apre nel .control (alter rattt = 1e12): OUTA arriva a W da qui.",
        "RL1 OUTA TAP6 845", "RL2 TAP6 TAP12 464", "RL3 TAP12 0 464"]
@@ -262,6 +283,12 @@ def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=1000,
     st = {}
     st.update(cambio_guadagno(g1, g2, tg))
     st.update(cambio_trim(p1, p2, tp))
+    if ARG.matrice == "caldo":
+        # il guadagno lo portano i gemelli comportamentali; gli interruttori nativi restano aperti
+        for n in ("K1", "K5"):
+            i, t = st[n]
+            out += ["alter v%sbi dc = %s" % (n.lower(), i), "alter v%sbt dc = %.6f" % (n.lower(), t)]
+            st[n] = (0, 1000)
     for n in CONTATTI:
         i, t = st[n]
         out += ["alter v%si dc = %s" % (n.lower(), i), "alter v%st dc = %.6f" % (n.lower(), t)]
@@ -403,12 +430,8 @@ def matrice_l29c():
                          tm, "evento", rif_nome("g%d" % g2, "sempre", fk),
                          rif_nome("g%d" % g2, "mai", fk), 0.0, 1,
                          "A_ins;A_rel;B2" if amp == 0 else "S_rel;B2")]
-            if amp == 0:
-                # il cambio A CALDO, criterio 3 di ADR-030: senza mute, stesso passaggio a 1 s
-                nc = "gc%dx%d_lz" % (g1, g2)
-                out += corsa(nc, amp=0, tf=3.5, g1=g1, g2=g2, tg=TI)
-                out += [riga(nc, nc, "caldo", 1000, 0, gm, "100k", TI, 1000, 3.5, 10e-6, "evento",
-                             rif_nome("g%d" % g2, "mai", None), "-", 0.0, 1, "A_ins")]
+            # il cambio A CALDO (criterio 3 di ADR-030) non sta qui: --matrice caldo. Con
+            # l'interruttore netto i passaggi che muovono K5 si fermano su 'Timestep too small'.
         if fk is None:
             # pavimento numerico di A sul passaggio piu' largo
             nomep = "gm0x10p_lz"
@@ -552,8 +575,11 @@ def accensione(var):
             for rr in RIT_RELE:
                 n = "off_r%g%s_d%g" % (tr * 1e3, sk, rr * 1e3)
                 tf = T_OFF + 2.5
-                rail = ("0 15 %g 15 %g 0 1000 0" % (T_OFF + dp, T_OFF + dp + tr),
-                        "0 -15 %g -15 %g 0 1000 0" % (T_OFF + dm, T_OFF + dm + tr),
+                # la discesa si ferma a +-1 mV: a 0 V esatti, rampa da 10 ms e rele' senza
+                # ritardo, la tran si ferma su 'Timestep too small' in fondo alla rampa
+                # (sonde/op/prova_tran.py). 1 mV di rail residuo non cambia la fisica.
+                rail = ("0 15 %g 15 %g 1m 1000 1m" % (T_OFF + dp, T_OFF + dp + tr),
+                        "0 -15 %g -15 %g -1m 1000 -1m" % (T_OFF + dm, T_OFF + dm + tr),
                         "0 1 %g 1 %g 0 1000 0" % (T_OFF + dp, T_OFF + dp + tr))
                 out += ["* ---- 5: spegnimento, rampa %g ms, sfasamento %s, rele' +%g ms ----"
                         % (tr * 1e3, sk, rr * 1e3)]
@@ -589,8 +615,26 @@ def matrice_curve():
     return out
 
 
+def matrice_caldo():
+    """Il cambio di guadagno a caldo, senza segnale e senza mute, coi riferimenti mai in mute a
+    ogni guadagno, nello stesso deck (con gli stessi gemelli, aperti)."""
+    out = []
+    for g in (0, 3, 10):
+        n = "hmai_g%d" % g
+        out += corsa(n, amp=0, tf=3.5, g1=g)
+        out += [riga(n, n, "rif", 1000, 0, g, "100k", TI, 1000, 3.5, 10e-6, "rif_mai", gruppo=1)]
+    for g1, g2 in [(0, 3), (3, 0), (3, 10), (10, 3), (0, 10), (10, 0)]:
+        n = "hc%dx%d_lz" % (g1, g2)
+        out += corsa(n, amp=0, tf=3.5, g1=g1, g2=g2, tg=TI)
+        out += [riga(n, n, "caldo_morbido", 1000, 0, "%da%d" % (g1, g2), "100k", TI, 1000, 3.5, 10e-6,
+                     "evento", "hmai_g%d" % g2, "-", 0.0, 1, "A_ins")]
+    return out
+
+
 if ARG.matrice == "controfattuale":
     C += controfattuale()
+elif ARG.matrice == "caldo":
+    C += matrice_caldo()
 elif ARG.matrice == "curve":
     C += matrice_curve()
 else:
