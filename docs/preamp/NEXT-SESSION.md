@@ -63,7 +63,9 @@ vuole, perché un contatto taglia la musica di colpo (~70 dB in un istante).
 3. **Le celle che reggevano**, per non romperle: il mute semplice e le inversioni con musica
    (S, B2) a 1 kHz e 20 Hz, e A del rilascio senza segnale. B col contatto aperto è la domanda
    vera della variante (ii).
-4. **20 kHz**: solo se serve, e pianificato prima (in L29c una corsa ha richiesto 6–7 ore coi
+4. **Il carico da 10 kΩ** sulla cella peggiore di ogni punto: L29c l'aveva pianificato e non
+   l'ha fatto (tutta la sua matrice è a 100 kΩ). Va fatto nelle due varianti.
+5. **20 kHz**: solo se serve, e pianificato prima (in L29c una corsa ha richiesto 6–7 ore coi
    core contesi).
 
 **Esito**: la tabella delle due varianti contro L29c. **L'utente sceglie**, e la scelta diventa

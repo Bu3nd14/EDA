@@ -79,7 +79,8 @@ Senza segnale, jack principale; le fisse non cambiano guadagno e restano a pV.
   il calcolo dà 27 µV, e 27 µV si misurano.
 - **Con musica** (1 kHz e 20 Hz, 100 k): S d'inserzione ≤ 7,16 dB, S del rilascio 0 dB, B2 ≤
   8,5 µV. Reggono.
-- **A 20 kHz** (0→+10, 100 k): VEDI_20K.
+- **A 20 kHz** (0→+10, 100 k, TMAX 0,5 µs): il rilascio a +10 dB dà S = 0 dB e B2 1,35 µV.
+  Regge, anche con lo slew più lento di ADR-042.
 
 ## 3. Il trim (punto 2)
 
@@ -107,7 +108,9 @@ finestra di A dell'inserzione è per costruzione più corta dei 2 s che il metod
 13 nV, e il tratto successivo lo copre A del rilascio. Si legge «non decidibile per
 costruzione», non «fuori».
 
-A 20 kHz, mute di 2 s: VEDI_20K.
+A 20 kHz, mute di 2 s (100 k): S d'inserzione **6,61 dB**, del rilascio **6,12 dB**, B2 27 µV.
+Sono le cifre di L29b2 (6,6 / 6,1 dB, relè tenuto 1 s): lo slew più lento di ADR-042 non
+sposta il verdetto, e nemmeno la durata del mute.
 
 ## 5. La dispersione dell'LSK489 (punto 3)
 
@@ -161,7 +164,7 @@ inversioni a 0,25 e 0,75, relè 1 e 2 s; 1 kHz, 20 Hz, senza segnale.
 |---|---|---|---|
 | A / A | 9,36 dB | 11,7 µV | 3,78 µV |
 | A / D | 10,97 dB | 18,5 µV | 1,87 µV |
-| D / A | VEDI_DA | | |
+| D / A | 5,89 dB | 4,96 µV | 6,03 µV |
 | D / D | 10,97 dB | 7,8 µV | 1,72 µV |
 | B / B (il deck versionato, §4) | 7,16 dB | 8,5 µV | 3,76 µV |
 
@@ -180,7 +183,12 @@ inversioni a 0,25 e 0,75, relè 1 e 2 s; 1 kHz, 20 Hz, senza segnale.
 | 4 durata del mute, S | regge (≤ 7,2 dB) |
 | 5 **accensione e spegnimento** | **fuori**: mV-V |
 | 6 curve della LDR | regge (S ≤ 11 dB) |
-| 20 kHz | VEDI_20K |
+| 20 kHz (guadagno 0→+10 sotto mute, mute di 2 s) | regge (S ≤ 6,6 dB, B2 ≤ 27 µV) |
+
+**Non fatto, e dichiarato**: il piano prevedeva il carico da **10 kΩ** sulla cella peggiore di
+ogni punto. Tutta la matrice è a 100 kΩ. Per le celle fuori soglia il carico conta poco, perché il
+jack è in corto sul contatto chiuso (0,1 Ω contro 47 Ω); in L29b2 i due carichi coincidevano
+entro l'1 %. È un ragionamento, non una misura: la cella da 10 kΩ passa a L29d.
 
 **NC-028 resta aperta e bloccante.** La musica è sistemata, i salti in continua no. Le decisioni
 dell'utente del 2026-09-23:
@@ -195,5 +203,5 @@ dell'utente del 2026-09-23:
 | Cosa | Corse | Tempo |
 |---|---|---|
 | 1 kHz, 20 Hz, senza segnale (17,5–36,5 s simulati) | 117 + 132 + 72 + 9 | 1–15 min l'una, 7 in parallelo |
-| 20 kHz (19 s simulati, TMAX 0,5 µs) | 3 | 6,4–7+ h l'una, coi core contesi |
+| 20 kHz (19 s simulati, TMAX 0,5 µs) | 3 | 6,4 / 6,7 / **11,4 h** (il riferimento mai in mute), coi core contesi |
 | `analizza` in parallelo (`analizza_par.py`) | — | 245 s per la cella da 11 corse; ~2 h per le 87 veloci, con 3 processi e i core pieni |

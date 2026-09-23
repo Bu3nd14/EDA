@@ -36,7 +36,7 @@ sotto e nel report datato in `reports/`.
   - Ogni corsa è verificata sul punto di partenza.
 - **Con la musica regge ovunque.** Guadagno e trim sotto mute, mute da 0,1 a 20 s, inversioni,
   curve A–D della VTL5C4, dispersione dell'LSK489: S ≤ 11 dB, B2 ≤ 21 µV, A del rilascio ≤ 70 µV.
-  20 kHz: VEDI_20K.
+  20 kHz (100 k): S ≤ 6,61 dB, B2 ≤ 27 µV; lo slew di ADR-042 non sposta il verdetto.
 - **Il criterio 3 di ADR-030 è soddisfatto**: il cambio a caldo vale 13,8 / 57 / 69 mV, sotto
   mute 27–116 µV. L36 è giustificato.
 - **Fuori dai 100 µV di A, senza musica**, per una causa sola: il contatto di mute in derivazione,
@@ -58,6 +58,8 @@ sotto e nel report datato in `reports/`.
   - i rail a 0 V esatti fermano la `tran` (discesa a ±1 mV);
   - `$(jobs -r)` in una sottoshell non vede i job (usare `${#jobstates}`);
   - VOSB positivo si **somma** all'offset sistematico.
+- **Non fatto, dichiarato**: il carico da 10 kΩ sulla cella peggiore (tutta la matrice è a
+  100 kΩ). Passa a L29d.
 
 ### L40 — V1 coi modelli del costruttore (2026-09-23)
 
