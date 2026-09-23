@@ -1,0 +1,16 @@
+rampa_alter.cir - sonda L29c: alter @v[pwl] su una sorgente definita DC
+VPP VPLUS 0 DC 15
+R1 VPLUS 0 1k
+.control
+set numdgt=15
+alter @vpp[pwl] = [ 0 0 10m 15 ]
+tran 1m 20m 0 0.1m
+print v(vplus)[0] v(vplus)[5] v(vplus)[10] v(vplus)[20]
+meas tran v5 find v(vplus) at=5m
+meas tran v15 find v(vplus) at=15m
+destroy all
+alter vpp dc = 7
+op
+print v(vplus)
+.endc
+.end

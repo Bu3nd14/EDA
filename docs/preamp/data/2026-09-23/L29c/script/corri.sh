@@ -1,0 +1,68 @@
+#!/bin/zsh
+# corri.sh <dir> <deck> <regex> <npar> : corre le corse di un deck di V2 generato (L29c), quelle
+# la cui colonna FILE del manifesto soddisfa <regex> (grep -E sul nome del .dat, senza .dat), con
+# al piu' <npar> ngspice insieme. Procedura di L29b2: sed @REPO@, dividi.py, una corsa per
+# processo. Il manifesto filtrato (manifest_sel.csv) contiene le righe le cui corse sono
+# richieste; i riferimenti che nominano vanno selezionati anche loro dal regex.
+# Una corsa gia' fatta (.dat non vuoto e riga rc=0 in tempi.txt) non si ripete.
+ROOT=${0:A:h:h:h:h:h:h:h}
+zmodload zsh/parameter
+DIR=$1
+DECK=$2
+RE=$3
+NPAR=${4:-10}
+mkdir -p $DIR
+sed "s|@REPO@|$ROOT|g" $DECK > $DIR/deck.cir
+/usr/bin/python3 $ROOT/docs/preamp/data/2026-09-22/L29b2/pavimento/dividi.py $DIR/deck.cir > $DIR/dividi.txt
+/usr/bin/python3 $ROOT/docs/preamp/data/2026-09-23/L29c/script/seleziona.py $DIR/manifest.csv "$RE" $DIR/manifest_sel.csv $DIR/corse_sel.txt
+cd $DIR
+touch tempi.txt
+corri() {
+  local c=$1 t0=$SECONDS
+  /opt/homebrew/bin/ngspice -b corsa_$c.cir > corsa_$c.log 2>&1
+  local rc=$?
+  # L29c: il 'transient op' puo' finire "successfully" in uno stato sbagliato (OUTA a +13 V):
+  # una corsa che ci e' passata non vale, qualunque rc abbia.
+  if grep -q 'Transient op started' corsa_$c.log; then
+    rc=OPT
+  fi
+  local nota=""
+  if [ "$rc" != "0" ]; then
+    # L29c: il .nodeset aiuta certe corse e ne rompe altre (il riferimento 'sempre' con la
+    # derivazione in curva A si ferma al primo istante). Seconda prova senza, stessa guardia.
+    sed 's/^\.nodeset/* nodeset tolto (seconda prova di corri.sh):/' corsa_$c.cir > corsa_${c}_sn.cir
+    /opt/homebrew/bin/ngspice -b corsa_${c}_sn.cir > corsa_$c.log 2>&1
+    rc=$?
+    if grep -q 'Transient op started' corsa_$c.log; then
+      rc=OPT
+    fi
+    nota=" senza_nodeset"
+  fi
+  if [ "$rc" != "0" ]; then
+    # terza prova: il nodeset esteso ai nodi della derivazione (INA, SELA). Serve al riferimento
+    # 'sempre' con la serie in curva D e la derivazione in curva A: col nodeset si ferma al primo
+    # istante, senza passa dal transient op e parte agganciato (sonde/op/prova_tran.py, ns_ina).
+    sed 's/^\(\.nodeset .*\)$/\1 V(INA)=0 V(SELA)=0/' corsa_$c.cir > corsa_${c}_ne.cir
+    /opt/homebrew/bin/ngspice -b corsa_${c}_ne.cir > corsa_$c.log 2>&1
+    rc=$?
+    if grep -q 'Transient op started' corsa_$c.log; then
+      rc=OPT
+    fi
+    nota=" nodeset_esteso"
+  fi
+  print -r -- "$c rc=$rc $((SECONDS-t0))s $(date +%H:%M:%S)$nota" >> tempi.txt
+}
+for c in $(cat corse_sel.txt); do
+  if [ -s $c.dat ] && grep -q "^$c rc=0 " tempi.txt; then
+    echo "$c: gia' corsa"
+    continue
+  fi
+  # ${#jobstates}, non $(jobs -r | wc -l): la sostituzione gira in una sottoshell che non vede
+  # i job del padre, e la prima versione ha lanciato 117 ngspice insieme (L29c).
+  while (( ${#jobstates} >= NPAR )); do
+    sleep 5
+  done
+  corri $c &
+done
+wait
+echo "fatto: $(wc -l < corse_sel.txt) corse selezionate"

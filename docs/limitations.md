@@ -743,3 +743,32 @@ dopo l'ultimo `destroy all` era il primo sospetto, ed era innocente.
 **Regola operativa**: un deck derivato che toglie istruzioni da un `.control`
 lascia in ogni ramo almeno un'istruzione innocua. Un rc 139 si controlla contando
 le righe della tabella prima di buttare la corsa.
+
+## 33. Il «transient op» di ngspice può finire «successfully» in uno stato sbagliato, e la `tran` parte da lì
+
+Scoperto in L29c (`docs/preamp/data/2026-09-23/L29c/sonde/op/`).
+
+Quando l'op iniziale di una `tran` fallisce dynamic gmin, true gmin e source stepping,
+ngspice 47 ripiega sul **transient op** (una pseudo-transitoria fino al regime). Nel banco
+di L29c, col trim montato, il log dice:
+
+```
+Warning: source stepping failed
+Note: Transient op started
+Note: Transient op finished successfully
+```
+
+e la `tran` parte con OUTA a **+12,97 V** (il blocco A incollato al rail), il jack a
+13,18 V **in continua** dietro un condensatore in serie, e lo stato di un contatto a 0,89
+invece di 1. rc 0, nessuna riga `Error`. La stessa rete in un `op` puro converge per
+source stepping a OUTA −15,45 mV: il percorso verso l'op dentro la `tran` è diverso.
+
+**Rimedio usato**: `option gminsteps=40` nel `.control` cambia il percorso (spice3 gmin,
+poi source stepping, che completa) e la `tran` parte dal punto dell'op puro. È la strada
+verso l'op, non l'accuratezza: il controfattuale di L29c lo prova sulla cella di L40.
+
+**Regola operativa**:
+- un log con «Transient op started» invalida la corsa, qualunque cosa dica dopo:
+  `L29c/script/corri.sh` la registra con rc=OPT;
+- chi introduce elementi comportamentali con conduttanze esponenziali (contatti
+  `pow(10, …)`) legge nel log **da dove** parte la `tran`, non solo se parte.

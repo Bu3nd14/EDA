@@ -86,7 +86,7 @@ ciò che è stato scoperto e non è ancora finito negli altri documenti.
 2. **`AGENTS.md`** — roster degli agenti, gate G1/G2/G3, e le 10 regole
    operative che valgono per tutto il lavoro nel repo.
 3. **`docs/limitations.md`** — **da leggere prima di scrivere qualsiasi
-   codice.** È il file più load-bearing del repo: 18 limitazioni
+   codice.** È il file più load-bearing del repo: 33 limitazioni
    documentate, molte delle quali falliscono in silenzio.
 
 ## Percorsi assoluti

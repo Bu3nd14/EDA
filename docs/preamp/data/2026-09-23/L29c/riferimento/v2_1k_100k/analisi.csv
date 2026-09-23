@@ -1,0 +1,136 @@
+cella,variante,f_hz,amp,gm,rl,grandezza,uscita,picco_V,t_picco_s,finestra_s,esito,nota
+mai_1k_100k,rif,1000,3.818,10,100k,C_pav,MAINJACK,0.0003413,0.988125,,sotto,"pavimento di C a 1.000 s, cond 1"
+mai_1k_100k,rif,1000,3.818,10,100k,C_pav,MAINJACK,0.0003414,8.552125,,sotto,"pavimento di C a 8.500 s, cond 1"
+mai_1k_100k,rif,1000,3.818,10,100k,C_pav,FIXJACK1,3.699e-05,1.129146,,sotto,"pavimento di C a 1.000 s, cond 1"
+mai_1k_100k,rif,1000,3.818,10,100k,C_pav,FIXJACK1,3.698e-05,8.587146,,sotto,"pavimento di C a 8.500 s, cond 1"
+mai_1k_100k,rif,1000,3.818,10,100k,C_pav,FIXJACK2,3.699e-05,1.129146,,sotto,"pavimento di C a 1.000 s, cond 1"
+mai_1k_100k,rif,1000,3.818,10,100k,C_pav,FIXJACK2,3.698e-05,8.587146,,sotto,"pavimento di C a 8.500 s, cond 1"
+sempre_1k_100k,rif,1000,3.818,10,100k,B1,MAINJACK,5.771e-08,10.540167,,sotto,"riferimento sempre in mute, da 0,5 s"
+sempre_1k_100k,rif,1000,3.818,10,100k,B1,FIXJACK1,1.832e-08,0.639167,,sotto,"riferimento sempre in mute, da 0,5 s"
+sempre_1k_100k,rif,1000,3.818,10,100k,B1,FIXJACK2,1.832e-08,16.864167,,sotto,"riferimento sempre in mute, da 0,5 s"
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,A_ins,MAINJACK,12.72,1.000021,2.000,SOPRA,riferimento sempre_1k_100k
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,A_rel,MAINJACK,12.72,8.500021,2.000,SOPRA,riferimento mai_1k_100k
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,B2,MAINJACK,3.297e-07,7.526365,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,C1_ins,MAINJACK,0.00222,2.353927,,SOPRA,"diagnostica, cond 1"
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,C1_rel,MAINJACK,0.001217,12.713354,,SOPRA,"diagnostica, cond 1"
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,C2_ins,MAINJACK,0.00222,2.353927,,SOPRA,"riferimento sempre_1k_100k, cond 1"
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,C2_rel,MAINJACK,0.0009784,12.692677,,sotto,"riferimento mai_1k_100k, cond 1"
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,S_ins,MAINJACK,7.163,6.040000,,sotto,dB in 100 ms sopra -70 dB; pieno 12.02 V da mai_1k_100k
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,S_rel,MAINJACK,5.32,9.437000,,sotto,dB in 100 ms sopra -70 dB; pieno 12.02 V da mai_1k_100k
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,A_ins,FIXJACK1,4.035,1.000021,2.000,SOPRA,riferimento sempre_1k_100k
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,A_rel,FIXJACK1,4.035,8.500021,2.000,SOPRA,riferimento mai_1k_100k
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,B2,FIXJACK1,1.072e-07,7.525365,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,C1_ins,FIXJACK1,0.0006541,2.353927,,sotto,"diagnostica, cond 1"
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,C1_rel,FIXJACK1,0.0003682,12.677354,,sotto,"diagnostica, cond 1"
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,C2_ins,FIXJACK1,0.0006541,2.353927,,sotto,"riferimento sempre_1k_100k, cond 1"
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,C2_rel,FIXJACK1,0.0003392,12.662344,,sotto,"riferimento mai_1k_100k, cond 1"
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,S_ins,FIXJACK1,7.163,6.040000,,sotto,dB in 100 ms sopra -70 dB; pieno 3.815 V da mai_1k_100k
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,S_rel,FIXJACK1,5.32,9.437000,,sotto,dB in 100 ms sopra -70 dB; pieno 3.815 V da mai_1k_100k
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,A_ins,FIXJACK2,4.035,1.000021,2.000,SOPRA,riferimento sempre_1k_100k
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,A_rel,FIXJACK2,4.035,8.500021,2.000,SOPRA,riferimento mai_1k_100k
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,B2,FIXJACK2,1.072e-07,7.525365,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,C1_ins,FIXJACK2,0.0006541,2.353927,,sotto,"diagnostica, cond 1"
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,C1_rel,FIXJACK2,0.0003682,12.677354,,sotto,"diagnostica, cond 1"
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,C2_ins,FIXJACK2,0.0006541,2.353927,,sotto,"riferimento sempre_1k_100k, cond 1"
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,C2_rel,FIXJACK2,0.0003392,12.662344,,sotto,"riferimento mai_1k_100k, cond 1"
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,S_ins,FIXJACK2,7.163,6.040000,,sotto,dB in 100 ms sopra -70 dB; pieno 3.815 V da mai_1k_100k
+ev_1k_100k,ldr_v4_td6,1000,3.818,10,100k,S_rel,FIXJACK2,5.32,9.437000,,sotto,dB in 100 ms sopra -70 dB; pieno 3.815 V da mai_1k_100k
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,A_ins,MAINJACK,0.0001251,7.501458,1.000,SOPRA,riferimento norele_1k_100k
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,A_rel,MAINJACK,6.545e-05,8.500438,2.000,sotto,riferimento norele_1k_100k
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,B2,MAINJACK,3.297e-07,7.526365,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,C1_ins,MAINJACK,6.665e-05,7.500302,,sotto,"diagnostica, cond 1"
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,C1_rel,MAINJACK,5.644e-05,8.500396,,sotto,"diagnostica, cond 1"
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,C2_ins,MAINJACK,6.666e-05,7.500302,,sotto,"riferimento norele_1k_100k, cond 1"
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,C2_rel,MAINJACK,5.651e-05,8.500396,,sotto,"riferimento norele_1k_100k, cond 1"
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,S_ins,MAINJACK,0,,,sotto,dB in 100 ms sopra -70 dB; pieno 12.02 V da norele_1k_100k
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,S_rel,MAINJACK,0,,,sotto,dB in 100 ms sopra -70 dB; pieno 12.02 V da norele_1k_100k
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,A_ins,FIXJACK1,3.973e-05,7.501458,1.000,"sotto, finestra corta: non accetta",riferimento norele_1k_100k
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,A_rel,FIXJACK1,2.076e-05,8.500438,2.000,sotto,riferimento norele_1k_100k
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,B2,FIXJACK1,1.072e-07,7.525365,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,C1_ins,FIXJACK1,2.118e-05,7.500302,,sotto,"diagnostica, cond 1"
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,C1_rel,FIXJACK1,1.794e-05,8.500396,,sotto,"diagnostica, cond 1"
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,C2_ins,FIXJACK1,2.118e-05,7.500302,,sotto,"riferimento norele_1k_100k, cond 1"
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,C2_rel,FIXJACK1,1.797e-05,8.500396,,sotto,"riferimento norele_1k_100k, cond 1"
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,S_ins,FIXJACK1,0,,,sotto,dB in 100 ms sopra -70 dB; pieno 3.815 V da norele_1k_100k
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,S_rel,FIXJACK1,0,,,sotto,dB in 100 ms sopra -70 dB; pieno 3.815 V da norele_1k_100k
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,A_ins,FIXJACK2,3.973e-05,7.501458,1.000,"sotto, finestra corta: non accetta",riferimento norele_1k_100k
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,A_rel,FIXJACK2,2.076e-05,8.500438,2.000,sotto,riferimento norele_1k_100k
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,B2,FIXJACK2,1.072e-07,7.525365,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,C1_ins,FIXJACK2,2.118e-05,7.500302,,sotto,"diagnostica, cond 1"
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,C1_rel,FIXJACK2,1.794e-05,8.500396,,sotto,"diagnostica, cond 1"
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,C2_ins,FIXJACK2,2.118e-05,7.500302,,sotto,"riferimento norele_1k_100k, cond 1"
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,C2_rel,FIXJACK2,1.797e-05,8.500396,,sotto,"riferimento norele_1k_100k, cond 1"
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,S_ins,FIXJACK2,0,,,sotto,dB in 100 ms sopra -70 dB; pieno 3.815 V da norele_1k_100k
+rele_1k_100k,rele_contro_norele,1000,3.818,10,100k,S_rel,FIXJACK2,0,,,sotto,dB in 100 ms sopra -70 dB; pieno 3.815 V da norele_1k_100k
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,A_ins,MAINJACK,12.72,1.000021,2.000,SOPRA,riferimento sempre_1k_100k
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,A_rel,MAINJACK,10.73,7.094010,2.000,SOPRA,riferimento mai_1k_100k
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,B2,MAINJACK,0,5.520000,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,C1_ins,MAINJACK,0.004287,5.502979,,SOPRA,"diagnostica, cond 1"
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,C1_rel,MAINJACK,0.004287,5.502979,,SOPRA,"diagnostica, cond 1"
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,C2_ins,MAINJACK,0.004287,5.502979,,SOPRA,"riferimento sempre_1k_100k, cond 1"
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,C2_rel,MAINJACK,0.004125,5.503010,,SOPRA,"riferimento mai_1k_100k, cond 1"
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,S_ins,MAINJACK,3.035,5.403000,,sotto,dB in 100 ms sopra -70 dB; pieno 12.02 V da mai_1k_100k
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,S_rel,MAINJACK,2.181,7.153000,,sotto,dB in 100 ms sopra -70 dB; pieno 12.02 V da mai_1k_100k
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,A_ins,FIXJACK1,4.035,1.000021,2.000,SOPRA,riferimento sempre_1k_100k
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,A_rel,FIXJACK1,3.405,7.094510,2.000,SOPRA,riferimento mai_1k_100k
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,B2,FIXJACK1,0,5.520000,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,C1_ins,FIXJACK1,0.001359,5.502979,,SOPRA,"diagnostica, cond 1"
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,C1_rel,FIXJACK1,0.001359,5.502979,,SOPRA,"diagnostica, cond 1"
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,C2_ins,FIXJACK1,0.001359,5.502979,,SOPRA,"riferimento sempre_1k_100k, cond 1"
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,C2_rel,FIXJACK1,0.001346,5.502479,,SOPRA,"riferimento mai_1k_100k, cond 1"
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,S_ins,FIXJACK1,3.035,5.403000,,sotto,dB in 100 ms sopra -70 dB; pieno 3.815 V da mai_1k_100k
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,S_rel,FIXJACK1,2.181,7.153000,,sotto,dB in 100 ms sopra -70 dB; pieno 3.815 V da mai_1k_100k
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,A_ins,FIXJACK2,4.035,1.000021,2.000,SOPRA,riferimento sempre_1k_100k
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,A_rel,FIXJACK2,3.405,7.094510,2.000,SOPRA,riferimento mai_1k_100k
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,B2,FIXJACK2,0,5.520000,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,C1_ins,FIXJACK2,0.001359,5.502979,,SOPRA,"diagnostica, cond 1"
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,C1_rel,FIXJACK2,0.001359,5.502979,,SOPRA,"diagnostica, cond 1"
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,C2_ins,FIXJACK2,0.001359,5.502979,,SOPRA,"riferimento sempre_1k_100k, cond 1"
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,C2_rel,FIXJACK2,0.001346,5.502479,,SOPRA,"riferimento mai_1k_100k, cond 1"
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,S_ins,FIXJACK2,3.035,5.403000,,sotto,dB in 100 ms sopra -70 dB; pieno 3.815 V da mai_1k_100k
+inv_1k_100k,inversione_d75,1000,3.818,10,100k,S_rel,FIXJACK2,2.181,7.153000,,sotto,dB in 100 ms sopra -70 dB; pieno 3.815 V da mai_1k_100k
+pav_ev0_1k_100k,pavimento,1000,3.818,10,100k,A_pav,MAINJACK,7.065e-05,1.000698,2.000,sotto,contro ev_1k_100k
+pav_ev0_1k_100k,pavimento,1000,3.818,10,100k,C2_pav,MAINJACK,1.47e-05,1.191760,,sotto,"pavimento di C2 contro ev_1k_100k, cond 1"
+pav_ev0_1k_100k,pavimento,1000,3.818,10,100k,A_pav,FIXJACK1,1.806e-05,1.000031,2.000,sotto,contro ev_1k_100k
+pav_ev0_1k_100k,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK1,1.844e-06,1.162760,,sotto,"pavimento di C2 contro ev_1k_100k, cond 1"
+pav_ev0_1k_100k,pavimento,1000,3.818,10,100k,A_pav,FIXJACK2,1.806e-05,1.000031,2.000,sotto,contro ev_1k_100k
+pav_ev0_1k_100k,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK2,1.844e-06,1.162760,,sotto,"pavimento di C2 contro ev_1k_100k, cond 1"
+pav_ev1_1k_100k,pavimento,1000,3.818,10,100k,A_pav,MAINJACK,2.454e-06,8.500604,2.000,sotto,contro ev_1k_100k
+pav_ev1_1k_100k,pavimento,1000,3.818,10,100k,C2_pav,MAINJACK,8.369e-07,7.500021,,sotto,"pavimento di C2 contro ev_1k_100k, cond 1"
+pav_ev1_1k_100k,pavimento,1000,3.818,10,100k,A_pav,FIXJACK1,7.128e-07,8.500604,2.000,sotto,contro ev_1k_100k
+pav_ev1_1k_100k,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK1,2.367e-07,7.500021,,sotto,"pavimento di C2 contro ev_1k_100k, cond 1"
+pav_ev1_1k_100k,pavimento,1000,3.818,10,100k,A_pav,FIXJACK2,7.128e-07,8.500604,2.000,sotto,contro ev_1k_100k
+pav_ev1_1k_100k,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK2,2.367e-07,7.500021,,sotto,"pavimento di C2 contro ev_1k_100k, cond 1"
+pav_ev2_1k_100k,pavimento,1000,3.818,10,100k,A_pav,MAINJACK,8.241e-06,10.499760,2.000,sotto,contro ev_1k_100k
+pav_ev2_1k_100k,pavimento,1000,3.818,10,100k,C2_pav,MAINJACK,2.443e-06,8.500604,,sotto,"pavimento di C2 contro ev_1k_100k, cond 1"
+pav_ev2_1k_100k,pavimento,1000,3.818,10,100k,A_pav,FIXJACK1,2.62e-06,10.499760,2.000,sotto,contro ev_1k_100k
+pav_ev2_1k_100k,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK1,7.095e-07,8.500604,,sotto,"pavimento di C2 contro ev_1k_100k, cond 1"
+pav_ev2_1k_100k,pavimento,1000,3.818,10,100k,A_pav,FIXJACK2,2.62e-06,10.499760,2.000,sotto,contro ev_1k_100k
+pav_ev2_1k_100k,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK2,7.095e-07,8.500604,,sotto,"pavimento di C2 contro ev_1k_100k, cond 1"
+pav_inv_1k_100k,pavimento,1000,3.818,10,100k,A_pav,MAINJACK,2.791e-05,7.091323,2.000,sotto,contro inv_1k_100k
+pav_inv_1k_100k,pavimento,1000,3.818,10,100k,C2_pav,MAINJACK,5.442e-06,5.668250,,sotto,"pavimento di C2 contro inv_1k_100k, cond 1"
+pav_inv_1k_100k,pavimento,1000,3.818,10,100k,A_pav,FIXJACK1,9.333e-06,7.091323,2.000,sotto,contro inv_1k_100k
+pav_inv_1k_100k,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK1,2.461e-06,5.668250,,sotto,"pavimento di C2 contro inv_1k_100k, cond 1"
+pav_inv_1k_100k,pavimento,1000,3.818,10,100k,A_pav,FIXJACK2,9.333e-06,7.091323,2.000,sotto,contro inv_1k_100k
+pav_inv_1k_100k,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK2,2.461e-06,5.668250,,sotto,"pavimento di C2 contro inv_1k_100k, cond 1"
+lzsempre_100k,rif,1000,0,10,100k,B1,MAINJACK,7.637e-14,2.700781,,sotto,"riferimento sempre in mute, da 0,5 s"
+lzsempre_100k,rif,1000,0,10,100k,B1,FIXJACK1,2.319e-14,11.710823,,sotto,"riferimento sempre in mute, da 0,5 s"
+lzsempre_100k,rif,1000,0,10,100k,B1,FIXJACK2,2.293e-14,11.296500,,sotto,"riferimento sempre in mute, da 0,5 s"
+lzev_100k,ldr_v4_td6,1000,0,10,100k,A_ins,MAINJACK,1.306e-08,2.362406,2.000,sotto,riferimento lzsempre_100k
+lzev_100k,ldr_v4_td6,1000,0,10,100k,A_rel,MAINJACK,3.189e-08,9.823187,2.000,sotto,riferimento lzmai_100k
+lzev_100k,ldr_v4_td6,1000,0,10,100k,B2,MAINJACK,9.828e-09,7.520000,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+lzev_100k,ldr_v4_td6,1000,0,10,100k,A_ins,FIXJACK1,4.149e-09,2.362469,2.000,sotto,riferimento lzsempre_100k
+lzev_100k,ldr_v4_td6,1000,0,10,100k,A_rel,FIXJACK1,1.011e-08,9.823323,2.000,sotto,riferimento lzmai_100k
+lzev_100k,ldr_v4_td6,1000,0,10,100k,B2,FIXJACK1,7.578e-09,7.520000,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+lzev_100k,ldr_v4_td6,1000,0,10,100k,A_ins,FIXJACK2,4.145e-09,2.362406,2.000,sotto,riferimento lzsempre_100k
+lzev_100k,ldr_v4_td6,1000,0,10,100k,A_rel,FIXJACK2,1.011e-08,9.823198,2.000,sotto,riferimento lzmai_100k
+lzev_100k,ldr_v4_td6,1000,0,10,100k,B2,FIXJACK2,7.578e-09,7.520000,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+lzinv_100k,inversione_d75,1000,0,10,100k,A_ins,MAINJACK,1.306e-08,2.362406,2.000,sotto,riferimento lzsempre_100k
+lzinv_100k,inversione_d75,1000,0,10,100k,A_rel,MAINJACK,3.748e-06,5.500031,2.000,sotto,riferimento lzmai_100k
+lzinv_100k,inversione_d75,1000,0,10,100k,B2,MAINJACK,0,5.520000,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+lzinv_100k,inversione_d75,1000,0,10,100k,A_ins,FIXJACK1,4.149e-09,2.362469,2.000,sotto,riferimento lzsempre_100k
+lzinv_100k,inversione_d75,1000,0,10,100k,A_rel,FIXJACK1,1.173e-06,5.500031,2.000,sotto,riferimento lzmai_100k
+lzinv_100k,inversione_d75,1000,0,10,100k,B2,FIXJACK1,0,5.520000,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+lzinv_100k,inversione_d75,1000,0,10,100k,A_ins,FIXJACK2,4.145e-09,2.362406,2.000,sotto,riferimento lzsempre_100k
+lzinv_100k,inversione_d75,1000,0,10,100k,A_rel,FIXJACK2,1.173e-06,5.500031,2.000,sotto,riferimento lzmai_100k
+lzinv_100k,inversione_d75,1000,0,10,100k,B2,FIXJACK2,0,5.520000,,sotto,mute da t_ins+t_grad+20 ms a t_rel
