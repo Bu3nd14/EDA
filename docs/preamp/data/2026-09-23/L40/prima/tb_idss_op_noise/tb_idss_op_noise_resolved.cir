@@ -1,0 +1,280 @@
+tb_idss_op_noise.cir - L20: the gain block at five I_DSS of its input JFET, operating point, common-mode range and noise
+* First line is a title (docs/limitations.md #10).
+*
+* WHY (L20, NC-013, ADR-031). The vendor model of the input JFET describes a
+* low-I_DSS corner part (2.593 mA at V_DG = 15 V, 25 C) and the part the source
+* names is the B grade, 8.0 / 11.5 / 15.0 mA. This deck measures how much the
+* gain block depends on I_DSS: operating point, common-mode range at the E6
+* peak, and output noise (E5) in the five configurations of
+* tb_noise_breakdown.cir. No value of the circuit changes.
+*
+* THE MODELS. The input pair here is LSK489A, the vendor model of
+* models/jfet/lsk489.lib, included untouched, and it has 1/f noise (Kf =
+* 0.0009f, Af = 1). The mirror LS352 is the vendor model of
+* models/bjt_pnp/ls350.lib, without KF. Since L39 (NC-017) every other device
+* is a vendor model of models/ too (MMBT5551, MMBT5401, Qmje15032, Qmje15033,
+* D1N914), none with KF; until L39 they were the hand-written models of
+* placeholder_devices.lib. So every noise figure here is a FLOOR WITHOUT
+* FLICKER for every device but the input pair.
+*
+* THE BLOCK is the generated spice/preamp/gain_block_flat.inc. Until L39 it was
+* a copy derived by scripts/derive_jfet_variant.py with LSK489A on its two JFET
+* lines; since L39 the generated block names LSK489A itself, and the derivation
+* is retired.
+*
+* VARIANTS, via `altermod` inside .control on the vendor model, in this order.
+* The Vto are the declared values of
+* docs/preamp/data/2026-09-15/L20/esplorazione/vto_dichiarati.csv (Beta
+* unchanged, as NC-013 prescribes); I_DSS below at V_DG = 15 V, 25 C:
+*   a_come_e        as published, Vto -1.130 V           I_DSS  2.593 mA
+*   a_come_e_kf0    the same with kf = 0: what the JFET's 1/f adds
+*   a_tip           Vto -1.696 V, kf restored            I_DSS  5.503 mA
+*   b_min           Vto -2.086 V                         I_DSS  8.005 mA
+*   b_tip           Vto -2.557 V                         I_DSS 11.499 mA
+*   b_max           Vto -2.976 V                         I_DSS 14.997 mA
+*   a_ripristinato  Vto -1.130 V, kf restored: must equal a_come_e in every
+*                   cell, which proves the altermods above are undone
+*   xa              every parameter set to those of the hand-written model the
+*                   generated block names: the POSITIVE CONTROL. It must print
+*                   the 82 values of docs/preamp/data/2026-09-14/L27/dopo/tb_op/
+*                   and the five noise totals of .../L27/dopo/tb_noise_breakdown/.
+*
+* THE PROBE. JPRB is a JFET on the same model, on nodes of its own (PRBD, PRBG:
+* not in the block, #24), at V_DS = 15 V and V_GS = 0. Its current, at the
+* deck's 27 C, is the I_DSS the block really simulates in that variant: it must
+* equal the 27 C column of vto_dichiarati.csv. A wrong model name in `altermod`
+* prints one Error line and changes nothing (L20 step 0), so the log must also
+* contain no line with "Error". The circuit runs at 27 C like every deck of the
+* repo; the datasheet's 25 C is in tb_idss_jfet.cir.
+*
+* SOURCE AND CONTACTS as tb_noise_breakdown.cir; the operating point is taken
+* at 0 dB with 430 ohm of source. The xa operating point is compared with
+* tb_op.cir, which drives IN directly: the gate current of JQ110A (~9.7 pA)
+* through 430 ohm lifts IN and G1 by ~4.2 nV. The verifier of L20 predicts that
+* shift and subtracts it; every other node agrees within 1 ppm.
+*
+* OUTPUTS
+*   tb_idss_op_noise_op.csv       echo, one row per variant (no wrdata uses
+*                                 the name, #25). V, A, S
+*   tb_idss_op_noise_rumore.csv   echo, onoise_total / inoise_total per
+*                                 variant and configuration, V RMS 20 Hz-20 kHz
+*   tb_idss_op_noise_cm_<var>     wrdata, VSRC from -3.82 to +3.82 V at 0 dB:
+*                                 col1 v(d1n), col3 v(g1), col5 v(d2n),
+*                                 col7 v(g2), col9 v(src), col11 v(nte),
+*                                 col13 v(out); even columns = the swept VSRC
+*   tb_idss_op_noise_d_<var>      wrdata, configuration D (+10 dB, 2.5 k):
+*                                 col1 onoise_spectrum, col3 inoise_spectrum
+*                                 [V/sqrt(Hz)]; even columns = frequency
+
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/diodes/1n4148.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VSRC SRCN 0 DC 0 AC 1
+RSRC SRCN IN 430
+
+CSTRAY   RG   0 15p
+RRG      RG   0 1G
+CSTRAY10 RG10 0 15p
+RRG10    RG10 0 1G
+
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+
+VPRBD PRBD 0 DC 15
+VPRBG PRBG 0 DC 0
+JPRB  PRBD PRBG 0 LSK489A
+
+.control
+set t = .txt
+echo "var,vto_v,kf,idss_probe_27c_a,id_a,id_b,vgs_a,vgs_b,gm_a,gm_b,ig_a,ig_b,vds_a,vds_b,ic_q106,vce_q106,ic_q117,ic_q118,v_ncasc,ic_q122,ic_q125,ic_q132,ic_q133,v_src,v_out,i_vpp,i_vmm" > tb_idss_op_noise_op.csv
+echo "var,cfg,onoise_total_v,inoise_total_v" > tb_idss_op_noise_rumore.csv
+foreach v 1 2 3 4 5 6 7 8
+  if $v = 1
+    set lbl = "A_come_e"
+    set vto = "-1.130"
+    set kf = "9e-19"
+  end
+  if $v = 2
+    set lbl = "A_come_e_kf0"
+    set vto = "-1.130"
+    set kf = "0"
+    altermod lsk489a kf = 0
+  end
+  if $v = 3
+    set lbl = "A_tip"
+    set vto = "-1.696"
+    set kf = "9e-19"
+    altermod lsk489a vto = -1.696
+    altermod lsk489a kf = 9e-19
+  end
+  if $v = 4
+    set lbl = "B_min"
+    set vto = "-2.086"
+    set kf = "9e-19"
+    altermod lsk489a vto = -2.086
+    altermod lsk489a kf = 9e-19
+  end
+  if $v = 5
+    set lbl = "B_tip"
+    set vto = "-2.557"
+    set kf = "9e-19"
+    altermod lsk489a vto = -2.557
+    altermod lsk489a kf = 9e-19
+  end
+  if $v = 6
+    set lbl = "B_max"
+    set vto = "-2.976"
+    set kf = "9e-19"
+    altermod lsk489a vto = -2.976
+    altermod lsk489a kf = 9e-19
+  end
+  if $v = 7
+    set lbl = "A_ripristinato"
+    set vto = "-1.130"
+    set kf = "9e-19"
+    altermod lsk489a vto = -1.13
+    altermod lsk489a kf = 9e-19
+  end
+  if $v = 8
+    set lbl = "Xa"
+    set vto = "-1.500"
+    set kf = "0"
+    altermod lsk489a vto = -1.5
+    altermod lsk489a beta = 2.0e-3
+    altermod lsk489a lambda = 0.010
+    altermod lsk489a is = 1e-14
+    altermod lsk489a rd = 10
+    altermod lsk489a rs = 10
+    altermod lsk489a cgs = 2.9e-12
+    altermod lsk489a cgd = 1.1e-12
+    altermod lsk489a pb = 0.8
+    altermod lsk489a fc = 0.5
+    altermod lsk489a kf = 0
+    altermod lsk489a af = 1
+    altermod lsk489a betatce = 0
+    altermod lsk489a vtotc = 0
+    altermod lsk489a nlev = 0
+    altermod lsk489a gdsnoi = 1
+  end
+  echo "=== variant $lbl: the model the block and the probe simulate ==="
+  showmod jprb : vto beta lambda is rd rs cgs cgd pb fc kf af betatce vtotc nlev gdsnoi
+
+* --- operating point, 0 dB, source 430 ohm -------------------------------
+  alter rrg = 1G
+  alter rrg10 = 1G
+  alter rsrc = 430
+  op
+  let ipr = abs(i(vprbd))
+  let ida = @jq110a[id]
+  let idb = @jq110b[id]
+  let vgsa = @jq110a[vgs]
+  let vgsb = @jq110b[vgs]
+  let gma = @jq110a[gm]
+  let gmb = @jq110b[gm]
+  let iga = @jq110a[ig]
+  let igb = @jq110b[ig]
+  let vdsa = v(d1n) - v(s1)
+  let vdsb = v(d2n) - v(s2)
+  let ic106 = @q106[ic]
+  let vce106 = v(src) - v(nte)
+  let ic117 = @q117[ic]
+  let ic118 = @q118[ic]
+  let vncasc = v(ncasc)
+  let ic122 = @q122[ic]
+  let ic125 = @q125[ic]
+  let ic132 = @q132[ic]
+  let ic133 = @q133[ic]
+  let vsrc0 = v(src)
+  let vout0 = v(out)
+  let ivpp = i(vpp)
+  let ivmm = i(vmm)
+  print ipr ida idb vgsa vgsb gma gmb vout0
+  echo "$lbl,$vto,$kf,$&ipr,$&ida,$&idb,$&vgsa,$&vgsb,$&gma,$&gmb,$&iga,$&igb,$&vdsa,$&vdsb,$&ic106,$&vce106,$&ic117,$&ic118,$&vncasc,$&ic122,$&ic125,$&ic132,$&ic133,$&vsrc0,$&vout0,$&ivpp,$&ivmm" >> tb_idss_op_noise_op.csv
+  if $v = 8
+    echo "=== XA: THE PRINTS OF tb_op.cir ==="
+    print v(IN) v(FB) v(OUT) v(JACK) v(NREF) v(NREFM) v(NCASC) v(SRC)
+    print v(G1) v(G2) v(S1) v(S2) v(D1N) v(D2N) v(NMIRI) v(NHI)
+    print v(NX) v(NY) v(NBB) v(NBN) v(NBP) v(NEN) v(NEP) v(NVE) v(NVLE) v(NTE)
+    print @jq110a[id]
+    print @jq110b[id]
+    print @jq110a[vgs]
+    print @jq110b[vgs]
+    print @jq110a[gm]
+    print @jq110b[gm]
+    print i(VPP) i(VMM)
+    print @q106[ic] @q106[ib] @q106[vbe] @q106[vbc]
+    print @q117[ic] @q117[ib] @q117[vbe] @q117[vbc]
+    print @q118[ic] @q118[ib] @q118[vbe] @q118[vbc]
+    print @q121A[ic] @q121A[ib] @q121A[vbe] @q121A[vbc]
+    print @q121B[ic] @q121B[ib] @q121B[vbe] @q121B[vbc]
+    print @q122[ic] @q122[ib] @q122[vbe] @q122[vbc]
+    print @q125[ic] @q125[ib] @q125[vbe] @q125[vbc]
+    print @q127[ic] @q127[ib] @q127[vbe] @q127[vbc]
+    print @q132[ic] @q132[ib] @q132[vbe] @q132[vbc]
+    print @q133[ic] @q133[ib] @q133[vbe] @q133[vbc]
+    print @riso[i] @r136[i] @r134[i] @r135[i] @r107[i] @r123[i] @r126[i]
+    echo "=== XA: END ==="
+  end
+  destroy all
+
+* --- common-mode range: 0 dB, the input swept to the E6 peak --------------
+  dc VSRC -3.82 3.82 20m
+  wrdata tb_idss_op_noise_cm_$lbl$t v(d1n) v(g1) v(d2n) v(g2) v(src) v(nte) v(out)
+  destroy all
+
+* --- noise: the five configurations of tb_noise_breakdown.cir ------------
+  foreach cfg 1 2 3 4 5
+    if $cfg = 1
+      alter rrg = 1G
+      alter rrg10 = 1G
+      alter rsrc = 1
+      set clbl = "a_0db_1r"
+    end
+    if $cfg = 2
+      alter rrg = 1G
+      alter rrg10 = 1G
+      alter rsrc = 430
+      set clbl = "b_0db_430r"
+    end
+    if $cfg = 3
+      alter rrg = 1G
+      alter rrg10 = 1G
+      alter rsrc = 2500
+      set clbl = "c_0db_2500r"
+    end
+    if $cfg = 4
+      alter rrg = 0.1
+      alter rrg10 = 0.1
+      alter rsrc = 2500
+      set clbl = "d_10db_2500r"
+    end
+    if $cfg = 5
+      alter rrg = 0.1
+      alter rrg10 = 1G
+      alter rsrc = 2500
+      set clbl = "e_3db_2500r"
+    end
+    noise v(JACK) VSRC dec 100 20 20000 1
+    setplot noise1
+    if $cfg = 4
+      wrdata tb_idss_op_noise_d_$lbl$t onoise_spectrum inoise_spectrum
+    end
+    setplot noise2
+    print onoise_total inoise_total
+    echo "$lbl,$clbl,$&onoise_total,$&inoise_total" >> tb_idss_op_noise_rumore.csv
+    destroy all
+  end
+end
+.endc
+
+.end

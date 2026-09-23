@@ -10,17 +10,57 @@ realtà, il progetto non è ripartibile.
 
 | | |
 |---|---|
-| Ultimo aggiornamento | **2026-09-22** |
-| Ultimo lotto chiuso | **L39** — Fase 4: i sette modelli del costruttore nel sorgente e nei 25 deck; nel blocco generato cambiano solo i nomi dei modelli. Regressione prima/dopo: E2–E5, V3, P7, classe A e V2 reggono; **V1 cade** su ogni istanza a guadagno unitario (blocco B 0 dB **55,55°**, blocco A 57,93°, buffer 54,92°) → **NC-034**; la corrente di riposo d'uscita sale da 14,6 a **20,4 mA** → **NC-035**. **Chiude NC-017** (su T7, decisione dell'utente). Report `reports/2026-09-22-L39-modelli-costruttore.md`. Prima: **L29b2** |
-| **Prossimo lotto** | **L40 — V1 coi modelli del costruttore**, nella direzione data dall'utente il 2026-09-22: margine di fase prima della banda (Miller più grande), o guadagno minimo fino a +1,5 dB; con la corrente di riposo (NC-035). Poi **L29c**. Prompt in `NEXT-SESSION.md` |
-| Non conformità | **14 aperte, 3 bloccanti** |
-| Le bloccanti | NC-004 · NC-028 (L29c) · NC-034 (L40) |
+| Ultimo aggiornamento | **2026-09-23** |
+| Ultimo lotto chiuso | **L40** — V1 coi modelli del costruttore. Causa separata: la caduta è la **CJE dei MJE** (NC-025), non i MMBT. **ADR-042** (decisione dell'utente): Miller C124 da 470 pF a **1 nF**, corrente di riposo tenuta a **~20,3 mA** (R128 1,69 kΩ). V1 ≥ **62,08°** su ogni istanza e nel gruppo B; regressione di L39 rifatta, regge. Prezzo dichiarato: slew −1,68 V/µs, PSRR+ −6,5 dB (limiti per tono di ADR-020 ricalcolati), banda 912 kHz. **Chiude NC-034 e NC-035.** Report `reports/2026-09-23-L40-v1-costruttore.md`. Prima: **L39** |
+| **Prossimo lotto** | **L29c — il caso peggiore di V2 col mute reale** (NC-028), sul circuito di ADR-042. Poi **L36**. Prompt in `NEXT-SESSION.md` |
+| Non conformità | **12 aperte, 2 bloccanti** |
+| Le bloccanti | NC-004 · NC-028 (L29c) |
 | Suite | `run_tests.sh` **10 passed / 0 failed** a fine L39 (2026-09-22), eseguita dal worktree; il blocco **2i** è ora `check_no_placeholders.py`; `validate_models.py` 48/48 |
 
 ## Diario degli ultimi lotti
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L40 — V1 coi modelli del costruttore (2026-09-23)
+
+**Chiude NC-034 e NC-035; aggiorna NC-025 e NC-029.** ADR nuova: **ADR-042**. Report:
+`reports/2026-09-23-L40-v1-costruttore.md`. Dati: `data/2026-09-23/L40/` (README).
+
+- **La causa della caduta**, separata una famiglia e poi una grandezza alla volta
+  sulla cella del minimo:
+  - la sola **CJE/CJC dei MJE** (3,06 nF invece dei 300 pF del segnaposto) vale da
+    55,55 a 62,49°: è la f_T bassa di NC-025;
+  - MMBT, JFET, diodo, TF e VAF pesano meno di 1,1°;
+  - i controlli ridanno L39/prima (61,80°) e L39/dopo (55,55°).
+- **La corrente** si abbassa con R128: 1,33 kΩ (E96) ridà 14,6 mA, ma **toglie** 1,3°
+  di V1.
+- **Le due strade misurate**, sulle tre istanze a guadagno unitario:
+  - **(a) Miller**: 1 nF dà 62,08° (61,57 a 14,6 mA), 820 p nessun margine;
+  - **(b) guadagno minimo +1,5 dB** con una gamba fissa: da sola non basta
+    (59,11° sul buffer), perché lo zero di C_f riporta a 1 il guadagno di rumore.
+    Con C_f 220 p e Miller 560 p fa 63,11°, ma cambia E1 e le uscite fisse.
+- **Decisione dell'utente → ADR-042**: C124 **1 nF**, R128 invariato a 1,69 kΩ, cioè
+  **~20,3 mA** come corrente di progetto (la raccomandazione era 1,33 kΩ).
+- **Sorgente e blocco**: una riga del blocco SPICE (`C124 … 1n`); commenti ADR-042
+  su C124, R128 e sulle frasi «15 mA». Blocco «SIMULATED RESULTS» aggiornato.
+- **Regressione di L39 rifatta**, prima (470 p) e dopo (1 nF), 21 deck più la cella
+  V2 (rc 0 ovunque, nessuna riga `Error`):
+  - **V1**: 62,08 / 76,20 / 96,66° sul blocco B, 67,68° sul blocco A, 63,21° sul buffer;
+  - **gruppo B su tutte e tre le istanze** (ADR-031): dispersione ≤ 0,16°;
+  - E2–E5, E3, E4, V3, P7, classe A, V2 dei relè: reggono, punto di lavoro identico;
+  - V2 del mute: S 7,163 / 5,32 dB, A ≤ 3,75 µV, come prima; C_pav 0,27 → 0,34 mV.
+- **Il prezzo, in ADR-042**:
+  - slew in discesa da −3,40 a −1,68 V/µs: 20 kHz a 12 V di picco comincia a
+    entrare in slew, con 0,57 V di continua;
+  - PSRR+ −6,5 dB fra 1 e 20 kHz. I **limiti per tono di ADR-020** sono ricalcolati
+    in `REQUIREMENTS.md`: 10 kHz 14,2 µV, rumore bianco ≤ 87 nV/√Hz;
+  - banda a 0 dB 912 kHz; recupero di V3 3,03 µs.
+- **Trappole**:
+  - un corpo di `if` vuoto fa uscire ngspice con 139 (**limitations #32**);
+  - in `tb_ac.cir` `fhi`/`flo` hanno i nomi scambiati (report §6).
+
+Suite ****10 passed / 0 failed****. **12 voci aperte, 2 bloccanti.** Prossimo: **L29c**.
 
 ### L39 — i modelli del costruttore nel progetto (2026-09-22)
 
@@ -1205,8 +1245,8 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L29b | **Il mute graduale a monte con LDR: il modello e la misura** (diviso due volte: il caso peggiore è L29c, il sorgente è L29b2; tecnica cambiata in corsa, **ADR-037 → ADR-038**). Modello VTL5C4 comportamentale verificato contro i punti del datasheet e corretto nel generatore; `validate_models.py` 48/48; scratch sulla catena col metodo di V2, tre profili del comando dei LED, relè a 1 e 20 kHz, carico sulla sorgente, pavimento di C2 con le LDR | M/L | NC-028 | **fatto** — profilo **v3, Td 6 s**: C2 d'inserzione 2,56 / 0,62 mV (principale / fisse), A, B, relè ed E3 nei limiti; **rilascio non decidibile** (pavimento numerico 4,6–7,2 mV con le LDR attive); NC-028 resta aperta e bloccante |
 | L29b2 | **Il mute LDR nel sorgente, e il taglio giudicato sul salto di livello.** Pavimento di C2 con le LDR attribuito a `wrdata` (limitations #30); v3 decisa; C ≤ 1 mV dimostrata non soddisfacibile (simulatore veloce tarato su ngspice); **ADR-040** (S ≤ 20 dB in 100 ms, dall'utente; C2 diagnostica; S in `v2_metodo.py`); profilo **v4**; LDR nel sorgente (**ADR-039**), J3; 2e/2f/2g estesi e fatti fallire; `tb_e3_e5_ldr.cir` (E3, E5, accoppiamento LED–cella); P7 riletto; deck versionato `tb_v2_mute_ldr.cir` generato, matrice v4 | M/L | NC-028 | **fatto** — v4: S ≤ 7,2 dB a 20 Hz e 1 kHz, S ≤ 6,6 dB a 20 kHz (100 kΩ); A ≤ 3,9 µV, B2 ≤ 10 µV; E3 ≥ 111,6 kΩ, E5 ≤ 4,957 µV; NC-028 resta aperta e bloccante (manca L29c) |
 | L39 | **Fase 4 — i modelli del costruttore nel progetto** (decisione dell'utente del 2026-09-22: **prima di L29c**, perché il caso peggiore dipende dai modelli). I sette modelli sono già in `models/` da L25; si sostituiscono i segnaposto di `spice/preamp/placeholder_devices.lib` (LSK489X, NSS2N5551, PSS2N5401, PTHAT320, NMJE15032, PMJE15033, D1N4148) dal **sorgente** (`gain_block.py` / `spice_export.py`, blocco generato e derivato), poi si rimisura: punto di lavoro e classe A, V1 (margine di fase, ADR-019), E2–E5, V3, P7, l'offset del blocco B di ADR-030, il fondo di distorsione di C2. Ogni cifra che cambia oltre la sua soglia apre o aggiorna una NC. Se non entra, si divide (sostituzione e regressione, poi il resto) | M/L | **NC-017**, NC-004 (in parte: nessun modello ha il rumore 1/f) | **fatto** — sostituzione completa, blocco generato cambiato solo nei nomi dei modelli; E2–E5, V3, P7, classe A e V2 reggono; **V1 cade** a guadagno unitario (NC-034) e la corrente di riposo sale del 40 % (NC-035); chiude NC-017 |
-| L40 | **V1 coi modelli del costruttore** (NC-034), nella direzione dell'utente del 2026-09-22: margine di fase prima della banda, cioè banda ridotta (il Miller C124: 820 pF dà 60,70° sul blocco B, esplorazione di L39) **o** guadagno minimo fino a +1,5 dB. Una ADR che scelga; V1 ≥ 60° su blocco A, blocco B nei tre modi e buffer; separare la quota della f_T dei MJE (NC-025). Insieme la corrente di riposo (NC-035): tenere ~15 mA con un valore nuovo del moltiplicatore o accettare ~20 mA con una ADR. Poi la regressione di L39 rifatta | M | **NC-034**, NC-035, NC-025 | da fare — **prossimo** |
-| L29c | **Il caso peggiore di V2 col mute reale**, col profilo v4 e il criterio **S** di ADR-040 (C2 diagnostica). Passaggi di guadagno 0↔+3, +3↔+10, 0↔+10 dB e **criterio 3 di ADR-030** (cambio a caldo contro cambio sotto mute seguito dal rilascio: da cui dipende **L36**); trim nelle tre posizioni; dispersione LSK489 fino a ±20 mV in più posizioni dell'attenuatore; mute breve e ≥ 2 s; **accensione e spegnimento** con le rampe dei rail. Chiude NC-028 se tutto regge | M/L | NC-028 | da fare — **dopo L40** (V1 coi modelli del costruttore). Le corse a 20 kHz (TMAX 0,5 µs) valgono circa 4 ore l'una, con 7 in parallelo su 10 core (misurato in L29b2): pianificarle prima. Bozza del mandato: `data/2026-09-22/L29b2/bozza_prompt_L29c.md` |
+| L40 | **V1 coi modelli del costruttore** (NC-034), nella direzione dell'utente del 2026-09-22: margine di fase prima della banda, cioè banda ridotta (il Miller C124: 820 pF dà 60,70° sul blocco B, esplorazione di L39) **o** guadagno minimo fino a +1,5 dB. Una ADR che scelga; V1 ≥ 60° su blocco A, blocco B nei tre modi e buffer; separare la quota della f_T dei MJE (NC-025). Insieme la corrente di riposo (NC-035): tenere ~15 mA con un valore nuovo del moltiplicatore o accettare ~20 mA con una ADR. Poi la regressione di L39 rifatta | M | **NC-034**, NC-035, NC-025 | **fatto** — causa: CJE dei MJE; **ADR-042**: Miller 1 nF, I_q ~20,3 mA tenuta; V1 ≥ 62,08° ovunque, regressione regge; chiude NC-034 e NC-035 |
+| L29c | **Il caso peggiore di V2 col mute reale**, col profilo v4 e il criterio **S** di ADR-040 (C2 diagnostica). Passaggi di guadagno 0↔+3, +3↔+10, 0↔+10 dB e **criterio 3 di ADR-030** (cambio a caldo contro cambio sotto mute seguito dal rilascio: da cui dipende **L36**); trim nelle tre posizioni; dispersione LSK489 fino a ±20 mV in più posizioni dell'attenuatore; mute breve e ≥ 2 s; **accensione e spegnimento** con le rampe dei rail. Chiude NC-028 se tutto regge | M/L | NC-028 | da fare — **prossimo** (L40 fatto: circuito di ADR-042). Le corse a 20 kHz (TMAX 0,5 µs) valgono circa 4 ore l'una, con 7 in parallelo su 10 core (misurato in L29b2): pianificarle prima. Mandato in `NEXT-SESSION.md` |
 | L30 | **Il calore del telaio con otto blocchi.** A riposo la scheda audio dissipa 6,45 W (0,806 W per blocco, L17) contro i 3-4 W che P5 prevede per l'apparecchio intero. Stima termica del telaio con l'alimentatore; poi o P5 aggiornato al numero vero, o ventilazione e montaggio progettati con una ADR, o ADR-021 riaperta se i 60 °C non reggono. Va col lotto dell'alimentatore | S | NC-029 | da fare |
 | L31 | **I vettori di rumore di `tb_noise_vectors.cir`.** Il deck cita `onoise_q123`, `onoise_r121`, `onoise_jq110`, `onoise_jq111`, dispositivi che non esistono più; il `wrdata` si ferma e non scrive niente, con rc 0. Rinominarli dall'include generato ed estendere `check_deck_refs.py` ai nomi `onoise_*`/`inoise_*`, facendolo fallire sul deck di oggi | XS | NC-030 | **fatto** — 2g esteso e fatto cadere (4 nomi morti), mappa per nodi (tre nomi vivi erano già sbagliati), quadratura = spettro |
 | L32 | **Il dossier rigenerato sui dati di oggi. Subito dopo L16.** `build_dossier.py` legge ancora `data/2026-09-09`: THAT320, C_f 22 pF, due soli guadagni. Va esteso ai tre modi (0 / +3 / +10 dB) e puntato ai dati di L27 e L16, coi margini di V1 al minimo della spazzata (ADR-024), la cifra unica di headroom che L16 sceglie per NC-009 e la «KPI riferita a 60°» rimasta da L19. Accanto a ogni numero, la provenienza dei modelli ancora segnaposto (NC-004, NC-017). **Nessun avviso di obsolescenza**: il dossier lo legge solo l'utente (deciso il 2026-09-14) | S | NC-009 (la metà del dossier), apre **NC-031** | **fatto** — tre modi, V1 al minimo della spazzata, M1 +6,58 dB, provenienza letta dagli `.include`; nove controlli fatti fallire |

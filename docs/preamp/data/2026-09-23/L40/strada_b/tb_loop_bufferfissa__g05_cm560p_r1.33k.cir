@@ -1,0 +1,116 @@
+tb_loop_bufferfissa__g05_cm560p_r1.33k.cir - L40 ESPLORAZIONE da tb_loop_bufferfissa.cir, RG0L40 FB 0 25.5k; alter c124 = 560p; alter r128 = 1.33k
+* Prima riga = titolo (docs/limitations.md #10).
+*
+* WHAT IT IS. Since ADR-023 each fixed output has its own buffer: THE gain
+* block again (T3 / ADR-006), unity gain, driving 47 ohm + 4.7 uF + 470 k and
+* the headphone amplifier behind them. It is block A's old situation on one
+* output instead of two - so NC-002's 41.98 deg at 4.7 nF is the number this
+* deck is expected to land near, and ADR-019 asks 60 deg.
+*
+* SOURCE: block A's output, ~1 ohm (tb_zout_psrr_noise: 1.04 ohm at 0 dB,
+* flat to 20 kHz), modelled as RSRC. The flat include carries R113 = 1 MEG on
+* IN, which preamp_audio.py does not fit on a buffer: against 1 ohm it does
+* nothing.
+*
+* LOAD: RSEP 47 + CFIX 4.7 u + RBL 470 k + RLD at the jack. RLD is the
+* Singxer's 10 k (hypothesised, as in G0) or the Stax's 50 k: above the loop's
+* crossover the 4.7 uF is a short, so the headphone amp's resistance barely
+* matters; both are run.
+*
+* CABLE: CPROBE swept 1 fF - 4.7 nF in two positions:
+*   pos 1  at the JACK - where a real interconnect sits;
+*   pos 2  on the OUTPUT NODE, before the 47 ohm - the position NC-002 used,
+*          and the harsher one.
+*
+* LOOP BREAK: as in tb_loop.cir. R109 opened, RBRK + VINJ in series;
+* T = v(fb)/v(g2). Margine di fase = |Tph| dove Tdb attraversa lo zero.
+*
+* VERDICT (L12, ADR-024): pos 1 counts - the cable at the jack, minimum over the
+* whole sweep, which lies between 2.2 and 3.3 nF (hence the 1.5n/2.7n/3.3n points
+* added in L12). Pos 2 is information. Manufacturer device models since L39.
+*
+* Nessun file si chiama tb_loop_bufferfissa_wrdata.txt: run_simulation.sh
+* avvisa, e converte i .txt al secondo passaggio. La tabella e' un .csv
+* scritto da echo.
+
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+* The source node is NOT called SRC: gain_block_flat.inc puts its devices at
+* top level, and SRC is the JFET pair's common source there. The first L17
+* run used SRC and shorted the tail to 0 V: loop gain 22 dB instead of ~72,
+* crossover 76 MHz, and no error anywhere. check_deck_refs.py cannot see a
+* node collision.
+VIN VSRCN 0 DC 0
+RSRC VSRCN IN 1
+
+RRG RG 0 1G
+RRG10  RG10 0 1G
+
+RBRK FB NBRK 100
+VINJ NBRK G2 DC 0 AC 1
+
+RSEP OUT FIX 47
+CFIX FIX JACK 4.7u
+RBL  JACK 0 470k
+RLD  JACK 0 10k
+
+* the probe, in both positions; the unused one sits at 1 fF
+CPJ JACK 0 1f
+CPN OUT 0 1f
+
+* L40: righe di netlist in piu' (varianti.py)
+RG0L40 FB 0 25.5k
+.control
+* L40: variante
+alter c124 = 560p
+alter r128 = 1.33k
+show c124 : capacitance
+show r128 : resistance
+show rg0l40 : resistance
+set t = .txt
+set u = _
+alter r109 = 1G
+set units = degrees
+echo "pos,rld,cprobe,fcross_hz,pm_deg,tdb_10hz" > tb_loop_bufferfissa.csv
+foreach rl 10k 50k
+  alter rld = $rl
+  foreach pos 1 2
+    foreach cw 1f 47p 100p 220p 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+      if $pos = 1
+        alter cpj = $cw
+        alter cpn = 1f
+      else
+        alter cpj = 1f
+        alter cpn = $cw
+      end
+      ac dec 100 1 100meg
+      let T = v(fb)/v(g2)
+      let Tdb = db(T)
+      let Tph = ph(T)
+      meas ac fcross when Tdb=0
+      meas ac pmarg find Tph when Tdb=0
+      meas ac tdc find Tdb at=10
+      echo "BUFFER FISSA  RLD=$rl  pos=$pos  C=$cw"
+      print fcross pmarg tdc
+      echo "$pos,$rl,$cw,$&fcross,$&pmarg,$&tdc" >> tb_loop_bufferfissa.csv
+      * curve: solo Singxer (10 k), sonda al jack (pos 1) e sul nodo (pos 2)
+      *   col1 Tdb [dB]  col3 Tph [gradi]   (colonne pari = frequenza)
+      if $rl = 10k
+        let l40_nessuna_curva = 0
+      end
+      destroy all
+    end
+  end
+end
+.endc
+
+.end

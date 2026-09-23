@@ -725,3 +725,21 @@ Quello che non vale è leggere la tabella come se si fermasse ai capi.
 - chi rifà un modello fuori da ngspice (un simulatore veloce, un foglio di
   calcolo) deve estrapolare allo stesso modo, e tararsi contro ngspice;
   `transizione/sur.py` lo fa, e la taratura lo prova (0,002 decadi).
+
+## 32. Un corpo di `if` vuoto in `.control` fa uscire ngspice con 139 a fine corsa, a tabelle complete
+
+Scoperto in L40 (`docs/preamp/data/2026-09-23/L40/script/varianti.py`).
+
+Commentando i `wrdata` di `tb_loop.cir` per non scrivere le curve, alcuni rami
+`if … else … end` restano senza istruzioni. ngspice 47 esegue **tutta** la
+matrice, scrive ogni riga della tabella `echo` (660 su 660), e poi esce con
+**rc 139** (segmentation fault) invece di 0. Rimettendo nel ramo un'istruzione
+qualsiasi (`let l40_nessuna_curva = 0`) esce 0, con le stesse tabelle.
+
+Non è silenzioso, ma inganna nel verso opposto a quelli di #22 e #29: chi vede
+139 butta via una corsa buona, o cerca il guasto nel circuito. Una `print` messa
+dopo l'ultimo `destroy all` era il primo sospetto, ed era innocente.
+
+**Regola operativa**: un deck derivato che toglie istruzioni da un `.control`
+lascia in ogni ramo almeno un'istruzione innocua. Un rc 139 si controlla contando
+le righe della tabella prima di buttare la corsa.

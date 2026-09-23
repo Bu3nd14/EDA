@@ -1,116 +1,116 @@
-# Prompt per la sessione successiva — L40 (V1 coi modelli del costruttore)
+# Prompt per la sessione successiva — L29c (il caso peggiore di V2 col mute reale)
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è
-organizzato in LOTTI PICCOLI: questa sessione fa **L40** e si ferma. Non iniziarne un
+organizzato in LOTTI PICCOLI: questa sessione fa **L29c** e si ferma. Non iniziarne un
 secondo.
 
 ## Perché adesso
 
-Il lotto precedente ha messo i modelli del costruttore nel progetto, e **V1 è caduto** su
-ogni istanza a guadagno unitario (**NC-034**, bloccante):
+**NC-028 è l'ultima bloccante di V2**: manca il caso peggiore. Era rimandato perché
+dipendeva dai modelli e dalla compensazione, e ora sono fermi entrambi:
+- **L39** ha messo i modelli del costruttore;
+- **L40** ha chiuso V1 (NC-034) col **Miller da 1 nF** e tenuto la corrente di riposo
+  d'uscita a **~20,3 mA** (**ADR-042**).
 
-| Istanza | Prima (segnaposto) | Dopo (costruttore) |
-|---|---|---|
-| blocco B, 0 dB | 61,80° | **55,55°** |
-| blocco A (cablaggio ≤ 1 nF) | 63,36° | **57,93°** |
-| buffer delle fisse | 61,63° | **54,92°** |
-| blocco B, +3 / +10 dB | 69,77 / 102,98° | 63,90 / 100,19° |
-
-**La direzione è dell'utente (2026-09-22)**: «non sono convinto che ci serva quasi un
-megaherz di banda passante a 0 dB, preferisco rispettare i margini di fase e ridurre la
-banda passante o alzare il guadagno fino a 1,5 dB».
-
-L29c (il caso peggiore di V2) viene **dopo** questo lotto: misurarlo su un circuito che
-cambia compensazione vorrebbe dire rifarlo.
+La topologia e il guadagno minimo (0 dB, E1) non sono cambiati.
 
 ## Da dove si parte
 
-- **I modelli sono tutti del costruttore** (`models/`), nel sorgente e nei 25 deck. Solo
-  l'LSK489A ha KF; nessun modello porta la dispersione; NC-020, NC-024 e NC-025 dicono
-  dove i modelli stanno sotto i propri datasheet.
-- **L'esplorazione di L39** (`data/2026-09-22/L39/esplorazione/`, solo sul blocco B, nessun
-  valore cambiato):
-  - **C_f** (C137, 330 pF, ADR-025) non aiuta a 0 dB: con R_g aperta la controreazione è
-    già totale;
-  - **il Miller** (C124, 470 pF): 680 p 59,26°, **820 p 60,70°**, 1 n 62,08°. Il crossover a
-    vuoto scende da 889 a 520 kHz (820 p).
-  Non misurati: blocco A e buffer col Miller nuovo, slew rate, V3, risposta, THD di modello.
-- **La seconda strada, il guadagno minimo fino a +1,5 dB**, non è stata misurata. Tocca la
-  rete di controreazione di ogni istanza oggi a guadagno 1 (blocco A, blocco B a «0 dB»,
-  buffer), quindi E2, la struttura del guadagno di ADR-001/ADR-019, l'headroom (NC-009),
-  il rumore e V2. È una modifica di **topologia**: si misura, si confronta con la prima
-  strada e **si chiede all'utente prima di toccare il sorgente**.
-- **La corrente di riposo d'uscita** (**NC-035**) è 20,3 / 20,4 mA invece di 14,6. La Vbe
-  dei MJE veri è 0,57 / 0,54 V. Lo sweep del moltiplicatore (1,5–1,87 kΩ) dà 17,3–23,2 mA:
-  i ~15 mA stanno sotto 1,5 kΩ. La corrente tocca i poli dello stadio d'uscita, quindi
-  **si decide insieme a V1**, non dopo.
+- **I modelli.** Ogni dispositivo attivo è il modello del costruttore di `models/`
+  (LSK489A, MMBT5551, MMBT5401, LS350, Qmje15032, Qmje15033, D1N914). Solo l'LSK489A
+  ha KF; nessun modello porta la dispersione. Le cifre di V2 portano quell'etichetta.
+- **Il circuito di L40** (ADR-042): C124 1 nF, R128 1,69 kΩ. Cosa cambia per V2:
+  - la banda a 0 dB scende a 912 kHz, a +10 dB a 113 kHz;
+  - lo slew in discesa è −1,68 V/µs: **una sinusoide a 20 kHz e 12 V di picco
+    comincia a entrare in slew**, con +0,57 V di continua dietro lo stadio;
+  - il recupero di V3 passa da 1,07 a 3,03 µs.
+
+  Le corse a 20 kHz a fondo scala vanno lette sapendolo: un gradino o un residuo che
+  compare solo lì può essere lo slew, non il mute.
+- **La cella di riferimento di L40** (1 kHz, 100 k, principale, `data/2026-09-23/L40/`,
+  `prima/` = 470 p, `dopo/` = 1 nF): S 7,163 / 5,32 dB (invariato), A senza segnale ≤ 3,75 µV, B2 0,33 µV; il fondo di distorsione della catena C_pav sale da 0,27 a **0,34 mV** (diagnostica). Rimisurare questa cella prima della matrice resta il primo controllo.
+- **L'offset del blocco B** (criterio 3 di ADR-030): −15,45 mV, invariato da L40.
+- **Il criterio (ADR-040).** Il taglio con musica si giudica su **S, il salto di
+  livello: ≤ 20 dB in 100 ms**, contato sopra −70 dB. **C2 è diagnostica.** A e B
+  restano a 100 µV, A senza segnale. Strumento: `scripts/v2_metodo.py`, righe `S_ins`
+  e `S_rel`.
+- **Il profilo del comando dei LED è la v4** (ADR-039, ADR-040). Td = 6 s, 10 nA di
+  riposo, relè 0,5 s dopo d = 1.
+- **Il guadagno si interblocca col mute come il trim** (ADR-041). L36 lo realizza,
+  dopo questo lotto.
+- **Il deck versionato** `spice/preamp/tb/tb_v2_mute_ldr.cir` è **generato** da
+  `data/2026-09-22/L29b2/deck/genera_tb_v2_mute_ldr.py`, e si divide con
+  `data/2026-09-22/L29b2/pavimento/dividi.py`. Per una sola cella c'è
+  `data/2026-09-23/L40/script/v2_cella.sh <fase>`.
 
 ## Leggi PRIMA, in quest'ordine
 
-1. **`CLAUDE.md`** e **`docs/limitations.md`**, in particolare #22, #24, #27, #29 e #30.
-2. **`docs/preamp/STATE.md`**: la voce L39 del diario e le righe L40 e L29c.
-3. **`reports/2026-09-22-L39-modelli-costruttore.md`**, soprattutto §4 e §5.
-4. **ADR-019** (V1), **ADR-024** (la cella di V1), **ADR-025** (C_f 330 pF), **ADR-017**
-   (che prevede di ridecidere il Miller con una ADR propria), **ADR-031** («da riaprire
-   se» scatta), ADR-001, ADR-004, ADR-026 (la struttura del guadagno), ADR-023 (classe A).
-5. **`NONCOMPLIANCE.md`**: NC-034, NC-035, NC-025, NC-029, NC-009, NC-021 (chiusa, la
-   stessa forma).
+1. **`CLAUDE.md`** e **`docs/limitations.md`**, in particolare #10, #22, #24, #26,
+   #29, #30, #31 e **#32** (un corpo di `if` vuoto fa uscire ngspice con 139).
+2. **`docs/preamp/STATE.md`**: le voci L40, L29b2 e L29b del diario, le righe L29c e
+   L36.
+3. **`reports/2026-09-22-L29b2-mute-ldr-sorgente.md`** (§8, i tempi delle corse) e
+   **`reports/2026-09-23-L40-v1-costruttore.md`** (§5).
+4. **ADR-030** (i tre criteri, il 3 in particolare), **ADR-035/036** (il metodo),
+   **ADR-038/039/040** (il mute LDR e il criterio S), **ADR-041**, **ADR-042**.
+5. **`NONCOMPLIANCE.md`**: NC-028 per intero.
 
 ## IL LAVORO, in ordine
 
-1. **Separare le cause** della caduta di V1: MJE (f_T, NC-025) contro MMBT (VAF, CJE)
-   contro corrente di riposo. Si fa sostituendo un modello alla volta in un deck
-   d'esplorazione, **senza toccare `models/`** (limitations #29 per gli `altermod`: nome
-   giusto, `showmod`, sonda).
-2. **Le due strade, misurate su tutte e tre le istanze a guadagno unitario** (blocco A,
-   blocco B a 0 dB, buffer), con la cella di ADR-024:
-   - (a) banda ridotta: il Miller (e, se serve, un'altra compensazione) al valore minimo
-     che dia ≥ 60° **con un margine** su tutte e tre, più +3 e +10 dB;
-   - (b) guadagno minimo fino a +1,5 dB: quale rete, quale margine, e cosa costa ad E2,
-     all'headroom, al rumore.
-   Per ciascuna: crossover, banda −3 dB, slew rate, V3.
-3. **La corrente di riposo**, insieme: ~15 mA con un valore nuovo del moltiplicatore
-   (sweep esteso sotto 1,5 kΩ) oppure ~20 mA accettati, con dissipazione (NC-029) e
-   budget di corrente.
-4. **Chiedere all'utente** con i numeri delle due strade e della corrente. **Niente nel
-   sorgente prima della risposta.**
-5. Con la risposta: **una ADR**; il valore nel sorgente, con il commento che la cita; il
-   blocco rigenerato; la **regressione di L39 rifatta** (gli script sono in
-   `data/2026-09-22/L39/script/`: `esegui_deck.sh`, `confronta.py`, `margini.py`, `p7.py`,
-   `classe_a.py`, `v3.py`, `v2_cella.sh`). ADR-031: rimisurare la dispersione del gruppo B
-   sul circuito nuovo, blocco A e buffer compresi.
-6. **L'esito**: NC-034 si chiude se V1 ≥ 60° ovunque e la regressione regge; NC-035 si
-   chiude con la corrente decisa. Report datato.
+Il caso peggiore di V2 col mute reale (LDR v4 più il relè al jack). **Prima della
+matrice, pianifica le corse**: a 20 kHz con TMAX 0,5 µs valgono ore l'una. In L29b2
+erano circa 4 ore, con 7 in parallelo su 10 core; in L39–L40 le corse a 1 kHz sono
+durate 2,5–7 minuti l'una, 11 in parallelo. Scrivi il piano in `STATE.md` prima di
+lanciare.
 
-**Se non entra in una sessione, dividi**: prima i punti 1–4 (misura e domanda); poi 5–6.
-Scrivilo in `STATE.md`.
+1. **I passaggi di guadagno**, 0↔+3, +3↔+10 e 0↔+10 dB nei due versi, **sotto mute**
+   e seguiti dal rilascio. È il **criterio 3 di ADR-030**, da cui dipende L36. A e S
+   devono stare nei limiti.
+2. **Il trim** nelle tre posizioni, con lo stesso schema.
+3. **La dispersione dell'LSK489** fino a ±20 mV di offset, in più posizioni
+   dell'attenuatore. Il gruppo B si fa con `altermod` e sonda (limitations #29), come
+   `tb_idss_*.cir` e `data/2026-09-23/L40/script/idss_istanze.py`.
+4. **Mute breve e mute di almeno 2 s.**
+5. **Accensione e spegnimento**, con le rampe dei rail.
+6. **Le curve A–D** del modello della LDR: la dispersione delle parti, per canale.
+
+**Esito**: NC-028 si chiude se A, B e S reggono in tutta la matrice. Report datato.
+
+**Se non entra in una sessione, dividi**: prima 1 e 4, cioè ciò da cui dipende L36;
+poi il resto. Scrivilo in `STATE.md`.
 
 ## I vincoli
 
 - **Nessun cambio di topologia né di valore senza l'utente.**
-- I file in `vendor/` non si toccano; i modelli in `models/` si cambiano solo col loro
-  processo (provenienza, `validate_models.py`).
-- Il blocco generato non si edita a mano: si cambia `gain_block.py` e si rigenera.
-- Un deck che include `gain_block_flat.inc` non usa nomi di nodo del blocco (#24); un
-  anello si confronta col guadagno a bassa frequenza, che coi modelli veri vale
-  **~81 dB**, non più ~72.
-- Il blocco A coi modelli veri converge per source stepping (L39): normale, ma un'analisi
-  che non converge va guardata, non ignorata.
-- Gli script zsh si lanciano da soli. `git` e i comandi con costrutti composti (`$(...)`,
-  `cd … &&`, heredoc, `awk -v`, cicli con pipe) vengono rifiutati nel worktree: comandi
-  semplici e separati, script su file. Scipy non c'è; numpy c'è nel venv 3.13.
+- `set numdgt=15` prima di ogni `wrdata` (limitations #30); `pwl()` estrapola (#31).
+- **Il manifesto non è l'elenco delle corse** (L39): `rele_*` rilegge i dati di `ev`,
+  `pav_*` quelli di `evp`/`invp`. Una cella si estrae dalla colonna `file`.
+- **I tempi degli strumenti.**
+  - Un LED senza percorso DC fa fallire l'op in silenzio.
+  - I comandi dei LED sono log-lineari.
+  - `analizza` accetta eventi solo per t > 0,3 s, e su 11 corse a 1 kHz impiega
+    decine di minuti.
+  - `awk` col locale italiano non legge i `.dat`.
+- `pkill -f` sul nome di uno script zsh prende anche i suoi subshell; `pgrep` con `\|`
+  non vuol dire «oppure».
+- Gli script zsh si lanciano da soli. `git` e i comandi con costrutti composti
+  (`$(...)`, `cd … &&`, `for` con variabili, heredoc passati a comandi) vengono
+  rifiutati nel worktree: comandi semplici e separati, script su file. Scipy non c'è;
+  numpy c'è nel venv 3.13.
+- Le forme d'onda rigenerabili (i `.dat` da ~400 MB) **non si committano**. Tieni
+  riassunti e analisi.
 
 ## NON fa parte di questo lotto
 
-- **L29c** (viene subito dopo: la bozza aggiornata ai modelli del costruttore è
-  `data/2026-09-22/L39/bozza_prompt_L29c.md`), L36, L35, L28, L30, il dossier.
+- **L36** (viene dopo, e dipende dal punto 1), L35, L28, L30, il dossier.
+- Ritoccare la compensazione: se lo slew a 20 kHz rende una cella fuori soglia, lo
+  si scrive e si chiede all'utente (ADR-042, «Da riaprire se»).
 
 ## CHIUSURA
 
-1. `STATE.md` con L40 **fatto** e L29c come prossimo.
-2. Riscrivi QUESTO file per L29c, partendo dalla bozza
-   `data/2026-09-22/L39/bozza_prompt_L29c.md` aggiornata ai valori di L40.
+1. `STATE.md` con L29c **fatto** (o diviso) e il prossimo lotto.
+2. Riscrivi QUESTO file per il lotto successivo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L40`.
+4. `/bin/zsh scripts/chunk_close.sh L29c`.
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**

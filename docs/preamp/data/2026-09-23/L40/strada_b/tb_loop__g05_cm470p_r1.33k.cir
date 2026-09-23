@@ -1,0 +1,193 @@
+tb_loop__g05_cm470p_r1.33k.cir - L40 ESPLORAZIONE da tb_loop.cir, RG0L40 FB 0 25.5k; alter r138 = 4.12k; alter c124 = 470p; alter r128 = 1.33k
+* METHOD: voltage injection at the inverting JFET gate. That node draws no
+* current (JFET gate, ~1e12 ohm) while the feedback network drives it from
+* ~470 ohm, so simple voltage injection is exact here - no Middlebrook
+* correction needed. The deck OPENS the generated gate stopper R109 and
+* re-creates it as RBRK + a DC=0 AC=1 source, so the loop topology and the DC
+* bias are untouched; only the injection point is added.
+*
+* T = V(FB)/V(G2). G2 is the INVERTING input, so T is negative real at DC:
+* its phase there is 180 deg. Phase margin is therefore read directly as
+* |ph(T)| at the frequency where |T| = 1.
+*
+* WHERE THE PROBE GOES (L12, ADR-024). The capacitive probe of V1 is the
+* interconnect cable: it sits at the JACK, and ADR-019's 60 deg must hold for
+* EVERY cable up to 4.7 nF - the verdict is the MINIMUM over the sweep, not the
+* value at 4.7 nF (at the jack the minimum lies between 2.2 and 3.3 nF).
+*   pos 1  CCABLE at the JACK, after 47 ohm + 4.7 uF - the position that counts;
+*   pos 2  CNODE on the OUTPUT NODE, before the 47 ohm - information only, and
+*          the check that the deck can fail (L12: with CNODE never altered the
+*          pos-2 rows stayed at the 1 fF value).
+* The unused probe sits at 1 fF.
+*
+* ATTENUATOR SOURCE (L12). Block B's gate is fed by the 10 k stepped attenuator,
+* whose Zout goes 0 -> 2.5 k (mid-rotation) -> ~0. V1 lists the positions; L12
+* found the worst cell at 2.5 k. RSRCB sweeps 1 mohm, 1 k, 2.5 k.
+* Node VSRCN, not SRC: gain_block_flat.inc has a node SRC (docs/limitations.md #24).
+*
+* Phase margin is set by device capacitances and transit times. Until L39 they
+* came from hand-written placeholders; since L39 (NC-017) they are the
+* manufacturer models of models/. Two of them miss their own datasheet: both
+* MJE f_T sit under the 30 MHz minimum (NC-025), the LS352 f_T 35 % under
+* (NC-020) - every margin here carries that.
+
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+* L39 (NC-017): every active device in this deck is a vendor model from
+* models/, each next to its .provenance.json:
+*   LSK489   - vendor model LSK489A, the published corner sample (I_DSS
+*              2.59 mA, below the group-B window of ADR-031)
+*   LS352    - vendor model LS350 (ADR-018), included on the next line
+*   MMBT5551 - vendor model, Diodes Inc. (ADR-017)
+*   MMBT5401 - vendor model, Diodes Inc. (ADR-017)
+*   MJE15032 - vendor model Qmje15032, onsemi (NC-024, NC-025)
+*   MJE15033 - vendor model Qmje15033, onsemi (NC-025)
+*   1N4148   - vendor model D1N914, onsemi (docs/limitations.md #20)
+* Only the LSK489A carries KF: 1/f noise is on the input pair and nowhere
+* else. No model carries part-to-part spread.
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN VSRCN 0 DC 0
+RSRCB VSRCN IN 1m
+
+* The two gain-relay contact nodes (L27, ADR-026). Each starts as an OPEN
+* contact - 15 pF of stray, 1 G of leakage - and a closed one is 0.1 ohm:
+*   0 dB    rrg = 1G    rrg10 = 1G
+*   +3 dB   rrg = 0.1   rrg10 = 1G
+*   +10 dB  rrg = 0.1   rrg10 = 0.1
+* RG10 must be terminated here: left dangling it silently behaves as an open
+* contact without its stray (scripts/check_deck_refs.py refuses that).
+CSTRAY   RG   0 15p
+RRG      RG   0 1G
+CSTRAY10 RG10 0 15p
+RRG10    RG10 0 1G
+
+* loop break, substituting for the generated 100 ohm gate stopper R109
+RBRK FB NBRK 100
+VINJ NBRK G2 DC 0 AC 1
+
+* BLOCK B output network + cable. The probes are altered in the loop below.
+* No new node names on the block: CNODE sits on the block's own OUT (#24).
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+CCABLE JACK 0 1f
+CNODE  OUT 0 1f
+
+* L40: righe di netlist in piu' (varianti.py)
+RG0L40 FB 0 25.5k
+.control
+* L40: variante
+alter r138 = 4.12k
+alter c124 = 470p
+alter r128 = 1.33k
+show r138 : resistance
+show c124 : capacitance
+show r128 : resistance
+show rg0l40 : resistance
+* --- wrdata (L5): una curva di anello PER ITERAZIONE ------------------
+* NOMI PARAMETRIZZATI: un `$var` in un nome di file non si chiude da solo
+* - ngspice fa entrare nel nome della variabile anche `.`, `-` e `_`,
+* quindi `wrdata tb_loop_$cab.txt` cercherebbe la variabile "cab.txt". Un
+* `$` invece TERMINA il nome: la forma che funziona e' `$cab$t` con
+* t = ".txt" e u = "_". Misurato con una sonda in L5, non dedotto.
+*
+* DOVE: dentro il ciclo interno, PRIMA del `destroy all` (docs/limitations.md #10).
+*
+* I FILE (L12, L27), con <C> in 1f 47p 100p 220p 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+* e <G> in 0db 3db 10db. Le curve si scrivono solo col carico da 100 k:
+*   sorgente 1 mohm, sonda al jack:  tb_loop_<G>_<C>.txt      - i nomi di prima
+*   sorgente 1 mohm, sonda sul nodo: tb_loop_nodo_<G>_<C>.txt
+*   sorgente 2.5 k,  sonda al jack:  tb_loop_att2k5_<G>_<C>.txt
+* La sorgente da 1 k, la 2.5 k sul nodo e il carico da 10 k stanno solo in tabella.
+* LA TABELLA dei margini e' tb_loop_margini.csv, scritta da echo: nessun
+* wrdata produce quel nome (docs/limitations.md #25). La colonna rload (L27)
+* sta in CODA, cosi' le prime sette restano confrontabili con quelle di L12.
+*
+* CARICO (L27): V1 elenca il cj da 100 k, e ADR-007 dimensiona l'uscita per
+* un finale futuro da 10 k. RLOAD spazza entrambi.
+*
+* MODALITA' (L27, ADR-026): `foreach mode 0 3 10`, e ogni ramo imposta i DUE
+* contatti. Le etichette sono quotate: `set gm = 3db` memorizzerebbe 3
+* (docs/limitations.md #10).
+*
+* COLONNE delle curve (~801 righe, 1 Hz - 100 MHz, 100 punti/decade).
+*   col0 = frequenza [Hz]   col1 = Tdb = |T| in dB
+*   col2 = frequenza [Hz]   col3 = Tph = fase di T in GRADI
+* Margine di fase = |Tph| dove Tdb attraversa lo zero. Non e' 180 - |Tph|.
+* ---------------------------------------------------------------------
+set t = .txt
+set u = "_"
+alter r109 = 1G
+set units = degrees
+echo "mode,rsrc,pos,cprobe,fcross_hz,pm_deg,tdb_10hz,rload" > tb_loop_margini.csv
+foreach mode 0 3 10
+  if $mode = 0
+    set gm = "0db"
+    alter rrg = 1G
+    alter rrg10 = 1G
+  end
+  if $mode = 3
+    set gm = "3db"
+    alter rrg = 0.1
+    alter rrg10 = 1G
+  end
+  if $mode = 10
+    set gm = "10db"
+    alter rrg = 0.1
+    alter rrg10 = 0.1
+  end
+  foreach rl 100k 10k
+    alter rload = $rl
+    foreach rs 1m 1k 2.5k 2.571k 2.611k
+      alter rsrcb = $rs
+      foreach pos 1 2
+        foreach cab 1f 47p 100p 220p 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+          if $pos = 1
+            alter ccable = $cab
+            alter cnode = 1f
+          else
+            alter ccable = 1f
+            alter cnode = $cab
+          end
+          ac dec 100 1 100meg
+          let T = v(fb)/v(g2)
+          let Tdb = db(T)
+          let Tph = ph(T)
+          meas ac fcross when Tdb=0
+          meas ac pmarg find Tph when Tdb=0
+          meas ac tdc find Tdb at=10
+          echo "mode=$gm  rload=$rl  rsrc=$rs  pos=$pos  C=$cab"
+          print fcross pmarg tdc
+          echo "$gm,$rs,$pos,$cab,$&fcross,$&pmarg,$&tdc,$rl" >> tb_loop_margini.csv
+          if $rl = 100k
+            if $rs = 1m
+              if $pos = 1
+                let l40_nessuna_curva = 0
+              else
+                let l40_nessuna_curva = 0
+              end
+            end
+            if $rs = 2.5k
+              if $pos = 1
+                let l40_nessuna_curva = 0
+              end
+            end
+          end
+          destroy all
+        end
+      end
+    end
+  end
+end
+.endc
+
+.end

@@ -1,0 +1,96 @@
+tb_switch_v2_counterfactual.cir - what the REJECTED arrangement would do
+* ADR-004 rejected putting the relay contact in series with R_f (the loop
+* leg). This deck shows why, on the same circuit, by opening R136 (R_f)
+* to 1 Gohm - which is what an open contact in that position IS.
+*
+* Prediction: with R_f open there is no feedback path at all, the input pair
+* sees only its own offset amplified by the full open-loop gain, and the
+* output sits hard against a rail. Compare with tb_switch_v2.cir, where the
+* same relay in the ADR-004 position never moves the output outside the
+* band bounded by the two gain settings.
+*
+* This is the falsifiable half of the V2 claim: it is not enough to show the
+* chosen arrangement behaves; the rejected one has to be shown to misbehave,
+* or the design decision carries no information.
+
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/diodes/1n4148.lib
+* L39 (NC-017): every active device in this deck is a vendor model from
+* models/, each next to its .provenance.json:
+*   LSK489   - vendor model LSK489A, the published corner sample (I_DSS
+*              2.59 mA, below the group-B window of ADR-031)
+*   LS352    - vendor model LS350 (ADR-018), included on the next line
+*   MMBT5551 - vendor model, Diodes Inc. (ADR-017)
+*   MMBT5401 - vendor model, Diodes Inc. (ADR-017)
+*   MJE15032 - vendor model Qmje15032, onsemi (NC-024, NC-025)
+*   MJE15033 - vendor model Qmje15033, onsemi (NC-025)
+*   1N4148   - vendor model D1N914, onsemi (docs/limitations.md #20)
+* Only the LSK489A carries KF: 1/f noise is on the input pair and nowhere
+* else. No model carries part-to-part spread.
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VSRC SRCN 0 DC 0 AC 1
+RSRC SRCN IN 430
+
+CSTRAY RG 0 15p
+CSTRAY10 RG10 0 15p
+RRG    RG 0 1G
+RRG10  RG10 0 1G
+
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+
+.control
+* In the REJECTED topology the relay sits in the R_f leg, so R_g is
+* permanently strapped to ground: RRG = 0.1 ohm in both states below.
+*
+* --- wrdata (L4): tre stati, tre file --------------------------------
+* Il nome nudo non dice a quale stato appartiene, quindi la mappatura sta
+* QUI dentro, come per tb_dc_headroom (L3):
+*
+*   tb_switch_v2_counterfactual_wrdata.txt    A - contatto CHIUSO, R_f = 1.50k
+*   tb_switch_v2_counterfactual_open.txt      B - contatto APERTO, R_f = 1e12
+*   tb_switch_v2_counterfactual_reclosed.txt  C - richiuso, controprova di B
+*
+* COLONNE, identiche nei tre file. E' l'unica traccia dell'identita' delle
+* colonne: run_simulation.sh intesta il CSV col0..colN e basta.
+*   Un `wrdata` da .op scrive UNA riga e, per ogni vettore richiesto, una
+*   COPPIA di colonne (scale, valore). Lo scale di un plot `op` e' un
+*   vettore arbitrario del plot e NON significa niente - in tb_op.csv e'
+*   -13.7002041 ripetuto sei volte mentre v(out) vale -0.0118. I dati sono
+*   quindi le colonne DISPARI, in quest'ordine:
+*     col1 = v(OUT)   col3 = v(FB)   col5 = v(NX)   col7 = v(NY)
+*
+* Ogni `wrdata` sta SUBITO DOPO il proprio `op`, quindi scrive il plot
+* appena creato. Qui non c'e' `setplot`, quindi non c'e' il caso di
+* docs/limitations.md #10 (plot vecchio letto in silenzio); e il deck lo
+* prova da se', perche' i tre stati stampano numeri diversi.
+* ---------------------------------------------------------------------
+alter rrg = 0.1
+alter rrg10 = 0.1
+echo "--- A: contact CLOSED (R_f = 1.50k), R_g strapped: the +10 dB state ---"
+op
+print v(OUT) v(FB) v(NX) v(NY)
+wrdata tb_switch_v2_counterfactual_wrdata.txt v(OUT) v(FB) v(NX) v(NY)
+echo "--- B: contact OPEN (R_f = 1e12), R_g still strapped: loop is BROKEN ---"
+alter r136 = 1e12
+op
+print v(OUT) v(FB) v(NX) v(NY)
+wrdata tb_switch_v2_counterfactual_open.txt v(OUT) v(FB) v(NX) v(NY)
+echo "--- C: closed again, to prove B was not a solver artefact ---"
+alter r136 = 1.50k
+op
+print v(OUT) v(FB)
+wrdata tb_switch_v2_counterfactual_reclosed.txt v(OUT) v(FB) v(NX) v(NY)
+.endc
+
+.end

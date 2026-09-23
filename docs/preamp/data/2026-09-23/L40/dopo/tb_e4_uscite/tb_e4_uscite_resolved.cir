@@ -1,0 +1,295 @@
+tb_e4_uscite.cir - L13: E4 (Zout) sulle tre uscite, nei tre modi, in ogni posizione di trim e attenuatore
+* Prima riga = titolo (docs/limitations.md #10).
+*
+* COSA MISURA. REQUIREMENTS E4: "< 100 ohm in banda passante (misurata
+* escludendo la reattanza del condensatore d'accoppiamento), costante con la
+* posizione del volume". NC-008: fino a L13 E4 era misurata su un'uscita su tre
+* e a manopola ferma.
+*
+* LA CATENA, un canale, come preamp_audio.py e trim.py la cablano (L16, L17):
+*   VSRC -> BLOCCO A -+-> BUFFER F1 -> 47 R -> 4.7 u -> FIXJACK1 (470 k; Singxer 10 k)
+*                     +-> BUFFER F2 -> 47 R -> 4.7 u -> FIXJACK2 (470 k; Stax 50 k)
+*                     +-> TRIM 845/464/464 -> cablaggio 100 p -> ATTENUATORE 10 k
+*                          -> BLOCCO B (0/+3/+10 dB) -> 47 R -> 4.7 u -> MAINJACK (220 k; 100 k)
+* Quattro GAINBLOCK da gain_block.subckt: nessun nodo del deck collide con un
+* nodo di un blocco (#24). Ogni porta RG/RG10 e' terminata (#27). Il subckt
+* porta R113 = 1 MEG anche dove preamp_audio.py non la monta (F1, F2, B): in
+* parallelo all'uscita del blocco A o a <= 2,6 k non conta.
+*
+* PERCHE' UN DECK NUOVO e non tb_zout_psrr_noise.cir esteso: quello include
+* gain_block_flat.inc, che ospita UN blocco solo (#24), e al posto della
+* posizione del volume ha una RSRC fissa. Qui la resistenza di sorgente del
+* blocco B la fanno davvero blocco A, trim e attenuatore.
+*
+* LA MATRICE: trim {0, -6, -12 dB} x attenuatore {0, 25, 50, 75, 100 %} x modo
+*   {0, +3, +10 dB} = 45 celle. Attenuatore: RATTH sopra il cursore, RATTL
+*   sotto, somma 10 k; 0 % = minimo (RATTL 1 mohm), 100 % = massimo (RATTH
+*   1 mohm). Contatti: chiuso 0.1 ohm, aperto 1 G, 15 pF (tb_trim.cir).
+*
+* PER OGNI CELLA
+*   1. CONTROLLO POSITIVO: carichi nominali, VSRC 1 V AC, nessuna iniezione.
+*      g1k = vdb(MAINJACK) a 1 kHz. Deve seguire trim, attenuatore e modo. E'
+*      la prova che manopola e modo arrivano al blocco B: senza, "costante col
+*      volume" uscirebbe anche da un attenuatore scollegato.
+*   2. E4: VSRC SPENTA (@vsrc[acmag] = 0; l'averla lasciata accesa e' il
+*      difetto che L13 ha trovato in tb_zout_psrr_noise.cir), carichi tolti
+*      (1 G), scarichi lasciati, 1 A AC iniettato in UN jack per volta:
+*      MAIN, FIX1, FIX2.
+*        ZR = Re(v(jack))  E4 esclude la reattanza del condensatore, che in
+*                          serie e' reattanza pura: resta la parte reale (L17)
+*        ZM = |v(jack)|    cio' che vede il cavo, condensatore compreso
+*        ZN = |v(nodo)|    il nodo d'uscita del blocco, prima dei 47 ohm
+*
+* TABELLE (echo; nessun wrdata produce questi nomi, #25):
+*   tb_e4_uscite_guadagno.csv  trim,att,mode,g1k_db
+*   tb_e4_uscite_tab.csv       out,trim,att,mode,zrmax,zr20,zr1k,zr20k,zm20,zm1k,zn1k,zn20k
+*     zrmax = massimo di ZR su 20 Hz - 20 kHz; le altre a 20 Hz / 1 kHz / 20 kHz
+* CURVE (wrdata, solo trim 0 e attenuatore al 50 %):
+*   tb_e4_uscite_z_<out>_<modo>.txt   col1 ZR, col3 ZM, col5 ZN (pari = f)
+*
+* Il verdetto non sta qui: docs/preamp/data/2026-09-15/L13/esplorazione/script/e4.py
+* confronta la tabella col log e la giudica.
+
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/diodes/1n4148.lib
+* L39 (NC-017): every active device in this deck is a vendor model from
+* models/, each next to its .provenance.json:
+*   LSK489   - vendor model LSK489A, the published corner sample (I_DSS
+*              2.59 mA, below the group-B window of ADR-031)
+*   LS352    - vendor model LS350 (ADR-018), included on the next line
+*   MMBT5551 - vendor model, Diodes Inc. (ADR-017)
+*   MMBT5401 - vendor model, Diodes Inc. (ADR-017)
+*   MJE15032 - vendor model Qmje15032, onsemi (NC-024, NC-025)
+*   MJE15033 - vendor model Qmje15033, onsemi (NC-025)
+*   1N4148   - vendor model D1N914, onsemi (docs/limitations.md #20)
+* Only the LSK489A carries KF: 1/f noise is on the input pair and nowhere
+* else. No model carries part-to-part spread.
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/spice/preamp/gain_block.subckt
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+
+* --- la sorgente selezionata (FiiO K11, 1.5 ohm, come tb_trim.cir) ---
+VSRC VSN 0 DC 0 AC 1
+RSRC VSN AIN 1.5
+
+* --- blocco A, guadagno unitario, gamba del rele' non montata ---
+XA AIN AOUT AFB ARG ARG10 VPLUS VMINUS GAINBLOCK
+RARG   ARG   0 1G
+RARG10 ARG10 0 1G
+
+* --- le due fisse, un buffer ciascuna (ADR-023), prima del trim (ADR-027) ---
+XF1 AOUT F1OUT F1FB F1RG F1RG10 VPLUS VMINUS GAINBLOCK
+RF1RG   F1RG   0 1G
+RF1RG10 F1RG10 0 1G
+RSEP1 F1OUT FIX1 47
+CFIX1 FIX1 FIXJACK1 4.7u
+RBL1  FIXJACK1 0 470k
+RLD1  FIXJACK1 0 10k
+IFIX1 0 FIXJACK1 DC 0 AC 0
+
+XF2 AOUT F2OUT F2FB F2RG F2RG10 VPLUS VMINUS GAINBLOCK
+RF2RG   F2RG   0 1G
+RF2RG10 F2RG10 0 1G
+RSEP2 F2OUT FIX2 47
+CFIX2 FIX2 FIXJACK2 4.7u
+RBL2  FIXJACK2 0 470k
+RLD2  FIXJACK2 0 50k
+IFIX2 0 FIXJACK2 DC 0 AC 0
+
+* --- il trim, scala di ADR-027 (trim.py: R1_TRIM, R2_TRIM, R3_TRIM) ---
+RL1 AOUT TAP6 845
+RL2 TAP6 TAP12 464
+RL3 TAP12 0 464
+RT1R AOUT ATOP 0.1
+CT1R AOUT ATOP 15p
+RT1S T2C ATOP 1G
+CT1S T2C ATOP 15p
+RT2R TAP6 T2C 0.1
+CT2R TAP6 T2C 15p
+RT2S TAP12 T2C 1G
+CT2S TAP12 T2C 15p
+
+* cablaggio verso l'attenuatore a pannello (ADR-024)
+CWIRE ATOP 0 100p
+
+* --- l'attenuatore a scatti da 10 k (F4): sopra e sotto il cursore ---
+RATTH ATOP BIN 1m
+RATTL BIN 0 10k
+
+* --- blocco B, 0 / +3 / +10 dB (ADR-026) ---
+XB BIN BOUT BFB BRG BRG10 VPLUS VMINUS GAINBLOCK
+CSTB   BRG   0 15p
+RRGB   BRG   0 1G
+CSTB10 BRG10 0 15p
+RRG10B BRG10 0 1G
+
+RISO   BOUT BOUTA 47
+COUT   BOUTA MAINJACK 4.7u
+RBLEED MAINJACK 0 220k
+RLOAD  MAINJACK 0 100k
+IMAIN  0 MAINJACK DC 0 AC 0
+
+.control
+set t = .txt
+echo "trim,att,mode,g1k_db" > tb_e4_uscite_guadagno.csv
+echo "out,trim,att,mode,zrmax,zr20,zr1k,zr20k,zm20,zm1k,zn1k,zn20k" > tb_e4_uscite_tab.csv
+
+foreach tr 0 6 12
+  if $tr = 0
+    alter rt1r = 0.1
+    alter rt1s = 1G
+    alter rt2r = 0.1
+    alter rt2s = 1G
+  end
+  if $tr = 6
+    alter rt1r = 1G
+    alter rt1s = 0.1
+    alter rt2r = 0.1
+    alter rt2s = 1G
+  end
+  if $tr = 12
+    alter rt1r = 1G
+    alter rt1s = 0.1
+    alter rt2r = 1G
+    alter rt2s = 0.1
+  end
+  foreach ap 0 25 50 75 100
+    if $ap = 0
+      alter ratth = 10k
+      alter rattl = 1m
+    end
+    if $ap = 25
+      alter ratth = 7.5k
+      alter rattl = 2.5k
+    end
+    if $ap = 50
+      alter ratth = 5k
+      alter rattl = 5k
+    end
+    if $ap = 75
+      alter ratth = 2.5k
+      alter rattl = 7.5k
+    end
+    if $ap = 100
+      alter ratth = 1m
+      alter rattl = 10k
+    end
+    foreach mode 0 3 10
+      if $mode = 0
+        set gm = "0db"
+        alter rrgb = 1G
+        alter rrg10b = 1G
+      end
+      if $mode = 3
+        set gm = "3db"
+        alter rrgb = 0.1
+        alter rrg10b = 1G
+      end
+      if $mode = 10
+        set gm = "10db"
+        alter rrgb = 0.1
+        alter rrg10b = 0.1
+      end
+
+      * ---- 1. controllo positivo: la manopola e il modo arrivano a B ----
+      alter @vsrc[acmag] = 1
+      alter rload = 100k
+      alter rld1 = 10k
+      alter rld2 = 50k
+      ac dec 20 20 200k
+      let G = vdb(mainjack)
+      meas ac g1k find G at=1000
+      echo "GAIN trim=$tr att=$ap mode=$gm"
+      print g1k
+      echo "$tr,$ap,$gm,$&g1k" >> tb_e4_uscite_guadagno.csv
+      destroy all
+
+      * ---- 2. E4: sorgente spenta, carichi tolti, un jack per volta ----
+      alter @vsrc[acmag] = 0
+      alter rload = 1G
+      alter rld1 = 1G
+      alter rld2 = 1G
+
+      alter @imain[acmag] = 1
+      ac dec 20 20 200k
+      let ZR = real(v(mainjack))
+      let ZM = mag(v(mainjack))
+      let ZN = mag(v(bout))
+      meas ac zrmax MAX ZR from=20 to=20000
+      meas ac zr20  find ZR at=20
+      meas ac zr1k  find ZR at=1000
+      meas ac zr20k find ZR at=20000
+      meas ac zm20  find ZM at=20
+      meas ac zm1k  find ZM at=1000
+      meas ac zn1k  find ZN at=1000
+      meas ac zn20k find ZN at=20000
+      echo "CELL out=main trim=$tr att=$ap mode=$gm"
+      print zrmax zr20 zr1k zr20k zm20 zm1k zn1k zn20k
+      echo "main,$tr,$ap,$gm,$&zrmax,$&zr20,$&zr1k,$&zr20k,$&zm20,$&zm1k,$&zn1k,$&zn20k" >> tb_e4_uscite_tab.csv
+      if $tr = 0
+        if $ap = 50
+          wrdata tb_e4_uscite_z_main_$gm$t ZR ZM ZN
+        end
+      end
+      destroy all
+      alter @imain[acmag] = 0
+
+      alter @ifix1[acmag] = 1
+      ac dec 20 20 200k
+      let ZR = real(v(fixjack1))
+      let ZM = mag(v(fixjack1))
+      let ZN = mag(v(f1out))
+      meas ac zrmax MAX ZR from=20 to=20000
+      meas ac zr20  find ZR at=20
+      meas ac zr1k  find ZR at=1000
+      meas ac zr20k find ZR at=20000
+      meas ac zm20  find ZM at=20
+      meas ac zm1k  find ZM at=1000
+      meas ac zn1k  find ZN at=1000
+      meas ac zn20k find ZN at=20000
+      echo "CELL out=fix1 trim=$tr att=$ap mode=$gm"
+      print zrmax zr20 zr1k zr20k zm20 zm1k zn1k zn20k
+      echo "fix1,$tr,$ap,$gm,$&zrmax,$&zr20,$&zr1k,$&zr20k,$&zm20,$&zm1k,$&zn1k,$&zn20k" >> tb_e4_uscite_tab.csv
+      if $tr = 0
+        if $ap = 50
+          wrdata tb_e4_uscite_z_fix1_$gm$t ZR ZM ZN
+        end
+      end
+      destroy all
+      alter @ifix1[acmag] = 0
+
+      alter @ifix2[acmag] = 1
+      ac dec 20 20 200k
+      let ZR = real(v(fixjack2))
+      let ZM = mag(v(fixjack2))
+      let ZN = mag(v(f2out))
+      meas ac zrmax MAX ZR from=20 to=20000
+      meas ac zr20  find ZR at=20
+      meas ac zr1k  find ZR at=1000
+      meas ac zr20k find ZR at=20000
+      meas ac zm20  find ZM at=20
+      meas ac zm1k  find ZM at=1000
+      meas ac zn1k  find ZN at=1000
+      meas ac zn20k find ZN at=20000
+      echo "CELL out=fix2 trim=$tr att=$ap mode=$gm"
+      print zrmax zr20 zr1k zr20k zm20 zm1k zn1k zn20k
+      echo "fix2,$tr,$ap,$gm,$&zrmax,$&zr20,$&zr1k,$&zr20k,$&zm20,$&zm1k,$&zn1k,$&zn20k" >> tb_e4_uscite_tab.csv
+      if $tr = 0
+        if $ap = 50
+          wrdata tb_e4_uscite_z_fix2_$gm$t ZR ZM ZN
+        end
+      end
+      destroy all
+      alter @ifix2[acmag] = 0
+    end
+  end
+end
+.endc
+
+.end

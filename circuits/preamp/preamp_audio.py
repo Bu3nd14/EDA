@@ -206,7 +206,7 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole):
     # DC-returned by block A's output, a ~1 ohm DC-coupled source, so a
     # 1 MOhm to ground would only load block A for nothing - the same
     # reasoning as block B, whose gate the attenuator returns.
-    # A buffer on a shorted or dead-loaded jack DOES go class B (same 15 mA
+    # A buffer on a shorted or dead-loaded jack DOES go class B (same ~20 mA
     # bias, same 47 ohm): ADR-023 admits that, because nobody listens to that
     # output, provided P7 / ADR-021 hold for it (tb_mute_corto.cir, L17).
     #

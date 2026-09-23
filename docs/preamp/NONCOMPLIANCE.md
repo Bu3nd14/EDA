@@ -104,8 +104,13 @@ una voce sua). La regressione regge su E2–E5, V3, P7, classe A e V2, ma **V1
 cade** su ogni istanza a guadagno unitario: **apre NC-034** (bloccante). La
 corrente di riposo d'uscita sale del 40 %: **apre NC-035**. Aggiorna NC-004,
 NC-024 e NC-025.
-**14 voci aperte, 3 bloccanti.**
-L'accesso a G1 non è concesso finché NC-004, NC-028 e NC-034 restano aperte.
+**L40** (2026-09-23) ha separato la causa della caduta di V1 (la capacità di giunzione
+dei MJE, NC-025) e misurato le due strade date dall'utente. L'utente ha scelto il
+Miller da 1 nF e ha tenuto la corrente di riposo a ~20 mA (**ADR-042**). V1 torna
+≥ 62,08° su ogni istanza, e la regressione di L39 regge. Il prezzo è dichiarato:
+slew, PSRR+ e banda. **Chiude NC-034 e NC-035**; aggiorna NC-025 e NC-029.
+**12 voci aperte, 2 bloccanti.**
+L'accesso a G1 non è concesso finché NC-004 e NC-028 restano aperte.
 
 ---
 
@@ -2018,6 +2023,14 @@ il caso previsto sopra: C_f non aiuta a 0 dB, il Miller da 470 pF sì. Quanta pa
 della caduta venga dalla f_T bassa dei MJE non è stato separato: resta da fare in
 L40, accanto alla scelta del valore.
 
+**AGGIORNATA IL 2026-09-23 da L40.** Separato: la caduta di V1 è **tutta** della
+CJE/CJC dei MJE (3,06 nF / 0,30 nF). Rimettendo i soli valori del segnaposto
+(300 / 100–120 pF) la cella peggiore passa da 55,55° a 62,49°. TF e VAF dei MJE non
+contano (55,06 / 55,42°). **ADR-042** compensa col Miller da 1 nF, e la sua clausola
+«Da riaprire se» cita questa voce: se il MJE vero ha una CJE molto più bassa, il
+Miller va rispazzato. La voce resta aperta: il modello sta ancora sotto il proprio
+datasheet, e ogni cifra in alta frequenza lo porta con sé.
+
 ### NC-026 — Il disegno a blocchi non è rigenerabile da L22: le sue asserzioni non girano da un giorno
 
 | | |
@@ -2444,6 +2457,13 @@ l'apparecchio intero.
 
 Lotto **L30**.
 
+**AGGIORNATA IL 2026-09-23 da L40.** Coi modelli del costruttore la corrente di riposo
+d'uscita è ~20,3 mA, e l'utente l'ha tenuta (**ADR-042**, chiude NC-035). La
+dissipazione a riposo per blocco sale a **0,993 W** (`tb_op`: 15 V × (32,6 + 33,6) mA),
+cioè **~7,9 W** per gli otto blocchi della scheda audio, contro 6,45 W. La strada
+pronta, se la stima termica di L30 non regge, è R128 a 1,33 kΩ: 14,6 mA,
+0,822 W per blocco, 0,5° di V1 in meno.
+
 ### NC-030 — `tb_noise_vectors.cir` non scrive dati: cita vettori di rumore di dispositivi che non esistono più
 
 | | |
@@ -2717,7 +2737,7 @@ evidenza `data/2026-09-15/L37/`.
 | Requisito | **V1**, soglia 60° ovunque (**ADR-019**), cella di **ADR-024** |
 | Severità | **bloccante** |
 | Aperta da | `reports/2026-09-22-L39-modelli-costruttore.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-23 da L40** — ADR-042. Vedi «Chiusura» in fondo alla voce e «Voci chiuse» |
 
 **Evidenza.** Stessi deck, stesse celle, prima (segnaposto) e dopo (modelli del
 costruttore), `data/2026-09-22/L39/margini.csv`:
@@ -2754,6 +2774,21 @@ e guadagno minimo fino a +1,5 dB; poi V1 ≥ 60° su blocco A, blocco B nei tre 
 buffer, con la regressione di L39 rifatta (slew e V3, E2, risposta, V2), e la
 quota di caduta dovuta alla f_T dei MJE (NC-025) separata.
 
+**Chiusura (2026-09-23, L40).** `reports/2026-09-23-L40-v1-costruttore.md`,
+dati `data/2026-09-23/L40/`.
+- **La causa è separata.** Rimettendo al segnaposto una cosa alla volta, sulla cella
+  del minimo, la sola CJE/CJC dei MJE ridà 62,49°. MMBT, JFET, diodo, TF e VAF dei
+  MJE pesano meno di 1,1° ciascuno. Il controllo, tutto al segnaposto, ridà 61,80°.
+- **ADR-042**, decisa dall'utente sui numeri: C124 da 470 pF a 1 nF.
+- **Deck versionati, blocco rigenerato** (`dopo/`): blocco B 0 / +3 / +10 dB
+  **62,08 / 76,20 / 96,66°**, blocco A **67,68°**, buffer **63,21°**.
+- **Gruppo B di I_DSS** (ADR-031), rimisurato sulle tre istanze: B 62,19–62,24°,
+  A 67,71–67,74°, buffer 63,23–63,25°. La dispersione resta ≤ 0,16°.
+- **La regressione regge**: E2–E5, V3, P7, classe A, V2 dei relè e del mute.
+- **Il prezzo dichiarato**: slew in discesa −1,68 V/µs, PSRR+ ~6,5 dB più basso
+  da 1 a 20 kHz (i limiti per tono di ADR-020 sono ricalcolati) e banda a 0 dB di
+  912 kHz.
+
 ### NC-035 — Coi modelli del costruttore la corrente di riposo d'uscita sale del 40 %
 
 | | |
@@ -2761,7 +2796,7 @@ quota di caduta dovuta alla f_T dei MJE (NC-025) separata.
 | Requisito | classe A (**ADR-003**, **ADR-023**) · **P5** / **NC-029** (dissipazione a riposo) · il valore select-on-test del moltiplicatore di Vbe |
 | Severità | **maggiore** |
 | Aperta da | `reports/2026-09-22-L39-modelli-costruttore.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-23 da L40** — ADR-042. Vedi «Chiusura» in fondo alla voce e «Voci chiuse» |
 
 **Evidenza.** `tb_op.cir`: I_C di Q132/Q133 da **14,56 a 20,29 / 20,40 mA**. La Vbe
 dei MJE vale 0,566 / 0,539 V contro 0,662 dei segnaposto, e il 1,69 kΩ del
@@ -2783,7 +2818,34 @@ nuovo valore, o accettare ~20 mA con una ADR), estendere lo sweep sotto 1,5 kΩ,
 ridare il budget termico e di corrente. Da fare in L40 con la compensazione:
 la corrente d'uscita tocca anche i poli dello stadio d'uscita.
 
+**Chiusura (2026-09-23, L40).** Lo sweep è esteso sotto 1,5 kΩ
+(`data/2026-09-23/L40/mje/`). **R128 a 1,33 kΩ** ridà 14,61 / 14,69 mA; 1,20 k dà
+12,6 mA. Misurata anche la relazione con V1: la corrente più bassa **toglie**
+margine (54,27° a 14,6 mA contro 55,55° a 20,3 mA, sul Miller vecchio).
+**Decisione dell'utente (ADR-042)**: si tiene 1,69 kΩ, e **~20,3 mA** è la
+corrente di progetto. Il sorgente lo dice accanto al valore.
+- Budget per blocco: 0,993 W a riposo, rail 32,6 / 33,6 mA. Il totale va in
+  NC-029: ~7,9 W per gli otto blocchi, contro 6,6 W a 14,6 mA.
+- Classe A e P7 reggono (MJE peggiore 0,371 W contro 1,04 W).
+- R128 resta select-on-test.
+
 ## Voci chiuse
+
+**NC-034 — Coi modelli del costruttore V1 cade su ogni istanza a guadagno
+unitario** (bloccante). **CHIUSA il 2026-09-23 da L40.**
+- La causa è la CJE dei MJE (NC-025), separata una grandezza alla volta.
+- **ADR-042**: Miller da 1 nF. V1 vale ≥ 62,08° su blocco A, blocco B nei tre modi
+  e buffer, anche nel gruppo B.
+- La regressione di L39 regge; slew, PSRR+ e banda sono il prezzo dichiarato.
+
+**NC-035 — Coi modelli del costruttore la corrente di riposo d'uscita sale del
+40 %** (maggiore). **CHIUSA il 2026-09-23 da L40.**
+- Lo sweep è esteso fino a 1,20 kΩ: 14,6 mA stanno a 1,33 kΩ.
+- **ADR-042**: l'utente tiene 1,69 kΩ e ~20,3 mA come corrente di progetto.
+- Il costo termico passa a NC-029.
+
+Il testo completo delle due voci resta sopra, con la sua «Chiusura». Report:
+`reports/2026-09-23-L40-v1-costruttore.md`.
 
 **NC-017 — Sei dispositivi attivi su sette non hanno un modello SPICE del
 costruttore** (bloccante). **CHIUSA il 2026-09-22 da L39.**

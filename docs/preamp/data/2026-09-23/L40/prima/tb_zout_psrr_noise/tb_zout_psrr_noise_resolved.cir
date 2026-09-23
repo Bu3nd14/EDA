@@ -1,0 +1,297 @@
+tb_zout_psrr_noise.cir - E4 (Zout), PSRR, and E5 (output noise)
+* Zout  : 1 A AC current injected at the jack, input grounded, load removed.
+*         The 220k bleeder stays because the real circuit has it.
+*         Measured AT THE JACK, i.e. what the cable and the cj EV250 see -
+*         which is the quantity E4 constrains, not the raw emitter impedance.
+* PSRR  : 1 V AC in series with each rail, separately. Reported as
+*         20*log10(Vrail/Vout), so BIGGER IS BETTER.
+* NOISE : output noise integrated 20 Hz - 20 kHz, unweighted (E5 < 10 uV).
+*
+* *** THE NOISE NUMBER IS A FLOOR, NOT A PREDICTION ***
+* Since L39 the models are the manufacturer's, and only the LSK489A carries
+* KF: the input pair has its 1/f, the mirror/VAS flicker noise is missing.
+* Treat the result as a floor for everything but the input pair.
+
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/diodes/1n4148.lib
+* L39 (NC-017): every active device in this deck is a vendor model from
+* models/, each next to its .provenance.json:
+*   LSK489   - vendor model LSK489A, the published corner sample (I_DSS
+*              2.59 mA, below the group-B window of ADR-031)
+*   LS352    - vendor model LS350 (ADR-018), included on the next line
+*   MMBT5551 - vendor model, Diodes Inc. (ADR-017)
+*   MMBT5401 - vendor model, Diodes Inc. (ADR-017)
+*   MJE15032 - vendor model Qmje15032, onsemi (NC-024, NC-025)
+*   MJE15033 - vendor model Qmje15033, onsemi (NC-025)
+*   1N4148   - vendor model D1N914, onsemi (docs/limitations.md #20)
+* Only the LSK489A carries KF: 1/f noise is on the input pair and nowhere
+* else. No model carries part-to-part spread.
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS NPP DC 0 AC 0
+VPRAIL NPP 0 DC 15
+VMM VMINUS NMM DC 0 AC 0
+VMRAIL NMM 0 DC -15
+
+VSRC SRCN 0 DC 0 AC 1
+RSRC SRCN IN 430
+
+* Gain-relay contacts (L27, ADR-026): open = 15 pF + 1 G, closed = 0.1 ohm.
+CSTRAY   RG   0 15p
+RRG      RG   0 1G
+CSTRAY10 RG10 0 15p
+RRG10    RG10 0 1G
+
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+IOUT   0 JACK DC 0 AC 0
+
+.control
+* --- wrdata (L5) + CORREZIONE DELLA CODA -----------------------------
+* NOMI PARAMETRIZZATI: un `$var` in un nome di file non si chiude da solo
+* - ngspice fa entrare nel nome della variabile anche `.`, `-` e `_`,
+* quindi `wrdata ..._$gm.txt` cercherebbe la variabile "gm.txt". Un `$`
+* invece TERMINA il nome: la forma che funziona e' `$gm$t` con t = ".txt".
+* Misurato con una sonda in L5, non dedotto.
+*
+* ETICHETTE: 0db/3db/10db nel nome invece dei valori di RRG e RRG10. L27
+* (ADR-026): i `foreach` sono `foreach mode 0 3 10`, ogni ramo imposta i DUE
+* contatti, e gli echo stampano MODE=<etichetta>.
+*
+* I 14 FILE, per sezione:
+*   _zout_0db / _3db / _10db      Z al jack e Z al nodo OUT
+*   _psrrp_0db / _3db / _10db     PSRR dal rail +
+*   _psrrm_0db / _3db / _10db     PSRR dal rail -
+*   _noise_0db / _3db / _10db     spettro di rumore, RSRC = 430
+*   _noise_intrinsic              coda: 0 dB, RSRC=1 ohm
+*   tb_zout_psrr_noise_wrdata     coda: +10 dB, RSRC=2500 - IL CASO
+*                                 PEGGIORE, ed e' il file principale
+*                                 perche' <basename>_wrdata.txt e' il nome
+*                                 che run_simulation.sh cerca per primo.
+*
+* COLONNE. Per ogni vettore una COPPIA (frequenza, valore): le PARI sono
+* la frequenza ripetuta, i dati sono le DISPARI.
+*   sezione Zout  (81 righe, 20 Hz - 200 kHz, 20 punti/decade)
+*     col0 = f [Hz]  col1 = Z  = |v(JACK)| = ohm AL JACK (1 A iniettato)
+*     col2 = f [Hz]  col3 = ZA = |v(OUT)|  = ohm al nodo OUT, prima di RISO
+*   sezioni PSRR  (81 righe)
+*     col0 = f [Hz]  col1 = P = -db(v(JACK)) in dB, PIU' GRANDE E' MEGLIO
+*   sezioni rumore (151 righe, 20 Hz - 20 kHz, 50 punti/decade, plot noise1)
+*     col0 = f [Hz]  col1 = onoise_spectrum [V/sqrt(Hz)]
+*     col2 = f [Hz]  col3 = inoise_spectrum [V/sqrt(Hz)]
+*
+* *** LA CORREZIONE (L5, warning aperto in L3d) ***
+* In coda a questo deck mancavano i `destroy all` che i `foreach` qui
+* sopra hanno. Ogni analisi crea plot numerati, quindi la SECONDA `noise`
+* di coda produceva noise3/noise4 mentre `setplot noise2` continuava a
+* selezionare il plot della PRIMA: la riga "WORST CASE" stampava
+* 1.676227e-06, cioe' esattamente il valore "intrinsic" della riga sopra,
+* invece di 5.6969e-06. Un fattore 3,4 sul rumore in uscita, senza alcun
+* errore. Vedi docs/limitations.md #10. I due `destroy all` in fondo sono
+* il rimedio, ed erano gia' stati verificati su una copia di scratch.
+* Controprova indipendente: tb_noise_breakdown.cir misura la stessa
+* configurazione (D) e da' 5.696897e-06.
+* ---------------------------------------------------------------------
+* *** LA SPAZZATA ARRIVA A 200 kHz, NON A 100 kHz (L5b) ***
+* `meas ... find <vec> at=100000` interpola FRA due punti, quindi vuole che
+* 100 kHz sia INTERNO alla spazzata. Con `ac dec 20 20 100k` cadeva
+* sull'ultimo punto e ngspice rispondeva
+*     Error: measure  za100k  find(AT) : out of interval
+* lasciando za100k e p100k inesistenti: sei misure su sei sezioni non
+* venivano prodotte, e il `print` che segue stampava solo un warning. Il
+* deck proseguiva e usciva 0, quindi il buco non si vedeva dal codice di
+* uscita.
+*
+* IL RIMEDIO SPOSTA LA GRIGLIA, e va detto perche' l'ipotesi contraria e'
+* stata falsificata confrontando i log. Con `dec 20 20 100k` la spazzata
+* copre 3,699 decadi: ngspice NON usa un passo di 1/20 di decade e poi si
+* ferma, distribuisce 74 punti fra gli estremi, quindi il passo reale era
+* 0,0507 decadi. Con 200k le decadi sono 4 esatte, i punti diventano 81 e
+* il passo e' esattamente 0,05. Conseguenza misurata:
+*
+*   z20   1.69341e+03 -> 1.69341e+03   identico (e' il primo punto)
+*   z1k   5.88414e+01 -> 5.87602e+01   -0,14%
+*   z20k  4.80490e+01 -> 4.80488e+01   -4e-6
+*   za*   identici a cinque cifre tranne za20k, -7e-5
+*
+* Solo z1k si muove in modo visibile, e NON perche' il circuito sia
+* cambiato: 1 kHz non cade su un punto della griglia in nessuno dei due
+* casi, quindi `meas find at=1000` interpola, e i due vicini fra cui
+* interpola sono diversi. E' la misura dell'errore di interpolazione di
+* `meas find at=` su una griglia da 20 punti/decade: circa 0,1%. Il valore
+* nuovo e' il migliore dei due, perche' la griglia e' ora regolare.
+*
+set t = .txt
+set units = degrees
+
+echo "########## Zout at the jack, load removed, both gain modes ##########"
+* *** LA SORGENTE SPENTA (L13, 2026-09-15) ***
+* Fino a L13 questa sezione NON azzerava @vsrc[acmag]: VSRC restava a 1 V AC
+* e v(JACK) sommava alla caduta dovuta a 1 A iniettato il segnale amplificato
+* dal blocco. Nessun errore, rc 0. La firma stava nei numeri: za1k valeva
+* 1,0355 / 1,4704 / 3,2621 ohm a 0 / +3 / +10 dB - cioe' il guadagno del modo
+* per 1 V, piatto in frequenza - mentre il nodo di un buffer identico, a
+* sorgente spenta, da' 0,0386 ohm (tb_uscite_fisse.cir, L17). Presente dal
+* 2026-09-09 (za1k 1,03692). Numeri prima e dopo:
+* docs/preamp/data/2026-09-15/L13/, report 2026-09-15-L13-e4-tre-uscite.md.
+alter @vsrc[acmag] = 0
+alter rload = 1G
+alter @iout[acmag] = 1
+foreach mode 0 3 10
+  if $mode = 0
+    set gm = "0db"
+    alter rrg = 1G
+    alter rrg10 = 1G
+  end
+  if $mode = 3
+    set gm = "3db"
+    alter rrg = 0.1
+    alter rrg10 = 1G
+  end
+  if $mode = 10
+    set gm = "10db"
+    alter rrg = 0.1
+    alter rrg10 = 0.1
+  end
+  ac dec 20 20 200k
+  let Z = mag(v(JACK))
+  meas ac z20   find Z at=20
+  meas ac z1k   find Z at=1000
+  meas ac z20k  find Z at=20000
+  let ZA = mag(v(OUT))
+  meas ac za20  find ZA at=20
+  meas ac za1k  find ZA at=1000
+  meas ac za20k find ZA at=20000
+  meas ac za100k find ZA at=100000
+  echo "MODE=$gm"
+  print z20 z1k z20k za20 za1k za20k za100k
+  wrdata tb_zout_psrr_noise_zout_$gm$t Z ZA
+  destroy all
+end
+alter @iout[acmag] = 0
+alter rload = 100k
+alter @vsrc[acmag] = 1
+
+echo "########## PSRR (input source silenced) ##########"
+alter @vsrc[acmag] = 0
+alter @vpp[acmag] = 1
+foreach mode 0 3 10
+  if $mode = 0
+    set gm = "0db"
+    alter rrg = 1G
+    alter rrg10 = 1G
+  end
+  if $mode = 3
+    set gm = "3db"
+    alter rrg = 0.1
+    alter rrg10 = 1G
+  end
+  if $mode = 10
+    set gm = "10db"
+    alter rrg = 0.1
+    alter rrg10 = 0.1
+  end
+  ac dec 20 20 200k
+  let P = -db(v(JACK))
+  meas ac p100  find P at=100
+  meas ac p1k   find P at=1000
+  meas ac p10k  find P at=10000
+  meas ac p100k find P at=100000
+  echo "PSRR+ MODE=$gm (dB, bigger is better)"
+  print p100 p1k p10k p100k
+  wrdata tb_zout_psrr_noise_psrrp_$gm$t P
+  destroy all
+end
+alter @vpp[acmag] = 0
+
+echo "########## PSRR from V- ##########"
+alter @vmm[acmag] = 1
+foreach mode 0 3 10
+  if $mode = 0
+    set gm = "0db"
+    alter rrg = 1G
+    alter rrg10 = 1G
+  end
+  if $mode = 3
+    set gm = "3db"
+    alter rrg = 0.1
+    alter rrg10 = 1G
+  end
+  if $mode = 10
+    set gm = "10db"
+    alter rrg = 0.1
+    alter rrg10 = 0.1
+  end
+  ac dec 20 20 200k
+  let P = -db(v(JACK))
+  meas ac p100  find P at=100
+  meas ac p1k   find P at=1000
+  meas ac p10k  find P at=10000
+  meas ac p100k find P at=100000
+  echo "PSRR- MODE=$gm (dB, bigger is better)"
+  print p100 p1k p10k p100k
+  wrdata tb_zout_psrr_noise_psrrm_$gm$t P
+  destroy all
+end
+alter @vmm[acmag] = 0
+alter @vsrc[acmag] = 1
+
+echo "########## output noise 20 Hz - 20 kHz ##########"
+foreach mode 0 3 10
+  if $mode = 0
+    set gm = "0db"
+    alter rrg = 1G
+    alter rrg10 = 1G
+  end
+  if $mode = 3
+    set gm = "3db"
+    alter rrg = 0.1
+    alter rrg10 = 1G
+  end
+  if $mode = 10
+    set gm = "10db"
+    alter rrg = 0.1
+    alter rrg10 = 0.1
+  end
+  noise v(JACK) VSRC dec 50 20 20000 1
+  setplot noise1
+  wrdata tb_zout_psrr_noise_noise_$gm$t onoise_spectrum inoise_spectrum
+  setplot noise2
+  echo "MODE=$gm  RSRC=430 (phono cathode follower)"
+  print onoise_total inoise_total
+  destroy all
+end
+* and with a dead-short source, to separate source-resistance noise
+alter rsrc = 1
+alter rrg = 1G
+alter rrg10 = 1G
+noise v(JACK) VSRC dec 50 20 20000 1
+setplot noise1
+wrdata tb_zout_psrr_noise_noise_intrinsic.txt onoise_spectrum inoise_spectrum
+setplot noise2
+echo "RRG=1G  RSRC=1 ohm (intrinsic)"
+print onoise_total inoise_total
+* IL `destroy all` CHE MANCAVA. Senza, la `noise` qui sotto crea
+* noise3/noise4 e il `setplot noise2` che segue continua a selezionare
+* QUESTO plot: la riga WORST CASE ristampava questo stesso numero.
+destroy all
+alter rsrc = 2500
+alter rrg = 0.1
+alter rrg10 = 0.1
+noise v(JACK) VSRC dec 50 20 20000 1
+setplot noise1
+wrdata tb_zout_psrr_noise_wrdata.txt onoise_spectrum inoise_spectrum
+setplot noise2
+echo "RRG=0.1  RSRC=2500 (attenuator at mid-rotation, +10 dB) - WORST CASE"
+print onoise_total inoise_total
+destroy all
+.endc
+
+.end

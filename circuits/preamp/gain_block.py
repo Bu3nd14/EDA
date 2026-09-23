@@ -15,7 +15,7 @@ TOPOLOGY - three stages + global feedback, no op-amp, no DC servo:
 
     stage 1  LSK489 differential pair, CASCODED, current-mirror load
     stage 2  PNP common-emitter VAS, Miller-compensated, current-source load
-    stage 3  complementary Class A emitter follower, MJE15032/33, 15 mA
+    stage 3  complementary Class A emitter follower, MJE15032/33, ~20 mA (ADR-042)
 
   ADR-013 input pair: LSK489 monolithic dual N-JFET (C_iss 4 pF)
   ADR-014 cascode:    mandatory - without it the HF response would depend on
@@ -123,8 +123,8 @@ R_G10 = "866"       # Leg 2, relay K5, commanded only TOGETHER with K1:
                     # +9.97 dB - E2's "+10 dB", 0.16 % from the single 698 ohm
                     # leg it replaces (+9.96 dB until L27). So the network at
                     # +10 dB is still a 2.2 kOhm load on the output stage
-                    # (3.9 mA peak at clipping, well inside the 15 mA Class A
-                    # bias), and R_f's own Johnson noise (4.98 nV/rtHz ->
+                    # (3.9 mA peak at clipping, well inside the ~20 mA Class A
+                    # bias of ADR-042), and R_f's own Johnson noise (4.98 nV/rtHz ->
                     # 0.70 uV over 20 kHz) stays far below E5's 10 uV.
                     # Why parallel and not a selector in series: no contact
                     # state, welded included, can exceed +10 dB, and a single
@@ -445,7 +445,15 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # MUST be C0G/NP0: it sees ~13 V of DC bias and carries the entire
     # correction signal; an X7R here would modulate the compensation with the
     # signal. Handed to bom-component-manager as a dielectric requirement.
-    C("470p", NX, NHI)
+    # ADR-042 (L40): 470p -> 1n. On the manufacturer models V1 fell to 54.9 deg
+    # at unity gain (NC-034), and the cause is the MJE junction capacitance
+    # (CJE 3.06 nF: the f_T shortfall of NC-025), not the MMBTs. 1n gives V1
+    # >= 62.08 deg on every instance and mode, crossover 889 -> 430 kHz, -3 dB
+    # at 0 dB 2.45 MHz -> 912 kHz. The price, accepted by the user (ADR-042),
+    # is the one ADR-025 refused 1n for: slew rate falling 3.40 -> 1.68 V/us,
+    # so a 20 kHz sine at 12 V peak (+10 dB, full scale) starts to slew
+    # (+0.57 V of DC), and PSRR from V+ at 10 kHz 39.5 -> 33.0 dB.
+    C("1n", NX, NHI)
 
     # VAS load: current sink off the same reference string as the tail.
     # 0.55 V / 6 mA = 91.7 -> 91 Ohm (E96).
@@ -458,14 +466,16 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # ========================================================================
     # 1.69k is a SWEPT value, not a calculated one. The hand calculation was
     # wrong twice: 2.16k (textbook Vbe = 0.62 V) simulated at Iq = 22.1 mA,
-    # 1.87k at 17.5 mA. spice/preamp/tb/tb_bias_sweep.cir swept the leg and
-    # 1.69k lands on Iq = 14.7 mA - the honest number, not "15".
-    # Sensitivity from that sweep: 50 Ohm (3 %) moves Iq by 0.78 mA (5.3 %),
+    # 1.87k at 17.5 mA. spice/preamp/tb/tb_bias_sweep.cir swept the leg and,
+    # on the placeholder models, 1.69k landed on Iq = 14.7 mA.
+    # ADR-042 (L40): re-swept on the manufacturer models (MJE Vbe 0.566 /
+    # 0.539 V), 1.69k gives Iq = 20.3 / 20.4 mA, and the user KEPT it: ~20 mA
+    # is the design current now, not 14.7. 1.33k would give 14.6 mA, 0.17 W
+    # less per block, and 0.5 deg less V1 (data/2026-09-23/L40/mje/).
+    # Sensitivity: 50 Ohm (3 %) moves Iq by ~0.8 mA (4 %) on these models,
     # so 1 % resistors are not the limit here; the spread of Vbe between
-    # samples is. This resistor is SELECT-ON-TEST on the bench, and MUST be
-    # re-swept when the vendor MJE15032/33 and 2N5551 models arrive (Fase 4):
-    # it is set by device Vbe, which is exactly what a placeholder model
-    # gets wrong.
+    # samples is. This resistor stays SELECT-ON-TEST on the bench: it is set
+    # by device Vbe, and no model carries part-to-part spread.
     # This transistor MUST be thermally coupled to the NPN output device
     # (MJE15032) or the bias drifts. ADR-034 / NC-019: the coupling is PCB
     # COPPER, not thermal compound + cable tie - ADR-017 makes this part an
@@ -486,12 +496,12 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # 5. OUTPUT STAGE - complementary Class A emitter follower
     # ========================================================================
     # MJE15032/33: confirmed Active and in stock in the Fase 1 report, and
-    # deliberately oversized - at 15 mA / 15 V they dissipate 225 mW against a
+    # deliberately oversized - at 20 mA / 15 V (ADR-042) they dissipate 0.3 W against a
     # package good for tens of watts, so the operating point never leaves the
     # flat part of the beta and Vbe curves.
     # Class A holds under the loads V1 lists, by arithmetic: the heaviest of
     # them is 100 kOhm (cj EV250) in parallel with the 2.2 kOhm feedback
-    # network, i.e. 3.9 mA peak at full output - a quarter of the 15 mA bias,
+    # network, i.e. 3.9 mA peak at full output - a fifth of the ~20 mA bias,
     # so neither device turns off.
     # It does NOT hold with the mute engaged or with a short at an output
     # connector (NC-001, NC-010): both put ground behind 47 ohm + 4.7 uF and
@@ -580,58 +590,59 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 # ============================================================================
 
 # ============================================================================
-# SIMULATED RESULTS - L39, 2026-09-22, ON THE MANUFACTURER MODELS (NC-017)
+# SIMULATED RESULTS - L40, 2026-09-23, MANUFACTURER MODELS, C124 1n (ADR-042)
 # Every number below came out of a deck in spice/preamp/tb/, not out of a
-# calculation: docs/preamp/data/2026-09-22/L39/dopo/ (and prima/ for the same
-# decks on the hand-written placeholders, until L39). Report:
-# docs/preamp/reports/2026-09-22-L39-modelli-costruttore.md.
+# calculation: docs/preamp/data/2026-09-23/L40/dopo/ (and prima/ for the same
+# decks with C124 470p, i.e. L39). Report:
+# docs/preamp/reports/2026-09-23-L40-v1-costruttore.md.
 # Models: LSK489A (published corner sample, I_DSS 2.59 mA), MMBT5551, MMBT5401,
 # LS350, Qmje15032, Qmje15033, D1N914 - all from models/. Only the LSK489A has
 # KF; no model has spread. The MJE miss their datasheet f_T (NC-025) and the
 # MJE15032 its h_FE (NC-024); the LS352 f_T sits 35 % low (NC-020).
 #
-#   OPERATING POINT (tb_op.cir), before -> after L39
-#     LSK489 halves     2.211/2.163 -> 2.282/2.238 mA, gm 4.57/4.52 mS
-#     tail sink          4.374 -> 4.520 mA
-#     VAS (MMBT5401)     6.443 -> 6.797 mA
-#     output pair       14.56 -> 20.29 / 20.40 mA   *** +40 % - NC-035 ***
-#                       Vbe of the MJE 0.662 -> 0.566 / 0.539 V: the 1.69k of
-#                       the Vbe multiplier was swept on the placeholders, and
-#                       on these models 1.5k-1.87k gives 17.3-23.2 mA.
-#     rail currents     26.4 / 27.4 -> 32.6 / 33.6 mA per block
-#     output DC offset  -16.6 -> -15.45 mV
+#   OPERATING POINT (tb_op.cir) - unchanged by L40, identical to L39
+#     LSK489 halves     2.282/2.238 mA, gm 4.57/4.52 mS
+#     tail sink         4.520 mA        VAS (MMBT5401) 6.797 mA
+#     output pair       20.29 / 20.40 mA  - the design current, ADR-042
+#                       (Vbe of the MJE 0.566 / 0.539 V; 1.33k would give 14.6)
+#     rail currents     32.6 / 33.6 mA per block -> 0.993 W at rest (NC-029)
+#     output DC offset  -15.45 mV
 #
 #   LOOP - V1 (ADR-019, >= 60 deg; ADR-024 cell: cable at the jack, min over
 #   0-4.7 nF, every V1 source, 100 k and 10 k; block A harness <= 1 nF)
-#     block B 0 dB    61.80 -> 55.55 deg   *** BELOW 60 - NC-034 ***
-#     block B +3 dB   69.77 -> 63.90 deg
-#     block B +10 dB 102.98 -> 100.19 deg
-#     block A         63.36 -> 57.93 deg   *** BELOW 60 - NC-034 ***
-#     buffer          61.63 -> 54.92 deg   *** BELOW 60 - NC-034 ***
-#     loop gain at 10 Hz 72.4 -> 81.4 dB; crossover at 0 dB ~0.89 MHz.
-#     C_f does not help at 0 dB (R_g open, feedback already total); the Miller
-#     C124 at 820 p gives 60.70 deg on block B at 0 dB with the crossover at
-#     520 kHz (data/2026-09-22/L39/esplorazione/). User, 2026-09-22: phase
-#     margin first, bandwidth may drop, or up to +1.5 dB of gain. L40.
+#     block B 0 dB    55.55 -> 62.08 deg   (C124 470p -> 1n, ADR-042)
+#     block B +3 dB   63.90 -> 76.20 deg
+#     block B +10 dB 100.19 -> 96.66 deg
+#     block A         57.93 -> 67.68 deg
+#     buffer          54.92 -> 63.21 deg
+#     I_DSS group B (ADR-031): B 62.19-62.24, A 67.71-67.74, buffer
+#     63.23-63.25 deg. Loop gain at 10 Hz 81.2 dB; crossover at 0 dB 889 ->
+#     430 kHz. The drop of L39 was the MJE junction capacitance (NC-025).
 #
-#   RESPONSE (tb_ac.cir): 1 kHz gain -0.007 / +3.039 / +9.959 dB (E2 holds);
-#     -3 dB at 0 dB from 2.12 to 2.45 MHz.
-#   Zout (tb_e4_uscite.cir): Re(Z) max at the jack 60.04 ohm main, 53.12 ohm
-#     fixed (E4 < 100 ohm); at the block node 0.027 ohm (0 dB).
-#   PSRR (tb_zout_psrr_noise.cir), from V+ at 0 dB: 78.0 / 59.5 / 39.5 dB at
-#     100 Hz / 1 kHz / 10 kHz (was 72.1 / 59.6 / 39.8). From V- up to 9 dB lower
-#     than before at 10-100 kHz, still >= 53 dB.
+#   RESPONSE (tb_ac.cir): 1 kHz gain -0.007 / +3.039 / +9.963 dB (E2 holds);
+#     -3 dB at 0 / +3 / +10 dB 912 / 303 / 113 kHz (was 2.45 MHz / 577 / 182);
+#     at +10 dB, 20 kHz is 0.134 dB below 1 kHz. NB: in tb_ac.cir the meas
+#     named `flo` is the UPPER corner and `fhi` the lower one.
+#   SLEW (data/2026-09-23/L40/slew/, +10 dB): step 4.42 / -1.68 V/us (was
+#     8.25 / -3.40). A 20 kHz sine at 12 V peak starts to slew: +0.57 V of DC
+#     behind the stage (0.05 V with 470p). Accepted in ADR-042.
+#   Zout (tb_e4_uscite.cir): Re(Z) max at the jack 60.09 ohm main, 53.12 ohm
+#     fixed (E4 < 100 ohm); at the block node 0.037 / 0.57 ohm at 1 / 20 kHz.
+#   PSRR (tb_zout_psrr_noise.cir), from V+, worst mode (+10 dB): 62.6 / 43.0 /
+#     23.0 dB at 100 Hz / 1 kHz / 10 kHz (was 68.1 / 49.5 / 29.5). The per-tone
+#     limits of ADR-020 are recomputed in REQUIREMENTS.md (white noise on V+
+#     <= 87 nV/rtHz).
 #   NOISE (tb_noise_breakdown.cir), 20 Hz-20 kHz: 1.18 / 1.23 / 1.49 uV at 0 dB,
-#     4.28 uV at +10 dB (2.5 kOhm); E5 worst 5.05 uV (tb_e3_e5_ldr.cir). 1/f only
+#     4.27 uV at +10 dB (2.5 kOhm); E5 worst 5.03 uV (tb_e3_e5_ldr.cir). 1/f only
 #     on the input pair: still a floor (NC-004).
 #   E3 (tb_e3_e5_ldr.cir): worst 110.7 kOhm (>= 100 kOhm).
 #   V3 (tb_v3_overload.cir): clips +13.23 / -13.79 V, back inside 5 % of its
-#     linear envelope in 1.07 us, DC at the jack +3.2 mV.
-#   P7 (tb_mute_corto.cir): worst MJE 0.362 W (1.04 W allowed), worst MMBT
-#     92.6 mW (310 mW in SOT-23). Class A holds on every listening path.
-#   V2 - GAIN RELAYS (tb_switch_v2.cir): envelope +1.526 / -1.624 V, as before.
+#     linear envelope in 3.03 us (1.07 with 470p), DC at the jack +3.2 mV.
+#   P7 (tb_mute_corto.cir): worst MJE 0.371 W (1.04 W allowed), worst MMBT
+#     98 mW (310 mW in SOT-23). Class A holds on every listening path.
+#   V2 - GAIN RELAYS (tb_switch_v2.cir): unchanged by L40.
 #     Mute (tb_v2_mute_ldr.cir, 1 kHz, 100 k, main): S 7.16 / 5.32 dB, A <=
-#     3.75 uV; chain distortion floor of C (C_pav) 0.96 -> 0.27 mV.
+#     3.75 uV, B2 0.33 uV; chain distortion floor of C (C_pav) 0.27 -> 0.34 mV.
 #
 #   THD: tb_v3_overload.cir prints a .four figure. Since L39 it is a MODEL
 #     figure of manufacturer models that miss parts of their own datasheet and

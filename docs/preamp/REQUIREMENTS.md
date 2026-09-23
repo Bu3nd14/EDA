@@ -104,24 +104,34 @@ del blocco e sommati in quadratura su 20 Hz–20 kHz, devono restare
 
 **Come si decide.** Si prende lo spettro dei rail, prima simulato da chi
 progetta l'alimentatore e poi misurato sul prototipo, e la PSRR(f) dai CSV
-vigenti: oggi `data/2026-09-13/tb_zout_psrr_noise_psrr{p,m}_10db.csv`,
-topologia LS352. La modalità +10 dB è la peggiore su tutti gli 81 punti di
-entrambi i rail. Il vincolo passa se la somma resta ≤ 1 µV. La verifica finale
+vigenti: oggi `data/2026-09-23/L40/dopo/tb_zout_psrr_noise/tb_zout_psrr_noise_psrr{p,m}_10db.csv`
+(modelli del costruttore, C124 1 nF). La modalità +10 dB è la peggiore su tutti
+gli 81 punti di entrambi i rail. Il vincolo passa se la somma resta ≤ 1 µV. La verifica finale
 è la misura in uscita sul prototipo.
 
 **I limiti per tono, se tutta la quota cade su una sola frequenza**
-(1 µV · 10^(PSRR/20), modalità +10 dB; 50 Hz interpolato sulla griglia). Con
-più componenti vale la somma, non la tabella.
+(1 µV · 10^(PSRR/20), PSRR minimo fra i tre modi, che è +10 dB ovunque;
+interpolato in log f). Con più componenti vale la somma, non la tabella.
+**Ricalcolati il 2026-09-23 (L40)** sui modelli del costruttore e sul Miller da
+1 nF di **ADR-042**, come ADR-020 prevede quando il PSRR+ scende. Fonte:
+`data/2026-09-23/L40/dopo/tb_zout_psrr_noise/`, script
+`data/2026-09-23/L40/script/limiti_psrr.py`, che riproduce esattamente la tabella di
+L18 dai suoi CSV.
 
 | f | PSRR rail + | V+ massimo | PSRR rail − | V− massimo |
 |---|---|---|---|---|
-| 50 Hz | 62,76 dB | 1,37 mV RMS (1,94 mV pk) | 69,51 dB | 2,99 mV RMS |
-| 100 Hz | 62,17 dB | 1,28 mV RMS (1,81 mV pk) | 74,37 dB | 5,23 mV RMS |
-| 1 kHz | 49,62 dB | 0,303 mV RMS | 87,75 dB | 24,4 mV RMS |
-| 10 kHz | 29,82 dB | **31,0 µV RMS** | 86,23 dB | 20,5 mV RMS |
-| 20 kHz | 23,81 dB | **15,5 µV RMS** | 81,91 dB | 12,5 mV RMS |
+| 50 Hz | 67,70 dB | 2,43 mV RMS | 68,22 dB | 2,57 mV RMS |
+| 100 Hz | 62,63 dB | 1,35 mV RMS (1,91 mV pk) | 73,26 dB | 4,60 mV RMS |
+| 1 kHz | 42,99 dB | **0,141 mV RMS** | 85,44 dB | 18,7 mV RMS |
+| 10 kHz | 23,03 dB | **14,2 µV RMS** | 76,44 dB | 6,64 mV RMS |
+| 20 kHz | 17,11 dB | **7,17 µV RMS** | 69,64 dB | 3,03 mV RMS |
 
-Rumore bianco sul solo rail +, su 20 Hz–20 kHz: **≤ 190 nV/√Hz**.
+Rumore bianco sul solo rail +, su 20 Hz–20 kHz: **≤ 87 nV/√Hz**.
+
+Fino a L40 la tabella era quella di L18 (topologia LS352, segnaposto): 1 kHz
+0,303 mV, 10 kHz 31,0 µV, 20 kHz 15,5 µV, 190 nV/√Hz. Il Miller da 1 nF abbassa il
+guadagno d'anello e con lui il PSRR+ di ~6,5 dB da 1 a 20 kHz: i limiti del rail +
+in quella banda **si dimezzano circa**.
 
 **Perché c'è una ADR, e non solo questa nota.** Col criterio di L15 la
 ripartizione è **sostanziale**. Un progetto con 5 µV di rumore e 5 µV di
@@ -132,12 +142,12 @@ ADR-010 o ADR-015.
 
 **Cosa la nota non copre.**
 - **Sopra 20 kHz** E5 non vede niente, e il vincolo nemmeno: 100 mV a 100 kHz
-  sul rail + passano. Eppure lì il PSRR+ vale **10,20 dB** e lavora uno
+  sul rail + passano. Eppure lì il PSRR+ vale **5,5 dB** (L40; 10,20 dB in L18) e lavora uno
   switching. Il limite fuori banda, come la scelta del rimedio, è del lotto
   dell'alimentatore.
 - **Il ronzio indotto dal toroide** (ADR-010) non passa dai rail.
-- **Le cifre di PSRR** vengono da modelli in parte ancora segnaposto
-  (NC-017). Quando la PSRR cambia, i limiti per tono si ricalcolano; la quota
+- **Le cifre di PSRR** vengono dai modelli del costruttore da L39 (NC-017
+  chiusa), col Miller di ADR-042 da L40. Quando la PSRR cambia, i limiti per tono si ricalcolano; la quota
   no.
 
 Ragionamento completo: `reports/2026-09-13-L18-vincolo-psrr.md`.
@@ -239,7 +249,7 @@ soddisfare il criterio qui sotto a **ogni** I_DSS della finestra. Misurato a
 | Q106 in zona attiva su tutto il modo comune | V_CE > 1 V | 11,40 V |
 | Classe A: coda, cascode, VAS e uscita | entro lo 0,5 % del modello com'è | 0,15 % (coda) |
 | E5, i cinque casi di `tb_noise_breakdown` | ≤ √(10² − 1²) = 9,95 µV (ADR-020) | **4,308 µV** (+10 dB, 2,5 kΩ) |
-| V1, blocco B a 0 dB, caso peggiore di L27/L16 | ≥ 60° | **62,71°**; dispersione nel gruppo ≤ 0,10° |
+| V1, blocco B a 0 dB, caso peggiore di L27/L16 | ≥ 60° | **62,19°** (L40, modelli del costruttore, C124 1 nF di ADR-042); dispersione nel gruppo ≤ 0,16°. Blocco A 67,71°, buffer 63,23°, dispersione ≤ 0,06° |
 | Offset in uscita | **nessuna soglia**: è di L29 (NC-028) | −17,28 … −17,30 mV |
 
 **Come si legge.** La coda impone la corrente dei JFET, quindi I_DSS sposta
@@ -248,8 +258,9 @@ margine di saturazione a modo comune alto. Le cifre B sono l'`LSK489A` del
 costruttore con `Vto` spostato e `Beta` invariato: **non esiste un modello del
 costruttore del gruppo B**, e va detto accanto a ogni cifra (V4). Il rumore è un
 pavimento senza flicker per ogni dispositivo tranne la coppia d'ingresso. Il
-buffer delle fisse e il blocco A non sono rimisurati: la dispersione di V1 nel
-gruppo, 0,10°, sta sotto la regola di estensione scritta prima dei dati (1,63°).
+buffer delle fisse e il blocco A non erano rimisurati fino a L39. L40 (2026-09-23,
+ADR-031 «da riaprire se») li ha misurati sul circuito di ADR-042:
+`data/2026-09-23/L40/dopo_idss/`.
 
 ## Requisiti fisici e di sicurezza
 

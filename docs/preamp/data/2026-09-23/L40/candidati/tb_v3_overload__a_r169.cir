@@ -1,0 +1,66 @@
+tb_v3_overload__a_r169.cir - L40 ESPLORAZIONE da tb_v3_overload.cir, alter c124 = 1n
+* PART 1 (V3): +10 dB mode, 1 kHz, driven at 8 V pk - 5.6 dB past the 4.18 V pk
+* input that clips the stage - for 5 cycles, then back to a 0.5 V pk burst.
+* Measures how long the output takes to return to its linear envelope.
+* A discrete feedback amplifier can latch or take milliseconds to recover;
+* the requirement says verify, not assume.
+*
+* PART 2: a .four run at 1 kHz. Until L39 its result was meaningless: the
+* models were hand-written placeholders fitted to nothing. Since L39 (NC-017)
+* they are the manufacturer's, so the number is a MODEL figure - of models
+* that miss their own datasheet in places (NC-020, NC-024, NC-025), with no
+* spread. It is not a measurement and not V4 evidence on its own.
+
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+* L39 (NC-017): every active device in this deck is a vendor model from
+* models/, each next to its .provenance.json:
+*   LSK489   - vendor model LSK489A, the published corner sample (I_DSS
+*              2.59 mA, below the group-B window of ADR-031)
+*   LS352    - vendor model LS350 (ADR-018), included on the next line
+*   MMBT5551 - vendor model, Diodes Inc. (ADR-017)
+*   MMBT5401 - vendor model, Diodes Inc. (ADR-017)
+*   MJE15032 - vendor model Qmje15032, onsemi (NC-024, NC-025)
+*   MJE15033 - vendor model Qmje15033, onsemi (NC-025)
+*   1N4148   - vendor model D1N914, onsemi (docs/limitations.md #20)
+* Only the LSK489A carries KF: 1/f noise is on the input pair and nowhere
+* else. No model carries part-to-part spread.
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+* 3.5 V pk from 1 ms to 6 ms, then 0.5 V pk - built from two sines gated by
+* PWL amplitude is not available, so use a PWL-driven behavioural source.
+VBIG  NBIG 0 SIN(0 1 1k)
+VGATE NGATE 0 PWL(0 0.5 0.999m 0.5 1.000m 8.0 6.000m 8.0 6.001m 0.5 20m 0.5)
+BSRC  SRCN 0 V = V(NBIG)*V(NGATE)
+RSRC  SRCN IN 430
+
+CSTRAY RG 0 15p
+CSTRAY10 RG10 0 15p
+RRG    RG 0 0.1
+RRG10  RG10 0 0.1
+
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+
+.control
+* L40: variante
+alter c124 = 1n
+show c124 : capacitance
+tran 1u 20m 0 1u
+wrdata tb_v3_overload_wrdata.txt v(SRCN) v(OUT) v(JACK) v(NX)
+echo "PART 2 - Fourier at 1 kHz. A MODEL FIGURE (L39): not a measurement, not V4 evidence."
+alter @vgate[pwl] = [ 0 0.5 20m 0.5 ]
+tran 1u 20m 10m 1u
+fourier 1000 v(OUT)
+.endc
+
+.end

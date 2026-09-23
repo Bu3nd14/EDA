@@ -1,0 +1,506 @@
+tb_mute_corto.cir - mute tenuto e corto su ciascuna uscita, coi buffer delle fisse: regime e transitorio (L11, L17, ADR-021, ADR-023)
+* Prima riga = titolo (docs/limitations.md #10).
+*
+* COSA MISURA. Due verbi sulla topologia di OGGI, che non ha alcuna protezione.
+*  1. P7 / ADR-021: con il mute inserito, con un corto al connettore di una
+*     qualsiasi delle tre uscite, o con un apparecchio spento a bassa Zin su
+*     una fissa, a tempo indefinito e con segnale, la potenza media di ogni
+*     dispositivo di ogni blocco (Tj = 60 C + P*RthJA), le correnti di picco
+*     dei due d'uscita, la potenza nelle resistenze che la corrente attraversa.
+*  2. ADR-023: in ogni condizione, gli stadi dei percorsi ASCOLTABILI restano
+*     in classe A. Si legge dalle colonne icmin_q132 / icmax_q133 (vedi sotto).
+*
+* UN CANALE INTERO, come preamp_audio.py lo cabla da L17:
+*   blocco A -> attenuatore -> blocco B -> uscita principale
+*   blocco A -> buffer F1 -> 47 R + 4.7 u -> fissa 1 (Singxer)
+*   blocco A -> buffer F2 -> 47 R + 4.7 u -> fissa 2 (Stax)
+* Ogni blocco e' istanziato da gain_block.subckt (generato, mai toccato a
+* mano). Differenza nota: il subckt porta R113 = 1 MEG sull'ingresso, che
+* preamp_audio.py monta SOLO sul blocco A. Sul blocco B e' in parallelo ai
+* <= 2.5 k del cursore (0.25 %); sui buffer e' in parallelo all'uscita del
+* blocco A, ~1 ohm. Nessuna delle due tocca le correnti d'uscita.
+*
+* IL MUTE come e' cablato (preamp_audio.py): TRE contatti NC, un solo
+* MUTE_CMD, quindi TUTTI e tre i jack a massa INSIEME. Da L17 ogni jack sta
+* dietro al proprio stadio: il buffer F1, il buffer F2, il blocco B. Il blocco
+* A non vede piu' 47 || 47 ohm, che era il caso peggiore di L11. RON = 0.01
+* ohm come il corto: caso peggiore, la resistenza di contatto e' ignorata.
+*
+* I CASI (colonna caso):
+*   0 normale | 1 mute (tre jack a massa) | 2 corto FIX1 | 3 corto FIX2
+*   4 corto MAIN | 5 apparecchio spento su FIX1, Zin 10 ohm
+*   6 apparecchio spento su FIX1, Zin 100 ohm
+* Un apparecchio spento e' modellato come una resistenza al posto del suo
+* carico normale (RLD1 = 10 k del Singxer ipotizzato).
+*
+* PERCORSI ASCOLTABILI per caso, cioe' cio' che deve restare in classe A
+* (ADR-023). Un'uscita mutata, in corto o con l'apparecchio spento non si
+* ascolta; il blocco che serve solo lei e' libero, entro P7.
+*   caso 0      A, F1, F2, B
+*   caso 1      nessuno (il mute tace tutto)
+*   caso 2, 5, 6  A, F2, B        (F1 libero)
+*   caso 3      A, F1, B          (F2 libero)
+*   caso 4      A, F1, F2         (B libero)
+* Classe A <=> icmin_q132 > 0 E icmax_q133 < 0.
+*
+* NOMI DEI DISPOSITIVI letti da gain_block.subckt di oggi, non da G0:
+*   Q132 Qmje15032 (NPN d'uscita)   Q133 Qmje15033 (PNP d'uscita)
+*   Q122 VAS   Q125 carico VAS   Q127 moltiplicatore Vbe   Q106 coda
+*   Q117/Q118 cascode   Q121A/B LS352   JQ110A/B LSK489
+*   R134/R135 22 ohm d'emettitore   R130/R131 10 ohm di base
+*   R123/R126 91 ohm di VAS e carico VAS
+* Il `@q134` citato da NC-001 e da G0 NON esiste piu' (rinumerazioni L22/L10).
+*
+* MODELLI (L39, NC-017): ogni dispositivo attivo e' il modello del costruttore
+* in models/ - LSK489A, MMBT5551, MMBT5401, LS350, Qmje15032, Qmje15033, D1N914.
+* Solo l'LSK489A ha KF (1/f); nessun modello porta la dispersione. Le correnti di
+* corto le fissano il carico e la corrente di pilotaggio, quindi h_FE conta
+* (NC-024).
+*
+* CONVENZIONE DI PERCORSO: quella di tb_op.cir (L2-L3). `.include /Users/roberto/EDA/.claude/worktrees/L40/...`
+* e file scritti con nome nudo. Nessun file si chiama
+* tb_mute_corto_wrdata.txt, quindi run_simulation.sh avvisa e scrive un
+* tb_mute_corto.json con rows: 0; i transitori li converte il secondo
+* passaggio, le tabelle sono .csv scritte da echo e non vengono toccate.
+
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/diodes/1n4148.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/spice/preamp/gain_block.subckt
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+
+* Sorgente: il K11 (< 1.5 ohm). 3.818 V pk = 2.700 V RMS = E6.
+VIN SRC 0 SIN(0 3.818 1k)
+RSRC SRC INA 1.5
+
+* ---------------- BLOCCO A: guadagno 1, R_g non montata ------------------
+* L27: il subckt ha due nodi di contatto di guadagno, RG e RG10 (ADR-026).
+* Sui blocchi senza rele' (A, F1, F2) restano entrambi aperti.
+XA INA OUTA FBA RGA RG10A VPLUS VMINUS GAINBLOCK
+RRGA RGA 0 1G
+CRGA RGA 0 15p
+RRG10A RG10A 0 1G
+CRG10A RG10A 0 15p
+
+* Attenuatore da 10 k: k = RATTB / 10 k. RATTT a 1 mohm = manopola al massimo.
+RATTT OUTA W 1m
+RATTB W 0 10k
+
+* ---------------- BUFFER DELLE FISSE (ADR-023): guadagno 1 ---------------
+XF1 OUTA OUTF1 FBF1 RGF1 RG10F1 VPLUS VMINUS GAINBLOCK
+RRGF1 RGF1 0 1G
+CRGF1 RGF1 0 15p
+RRG10F1 RG10F1 0 1G
+CRG10F1 RG10F1 0 15p
+XF2 OUTA OUTF2 FBF2 RGF2 RG10F2 VPLUS VMINUS GAINBLOCK
+RRGF2 RGF2 0 1G
+CRGF2 RGF2 0 15p
+RRG10F2 RG10F2 0 1G
+CRG10F2 RG10F2 0 15p
+
+* Fissa 1 (Singxer, Zin non pubblicata: 10 k come G0) e fissa 2 (Stax 50 k)
+RSEP1 OUTF1 FIX1 47
+CFIX1 FIX1 J1 4.7u
+RBL1  J1 0 470k
+RLD1  J1 0 10k
+RSEP2 OUTF2 FIX2 47
+CFIX2 FIX2 J2 4.7u
+RBL2  J2 0 470k
+RLD2  J2 0 50k
+
+* ---------------- BLOCCO B: 0 / +3 / +10 dB, due rele' su R_g ------------
+XB W OUTB FBB RGB RG10B VPLUS VMINUS GAINBLOCK
+* Contatto aperto = 1 G + 15 pF, chiuso = alter ... = 0.1 (ADR-026):
+*   0 dB   rrgb = 1G    rrg10b = 1G
+*   +3 dB  rrgb = 0.1   rrg10b = 1G
+*   +10 dB rrgb = 0.1   rrg10b = 0.1
+RRGB RGB 0 1G
+CRGB RGB 0 15p
+RRG10B RG10B 0 1G
+CRG10B RG10B 0 15p
+RISOM OUTB MAINA 47
+COUTM MAINA JM 4.7u
+RBLM  JM 0 220k
+RLDM  JM 0 100k
+
+* ---------------- i due modi di mettere a massa un jack ------------------
+* Corto esterno al connettore: 1e12 = assente, alter a 0.01 = corto franco.
+RSH1 J1 0 1e12
+RSH2 J2 0 1e12
+RSHM JM 0 1e12
+* Mute: i tre contatti NC, un solo comando. VMUTE 0 = rilasciato, 1 = inserito.
+.model SWMUTE SW(VT=0.5 VH=0.1 RON=0.01 ROFF=1e12)
+VMUTE MCTL 0 PULSE(0 0 0 1u 1u 1 2)
+SMUTE1 J1 0 MCTL 0 SWMUTE
+SMUTE2 J2 0 MCTL 0 SWMUTE
+SMUTEM JM 0 MCTL 0 SWMUTE
+
+.control
+set t = .txt
+
+save @q.xa.q132[p] @q.xa.q133[p] @q.xa.q132[ic] @q.xa.q133[ic]
+save @q.xa.q122[p] @q.xa.q122[ic] @q.xa.q125[p] @q.xa.q127[p]
+save @q.xa.q121a[p] @q.xa.q121b[p] @q.xa.q117[p] @q.xa.q118[p] @q.xa.q106[p]
+save @j.xa.jq110a[id] @j.xa.jq110b[id] v(xa.d1n) v(xa.d2n) v(xa.s1) v(xa.s2)
+save @r.xa.r134[i] @r.xa.r135[i] @r.xa.r130[i] @r.xa.r131[i] @r.xa.r123[i] @r.xa.r126[i]
+save @q.xf1.q132[p] @q.xf1.q133[p] @q.xf1.q132[ic] @q.xf1.q133[ic]
+save @q.xf1.q122[p] @q.xf1.q122[ic] @q.xf1.q125[p] @q.xf1.q127[p]
+save @q.xf1.q121a[p] @q.xf1.q121b[p] @q.xf1.q117[p] @q.xf1.q118[p] @q.xf1.q106[p]
+save @j.xf1.jq110a[id] @j.xf1.jq110b[id] v(xf1.d1n) v(xf1.d2n) v(xf1.s1) v(xf1.s2)
+save @r.xf1.r134[i] @r.xf1.r135[i] @r.xf1.r130[i] @r.xf1.r131[i] @r.xf1.r123[i] @r.xf1.r126[i]
+save @q.xf2.q132[p] @q.xf2.q133[p] @q.xf2.q132[ic] @q.xf2.q133[ic]
+save @q.xf2.q122[p] @q.xf2.q122[ic] @q.xf2.q125[p] @q.xf2.q127[p]
+save @q.xf2.q121a[p] @q.xf2.q121b[p] @q.xf2.q117[p] @q.xf2.q118[p] @q.xf2.q106[p]
+save @j.xf2.jq110a[id] @j.xf2.jq110b[id] v(xf2.d1n) v(xf2.d2n) v(xf2.s1) v(xf2.s2)
+save @r.xf2.r134[i] @r.xf2.r135[i] @r.xf2.r130[i] @r.xf2.r131[i] @r.xf2.r123[i] @r.xf2.r126[i]
+save @q.xb.q132[p] @q.xb.q133[p] @q.xb.q132[ic] @q.xb.q133[ic]
+save @q.xb.q122[p] @q.xb.q122[ic] @q.xb.q125[p] @q.xb.q127[p]
+save @q.xb.q121a[p] @q.xb.q121b[p] @q.xb.q117[p] @q.xb.q118[p] @q.xb.q106[p]
+save @j.xb.jq110a[id] @j.xb.jq110b[id] v(xb.d1n) v(xb.d2n) v(xb.s1) v(xb.s2)
+save @r.xb.r134[i] @r.xb.r135[i] @r.xb.r130[i] @r.xb.r131[i] @r.xb.r123[i] @r.xb.r126[i]
+save @rsep1[i] @rsep2[i] @risom[i] v(outa) v(outf1) v(outf2) v(outb) v(j1) v(j2) v(jm) v(mctl)
+save vpp#branch vmm#branch
+* per la controprova della potenza (sezione 3)
+save v(xf1.nen) v(xf1.nbn) @q.xf1.q132[ib] v(fix1) v(vplus)
+
+* =========================================================================
+* 1. REGIME. Una riga per blocco per corsa, in tb_mute_corto_regime.csv.
+*    blk: A | F1 | F2 | B      caso: vedi l'intestazione
+*    Finestra 4-8 ms dopo 4 ms di assestamento: numero intero di periodi a
+*    1 kHz e a 20 kHz. p_q132_w1 / _w2 sono le due meta' della finestra: se
+*    differiscono, il regime non e' raggiunto e la riga non vale.
+*    p_rsep: la 47 ohm del blocco (F1 RSEP1, F2 RSEP2, B RISOM; A nessuna).
+*    p_rail: potenza media erogata dai due rail al CANALE intero, uguale sulle
+*    quattro righe di una corsa. A caso 0 e ampiezza 0 e' il riposo.
+* =========================================================================
+echo "blk,modo_db,f_hz,vin_pk,k_att,caso,p_q132,p_q133,icmax_q132,icmin_q132,icmax_q133,icmin_q133,p_q122,icmax_q122,p_q125,p_q127,p_q121a,p_q121b,p_q117,p_q118,p_q106,p_jq110a,p_jq110b,p_r134,p_r135,p_r130,p_r131,p_r123,p_r126,p_rsep,p_rsep2,irms_rsep,irms_rsep2,p_q132_w1,p_q132_w2,voutpk,p_rail" > tb_mute_corto_regime.csv
+
+* 1a: 0 dB, manopola al massimo, ampiezza spazzata (0 = riposo, controllo
+*     contro tb_op), tutti i sette casi.
+* 1b: +10 dB, fondo scala all'ingresso, manopola spazzata: il caso peggiore
+*     in classe B sta a Vpk = 2 Vcc / pi ~ 9.5 V in uscita, non al clipping.
+*     I casi 2 e 5 ci sono per il verbo di ADR-023 sul blocco B: con una
+*     fissa in corto o spenta, l'uscita principale a +10 dB resta in classe A.
+* 1c: +3 dB (L27, ADR-026), come 1b. ADR-021 lo chiede nel suo «da riaprire
+*     se»: il modo nuovo e' dentro il dominio, ma va verificato, non dedotto.
+foreach sweep 1 2 3
+if $sweep = 1
+  alter rrgb = 1G
+  alter rrg10b = 1G
+  set gm = 0
+  set amps = ( 0 0.4243 1.4142 2.8284 3.818 )
+  set ks = ( 1 )
+  set cases = ( 0 1 2 3 4 5 6 )
+end
+if $sweep = 2
+  alter rrgb = 0.1
+  alter rrg10b = 0.1
+  set gm = 10
+  set amps = ( 3.818 )
+  set ks = ( 0.25 0.5 0.79 1 )
+  set cases = ( 0 1 2 4 5 )
+end
+if $sweep = 3
+  alter rrgb = 0.1
+  alter rrg10b = 1G
+  set gm = 3
+  set amps = ( 3.818 )
+  set ks = ( 0.25 0.5 0.79 1 )
+  set cases = ( 0 1 2 4 5 )
+end
+foreach f 1000 20000
+foreach a $amps
+foreach k $ks
+foreach c $cases
+  alter @vin[sin] = [ 0 $a $f ]
+  let rt = (1 - $k) * 10000 + 1e-3
+  let rb = $k * 10000 + 1e-3
+  alter rattt = $&rt
+  alter rattb = $&rb
+  alter rsh1 = 1e12
+  alter rsh2 = 1e12
+  alter rshm = 1e12
+  alter rld1 = 10k
+  alter @vmute[pulse] = [ 0 0 0 1u 1u 1 2 ]
+  if $c = 1
+    alter @vmute[pulse] = [ 1 1 0 1u 1u 1 2 ]
+  end
+  if $c = 2
+    alter rsh1 = 0.01
+  end
+  if $c = 3
+    alter rsh2 = 0.01
+  end
+  if $c = 4
+    alter rshm = 0.01
+  end
+  if $c = 5
+    alter rld1 = 10
+  end
+  if $c = 6
+    alter rld1 = 100
+  end
+  if $f = 1000
+    tran 5u 8m 4m 5u
+  else
+    tran 1u 8m 4m 1u
+  end
+
+  let prail = -15 * vpp#branch + 15 * vmm#branch
+  meas tran pra AVG prail from=4m to=8m
+
+  * --- blocco A ---
+  meas tran pq132 AVG @q.xa.q132[p] from=4m to=8m
+  meas tran pq133 AVG @q.xa.q133[p] from=4m to=8m
+  meas tran icx132 MAX @q.xa.q132[ic] from=4m to=8m
+  meas tran icn132 MIN @q.xa.q132[ic] from=4m to=8m
+  meas tran icx133 MAX @q.xa.q133[ic] from=4m to=8m
+  meas tran icn133 MIN @q.xa.q133[ic] from=4m to=8m
+  meas tran pq122 AVG @q.xa.q122[p] from=4m to=8m
+  meas tran icx122 MAX @q.xa.q122[ic] from=4m to=8m
+  meas tran pq125 AVG @q.xa.q125[p] from=4m to=8m
+  meas tran pq127 AVG @q.xa.q127[p] from=4m to=8m
+  meas tran pq121a AVG @q.xa.q121a[p] from=4m to=8m
+  meas tran pq121b AVG @q.xa.q121b[p] from=4m to=8m
+  meas tran pq117 AVG @q.xa.q117[p] from=4m to=8m
+  meas tran pq118 AVG @q.xa.q118[p] from=4m to=8m
+  meas tran pq106 AVG @q.xa.q106[p] from=4m to=8m
+  let pja = @j.xa.jq110a[id] * (v(xa.d1n) - v(xa.s1))
+  let pjb = @j.xa.jq110b[id] * (v(xa.d2n) - v(xa.s2))
+  meas tran pjfa AVG pja from=4m to=8m
+  meas tran pjfb AVG pjb from=4m to=8m
+  let x134 = @r.xa.r134[i] * @r.xa.r134[i] * 22
+  let x135 = @r.xa.r135[i] * @r.xa.r135[i] * 22
+  let x130 = @r.xa.r130[i] * @r.xa.r130[i] * 10
+  let x131 = @r.xa.r131[i] * @r.xa.r131[i] * 10
+  let x123 = @r.xa.r123[i] * @r.xa.r123[i] * 91
+  let x126 = @r.xa.r126[i] * @r.xa.r126[i] * 91
+  meas tran pr134 AVG x134 from=4m to=8m
+  meas tran pr135 AVG x135 from=4m to=8m
+  meas tran pr130 AVG x130 from=4m to=8m
+  meas tran pr131 AVG x131 from=4m to=8m
+  meas tran pr123 AVG x123 from=4m to=8m
+  meas tran pr126 AVG x126 from=4m to=8m
+  meas tran pw1 AVG @q.xa.q132[p] from=4m to=6m
+  meas tran pw2 AVG @q.xa.q132[p] from=6m to=8m
+  meas tran vpk MAX v(outa) from=4m to=8m
+  echo "A,$gm,$f,$a,$k,$c,$&pq132,$&pq133,$&icx132,$&icn132,$&icx133,$&icn133,$&pq122,$&icx122,$&pq125,$&pq127,$&pq121a,$&pq121b,$&pq117,$&pq118,$&pq106,$&pjfa,$&pjfb,$&pr134,$&pr135,$&pr130,$&pr131,$&pr123,$&pr126,0,0,0,0,$&pw1,$&pw2,$&vpk,$&pra" >> tb_mute_corto_regime.csv
+
+  * --- blocco F1 ---
+  meas tran pq132 AVG @q.xf1.q132[p] from=4m to=8m
+  meas tran pq133 AVG @q.xf1.q133[p] from=4m to=8m
+  meas tran icx132 MAX @q.xf1.q132[ic] from=4m to=8m
+  meas tran icn132 MIN @q.xf1.q132[ic] from=4m to=8m
+  meas tran icx133 MAX @q.xf1.q133[ic] from=4m to=8m
+  meas tran icn133 MIN @q.xf1.q133[ic] from=4m to=8m
+  meas tran pq122 AVG @q.xf1.q122[p] from=4m to=8m
+  meas tran icx122 MAX @q.xf1.q122[ic] from=4m to=8m
+  meas tran pq125 AVG @q.xf1.q125[p] from=4m to=8m
+  meas tran pq127 AVG @q.xf1.q127[p] from=4m to=8m
+  meas tran pq121a AVG @q.xf1.q121a[p] from=4m to=8m
+  meas tran pq121b AVG @q.xf1.q121b[p] from=4m to=8m
+  meas tran pq117 AVG @q.xf1.q117[p] from=4m to=8m
+  meas tran pq118 AVG @q.xf1.q118[p] from=4m to=8m
+  meas tran pq106 AVG @q.xf1.q106[p] from=4m to=8m
+  let pja = @j.xf1.jq110a[id] * (v(xf1.d1n) - v(xf1.s1))
+  let pjb = @j.xf1.jq110b[id] * (v(xf1.d2n) - v(xf1.s2))
+  meas tran pjfa AVG pja from=4m to=8m
+  meas tran pjfb AVG pjb from=4m to=8m
+  let x134 = @r.xf1.r134[i] * @r.xf1.r134[i] * 22
+  let x135 = @r.xf1.r135[i] * @r.xf1.r135[i] * 22
+  let x130 = @r.xf1.r130[i] * @r.xf1.r130[i] * 10
+  let x131 = @r.xf1.r131[i] * @r.xf1.r131[i] * 10
+  let x123 = @r.xf1.r123[i] * @r.xf1.r123[i] * 91
+  let x126 = @r.xf1.r126[i] * @r.xf1.r126[i] * 91
+  meas tran pr134 AVG x134 from=4m to=8m
+  meas tran pr135 AVG x135 from=4m to=8m
+  meas tran pr130 AVG x130 from=4m to=8m
+  meas tran pr131 AVG x131 from=4m to=8m
+  meas tran pr123 AVG x123 from=4m to=8m
+  meas tran pr126 AVG x126 from=4m to=8m
+  let xs = @rsep1[i] * @rsep1[i] * 47
+  meas tran prs AVG xs from=4m to=8m
+  meas tran irs RMS @rsep1[i] from=4m to=8m
+  meas tran pw1 AVG @q.xf1.q132[p] from=4m to=6m
+  meas tran pw2 AVG @q.xf1.q132[p] from=6m to=8m
+  meas tran vpk MAX v(outf1) from=4m to=8m
+  echo "F1,$gm,$f,$a,$k,$c,$&pq132,$&pq133,$&icx132,$&icn132,$&icx133,$&icn133,$&pq122,$&icx122,$&pq125,$&pq127,$&pq121a,$&pq121b,$&pq117,$&pq118,$&pq106,$&pjfa,$&pjfb,$&pr134,$&pr135,$&pr130,$&pr131,$&pr123,$&pr126,$&prs,0,$&irs,0,$&pw1,$&pw2,$&vpk,$&pra" >> tb_mute_corto_regime.csv
+
+  * --- blocco F2 ---
+  meas tran pq132 AVG @q.xf2.q132[p] from=4m to=8m
+  meas tran pq133 AVG @q.xf2.q133[p] from=4m to=8m
+  meas tran icx132 MAX @q.xf2.q132[ic] from=4m to=8m
+  meas tran icn132 MIN @q.xf2.q132[ic] from=4m to=8m
+  meas tran icx133 MAX @q.xf2.q133[ic] from=4m to=8m
+  meas tran icn133 MIN @q.xf2.q133[ic] from=4m to=8m
+  meas tran pq122 AVG @q.xf2.q122[p] from=4m to=8m
+  meas tran icx122 MAX @q.xf2.q122[ic] from=4m to=8m
+  meas tran pq125 AVG @q.xf2.q125[p] from=4m to=8m
+  meas tran pq127 AVG @q.xf2.q127[p] from=4m to=8m
+  meas tran pq121a AVG @q.xf2.q121a[p] from=4m to=8m
+  meas tran pq121b AVG @q.xf2.q121b[p] from=4m to=8m
+  meas tran pq117 AVG @q.xf2.q117[p] from=4m to=8m
+  meas tran pq118 AVG @q.xf2.q118[p] from=4m to=8m
+  meas tran pq106 AVG @q.xf2.q106[p] from=4m to=8m
+  let pja = @j.xf2.jq110a[id] * (v(xf2.d1n) - v(xf2.s1))
+  let pjb = @j.xf2.jq110b[id] * (v(xf2.d2n) - v(xf2.s2))
+  meas tran pjfa AVG pja from=4m to=8m
+  meas tran pjfb AVG pjb from=4m to=8m
+  let x134 = @r.xf2.r134[i] * @r.xf2.r134[i] * 22
+  let x135 = @r.xf2.r135[i] * @r.xf2.r135[i] * 22
+  let x130 = @r.xf2.r130[i] * @r.xf2.r130[i] * 10
+  let x131 = @r.xf2.r131[i] * @r.xf2.r131[i] * 10
+  let x123 = @r.xf2.r123[i] * @r.xf2.r123[i] * 91
+  let x126 = @r.xf2.r126[i] * @r.xf2.r126[i] * 91
+  meas tran pr134 AVG x134 from=4m to=8m
+  meas tran pr135 AVG x135 from=4m to=8m
+  meas tran pr130 AVG x130 from=4m to=8m
+  meas tran pr131 AVG x131 from=4m to=8m
+  meas tran pr123 AVG x123 from=4m to=8m
+  meas tran pr126 AVG x126 from=4m to=8m
+  let xs = @rsep2[i] * @rsep2[i] * 47
+  meas tran prs AVG xs from=4m to=8m
+  meas tran irs RMS @rsep2[i] from=4m to=8m
+  meas tran pw1 AVG @q.xf2.q132[p] from=4m to=6m
+  meas tran pw2 AVG @q.xf2.q132[p] from=6m to=8m
+  meas tran vpk MAX v(outf2) from=4m to=8m
+  echo "F2,$gm,$f,$a,$k,$c,$&pq132,$&pq133,$&icx132,$&icn132,$&icx133,$&icn133,$&pq122,$&icx122,$&pq125,$&pq127,$&pq121a,$&pq121b,$&pq117,$&pq118,$&pq106,$&pjfa,$&pjfb,$&pr134,$&pr135,$&pr130,$&pr131,$&pr123,$&pr126,$&prs,0,$&irs,0,$&pw1,$&pw2,$&vpk,$&pra" >> tb_mute_corto_regime.csv
+
+  * --- blocco B ---
+  meas tran pq132 AVG @q.xb.q132[p] from=4m to=8m
+  meas tran pq133 AVG @q.xb.q133[p] from=4m to=8m
+  meas tran icx132 MAX @q.xb.q132[ic] from=4m to=8m
+  meas tran icn132 MIN @q.xb.q132[ic] from=4m to=8m
+  meas tran icx133 MAX @q.xb.q133[ic] from=4m to=8m
+  meas tran icn133 MIN @q.xb.q133[ic] from=4m to=8m
+  meas tran pq122 AVG @q.xb.q122[p] from=4m to=8m
+  meas tran icx122 MAX @q.xb.q122[ic] from=4m to=8m
+  meas tran pq125 AVG @q.xb.q125[p] from=4m to=8m
+  meas tran pq127 AVG @q.xb.q127[p] from=4m to=8m
+  meas tran pq121a AVG @q.xb.q121a[p] from=4m to=8m
+  meas tran pq121b AVG @q.xb.q121b[p] from=4m to=8m
+  meas tran pq117 AVG @q.xb.q117[p] from=4m to=8m
+  meas tran pq118 AVG @q.xb.q118[p] from=4m to=8m
+  meas tran pq106 AVG @q.xb.q106[p] from=4m to=8m
+  let pja = @j.xb.jq110a[id] * (v(xb.d1n) - v(xb.s1))
+  let pjb = @j.xb.jq110b[id] * (v(xb.d2n) - v(xb.s2))
+  meas tran pjfa AVG pja from=4m to=8m
+  meas tran pjfb AVG pjb from=4m to=8m
+  let x134 = @r.xb.r134[i] * @r.xb.r134[i] * 22
+  let x135 = @r.xb.r135[i] * @r.xb.r135[i] * 22
+  let x130 = @r.xb.r130[i] * @r.xb.r130[i] * 10
+  let x131 = @r.xb.r131[i] * @r.xb.r131[i] * 10
+  let x123 = @r.xb.r123[i] * @r.xb.r123[i] * 91
+  let x126 = @r.xb.r126[i] * @r.xb.r126[i] * 91
+  meas tran pr134 AVG x134 from=4m to=8m
+  meas tran pr135 AVG x135 from=4m to=8m
+  meas tran pr130 AVG x130 from=4m to=8m
+  meas tran pr131 AVG x131 from=4m to=8m
+  meas tran pr123 AVG x123 from=4m to=8m
+  meas tran pr126 AVG x126 from=4m to=8m
+  let xs = @risom[i] * @risom[i] * 47
+  meas tran prs AVG xs from=4m to=8m
+  meas tran irs RMS @risom[i] from=4m to=8m
+  meas tran pw1 AVG @q.xb.q132[p] from=4m to=6m
+  meas tran pw2 AVG @q.xb.q132[p] from=6m to=8m
+  meas tran vpk MAX v(outb) from=4m to=8m
+  echo "B,$gm,$f,$a,$k,$c,$&pq132,$&pq133,$&icx132,$&icn132,$&icx133,$&icn133,$&pq122,$&icx122,$&pq125,$&pq127,$&pq121a,$&pq121b,$&pq117,$&pq118,$&pq106,$&pjfa,$&pjfb,$&pr134,$&pr135,$&pr130,$&pr131,$&pr123,$&pr126,$&prs,0,$&irs,0,$&pw1,$&pw2,$&vpk,$&pra" >> tb_mute_corto_regime.csv
+
+  destroy all
+end
+end
+end
+end
+end
+
+* =========================================================================
+* 2. TRANSITORIO DEL MUTE (V2 e P7 nel transitorio), con segnale: 2.7 V RMS a
+*    1 kHz, manopola al massimo, nessun corto. Inserzione a 10 ms, rilascio a
+*    30 ms. Il contatto e' istantaneo: e' il caso peggiore per il gradino di
+*    corrente. Una riga per modalita' in tb_mute_corto_transitorio.csv, piu'
+*    la forma d'onda in tb_mute_corto_trans_<modo>.txt:
+*      col1 p(XB.Q132)  col3 p(XB.Q133)  col5 p(XA.Q132)  col7 p(XA.Q133)
+*      col9 p(XB.Q122)  col11 v(JM)      col13 v(J1)      col15 v(MCTL)
+*      col17 p(XF1.Q132)                 (L17: il buffer della fissa 1)
+*    (colonne pari = tempo, ripetuto: convenzione di wrdata)
+*    Poi la stessa commutazione SENZA segnale: il botto al rilascio dice
+*    quanto l'offset d'uscita arriva sul jack.
+* =========================================================================
+echo "modo_db,vin_pk,ppk_b132_ins,ppk_b133_ins,ppk_b132_mute,ppk_b133_mute,ppk_b132_rel,ppk_b133_rel,ppk_a132_ins,ppk_a132_mute,vjm_pk_prima,vjm_max_rel,vjm_min_rel,vj1_max_rel,vj1_min_rel,ppk_f1132_ins,ppk_f1133_ins,ppk_f1132_mute" > tb_mute_corto_transitorio.csv
+alter rattt = 1e-3
+alter rattb = 10000
+alter rsh1 = 1e12
+alter rsh2 = 1e12
+alter rshm = 1e12
+alter rld1 = 10k
+foreach a 3.818 0
+foreach gm 0 3 10
+  if $gm = 0
+    alter rrgb = 1G
+    alter rrg10b = 1G
+  end
+  if $gm = 3
+    alter rrgb = 0.1
+    alter rrg10b = 1G
+  end
+  if $gm = 10
+    alter rrgb = 0.1
+    alter rrg10b = 0.1
+  end
+  alter @vin[sin] = [ 0 $a 1k ]
+  alter @vmute[pulse] = [ 0 1 10m 1u 1u 20m 1 ]
+  tran 5u 40m 0 5u
+  meas tran pbi2 MAX @q.xb.q132[p] from=10m to=12m
+  meas tran pbi3 MAX @q.xb.q133[p] from=10m to=12m
+  meas tran pbm2 MAX @q.xb.q132[p] from=20m to=30m
+  meas tran pbm3 MAX @q.xb.q133[p] from=20m to=30m
+  meas tran pbr2 MAX @q.xb.q132[p] from=30m to=32m
+  meas tran pbr3 MAX @q.xb.q133[p] from=30m to=32m
+  meas tran pai2 MAX @q.xa.q132[p] from=10m to=12m
+  meas tran pam2 MAX @q.xa.q132[p] from=20m to=30m
+  meas tran vjp MAX v(jm) from=5m to=10m
+  meas tran vjrx MAX v(jm) from=30m to=40m
+  meas tran vjrn MIN v(jm) from=30m to=40m
+  meas tran v1rx MAX v(j1) from=30m to=40m
+  meas tran v1rn MIN v(j1) from=30m to=40m
+  meas tran pfi2 MAX @q.xf1.q132[p] from=10m to=12m
+  meas tran pfi3 MAX @q.xf1.q133[p] from=10m to=12m
+  meas tran pfm2 MAX @q.xf1.q132[p] from=20m to=30m
+  echo "$gm,$a,$&pbi2,$&pbi3,$&pbm2,$&pbm3,$&pbr2,$&pbr3,$&pai2,$&pam2,$&vjp,$&vjrx,$&vjrn,$&v1rx,$&v1rn,$&pfi2,$&pfi3,$&pfm2" >> tb_mute_corto_transitorio.csv
+  if $a = 3.818
+    wrdata tb_mute_corto_trans_$gm$t @q.xb.q132[p] @q.xb.q133[p] @q.xa.q132[p] @q.xa.q133[p] @q.xb.q122[p] v(jm) v(j1) v(mctl) @q.xf1.q132[p]
+  end
+  destroy all
+end
+end
+
+* =========================================================================
+* 3. CONTROPROVA DELLA POTENZA, per una strada indipendente da @q[p] e @r[i]:
+*    corto FIX1, 0 dB, 20 kHz, fondo scala. Su XF1.Q132:
+*      p = (Vc - Ve) * Ic + (Vb - Ve) * Ib,  Vc = VPLUS (collettore sul rail)
+*    e sulla 47 ohm RSEP1 dalla tensione ai suoi capi invece che dalla corrente.
+* =========================================================================
+alter rrgb = 1G
+alter rrg10b = 1G
+alter rsh1 = 0.01
+alter @vmute[pulse] = [ 0 0 0 1u 1u 1 2 ]
+alter @vin[sin] = [ 0 3.818 20000 ]
+tran 1u 8m 4m 1u
+meas tran pdev AVG @q.xf1.q132[p] from=4m to=8m
+let pcalc = (v(vplus) - v(xf1.nen)) * @q.xf1.q132[ic] + (v(xf1.nbn) - v(xf1.nen)) * @q.xf1.q132[ib]
+meas tran pcal AVG pcalc from=4m to=8m
+let xsi = @rsep1[i] * @rsep1[i] * 47
+let xsv = (v(outf1) - v(fix1)) * (v(outf1) - v(fix1)) / 47
+meas tran psi AVG xsi from=4m to=8m
+meas tran psv AVG xsv from=4m to=8m
+echo "CONTROPROVA corto FIX1 20 kHz: XF1.Q132 dal dispositivo $&pdev  da V e I $&pcal | RSEP1 da I $&psi  da V $&psv"
+destroy all
+.endc
+
+.end
