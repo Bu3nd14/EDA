@@ -6,6 +6,7 @@
 # richieste; i riferimenti che nominano vanno selezionati anche loro dal regex.
 # Una corsa gia' fatta (.dat non vuoto e riga rc=0 in tempi.txt) non si ripete.
 ROOT=${0:A:h:h:h:h:h:h:h}
+zmodload zsh/parameter
 DIR=$1
 DECK=$2
 RE=$3
@@ -19,14 +20,22 @@ touch tempi.txt
 corri() {
   local c=$1 t0=$SECONDS
   /opt/homebrew/bin/ngspice -b corsa_$c.cir > corsa_$c.log 2>&1
-  print -r -- "$c rc=$? $((SECONDS-t0))s $(date +%H:%M:%S)" >> tempi.txt
+  local rc=$?
+  # L29c: il 'transient op' puo' finire "successfully" in uno stato sbagliato (OUTA a +13 V):
+  # una corsa che ci e' passata non vale, qualunque rc abbia.
+  if grep -q 'Transient op started' corsa_$c.log; then
+    rc=OPT
+  fi
+  print -r -- "$c rc=$rc $((SECONDS-t0))s $(date +%H:%M:%S)" >> tempi.txt
 }
 for c in $(cat corse_sel.txt); do
   if [ -s $c.dat ] && grep -q "^$c rc=0 " tempi.txt; then
     echo "$c: gia' corsa"
     continue
   fi
-  while [ $(jobs -r | wc -l) -ge $NPAR ]; do
+  # ${#jobstates}, non $(jobs -r | wc -l): la sostituzione gira in una sottoshell che non vede
+  # i job del padre, e la prima versione ha lanciato 117 ngspice insieme (L29c).
+  while (( ${#jobstates} >= NPAR )); do
     sleep 5
   done
   corri $c &

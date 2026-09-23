@@ -10,6 +10,8 @@ Uso:
   --matrice l29c            (default) la matrice di L29c, scritta nel deck versionato
   --matrice controfattuale  le 11 corse della cella di L40 (1 kHz, 100 k) con TUTTE le aggiunte
                             di questo banco in posizione neutra: devono ridare la cella di L40
+  --matrice curve           il punto 6: gli eventi del mute (inversioni, rele' 1 e 2 s) con le curve
+                            date da --curve, a 1 kHz, 20 Hz e senza segnale, coi loro riferimenti
   --curve B B               le curve della VTL5C4 per la cella in serie e quella in derivazione
                             (A = resistenza piu' bassa ... D = piu' alta). Il deck versionato e'
                             B B, come tb_v2_mute_ldr.cir; le altre si generano nei dati di L29c.
@@ -24,9 +26,11 @@ v2_metodo.py analizza. Il manifesto ha due colonne in piu', ignorate da analizza
 
 COSA C'E' DENTRO, oltre a tb_v2_mute_ldr.cir (L29b2). Il blocco CANALE e' byte per byte quello
 di tb_v2_mute_graduale.cir (v2_metodo.py canale): tutto si aggiunge FUORI.
-- I contatti del guadagno che commutano nel tempo: K1 (RGB) e K5 (RG10B), conduttanze
-  comportamentali in parallelo a RRGB/RRG10B (1 G nel blocco, con i loro 15 pF), chiuse a
-  100 mohm, con fronte e rimbalzi del contatto al jack (BSJKR). Sequenza di tb_switch_v2.cir:
+- I contatti del guadagno che commutano nel tempo: K1 (RGB) e K5 (RG10B), interruttori nativi
+  (SW, come tb_switch_v2.cir) in parallelo a RRGB/RRG10B (1 G nel blocco, con i loro 15 pF),
+  chiusi a 100 mohm, coi rimbalzi del contatto al jack (BSJKR) ma senza il suo fronte da
+  4,55 us: la conduttanza comportamentale rendeva l'op dipendente dal percorso (limitations
+  #33). Sequenza di tb_switch_v2.cir:
   0 -> +10 con K5 per primo e K1 0,3 ms dopo; +10 -> 0 con K1 per primo.
 - Il trim (ADR-027, candidato 2 di trim.py): RATTT del blocco aperto (alter rattt = 1e12), la
   scala 845 / 464 / 464 da OUTA, i quattro contatti T1R, T1S, T2R, T2S con 15 pF ciascuno, i
@@ -54,7 +58,7 @@ import os
 QUI = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(QUI, *[".."] * 6))
 ap = argparse.ArgumentParser()
-ap.add_argument("--matrice", default="l29c", choices=("l29c", "controfattuale"))
+ap.add_argument("--matrice", default="l29c", choices=("l29c", "controfattuale", "curve"))
 ap.add_argument("--curve", nargs=2, default=("B", "B"), metavar=("SERIE", "DERIV"))
 ap.add_argument("--uscita", default=os.path.join(REPO, "spice", "preamp", "tb", "tb_v2_casopeggiore.cir"))
 ARG = ap.parse_args()
@@ -97,18 +101,29 @@ def contatto(n, a, b, cpar):
         "V%sT N%sT 0 DC 1000" % (n, n),
         "B%sR S%sR 0 V = (1 - V(N%sI)) * pwl(time - V(N%sT), %s)" % (n, n, n, n, MAKE),
         "+ + V(N%sI) * pwl(time - V(N%sT), %s)" % (n, n, BREAK),
-        "R%sS S%sR S%s 1k" % (n, n, n),
-        "C%sS S%s 0 4.55n" % (n, n),
-        "B%s %s %s I = V(%s,%s) * pow(10, -12 + 13*V(S%s))" % (n, a, b, a, b, n),
+        # L29c: interruttore NATIVO comandato dalla pwl coi rimbalzi, come tb_switch_v2.cir (L27).
+        # La conduttanza comportamentale pow(10, -12 + 13 s) del blocco, usata qui dentro l'anello
+        # (K1/K5) e in serie al segnale (trim), rendeva l'op dipendente dal percorso: il 'transient
+        # op' finiva in uno stato incollato al rail, e nessuna opzione lo sistemava in tutte le
+        # corse (sonde/op/, limitations #33). Commutazione netta, senza il fronte di 4,55 us:
+        # dichiarata.
+        "S%s %s %s S%sR 0 SWK" % (n, a, b, n),
     ]
     if cpar:
-        out.append("C%sP %s %s 15p" % (n, a, b))
+        # contatto aperto = 1 G + 15 pF, la convenzione del blocco (RRGB, CRGB) e di
+        # tb_e3_e5_ldr.cir. Senza l'1 G il nodo T2C del deviatore resta appeso ai soli 1e-12 S
+        # nelle prime iterazioni e l'op fallisce (gmin e source stepping): trovato nella prova
+        # di fumo di L29c.
+        out += ["C%sP %s %s 15p" % (n, a, b), "R%sP %s %s 1G" % (n, a, b)]
     return out
 
 
 CONTATTI = ("K1", "K5", "T1R", "T1S", "T2R", "T2S")
 AGGIUNTE = (
-    ["* ---- L29c: i contatti del guadagno, in parallelo a RRGB / RRG10B del blocco ----"]
+    ["* ---- L29c: i contatti del guadagno, in parallelo a RRGB / RRG10B del blocco ----",
+     "* interruttore nativo: 0,1 ohm chiuso (il massimo del G6K), 1 T aperto; soglia 0,5 V sulla",
+     "* pwl 0/1 dei rimbalzi, isteresi 0,25 V",
+     ".model SWK SW(RON=0.1 ROFF=1e12 VT=0.5 VH=0.25)"]
     + contatto("K1", "RGB", "0", False) + contatto("K5", "RG10B", "0", False)
     + ["* ---- L29c: il trim (ADR-027, trim.py candidato 2) fra OUTA e l'attenuatore ----",
        "* RATTT del blocco si apre nel .control (alter rattt = 1e12): OUTA arriva a W da qui.",
@@ -119,7 +134,14 @@ AGGIUNTE = (
        "* ---- L29c: la sonda del gruppo B (limitations #29), su nodi propri (#24) ----",
        "VPRBD PRBD 0 DC 15", "VPRBG PRBG 0 DC 0", "JPRB PRBD PRBG 0 LSK489A",
        "* ---- L29c: l'alimentazione del comando dei LED, 0..1, segue il rail positivo ----",
-       "VPWL NPWL 0 DC 1", ""]
+       "VPWL NPWL 0 DC 1",
+       "* ---- L29c: il punto di partenza di Newton per l'op (limitations #33) ----",
+       "* Con l'interruttore del trim fra OUTA e W il blocco A ha una seconda soluzione in continua,",
+       "* agganciata al rail (+13 V): gmin e source stepping falliscono e il 'transient op' finisce",
+       "* li', 'successfully'. Il nodeset e' solo il primo tentativo di Newton: la soluzione resta",
+       "* una soluzione del circuito, e ridà quella del deck di main (sonde/op/, controfattuale).",
+       ".nodeset V(OUTA)=0 V(W)=0 V(ATOP)=0 V(OUTB)=0 V(MAIN_A)=0 V(OUTF1)=0 V(OUTF2)=0",
+       ""]
 )
 
 H = [
@@ -168,6 +190,7 @@ C = [
     "* limitations #30: il tempo a 16 cifre, prima di ogni wrdata",
     "set numdgt=15",
     "set d = .dat",
+    "* L29c: corri.sh rifiuta ogni corsa col 'Transient op' nel log (limitations #33).",
     "save v(mainjack) v(fixjack1) v(fixjack2) v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)",
     'echo "cella,file,variante,f_hz,amp,gm,rl,t_ins,t_rel,t_fine,tmax,tipo,rif_ins,rif_rel,t_grad,gruppo,conta" > %s' % MAN,
     "* la sorgente passa dalla LDR in serie: RSRC del blocco a 1 T, il selettore chiuso",
@@ -245,8 +268,9 @@ def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=1000,
     if vto is not None:
         out += ["altermod lsk489a vto = %s" % VTO[vto],
                 "showmod jprb : vto beta",
-                "op",
-                "print -i(vprbd)"]
+                # la corrente della sonda si legge nella tabella dell'op, riga vprbd#branch
+                # (un print di i(vprbd) non la trova: il save non la tiene)
+                "op"]
         # niente destroy qui: dividi.py chiude una corsa al primo "destroy all"
     if rail is not None:
         vp, vm, pw = rail
@@ -450,10 +474,127 @@ def matrice_l29c():
             out += [riga(nome + "_c", nome, var, f, amp, "t%da%d" % (p1, p2), "100k", T_CAMBIO,
                          TR_CAMBIO, TF_CAMBIO, tm, "evento", ref(p2, "sempre"), ref(p2, "mai"), 0.0, 2,
                          "A_ins;A_rel;B2" if amp == 0 else "S_rel;B2")]
+    out += dispersione(var)
+    out += accensione(var)
     return out
 
 
-C += controfattuale() if ARG.matrice == "controfattuale" else matrice_l29c()
+# ======== 3: la dispersione dell'LSK489, senza segnale, a +10 dB
+# Il gradino d'offset e' lineare negli offset d'ingresso: il caso peggiore ha i VOS dello
+# stesso segno della parte sistematica del blocco (-15,45 mV, L40), il segno opposto e' il
+# controllo. VOSF1 / VOSF2 a +20 / -20 mV sempre (le fisse non cambiano guadagno). Il gruppo B
+# e' l'altermod del Vto (ADR-031) con la sonda; "a" e' il modello del costruttore com'e'.
+DISP_VOS = {"n": ("-20m", "-20m", "20m", "-20m"), "p": ("20m", "20m", "20m", "-20m")}
+DISP_VTO = ("a", "b_min", "b_max")
+DISP_ATT = ("max", "m20")
+
+
+def dispersione(var):
+    out = []
+    for sv, vos in DISP_VOS.items():
+        for vt in DISP_VTO:
+            for at in DISP_ATT:
+                sfx = "d%s%s%s" % (sv, vt.replace("b_", ""), at)
+                kw = dict(amp=0, vos=vos, att=at, vto=None if vt == "a" else vt)
+                out += ["* ---- 3: dispersione %s (VOS %s, %s, attenuatore %s) ----" % (sfx, sv, vt, at)]
+                for g, p in ((10, 0), (0, 0), (10, 12)):
+                    for k, extra in (("mai", {}), ("sempre", dict(ti=-10, tr=1000, tijk=-10, trjk=1000))):
+                        n = "r%s_g%dt%d_%s" % (k, g, p, sfx)
+                        out += corsa(n, tf=TF_CAMBIO, g1=g, p1=p, **dict(kw, **extra))
+                        out += [riga(n, n, "rif_" + sfx, 1000, 0, g, "100k", TI, T_RELE + 1, TF_CAMBIO,
+                                     10e-6, "rif_" + k, gruppo=3)]
+                ref = lambda g, p, k: "r%s_g%dt%d_%s" % (k, g, p, sfx)
+                for (g1, g2, p1, p2) in ((0, 10, 0, 0), (10, 0, 0, 0), (10, 10, 0, 12), (10, 10, 12, 0)):
+                    n = "x%d%d%d%d_%s" % (g1, g2, p1, p2, sfx)
+                    out += corsa(n, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO, tijk=T_RELE, trjk=TR_CAMBIO,
+                                 g1=g1, g2=g2, tg=T_CAMBIO if g1 != g2 else 1000,
+                                 p1=p1, p2=p2, tp=T_CAMBIO if p1 != p2 else 1000, **kw)
+                    gm = "g%da%d_t%da%d" % (g1, g2, p1, p2)
+                    out += [riga(n + "_i", n, var + "_" + sfx, 1000, 0, gm, "100k", TI, T_CAMBIO, TF_CAMBIO,
+                                 10e-6, "evento", ref(g1, p1, "sempre"), ref(g1, p1, "mai"), TG_LDR, 3,
+                                 "A_ins;B2")]
+                    out += [riga(n + "_c", n, var + "_" + sfx, 1000, 0, gm, "100k", T_CAMBIO, TR_CAMBIO,
+                                 TF_CAMBIO, 10e-6, "evento", ref(g2, p2, "sempre"), ref(g2, p2, "mai"), 0.0, 3,
+                                 "A_ins;A_rel;B2")]
+                # il mute semplice, rele' tenuto 1 s
+                n = "xm_%s" % sfx
+                out += corsa(n, tf=T_RELE + 1 + TD + 3, ti=TI, tr=T_RELE + 1, tijk=T_RELE, trjk=T_RELE + 1, **kw)
+                out += [riga(n, n, var + "_" + sfx, 1000, 0, 10, "100k", TI, T_RELE + 1, T_RELE + 1 + TD + 3,
+                             10e-6, "evento", ref(10, 0, "sempre"), ref(10, 0, "mai"), TG_LDR, 3,
+                             "A_ins;A_rel;B2")]
+    return out
+
+
+# ======== 5: accensione e spegnimento, senza segnale, +10 dB (ipotesi nell'intestazione)
+T0_ON, T_TIMER = 0.1, 2.5
+T_OFF = 1.0
+RAMPE = (0.01, 0.3)
+SFASI = {"s": (0.0, 0.0), "p": (0.05, 0.0), "m": (0.0, 0.05)}   # ritardo del rail + / -
+RIT_RELE = (0.0, 0.005, 0.02, 0.1)
+
+
+def accensione(var):
+    out = []
+    for tr in RAMPE:
+        for sk, (dp, dm) in SFASI.items():
+            # ---- accensione
+            n = "on_r%g%s" % (tr * 1e3, sk)
+            t_rel = T0_ON + T_TIMER
+            tf = t_rel + TD + 3.0
+            rail = ("0 0 %g 0 %g 15 1000 15" % (T0_ON + dp, T0_ON + dp + tr),
+                    "0 0 %g 0 %g -15 1000 -15" % (T0_ON + dm, T0_ON + dm + tr),
+                    "0 0 %g 0 %g 1 1000 1" % (T0_ON + dp, T0_ON + dp + tr))
+            out += ["* ---- 5: accensione, rampa %g ms, sfasamento %s ----" % (tr * 1e3, sk)]
+            out += corsa(n, amp=0, tf=tf, ti=-100, tr=t_rel, tijk=-10, trjk=t_rel, rail=rail)
+            out += [riga(n, n, "accensione", 1000, 0, 10, "100k", T0_ON, t_rel, tf, 10e-6, "evento",
+                         "g10sempre_lz", "g10mai_lz", 0.0, 5, "A_ins;A_rel")]
+            # ---- spegnimento
+            for rr in RIT_RELE:
+                n = "off_r%g%s_d%g" % (tr * 1e3, sk, rr * 1e3)
+                tf = T_OFF + 2.5
+                rail = ("0 15 %g 15 %g 0 1000 0" % (T_OFF + dp, T_OFF + dp + tr),
+                        "0 -15 %g -15 %g 0 1000 0" % (T_OFF + dm, T_OFF + dm + tr),
+                        "0 1 %g 1 %g 0 1000 0" % (T_OFF + dp, T_OFF + dp + tr))
+                out += ["* ---- 5: spegnimento, rampa %g ms, sfasamento %s, rele' +%g ms ----"
+                        % (tr * 1e3, sk, rr * 1e3)]
+                out += corsa(n, amp=0, tf=tf, tijk=T_OFF + rr, trjk=1000, rail=rail)
+                out += [riga(n, n, "spegnimento", 1000, 0, 10, "100k", T_OFF, 1000, tf, 10e-6, "evento",
+                             "g10sempre_lz", "-", 0.0, 5, "A_ins")]
+    return out
+
+
+# ======== 6: le curve della VTL5C4 (deck a parte per ogni coppia serie / derivazione)
+def matrice_curve():
+    out = []
+    var = "ldr_v4_td6_%s%s" % (CS, CP)
+    tfr = T_RELE + 2.0 + TD + 3.0
+    for fk, amp in (("1k", A), ("20", A), (None, 0)):
+        f, tm, _ = FREQ[fk] if fk else (1000, 10e-6, 7e-6)
+        sfx = fk or "lz"
+        for k, extra in (("mai", {}), ("sempre", dict(ti=-10, tr=1000, tijk=-10, trjk=1000))):
+            n = "c%s_%s" % (k, sfx)
+            out += corsa(n, amp=amp, f=f, tmax=tm, tf=tfr, **extra)
+            out += [riga(n, n, "rif", f, amp, 10, "100k", TI, T_RELE + 1, tfr, tm, "rif_" + k, gruppo=6)]
+        for m, tr, trele in (("inv25", TI + 0.25 * TD, None), ("inv75", TI + 0.75 * TD, None),
+                             ("ev", T_RELE + 1.0, T_RELE), ("h2", T_RELE + 2.0, T_RELE)):
+            n = "c%s_%s" % (m, sfx)
+            d_rel = min((tr - TI) / TD, 1.0)
+            tf = tr + d_rel * TD + 3.0
+            out += corsa(n, amp=amp, f=f, tmax=tm, tf=tf, ti=TI, tr=tr,
+                         tijk=trele if trele else 1000, trjk=tr if trele else 2000)
+            tg = TG_LDR if trele else d_rel * TD
+            out += [riga(n, n, var + "_" + m, f, amp, 10, "100k", TI, tr, tf, tm, "evento",
+                         "csempre_" + sfx, "cmai_" + sfx, tg, 6,
+                         "A_ins;A_rel;B2" if amp == 0 else "S_ins;S_rel;B2")]
+    return out
+
+
+if ARG.matrice == "controfattuale":
+    C += controfattuale()
+elif ARG.matrice == "curve":
+    C += matrice_curve()
+else:
+    C += matrice_l29c()
 C += [".endc", "", ".end"]
 os.makedirs(os.path.dirname(os.path.abspath(ARG.uscita)), exist_ok=True)
 open(ARG.uscita, "w").write("\n".join(H + C) + "\n")

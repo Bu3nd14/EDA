@@ -178,20 +178,19 @@ XLS ALS 0 SRCX SELA VTL5C4_B
 XLP ALP 0 INA 0 VTL5C4_B
 
 * ---- L29c: i contatti del guadagno, in parallelo a RRGB / RRG10B del blocco ----
+* interruttore nativo: 0,1 ohm chiuso (il massimo del G6K), 1 T aperto; soglia 0,5 V sulla
+* pwl 0/1 dei rimbalzi, isteresi 0,25 V
+.model SWK SW(RON=0.1 ROFF=1e12 VT=0.5 VH=0.25)
 VK1I NK1I 0 DC 0
 VK1T NK1T 0 DC 1000
 BK1R SK1R 0 V = (1 - V(NK1I)) * pwl(time - V(NK1T), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
 + + V(NK1I) * pwl(time - V(NK1T), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
-RK1S SK1R SK1 1k
-CK1S SK1 0 4.55n
-BK1 RGB 0 I = V(RGB,0) * pow(10, -12 + 13*V(SK1))
+SK1 RGB 0 SK1R 0 SWK
 VK5I NK5I 0 DC 0
 VK5T NK5T 0 DC 1000
 BK5R SK5R 0 V = (1 - V(NK5I)) * pwl(time - V(NK5T), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
 + + V(NK5I) * pwl(time - V(NK5T), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
-RK5S SK5R SK5 1k
-CK5S SK5 0 4.55n
-BK5 RG10B 0 I = V(RG10B,0) * pow(10, -12 + 13*V(SK5))
+SK5 RG10B 0 SK5R 0 SWK
 * ---- L29c: il trim (ADR-027, trim.py candidato 2) fra OUTA e l'attenuatore ----
 * RATTT del blocco si apre nel .control (alter rattt = 1e12): OUTA arriva a W da qui.
 RL1 OUTA TAP6 845
@@ -201,34 +200,30 @@ VT1RI NT1RI 0 DC 0
 VT1RT NT1RT 0 DC 1000
 BT1RR ST1RR 0 V = (1 - V(NT1RI)) * pwl(time - V(NT1RT), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
 + + V(NT1RI) * pwl(time - V(NT1RT), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
-RT1RS ST1RR ST1R 1k
-CT1RS ST1R 0 4.55n
-BT1R OUTA ATOP I = V(OUTA,ATOP) * pow(10, -12 + 13*V(ST1R))
+ST1R OUTA ATOP ST1RR 0 SWK
 CT1RP OUTA ATOP 15p
+RT1RP OUTA ATOP 1G
 VT1SI NT1SI 0 DC 0
 VT1ST NT1ST 0 DC 1000
 BT1SR ST1SR 0 V = (1 - V(NT1SI)) * pwl(time - V(NT1ST), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
 + + V(NT1SI) * pwl(time - V(NT1ST), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
-RT1SS ST1SR ST1S 1k
-CT1SS ST1S 0 4.55n
-BT1S T2C ATOP I = V(T2C,ATOP) * pow(10, -12 + 13*V(ST1S))
+ST1S T2C ATOP ST1SR 0 SWK
 CT1SP T2C ATOP 15p
+RT1SP T2C ATOP 1G
 VT2RI NT2RI 0 DC 0
 VT2RT NT2RT 0 DC 1000
 BT2RR ST2RR 0 V = (1 - V(NT2RI)) * pwl(time - V(NT2RT), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
 + + V(NT2RI) * pwl(time - V(NT2RT), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
-RT2RS ST2RR ST2R 1k
-CT2RS ST2R 0 4.55n
-BT2R TAP6 T2C I = V(TAP6,T2C) * pow(10, -12 + 13*V(ST2R))
+ST2R TAP6 T2C ST2RR 0 SWK
 CT2RP TAP6 T2C 15p
+RT2RP TAP6 T2C 1G
 VT2SI NT2SI 0 DC 0
 VT2ST NT2ST 0 DC 1000
 BT2SR ST2SR 0 V = (1 - V(NT2SI)) * pwl(time - V(NT2ST), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
 + + V(NT2SI) * pwl(time - V(NT2ST), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
-RT2SS ST2SR ST2S 1k
-CT2SS ST2S 0 4.55n
-BT2S TAP12 T2C I = V(TAP12,T2C) * pow(10, -12 + 13*V(ST2S))
+ST2S TAP12 T2C ST2SR 0 SWK
 CT2SP TAP12 T2C 15p
+RT2SP TAP12 T2C 1G
 CWIRE ATOP 0 100p
 RATTH ATOP W 1m
 * ---- L29c: la sonda del gruppo B (limitations #29), su nodi propri (#24) ----
@@ -237,11 +232,18 @@ VPRBG PRBG 0 DC 0
 JPRB PRBD PRBG 0 LSK489A
 * ---- L29c: l'alimentazione del comando dei LED, 0..1, segue il rail positivo ----
 VPWL NPWL 0 DC 1
+* ---- L29c: il punto di partenza di Newton per l'op (limitations #33) ----
+* Con l'interruttore del trim fra OUTA e W il blocco A ha una seconda soluzione in continua,
+* agganciata al rail (+13 V): gmin e source stepping falliscono e il 'transient op' finisce
+* li', 'successfully'. Il nodeset e' solo il primo tentativo di Newton: la soluzione resta
+* una soluzione del circuito, e ridà quella del deck di main (sonde/op/, controfattuale).
+.nodeset V(OUTA)=0 V(W)=0 V(ATOP)=0 V(OUTB)=0 V(MAIN_A)=0 V(OUTF1)=0 V(OUTF2)=0
 
 .control
 * limitations #30: il tempo a 16 cifre, prima di ogni wrdata
 set numdgt=15
 set d = .dat
+* L29c: corri.sh rifiuta ogni corsa col 'Transient op' nel log (limitations #33).
 save v(mainjack) v(fixjack1) v(fixjack2) v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
 echo "cella,file,variante,f_hz,amp,gm,rl,t_ins,t_rel,t_fine,tmax,tipo,rif_ins,rif_rel,t_grad,gruppo,conta" > tb_v2_casopeggiore_manifest.csv
 * la sorgente passa dalla LDR in serie: RSRC del blocco a 1 T, il selettore chiuso
@@ -3401,6 +3403,5958 @@ wrdata tm12x0_lz_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(
 destroy all
 echo "tm12x0_lz_i,tm12x0_lz.dat,ldr_v4_td6_BB,1000,0,t12a0,100k,1.0,8.0,19.0,1e-05,evento,t12sempre_lz,t12mai_lz,6.5,2,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
 echo "tm12x0_lz_c,tm12x0_lz.dat,ldr_v4_td6_BB,1000,0,t12a0,100k,8.0,10.0,19.0,1e-05,evento,g10sempre_lz,g10mai_lz,0.0,2,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+* ---- 3: dispersione dnamax (VOS n, a, attenuatore max) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t0_dnamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t0_dnamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t0_dnamax,rmai_g10t0_dnamax.dat,rif_dnamax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t0_dnamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t0_dnamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t0_dnamax,rsempre_g10t0_dnamax.dat,rif_dnamax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g0t0_dnamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g0t0_dnamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g0t0_dnamax,rmai_g0t0_dnamax.dat,rif_dnamax,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g0t0_dnamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g0t0_dnamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g0t0_dnamax,rsempre_g0t0_dnamax.dat,rif_dnamax,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t12_dnamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t12_dnamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t12_dnamax,rmai_g10t12_dnamax.dat,rif_dnamax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t12_dnamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t12_dnamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t12_dnamax,rsempre_g10t12_dnamax.dat,rif_dnamax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 8.000300
+alter vk5i dc = 0
+alter vk5t dc = 8.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata x01000_dnamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x01000_dnamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x01000_dnamax_i,x01000_dnamax.dat,ldr_v4_td6_BB_dnamax,1000,0,g0a10_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g0t0_dnamax,rmai_g0t0_dnamax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x01000_dnamax_c,x01000_dnamax.dat,ldr_v4_td6_BB_dnamax,1000,0,g0a10_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dnamax,rmai_g10t0_dnamax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 8.000000
+alter vk5i dc = 1
+alter vk5t dc = 8.000300
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata x10000_dnamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x10000_dnamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x10000_dnamax_i,x10000_dnamax.dat,ldr_v4_td6_BB_dnamax,1000,0,g10a0_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dnamax,rmai_g10t0_dnamax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x10000_dnamax_c,x10000_dnamax.dat,ldr_v4_td6_BB_dnamax,1000,0,g10a0_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g0t0_dnamax,rmai_g0t0_dnamax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 8.000000
+alter vt1si dc = 0
+alter vt1st dc = 8.001000
+alter vt2ri dc = 1
+alter vt2rt dc = 8.000000
+alter vt2si dc = 0
+alter vt2st dc = 8.001000
+tran 1e-05 19.0 0 1e-05
+wrdata x1010012_dnamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010012_dnamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010012_dnamax_i,x1010012_dnamax.dat,ldr_v4_td6_BB_dnamax,1000,0,g10a10_t0a12,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dnamax,rmai_g10t0_dnamax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010012_dnamax_c,x1010012_dnamax.dat,ldr_v4_td6_BB_dnamax,1000,0,g10a10_t0a12,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t12_dnamax,rmai_g10t12_dnamax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 8.001000
+alter vt1si dc = 1
+alter vt1st dc = 8.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 8.001000
+alter vt2si dc = 1
+alter vt2st dc = 8.000000
+tran 1e-05 19.0 0 1e-05
+wrdata x1010120_dnamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010120_dnamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010120_dnamax_i,x1010120_dnamax.dat,ldr_v4_td6_BB_dnamax,1000,0,g10a10_t12a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t12_dnamax,rmai_g10t12_dnamax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010120_dnamax_c,x1010120_dnamax.dat,ldr_v4_td6_BB_dnamax,1000,0,g10a10_t12a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dnamax,rmai_g10t0_dnamax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 8.5
+alter vtijk dc = 7.5
+alter vtrjk dc = 8.5
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 17.5 0 1e-05
+wrdata xm_dnamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata xm_dnamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "xm_dnamax,xm_dnamax.dat,ldr_v4_td6_BB_dnamax,1000,0,10,100k,1.0,8.5,17.5,1e-05,evento,rsempre_g10t0_dnamax,rmai_g10t0_dnamax,6.5,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+* ---- 3: dispersione dnam20 (VOS n, a, attenuatore m20) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t0_dnam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t0_dnam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t0_dnam20,rmai_g10t0_dnam20.dat,rif_dnam20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t0_dnam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t0_dnam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t0_dnam20,rsempre_g10t0_dnam20.dat,rif_dnam20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g0t0_dnam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g0t0_dnam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g0t0_dnam20,rmai_g0t0_dnam20.dat,rif_dnam20,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g0t0_dnam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g0t0_dnam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g0t0_dnam20,rsempre_g0t0_dnam20.dat,rif_dnam20,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t12_dnam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t12_dnam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t12_dnam20,rmai_g10t12_dnam20.dat,rif_dnam20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t12_dnam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t12_dnam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t12_dnam20,rsempre_g10t12_dnam20.dat,rif_dnam20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 8.000300
+alter vk5i dc = 0
+alter vk5t dc = 8.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata x01000_dnam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x01000_dnam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x01000_dnam20_i,x01000_dnam20.dat,ldr_v4_td6_BB_dnam20,1000,0,g0a10_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g0t0_dnam20,rmai_g0t0_dnam20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x01000_dnam20_c,x01000_dnam20.dat,ldr_v4_td6_BB_dnam20,1000,0,g0a10_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dnam20,rmai_g10t0_dnam20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 8.000000
+alter vk5i dc = 1
+alter vk5t dc = 8.000300
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata x10000_dnam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x10000_dnam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x10000_dnam20_i,x10000_dnam20.dat,ldr_v4_td6_BB_dnam20,1000,0,g10a0_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dnam20,rmai_g10t0_dnam20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x10000_dnam20_c,x10000_dnam20.dat,ldr_v4_td6_BB_dnam20,1000,0,g10a0_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g0t0_dnam20,rmai_g0t0_dnam20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 8.000000
+alter vt1si dc = 0
+alter vt1st dc = 8.001000
+alter vt2ri dc = 1
+alter vt2rt dc = 8.000000
+alter vt2si dc = 0
+alter vt2st dc = 8.001000
+tran 1e-05 19.0 0 1e-05
+wrdata x1010012_dnam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010012_dnam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010012_dnam20_i,x1010012_dnam20.dat,ldr_v4_td6_BB_dnam20,1000,0,g10a10_t0a12,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dnam20,rmai_g10t0_dnam20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010012_dnam20_c,x1010012_dnam20.dat,ldr_v4_td6_BB_dnam20,1000,0,g10a10_t0a12,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t12_dnam20,rmai_g10t12_dnam20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 8.001000
+alter vt1si dc = 1
+alter vt1st dc = 8.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 8.001000
+alter vt2si dc = 1
+alter vt2st dc = 8.000000
+tran 1e-05 19.0 0 1e-05
+wrdata x1010120_dnam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010120_dnam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010120_dnam20_i,x1010120_dnam20.dat,ldr_v4_td6_BB_dnam20,1000,0,g10a10_t12a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t12_dnam20,rmai_g10t12_dnam20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010120_dnam20_c,x1010120_dnam20.dat,ldr_v4_td6_BB_dnam20,1000,0,g10a10_t12a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dnam20,rmai_g10t0_dnam20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 8.5
+alter vtijk dc = 7.5
+alter vtrjk dc = 8.5
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 17.5 0 1e-05
+wrdata xm_dnam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata xm_dnam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "xm_dnam20,xm_dnam20.dat,ldr_v4_td6_BB_dnam20,1000,0,10,100k,1.0,8.5,17.5,1e-05,evento,rsempre_g10t0_dnam20,rmai_g10t0_dnam20,6.5,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+* ---- 3: dispersione dnminmax (VOS n, b_min, attenuatore max) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t0_dnminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t0_dnminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t0_dnminmax,rmai_g10t0_dnminmax.dat,rif_dnminmax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t0_dnminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t0_dnminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t0_dnminmax,rsempre_g10t0_dnminmax.dat,rif_dnminmax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g0t0_dnminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g0t0_dnminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g0t0_dnminmax,rmai_g0t0_dnminmax.dat,rif_dnminmax,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g0t0_dnminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g0t0_dnminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g0t0_dnminmax,rsempre_g0t0_dnminmax.dat,rif_dnminmax,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t12_dnminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t12_dnminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t12_dnminmax,rmai_g10t12_dnminmax.dat,rif_dnminmax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t12_dnminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t12_dnminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t12_dnminmax,rsempre_g10t12_dnminmax.dat,rif_dnminmax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 8.000300
+alter vk5i dc = 0
+alter vk5t dc = 8.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x01000_dnminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x01000_dnminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x01000_dnminmax_i,x01000_dnminmax.dat,ldr_v4_td6_BB_dnminmax,1000,0,g0a10_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g0t0_dnminmax,rmai_g0t0_dnminmax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x01000_dnminmax_c,x01000_dnminmax.dat,ldr_v4_td6_BB_dnminmax,1000,0,g0a10_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dnminmax,rmai_g10t0_dnminmax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 8.000000
+alter vk5i dc = 1
+alter vk5t dc = 8.000300
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x10000_dnminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x10000_dnminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x10000_dnminmax_i,x10000_dnminmax.dat,ldr_v4_td6_BB_dnminmax,1000,0,g10a0_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dnminmax,rmai_g10t0_dnminmax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x10000_dnminmax_c,x10000_dnminmax.dat,ldr_v4_td6_BB_dnminmax,1000,0,g10a0_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g0t0_dnminmax,rmai_g0t0_dnminmax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 8.000000
+alter vt1si dc = 0
+alter vt1st dc = 8.001000
+alter vt2ri dc = 1
+alter vt2rt dc = 8.000000
+alter vt2si dc = 0
+alter vt2st dc = 8.001000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x1010012_dnminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010012_dnminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010012_dnminmax_i,x1010012_dnminmax.dat,ldr_v4_td6_BB_dnminmax,1000,0,g10a10_t0a12,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dnminmax,rmai_g10t0_dnminmax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010012_dnminmax_c,x1010012_dnminmax.dat,ldr_v4_td6_BB_dnminmax,1000,0,g10a10_t0a12,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t12_dnminmax,rmai_g10t12_dnminmax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 8.001000
+alter vt1si dc = 1
+alter vt1st dc = 8.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 8.001000
+alter vt2si dc = 1
+alter vt2st dc = 8.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x1010120_dnminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010120_dnminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010120_dnminmax_i,x1010120_dnminmax.dat,ldr_v4_td6_BB_dnminmax,1000,0,g10a10_t12a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t12_dnminmax,rmai_g10t12_dnminmax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010120_dnminmax_c,x1010120_dnminmax.dat,ldr_v4_td6_BB_dnminmax,1000,0,g10a10_t12a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dnminmax,rmai_g10t0_dnminmax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 8.5
+alter vtijk dc = 7.5
+alter vtrjk dc = 8.5
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 17.5 0 1e-05
+wrdata xm_dnminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata xm_dnminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "xm_dnminmax,xm_dnminmax.dat,ldr_v4_td6_BB_dnminmax,1000,0,10,100k,1.0,8.5,17.5,1e-05,evento,rsempre_g10t0_dnminmax,rmai_g10t0_dnminmax,6.5,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+* ---- 3: dispersione dnminm20 (VOS n, b_min, attenuatore m20) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t0_dnminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t0_dnminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t0_dnminm20,rmai_g10t0_dnminm20.dat,rif_dnminm20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t0_dnminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t0_dnminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t0_dnminm20,rsempre_g10t0_dnminm20.dat,rif_dnminm20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g0t0_dnminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g0t0_dnminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g0t0_dnminm20,rmai_g0t0_dnminm20.dat,rif_dnminm20,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g0t0_dnminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g0t0_dnminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g0t0_dnminm20,rsempre_g0t0_dnminm20.dat,rif_dnminm20,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t12_dnminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t12_dnminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t12_dnminm20,rmai_g10t12_dnminm20.dat,rif_dnminm20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t12_dnminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t12_dnminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t12_dnminm20,rsempre_g10t12_dnminm20.dat,rif_dnminm20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 8.000300
+alter vk5i dc = 0
+alter vk5t dc = 8.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x01000_dnminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x01000_dnminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x01000_dnminm20_i,x01000_dnminm20.dat,ldr_v4_td6_BB_dnminm20,1000,0,g0a10_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g0t0_dnminm20,rmai_g0t0_dnminm20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x01000_dnminm20_c,x01000_dnminm20.dat,ldr_v4_td6_BB_dnminm20,1000,0,g0a10_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dnminm20,rmai_g10t0_dnminm20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 8.000000
+alter vk5i dc = 1
+alter vk5t dc = 8.000300
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x10000_dnminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x10000_dnminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x10000_dnminm20_i,x10000_dnminm20.dat,ldr_v4_td6_BB_dnminm20,1000,0,g10a0_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dnminm20,rmai_g10t0_dnminm20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x10000_dnminm20_c,x10000_dnminm20.dat,ldr_v4_td6_BB_dnminm20,1000,0,g10a0_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g0t0_dnminm20,rmai_g0t0_dnminm20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 8.000000
+alter vt1si dc = 0
+alter vt1st dc = 8.001000
+alter vt2ri dc = 1
+alter vt2rt dc = 8.000000
+alter vt2si dc = 0
+alter vt2st dc = 8.001000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x1010012_dnminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010012_dnminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010012_dnminm20_i,x1010012_dnminm20.dat,ldr_v4_td6_BB_dnminm20,1000,0,g10a10_t0a12,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dnminm20,rmai_g10t0_dnminm20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010012_dnminm20_c,x1010012_dnminm20.dat,ldr_v4_td6_BB_dnminm20,1000,0,g10a10_t0a12,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t12_dnminm20,rmai_g10t12_dnminm20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 8.001000
+alter vt1si dc = 1
+alter vt1st dc = 8.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 8.001000
+alter vt2si dc = 1
+alter vt2st dc = 8.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x1010120_dnminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010120_dnminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010120_dnminm20_i,x1010120_dnminm20.dat,ldr_v4_td6_BB_dnminm20,1000,0,g10a10_t12a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t12_dnminm20,rmai_g10t12_dnminm20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010120_dnminm20_c,x1010120_dnminm20.dat,ldr_v4_td6_BB_dnminm20,1000,0,g10a10_t12a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dnminm20,rmai_g10t0_dnminm20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 8.5
+alter vtijk dc = 7.5
+alter vtrjk dc = 8.5
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 17.5 0 1e-05
+wrdata xm_dnminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata xm_dnminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "xm_dnminm20,xm_dnminm20.dat,ldr_v4_td6_BB_dnminm20,1000,0,10,100k,1.0,8.5,17.5,1e-05,evento,rsempre_g10t0_dnminm20,rmai_g10t0_dnminm20,6.5,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+* ---- 3: dispersione dnmaxmax (VOS n, b_max, attenuatore max) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t0_dnmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t0_dnmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t0_dnmaxmax,rmai_g10t0_dnmaxmax.dat,rif_dnmaxmax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t0_dnmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t0_dnmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t0_dnmaxmax,rsempre_g10t0_dnmaxmax.dat,rif_dnmaxmax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g0t0_dnmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g0t0_dnmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g0t0_dnmaxmax,rmai_g0t0_dnmaxmax.dat,rif_dnmaxmax,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g0t0_dnmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g0t0_dnmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g0t0_dnmaxmax,rsempre_g0t0_dnmaxmax.dat,rif_dnmaxmax,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t12_dnmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t12_dnmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t12_dnmaxmax,rmai_g10t12_dnmaxmax.dat,rif_dnmaxmax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t12_dnmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t12_dnmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t12_dnmaxmax,rsempre_g10t12_dnmaxmax.dat,rif_dnmaxmax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 8.000300
+alter vk5i dc = 0
+alter vk5t dc = 8.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x01000_dnmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x01000_dnmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x01000_dnmaxmax_i,x01000_dnmaxmax.dat,ldr_v4_td6_BB_dnmaxmax,1000,0,g0a10_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g0t0_dnmaxmax,rmai_g0t0_dnmaxmax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x01000_dnmaxmax_c,x01000_dnmaxmax.dat,ldr_v4_td6_BB_dnmaxmax,1000,0,g0a10_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dnmaxmax,rmai_g10t0_dnmaxmax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 8.000000
+alter vk5i dc = 1
+alter vk5t dc = 8.000300
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x10000_dnmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x10000_dnmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x10000_dnmaxmax_i,x10000_dnmaxmax.dat,ldr_v4_td6_BB_dnmaxmax,1000,0,g10a0_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dnmaxmax,rmai_g10t0_dnmaxmax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x10000_dnmaxmax_c,x10000_dnmaxmax.dat,ldr_v4_td6_BB_dnmaxmax,1000,0,g10a0_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g0t0_dnmaxmax,rmai_g0t0_dnmaxmax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 8.000000
+alter vt1si dc = 0
+alter vt1st dc = 8.001000
+alter vt2ri dc = 1
+alter vt2rt dc = 8.000000
+alter vt2si dc = 0
+alter vt2st dc = 8.001000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x1010012_dnmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010012_dnmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010012_dnmaxmax_i,x1010012_dnmaxmax.dat,ldr_v4_td6_BB_dnmaxmax,1000,0,g10a10_t0a12,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dnmaxmax,rmai_g10t0_dnmaxmax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010012_dnmaxmax_c,x1010012_dnmaxmax.dat,ldr_v4_td6_BB_dnmaxmax,1000,0,g10a10_t0a12,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t12_dnmaxmax,rmai_g10t12_dnmaxmax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 8.001000
+alter vt1si dc = 1
+alter vt1st dc = 8.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 8.001000
+alter vt2si dc = 1
+alter vt2st dc = 8.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x1010120_dnmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010120_dnmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010120_dnmaxmax_i,x1010120_dnmaxmax.dat,ldr_v4_td6_BB_dnmaxmax,1000,0,g10a10_t12a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t12_dnmaxmax,rmai_g10t12_dnmaxmax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010120_dnmaxmax_c,x1010120_dnmaxmax.dat,ldr_v4_td6_BB_dnmaxmax,1000,0,g10a10_t12a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dnmaxmax,rmai_g10t0_dnmaxmax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 8.5
+alter vtijk dc = 7.5
+alter vtrjk dc = 8.5
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 17.5 0 1e-05
+wrdata xm_dnmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata xm_dnmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "xm_dnmaxmax,xm_dnmaxmax.dat,ldr_v4_td6_BB_dnmaxmax,1000,0,10,100k,1.0,8.5,17.5,1e-05,evento,rsempre_g10t0_dnmaxmax,rmai_g10t0_dnmaxmax,6.5,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+* ---- 3: dispersione dnmaxm20 (VOS n, b_max, attenuatore m20) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t0_dnmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t0_dnmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t0_dnmaxm20,rmai_g10t0_dnmaxm20.dat,rif_dnmaxm20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t0_dnmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t0_dnmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t0_dnmaxm20,rsempre_g10t0_dnmaxm20.dat,rif_dnmaxm20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g0t0_dnmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g0t0_dnmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g0t0_dnmaxm20,rmai_g0t0_dnmaxm20.dat,rif_dnmaxm20,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g0t0_dnmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g0t0_dnmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g0t0_dnmaxm20,rsempre_g0t0_dnmaxm20.dat,rif_dnmaxm20,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t12_dnmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t12_dnmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t12_dnmaxm20,rmai_g10t12_dnmaxm20.dat,rif_dnmaxm20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t12_dnmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t12_dnmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t12_dnmaxm20,rsempre_g10t12_dnmaxm20.dat,rif_dnmaxm20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 8.000300
+alter vk5i dc = 0
+alter vk5t dc = 8.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x01000_dnmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x01000_dnmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x01000_dnmaxm20_i,x01000_dnmaxm20.dat,ldr_v4_td6_BB_dnmaxm20,1000,0,g0a10_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g0t0_dnmaxm20,rmai_g0t0_dnmaxm20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x01000_dnmaxm20_c,x01000_dnmaxm20.dat,ldr_v4_td6_BB_dnmaxm20,1000,0,g0a10_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dnmaxm20,rmai_g10t0_dnmaxm20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 8.000000
+alter vk5i dc = 1
+alter vk5t dc = 8.000300
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x10000_dnmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x10000_dnmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x10000_dnmaxm20_i,x10000_dnmaxm20.dat,ldr_v4_td6_BB_dnmaxm20,1000,0,g10a0_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dnmaxm20,rmai_g10t0_dnmaxm20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x10000_dnmaxm20_c,x10000_dnmaxm20.dat,ldr_v4_td6_BB_dnmaxm20,1000,0,g10a0_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g0t0_dnmaxm20,rmai_g0t0_dnmaxm20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 8.000000
+alter vt1si dc = 0
+alter vt1st dc = 8.001000
+alter vt2ri dc = 1
+alter vt2rt dc = 8.000000
+alter vt2si dc = 0
+alter vt2st dc = 8.001000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x1010012_dnmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010012_dnmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010012_dnmaxm20_i,x1010012_dnmaxm20.dat,ldr_v4_td6_BB_dnmaxm20,1000,0,g10a10_t0a12,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dnmaxm20,rmai_g10t0_dnmaxm20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010012_dnmaxm20_c,x1010012_dnmaxm20.dat,ldr_v4_td6_BB_dnmaxm20,1000,0,g10a10_t0a12,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t12_dnmaxm20,rmai_g10t12_dnmaxm20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 8.001000
+alter vt1si dc = 1
+alter vt1st dc = 8.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 8.001000
+alter vt2si dc = 1
+alter vt2st dc = 8.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x1010120_dnmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010120_dnmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010120_dnmaxm20_i,x1010120_dnmaxm20.dat,ldr_v4_td6_BB_dnmaxm20,1000,0,g10a10_t12a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t12_dnmaxm20,rmai_g10t12_dnmaxm20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010120_dnmaxm20_c,x1010120_dnmaxm20.dat,ldr_v4_td6_BB_dnmaxm20,1000,0,g10a10_t12a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dnmaxm20,rmai_g10t0_dnmaxm20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 8.5
+alter vtijk dc = 7.5
+alter vtrjk dc = 8.5
+alter vosa dc = -20m
+alter vosb dc = -20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 17.5 0 1e-05
+wrdata xm_dnmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata xm_dnmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "xm_dnmaxm20,xm_dnmaxm20.dat,ldr_v4_td6_BB_dnmaxm20,1000,0,10,100k,1.0,8.5,17.5,1e-05,evento,rsempre_g10t0_dnmaxm20,rmai_g10t0_dnmaxm20,6.5,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+* ---- 3: dispersione dpamax (VOS p, a, attenuatore max) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t0_dpamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t0_dpamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t0_dpamax,rmai_g10t0_dpamax.dat,rif_dpamax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t0_dpamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t0_dpamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t0_dpamax,rsempre_g10t0_dpamax.dat,rif_dpamax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g0t0_dpamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g0t0_dpamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g0t0_dpamax,rmai_g0t0_dpamax.dat,rif_dpamax,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g0t0_dpamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g0t0_dpamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g0t0_dpamax,rsempre_g0t0_dpamax.dat,rif_dpamax,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t12_dpamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t12_dpamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t12_dpamax,rmai_g10t12_dpamax.dat,rif_dpamax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t12_dpamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t12_dpamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t12_dpamax,rsempre_g10t12_dpamax.dat,rif_dpamax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 8.000300
+alter vk5i dc = 0
+alter vk5t dc = 8.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata x01000_dpamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x01000_dpamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x01000_dpamax_i,x01000_dpamax.dat,ldr_v4_td6_BB_dpamax,1000,0,g0a10_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g0t0_dpamax,rmai_g0t0_dpamax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x01000_dpamax_c,x01000_dpamax.dat,ldr_v4_td6_BB_dpamax,1000,0,g0a10_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dpamax,rmai_g10t0_dpamax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 8.000000
+alter vk5i dc = 1
+alter vk5t dc = 8.000300
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata x10000_dpamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x10000_dpamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x10000_dpamax_i,x10000_dpamax.dat,ldr_v4_td6_BB_dpamax,1000,0,g10a0_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dpamax,rmai_g10t0_dpamax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x10000_dpamax_c,x10000_dpamax.dat,ldr_v4_td6_BB_dpamax,1000,0,g10a0_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g0t0_dpamax,rmai_g0t0_dpamax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 8.000000
+alter vt1si dc = 0
+alter vt1st dc = 8.001000
+alter vt2ri dc = 1
+alter vt2rt dc = 8.000000
+alter vt2si dc = 0
+alter vt2st dc = 8.001000
+tran 1e-05 19.0 0 1e-05
+wrdata x1010012_dpamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010012_dpamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010012_dpamax_i,x1010012_dpamax.dat,ldr_v4_td6_BB_dpamax,1000,0,g10a10_t0a12,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dpamax,rmai_g10t0_dpamax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010012_dpamax_c,x1010012_dpamax.dat,ldr_v4_td6_BB_dpamax,1000,0,g10a10_t0a12,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t12_dpamax,rmai_g10t12_dpamax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 8.001000
+alter vt1si dc = 1
+alter vt1st dc = 8.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 8.001000
+alter vt2si dc = 1
+alter vt2st dc = 8.000000
+tran 1e-05 19.0 0 1e-05
+wrdata x1010120_dpamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010120_dpamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010120_dpamax_i,x1010120_dpamax.dat,ldr_v4_td6_BB_dpamax,1000,0,g10a10_t12a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t12_dpamax,rmai_g10t12_dpamax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010120_dpamax_c,x1010120_dpamax.dat,ldr_v4_td6_BB_dpamax,1000,0,g10a10_t12a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dpamax,rmai_g10t0_dpamax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 8.5
+alter vtijk dc = 7.5
+alter vtrjk dc = 8.5
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 17.5 0 1e-05
+wrdata xm_dpamax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata xm_dpamax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "xm_dpamax,xm_dpamax.dat,ldr_v4_td6_BB_dpamax,1000,0,10,100k,1.0,8.5,17.5,1e-05,evento,rsempre_g10t0_dpamax,rmai_g10t0_dpamax,6.5,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+* ---- 3: dispersione dpam20 (VOS p, a, attenuatore m20) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t0_dpam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t0_dpam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t0_dpam20,rmai_g10t0_dpam20.dat,rif_dpam20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t0_dpam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t0_dpam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t0_dpam20,rsempre_g10t0_dpam20.dat,rif_dpam20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g0t0_dpam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g0t0_dpam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g0t0_dpam20,rmai_g0t0_dpam20.dat,rif_dpam20,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g0t0_dpam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g0t0_dpam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g0t0_dpam20,rsempre_g0t0_dpam20.dat,rif_dpam20,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t12_dpam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t12_dpam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t12_dpam20,rmai_g10t12_dpam20.dat,rif_dpam20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t12_dpam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t12_dpam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t12_dpam20,rsempre_g10t12_dpam20.dat,rif_dpam20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 8.000300
+alter vk5i dc = 0
+alter vk5t dc = 8.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata x01000_dpam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x01000_dpam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x01000_dpam20_i,x01000_dpam20.dat,ldr_v4_td6_BB_dpam20,1000,0,g0a10_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g0t0_dpam20,rmai_g0t0_dpam20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x01000_dpam20_c,x01000_dpam20.dat,ldr_v4_td6_BB_dpam20,1000,0,g0a10_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dpam20,rmai_g10t0_dpam20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 8.000000
+alter vk5i dc = 1
+alter vk5t dc = 8.000300
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 19.0 0 1e-05
+wrdata x10000_dpam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x10000_dpam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x10000_dpam20_i,x10000_dpam20.dat,ldr_v4_td6_BB_dpam20,1000,0,g10a0_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dpam20,rmai_g10t0_dpam20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x10000_dpam20_c,x10000_dpam20.dat,ldr_v4_td6_BB_dpam20,1000,0,g10a0_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g0t0_dpam20,rmai_g0t0_dpam20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 8.000000
+alter vt1si dc = 0
+alter vt1st dc = 8.001000
+alter vt2ri dc = 1
+alter vt2rt dc = 8.000000
+alter vt2si dc = 0
+alter vt2st dc = 8.001000
+tran 1e-05 19.0 0 1e-05
+wrdata x1010012_dpam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010012_dpam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010012_dpam20_i,x1010012_dpam20.dat,ldr_v4_td6_BB_dpam20,1000,0,g10a10_t0a12,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dpam20,rmai_g10t0_dpam20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010012_dpam20_c,x1010012_dpam20.dat,ldr_v4_td6_BB_dpam20,1000,0,g10a10_t0a12,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t12_dpam20,rmai_g10t12_dpam20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 8.001000
+alter vt1si dc = 1
+alter vt1st dc = 8.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 8.001000
+alter vt2si dc = 1
+alter vt2st dc = 8.000000
+tran 1e-05 19.0 0 1e-05
+wrdata x1010120_dpam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010120_dpam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010120_dpam20_i,x1010120_dpam20.dat,ldr_v4_td6_BB_dpam20,1000,0,g10a10_t12a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t12_dpam20,rmai_g10t12_dpam20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010120_dpam20_c,x1010120_dpam20.dat,ldr_v4_td6_BB_dpam20,1000,0,g10a10_t12a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dpam20,rmai_g10t0_dpam20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 8.5
+alter vtijk dc = 7.5
+alter vtrjk dc = 8.5
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+tran 1e-05 17.5 0 1e-05
+wrdata xm_dpam20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata xm_dpam20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "xm_dpam20,xm_dpam20.dat,ldr_v4_td6_BB_dpam20,1000,0,10,100k,1.0,8.5,17.5,1e-05,evento,rsempre_g10t0_dpam20,rmai_g10t0_dpam20,6.5,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+* ---- 3: dispersione dpminmax (VOS p, b_min, attenuatore max) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t0_dpminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t0_dpminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t0_dpminmax,rmai_g10t0_dpminmax.dat,rif_dpminmax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t0_dpminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t0_dpminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t0_dpminmax,rsempre_g10t0_dpminmax.dat,rif_dpminmax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g0t0_dpminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g0t0_dpminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g0t0_dpminmax,rmai_g0t0_dpminmax.dat,rif_dpminmax,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g0t0_dpminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g0t0_dpminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g0t0_dpminmax,rsempre_g0t0_dpminmax.dat,rif_dpminmax,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t12_dpminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t12_dpminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t12_dpminmax,rmai_g10t12_dpminmax.dat,rif_dpminmax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t12_dpminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t12_dpminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t12_dpminmax,rsempre_g10t12_dpminmax.dat,rif_dpminmax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 8.000300
+alter vk5i dc = 0
+alter vk5t dc = 8.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x01000_dpminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x01000_dpminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x01000_dpminmax_i,x01000_dpminmax.dat,ldr_v4_td6_BB_dpminmax,1000,0,g0a10_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g0t0_dpminmax,rmai_g0t0_dpminmax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x01000_dpminmax_c,x01000_dpminmax.dat,ldr_v4_td6_BB_dpminmax,1000,0,g0a10_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dpminmax,rmai_g10t0_dpminmax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 8.000000
+alter vk5i dc = 1
+alter vk5t dc = 8.000300
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x10000_dpminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x10000_dpminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x10000_dpminmax_i,x10000_dpminmax.dat,ldr_v4_td6_BB_dpminmax,1000,0,g10a0_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dpminmax,rmai_g10t0_dpminmax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x10000_dpminmax_c,x10000_dpminmax.dat,ldr_v4_td6_BB_dpminmax,1000,0,g10a0_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g0t0_dpminmax,rmai_g0t0_dpminmax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 8.000000
+alter vt1si dc = 0
+alter vt1st dc = 8.001000
+alter vt2ri dc = 1
+alter vt2rt dc = 8.000000
+alter vt2si dc = 0
+alter vt2st dc = 8.001000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x1010012_dpminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010012_dpminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010012_dpminmax_i,x1010012_dpminmax.dat,ldr_v4_td6_BB_dpminmax,1000,0,g10a10_t0a12,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dpminmax,rmai_g10t0_dpminmax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010012_dpminmax_c,x1010012_dpminmax.dat,ldr_v4_td6_BB_dpminmax,1000,0,g10a10_t0a12,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t12_dpminmax,rmai_g10t12_dpminmax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 8.001000
+alter vt1si dc = 1
+alter vt1st dc = 8.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 8.001000
+alter vt2si dc = 1
+alter vt2st dc = 8.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x1010120_dpminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010120_dpminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010120_dpminmax_i,x1010120_dpminmax.dat,ldr_v4_td6_BB_dpminmax,1000,0,g10a10_t12a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t12_dpminmax,rmai_g10t12_dpminmax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010120_dpminmax_c,x1010120_dpminmax.dat,ldr_v4_td6_BB_dpminmax,1000,0,g10a10_t12a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dpminmax,rmai_g10t0_dpminmax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 8.5
+alter vtijk dc = 7.5
+alter vtrjk dc = 8.5
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 17.5 0 1e-05
+wrdata xm_dpminmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata xm_dpminmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "xm_dpminmax,xm_dpminmax.dat,ldr_v4_td6_BB_dpminmax,1000,0,10,100k,1.0,8.5,17.5,1e-05,evento,rsempre_g10t0_dpminmax,rmai_g10t0_dpminmax,6.5,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+* ---- 3: dispersione dpminm20 (VOS p, b_min, attenuatore m20) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t0_dpminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t0_dpminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t0_dpminm20,rmai_g10t0_dpminm20.dat,rif_dpminm20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t0_dpminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t0_dpminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t0_dpminm20,rsempre_g10t0_dpminm20.dat,rif_dpminm20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g0t0_dpminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g0t0_dpminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g0t0_dpminm20,rmai_g0t0_dpminm20.dat,rif_dpminm20,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g0t0_dpminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g0t0_dpminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g0t0_dpminm20,rsempre_g0t0_dpminm20.dat,rif_dpminm20,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t12_dpminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t12_dpminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t12_dpminm20,rmai_g10t12_dpminm20.dat,rif_dpminm20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t12_dpminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t12_dpminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t12_dpminm20,rsempre_g10t12_dpminm20.dat,rif_dpminm20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 8.000300
+alter vk5i dc = 0
+alter vk5t dc = 8.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x01000_dpminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x01000_dpminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x01000_dpminm20_i,x01000_dpminm20.dat,ldr_v4_td6_BB_dpminm20,1000,0,g0a10_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g0t0_dpminm20,rmai_g0t0_dpminm20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x01000_dpminm20_c,x01000_dpminm20.dat,ldr_v4_td6_BB_dpminm20,1000,0,g0a10_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dpminm20,rmai_g10t0_dpminm20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 8.000000
+alter vk5i dc = 1
+alter vk5t dc = 8.000300
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x10000_dpminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x10000_dpminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x10000_dpminm20_i,x10000_dpminm20.dat,ldr_v4_td6_BB_dpminm20,1000,0,g10a0_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dpminm20,rmai_g10t0_dpminm20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x10000_dpminm20_c,x10000_dpminm20.dat,ldr_v4_td6_BB_dpminm20,1000,0,g10a0_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g0t0_dpminm20,rmai_g0t0_dpminm20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 8.000000
+alter vt1si dc = 0
+alter vt1st dc = 8.001000
+alter vt2ri dc = 1
+alter vt2rt dc = 8.000000
+alter vt2si dc = 0
+alter vt2st dc = 8.001000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x1010012_dpminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010012_dpminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010012_dpminm20_i,x1010012_dpminm20.dat,ldr_v4_td6_BB_dpminm20,1000,0,g10a10_t0a12,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dpminm20,rmai_g10t0_dpminm20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010012_dpminm20_c,x1010012_dpminm20.dat,ldr_v4_td6_BB_dpminm20,1000,0,g10a10_t0a12,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t12_dpminm20,rmai_g10t12_dpminm20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 8.001000
+alter vt1si dc = 1
+alter vt1st dc = 8.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 8.001000
+alter vt2si dc = 1
+alter vt2st dc = 8.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x1010120_dpminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010120_dpminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010120_dpminm20_i,x1010120_dpminm20.dat,ldr_v4_td6_BB_dpminm20,1000,0,g10a10_t12a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t12_dpminm20,rmai_g10t12_dpminm20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010120_dpminm20_c,x1010120_dpminm20.dat,ldr_v4_td6_BB_dpminm20,1000,0,g10a10_t12a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dpminm20,rmai_g10t0_dpminm20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 8.5
+alter vtijk dc = 7.5
+alter vtrjk dc = 8.5
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.086
+showmod jprb : vto beta
+op
+tran 1e-05 17.5 0 1e-05
+wrdata xm_dpminm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata xm_dpminm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "xm_dpminm20,xm_dpminm20.dat,ldr_v4_td6_BB_dpminm20,1000,0,10,100k,1.0,8.5,17.5,1e-05,evento,rsempre_g10t0_dpminm20,rmai_g10t0_dpminm20,6.5,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+* ---- 3: dispersione dpmaxmax (VOS p, b_max, attenuatore max) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t0_dpmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t0_dpmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t0_dpmaxmax,rmai_g10t0_dpmaxmax.dat,rif_dpmaxmax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t0_dpmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t0_dpmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t0_dpmaxmax,rsempre_g10t0_dpmaxmax.dat,rif_dpmaxmax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g0t0_dpmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g0t0_dpmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g0t0_dpmaxmax,rmai_g0t0_dpmaxmax.dat,rif_dpmaxmax,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g0t0_dpmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g0t0_dpmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g0t0_dpmaxmax,rsempre_g0t0_dpmaxmax.dat,rif_dpmaxmax,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t12_dpmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t12_dpmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t12_dpmaxmax,rmai_g10t12_dpmaxmax.dat,rif_dpmaxmax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t12_dpmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t12_dpmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t12_dpmaxmax,rsempre_g10t12_dpmaxmax.dat,rif_dpmaxmax,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 8.000300
+alter vk5i dc = 0
+alter vk5t dc = 8.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x01000_dpmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x01000_dpmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x01000_dpmaxmax_i,x01000_dpmaxmax.dat,ldr_v4_td6_BB_dpmaxmax,1000,0,g0a10_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g0t0_dpmaxmax,rmai_g0t0_dpmaxmax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x01000_dpmaxmax_c,x01000_dpmaxmax.dat,ldr_v4_td6_BB_dpmaxmax,1000,0,g0a10_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dpmaxmax,rmai_g10t0_dpmaxmax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 8.000000
+alter vk5i dc = 1
+alter vk5t dc = 8.000300
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x10000_dpmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x10000_dpmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x10000_dpmaxmax_i,x10000_dpmaxmax.dat,ldr_v4_td6_BB_dpmaxmax,1000,0,g10a0_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dpmaxmax,rmai_g10t0_dpmaxmax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x10000_dpmaxmax_c,x10000_dpmaxmax.dat,ldr_v4_td6_BB_dpmaxmax,1000,0,g10a0_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g0t0_dpmaxmax,rmai_g0t0_dpmaxmax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 8.000000
+alter vt1si dc = 0
+alter vt1st dc = 8.001000
+alter vt2ri dc = 1
+alter vt2rt dc = 8.000000
+alter vt2si dc = 0
+alter vt2st dc = 8.001000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x1010012_dpmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010012_dpmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010012_dpmaxmax_i,x1010012_dpmaxmax.dat,ldr_v4_td6_BB_dpmaxmax,1000,0,g10a10_t0a12,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dpmaxmax,rmai_g10t0_dpmaxmax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010012_dpmaxmax_c,x1010012_dpmaxmax.dat,ldr_v4_td6_BB_dpmaxmax,1000,0,g10a10_t0a12,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t12_dpmaxmax,rmai_g10t12_dpmaxmax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 8.001000
+alter vt1si dc = 1
+alter vt1st dc = 8.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 8.001000
+alter vt2si dc = 1
+alter vt2st dc = 8.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x1010120_dpmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010120_dpmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010120_dpmaxmax_i,x1010120_dpmaxmax.dat,ldr_v4_td6_BB_dpmaxmax,1000,0,g10a10_t12a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t12_dpmaxmax,rmai_g10t12_dpmaxmax,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010120_dpmaxmax_c,x1010120_dpmaxmax.dat,ldr_v4_td6_BB_dpmaxmax,1000,0,g10a10_t12a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dpmaxmax,rmai_g10t0_dpmaxmax,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 8.5
+alter vtijk dc = 7.5
+alter vtrjk dc = 8.5
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 17.5 0 1e-05
+wrdata xm_dpmaxmax$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata xm_dpmaxmax_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "xm_dpmaxmax,xm_dpmaxmax.dat,ldr_v4_td6_BB_dpmaxmax,1000,0,10,100k,1.0,8.5,17.5,1e-05,evento,rsempre_g10t0_dpmaxmax,rmai_g10t0_dpmaxmax,6.5,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+* ---- 3: dispersione dpmaxm20 (VOS p, b_max, attenuatore m20) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t0_dpmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t0_dpmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t0_dpmaxm20,rmai_g10t0_dpmaxm20.dat,rif_dpmaxm20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t0_dpmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t0_dpmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t0_dpmaxm20,rsempre_g10t0_dpmaxm20.dat,rif_dpmaxm20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g0t0_dpmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g0t0_dpmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g0t0_dpmaxm20,rmai_g0t0_dpmaxm20.dat,rif_dpmaxm20,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g0t0_dpmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g0t0_dpmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g0t0_dpmaxm20,rsempre_g0t0_dpmaxm20.dat,rif_dpmaxm20,1000,0,0,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rmai_g10t12_dpmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rmai_g10t12_dpmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rmai_g10t12_dpmaxm20,rmai_g10t12_dpmaxm20.dat,rif_dpmaxm20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_mai,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -10
+alter vtr dc = 1000
+alter vtijk dc = -10
+alter vtrjk dc = 1000
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 1
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 1
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata rsempre_g10t12_dpmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rsempre_g10t12_dpmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "rsempre_g10t12_dpmaxm20,rsempre_g10t12_dpmaxm20.dat,rif_dpmaxm20,1000,0,10,100k,1.0,8.5,19.0,1e-05,rif_sempre,-,-,0.0,3," >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 0
+alter vk1t dc = 8.000300
+alter vk5i dc = 0
+alter vk5t dc = 8.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x01000_dpmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x01000_dpmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x01000_dpmaxm20_i,x01000_dpmaxm20.dat,ldr_v4_td6_BB_dpmaxm20,1000,0,g0a10_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g0t0_dpmaxm20,rmai_g0t0_dpmaxm20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x01000_dpmaxm20_c,x01000_dpmaxm20.dat,ldr_v4_td6_BB_dpmaxm20,1000,0,g0a10_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dpmaxm20,rmai_g10t0_dpmaxm20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 8.000000
+alter vk5i dc = 1
+alter vk5t dc = 8.000300
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x10000_dpmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x10000_dpmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x10000_dpmaxm20_i,x10000_dpmaxm20.dat,ldr_v4_td6_BB_dpmaxm20,1000,0,g10a0_t0a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dpmaxm20,rmai_g10t0_dpmaxm20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x10000_dpmaxm20_c,x10000_dpmaxm20.dat,ldr_v4_td6_BB_dpmaxm20,1000,0,g10a0_t0a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g0t0_dpmaxm20,rmai_g0t0_dpmaxm20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 8.000000
+alter vt1si dc = 0
+alter vt1st dc = 8.001000
+alter vt2ri dc = 1
+alter vt2rt dc = 8.000000
+alter vt2si dc = 0
+alter vt2st dc = 8.001000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x1010012_dpmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010012_dpmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010012_dpmaxm20_i,x1010012_dpmaxm20.dat,ldr_v4_td6_BB_dpmaxm20,1000,0,g10a10_t0a12,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t0_dpmaxm20,rmai_g10t0_dpmaxm20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010012_dpmaxm20_c,x1010012_dpmaxm20.dat,ldr_v4_td6_BB_dpmaxm20,1000,0,g10a10_t0a12,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t12_dpmaxm20,rmai_g10t12_dpmaxm20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 10.0
+alter vtijk dc = 7.5
+alter vtrjk dc = 10.0
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 0
+alter vt1rt dc = 8.001000
+alter vt1si dc = 1
+alter vt1st dc = 8.000000
+alter vt2ri dc = 0
+alter vt2rt dc = 8.001000
+alter vt2si dc = 1
+alter vt2st dc = 8.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 19.0 0 1e-05
+wrdata x1010120_dpmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata x1010120_dpmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "x1010120_dpmaxm20_i,x1010120_dpmaxm20.dat,ldr_v4_td6_BB_dpmaxm20,1000,0,g10a10_t12a0,100k,1.0,8.0,19.0,1e-05,evento,rsempre_g10t12_dpmaxm20,rmai_g10t12_dpmaxm20,6.5,3,A_ins;B2" >> tb_v2_casopeggiore_manifest.csv
+echo "x1010120_dpmaxm20_c,x1010120_dpmaxm20.dat,ldr_v4_td6_BB_dpmaxm20,1000,0,g10a10_t12a0,100k,8.0,10.0,19.0,1e-05,evento,rsempre_g10t0_dpmaxm20,rmai_g10t0_dpmaxm20,0.0,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1.0
+alter vtr dc = 8.5
+alter vtijk dc = 7.5
+alter vtrjk dc = 8.5
+alter vosa dc = 20m
+alter vosb dc = 20m
+alter vosf1 dc = 20m
+alter vosf2 dc = -20m
+alter ratth = 9k
+alter rattb = 1k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+altermod lsk489a vto = -2.976
+showmod jprb : vto beta
+op
+tran 1e-05 17.5 0 1e-05
+wrdata xm_dpmaxm20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata xm_dpmaxm20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "xm_dpmaxm20,xm_dpmaxm20.dat,ldr_v4_td6_BB_dpmaxm20,1000,0,10,100k,1.0,8.5,17.5,1e-05,evento,rsempre_g10t0_dpmaxm20,rmai_g10t0_dpmaxm20,6.5,3,A_ins;A_rel;B2" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: accensione, rampa 10 ms, sfasamento s ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -100
+alter vtr dc = 2.6
+alter vtijk dc = -10
+alter vtrjk dc = 2.6
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 0 0.1 0 0.11 15 1000 15 ]
+alter @vmm[pwl] = [ 0 0 0.1 0 0.11 -15 1000 -15 ]
+alter @vpwl[pwl] = [ 0 0 0.1 0 0.11 1 1000 1 ]
+tran 1e-05 11.6 0 1e-05
+wrdata on_r10s$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata on_r10s_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "on_r10s,on_r10s.dat,accensione,1000,0,10,100k,0.1,2.6,11.6,1e-05,evento,g10sempre_lz,g10mai_lz,0.0,5,A_ins;A_rel" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 10 ms, sfasamento s, rele' +0 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.0
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1 15 1.01 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.01 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1 1 1.01 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r10s_d0$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r10s_d0_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r10s_d0,off_r10s_d0.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 10 ms, sfasamento s, rele' +5 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.005
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1 15 1.01 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.01 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1 1 1.01 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r10s_d5$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r10s_d5_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r10s_d5,off_r10s_d5.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 10 ms, sfasamento s, rele' +20 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.02
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1 15 1.01 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.01 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1 1 1.01 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r10s_d20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r10s_d20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r10s_d20,off_r10s_d20.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 10 ms, sfasamento s, rele' +100 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.1
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1 15 1.01 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.01 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1 1 1.01 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r10s_d100$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r10s_d100_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r10s_d100,off_r10s_d100.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: accensione, rampa 10 ms, sfasamento p ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -100
+alter vtr dc = 2.6
+alter vtijk dc = -10
+alter vtrjk dc = 2.6
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 0 0.15 0 0.16 15 1000 15 ]
+alter @vmm[pwl] = [ 0 0 0.1 0 0.11 -15 1000 -15 ]
+alter @vpwl[pwl] = [ 0 0 0.15 0 0.16 1 1000 1 ]
+tran 1e-05 11.6 0 1e-05
+wrdata on_r10p$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata on_r10p_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "on_r10p,on_r10p.dat,accensione,1000,0,10,100k,0.1,2.6,11.6,1e-05,evento,g10sempre_lz,g10mai_lz,0.0,5,A_ins;A_rel" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 10 ms, sfasamento p, rele' +0 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.0
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1.05 15 1.06 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.01 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1.05 1 1.06 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r10p_d0$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r10p_d0_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r10p_d0,off_r10p_d0.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 10 ms, sfasamento p, rele' +5 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.005
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1.05 15 1.06 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.01 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1.05 1 1.06 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r10p_d5$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r10p_d5_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r10p_d5,off_r10p_d5.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 10 ms, sfasamento p, rele' +20 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.02
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1.05 15 1.06 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.01 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1.05 1 1.06 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r10p_d20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r10p_d20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r10p_d20,off_r10p_d20.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 10 ms, sfasamento p, rele' +100 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.1
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1.05 15 1.06 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.01 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1.05 1 1.06 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r10p_d100$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r10p_d100_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r10p_d100,off_r10p_d100.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: accensione, rampa 10 ms, sfasamento m ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -100
+alter vtr dc = 2.6
+alter vtijk dc = -10
+alter vtrjk dc = 2.6
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 0 0.1 0 0.11 15 1000 15 ]
+alter @vmm[pwl] = [ 0 0 0.15 0 0.16 -15 1000 -15 ]
+alter @vpwl[pwl] = [ 0 0 0.1 0 0.11 1 1000 1 ]
+tran 1e-05 11.6 0 1e-05
+wrdata on_r10m$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata on_r10m_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "on_r10m,on_r10m.dat,accensione,1000,0,10,100k,0.1,2.6,11.6,1e-05,evento,g10sempre_lz,g10mai_lz,0.0,5,A_ins;A_rel" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 10 ms, sfasamento m, rele' +0 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.0
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1 15 1.01 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1.05 -15 1.06 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1 1 1.01 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r10m_d0$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r10m_d0_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r10m_d0,off_r10m_d0.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 10 ms, sfasamento m, rele' +5 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.005
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1 15 1.01 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1.05 -15 1.06 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1 1 1.01 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r10m_d5$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r10m_d5_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r10m_d5,off_r10m_d5.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 10 ms, sfasamento m, rele' +20 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.02
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1 15 1.01 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1.05 -15 1.06 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1 1 1.01 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r10m_d20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r10m_d20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r10m_d20,off_r10m_d20.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 10 ms, sfasamento m, rele' +100 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.1
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1 15 1.01 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1.05 -15 1.06 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1 1 1.01 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r10m_d100$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r10m_d100_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r10m_d100,off_r10m_d100.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: accensione, rampa 300 ms, sfasamento s ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -100
+alter vtr dc = 2.6
+alter vtijk dc = -10
+alter vtrjk dc = 2.6
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 0 0.1 0 0.4 15 1000 15 ]
+alter @vmm[pwl] = [ 0 0 0.1 0 0.4 -15 1000 -15 ]
+alter @vpwl[pwl] = [ 0 0 0.1 0 0.4 1 1000 1 ]
+tran 1e-05 11.6 0 1e-05
+wrdata on_r300s$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata on_r300s_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "on_r300s,on_r300s.dat,accensione,1000,0,10,100k,0.1,2.6,11.6,1e-05,evento,g10sempre_lz,g10mai_lz,0.0,5,A_ins;A_rel" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 300 ms, sfasamento s, rele' +0 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.0
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1 15 1.3 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.3 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1 1 1.3 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r300s_d0$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r300s_d0_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r300s_d0,off_r300s_d0.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 300 ms, sfasamento s, rele' +5 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.005
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1 15 1.3 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.3 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1 1 1.3 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r300s_d5$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r300s_d5_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r300s_d5,off_r300s_d5.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 300 ms, sfasamento s, rele' +20 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.02
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1 15 1.3 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.3 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1 1 1.3 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r300s_d20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r300s_d20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r300s_d20,off_r300s_d20.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 300 ms, sfasamento s, rele' +100 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.1
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1 15 1.3 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.3 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1 1 1.3 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r300s_d100$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r300s_d100_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r300s_d100,off_r300s_d100.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: accensione, rampa 300 ms, sfasamento p ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -100
+alter vtr dc = 2.6
+alter vtijk dc = -10
+alter vtrjk dc = 2.6
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 0 0.15 0 0.45 15 1000 15 ]
+alter @vmm[pwl] = [ 0 0 0.1 0 0.4 -15 1000 -15 ]
+alter @vpwl[pwl] = [ 0 0 0.15 0 0.45 1 1000 1 ]
+tran 1e-05 11.6 0 1e-05
+wrdata on_r300p$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata on_r300p_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "on_r300p,on_r300p.dat,accensione,1000,0,10,100k,0.1,2.6,11.6,1e-05,evento,g10sempre_lz,g10mai_lz,0.0,5,A_ins;A_rel" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 300 ms, sfasamento p, rele' +0 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.0
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1.05 15 1.35 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.3 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1.05 1 1.35 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r300p_d0$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r300p_d0_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r300p_d0,off_r300p_d0.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 300 ms, sfasamento p, rele' +5 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.005
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1.05 15 1.35 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.3 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1.05 1 1.35 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r300p_d5$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r300p_d5_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r300p_d5,off_r300p_d5.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 300 ms, sfasamento p, rele' +20 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.02
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1.05 15 1.35 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.3 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1.05 1 1.35 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r300p_d20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r300p_d20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r300p_d20,off_r300p_d20.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 300 ms, sfasamento p, rele' +100 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.1
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1.05 15 1.35 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1 -15 1.3 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1.05 1 1.35 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r300p_d100$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r300p_d100_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r300p_d100,off_r300p_d100.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: accensione, rampa 300 ms, sfasamento m ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = -100
+alter vtr dc = 2.6
+alter vtijk dc = -10
+alter vtrjk dc = 2.6
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 0 0.1 0 0.4 15 1000 15 ]
+alter @vmm[pwl] = [ 0 0 0.15 0 0.45 -15 1000 -15 ]
+alter @vpwl[pwl] = [ 0 0 0.1 0 0.4 1 1000 1 ]
+tran 1e-05 11.6 0 1e-05
+wrdata on_r300m$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata on_r300m_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "on_r300m,on_r300m.dat,accensione,1000,0,10,100k,0.1,2.6,11.6,1e-05,evento,g10sempre_lz,g10mai_lz,0.0,5,A_ins;A_rel" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 300 ms, sfasamento m, rele' +0 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.0
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1 15 1.3 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1.05 -15 1.35 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1 1 1.3 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r300m_d0$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r300m_d0_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r300m_d0,off_r300m_d0.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 300 ms, sfasamento m, rele' +5 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.005
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1 15 1.3 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1.05 -15 1.35 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1 1 1.3 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r300m_d5$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r300m_d5_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r300m_d5,off_r300m_d5.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 300 ms, sfasamento m, rele' +20 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.02
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1 15 1.3 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1.05 -15 1.35 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1 1 1.3 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r300m_d20$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r300m_d20_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r300m_d20,off_r300m_d20.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- 5: spegnimento, rampa 300 ms, sfasamento m, rele' +100 ms ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vti dc = 1000
+alter vtr dc = 2000
+alter vtijk dc = 1.1
+alter vtrjk dc = 1000
+alter vosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter vk1i dc = 1
+alter vk1t dc = 1000.000000
+alter vk5i dc = 1
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter @vpp[pwl] = [ 0 15 1 15 1.3 0 1000 0 ]
+alter @vmm[pwl] = [ 0 -15 1.05 -15 1.35 0 1000 0 ]
+alter @vpwl[pwl] = [ 0 1 1 1 1.3 0 1000 0 ]
+tran 1e-05 3.5 0 1e-05
+wrdata off_r300m_d100$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata off_r300m_d100_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)
+destroy all
+echo "off_r300m_d100,off_r300m_d100.dat,spegnimento,1000,0,10,100k,1.0,1000,3.5,1e-05,evento,g10sempre_lz,-,0.0,5,A_ins" >> tb_v2_casopeggiore_manifest.csv
 .endc
 
 .end
