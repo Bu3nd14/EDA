@@ -26,7 +26,31 @@ corri() {
   if grep -q 'Transient op started' corsa_$c.log; then
     rc=OPT
   fi
-  print -r -- "$c rc=$rc $((SECONDS-t0))s $(date +%H:%M:%S)" >> tempi.txt
+  local nota=""
+  if [ "$rc" != "0" ]; then
+    # L29c: il .nodeset aiuta certe corse e ne rompe altre (il riferimento 'sempre' con la
+    # derivazione in curva A si ferma al primo istante). Seconda prova senza, stessa guardia.
+    sed 's/^\.nodeset/* nodeset tolto (seconda prova di corri.sh):/' corsa_$c.cir > corsa_${c}_sn.cir
+    /opt/homebrew/bin/ngspice -b corsa_${c}_sn.cir > corsa_$c.log 2>&1
+    rc=$?
+    if grep -q 'Transient op started' corsa_$c.log; then
+      rc=OPT
+    fi
+    nota=" senza_nodeset"
+  fi
+  if [ "$rc" != "0" ]; then
+    # terza prova: il nodeset esteso ai nodi della derivazione (INA, SELA). Serve al riferimento
+    # 'sempre' con la serie in curva D e la derivazione in curva A: col nodeset si ferma al primo
+    # istante, senza passa dal transient op e parte agganciato (sonde/op/prova_tran.py, ns_ina).
+    sed 's/^\(\.nodeset .*\)$/\1 V(INA)=0 V(SELA)=0/' corsa_$c.cir > corsa_${c}_ne.cir
+    /opt/homebrew/bin/ngspice -b corsa_${c}_ne.cir > corsa_$c.log 2>&1
+    rc=$?
+    if grep -q 'Transient op started' corsa_$c.log; then
+      rc=OPT
+    fi
+    nota=" nodeset_esteso"
+  fi
+  print -r -- "$c rc=$rc $((SECONDS-t0))s $(date +%H:%M:%S)$nota" >> tempi.txt
 }
 for c in $(cat corse_sel.txt); do
   if [ -s $c.dat ] && grep -q "^$c rc=0 " tempi.txt; then

@@ -503,9 +503,11 @@ def matrice_l29c():
 
 
 # ======== 3: la dispersione dell'LSK489, senza segnale, a +10 dB
-# Il gradino d'offset e' lineare negli offset d'ingresso: il caso peggiore ha i VOS dello
-# stesso segno della parte sistematica del blocco (-15,45 mV, L40), il segno opposto e' il
-# controllo. VOSF1 / VOSF2 a +20 / -20 mV sempre (le fisse non cambiano guadagno). Il gruppo B
+# Il gradino d'offset e' lineare negli offset d'ingresso: il caso peggiore ha i VOS che si
+# SOMMANO alla parte sistematica del blocco (-15,45 mV, L40), il segno opposto e' il controllo.
+# ATTENZIONE AL SEGNO: VOSB sta fra W (+) e WB (-), quindi VOS = +20 mV porta il gate a W - 20 mV
+# e si somma alla parte sistematica. Il peggiore e' "p", non "n" (misurato in L29c: 267 contro
+# 31 uV sul cambio sotto mute; la prima stesura di questo commento diceva il contrario). VOSF1 / VOSF2 a +20 / -20 mV sempre (le fisse non cambiano guadagno). Il gruppo B
 # e' l'altermod del Vto (ADR-031) con la sonda; "a" e' il modello del costruttore com'e'.
 DISP_VOS = {"n": ("-20m", "-20m", "20m", "-20m"), "p": ("20m", "20m", "20m", "-20m")}
 DISP_VTO = ("a", "b_min", "b_max")

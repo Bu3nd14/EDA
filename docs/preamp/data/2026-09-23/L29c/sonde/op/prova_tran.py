@@ -21,6 +21,12 @@ V = {
     "roff1g": ([], None, (r"SW\(RON=0.1 ROFF=1e12", "SW(RON=0.1 ROFF=1e9")),
     "rail1m": ([], None, ("RAIL", "1m")),
     "gear_tmax1u": (["option method=gear"], "1e-06", None),
+    "senza_nodeset": ([], None, (r"^\.nodeset.*", "* nodeset tolto")),
+    "gmin": (["option gminsteps=40"], None, None),
+    "sn_gmin": (["option gminsteps=40"], None, (r"^\.nodeset.*", "* nodeset tolto")),
+    "ns_outa": ([], None, (r"^\.nodeset.*", ".nodeset V(OUTA)=0")),
+    "ns_outa_main": ([], None, (r"^\.nodeset.*", ".nodeset V(OUTA)=0 V(MAIN_A)=0 V(OUTB)=0")),
+    "ns_ina": ([], None, (r"^\.nodeset.*", ".nodeset V(OUTA)=0 V(W)=0 V(ATOP)=0 V(OUTB)=0 V(MAIN_A)=0 V(OUTF1)=0 V(OUTF2)=0 V(INA)=0 V(SELA)=0")),
 }
 
 

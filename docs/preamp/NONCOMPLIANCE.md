@@ -109,6 +109,12 @@ dei MJE, NC-025) e misurato le due strade date dall'utente. L'utente ha scelto i
 Miller da 1 nF e ha tenuto la corrente di riposo a ~20 mA (**ADR-042**). V1 torna
 ≥ 62,08° su ogni istanza, e la regressione di L39 regge. Il prezzo è dichiarato:
 slew, PSRR+ e banda. **Chiude NC-034 e NC-035**; aggiorna NC-025 e NC-029.
+**L29c** (2026-09-23) ha misurato il caso peggiore di V2 col mute reale. Con la musica regge
+ovunque (S ≤ 11 dB); il criterio 3 di ADR-030 è soddisfatto. Senza musica sono fuori il cambio
+di guadagno o di trim a relè chiuso (fino a 267 µV con la dispersione), l'accensione e lo
+spegnimento: il contatto in derivazione attenua solo ~1/471. L'utente ha deciso **ADR-043**
+(spegnimento e failsafe all'alimentatore, L30) e un contatto in serie al jack da misurare in
+**L29d**. **NC-028 resta aperta e bloccante**, aggiornata.
 **12 voci aperte, 2 bloccanti.**
 L'accesso a G1 non è concesso finché NC-004 e NC-028 restano aperte.
 
@@ -2411,6 +2417,31 @@ salto di livello. La voce RESTA APERTA E BLOCCANTE.**
 - **Il guadagno si interblocca col mute come il trim** (ADR-041). L36 lo realizza.
 - **Cosa manca per chiuderla**: il caso peggiore, **L29c**. Viene dopo la Fase 4 (**L39**),
   per decisione dell'utente, perché dipende dai modelli.
+
+**AGGIORNATA IL 2026-09-23, da L29c: il caso peggiore col mute reale. La voce RESTA APERTA E
+BLOCCANTE.** (`reports/2026-09-23-L29c-v2-caso-peggiore.md`, deck generato
+`spice/preamp/tb/tb_v2_casopeggiore.cir`, dati `data/2026-09-23/L29c/`)
+
+- **Con la musica regge ovunque.** Passaggi di guadagno e di trim sotto mute, mute breve e fino
+  a 20 s, inversioni, curve A–D della VTL5C4 per serie e derivazione, dispersione dell'LSK489: S
+  ≤ 11 dB (soglia 20), B2 ≤ 21 µV, A del rilascio ≤ 70 µV. Il criterio 3 di ADR-030 è
+  soddisfatto: il cambio a caldo vale 13,8 / 57 / 69 mV, sotto mute 27–116 µV.
+- **Senza musica, tre condizioni sono fuori dai 100 µV di A.** La causa è una sola: il contatto di
+  mute in derivazione, 0,1 Ω dietro 47 Ω, attenua solo ~1/471 un salto in continua dell'uscita
+  del blocco.
+  - **il cambio di guadagno o di trim a relè chiuso**: 98–116 µV coi modelli com'è, **267 µV**
+    con ±20 mV di VOS dell'LSK489 (il salto d'offset del blocco B col guadagno);
+  - **l'accensione**: fino a 11 mV sulle fisse (sotto ~7 V di rail gli stadi non regolano);
+  - **lo spegnimento**: da 0,23 mV a 17,5 V secondo rampa e ritardo del relè (sotto ~10 V di rail
+    l'uscita scatta verso il rail rimasto).
+- **Decisioni dell'utente, il 2026-09-23**:
+  - **ADR-043**: lo spegnimento è un requisito dell'alimentatore (L30); e un failsafe per il
+    guasto dell'alimentatore, che non dipenda dall'alimentatore sano;
+  - **L29d**, prima di L36: un **contatto in serie** al jack, misurato sulla matrice di L29c in
+    due varianti, (i) serie più derivazione e (ii) serie sola. Le LDR restano (S): un contatto
+    taglia la musica di colpo.
+- **Cosa manca per chiuderla**: L29d (cambio sotto mute e accensione sotto 100 µV), poi L30
+  (spegnimento e failsafe, ADR-043).
 
 
 ### NC-029 — Con i buffer delle fisse la dissipazione a riposo raddoppia, e P5 non la copre
