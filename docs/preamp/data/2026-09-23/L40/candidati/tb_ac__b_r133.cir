@@ -1,0 +1,156 @@
+tb_ac__b_r133.cir - L40 ESPLORAZIONE da tb_ac.cir, RG0L40 FB 0 7.87k; alter r138 = 6.49k; alter c137 = 220p; alter c124 = 560p; alter r128 = 1.33k
+* The point of this deck is ONE falsifiable claim, from ADR-014:
+*   "the HF response must not move when the volume knob moves."
+* The stepped attenuator's output impedance runs 0 -> 2500 -> 0 ohm across
+* the rotation (R/4 at mid-rotation on a 10 kohm ladder). If the cascode is
+* doing its job, the 20 kHz response must be the same for RSRC = 0 and
+* RSRC = 2500. If it is not, ADR-014 was not implemented, whatever the
+* schematic says.
+* Also covers: phono cathode follower (430 ohm), K11 (1.5 ohm), and the
+* low-frequency corner set by the 4.7 uF output cap (E8/ADR-007).
+
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+* L39 (NC-017): every active device in this deck is a vendor model from
+* models/, each next to its .provenance.json:
+*   LSK489   - vendor model LSK489A, the published corner sample (I_DSS
+*              2.59 mA, below the group-B window of ADR-031)
+*   LS352    - vendor model LS350 (ADR-018), included on the next line
+*   MMBT5551 - vendor model, Diodes Inc. (ADR-017)
+*   MMBT5401 - vendor model, Diodes Inc. (ADR-017)
+*   MJE15032 - vendor model Qmje15032, onsemi (NC-024, NC-025)
+*   MJE15033 - vendor model Qmje15033, onsemi (NC-025)
+*   1N4148   - vendor model D1N914, onsemi (docs/limitations.md #20)
+* Only the LSK489A carries KF: 1/f noise is on the input pair and nowhere
+* else. No model carries part-to-part spread.
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VSRC SRCN 0 DC 0 AC 1
+RSRC SRCN IN 1.5
+
+* Gain-relay contacts (L27, ADR-026): open = 15 pF + 1 G, closed = 0.1 ohm.
+CSTRAY   RG   0 15p
+RRG      RG   0 1G
+CSTRAY10 RG10 0 15p
+RRG10    RG10 0 1G
+
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+CCABLE JACK 0 100p
+
+* L40: righe di netlist in piu' (varianti.py)
+RG0L40 FB 0 7.87k
+.control
+* L40: variante
+alter r138 = 6.49k
+alter c137 = 220p
+alter c124 = 560p
+alter r128 = 1.33k
+show r138 : resistance
+show c137 : capacitance
+show c124 : capacitance
+show r128 : resistance
+show rg0l40 : resistance
+* --- wrdata (L5): una curva PER ITERAZIONE, 12 + 1 ------------------
+* NOMI PARAMETRIZZATI: un `$var` dentro un nome di file non si chiude da
+* solo - ngspice fa entrare nel nome della variabile anche `.`, `-` e `_`,
+* quindi `wrdata tb_ac_$rs.txt` cercherebbe la variabile "rs.txt" e
+* scriverebbe un file chiamato "tb_ac_". Un `$` invece TERMINA il nome:
+* la forma che funziona e' quella delle variabili adiacenti, `$rs$t` con
+* t = ".txt" e u = "_". Misurato con una sonda in L5, non dedotto.
+*
+* ETICHETTE: il nome porta 0db/3db/10db, non i valori di RRG e RRG10,
+* perche' chi apre la directory dei risultati non deve ricordare quale
+* combinazione di contatti da' quale guadagno. L27 (ADR-026): il ciclo e'
+* `foreach mode 0 3 10` e ogni ramo imposta i DUE contatti; l'echo stampa
+* l'etichetta (MODE=...), non piu' RRG=..., che da solo non dice il modo.
+*
+* DOVE: DENTRO il ciclo interno e PRIMA del `destroy all`. Fuori dal
+* ciclo si scriverebbe una curva sola su dodici; e senza il `destroy all`
+* ogni `ac` successiva creerebbe ac2, ac3... e un `wrdata` finale
+* leggerebbe il plot SBAGLIATO senza alcun errore (limitations #10).
+*
+* GLI 12 + 1 FILE:
+*   tb_ac_0db_<rs>.txt    RRG = 1G,  RRG10 = 1G   (entrambi aperti, guadagno 1)
+*   tb_ac_3db_<rs>.txt    RRG = 0.1, RRG10 = 1G   (K1 chiuso, +3 dB)
+*   tb_ac_10db_<rs>.txt   RRG = 0.1, RRG10 = 0.1  (K1 e K5 chiusi, +10 dB)
+*   con <rs> in 1.5 / 430 / 2500 / 10k = impedenza della sorgente
+*   tb_ac_wrdata.txt      la sezione FUORI ciclo: corner LF con RLOAD=50k
+*
+* Il nono nome e' <basename>_wrdata.txt di proposito: e' quello che
+* run_simulation.sh cerca per PRIMO, quindi la sezione fuori ciclo
+* diventa il CSV principale del deck e le 12 curve le converte il secondo
+* passaggio.
+*
+* COLONNE (~1636 righe, 0,2 Hz - 30 MHz, 200 punti/decade; il file
+* principale ne ha ~801, 0,1 Hz - 1 kHz). Per ogni vettore una COPPIA
+* (frequenza, valore): le PARI sono la frequenza ripetuta, i dati sono
+* le DISPARI.
+*   col0 = frequenza [Hz]   col1 = G   = |v(JACK)| in dB
+*   col2 = frequenza [Hz]   col3 = Gph = fase di v(JACK) in GRADI
+*                                        (`set units = degrees` qui sopra)
+* L'impedenza di sorgente e la modalita' non sono colonne: sono nel NOME.
+* --------------------------------------------------------------------
+set t = .txt
+set u = "_"
+set units = degrees
+foreach mode 0 3 10
+  if $mode = 0
+    set gm = "0db"
+    alter rrg = 1G
+    alter rrg10 = 1G
+  end
+  if $mode = 3
+    set gm = "3db"
+    alter rrg = 0.1
+    alter rrg10 = 1G
+  end
+  if $mode = 10
+    set gm = "10db"
+    alter rrg = 0.1
+    alter rrg10 = 0.1
+  end
+  foreach rs 1.5 430 2500 10k
+    alter rsrc = $rs
+    ac dec 200 0.2 30meg
+    let G = db(v(JACK))
+    meas ac g1k   find G at=1000
+    meas ac g20   find G at=20
+    meas ac g20k  find G at=20000
+    meas ac g100k find G at=100000
+    let Gn = G - g1k
+    meas ac fhi when Gn=-3 rise=1
+    meas ac flo when Gn=-3 fall=1
+    echo "MODE=$gm  RSRC=$rs"
+    print g1k g20 g20k g100k fhi flo
+    let Gph = ph(v(JACK))
+    wrdata tb_ac_$gm$u$rs$t G Gph
+    destroy all
+  end
+end
+* low-frequency corner with the 50 kohm Stax-like load instead of 100k
+alter rrg = 1G
+alter rrg10 = 1G
+alter rsrc = 430
+alter rload = 50k
+ac dec 200 0.1 1000
+let G = db(v(JACK))
+meas ac g1kb find G at=1000
+meas ac g20b find G at=20
+meas ac g5b  find G at=5
+echo "LF corner, RLOAD=50k, RBLEED=220k, COUT=4.7u"
+print g1kb g20b g5b
+let Gph = ph(v(JACK))
+wrdata tb_ac_wrdata.txt G Gph
+.endc
+
+.end

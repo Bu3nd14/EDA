@@ -1,0 +1,265 @@
+tb_loop_blockA__g05_cm470p_r1.69k.cir - L40 ESPLORAZIONE da tb_loop_blockA.cir, RG0L40 FB 0 25.5k; alter c124 = 470p; alter r128 = 1.69k
+* Prima riga = titolo (docs/limitations.md #10).
+*
+* WHAT CHANGED IN L17. Until L17 block A drove the attenuator AND the two
+* fixed outputs straight from its feedback node (ADR-008). This deck still
+* carried the values ADR-008 was first written with - 100 ohm, 2.2 uF, 50 k -
+* which the addenda had superseded (NC-002). Since ADR-023 each fixed output
+* has its own buffer, so block A's output node carries:
+*   - the 10 k stepped attenuator (manopola al massimo: il carico piu' pesante);
+*   - the INPUTS of two buffers (a JFET gate behind 100 ohm, pF);
+*   - the harness wiring to the front-panel attenuator: CWIRE, swept.
+* The buffers are instantiated from gain_block.subckt with their own fixed
+* loads, so what block A sees is the real input of a real block, not a guess.
+*
+* WHAT CHANGED IN L16 (ADR-027). The common trim sits on the variable-output
+* branch: block A OUT -> ladder -> T1/T2 contacts -> harness -> attenuator. The
+* buffers stay on OUT, before the trim. The first loop below is L27's, with the
+* trim ABSENT (ladder cut at 1e12, contacts open): its rows and curves keep
+* their meaning. The SECOND loop moves the attenuator and CWIRE behind the trim
+* contacts and measures the three positions with the two candidate ladders of
+* data/2026-09-14/L16/esplorazione/script/trim_ramo_e96.py, load 1 only:
+*   cand 1  549 / 294 / 294     cand 2  845 / 464 / 464
+* At 0 dB block A carries the whole ladder in parallel with the attenuator (the
+* heaviest load) and CWIRE straight on its output through 0.1 ohm; at -6 and
+* -12 dB the harness sits behind R1. New nodes are named TRM*, which the block
+* does not use (docs/limitations.md #24). Table: tb_loop_blockA_trim.csv.
+*
+* TWO LOADS, selected by resistors (1 mohm / 1e12), same deck:
+*   load 1  NUOVO   - ADR-023, as above.
+*   load 2  CANONICO ADR-008 - the load NC-002 measured by hand: 47 ohm +
+*           4.7 uF + 470 k on each fixed output, straight on OUT, 50 k at each
+*           jack. It is here as the CONTROL: at the L17 values (C137 22 p) it
+*           reproduced NC-002 within 1 deg; since L12 it tracks load 1.
+*
+* CWIRE: 1 fF to 4.7 nF straight on the output node. Block A drives no cable to
+* another apparatus: its "cable" is the harness to the front-panel attenuator.
+* ADR-024 (L12) judges block A against a REALISTIC harness capacitance, taken as
+* <= 1 nF (a few tens of pF expected for <= 50 cm): the verdict is the minimum
+* over CWIRE <= 1 nF. The 2.2 nF and 4.7 nF rows stay as information.
+*
+* SOURCE (L12). Block A's source is the input connector: K11 (~1.5 ohm) or the
+* phono cathode follower (430 ohm, V1). RSRCA sweeps 1 mohm and 430 ohm; L12
+* found 430 ohm the worse. Node VSRCN, not SRC (docs/limitations.md #24).
+*
+* LOOP BREAK: as in tb_loop.cir. R109 (the FB-side gate stopper) is opened
+* and replaced by RBRK + VINJ in series; T = v(fb)/v(g2).
+*
+* Gain relay not fitted (ADR-006): unity gain, RG left on 1 G.
+* Manufacturer device models since L39 (NC-017); see tb_loop.cir header.
+
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+* L39 (NC-017): every active device in this deck is a vendor model from
+* models/, each next to its .provenance.json:
+*   LSK489   - vendor model LSK489A, the published corner sample (I_DSS
+*              2.59 mA, below the group-B window of ADR-031)
+*   LS352    - vendor model LS350 (ADR-018), included on the next line
+*   MMBT5551 - vendor model, Diodes Inc. (ADR-017)
+*   MMBT5401 - vendor model, Diodes Inc. (ADR-017)
+*   MJE15032 - vendor model Qmje15032, onsemi (NC-024, NC-025)
+*   MJE15033 - vendor model Qmje15033, onsemi (NC-025)
+*   1N4148   - vendor model D1N914, onsemi (docs/limitations.md #20)
+* Only the LSK489A carries KF: 1/f noise is on the input pair and nowhere
+* else. No model carries part-to-part spread.
+.include @REPO@/models/bjt_pnp/ls350.lib
+* the block under test, flat (its devices are top-level: R109 can be altered)
+.include @REPO@/spice/preamp/gain_block_flat.inc
+* the two buffers it drives, as subcircuits
+.include @REPO@/spice/preamp/gain_block.subckt
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN VSRCN 0 DC 0
+RSRCA VSRCN IN 1m
+
+* R_g / relay not fitted on block A
+RRG RG 0 1G
+RRG10  RG10 0 1G
+
+RBRK FB NBRK 100
+VINJ NBRK G2 DC 0 AC 1
+
+* --- harness capacitance and attenuator, both loads ---
+CWIRE  OUT 0 1f
+RATT   OUT 0 10k
+
+* --- L16: the trim on the variable-output branch, ABSENT by default ---
+RTRL1  OUT TRMT6 1e12
+RTRL2  TRMT6 TRMT12 294
+RTRL3  TRMT12 0 294
+RTR1R  OUT TRMATT 1e12
+RTR1S  TRMC2 TRMATT 1e12
+RTR2R  TRMT6 TRMC2 1e12
+RTR2S  TRMT12 TRMC2 1e12
+CWIRET TRMATT 0 1f
+RATTT  TRMATT 0 1e12
+
+* --- load 1: the two buffers of ADR-023, each with its fixed output ---
+RSELN1 OUT BIN1 1m
+RSELN2 OUT BIN2 1m
+XF1 BIN1 OUTF1 FBF1 RGF1 RG10F1 VPLUS VMINUS GAINBLOCK
+RRGF1 RGF1 0 1G
+RRG10F1 RG10F1 0 1G
+XF2 BIN2 OUTF2 FBF2 RGF2 RG10F2 VPLUS VMINUS GAINBLOCK
+RRGF2 RGF2 0 1G
+RRG10F2 RG10F2 0 1G
+RSEP1 OUTF1 FIX1 47
+CFIX1 FIX1 J1 4.7u
+RBL1  J1 0 470k
+RJ1   J1 0 10k
+RSEP2 OUTF2 FIX2 47
+CFIX2 FIX2 J2 4.7u
+RBL2  J2 0 470k
+RJ2   J2 0 50k
+
+* --- load 2: the canonical ADR-008 load NC-002 measured (control) ---
+RSELV1 OUT VFIX1A 1e12
+RSELV2 OUT VFIX2A 1e12
+RVSEP1 VFIX1A VFIX1 47
+CVFIX1 VFIX1 VJ1 4.7u
+RVBL1  VJ1 0 470k
+RVJ1   VJ1 0 50k
+RVSEP2 VFIX2A VFIX2 47
+CVFIX2 VFIX2 VJ2 4.7u
+RVBL2  VJ2 0 470k
+RVJ2   VJ2 0 50k
+
+* L40: righe di netlist in piu' (varianti.py)
+RG0L40 FB 0 25.5k
+.control
+* L40: variante
+alter c124 = 470p
+alter r128 = 1.69k
+show c124 : capacitance
+show r128 : resistance
+show rg0l40 : resistance
+* --- wrdata (L5): una curva di anello PER ITERAZIONE ------------------
+* NOMI PARAMETRIZZATI: un `$var` in un nome di file non si chiude da solo -
+* ngspice fa entrare nel nome della variabile anche `.`, `-` e `_`. Un `$`
+* invece TERMINA il nome: la forma che funziona e' `$cw$t` con t = ".txt".
+* Misurato con una sonda in L5, non dedotto.
+*
+* Solo il carico 1 scrive le curve:
+*   sorgente 1 mohm: tb_loop_blockA_<cw>.txt        - i nomi di prima
+*   sorgente 430 ohm: tb_loop_blockA_src430_<cw>.txt
+* il controllo stampa margine e attraversamento nel log e in tb_loop_blockA.csv
+* (nessun wrdata produce quel nome, docs/limitations.md #25).
+* Il secondo ciclo (L16, trim) non scrive curve: solo tb_loop_blockA_trim.csv.
+*
+* COLONNE delle curve (~801 righe, 1 Hz - 100 MHz, 100 punti/decade).
+*   col0 = frequenza [Hz]   col1 = Tdb = |T| in dB
+*   col2 = frequenza [Hz]   col3 = Tph = fase di T in GRADI
+* Margine di fase = |Tph| dove Tdb attraversa lo zero (vedi tb_loop.cir).
+*
+* DOVE: dentro il ciclo, PRIMA del `destroy all` (docs/limitations.md #10).
+* ---------------------------------------------------------------------
+set t = .txt
+alter r109 = 1G
+set units = degrees
+echo "carico,rsrc,cwire,fcross_hz,pm_deg,tdb_10hz" > tb_loop_blockA.csv
+foreach ld 1 2
+  if $ld = 1
+    alter rseln1 = 1m
+    alter rseln2 = 1m
+    alter rselv1 = 1e12
+    alter rselv2 = 1e12
+  else
+    alter rseln1 = 1e12
+    alter rseln2 = 1e12
+    alter rselv1 = 1m
+    alter rselv2 = 1m
+  end
+  foreach rs 1m 430
+    alter rsrca = $rs
+    foreach cw 1f 47p 100p 220p 470p 1n 2.2n 4.7n
+      alter cwire = $cw
+      ac dec 100 1 100meg
+      let T = v(fb)/v(g2)
+      let Tdb = db(T)
+      let Tph = ph(T)
+      meas ac fcross when Tdb=0
+      meas ac pmarg find Tph when Tdb=0
+      meas ac tdc find Tdb at=10
+      echo "BLOCK A  carico=$ld  rsrc=$rs  Cwire=$cw"
+      print fcross pmarg tdc
+      echo "$ld,$rs,$cw,$&fcross,$&pmarg,$&tdc" >> tb_loop_blockA.csv
+      if $ld = 1
+        if $rs = 1m
+          let l40_nessuna_curva = 0
+        else
+          let l40_nessuna_curva = 0
+        end
+      end
+      destroy all
+    end
+  end
+end
+
+* ---------------- L16: the trim on the variable-output branch ----------------
+echo "cand,pos,rsrc,cwire,fcross_hz,pm_deg,tdb_10hz" > tb_loop_blockA_trim.csv
+alter rseln1 = 1m
+alter rseln2 = 1m
+alter rselv1 = 1e12
+alter rselv2 = 1e12
+* the attenuator and the harness move behind the trim contacts
+alter ratt = 1e12
+alter cwire = 1f
+alter rattt = 10k
+foreach cand 1 2
+  if $cand = 1
+    set r1v = "549"
+    alter rtrl2 = 294
+    alter rtrl3 = 294
+  end
+  if $cand = 2
+    set r1v = "845"
+    alter rtrl2 = 464
+    alter rtrl3 = 464
+  end
+  alter rtrl1 = $r1v
+  foreach pos 0 6 12
+    if $pos = 0
+      alter rtr1r = 0.1
+      alter rtr1s = 1e12
+      alter rtr2r = 0.1
+      alter rtr2s = 1e12
+    end
+    if $pos = 6
+      alter rtr1r = 1e12
+      alter rtr1s = 0.1
+      alter rtr2r = 0.1
+      alter rtr2s = 1e12
+    end
+    if $pos = 12
+      alter rtr1r = 1e12
+      alter rtr1s = 0.1
+      alter rtr2r = 1e12
+      alter rtr2s = 0.1
+    end
+    foreach rs 1m 430
+      alter rsrca = $rs
+      foreach cw 1f 47p 100p 220p 470p 1n 2.2n 4.7n
+        alter cwiret = $cw
+        ac dec 100 1 100meg
+        let T = v(fb)/v(g2)
+        let Tdb = db(T)
+        let Tph = ph(T)
+        meas ac fcross when Tdb=0
+        meas ac pmarg find Tph when Tdb=0
+        meas ac tdc find Tdb at=10
+        echo "BLOCK A TRIM  cand=$cand  pos=$pos  rsrc=$rs  Cwire=$cw"
+        print fcross pmarg tdc
+        echo "$cand,$pos,$rs,$cw,$&fcross,$&pmarg,$&tdc" >> tb_loop_blockA_trim.csv
+        destroy all
+      end
+    end
+  end
+end
+.endc
+
+.end

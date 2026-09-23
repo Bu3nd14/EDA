@@ -1,0 +1,67 @@
+slew__base.cir - L40 ESPLORAZIONE: slew rate e 20 kHz a fondo scala, blocco B +10 dB; nessuna alter
+* generato da genera_slew.py; metodo di L12 slew3_B.cir, blocco di oggi
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VSIN  VSRCN NMIDS SIN(0 3.818 20k)
+VSTEP NMIDS 0 PULSE(0 0 1m 1u 1u 1m 10m)
+RSRCB VSRCN IN 1.5
+* +10 dB: i due contatti chiusi (L27, ADR-026)
+CSTRAY   RG   0 15p
+RRG      RG   0 0.1
+CSTRAY10 RG10 0 15p
+RRG10    RG10 0 0.1
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+
+.control
+echo "cm,r128,amp_in,vo_max,vo_min,vo_mean_dc,slope_pos_vus,slope_neg_vus,ideal_slope_vus,gain" > slew_tab.csv
+echo "cm,r128,sr_rise_vus,sr_fall_vus" > slew_step.csv
+foreach r 1.69k 1.33k
+  alter r128 = $r
+  foreach cm 470p 560p 680p 820p 1n 1.2n
+    alter c124 = $cm
+    show c124 : capacitance
+    show r128 : resistance
+    foreach amp 3.818 1.909
+      alter @vsin[sin] = [ 0 $amp 20k ]
+      alter @vstep[pulse] = [ 0 0 1m 1u 1u 1m 10m ]
+      tran 10n 1m
+      let dvo = deriv(v(out))
+      meas tran vomax max v(out) from=0.7m to=0.95m
+      meas tran vomin min v(out) from=0.7m to=0.95m
+      meas tran vodc avg v(out) from=0.7m to=0.95m
+      meas tran vimax max v(in) from=0.7m to=0.95m
+      meas tran sp max dvo from=0.7m to=0.95m
+      meas tran sn min dvo from=0.7m to=0.95m
+      let spv = sp/1e6
+      let snv = sn/1e6
+      let gg = (vomax-vomin)/(2*vimax)
+      let ideal = 2*3.14159265*20e3*gg*vimax/1e6
+      echo "$cm,$r,$amp,$&vomax,$&vomin,$&vodc,$&spv,$&snv,$&ideal,$&gg" >> slew_tab.csv
+      destroy all
+    end
+    alter @vsin[sin] = [ 0 0 20k ]
+    alter @vstep[pulse] = [ -1.9 1.9 1m 1u 1u 1m 10m ]
+    tran 10n 3m
+    let dvo = deriv(v(out))
+    meas tran srr max dvo from=0.95m to=1.5m
+    meas tran srf min dvo from=1.95m to=2.5m
+    let srrv = srr/1e6
+    let srfv = srf/1e6
+    echo "$cm,$r,$&srrv,$&srfv" >> slew_step.csv
+    destroy all
+  end
+end
+.endc
+.end

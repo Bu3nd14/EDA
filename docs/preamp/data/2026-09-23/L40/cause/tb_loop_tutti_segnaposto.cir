@@ -1,0 +1,123 @@
+tb_loop_tutti_segnaposto.cir - L40 ESPLORAZIONE: V1 blocco B 0 dB, famiglie al segnaposto: jfet,mmbt,mje,diodo. Circuito di tb_loop.cir, generato da separa_cause.py
+* METHOD: voltage injection at the inverting JFET gate. That node draws no
+* current (JFET gate, ~1e12 ohm) while the feedback network drives it from
+* ~470 ohm, so simple voltage injection is exact here - no Middlebrook
+* correction needed. The deck OPENS the generated gate stopper R109 and
+* re-creates it as RBRK + a DC=0 AC=1 source, so the loop topology and the DC
+* bias are untouched; only the injection point is added.
+*
+* T = V(FB)/V(G2). G2 is the INVERTING input, so T is negative real at DC:
+* its phase there is 180 deg. Phase margin is therefore read directly as
+* |ph(T)| at the frequency where |T| = 1.
+*
+* WHERE THE PROBE GOES (L12, ADR-024). The capacitive probe of V1 is the
+* interconnect cable: it sits at the JACK, and ADR-019's 60 deg must hold for
+* EVERY cable up to 4.7 nF - the verdict is the MINIMUM over the sweep, not the
+* value at 4.7 nF (at the jack the minimum lies between 2.2 and 3.3 nF).
+*   pos 1  CCABLE at the JACK, after 47 ohm + 4.7 uF - the position that counts;
+*   pos 2  CNODE on the OUTPUT NODE, before the 47 ohm - information only, and
+*          the check that the deck can fail (L12: with CNODE never altered the
+*          pos-2 rows stayed at the 1 fF value).
+* The unused probe sits at 1 fF.
+*
+* ATTENUATOR SOURCE (L12). Block B's gate is fed by the 10 k stepped attenuator,
+* whose Zout goes 0 -> 2.5 k (mid-rotation) -> ~0. V1 lists the positions; L12
+* found the worst cell at 2.5 k. RSRCB sweeps 1 mohm, 1 k, 2.5 k.
+* Node VSRCN, not SRC: gain_block_flat.inc has a node SRC (docs/limitations.md #24).
+*
+* Phase margin is set by device capacitances and transit times. Until L39 they
+* came from hand-written placeholders; since L39 (NC-017) they are the
+* manufacturer models of models/. Two of them miss their own datasheet: both
+* MJE f_T sit under the 30 MHz minimum (NC-025), the LS352 f_T 35 % under
+* (NC-020) - every margin here carries that.
+
+* L40: tolto, al suo posto il segnaposto -> .include @REPO@/models/jfet/lsk489.lib
+* L40: tolto, al suo posto il segnaposto -> .include @REPO@/models/bjt_npn/mmbt5551.lib
+* L40: tolto, al suo posto il segnaposto -> .include @REPO@/models/bjt_pnp/mmbt5401.lib
+* L40: tolto, al suo posto il segnaposto -> .include @REPO@/models/bjt_npn/mje15032.lib
+* L40: tolto, al suo posto il segnaposto -> .include @REPO@/models/bjt_pnp/mje15033.lib
+* L40: tolto, al suo posto il segnaposto -> .include @REPO@/models/diodes/1n4148.lib
+* L39 (NC-017): every active device in this deck is a vendor model from
+* models/, each next to its .provenance.json:
+*   LSK489   - vendor model LSK489A, the published corner sample (I_DSS
+*              2.59 mA, below the group-B window of ADR-031)
+*   LS352    - vendor model LS350 (ADR-018), included on the next line
+*   MMBT5551 - vendor model, Diodes Inc. (ADR-017)
+*   MMBT5401 - vendor model, Diodes Inc. (ADR-017)
+*   MJE15032 - vendor model Qmje15032, onsemi (NC-024, NC-025)
+*   MJE15033 - vendor model Qmje15033, onsemi (NC-025)
+*   1N4148   - vendor model D1N914, onsemi (docs/limitations.md #20)
+* Only the LSK489A carries KF: 1/f noise is on the input pair and nowhere
+* else. No model carries part-to-part spread.
+.include @REPO@/models/bjt_pnp/ls350.lib
+* L40: segnaposto sotto il nome del costruttore
+.include @REPO@/docs/preamp/data/2026-09-23/L40/cause/modelli_segnaposto_jfet.lib
+.include @REPO@/docs/preamp/data/2026-09-23/L40/cause/modelli_segnaposto_mmbt.lib
+.include @REPO@/docs/preamp/data/2026-09-23/L40/cause/modelli_segnaposto_mje.lib
+.include @REPO@/docs/preamp/data/2026-09-23/L40/cause/modelli_segnaposto_diodo.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN VSRCN 0 DC 0
+RSRCB VSRCN IN 1m
+
+* The two gain-relay contact nodes (L27, ADR-026). Each starts as an OPEN
+* contact - 15 pF of stray, 1 G of leakage - and a closed one is 0.1 ohm:
+*   0 dB    rrg = 1G    rrg10 = 1G
+*   +3 dB   rrg = 0.1   rrg10 = 1G
+*   +10 dB  rrg = 0.1   rrg10 = 0.1
+* RG10 must be terminated here: left dangling it silently behaves as an open
+* contact without its stray (scripts/check_deck_refs.py refuses that).
+CSTRAY   RG   0 15p
+RRG      RG   0 1G
+CSTRAY10 RG10 0 15p
+RRG10    RG10 0 1G
+
+* loop break, substituting for the generated 100 ohm gate stopper R109
+RBRK FB NBRK 100
+VINJ NBRK G2 DC 0 AC 1
+
+* BLOCK B output network + cable. The probes are altered in the loop below.
+* No new node names on the block: CNODE sits on the block's own OUT (#24).
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+CCABLE JACK 0 1f
+CNODE  OUT 0 1f
+
+.control
+alter r109 = 1G
+set units = degrees
+alter rrg = 1G
+alter rrg10 = 1G
+alter rload = 100k
+showmod jq110a : vto beta lambda cgs cgd
+showmod q127 : vaf cje cjc tf
+showmod q122 : vaf cje cjc tf
+showmod q132 : vaf cje cjc tf
+showmod q133 : vaf cje cjc tf
+showmod d102 : is n cjo
+op
+print @q132[ic] @q133[ic] @q122[ic] v(nx)-v(ny)
+destroy all
+echo "variante,rsrc,cprobe,fcross_hz,pm_deg,tdb_10hz" > tb_loop_tutti_segnaposto.csv
+foreach rs 1m 2.611k
+  alter rsrcb = $rs
+  foreach cab 1f 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+    alter ccable = $cab
+    alter cnode = 1f
+    ac dec 100 1 100meg
+    let T = v(fb)/v(g2)
+    let Tdb = db(T)
+    let Tph = ph(T)
+    meas ac fcross when Tdb=0
+    meas ac pmarg find Tph when Tdb=0
+    meas ac tdc find Tdb at=10
+    echo "tutti_segnaposto,$rs,$cab,$&fcross,$&pmarg,$&tdc" >> tb_loop_tutti_segnaposto.csv
+    destroy all
+  end
+end
+.endc
+.end

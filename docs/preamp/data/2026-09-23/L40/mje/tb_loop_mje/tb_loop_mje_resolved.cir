@@ -1,0 +1,446 @@
+tb_loop_mje.cir - L40 ESPLORAZIONE: V1 blocco B 0 dB, i Qmje ALTERATI con altermod una grandezza alla volta, poi R128; generato da separa_mje.py
+* ATTENZIONE (limitations #29): nel .control i modelli Qmje15032/Qmje15033 sono alterati; il nome resta quello del costruttore.
+* METHOD: voltage injection at the inverting JFET gate. That node draws no
+* current (JFET gate, ~1e12 ohm) while the feedback network drives it from
+* ~470 ohm, so simple voltage injection is exact here - no Middlebrook
+* correction needed. The deck OPENS the generated gate stopper R109 and
+* re-creates it as RBRK + a DC=0 AC=1 source, so the loop topology and the DC
+* bias are untouched; only the injection point is added.
+*
+* T = V(FB)/V(G2). G2 is the INVERTING input, so T is negative real at DC:
+* its phase there is 180 deg. Phase margin is therefore read directly as
+* |ph(T)| at the frequency where |T| = 1.
+*
+* WHERE THE PROBE GOES (L12, ADR-024). The capacitive probe of V1 is the
+* interconnect cable: it sits at the JACK, and ADR-019's 60 deg must hold for
+* EVERY cable up to 4.7 nF - the verdict is the MINIMUM over the sweep, not the
+* value at 4.7 nF (at the jack the minimum lies between 2.2 and 3.3 nF).
+*   pos 1  CCABLE at the JACK, after 47 ohm + 4.7 uF - the position that counts;
+*   pos 2  CNODE on the OUTPUT NODE, before the 47 ohm - information only, and
+*          the check that the deck can fail (L12: with CNODE never altered the
+*          pos-2 rows stayed at the 1 fF value).
+* The unused probe sits at 1 fF.
+*
+* ATTENUATOR SOURCE (L12). Block B's gate is fed by the 10 k stepped attenuator,
+* whose Zout goes 0 -> 2.5 k (mid-rotation) -> ~0. V1 lists the positions; L12
+* found the worst cell at 2.5 k. RSRCB sweeps 1 mohm, 1 k, 2.5 k.
+* Node VSRCN, not SRC: gain_block_flat.inc has a node SRC (docs/limitations.md #24).
+*
+* Phase margin is set by device capacitances and transit times. Until L39 they
+* came from hand-written placeholders; since L39 (NC-017) they are the
+* manufacturer models of models/. Two of them miss their own datasheet: both
+* MJE f_T sit under the 30 MHz minimum (NC-025), the LS352 f_T 35 % under
+* (NC-020) - every margin here carries that.
+
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/diodes/1n4148.lib
+* L39 (NC-017): every active device in this deck is a vendor model from
+* models/, each next to its .provenance.json:
+*   LSK489   - vendor model LSK489A, the published corner sample (I_DSS
+*              2.59 mA, below the group-B window of ADR-031)
+*   LS352    - vendor model LS350 (ADR-018), included on the next line
+*   MMBT5551 - vendor model, Diodes Inc. (ADR-017)
+*   MMBT5401 - vendor model, Diodes Inc. (ADR-017)
+*   MJE15032 - vendor model Qmje15032, onsemi (NC-024, NC-025)
+*   MJE15033 - vendor model Qmje15033, onsemi (NC-025)
+*   1N4148   - vendor model D1N914, onsemi (docs/limitations.md #20)
+* Only the LSK489A carries KF: 1/f noise is on the input pair and nowhere
+* else. No model carries part-to-part spread.
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN VSRCN 0 DC 0
+RSRCB VSRCN IN 1m
+
+* The two gain-relay contact nodes (L27, ADR-026). Each starts as an OPEN
+* contact - 15 pF of stray, 1 G of leakage - and a closed one is 0.1 ohm:
+*   0 dB    rrg = 1G    rrg10 = 1G
+*   +3 dB   rrg = 0.1   rrg10 = 1G
+*   +10 dB  rrg = 0.1   rrg10 = 0.1
+* RG10 must be terminated here: left dangling it silently behaves as an open
+* contact without its stray (scripts/check_deck_refs.py refuses that).
+CSTRAY   RG   0 15p
+RRG      RG   0 1G
+CSTRAY10 RG10 0 15p
+RRG10    RG10 0 1G
+
+* loop break, substituting for the generated 100 ohm gate stopper R109
+RBRK FB NBRK 100
+VINJ NBRK G2 DC 0 AC 1
+
+* BLOCK B output network + cable. The probes are altered in the loop below.
+* No new node names on the block: CNODE sits on the block's own OUT (#24).
+RISO   OUT OUTA 47
+COUT   OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+CCABLE JACK 0 1f
+CNODE  OUT 0 1f
+
+.control
+alter r109 = 1G
+set units = degrees
+alter rrg = 1G
+alter rrg10 = 1G
+alter rload = 100k
+alter cnode = 1f
+echo "variante,rsrc,cprobe,fcross_hz,pm_deg,tdb_10hz" > tb_loop_mje.csv
+showmod q132 : cje cjc tf vaf
+showmod q133 : cje cjc tf vaf
+op
+echo "IQ base"
+print @q132[ic] @q133[ic] @r128[resistance]
+destroy all
+foreach rs 1m 2.611k
+  alter rsrcb = $rs
+  foreach cab 1f 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+    alter ccable = $cab
+    ac dec 100 1 100meg
+    let T = v(fb)/v(g2)
+    let Tdb = db(T)
+    let Tph = ph(T)
+    meas ac fcross when Tdb=0
+    meas ac pmarg find Tph when Tdb=0
+    meas ac tdc find Tdb at=10
+    echo "base,$rs,$cab,$&fcross,$&pmarg,$&tdc" >> tb_loop_mje.csv
+    destroy all
+  end
+end
+altermod qmje15032 cje = 3.05969e-09
+altermod qmje15032 cjc = 3.00108e-10
+altermod qmje15032 tf = 4.94819e-09
+altermod qmje15032 vaf = 31.5491
+altermod qmje15033 cje = 3.06005e-09
+altermod qmje15033 cjc = 3.00101e-10
+altermod qmje15033 tf = 4.78203e-09
+altermod qmje15033 vaf = 12.5778
+altermod qmje15032 cje = 300p
+altermod qmje15033 cje = 300p
+altermod qmje15032 cjc = 100p
+altermod qmje15033 cjc = 120p
+showmod q132 : cje cjc tf vaf
+showmod q133 : cje cjc tf vaf
+op
+echo "IQ cap"
+print @q132[ic] @q133[ic] @r128[resistance]
+destroy all
+foreach rs 1m 2.611k
+  alter rsrcb = $rs
+  foreach cab 1f 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+    alter ccable = $cab
+    ac dec 100 1 100meg
+    let T = v(fb)/v(g2)
+    let Tdb = db(T)
+    let Tph = ph(T)
+    meas ac fcross when Tdb=0
+    meas ac pmarg find Tph when Tdb=0
+    meas ac tdc find Tdb at=10
+    echo "cap,$rs,$cab,$&fcross,$&pmarg,$&tdc" >> tb_loop_mje.csv
+    destroy all
+  end
+end
+altermod qmje15032 cje = 3.05969e-09
+altermod qmje15032 cjc = 3.00108e-10
+altermod qmje15032 tf = 4.94819e-09
+altermod qmje15032 vaf = 31.5491
+altermod qmje15033 cje = 3.06005e-09
+altermod qmje15033 cjc = 3.00101e-10
+altermod qmje15033 tf = 4.78203e-09
+altermod qmje15033 vaf = 12.5778
+altermod qmje15032 tf = 5.3n
+altermod qmje15033 tf = 6.4n
+showmod q132 : cje cjc tf vaf
+showmod q133 : cje cjc tf vaf
+op
+echo "IQ tf"
+print @q132[ic] @q133[ic] @r128[resistance]
+destroy all
+foreach rs 1m 2.611k
+  alter rsrcb = $rs
+  foreach cab 1f 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+    alter ccable = $cab
+    ac dec 100 1 100meg
+    let T = v(fb)/v(g2)
+    let Tdb = db(T)
+    let Tph = ph(T)
+    meas ac fcross when Tdb=0
+    meas ac pmarg find Tph when Tdb=0
+    meas ac tdc find Tdb at=10
+    echo "tf,$rs,$cab,$&fcross,$&pmarg,$&tdc" >> tb_loop_mje.csv
+    destroy all
+  end
+end
+altermod qmje15032 cje = 3.05969e-09
+altermod qmje15032 cjc = 3.00108e-10
+altermod qmje15032 tf = 4.94819e-09
+altermod qmje15032 vaf = 31.5491
+altermod qmje15033 cje = 3.06005e-09
+altermod qmje15033 cjc = 3.00101e-10
+altermod qmje15033 tf = 4.78203e-09
+altermod qmje15033 vaf = 12.5778
+altermod qmje15032 vaf = 100
+altermod qmje15033 vaf = 100
+showmod q132 : cje cjc tf vaf
+showmod q133 : cje cjc tf vaf
+op
+echo "IQ vaf"
+print @q132[ic] @q133[ic] @r128[resistance]
+destroy all
+foreach rs 1m 2.611k
+  alter rsrcb = $rs
+  foreach cab 1f 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+    alter ccable = $cab
+    ac dec 100 1 100meg
+    let T = v(fb)/v(g2)
+    let Tdb = db(T)
+    let Tph = ph(T)
+    meas ac fcross when Tdb=0
+    meas ac pmarg find Tph when Tdb=0
+    meas ac tdc find Tdb at=10
+    echo "vaf,$rs,$cab,$&fcross,$&pmarg,$&tdc" >> tb_loop_mje.csv
+    destroy all
+  end
+end
+altermod qmje15032 cje = 3.05969e-09
+altermod qmje15032 cjc = 3.00108e-10
+altermod qmje15032 tf = 4.94819e-09
+altermod qmje15032 vaf = 31.5491
+altermod qmje15033 cje = 3.06005e-09
+altermod qmje15033 cjc = 3.00101e-10
+altermod qmje15033 tf = 4.78203e-09
+altermod qmje15033 vaf = 12.5778
+altermod qmje15032 cje = 3.05969e-09
+altermod qmje15033 cje = 3.06005e-09
+altermod qmje15032 cjc = 3.00108e-10
+altermod qmje15033 cjc = 3.00101e-10
+altermod qmje15032 tf = 4.94819e-09
+altermod qmje15033 tf = 4.78203e-09
+altermod qmje15032 vaf = 31.5491
+altermod qmje15033 vaf = 12.5778
+showmod q132 : cje cjc tf vaf
+showmod q133 : cje cjc tf vaf
+op
+echo "IQ ritorno"
+print @q132[ic] @q133[ic] @r128[resistance]
+destroy all
+foreach rs 1m 2.611k
+  alter rsrcb = $rs
+  foreach cab 1f 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+    alter ccable = $cab
+    ac dec 100 1 100meg
+    let T = v(fb)/v(g2)
+    let Tdb = db(T)
+    let Tph = ph(T)
+    meas ac fcross when Tdb=0
+    meas ac pmarg find Tph when Tdb=0
+    meas ac tdc find Tdb at=10
+    echo "ritorno,$rs,$cab,$&fcross,$&pmarg,$&tdc" >> tb_loop_mje.csv
+    destroy all
+  end
+end
+alter r128 = 1.20k
+showmod q132 : cje cjc tf vaf
+showmod q133 : cje cjc tf vaf
+op
+echo "IQ r1.20k"
+print @q132[ic] @q133[ic] @r128[resistance]
+destroy all
+foreach rs 1m 2.611k
+  alter rsrcb = $rs
+  foreach cab 1f 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+    alter ccable = $cab
+    ac dec 100 1 100meg
+    let T = v(fb)/v(g2)
+    let Tdb = db(T)
+    let Tph = ph(T)
+    meas ac fcross when Tdb=0
+    meas ac pmarg find Tph when Tdb=0
+    meas ac tdc find Tdb at=10
+    echo "r1.20k,$rs,$cab,$&fcross,$&pmarg,$&tdc" >> tb_loop_mje.csv
+    destroy all
+  end
+end
+alter r128 = 1.25k
+showmod q132 : cje cjc tf vaf
+showmod q133 : cje cjc tf vaf
+op
+echo "IQ r1.25k"
+print @q132[ic] @q133[ic] @r128[resistance]
+destroy all
+foreach rs 1m 2.611k
+  alter rsrcb = $rs
+  foreach cab 1f 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+    alter ccable = $cab
+    ac dec 100 1 100meg
+    let T = v(fb)/v(g2)
+    let Tdb = db(T)
+    let Tph = ph(T)
+    meas ac fcross when Tdb=0
+    meas ac pmarg find Tph when Tdb=0
+    meas ac tdc find Tdb at=10
+    echo "r1.25k,$rs,$cab,$&fcross,$&pmarg,$&tdc" >> tb_loop_mje.csv
+    destroy all
+  end
+end
+alter r128 = 1.30k
+showmod q132 : cje cjc tf vaf
+showmod q133 : cje cjc tf vaf
+op
+echo "IQ r1.30k"
+print @q132[ic] @q133[ic] @r128[resistance]
+destroy all
+foreach rs 1m 2.611k
+  alter rsrcb = $rs
+  foreach cab 1f 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+    alter ccable = $cab
+    ac dec 100 1 100meg
+    let T = v(fb)/v(g2)
+    let Tdb = db(T)
+    let Tph = ph(T)
+    meas ac fcross when Tdb=0
+    meas ac pmarg find Tph when Tdb=0
+    meas ac tdc find Tdb at=10
+    echo "r1.30k,$rs,$cab,$&fcross,$&pmarg,$&tdc" >> tb_loop_mje.csv
+    destroy all
+  end
+end
+alter r128 = 1.33k
+showmod q132 : cje cjc tf vaf
+showmod q133 : cje cjc tf vaf
+op
+echo "IQ r1.33k"
+print @q132[ic] @q133[ic] @r128[resistance]
+destroy all
+foreach rs 1m 2.611k
+  alter rsrcb = $rs
+  foreach cab 1f 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+    alter ccable = $cab
+    ac dec 100 1 100meg
+    let T = v(fb)/v(g2)
+    let Tdb = db(T)
+    let Tph = ph(T)
+    meas ac fcross when Tdb=0
+    meas ac pmarg find Tph when Tdb=0
+    meas ac tdc find Tdb at=10
+    echo "r1.33k,$rs,$cab,$&fcross,$&pmarg,$&tdc" >> tb_loop_mje.csv
+    destroy all
+  end
+end
+alter r128 = 1.35k
+showmod q132 : cje cjc tf vaf
+showmod q133 : cje cjc tf vaf
+op
+echo "IQ r1.35k"
+print @q132[ic] @q133[ic] @r128[resistance]
+destroy all
+foreach rs 1m 2.611k
+  alter rsrcb = $rs
+  foreach cab 1f 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+    alter ccable = $cab
+    ac dec 100 1 100meg
+    let T = v(fb)/v(g2)
+    let Tdb = db(T)
+    let Tph = ph(T)
+    meas ac fcross when Tdb=0
+    meas ac pmarg find Tph when Tdb=0
+    meas ac tdc find Tdb at=10
+    echo "r1.35k,$rs,$cab,$&fcross,$&pmarg,$&tdc" >> tb_loop_mje.csv
+    destroy all
+  end
+end
+alter r128 = 1.40k
+showmod q132 : cje cjc tf vaf
+showmod q133 : cje cjc tf vaf
+op
+echo "IQ r1.40k"
+print @q132[ic] @q133[ic] @r128[resistance]
+destroy all
+foreach rs 1m 2.611k
+  alter rsrcb = $rs
+  foreach cab 1f 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+    alter ccable = $cab
+    ac dec 100 1 100meg
+    let T = v(fb)/v(g2)
+    let Tdb = db(T)
+    let Tph = ph(T)
+    meas ac fcross when Tdb=0
+    meas ac pmarg find Tph when Tdb=0
+    meas ac tdc find Tdb at=10
+    echo "r1.40k,$rs,$cab,$&fcross,$&pmarg,$&tdc" >> tb_loop_mje.csv
+    destroy all
+  end
+end
+alter r128 = 1.45k
+showmod q132 : cje cjc tf vaf
+showmod q133 : cje cjc tf vaf
+op
+echo "IQ r1.45k"
+print @q132[ic] @q133[ic] @r128[resistance]
+destroy all
+foreach rs 1m 2.611k
+  alter rsrcb = $rs
+  foreach cab 1f 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+    alter ccable = $cab
+    ac dec 100 1 100meg
+    let T = v(fb)/v(g2)
+    let Tdb = db(T)
+    let Tph = ph(T)
+    meas ac fcross when Tdb=0
+    meas ac pmarg find Tph when Tdb=0
+    meas ac tdc find Tdb at=10
+    echo "r1.45k,$rs,$cab,$&fcross,$&pmarg,$&tdc" >> tb_loop_mje.csv
+    destroy all
+  end
+end
+alter r128 = 1.50k
+showmod q132 : cje cjc tf vaf
+showmod q133 : cje cjc tf vaf
+op
+echo "IQ r1.50k"
+print @q132[ic] @q133[ic] @r128[resistance]
+destroy all
+foreach rs 1m 2.611k
+  alter rsrcb = $rs
+  foreach cab 1f 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+    alter ccable = $cab
+    ac dec 100 1 100meg
+    let T = v(fb)/v(g2)
+    let Tdb = db(T)
+    let Tph = ph(T)
+    meas ac fcross when Tdb=0
+    meas ac pmarg find Tph when Tdb=0
+    meas ac tdc find Tdb at=10
+    echo "r1.50k,$rs,$cab,$&fcross,$&pmarg,$&tdc" >> tb_loop_mje.csv
+    destroy all
+  end
+end
+alter r128 = 1.69k
+showmod q132 : cje cjc tf vaf
+showmod q133 : cje cjc tf vaf
+op
+echo "IQ r1.69k"
+print @q132[ic] @q133[ic] @r128[resistance]
+destroy all
+foreach rs 1m 2.611k
+  alter rsrcb = $rs
+  foreach cab 1f 470p 1n 1.5n 2.2n 2.7n 3.3n 4.7n
+    alter ccable = $cab
+    ac dec 100 1 100meg
+    let T = v(fb)/v(g2)
+    let Tdb = db(T)
+    let Tph = ph(T)
+    meas ac fcross when Tdb=0
+    meas ac pmarg find Tph when Tdb=0
+    meas ac tdc find Tdb at=10
+    echo "r1.69k,$rs,$cab,$&fcross,$&pmarg,$&tdc" >> tb_loop_mje.csv
+    destroy all
+  end
+end
+.endc
+.end

@@ -1,0 +1,90 @@
+warning, model type mismatch in line
+    q121a nmiri nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: tb_noise_breakdown__ctrl.cir - l40 esplorazione da tb_noise_breakdown.cir, alter r128 = 1.69k
+
+Warning: Model issue on line 122 :
+  .model lsk489a njf(beta=2.2m betatce=-.5 rd=11 rs=30 lambda=4.3m vto=-1. ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+unrecognized parameter (mj) - ignored
+
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Note: True gmin stepping completed
+ Resistor: Simple linear resistor
+     device                  r128
+      model                     R
+ resistance                  1690
+
+===== per-device noise contributions at 1 kHz, 0 dB mode, Rsrc=430 =====
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 2
+
+No. of Data Rows : 1
+===== integrated totals, 20 Hz - 20 kHz =====
+A) 0 dB, source 1 ohm      (block A intrinsic)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.176050e-06
+inoise_total = 1.176773e-06
+B) 0 dB, source 430 ohm    (block A on the tube phono)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.234884e-06
+inoise_total = 1.236173e-06
+C) 0 dB, source 2500 ohm   (block B, attenuator mid-rotation)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.485820e-06
+inoise_total = 1.490446e-06
+D) +10 dB, source 2500 ohm (block B worst case)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 4.283282e-06
+inoise_total = 1.366526e-06
+E) +3 dB, source 2500 ohm  (block B, K1 closed, K5 open)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 2.033638e-06
+inoise_total = 1.437503e-06
+Note: Simulation executed from .control section 

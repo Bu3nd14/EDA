@@ -1,0 +1,109 @@
+tb_op__ctrl.cir - L40 ESPLORAZIONE da tb_op.cir, alter r128 = 1.69k
+* First line is a title (docs/limitations.md #10). Do not put a directive here.
+* Models are the manufacturer's since L39 (NC-017); see the include block.
+
+* ---------------------------------------------------------------------
+* CONVENZIONE DI PERCORSO (collaudata su questo deck in L2; L3 la replica
+* sugli altri 11 senza riprogettarla). Due regole, una per meta'.
+*
+* LETTURA - `.include /Users/roberto/EDA/.claude/worktrees/L40/<percorso-dalla-radice-del-repo>`.
+*   run_simulation.sh sostituisce /Users/roberto/EDA/.claude/worktrees/L40 con la radice del checkout di
+*   cui lo script stesso fa parte, e scrive un deck derivato
+*   <nome>_resolved.cir dentro la directory dei risultati.
+*
+*   Perche' non un percorso relativo: ngspice risolve un `.include`
+*   relativo contro la DIRECTORY DI LAVORO, non contro la directory del
+*   deck - e run_simulation.sh fa `cd "$OUTDIR"` prima di lanciare
+*   ngspice. Verificato, non dedotto: due file entrambi chiamati
+*   ../real.lib, uno raggiungibile dalla directory del deck (1 kohm) e
+*   uno dal cwd (9 kohm); ngspice -b ha letto quello del cwd
+*   (i(V1) = -1.111e-04 = 1/9k contro -1.000e-03 = 1/1k).
+*
+*   Un /Users/roberto/EDA/.claude/worktrees/L40 non sostituito fallisce in modo rumoroso: ngspice esce 1
+*   con "Could not find include file". Non e' un fallimento silenzioso.
+*
+* SCRITTURA - `wrdata <nome-nudo>`, senza alcun percorso.
+*   Lo stesso `cd "$OUTDIR"` lo fa atterrare nella directory dei
+*   risultati da solo. Il nome <basename-del-deck>_wrdata.txt e' quello
+*   che run_simulation.sh cerca per PRIMO (righe 80-90): usarlo evita il
+*   fallback che fa `grep ... | head -1`.
+*
+*   Nota per L3/L5: un deck con PIU' di un `wrdata` (tb_dc_headroom.cir
+*   ne ha 2) non puo' usare quel nome per entrambi e cade sul fallback,
+*   che ne vede solo il primo. Va gestito, non ereditato per distrazione.
+* ---------------------------------------------------------------------
+
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/diodes/1n4148.lib
+* L39 (NC-017): every active device in this deck is a vendor model from
+* models/, each next to its .provenance.json:
+*   LSK489   - vendor model LSK489A, the published corner sample (I_DSS
+*              2.59 mA, below the group-B window of ADR-031)
+*   LS352    - vendor model LS350 (ADR-018), included on the next line
+*   MMBT5551 - vendor model, Diodes Inc. (ADR-017)
+*   MMBT5401 - vendor model, Diodes Inc. (ADR-017)
+*   MJE15032 - vendor model Qmje15032, onsemi (NC-024, NC-025)
+*   MJE15033 - vendor model Qmje15033, onsemi (NC-025)
+*   1N4148   - vendor model D1N914, onsemi (docs/limitations.md #20)
+* Only the LSK489A carries KF: 1/f noise is on the input pair and nowhere
+* else. No model carries part-to-part spread.
+.include /Users/roberto/EDA/.claude/worktrees/L40/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L40/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN IN 0 DC 0 AC 1
+
+* Gain relay: open contact = 0 dB. An open relay contact is not an infinite
+* impedance, it is ~15 pF of stray with a very large leakage resistance.
+CSTRAY RG 0 15p
+CSTRAY10 RG10 0 15p
+RLEAK  RG 0 1G
+RLEAK10 RG10 0 1G
+
+* Output network of BLOCK B (main output), per E8 / ADR-007:
+RISO  OUT OUTA 47
+COUT  OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD JACK 0 100k
+
+.control
+* L40: variante
+alter r128 = 1.69k
+show r128 : resistance
+op
+* Meta' scrittura della convenzione: nome nudo, nessun percorso.
+wrdata tb_op_wrdata.txt v(OUT) v(JACK) v(FB) v(SRC) i(VPP) i(VMM)
+echo "=== NODE VOLTAGES ==="
+print v(IN) v(FB) v(OUT) v(JACK) v(NREF) v(NREFM) v(NCASC) v(SRC)
+print v(G1) v(G2) v(S1) v(S2) v(D1N) v(D2N) v(NMIRI) v(NHI)
+print v(NX) v(NY) v(NBB) v(NBN) v(NBP) v(NEN) v(NEP) v(NVE) v(NVLE) v(NTE)
+echo "=== INPUT JFET PAIR (LSK489 halves) ==="
+print @jq110a[id]
+print @jq110b[id]
+print @jq110a[vgs]
+print @jq110b[vgs]
+print @jq110a[gm]
+print @jq110b[gm]
+echo "=== RAIL CURRENTS (A) ==="
+print i(VPP) i(VMM)
+echo "=== BJT OPERATING POINTS: ic / vce ==="
+print @q106[ic] @q106[ib] @q106[vbe] @q106[vbc]
+print @q117[ic] @q117[ib] @q117[vbe] @q117[vbc]
+print @q118[ic] @q118[ib] @q118[vbe] @q118[vbc]
+print @q121A[ic] @q121A[ib] @q121A[vbe] @q121A[vbc]
+print @q121B[ic] @q121B[ib] @q121B[vbe] @q121B[vbc]
+print @q122[ic] @q122[ib] @q122[vbe] @q122[vbc]
+print @q125[ic] @q125[ib] @q125[vbe] @q125[vbc]
+print @q127[ic] @q127[ib] @q127[vbe] @q127[vbc]
+print @q132[ic] @q132[ib] @q132[vbe] @q132[vbc]
+print @q133[ic] @q133[ib] @q133[vbe] @q133[vbc]
+echo "=== KEY BRANCH CURRENTS ==="
+print @riso[i] @r136[i] @r134[i] @r135[i] @r107[i] @r123[i] @r126[i]
+.endc
+
+.end
