@@ -25,6 +25,13 @@ tb_mute_corto.cir - mute tenuto e corto su ciascuna uscita, coi buffer delle fis
 * dietro al proprio stadio: il buffer F1, il buffer F2, il blocco B. Il blocco
 * A non vede piu' 47 || 47 ohm, che era il caso peggiore di L11. RON = 0.01
 * ohm come il corto: caso peggiore, la resistenza di contatto e' ignorata.
+* L29e (ADR-044): nel sorgente il mute e' ora un deviatore - a mute inserito va
+* a massa il LATO DEL CONDENSATORE (contatto NC) e il jack si stacca. Questo
+* deck resta com'e': lo stadio vede lo stesso carico, 47 ohm piu' 4,7 uF verso
+* massa, in entrambi i casi, e RON = 0.01 resta il caso peggiore rispetto ai
+* 0,1 ohm del contatto. Il caso 1 vale quindi per P7 anche sulla iii. I casi
+* di corto al connettore (2-4) sono a mute rilasciato: la serie chiusa aggiunge
+* 0,1 ohm ai 47, e il deck, senza, resta il caso peggiore.
 *
 * I CASI (colonna caso):
 *   0 normale | 1 mute (tre jack a massa) | 2 corto FIX1 | 3 corto FIX2

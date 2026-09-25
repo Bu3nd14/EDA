@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-09-25** (L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-09-25** (L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -129,6 +129,10 @@ L29c: 0 celle fuori su 253, e 0 su 47 col cavo e i 10 kΩ. Il cambio a relè chi
 0,17 µV, l'accensione da 11 mV a 4,4 µV. L'utente ha registrato **ADR-044** e ha chiuso **la parte
 del mute di NC-028**. L29e la porta nel sorgente. **NC-028 resta aperta e bloccante solo per lo
 spegnimento** (L30).
+**L29e** (2026-09-25) ha portato la iii in `circuits/` (un deviatore per uscita sui G6K del mute) e
+ha rifatto le celle peggiori di L29d2 dal deck versionato, ora generato dalla netlist: 18 verdetti
+su 18 uguali al banco, 0 fuori. **La parte del mute è confermata sul sorgente**; NC-028 resta
+aperta e bloccante solo per lo spegnimento (L30).
 **12 voci aperte, 2 bloccanti.**
 L'accesso a G1 non è concesso finché NC-004 e NC-028 restano aperte.
 
@@ -2140,7 +2144,7 @@ lasciato flottante o collegato è una scelta di layout.
 | Requisito | **V2** (transitorio del relè di mute, al rilascio) · **F6**/ADR-012 (il mute esiste per non mandare botti alle uscite) · **ADR-019** (il trim si regola a mute inserito) |
 | Severità | **bloccante** da L38 (maggiore fino a L38: V2 non aveva una soglia) |
 | Aperta da | `reports/2026-09-14-L11-mute-e-corto.md` |
-| Stato | aperta **solo per lo spegnimento** (L30, ADR-043). La parte del mute è chiusa da L29d2 (2026-09-25, decisione dell'utente, ADR-044) |
+| Stato | aperta **solo per lo spegnimento** (L30, ADR-043). La parte del mute è chiusa da L29d2 (2026-09-25, decisione dell'utente, ADR-044) e **confermata sul sorgente da L29e** (2026-09-25) |
 
 **Evidenza.** `data/2026-09-14/tb_mute_corto_transitorio.csv` e
 `tb_mute_corto_trans_{0,10}.csv`. Segnale da 2,7 V RMS a 1 kHz, manopola al
@@ -2504,6 +2508,22 @@ la voce RESTA APERTA E BLOCCANTE per lo spegnimento (L30).**
   col relè immediato restano da spiegare. **Chi**: **L30** (ADR-043).
 - **Un vincolo per G2**: la capacità fra il lato condensatore e il jack, contatto più piste,
   resta sotto ~2,4 pF.
+
+**AGGIORNATA IL 2026-09-25, da L29e: la iii nel sorgente. LA PARTE DEL MUTE È CONFERMATA; la voce
+RESTA APERTA E BLOCCANTE per lo spegnimento (L30).**
+(`reports/2026-09-25-L29e-geometria-iii-sorgente.md`, dati `data/2026-09-25/L29e/`)
+
+- **Il sorgente**: in `preamp_audio.py` ogni polo di K2–K4 è un deviatore. Il COM va al lato del
+  condensatore, l'NC a massa, l'NO al jack. La piedinatura è riletta dal datasheet (pagina 6 del
+  PDF). Il bleed lato condensatore resta, per decisione dell'utente («Tenerlo»), e il bleed del
+  jack resta sul jack. Nessuna ADR nuova.
+- **Il 2e** asserisce la geometria per intento. È fatto fallire sulla netlist di `main` e su 4
+  varianti sabotate.
+- **Il deck versionato** si genera dalla netlist: il generatore rifiuta se la netlist non è la iii.
+  È identico, corsa per corsa, alla variante di progetto di L29d2.
+- **Le celle peggiori sul sorgente**: cambio a relè chiuso, dispersione, accensione e musica a
+  1 kHz e 20 Hz. **18 verdetti su 18 uguali al banco (scarto 0), 0 fuori.** La condizione di
+  ADR-044 «L29e non riproduce le celle peggiori» non scatta.
 
 
 ### NC-029 — Con i buffer delle fisse la dissipazione a riposo raddoppia, e P5 non la copre
