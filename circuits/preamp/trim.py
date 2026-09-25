@@ -114,7 +114,10 @@ SW_TABLE = {
 
 
 def trim_relays(vrelay, mute_cmd, g6k_pins):
-    """The parts both channels share. Returns {"T1": K7, "T2": K8}.
+    """The parts both channels share. Returns {"T1": K7, "T2": K8}, plus
+    "K6", "VTRIM" and "RET": since L36 the gain interlock (gain_interlock.py,
+    ADR-041 "come TRIM") shares the permissive and its rails. It takes
+    VHOLD from K6's pole-1 NO, free until then; nothing here changes.
 
     g6k_pins = (coil_a, coil_b, com1, no1, nc1, com2, no2, nc2) of the
     G6K-2F-Y as preamp_audio.py holds them: ONE pin map for the monostables,
@@ -200,6 +203,7 @@ def trim_relays(vrelay, mute_cmd, g6k_pins):
     jr = Part("Connector_Generic", "Conn_01x01", value="RLY_RET",
               footprint=FP_CONN1, ref="J2")
     jr[1] += ret
+    relays.update(K6=k6, VTRIM=vtrim, RET=ret)
     return relays
 
 

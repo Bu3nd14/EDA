@@ -59,6 +59,16 @@ stato vero del guadagno** a pannello, **solo se una misura lo giustifica**:
   condizione». Qualunque strada scelga L29, il cambio di guadagno deve rispettare
   V2.
 
+**Realizzata da L36** (2026-09-25, **ADR-041**; nessuna modifica al testo del
+requisito):
+- L29c ha soddisfatto il criterio;
+- l'utente ha deciso la forma: interblocco da premere come il trim, niente mute
+  automatico, LED;
+- L36 l'ha portata in `circuits/preamp/gain_interlock.py`;
+- il 2e (`check_relay_safe_state.py`) prova sulla netlist che fuori mute il
+  selettore non muove nulla, che in mute le bobine seguono il selettore, e che i tre
+  LED dicono lo stato vero.
+
 **Nota su «jack»** (2026-09-15, L34). Nei documenti, nei deck e nei nomi di nodo
 (`MAINJACK`, `FIXJACK1/2`) «jack» vuol dire **la presa d'uscita RCA**: il nodo a
 valle dei 47 Ω e del 4,7 µF, dove si attacca il cavo. Il progetto non ha

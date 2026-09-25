@@ -1,0 +1,48 @@
+L36 corsa ingenua L=0.02 gap=0.001 R=237.0 fraz=0.5 vr=5.0
+* titolo: la prima riga e' sempre il titolo (CLAUDE.md)
+VR vrelay 0 5.0
+VNC cnc 0 pwl(0 1 0.005 1 0.005001 0 0.031 0 0.031001 1)
+VNO cno 0 pwl(0 0 0.006 0 0.006001 1 0.03 1 0.030001 0)
+VKN knob 0 pwl(0 1)
+* K6: i due NC in serie come un contatto solo; il NO del polo 1 da' VHOLD
+SNC vrelay vtrim cnc 0 swc
+SNO vrelay vhold cno 0 swc
+D3 0 vtrim d4148
+* SW2: polo a (comando) e, nel progetto, polo b (ponte)
+SPA vtrim c3 knob 0 swc
+D10 c3 g3hi dsch
+D12 vhold h3 d4148
+* NO di K11, comandato dalla corrente della sua bobina
+SK11 h3 g3hi a11 0 swk
+D14 0 g3hi d4148
+* K1 e K11: bobine in parallelo, R + L ipotetica
+VS1 g3hi n1 0
+L1 n1 m1 0.02
+R1 m1 0 237
+VS11 g3hi n11 0
+L11 n11 m11 0.02
+R11 m11 0 237
+H1 a1 0 VS1 1000
+H11 a11 0 VS11 1000
+* l'ancora di K1 e' solo osservata: la sua corrente di bobina e' quella di K11
+RA1 a1 0 1meg
+RF1 vtrim 0 100meg
+RF2 c3 0 100meg
+RF3 h3 0 100meg
+RF4 vhold 0 100meg
+.model swc sw vt=0.5 vh=0.1 ron=0.1 roff=1e9
+.model swk sw vt=13.7131 vh=3.16456 ron=0.1 roff=1e9
+.model dsch d is=31.7u n=1.373 rs=0.051
+.model d4148 d is=2.52n n=1.752 rs=0.568
+.control
+tran 1u 0.05 0 1u
+meas tran imin_rel min i(VS1) from=0.005 to=0.0299
+meas tran ifin_out find i(VS1) at=0.0295
+meas tran imin_ins min i(VS1) from=0.03 to=0.0499
+meas tran ifin find i(VS1) at=0.0495
+meas tran i0 find i(VS1) at=0.0045
+meas tran tdrop when i(VS1)=0.0105485 fall=1 from=0.03
+echo "RISULTATO" $&imin_rel $&ifin_out $&imin_ins $&ifin $&i0 $&tdrop
+quit
+.endc
+.end

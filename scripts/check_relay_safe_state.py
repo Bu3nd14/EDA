@@ -54,6 +54,7 @@ ROLES, read from the part's value string:
           the ladder - TRIM1 reset on the unattenuated node, a resistor down
           to TRIM2 reset (-6 dB), another down to TRIM2 set (-12 dB), and one
           down to ground. So reset = 0 dB, the state the part ships in.
+  HOLD    monostable, HOLD3 / HOLD10 (L36). Judged by the gain proof.
   SPIA    bistable, SPIA1 / SPIA2 (F9). Coil on the SAME nets, same polarity,
           as TRIM1 / TRIM2; contacts never on a net a TRIM contact touches.
 
@@ -71,6 +72,19 @@ THE INTERLOCK PROOF. A graph of nets, walked from VRELAY:
   SPIA coil pin may be reachable. IN MUTE = those same relays de-energised:
   every TRIM and SPIA coil pin must be reachable - an interlock that also
   stops the trim from ever working would pass the first half alone.
+
+THE GAIN INTERLOCK (L36, ADR-041 = road B of ADR-030). Role HOLD: the
+auxiliary of a gain relay (HOLD3 on K1, HOLD10 on K5), coil on the same nets.
+Walked with the same graph, with two things the trim proof does not need:
+diodes and LEDs conduct anode -> cathode only, and the gain selector (the
+switch whose value says GAIN) is set position by position against the
+GAIN_KNOB table. Out of mute the powered gain coils must be exactly the
+state, in every position; in mute exactly the knob's table, from every
+state; and with every relay on the mute command caught BETWEEN throws (no
+contact closed) and the knob where the state is, still exactly the state -
+the race of ADR-030 at mute release, proved by structure because the
+datasheet gives no figure to prove it by timing. Plus ADR-026 (K5 never
+without K1) and the three gain LEDs, one lit per state, on the HOLD contacts.
 
 THE GRADUATED MUTE (ADR-038, L29b2). Not a relay, but the same kind of
 silent defect: two photoresistors per channel (Isolator:VTL5C, value
@@ -153,7 +167,19 @@ KNOWN_SWITCHES = {
     ("Switch", "SW_Rotary_4x3"): {"13": ("1", "2", "3"), "14": ("4", "5", "6"),
                                   "15": ("7", "8", "9"), "16": ("10", "11", "12")},
 }
-TWO_TERMINAL = {("Device", p) for p in ("R", "D", "LED", "D_TVS")}
+TWO_TERMINAL = {("Device", p) for p in ("R", "D", "D_Schottky", "LED",
+                                        "D_TVS")}
+# Of those, the ones that conduct one way only (L36; see reach()).
+DIRECTED = {("Device", p) for p in ("D", "D_Schottky", "LED")}
+
+# L36, ADR-041 / ADR-026: what the GAIN selector commands, position by
+# position (1 = 0 dB, 2 = +3 dB, 3 = +10 dB), as the set of gain steps whose
+# coil it asks for. "3" is K1 (value "... GAIN"), "10" is K5 ("... GAIN10").
+# The netlist must implement exactly this, in mute; and ADR-026 wants no
+# position with "10" and without "3".
+GAIN_KNOB = {1: frozenset(), 2: frozenset({"3"}), 3: frozenset({"3", "10"})}
+GAIN_STATES = tuple(GAIN_KNOB.values())
+GAIN_LED_DB = {frozenset(): 0, frozenset({"3"}): 3, frozenset({"3", "10"}): 10}
 
 # The intent, from the ADRs. `grounded` names the throw that must be tied to
 # ground with the coil de-energised; the other throw must NOT be.
@@ -171,6 +197,9 @@ ROLES = {
                "nessun guasto di bobina puo' alzare il guadagno",
     },
     "PERMIT": {"grounded": None, "bistable": False},
+    # L36, ADR-030 road B: the auxiliary of a gain relay, HOLD3 on K1 and
+    # HOLD10 on K5. Judged by the gain proof, like PERMIT by the trim's.
+    "HOLD": {"grounded": None, "bistable": False},
     "TRIM": {"grounded": None, "bistable": True},
     "SPIA": {"grounded": None, "bistable": True},
 }
@@ -479,6 +508,68 @@ def check_trim(components, relays, by_role, pin_net, findings):
                         f"spie non toccano il segnale.")
 
 
+def reach(components, pin_net, energised, transfer=(), positions=None):
+    """The nets reachable from VRELAY in one state of the relays.
+
+    energised  - monostables whose coil is on: COM-NO; the others COM-NC.
+    transfer   - monostables caught BETWEEN throws (L36): no contact closed.
+                 It is the instant of the race of ADR-030.
+    positions  - {switch ref: position 1..n}: that switch's COM reaches the
+                 throw of that position only. A switch not listed reaches
+                 ALL its throws (any position), as the trim proof wants.
+    Diodes and LEDs conduct from anode (pin 2) to cathode (pin 1) only:
+    since L36 the gain interlock rests on diodes that stop a return, and a
+    walk that let current flow backwards through them would find paths the
+    circuit does not have - and, worse, would pass a netlist whose diode is
+    fitted the wrong way round, if the only paths were the backward ones.
+    Resistors, coils and bidirectional TVS conduct both ways.
+    """
+    positions = positions or {}
+    adj = defaultdict(set)
+
+    def link(a, b, both=True):
+        if a and b:
+            adj[a].add(b)
+            if both:
+                adj[b].add(a)
+
+    for ref, c in components.items():
+        key = (c["lib"], c["part"])
+        if key in DIRECTED:
+            # pin 2 = A, pin 1 = K (KiCad Device:D, D_Schottky, LED)
+            link(pin_net.get((ref, "2")), pin_net.get((ref, "1")), both=False)
+        elif key in TWO_TERMINAL:
+            link(pin_net.get((ref, "1")), pin_net.get((ref, "2")))
+        elif key in KNOWN_SWITCHES:
+            for com, throws in KNOWN_SWITCHES[key].items():
+                if ref in positions:
+                    throws = (throws[positions[ref] - 1],)
+                for t in throws:
+                    link(pin_net.get((ref, com)), pin_net.get((ref, t)))
+        elif key in KNOWN_RELAYS:
+            pm = KNOWN_RELAYS[key]
+            link(*(pin_net.get((ref, p)) for p in pm["coil"]))
+            for pole in pm["poles"]:
+                com = pin_net.get((ref, pole["COM"]))
+                if key in BISTABLE:
+                    throws = ("NC", "NO")
+                elif ref in transfer:
+                    throws = ()
+                else:
+                    throws = ("NO",) if ref in energised else ("NC",)
+                for t in throws:
+                    link(com, pin_net.get((ref, pole[t])))
+    seen, stack = {SUPPLY_NET}, [SUPPLY_NET]
+    while stack:
+        x = stack.pop()
+        for y in adj[x]:
+            if y not in seen:
+                seen.add(y)
+                if y not in SINK_NETS:
+                    stack.append(y)
+    return seen
+
+
 def interlock(components, relays, by_role, pin_net, findings):
     """The proof of F8 on the netlist. Returns a list of report lines."""
     targets = set()
@@ -516,41 +607,7 @@ def interlock(components, relays, by_role, pin_net, findings):
                   not in BISTABLE and r not in on_mute)
 
     def walk(energised):
-        adj = defaultdict(set)
-
-        def link(a, b):
-            if a and b:
-                adj[a].add(b)
-                adj[b].add(a)
-
-        for ref, c in components.items():
-            key = (c["lib"], c["part"])
-            if key in TWO_TERMINAL:
-                link(pin_net.get((ref, "1")), pin_net.get((ref, "2")))
-            elif key in KNOWN_SWITCHES:
-                for com, throws in KNOWN_SWITCHES[key].items():
-                    for t in throws:
-                        link(pin_net.get((ref, com)), pin_net.get((ref, t)))
-            elif key in KNOWN_RELAYS:
-                pm = KNOWN_RELAYS[key]
-                link(*(pin_net.get((ref, p)) for p in pm["coil"]))
-                for pole in pm["poles"]:
-                    com = pin_net.get((ref, pole["COM"]))
-                    if key in BISTABLE:
-                        throws = ("NC", "NO")
-                    else:
-                        throws = ("NO",) if ref in energised else ("NC",)
-                    for t in throws:
-                        link(com, pin_net.get((ref, pole[t])))
-        seen, stack = {SUPPLY_NET}, [SUPPLY_NET]
-        while stack:
-            x = stack.pop()
-            for y in adj[x]:
-                if y not in seen:
-                    seen.add(y)
-                    if y not in SINK_NETS:
-                        stack.append(y)
-        return seen
+        return reach(components, pin_net, energised)
 
     n_states = 0
     for combo in itertools.product((False, True), repeat=len(free)):
@@ -577,6 +634,194 @@ def interlock(components, relays, by_role, pin_net, findings):
                   f"{len(on_mute)} rele' sul comando di mute "
                   f"({', '.join(on_mute)}), {n_states} stati provati fuori "
                   f"mute e in mute")
+    return report
+
+
+def gain_step(value):
+    """'10' for a GAIN10 relay, '3' for the plain GAIN one (ADR-026)."""
+    return "10" if "GAIN10" in value.upper() else "3"
+
+
+def gain_interlock(components, relays, by_role, pin_net, findings):
+    """The proof of ADR-041 on the netlist (L36). Returns report lines.
+
+    For every consistent gain state S (0, +3, +10 dB: GAIN and its HOLD
+    energised together) and every position of the gain selector:
+      OUT OF MUTE  - the powered gain coils are exactly S: the knob moves
+                     nothing, an ON coil holds itself and an OFF coil cannot
+                     be reached (F5 as ADR-041 extends F8 to it);
+      IN MUTE      - the powered coils are exactly GAIN_KNOB[position]: the
+                     coils follow the knob, both ways;
+      TRANSFER     - every relay on the mute command caught between throws
+                     (no contact closed: the instant of ADR-030's race), with
+                     the knob where the state is: the powered coils are
+                     still exactly S. A coil that is on and unfed here drops
+                     or not depending on figures the datasheet does not give.
+    "Powered" = a coil net other than the return is reachable from VRELAY,
+    and the coil's other net IS a return.
+    """
+    gains = by_role["GAIN"]
+    if not gains:
+        return []
+    report = []
+    by_step = {gain_step(relays[r]["value"]): r for r in gains}
+    holds = {index_of(relays[r]["value"]): r for r in by_role["HOLD"]}
+    if set(by_step) != {"3", "10"} or len(gains) != 2:
+        findings.append(f"rele' GAIN attesi esattamente GAIN e GAIN10 "
+                        f"(ADR-026), trovati {sorted(gains)}.")
+        return report
+    if set(holds) != {"3", "10"} or len(by_role["HOLD"]) != 2:
+        findings.append(
+            f"rele' ausiliari attesi HOLD3 su {by_step['3']} e HOLD10 su "
+            f"{by_step['10']}, trovati {sorted(by_role['HOLD'])}. ADR-041 / "
+            f"ADR-030 strada B: senza ausiliari il guadagno non si tiene fuori "
+            f"mute, e il suo comando non e' interbloccato col mute.")
+        return report
+    for step in ("3", "10"):
+        g, h = by_step[step], holds[step]
+        if coil_nets(g, relays, pin_net) != coil_nets(h, relays, pin_net):
+            findings.append(
+                f"{h}: la bobina deve stare sulle stesse net di {g}, con la "
+                f"stessa polarita' - {coil_nets(h, relays, pin_net)} contro "
+                f"{coil_nets(g, relays, pin_net)}. Altrimenti la tenuta e i "
+                f"LED seguono un rele' che non e' quello del guadagno.")
+    coil_hi = {}
+    for step in ("3", "10"):
+        nets = coil_nets(by_step[step], relays, pin_net)
+        hi = [n for n in nets if n not in SINK_NETS]
+        lo = [n for n in nets if n in SINK_NETS]
+        if len(hi) != 1 or len(lo) != 1 or hi[0] == SUPPLY_NET:
+            findings.append(
+                f"{by_step[step]}: la bobina sta su {nets}. ADR-041 la vuole "
+                f"comandata dal lato alto come quelle del trim, fra una net "
+                f"propria e il ritorno {SINK_NETS}: su {SUPPLY_NET}, o senza "
+                f"ritorno, la prova non ha niente da dire.")
+            return report
+        coil_hi[step] = hi[0]
+
+    sws = [r for r, c in components.items()
+           if (c["lib"], c["part"]) in KNOWN_SWITCHES
+           and "GAIN" in c["value"].upper()]
+    if len(sws) != 1:
+        findings.append(f"commutatore del guadagno atteso uno (valore con "
+                        f"GAIN), trovati {sws} (F10, ADR-041).")
+        return report
+    sw = sws[0]
+    npos = len(next(iter(KNOWN_SWITCHES[(components[sw]["lib"],
+                                         components[sw]["part"])].values())))
+    if npos != len(GAIN_KNOB):
+        findings.append(f"{sw}: {npos} posizioni, la tabella ne vuole "
+                        f"{len(GAIN_KNOB)}.")
+        return report
+
+    mute_coil = {coil_nets(r, relays, pin_net) for r in by_role["MUTE"]}
+    on_mute = sorted(r for r in relays
+                     if (relays[r]["lib"], relays[r]["part"]) not in BISTABLE
+                     and coil_nets(r, relays, pin_net) in mute_coil)
+
+    def gain_on(state):
+        return {x for s in state for x in (by_step[s], holds[s])}
+
+    def powered(seen):
+        return frozenset(s for s in ("3", "10") if coil_hi[s] in seen)
+
+    def name(state):
+        return f"{GAIN_LED_DB[frozenset(state)]:+d} dB" if state else "0 dB"
+
+    n = 0
+    for state in GAIN_STATES:
+        for pos, knob in GAIN_KNOB.items():
+            n += 1
+            out = powered(reach(components, pin_net,
+                                set(on_mute) | gain_on(state), (), {sw: pos}))
+            if out != state:
+                findings.append(
+                    f"INTERBLOCCO DEL GUADAGNO VIOLATO fuori mute: stato "
+                    f"{name(state)}, manopola in posizione {pos} "
+                    f"({name(knob)}), bobine alimentate {sorted(out)} invece "
+                    f"di {sorted(state)}. ADR-041: fuori mute la manopola non "
+                    f"muove nulla, e una bobina accesa si tiene da se'.")
+            inm = powered(reach(components, pin_net, gain_on(state), (),
+                                {sw: pos}))
+            if inm != knob:
+                findings.append(
+                    f"in mute, dallo stato {name(state)} con la manopola in "
+                    f"posizione {pos}, le bobine alimentate sono {sorted(inm)} "
+                    f"invece di {sorted(knob)}: a mute inserito le bobine "
+                    f"devono seguire la manopola, nei due versi (ADR-030 "
+                    f"punto 1, ADR-041).")
+            if "10" in inm and "3" not in inm:
+                findings.append(
+                    f"in mute, posizione {pos}: K5 alimentato senza K1 "
+                    f"(ADR-026: K5 mai senza K1).")
+            if knob == state:
+                tr = powered(reach(components, pin_net, gain_on(state),
+                                   set(on_mute), {sw: pos}))
+                if tr != state:
+                    findings.append(
+                        f"CORSA APERTA: con {', '.join(on_mute)} in "
+                        f"trasferimento (nessun contatto chiuso), stato e "
+                        f"manopola a {name(state)}, le bobine alimentate sono "
+                        f"{sorted(tr)} invece di {sorted(state)}. E' la corsa "
+                        f"di ADR-030 al rilascio del mute: che la bobina cada "
+                        f"o no dipende da induttanza, corrente di rilascio e "
+                        f"tempo di trasferimento, che il datasheet non da'.")
+    for pos, knob in GAIN_KNOB.items():
+        if "10" in knob and "3" not in knob:
+            findings.append(f"la tabella GAIN_KNOB comanda K5 senza K1 in "
+                            f"posizione {pos} (ADR-026).")
+
+    # The LEDs of the true gain state (ADR-030 point 2, twin of F9): on the
+    # HOLD contacts, one lit per state, the right one, out of mute.
+    hold_nets = set()
+    for h in holds.values():
+        pm = KNOWN_RELAYS[(relays[h]["lib"], relays[h]["part"])]
+        for pole in pm["poles"]:
+            for k in ("COM", "NC", "NO"):
+                net = pin_net.get((h, pole[k]))
+                if net in GROUND_NETS:
+                    findings.append(f"{h} {pole['name']}: il contatto {k} e' "
+                                    f"a massa audio: gli ausiliari non "
+                                    f"toccano il segnale.")
+                if net:
+                    hold_nets.add(net)
+    signal = set()
+    for r in by_role["MUTE"] + by_role["GAIN"] + by_role["TRIM"]:
+        pm = KNOWN_RELAYS[(relays[r]["lib"], relays[r]["part"])]
+        for pole in pm["poles"]:
+            for k in ("COM", "NC", "NO"):
+                if pin_net.get((r, pole[k])):
+                    signal.add(pin_net[(r, pole[k])])
+    for net in sorted(hold_nets & signal):
+        findings.append(f"la net {net!r} tocca un contatto di un ausiliario "
+                        f"e uno di segnale (mute, guadagno o trim).")
+    leds = {}
+    for ref, c in components.items():
+        if (c["lib"], c["part"]) == ("Device", "LED"):
+            anode = pin_net.get((ref, "2"))
+            if anode in hold_nets:
+                m = re.search(r"([+-]?\d+)\s*dB", c["value"])
+                leds[ref] = (anode, int(m.group(1)) if m else None)
+    if sorted(db for _, db in leds.values()) != [0, 3, 10]:
+        findings.append(
+            f"LED del guadagno sui contatti degli ausiliari attesi tre, "
+            f"0 / +3 / +10 dB, trovati {sorted(leds.items())} (ADR-030 punto "
+            f"2: i LED leggono lo stato vero dai poli liberi degli ausiliari).")
+    else:
+        for state in GAIN_STATES:
+            seen = reach(components, pin_net, set(on_mute) | gain_on(state),
+                         (), {sw: 1})
+            lit = sorted(db for a, db in leds.values() if a in seen)
+            if lit != [GAIN_LED_DB[frozenset(state)]]:
+                findings.append(
+                    f"LED del guadagno: nello stato {name(state)} si accendono "
+                    f"{lit} invece di [{GAIN_LED_DB[frozenset(state)]}]. Il "
+                    f"LED deve dire lo stato vero (ADR-030 punto 2).")
+    report.append(f"interblocco del guadagno: {by_step['3']}+{holds['3']}, "
+                  f"{by_step['10']}+{holds['10']}, selettore {sw}; {n} coppie "
+                  f"stato/posizione fuori mute e in mute, {len(GAIN_STATES)} "
+                  f"trasferimenti di {', '.join(on_mute)} con la manopola "
+                  f"allo stato; LED {len(leds)}")
     return report
 
 
@@ -703,6 +948,7 @@ def check(components, pin_net):
     report = check_mute_geometry(components, relays, by_role, pin_net,
                                  findings)
     report += interlock(components, relays, by_role, pin_net, findings)
+    report += gain_interlock(components, relays, by_role, pin_net, findings)
     report += check_ldr(components, pin_net, findings)
     return findings, relays, report
 
@@ -736,8 +982,9 @@ def main(argv):
     if not findings:
         print("\nOK: ogni rele' si guasta nel verso che le ADR richiedono "
               "(mute -> jack staccati e lato condensatore a massa, ADR-044; "
-              "guadagno -> R_g flottante), e il "
-              "trim si comanda solo a mute inserito (F8); le LDR del mute graduale "
+              "guadagno -> R_g flottante), il "
+              "trim si comanda solo a mute inserito (F8), il guadagno pure e "
+              "si tiene da se' anche durante il trasferimento (ADR-041, L36); le LDR del mute graduale "
               "stanno dove ADR-038 le vuole, col comando fuori dal segnale.")
         return 0
 

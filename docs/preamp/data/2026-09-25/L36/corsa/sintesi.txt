@@ -1,0 +1,33 @@
+corse: 1440; esiti: ok 1440, OPT 0, ERR 0
+
+== ingenua: 480 celle
+   cade al rilascio del mute:    373
+   cade all'inserimento del mute: 387
+   corrente minima / corrente a regime, nel peggiore: -0.000000
+
+== progetto: 480 celle
+   cade al rilascio del mute:    0
+   cade all'inserimento del mute: 0
+   corrente minima / corrente a regime, nel peggiore: 1.000000
+
+== ingenua: celle che cadono al rilascio, per L (righe) e buco di K6 (colonne), su 24 (3 R x 4 soglie x 2 VRELAY)
+   L mH       0.1 ms     0.3 ms       1 ms       3 ms
+       5          24         24         24         24
+      20          18         24         24         24
+      50           7         20         24         24
+     100           4         12         24         24
+     200           0          6         18         24
+   per soglia di rilascio (frazione di 5 V / R), su 120 (5 L x 4 buchi x 3 R x 2 VRELAY):
+    0.1: 74
+    0.3: 90
+    0.5: 97
+    0.7: 112
+
+== residuo (manopola a 0 dB fuori mute, poi mute inserito): K1 cade dopo l'apertura del NO di K6 di (solo elettrico, nessun ritardo meccanico accreditato):
+   tenuta fuori mute prima dell'inserimento: 480 su 480
+   L mH   min us   max us
+       5      2.6     33.6
+      20      8.9    132.7
+      50     21.3    331.0
+     100     42.1    661.4
+     200     83.7   1322.2

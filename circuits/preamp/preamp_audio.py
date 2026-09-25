@@ -71,6 +71,7 @@ from skidl import Part, Net, generate_netlist, POWER, ERC  # noqa: E402
 
 import spice_export as sx  # noqa: E402
 import trim  # noqa: E402
+import gain_interlock  # noqa: E402
 from gain_block import (  # noqa: E402
     gain_block, FP_R, FP_ELCO, REPO,
 )
@@ -113,7 +114,11 @@ FP_CONN2 = "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
 #                grounds the cap side, NO leaves the jack open on its bleed
 #                => silent when the supply is down (ADR-012)
 #   permissive  - NORMALLY CLOSED, twice in series (de-energised = muted =>
-#                 the trim command is live, ADR-019 / ADR-027; trim.py)
+#                 the trim command is live, ADR-019 / ADR-027; trim.py);
+#                 since L36 its pole-1 NO is VHOLD, the gain hold's supply
+#   gain aux    - K11 / K12 (L36, ADR-030 road B): coil in parallel with
+#                 K1 / K5, pole 1 NO = the self-hold, pole 2 = the LEDs
+#                 (gain_interlock.py)
 # All are asserted on the generated netlist by
 # scripts/check_relay_safe_state.py, which run_tests.sh runs: a deduced pin
 # map cannot come back in silence. This is the ONE copy of the G6K-2F-Y map:
@@ -345,30 +350,26 @@ if __name__ == "__main__":
     VCC_RLY = Net("VRELAY")
 
     # Shared relays. G6K-2F-Y is 2 Form C, so ONE relay covers both channels.
-    K_GAIN = Part("Relay", "G6K-2", value="G6K-2F-Y GAIN",
-                  footprint=FP_RELAY, ref="K1")
-    K_GAIN[K_COIL_A] += VCC_RLY
-    K_GAIN[K_COIL_B] += Net("GAIN_CMD")
-
-    # ADR-026: the second gain relay, for the R_g10 leg. It is K5 and not K2
-    # so that the three mute relays keep their references (limitations #22).
-    # Coil commands, from the 3-position gain selector:
-    #     0 dB    GAIN_CMD off   GAIN10_CMD off   (the de-energised state)
-    #     +3 dB   GAIN_CMD on    GAIN10_CMD off
-    #     +10 dB  GAIN_CMD on    GAIN10_CMD on
+    # The gain relays K1 (R_g3 leg) and K5 (R_g10 leg, ADR-026: K5 and not K2
+    # so that the mute relays keep their references, limitations #22) are
+    # made below by gain_interlock.gain_relays(), since L36 (ADR-041): their
+    # coils hang on the gain selector, the trim's permissive and their
+    # self-holding auxiliaries K11 / K12.
+    #     0 dB    K1 off  K5 off   (the de-energised state, F5)
+    #     +3 dB   K1 on   K5 off
+    #     +10 dB  K1 on   K5 on
     # Coil budget for psu-engineer (vendor/relays/omron/G6K/en-g6k.pdf,
     # ratings table, +/-10 %): 21.1 mA at 5 V, 9.1 mA at 12 V, 4.6 mA at 24 V
-    # per coil, the same for the G6KU-2F-Y bistables. Since L16 (ADR-027):
-    #   out of mute, +10 dB: K1, K5, K2-K4 and the permissive K6 energised,
-    #     six coils = 126.6 / 54.6 / 27.6 mA; the bistables draw nothing;
-    #   in mute, +10 dB: K1 and K5, plus the four bistable coils (K7-K10)
-    #     driven continuously by the trim knob = 126.6 / 54.6 / 27.6 mA,
-    #     plus ~2 mA of LED.
-    # The VRELAY voltage is not decided yet.
-    K_GAIN10 = Part("Relay", "G6K-2", value="G6K-2F-Y GAIN10",
-                    footprint=FP_RELAY, ref="K5")
-    K_GAIN10[K_COIL_A] += VCC_RLY
-    K_GAIN10[K_COIL_B] += Net("GAIN10_CMD")
+    # per coil, the same for the G6KU-2F-Y bistables. Since L36 (ADR-030
+    # road B, ADR-041), the worst case is +10 dB, EIGHT coils either way:
+    #   out of mute: K1, K5, their auxiliaries K11 / K12, K2-K4 and the
+    #     permissive K6 = 168.8 / 72.8 / 36.8 mA; the bistables draw nothing;
+    #   in mute: K1, K5, K11, K12, plus the four bistable coils (K7-K10)
+    #     driven continuously by the trim knob = 168.8 / 72.8 / 36.8 mA,
+    #     plus ~4 mA of LED (trim and gain, one each).
+    # The VRELAY voltage is not decided yet. One more constraint since L36:
+    # the gain pick-up passes through a Schottky (gain_interlock.py), so
+    # VRELAY - V_F(42 mA) >= 80 % of the rated coil voltage, at -5 % and warm.
 
     # Three mute relays: 6 output lines (3 outputs x 2 channels), 2 poles each.
     # ADR-012 puts mute on ALL outputs, and the reason is the headphone
@@ -401,6 +402,14 @@ if __name__ == "__main__":
     K_TRIM = trim.trim_relays(VCC_RLY, MUTE_CMD,
                               (K_COIL_A, K_COIL_B, K_COM1, K_NO1, K_NC1,
                                K_COM2, K_NO2, K_NC2))
+
+    # ADR-041 / ADR-030 road B (L36): the gain changes only in mute, like the
+    # trim, through the same permissive K6; K1 / K5 hold themselves out of
+    # mute through their auxiliaries K11 / K12, whose free poles light the
+    # three gain LEDs. The race at mute release is closed in there.
+    K_GAIN, K_GAIN10 = gain_interlock.gain_relays(
+        VCC_RLY, K_TRIM, (K_COIL_A, K_COIL_B, K_COM1, K_NO1, K_NC1,
+                          K_COM2, K_NO2, K_NC2))
 
     chans = {}
     for ch, base, pole in (("L", 100, 0), ("R", 300, 1)):
