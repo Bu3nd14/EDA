@@ -2558,6 +2558,21 @@ RESTA APERTA E BLOCCANTE per lo spegnimento (L30); L36 non la tocca.**
     jack prima dello stacco. **Non è misurato su un relè vero**: lo si porta all'utente, e al
     prototipo.
 
+**AGGIORNATA IL 2026-09-25, dopo L36: il residuo NON È ACCETTATO dall'utente, e ADR-045 lo chiude
+alla realizzazione (L35).**
+- **L'utente**, messo davanti alle cifre in dB (fino a ~90 dB SPL di picco a 1 m contro ~33 dB di
+  V2 e ~25–35 dB(A) di una stanza silenziosa): «non possiamo accettare il comportamento». Poi:
+  «sono d'accordo con lo sfasamento e metti una nota per il failsafe».
+- **ADR-045**: K6 su un comando proprio, `PERMIT_CMD`. All'inserimento del mute rilascia Δ
+  (~20 ms) dopo K2–K4, quindi guadagno e trim cambiano solo a jack staccati. L'ordine è
+  garantito dal rilascio massimo del datasheet (3 ms), non dallo scarto fra esemplari. Il caso
+  torna a un cambio sotto mute: ~−22 dB. **Chiude anche il trim**, che aveva la stessa forma.
+- **Finché L35 non lo realizza il residuo resta nel sorgente**, e questa voce lo tiene.
+- **Nota per il failsafe (L30, ADR-043)**: alla caduta di `VRELAY` tutte le bobine cadono insieme
+  e lo sfasamento sparisce. K1/K5 tornano a 0 dB nello stesso istante in cui si staccano i jack.
+  Il failsafe deve rilasciare `MUTE_CMD` per primo e tenere K6, K1/K5 e K11/K12 alimentati
+  almeno Δ dopo, oppure provare un'altra via.
+
 
 ### NC-029 — Con i buffer delle fisse la dissipazione a riposo raddoppia, e P5 non la copre
 
