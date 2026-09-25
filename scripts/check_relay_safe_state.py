@@ -43,7 +43,9 @@ somewhere else; written this way, the map and the intent have to agree, and
 the NC-014 inversion breaks the assertions rather than slipping past them.
 
 ROLES, read from the part's value string:
-  MUTE    monostable. NC to ground on both poles (ADR-012).
+  MUTE    monostable. NC to ground on both poles (ADR-012), and since L29e
+          a changeover in geometry iii (ADR-044): COM on the coupling cap's
+          far side, NO on the jack, a bleed to ground on both.
   GAIN    monostable. NO to ground on both poles (ADR-004 / ADR-026).
   PERMIT  monostable. Coil on the SAME two nets as the mute relays
           (ADR-019 para. 2, ADR-027). Its contacts are judged by the proof.
@@ -287,6 +289,98 @@ def check_monostable_role(ref, comp, role, pinmap, pin_net, findings):
             f"{ref}: i due poli sono cablati in modo diverso "
             f"({shapes[0]} contro {shapes[1]}). I due canali sono "
             f"identici per contratto (T3 / ADR-006).")
+
+
+def check_mute_geometry(components, relays, by_role, pin_net, findings):
+    """ADR-044 (L29e): every mute pole is a CHANGEOVER in geometry iii.
+
+    Read by intent, not by pin number:
+      COM - the coupling cap's far side: a net that touches a capacitor, no
+            connector, and has a resistor to ground (the cap-side bleed,
+            kept by the user in L29e);
+      NC  - ground (already asserted by check_monostable_role);
+      NO  - the jack: a net that touches a connector's signal pin, no
+            capacitor, and has a resistor to ground (the jack bleed: with
+            the coil de-energised it is the jack's only way to ground,
+            ADR-044 point 2, "Il bleed basta").
+    And no mute contact other than the NO touches a jack net. Until L29e the
+    jack itself sat on COM and NC grounded it (the shunt at the jack): this
+    function is what makes that shape FAIL, since the NC-ground rule alone
+    passes on both."""
+    net_pins = defaultdict(list)
+    for (ref, pin), net in pin_net.items():
+        net_pins[net].append((ref, pin))
+    res = resistors_between(components, pin_net)
+
+    def kinds(net):
+        out = set()
+        for ref, pin in net_pins.get(net, ()):
+            c = components.get(ref, {})
+            if (c.get("lib"), c.get("part")) == ("Device", "C"):
+                out.add("C")
+            if c.get("lib") == "Connector_Generic" and pin == "1":
+                out.add("JACK")
+        return out
+
+    def bleed(net):
+        return any(res.get(frozenset((net, g))) for g in GROUND_NETS)
+
+    report = []
+    jacks = set()
+    for ref in by_role["MUTE"]:
+        pm = KNOWN_RELAYS[(relays[ref]["lib"], relays[ref]["part"])]
+        for pole in pm["poles"]:
+            where = f"{ref} {pole['name']}"
+            cnet = pin_net.get((ref, pole["COM"]))
+            onet = pin_net.get((ref, pole["NO"]))
+            if cnet is None or onet is None:
+                findings.append(
+                    f"{where}: COM ({cnet!r}) o NO ({onet!r}) non collegato. "
+                    f"ADR-044: ogni polo del mute e' un deviatore, COM al lato "
+                    f"del condensatore e NO al jack.")
+                continue
+            if cnet in GROUND_NETS or onet in GROUND_NETS:
+                continue   # already a finding of check_monostable_role
+            kc, ko = kinds(cnet), kinds(onet)
+            if kc != {"C"}:
+                findings.append(
+                    f"{where}: il COM (pin {pole['COM']}) sta su {cnet!r}, che "
+                    f"tocca {sorted(kc) or 'nessun condensatore'}: deve essere "
+                    f"il lato del condensatore d'uscita e non il jack "
+                    f"(ADR-044, geometria iii). Se tocca il connettore, e' la "
+                    f"derivazione al jack di prima di L29e.")
+            if ko != {"JACK"}:
+                findings.append(
+                    f"{where}: il NO (pin {pole['NO']}) sta su {onet!r}, che "
+                    f"tocca {sorted(ko) or 'nessun connettore'}: deve essere il "
+                    f"jack, cosi' il segnale passa solo a bobina eccitata "
+                    f"(ADR-044).")
+            if not bleed(cnet):
+                findings.append(
+                    f"{where}: il lato del condensatore {cnet!r} non ha un "
+                    f"resistore verso massa. Nel ms del trasferimento resta "
+                    f"sospeso: L29d2 l'ha misurato col bleed, e l'utente l'ha "
+                    f"tenuto in L29e.")
+            if not bleed(onet):
+                findings.append(
+                    f"{where}: il jack {onet!r} non ha un resistore verso "
+                    f"massa. A bobina diseccitata e' l'unica cosa che lo tiene "
+                    f"a massa (ADR-044 punto 2, «Il bleed basta»).")
+            jacks.add(onet)
+    mute_set = set(by_role["MUTE"])
+    for net in jacks:
+        for ref, pin in net_pins[net]:
+            if ref in mute_set:
+                pm = KNOWN_RELAYS[(relays[ref]["lib"], relays[ref]["part"])]
+                if pin not in {p["NO"] for p in pm["poles"]}:
+                    findings.append(
+                        f"{ref} pin {pin} sta sul jack {net!r}: sul jack puo' "
+                        f"stare solo il NO di un deviatore (ADR-044).")
+    if by_role["MUTE"]:
+        report.append(f"mute ADR-044: {len(jacks)} jack su NO, lato "
+                      f"condensatore su COM, NC a massa, bleed su entrambi i "
+                      f"lati")
+    return report
 
 
 def resistors_between(components, pin_net):
@@ -606,7 +700,9 @@ def check(components, pin_net):
                     f"{ref}: il pin di bobina {p} non e' collegato.")
 
     check_trim(components, relays, by_role, pin_net, findings)
-    report = interlock(components, relays, by_role, pin_net, findings)
+    report = check_mute_geometry(components, relays, by_role, pin_net,
+                                 findings)
+    report += interlock(components, relays, by_role, pin_net, findings)
     report += check_ldr(components, pin_net, findings)
     return findings, relays, report
 
@@ -639,7 +735,8 @@ def main(argv):
 
     if not findings:
         print("\nOK: ogni rele' si guasta nel verso che le ADR richiedono "
-              "(mute -> uscite a massa, guadagno -> R_g flottante), e il "
+              "(mute -> jack staccati e lato condensatore a massa, ADR-044; "
+              "guadagno -> R_g flottante), e il "
               "trim si comanda solo a mute inserito (F8); le LDR del mute graduale "
               "stanno dove ADR-038 le vuole, col comando fuori dal segnale.")
         return 0

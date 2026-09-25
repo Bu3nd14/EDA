@@ -136,6 +136,9 @@ COUT = same(["C162", "C165", "C262", "C362", "C365", "C462"], "cap d'uscita")
 # Resistenze di scarico: fisse 470k, principale 220k.
 RBLEED_FIX = same(["R163", "R166", "R363", "R366"], "bleeder uscite fisse")
 RBLEED_MAIN = same(["R263", "R463"], "bleeder uscita principale")
+# L29e (ADR-044): lo scarico dal lato del condensatore, prima del deviatore di mute.
+RBLEEDC_FIX = same(["R167", "R168", "R367", "R368"], "bleeder lato C, fisse")
+RBLEEDC_MAIN = same(["R264", "R464"], "bleeder lato C, principale")
 
 # Attenuatore: e' fuori scheda, appare come connettore a 3 pin il cui VALORE
 # porta la resistenza del potenziometro a scatti (F4/ADR-009).
@@ -335,6 +338,8 @@ C_OUT = pretty(COUT, "F").replace("u", "µ")     # 4,7 µF
 R_ZIN = pretty(ZIN, OHM)
 R_BFIX = pretty(RBLEED_FIX, OHM)
 R_BMAIN = pretty(RBLEED_MAIN, OHM)
+R_BCFIX = pretty(RBLEEDC_FIX, OHM)
+R_BCMAIN = pretty(RBLEEDC_MAIN, OHM)
 R_ATT = pretty(ATT, OHM)
 R_F, R_G3, R_G10 = pretty(RF, OHM), pretty(RG3, OHM), pretty(RG10, OHM)
 
@@ -414,9 +419,10 @@ SHUNT_DEPTH = 3.15
 
 
 def shunt_to_gnd(x, y, label, sub=None, color=RED, drop=1.0):
-    """Un ramo che va A MASSA dalla linea di segnale: mute, scarico.
-    Disegnato in derivazione, non in serie - ADR-012 lo argomenta, e in un
-    diagramma a blocchi la differenza si vede solo se si disegna cosi'."""
+    """Un ramo che va A MASSA dalla linea di segnale: scarico, LDR.
+    Disegnato in derivazione, non in serie: in un diagramma a blocchi la
+    differenza si vede solo se si disegna cosi'. Il mute al jack, da L29e, e'
+    un deviatore IN SERIE (ADR-044) e si disegna con box()."""
     dot(x, y)
     wire(x, y, x, y - drop, color=color, lw=1.2)
     box(x, y - drop - 0.62, 2.4, 1.25,
@@ -492,11 +498,16 @@ for yy, dest, tag, kref, bname in (
     series(33.1, yy, R_ISO, w=2.2)
     wire(34.2, yy, 34.8, yy)
     series(35.9, yy, C_OUT, w=2.2)
-    wire(37.0, yy, 38.2, yy)
-    shunt_to_gnd(38.2, yy, R_BFIX, "scarico")
-    wire(38.2, yy, 40.2, yy)
-    shunt_to_gnd(40.2, yy, f"MUTE {kref}", "in derivazione")
-    arrow(40.2, yy, 41.6, yy)
+    # L29e (ADR-044, geometria iii): il mute e' un DEVIATORE in serie fra il
+    # lato del condensatore e il jack - NC a massa sul lato C, NO al jack.
+    wire(37.0, yy, 37.6, yy)
+    shunt_to_gnd(37.6, yy, R_BCFIX, "scarico lato C")
+    wire(37.6, yy, 38.3, yy)
+    box(39.3, yy, 2.0, 1.4, [f"MUTE {kref}", "deviatore"], color=RED,
+        lw=1.2, size=7.5, head_size=8.5)
+    wire(40.3, yy, 40.9, yy)
+    shunt_to_gnd(40.9, yy, R_BFIX, "scarico jack")
+    arrow(40.9, yy, 41.6, yy)
     txt((41.8, yy + 0.32), dest, size=9.5, halign="left")
     txt((41.8, yy - 0.34), tag, size=8, color=DIM, halign="left")
 
@@ -541,10 +552,14 @@ series(23.4, YM, R_ISO)
 wire(24.7, YM, 25.6, YM)
 series(27.0, YM, C_OUT)
 wire(28.3, YM, 29.6, YM)
-shunt_to_gnd(29.6, YM, R_BMAIN, "scarico")
-wire(29.6, YM, 31.8, YM)
-shunt_to_gnd(31.8, YM, "MUTE K4", "in derivazione")
-arrow(31.8, YM, 34.0, YM)
+# L29e (ADR-044): come sulle fisse, il deviatore di mute in serie.
+shunt_to_gnd(29.6, YM, R_BCMAIN, "scarico lato C")
+wire(29.6, YM, 30.6, YM)
+box(31.7, YM, 2.2, 1.4, ["MUTE K4", "deviatore"], color=RED, lw=1.2,
+    size=7.5, head_size=8.5)
+wire(32.8, YM, 33.4, YM)
+shunt_to_gnd(33.4, YM, R_BMAIN, "scarico jack")
+arrow(33.4, YM, 34.1, YM)
 txt((34.3, YM + 0.32), "conrad-johnson Evolution 250", size=9.5,
     halign="left")
 txt((34.3, YM - 0.34), f"= MV50 in triodo, 30 W, Zin 100 k{OHM}",
@@ -584,7 +599,7 @@ box(6.6, 4.95, 11.0, 2.4,
 box(19.6, 4.95, 12.2, 2.4,
     [f"K2 K3 K4 — MUTE   {RELAY_PN}",
      "2 scambi ciascuno = 6 linee (3 uscite × 2 canali)",
-     "servono NORMALMENTE CHIUSI: a riposo uscite a massa"],
+     "deviatori (ADR-044): a riposo lato C a massa, jack staccati"],
     color=RED, head_size=10)
 
 # ADR-027 (L16): il permissivo K6 sul comando del mute, i due bistabili del
@@ -603,7 +618,7 @@ txt((23.0, 3.30),
     size=9, color=AMBER)
 txt((23.0, 2.70),
     "a relè diseccitati — alimentazione assente, o temporizzatore non ancora "
-    "rilasciato — il guadagno deve essere 0 dB e le uscite a massa. Mancare "
+    "rilasciato — il guadagno deve essere 0 dB e i jack staccati. Mancare "
     "il verso significa un transitorio d'accensione negli elettrostatici "
     "Stax.", size=8.5, color=AMBER)
 
@@ -634,6 +649,7 @@ print(f"  Zin blocco A ............ {ZIN}")
 print(f"  isolamento uscite ....... {RISO} ohm  x3 per canale")
 print(f"  accoppiamento d'uscita .. {COUT}     x3 per canale")
 print(f"  scarico fisse / main .... {RBLEED_FIX} / {RBLEED_MAIN}")
+print(f"  scarico lato C (ADR-044)  {RBLEEDC_FIX} / {RBLEEDC_MAIN}")
 print(f"  attenuatore ............. {ATT}")
 print(f"  guadagno +3 dB (K1) ..... 1 + {RF}/{RG3} = "
       f"{GAIN3_LIN:.4f}x = +{GAIN3_DB:.3f} dB")

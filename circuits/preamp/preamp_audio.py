@@ -10,14 +10,14 @@ SAME function, gain_block(), is called for every block - eight times since
 L17 (ADR-023). There is no second topology to validate, and no place for the
 channels or the outputs to drift apart.
 
-   IN_L -> LDR_S -+-> [BLOCK A] -+-> [BUFFER F1] -> 47R -> 4.7u -> FIXED OUT 1 (Singxer)
-    (ADR-038)   LDR_P  (buffer,  +-> [BUFFER F2] -> 47R -> 4.7u -> FIXED OUT 2 (Stax)
+   IN_L -> LDR_S -+-> [BLOCK A] -+-> [BUFFER F1] -> 47R -> 4.7u -> K2 -> FIXED OUT 1 (Singxer)
+    (ADR-038)   LDR_P  (buffer,  +-> [BUFFER F2] -> 47R -> 4.7u -> K3 -> FIXED OUT 2 (Stax)
                   |    gain 1)
                  GND
                                     +-> [TRIM 0/-6/-12 dB] -> attenuator (off board, 10k stepped)
                                            (trim.py, K7/K8)          |
                                                                      v
-                                                                [BLOCK B] -> 47R -> 4.7u -> MAIN OUT
+                                                                [BLOCK B] -> 47R -> 4.7u -> K4 -> MAIN OUT
                                                         (0 / +3 / +10 dB, relays K1 + K5 on R_g)
    and the same again for the right channel.
 
@@ -109,8 +109,9 @@ FP_CONN2 = "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
 # What each relay needs, and the design fails safe only if they are right:
 #   gain relays - NORMALLY OPEN (de-energised => R_g leg floating; both
 #                 de-energised => 0 dB, ADR-004 / ADR-019 / ADR-026)
-#   mute relay - NORMALLY CLOSED (de-energised => outputs shorted to ground
-#                => silent when the supply is down, ADR-012)
+#   mute relay - a CHANGEOVER per output (ADR-044): de-energised => NC
+#                grounds the cap side, NO leaves the jack open on its bleed
+#                => silent when the supply is down (ADR-012)
 #   permissive  - NORMALLY CLOSED, twice in series (de-energised = muted =>
 #                 the trim command is live, ADR-019 / ADR-027; trim.py)
 # All are asserted on the generated netlist by
@@ -243,21 +244,38 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole):
         # be silent. The cost is board area, which ADR-010's single chassis
         # can absorb.
         fx = Net(f"{ch}_FIX{k + 1}")
+        # ADR-044 (geometry iii): the mute relay's changeover sits BETWEEN the
+        # coupling cap and the jack, so the cap's far side is its own node,
+        # FIXC. The jack node is FIXJACK, joined to the connector pin below.
+        fc = Net(f"{ch}_FIXC{k + 1}")
         jk = Net(f"{ch}_FIXJACK{k + 1}")
         R("47", f["OUT"], fx, base)
-        C(cval, fx, jk, base, fp=FP_FILM_P15)
+        C(cval, fx, fc, base, fp=FP_FILM_P15)
         # DC return for the coupling cap. Without it the far side floats when
         # nothing is plugged in, charges on leakage, and thumps on connection.
         # 470k keeps the corner where ADR-007 put it: 470k||50k = 45.2k with
-        # 2.2 uF => 1.6 Hz.
+        # 2.2 uF => 1.6 Hz. It stays ON THE JACK: with the relay at rest
+        # the jack is grounded only through it - ADR-044 point 2, the user's
+        # "Il bleed basta" (RBL1 / RBL2 in the V2 decks).
         R("470k", jk, gnd, base)
-        k_mute[k].append(jk)
+        # ADR-044: the bleed on the CAP side (RBC1 / RBC2 in the V2 decks),
+        # 470k as measured in L29d2. It only matters in the 1 ms transfer of
+        # the changeover, when neither throw holds FIXC; L29e kept it on the
+        # user's decision of 2026-09-25 ("Tenerlo"): no run measured the
+        # geometry without it. Explicit ref, so that nothing after it in
+        # this channel renumbers (limitations #22).
+        rbc = Part("Device", "R", value="470k", footprint=FP_R,
+                   ref=f"R{base + 67 + k}")
+        rbc[1] += fc
+        rbc[2] += gnd
         cn = Part("Connector_Generic", "Conn_01x02",
                   value=f"{name}_{ch}", footprint=FP_CONN2,
                   ref=f"J{base + 10 + k}")
         cn[1] += Net(f"{ch}_FIXOUT{k + 1}")
         cn[2] += gnd
-        k_mute[k].append(cn[1])
+        jk += cn[1]
+        k_mute[k].append(fc)
+        k_mute[k].append(jk)
 
     # ---- the common trim, variable branch only (L16, ADR-027) ------------
     # Between block A's output and the attenuator harness. Ladder and signal
@@ -275,6 +293,7 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole):
 
     _n[0] = 60
     main_a, main_j = Net(f"{ch}_MAIN_A"), Net(f"{ch}_MAINJACK")
+    main_c = Net(f"{ch}_MAINC")    # the cap's far side, ADR-044 (see above)
     # 47 ohm output isolation. The feedback is taken BEFORE it, on purpose:
     # that keeps every picofarad of interconnect cable outside the loop, at
     # the cost of 47 ohm of Zout - which E4 (<100 ohm) has room for.
@@ -289,14 +308,23 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole):
     # C_out: 4.7u film - ADR-007. Sized for a FUTURE 10 kOhm power amp
     # (3.4 Hz), not for the cj EV250's 100 kOhm, on the same logic that put
     # the +10 dB mode in (ADR-004): the load may change, the capacitor won't.
-    C("4.7u", main_a, main_j, base + 100, fp=FP_FILM_P22)
-    R("220k", main_j, gnd, base + 100)   # bleeder; 220k||100k, 4.7u => 0.49 Hz
+    C("4.7u", main_a, main_c, base + 100, fp=FP_FILM_P22)
+    # bleeder; 220k||100k, 4.7u => 0.49 Hz. On the JACK, as on the fixed
+    # outputs: ADR-044 point 2 (RBLM in the V2 decks).
+    R("220k", main_j, gnd, base + 100)
+    # ADR-044: the cap-side bleed (RBCM in the V2 decks), 220k as measured in
+    # L29d2 and kept by the user in L29e. Explicit ref (limitations #22).
+    rbcm = Part("Device", "R", value="220k", footprint=FP_R,
+                ref=f"R{base + 164}")
+    rbcm[1] += main_c
+    rbcm[2] += gnd
     mc = Part("Connector_Generic", "Conn_01x02", value=f"MAIN_{ch}",
               footprint=FP_CONN2, ref=f"J{base + 130}")
     mc[1] += Net(f"{ch}_MAINOUT")
     mc[2] += gnd
+    main_j += mc[1]
+    k_mute[2].append(main_c)
     k_mute[2].append(main_j)
-    k_mute[2].append(mc[1])
 
     # ---- gain relay legs, ADR-004 / ADR-026 ----------------------------
     # ONE pole of each gain relay per channel: K_GAIN (K1) grounds the R_g3
@@ -346,8 +374,14 @@ if __name__ == "__main__":
     # ADR-012 puts mute on ALL outputs, and the reason is the headphone
     # branch: the turn-on transient goes straight into a pair of
     # electrostatics, not into a loudspeaker two metres away.
-    # SHUNT to ground, not in series: a series contact would sit in the
-    # signal path permanently, which is exactly what ADR-004 argued against.
+    # Until L29e this was a SHUNT at the jack, on the argument that a series
+    # contact would sit in the signal path for good (ADR-004). L29c measured
+    # the price: 0.1 ohm behind 47 ohm attenuates only ~1/471, and a gain
+    # change with the relay closed put 111-267 uV on the jack. ADR-044
+    # (geometry iii, the user's choice of 2026-09-25) makes each pole a
+    # CHANGEOVER: COM on the cap's far side, NO to the jack, NC to ground.
+    # The series contact is the price ADR-004 feared, and L29d2 paid it on
+    # the whole V2 matrix: 0 cells out of 253.
     K_MUTE = []
     mute_lists = [[], [], []]
     MUTE_CMD = Net("MUTE_CMD")   # ONE net: SKiDL's Net("MUTE_CMD") inside the
@@ -397,7 +431,7 @@ if __name__ == "__main__":
     #     which through the 0.5 pF LED-cell coupling had put 4.8 mV into a
     #     1 MOhm node (profile v1, L29b);
     #   the jack relays follow the FULL depth: MUTE_CMD de-energises (jacks
-    #     grounded, ADR-012) 0.5 s after d = 1 and re-energises at the start
+    #     disconnected, cap sides grounded: ADR-012 as ADR-044 reads it) 0.5 s after d = 1 and re-energises at the start
     #     of the release, before d moves. 0.5 s because the series cell
     #     darkens slowly: 50 ms left it at 576 kOhm and C2 at 1.05 mV (L29b).
     j3 = Part("Connector_Generic", "Conn_01x04", value="LDR_CMD",
@@ -411,29 +445,45 @@ if __name__ == "__main__":
         right[2] += left[1]
         j3[pin_k] += right[1]
 
-    # Wire the mute contacts. mute_lists[i] holds, per output pair,
-    # [jack_node_L, connector_pin_L, jack_node_R, connector_pin_R].
-    # The NORMALLY CLOSED throw shorts the jack to ground when the coil is
-    # de-energised, i.e. whenever the supply is down or the timer has not
-    # released yet. Failing safe = failing silent.
+    # Wire the mute contacts - ADR-044, geometry iii. mute_lists[i] holds, per
+    # output pair, [cap_side_L, jack_L, cap_side_R, jack_R]; each jack node
+    # already carries its connector pin. Each pole is a CHANGEOVER:
+    #   COM - the coupling cap's far side (FIXCk / MAINC);
+    #   NO  - the jack: the signal passes only with the coil energised;
+    #   NC  - ground: with the coil de-energised the cap side is grounded
+    #         through the contact and the JACK is isolated, held at ground
+    #         only by its bleed (220k / 470k). That is ADR-012's safe state
+    #         as ADR-044 point 2 reads it ("Il bleed basta", the user).
+    # Break-before-make is the changeover's own: on insertion the NO opens
+    # and then the NC closes, on release the NC opens and then the NO closes
+    # - the order L29d2 simulated, with 1 ms of transfer. The pin map is read
+    # from the datasheet (en-g6k.pdf p. 6 of the PDF, G6K-2F-Y, TOP VIEW,
+    # de-energised; re-read in L29e): armature pivots on 3 / 6, rests on
+    # 2 / 7, open to 4 / 5 - K_COM/K_NC/K_NO above (NC-014).
+    # Failing safe = failing silent: supply down or timer not released =>
+    # coil de-energised => every jack disconnected from its stage.
     # The mute may be held INDEFINITELY (ADR-021, superseding ADR-012's "a few
     # seconds"): its command is the trim's permissive, through K6 (ADR-019,
-    # ADR-027). With all three jacks grounded the output stages run in class
-    # B - since L17 (ADR-023) that is the two fixed buffers and block B, each
-    # on its own 47 ohm; block A only drives the buffers and the trim - and
-    # ADR-021 asks only that every part stay inside its thermal and SOA
-    # limits. L11 measured that on the topology without buffers; L17
-    # re-measured it on this one. This shunt mute is NOT a short-circuit
-    # protection: during an external short it adds a second ground instead of
-    # removing the first.
+    # ADR-027). P7, re-read in L29e: in mute the output stages still run in
+    # class B - since L17 (ADR-023) the two fixed buffers and block B, each
+    # on its own 47 ohm; block A only drives the buffers and the trim. What
+    # goes to ground is now the cap's far side instead of the jack, and the
+    # stage sees the SAME load either way: 47 ohm plus 4.7 uF to ground.
+    # tb_mute_corto.cir (L17) grounds the jack side of that cap through
+    # 0.01 ohm; here it is the cap side through the contact (0.1 ohm, the
+    # contact's own figure in the V2 decks), so L17's P7 figures keep
+    # holding for the mute case, 0.09 ohm behind 47 ohm aside. ADR-021 asks
+    # only that every part stay inside its thermal and SOA limits.
+    # Unlike the shunt at the jack it replaces, this mute DOES isolate an
+    # external short on a jack from its stage - but only while muted: it is
+    # still not a short-circuit protection.
     for i, k in enumerate(K_MUTE):
         lst = mute_lists[i]
-        for pole_i, (com, nc) in enumerate(((K_COM1, K_NC1), (K_COM2, K_NC2))):
-            node = lst[pole_i * 2]
-            pin = lst[pole_i * 2 + 1]
-            node += pin           # signal passes straight through
-            k[com] += node
-            k[nc] += GND          # ...and the NC contact shorts it when muted
+        for pole_i, (com, no, nc) in enumerate(((K_COM1, K_NO1, K_NC1),
+                                                (K_COM2, K_NO2, K_NC2))):
+            k[com] += lst[pole_i * 2]       # cap side
+            k[no] += lst[pole_i * 2 + 1]    # jack: passes when energised
+            k[nc] += GND                    # cap side to ground at rest
 
     pc = Part("Connector_Generic", "Conn_01x04", value="POWER",
               footprint="Connector_PinHeader_2.54mm:"

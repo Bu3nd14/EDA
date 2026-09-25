@@ -166,6 +166,11 @@ echo "-- 2e. relay safe state on de-energised coils (NC-014) and the trim interl
 # the right channel - came out inverted: at power-on that channel was not
 # muted at all, and nothing said so. The fix is one line; this is what stops
 # it from coming back in silence.
+# L29e (ADR-044): the mute relay is a changeover in geometry iii - COM on the
+# cap's far side, NO on the jack, NC to ground, a bleed on both sides. "NC to
+# ground" alone passed on the old shunt at the jack as well; the geometry is
+# asserted by intent, and was made to fail on main's netlist and on four
+# sabotaged copies: docs/preamp/data/2026-09-25/L29e/falsi/.
 #
 # The netlists are named rather than discovered: the checker FAILS when it
 # finds no relay, deliberately, so it cannot go blind. Adding a second
