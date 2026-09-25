@@ -1,100 +1,96 @@
-# Prompt per la sessione successiva — L29d (il contatto in serie al jack)
+# Prompt per la sessione successiva — L29d2 (la matrice del contatto in serie)
 
-Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è
-organizzato in LOTTI PICCOLI: questa sessione fa **L29d** e si ferma. Non iniziarne un
-secondo.
+Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
+LOTTI PICCOLI: questa sessione fa **L29d2** e si ferma. Non iniziarne un secondo.
 
-## Perché adesso
+## PRIMA DI TUTTO: le decisioni dell'utente
 
-**L29c** ha misurato il caso peggiore di V2 col mute reale (LDR v4 a monte più il relè al
-jack). **Con la musica regge ovunque** (S ≤ 11 dB contro 20). **Senza musica, tre condizioni
-sono fuori dai 100 µV di A**, per una causa sola: il contatto di mute **in derivazione**, 0,1 Ω
-dietro 47 Ω, attenua solo ~1/471 un salto in continua dell'uscita del blocco:
-- il cambio di guadagno o di trim a relè chiuso: 98–116 µV, **267 µV** con ±20 mV di VOS
-  dell'LSK489;
-- l'accensione: fino a 11 mV sulle fisse;
-- lo spegnimento: fino a volt. Questo va all'alimentatore (**ADR-043**, L30), non qui.
+La sonda di L29d (`reports/2026-09-25-L29d-sonda-contatto-serie.md`) ha lasciato **tre decisioni
+all'utente**. Nessuna corsa della matrice parte prima di averle, e ogni decisione va registrata con
+le sue parole.
 
-**Decisione dell'utente del 2026-09-23**: si misura un **contatto in serie** al jack, in due
-varianti, e poi si sceglie coi numeri; la scelta diventa una ADR. Le LDR **restano**: S le
-vuole, perché un contatto taglia la musica di colpo (~70 dB in un istante).
+1. **Quale geometria** va nella matrice:
+   - la **iii**: serie più derivazione dal lato del condensatore. È l'unica che ha retto quasi tutto;
+   - la **iB**: serie più derivazione al jack, la serie che si chiude per prima, con un
+     trasferimento più lungo di 1 ms. Oggi dà 0,3–5,6 mV;
+   - la **ii**, serie sola, è da scartare: nessuna cella la salva.
+2. **Lo stato sicuro (ADR-012)**: «a macchina spenta le uscite sono a massa». Nella iii, a riposo, il
+   jack va a massa solo attraverso il bleed (220 k / 470 k), non attraverso un contatto. Le strade:
+   - il bleed basta;
+   - un secondo polo che mette a massa anche il jack: la iii più la derivazione al jack, da
+     misurare. Conta anche quanti poli ha il relè: oggi un relè serve L e R con due poli.
+   - La scelta tocca il failsafe di ADR-043.
+3. **I valori**, che oggi sono ipotesi del banco:
+   - il bleed dal lato condensatore;
+   - la capacità del contatto aperto, dal datasheet del relè: 5 pF ipotizzati;
+   - la capacità del cavo al jack da considerare: zero nella sonda;
+   - il tempo di trasferimento: 1 ms.
+
+   **Il residuo della iii** (205 µV all'accensione da 300 ms) è passaggio capacitivo di quei 5 pF:
+   dipende proprio da questi numeri.
+
+**Nessun cambio di topologia né di valore in `circuits/` senza l'utente.**
 
 ## Da dove si parte
 
-- **Il banco**: `spice/preamp/tb/tb_v2_casopeggiore.cir`, **generato** da
-  `data/2026-09-23/L29c/deck/genera_tb_v2_casopeggiore.py`. Si estende il generatore, non il
-  deck. Il README di `data/2026-09-23/L29c/` dice script e cartelle.
-- **La posizione in serie esiste già nel blocco CANALE**: `BSERM` / `BSER1` / `BSER2` fra il
-  condensatore e il jack, col ponte `RBYM` / `RBY1` / `RBY2` da 1 mΩ da aprire con `alter`, e lo
-  stato `SSER` (`VTISER`, `VTRSER`, `VMHSER`, netto coi rimbalzi). È la variante «serie» di L29a
-  (`tb_v2_mute_varianti.cir`), misurata allora con l'elemento ideale e i segnaposto.
-  **Attenzione**: è una conduttanza comportamentale `pow(10, …)` in serie al segnale, la forma
-  che in L29c ha reso l'op dipendente dal percorso (limitations #33). Se dà problemi: un
-  interruttore nativo fuori dal blocco, in parallelo a `BSERx` lasciato aperto, come K1/K5 in L29c.
-- **Le cifre di L29c da battere** (`reports/2026-09-23-L29c-v2-caso-peggiore.md`): cambio a relè
-  chiuso 116 µV (267 µV con la dispersione `dp…max`), accensione 11 mV sulle fisse; il rilascio,
-  S e B2 già in soglia.
-- **Gli strumenti di L29c**:
-  - `corri.sh` rifiuta il transient op e riprova senza `.nodeset` e con un `.nodeset` esteso;
-  - `verifica_partenza.py` controlla da dove è partita ogni corsa;
-  - `analizza_par.py` fa l'analisi in parallelo, con una cartella di lavoro per manifesto;
-  - `verdetto.py` legge la colonna `conta`.
+- **Il generatore**: `data/2026-09-23/L29c/deck/genera_tb_v2_casopeggiore.py`, esteso in L29d:
+  - `--matrice sonda_l29d`, con le geometrie N, iA, iB, ii e iii;
+  - `sonda_aggiunte()`, i contatti KS (serie) e KC (derivazione lato condensatore);
+  - `geo_alter()`, gli istanti e il bleed.
+
+  Si estende di nuovo per la matrice di L29d2. I deck di L29c devono restare byte-identici
+  rigenerandoli.
+- **I dati di L29d**: `data/2026-09-25/L29d/` (README). Contiene:
+  - `sonda/verdetto.csv` e `sonda/tabella.csv`;
+  - `script/controfattuale_N.py`, `tabella.py`, `sbircia.py` e `forma.py`.
+- **Gli strumenti di L29c** (`data/2026-09-23/L29c/script/`): `corri.sh`, `verifica_partenza.py`,
+  `analizza_par.py`, `verdetto.py`, `confronta_analisi.py`.
 
 ## Leggi PRIMA, in quest'ordine
 
-1. **`CLAUDE.md`** e **`docs/limitations.md`**, in particolare #22, #26, #29, #30, #31, #32 e
-   **#33** (il transient op).
-2. **`docs/preamp/STATE.md`**: le voci L29c e L29b2 del diario, le righe L29d, L36, L30.
-3. **`reports/2026-09-23-L29c-v2-caso-peggiore.md`** per intero.
-4. **ADR-012** (lo stato sicuro: il mute è NC, a macchina spenta le uscite sono a massa),
-   **ADR-038/039/040/041**, **ADR-043**.
-5. **`NONCOMPLIANCE.md`**: NC-028, l'aggiornamento di L29c.
+1. **`CLAUDE.md`** e **`docs/limitations.md`**, in particolare #29–#33.
+2. **`docs/preamp/STATE.md`**: le voci L29d e L29c del diario, le righe L29d2, L36 e L30.
+3. **`reports/2026-09-25-L29d-sonda-contatto-serie.md`** per intero, poi il report di L29c.
+4. **ADR-012**, **ADR-038/039/040/041**, **ADR-043**.
+5. **`NONCOMPLIANCE.md`**: NC-028, gli aggiornamenti di L29c e L29d.
 
-## IL LAVORO, in ordine
+## IL LAVORO, dopo le decisioni
 
-1. **Il contatto in serie nel generatore**, due varianti, nello stesso deck o in due:
-   - **(i) serie più derivazione**: la serie si apre, poi la derivazione si chiude; al rilascio
-     l'inverso. Da scrivere la sequenza e i suoi tempi;
-   - **(ii) serie sola**: la derivazione resta aperta.
-   Il contatto aperto ha la sua capacità (ipotesi da dichiarare: qualche pF, più il cavo).
-   Controfattuale: con la serie sempre chiusa il deck ridà L29c cella per cella.
-2. **Le celle che stavano fuori**, nelle due varianti: il cambio di guadagno e di trim a relè
-   chiuso (punti 1 e 2), la dispersione peggiore (`dp…max`, punto 3), l'accensione (punto 5).
-3. **Le celle che reggevano**, per non romperle: il mute semplice e le inversioni con musica
-   (S, B2) a 1 kHz e 20 Hz, e A del rilascio senza segnale. B col contatto aperto è la domanda
-   vera della variante (ii).
-4. **Il carico da 10 kΩ** sulla cella peggiore di ogni punto: L29c l'aveva pianificato e non
-   l'ha fatto (tutta la sua matrice è a 100 kΩ). Va fatto nelle due varianti.
-5. **20 kHz**: solo se serve, e pianificato prima (in L29c una corsa ha richiesto 6–7 ore coi
-   core contesi).
+1. **La geometria scelta nel generatore**, coi valori dell'utente, più il controfattuale: N deve
+   ridare L29c.
+2. **La matrice di L29c** sulla geometria scelta:
+   - il cambio di guadagno e di trim a relè chiuso (punti 1 e 2);
+   - la dispersione peggiore (`dp…max`, punto 3);
+   - l'accensione (punto 5);
+   - la musica (S, B2) a 1 kHz e 20 Hz;
+   - **B col contatto aperto**.
+3. **Il carico da 10 kΩ** sulla cella peggiore di ogni punto: mai fatto, né in L29c né in L29d.
+4. **20 kHz** solo se serve, pianificato prima: in L29c ci sono volute 6–11 ore.
 
-**Esito**: la tabella delle due varianti contro L29c. **L'utente sceglie**, e la scelta diventa
-una ADR che tocca ADR-012 (lo stato sicuro) e dà la base al failsafe di ADR-043. Se una variante
-porta tutte le celle sotto 100 µV (tranne lo spegnimento, che è di L30), **NC-028 si può
-chiudere per la parte del mute**. Scrivilo con l'utente, non da solo.
+**Esito**: la tabella della geometria scelta contro L29c. La scelta diventa **una ADR** (tocca
+ADR-012 e ADR-043). Se tutte le celle stanno sotto 100 µV (lo spegnimento escluso, che è di L30),
+**NC-028 si può chiudere per la parte del mute**. Scrivilo con l'utente, non da solo.
 
 ## I vincoli
 
-- **Nessun cambio di topologia né di valore senza l'utente.** L29d misura; la scelta è sua.
 - `set numdgt=15` prima di ogni `wrdata` (#30); `pwl()` estrapola (#31); nessun corpo di `if`
   vuoto (#32); una corsa col transient op non vale (#33).
 - **Il manifesto non è l'elenco delle corse**: una cella si estrae dalla colonna `file`.
-- Gli script zsh si lanciano da soli; nel worktree `git` e i comandi composti vengono
-  rifiutati: comandi semplici e separati, script su file.
-- Le forme d'onda non si committano: c'è un `.gitignore` nella cartella dati di L29c, da
-  copiare.
-- `analizza` è lento coi core pieni: ~2 ore per 87 corse con 3 processi. Pianificalo.
+- Nel worktree `git`, i comandi composti, `awk -v` e i percorsi calcolati a runtime vengono
+  rifiutati: comandi semplici, **percorsi assoluti**, script su file.
+- Le forme d'onda non si committano: c'è un `.gitignore` in ogni cartella dati.
+- I tempi di L29d: con i rail in rampa o senza segnale, una corsa dura 2–4 minuti, 8 in
+  parallelo; `analizza_par.py` con 8 processi fa 32 corse in 4 minuti.
 
 ## NON fa parte di questo lotto
 
-- **L36** (viene dopo: il cablaggio del mute al jack lo decide L29d), L30 e il failsafe
-  (ADR-043), L35, L28, il dossier.
+- **L36** (viene dopo), L30 e il failsafe (ADR-043), L35, L28, il dossier.
 
 ## CHIUSURA
 
-1. `STATE.md` con L29d **fatto** e il prossimo lotto.
+1. `STATE.md` con L29d2 **fatto** e il prossimo lotto.
 2. Riscrivi QUESTO file per il lotto successivo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L29d`.
+4. `/bin/zsh scripts/chunk_close.sh L29d2`.
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**
