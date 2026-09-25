@@ -1,0 +1,47 @@
+L35 - i falsi dei lotti precedenti rifatti col 2e esteso (comandi di ADR-045, finestra D,
+LED a pannello sugli header). Eseguiti il 2026-09-25 dal worktree L35.
+
+L16 (trim), docs/preamp/data/2026-09-14/L16/esplorazione/script/falsi.py, attraverso
+regressione_L16.py, su una copia della radice (circuits/preamp, library, scripts), cosi'
+i dati di L16 non si toccano:
+  bobina_K6_altra_net       non applicabile: metteva K6 su Net("PERMIT_CMD"), che da
+                            ADR-045 e' il progetto. La sostituiscono permesso_su_mute_cmd e
+                            permit_cmd_fuori_da_J4 (genera_falsi.py di L35)
+  permissivo_su_NO          rc=1
+  vtrim_da_vrelay           rc=1
+  reset_non_0dB             rc=1
+  spia_polarita_invertita   rc=1
+  scala_fuori_finestra      rc=0   come in L16: passa il 2e e fa cadere il 2f (README di L16)
+  polo2_invertito           rc=1
+  -> cinque cadono, una passa per progetto, una non si applica piu'.
+
+L29e (mute, geometria iii), docs/preamp/data/2026-09-25/L29e/falsi/genera_falsi.py, con la
+netlist di L35 come "vera" e quella di 1cb233a come "main prima di L29e", uscita in una
+cartella temporanea:
+  vera (oggi)               atteso 0  rc 0  ok
+  main prima di L29e        atteso 1  rc 1  ok
+  nc_no_polo2_K2            atteso 1  rc 1  ok
+  com_no_polo1_K4           atteso 1  rc 1  ok
+  senza_bleed_c_R167        atteso 1  rc 1  ok
+  senza_bleed_jack_R263     atteso 1  rc 1  ok
+  -> uguale a L29e.
+
+L36 (guadagno), attraverso regressione_L36.py, con la netlist di L35 e quella di 57708c5~1
+come "main prima di L36":
+  led_scambiati             non applicabile: sabotava D8/D9, usciti dalla scheda in L35.
+                            La sostituisce gain_led_3_10_scambiati (genera_falsi.py di L35)
+  vera (L35)                atteso 0 rc 0 ok
+  main prima di L36         atteso 1 rc 1 ok  (prima riga: ora e' K6 su MUTE_CMD, ADR-045)
+  senza_ponte_K1            atteso 1 rc 1 ok  CORSA APERTA (trasferimento di K2, K3, K4, K6)
+  ponte_senza_ausiliario    atteso 1 rc 1 ok  INTERBLOCCO DEL GUADAGNO VIOLATO fuori mute
+  tenuta_da_vrelay          atteso 1 rc 1 ok  in mute le bobine non seguono la manopola
+  diodo_comando_in_corto    atteso 1 rc 1 ok  INTERBLOCCO VIOLATO fuori mute (trim)
+  diodo_tenuta_invertito    atteso 1 rc 1 ok  INTERBLOCCO DEL GUADAGNO VIOLATO fuori mute
+  senza_diodo_tenuta        atteso 1 rc 1 ok  in mute le bobine non seguono la manopola
+  hold3_bobina_su_g10       atteso 1 rc 1 ok  K11 non sulle net di K1
+  k5_senza_k1               atteso 1 rc 1 ok  in mute K5 senza K1
+  nc_no_polo2_K11           atteso 1 rc 1 ok  LED del guadagno: nello stato 0 dB si accende +3
+  nc_no_polo1_K11           atteso 1 rc 1 ok  INTERBLOCCO DEL GUADAGNO VIOLATO fuori mute
+  -> le stesse ragioni di L36 (esito.csv di L36), tranne la prima riga di main: il 2e
+     oggi controlla i comandi prima degli ausiliari, e quella netlist ha tutte e due le
+     cose sbagliate (anche "rele' ausiliari attesi HOLD3 ... trovati []" e' nell'uscita).

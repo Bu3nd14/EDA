@@ -1,0 +1,17 @@
+variante,rc_atteso,rc,esito,prima_riga
+vera,0,0,ok,
+main_prima_di_L35,1,1,ok,K6 (PERMIT): la bobina sta sul comando dei rele' di mute 'MUTE_CMD'. ADR-045: il permissivo ha un comando proprio; rilasciato un ritardo dopo 'MUTE_CMD' all'inserimento del mute; sullo stesso comando rilascia insieme ai 
+permesso_su_mute_cmd,1,1,ok,K6 (PERMIT): la bobina sta sul comando dei rele' di mute 'MUTE_CMD'. ADR-045: il permissivo ha un comando proprio; rilasciato un ritardo dopo 'MUTE_CMD' all'inserimento del mute; sullo stesso comando rilascia insieme ai 
+permit_cmd_fuori_da_J4,1,1,ok,J4 pin 2: atteso il comando del permissivo ['PERMIT_CMD']; trovato None. Il temporizzatore sfasa i due comandi (ADR-045): un comando che non arriva al connettore non lo pilota nessuno.
+mute_cmd_fuori_da_J4,1,1,ok,J4 pin 1: atteso il comando dei rele' di mute ['MUTE_CMD']; trovato None. Il temporizzatore sfasa i due comandi (ADR-045): un comando che non arriva al connettore non lo pilota nessuno.
+comandi_scambiati_su_J4,1,1,ok,J4 pin 1: atteso il comando dei rele' di mute ['MUTE_CMD']; trovato 'PERMIT_CMD'. Il temporizzatore sfasa i due comandi (ADR-045): un comando che non arriva al connettore non lo pilota nessuno.
+interruttore_fuori_da_J4,1,1,ok,SW3 (mute): i capi stanno su ['MUTE_SW'; 'RLY_RET']; attesi RLY_RET e il pin 3 di J4 (None). F10: l'interruttore e' un ingresso del temporizzatore; che mette il mute se e' aperto OPPURE se l'accensione non e' finita; in 
+interruttore_su_mute_cmd,1,1,ok,SW3 (mute): i capi stanno su ['MUTE_CMD'; 'RLY_RET']; attesi RLY_RET e il pin 3 di J4 ('MUTE_SW'). F10: l'interruttore e' un ingresso del temporizzatore; che mette il mute se e' aperto OPPURE se l'accensione non e' finit
+trim_led_0_6_scambiati,1,1,ok,LED del trim (fuori mute): con SPIA1 reset e SPIA2 reset si accendono i pin di [-6] dB invece di [0]. F9: il LED dice lo stato vero del trim.
+spia1_reset_set_scambiati,1,1,ok,LED del trim (fuori mute): con SPIA1 reset e SPIA2 reset si accendono i pin di [-6] dB invece di [0]. F9: il LED dice lo stato vero del trim.
+trim_led_senza_ritorno,1,1,ok,J5 (TRIM_LED) pin 4: il ritorno dei LED sta su None; non su RLY_RET: nessun LED si accende; o si chiude sulla massa audio (P4).
+gain_led_3_10_scambiati,1,1,ok,LED del guadagno (fuori mute): nello stato +3 dB si accendono i pin di [10] dB invece di [3]. Il LED deve dire lo stato vero (ADR-030 punto 2).
+gain_led_su_segnale,1,1,ok,GAIN_LED pin 2 (+3 dB) sta su 'BL_RG'; che non e' un contatto degli ausiliari (ADR-030 punto 2: i LED leggono lo stato vero dai poli liberi degli ausiliari).
+led_mute_da_vrelay,1,1,ok,LED di mute fuori mute: acceso. F11: indica il mute inserito; letto da un contatto; acceso a jack collegati; o spento a mute inserito; dice il falso (ADR-028 punto 5).
+led_mute_da_vhold,1,1,ok,LED di mute in mute: spento. F11: indica il mute inserito; letto da un contatto; acceso a jack collegati; o spento a mute inserito; dice il falso (ADR-028 punto 5).
+led_mute_dal_comando,1,1,ok,LED di mute fuori mute: acceso. F11: indica il mute inserito; letto da un contatto; acceso a jack collegati; o spento a mute inserito; dice il falso (ADR-028 punto 5).

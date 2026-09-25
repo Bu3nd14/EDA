@@ -41,9 +41,15 @@ WHAT IS DELIBERATELY NOT HERE
    -> 0 with the knob, 2.611k at most behind the trim - is what the
    simulations in spice/preamp/tb sweep.
  - The MUTE TIMER (ADR-012) and the VRELAY supply. Only the mute contacts are
-   here, because they are in the signal path and change Zout, plus the mute
-   COMMAND net, because the trim's permissive hangs on it. The coil drive, the
-   delay and the rail-collapse detector belong to psu-engineer.
+   here, because they are in the signal path and change Zout, plus the two
+   COMMAND nets - MUTE_CMD for the jack relays, PERMIT_CMD for the permissive
+   K6 (ADR-045) - on the harness J4, with the contract the timer must honour
+   written next to it. The coil drive, the delay and the rail-collapse
+   detector belong to psu-engineer.
+ - The PANEL (ADR-028, F10, F11): only the continuous current of coils and
+   LEDs goes there, never signal. The switches appear as their harness
+   headers (SW1 trim, SW2 gain, SW3 mute), the LEDs as the headers J5 (trim),
+   J6 (gain) and J7 (the red mute LED).
  - The DRIVE of the graduated mute's LEDs (ADR-038, L29b2): two current
    sources and the depth generator. Only the cells (in the signal path) and
    the J3 harness to the LEDs are here; the contract the drive must honour
@@ -115,7 +121,8 @@ FP_CONN2 = "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
 #                => silent when the supply is down (ADR-012)
 #   permissive  - NORMALLY CLOSED, twice in series (de-energised = muted =>
 #                 the trim command is live, ADR-019 / ADR-027; trim.py);
-#                 since L36 its pole-1 NO is VHOLD, the gain hold's supply
+#                 since L36 its pole-1 NO is VHOLD, the gain hold's supply;
+#                 since L35 its coil is on PERMIT_CMD, not MUTE_CMD (ADR-045)
 #   gain aux    - K11 / K12 (L36, ADR-030 road B): coil in parallel with
 #                 K1 / K5, pole 1 NO = the self-hold, pole 2 = the LEDs
 #                 (gain_interlock.py)
@@ -365,8 +372,13 @@ if __name__ == "__main__":
     #   out of mute: K1, K5, their auxiliaries K11 / K12, K2-K4 and the
     #     permissive K6 = 168.8 / 72.8 / 36.8 mA; the bistables draw nothing;
     #   in mute: K1, K5, K11, K12, plus the four bistable coils (K7-K10)
-    #     driven continuously by the trim knob = 168.8 / 72.8 / 36.8 mA,
-    #     plus ~4 mA of LED (trim and gain, one each).
+    #     driven continuously by the trim knob = 168.8 / 72.8 / 36.8 mA;
+    #   in the window D of ADR-045 (K6 still on, K2-K4 already off): fewer.
+    #   Moving K6 to PERMIT_CMD (L35) changes no coil count.
+    # LEDs on top, ~2 mA each at 5 V through 1.5 k (R1, R2, R3): the trim's
+    # and the gain's are lit ALWAYS (they read the state, in and out of
+    # mute), the red mute LED only in mute (L35) - ~4 mA out of mute, ~6 mA
+    # in mute. Worst case: 168.8 + 6 = ~175 mA at 5 V, in mute at +10 dB.
     # The VRELAY voltage is not decided yet. One more constraint since L36:
     # the gain pick-up passes through a Schottky (gain_interlock.py), so
     # VRELAY - V_F(42 mA) >= 80 % of the rated coil voltage, at -5 % and warm.
@@ -389,6 +401,9 @@ if __name__ == "__main__":
                                  # loop would have made MUTE_CMD, MUTE_CMD1,
                                  # MUTE_CMD2 - three coils on three separate
                                  # nets, and only an ERC warning to say so.
+    # ADR-045 (L35): the permissive K6 has a command of its own, released a
+    # delay D after MUTE_CMD on insertion. Same one-net rule as MUTE_CMD.
+    PERMIT_CMD = Net("PERMIT_CMD")
     for i in range(3):
         k = Part("Relay", "G6K-2", value=f"G6K-2F-Y MUTE{i + 1}",
                  footprint=FP_RELAY, ref=f"K{i + 2}")
@@ -397,9 +412,10 @@ if __name__ == "__main__":
         K_MUTE.append(k)
 
     # ADR-027 / F8 / F9: the trim's relays (K7, K8), their LED twins (K9,
-    # K10), the command switch and the permissive K6 on MUTE_CMD. Every mute
-    # pole carries signal, so the permissive is a relay of its own.
-    K_TRIM = trim.trim_relays(VCC_RLY, MUTE_CMD,
+    # K10), the command switch and the permissive K6 - on PERMIT_CMD since
+    # L35 (ADR-045), no longer on MUTE_CMD. Every mute pole carries signal,
+    # so the permissive is a relay of its own.
+    K_TRIM = trim.trim_relays(VCC_RLY, PERMIT_CMD,
                               (K_COIL_A, K_COIL_B, K_COM1, K_NO1, K_NC1,
                                K_COM2, K_NO2, K_NC2))
 
@@ -473,7 +489,8 @@ if __name__ == "__main__":
     # coil de-energised => every jack disconnected from its stage.
     # The mute may be held INDEFINITELY (ADR-021, superseding ADR-012's "a few
     # seconds"): its command is the trim's permissive, through K6 (ADR-019,
-    # ADR-027). P7, re-read in L29e: in mute the output stages still run in
+    # ADR-027; since L35 the command is MUTE_CMD on J4, and the
+    # permissive has its own, ADR-045). P7, re-read in L29e: in mute the output stages still run in
     # class B - since L17 (ADR-023) the two fixed buffers and block B, each
     # on its own 47 ohm; block A only drives the buffers and the trim. What
     # goes to ground is now the cap's far side instead of the jack, and the
@@ -493,6 +510,68 @@ if __name__ == "__main__":
             k[com] += lst[pole_i * 2]       # cap side
             k[no] += lst[pole_i * 2 + 1]    # jack: passes when energised
             k[nc] += GND                    # cap side to ground at rest
+
+    # ---- the mute timer's harness, J4 (ADR-045, ADR-028; L35) -------------
+    # Pin 1 MUTE_CMD (the jack relays K2-K4), pin 2 PERMIT_CMD (the
+    # permissive K6), pin 3 MUTE_SW (the panel switch, an INPUT of the timer).
+    # Both commands are low-side: the timer sinks a coil to RLY_RET (J2) to
+    # energise it, i.e. to take the preamp OUT of mute. The timer is off
+    # this board (psu-engineer), like the LDR drive on J3.
+    # THE CONTRACT the timer must honour (ADR-045, ADR-027, ADR-028 point 4):
+    #   insertion: MUTE_CMD released first (jacks open, cap sides grounded,
+    #     ADR-044), PERMIT_CMD released a delay D later - D = 20 ms nominal,
+    #     >= 10 ms guaranteed, i.e. more than three times the jack relays'
+    #     3 ms maximum release (en-g6k.pdf p. 3). Gain and trim can move only
+    #     after K6 releases, so only with the jacks already open. In the LDR
+    #     sequence (J3) D counts from the release of MUTE_CMD, 0.5 s after
+    #     d = 1;
+    #   release: PERMIT_CMD energised NO LATER than MUTE_CMD (simultaneous
+    #     is allowed). The gain does not move - the bridge pole of L36 holds
+    #     it without K6 - nor does the trim, whose bistables hold their state;
+    #   power-on (ADR-027, moved onto PERMIT_CMD by ADR-045: it is K6
+    #     energising that ends the trim's drive): PERMIT_CMD energised no
+    #     earlier than 10 ms (set/reset width) + 3 ms (set time) after VRELAY
+    #     is valid; MUTE_CMD, which comes no earlier, inherits it;
+    #   F10 / ADR-028 point 4: the mute is inserted if MUTE_SW is OPEN or the
+    #     power-on timer has not expired. The switch is an input of the timer
+    #     and not a contact in series with MUTE_CMD: in series it would drop
+    #     the jack relays and K6 together, and D would be lost. SW3 closed =
+    #     music: a broken wire mutes. Debouncing is the timer's;
+    #   the LDR contract next to J3 is unchanged.
+    # NOTE FOR THE FAILSAFE (ADR-045 -> ADR-043, L30): the delay exists only
+    # while VRELAY is present. When VRELAY collapses every coil drops at once
+    # and K1 / K5 go back to 0 dB with the jacks' disconnection: the failsafe
+    # must release MUTE_CMD first and hold K6, K1 / K5 and K11 / K12 for at
+    # least D after, or prove another way that the gain does not move first.
+    MUTE_SW = Net("MUTE_SW")
+    jt = Part("Connector_Generic", "Conn_01x03", value="MUTE_TIMER",
+              footprint=FP_CONN3, ref="J4")
+    jt[1] += MUTE_CMD
+    jt[2] += PERMIT_CMD
+    jt[3] += MUTE_SW
+
+    # F10: the mute switch, a PANEL part like SW1 / SW2, on the board as its
+    # harness header. Closed = out of mute (MUTE_SW pulled to RLY_RET).
+    sw3 = Part("Switch", "SW_SPST", value="MUTE", footprint=FP_CONN2,
+               ref="SW3")
+    sw3[1] += MUTE_SW
+    sw3[2] += K_TRIM["RET"]
+
+    # F11 / ADR-028 point 5: the red mute LED, on the panel, read from VTRIM -
+    # the two NC of K6 in series, live exactly while K6 is released. It is the
+    # state of a contact, not the command, and costs no relay (the "Da
+    # riaprire se" of ADR-028 does not apply). With ADR-045 it errs on the
+    # safe side both ways: it lights D after the jacks open and goes dark no
+    # later than they close, so it never says "muted" with a jack connected.
+    # Declared limit: a welded K2-K4 contact does not show, the same kind of
+    # single-relay fault ADR-033 accepts. 1.5 k as R1 / R2, ~2 mA at 5 V.
+    rm = Part("Device", "R", value="1.5k", footprint=FP_R, ref="R3")
+    rm[1] += K_TRIM["VTRIM"]
+    rm[2] += Net("MLED")
+    jm = Part("Connector_Generic", "Conn_01x02", value="MUTE_LED",
+              footprint=FP_CONN2, ref="J7")
+    jm[1] += rm[2]           # the red LED's anode
+    jm[2] += K_TRIM["RET"]   # its cathode
 
     pc = Part("Connector_Generic", "Conn_01x04", value="POWER",
               footprint="Connector_PinHeader_2.54mm:"

@@ -1,78 +1,75 @@
-# Prompt per la sessione successiva — L35 (comandi e LED a pannello nel sorgente)
+# Prompt per la sessione successiva — L30 (lo spegnimento, il failsafe e il calore del telaio)
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L35** e si ferma. Non iniziarne un secondo.
+LOTTI PICCOLI: questa sessione fa **L30** e si ferma. Non iniziarne un secondo. **Se L30 non entra
+in una sessione, si divide** (L30a, L30b…), e la divisione si scrive nella tabella dei lotti di
+`STATE.md` prima di chiudere.
 
 ## Il mandato
 
-**ADR-028** e **NC-032**. Sul pannello passa solo la continua di bobine e LED, nessun segnale
-(F10, F11). Nel sorgente oggi:
-- i LED di trim (D4–D6, `trim.py`) e guadagno (D7–D9, `gain_interlock.py`) sono sulla scheda;
-- SW1 e SW2 sono header a 16 vie;
-- manca il comando del mute: `MUTE_CMD` non esce dalla scheda, e il LED rosso di mute non c'è.
+**NC-028** (bloccante, solo per lo spegnimento) e **NC-029** (maggiore). È il lotto che sta sul
+cammino di G1: finché NC-028 è aperta, G1 non si concede.
 
-L35 porta tutto questo a pannello, **senza cambiare la logica** provata dal 2e in L16 (trim) e
-in L36 (guadagno, compresa la corsa al rilascio).
+Tre cose, che vanno insieme perché nascono tutte dall'alimentatore:
+1. **Lo spegnimento normale** (ADR-043 §1). I rail audio restano sopra la soglia a cui il blocco
+   perde la regolazione (~10 V misurati in L29c, da rimisurare) finché il mute non è completo:
+   mute graduale e relè al jack. Servono un supervisore della rete e una tenuta dei rail.
+2. **Il failsafe per il guasto dell'alimentatore** (ADR-043 §2), che non deve dipendere
+   dall'alimentatore sano. Con la **nota di ADR-045**: alla caduta di `VRELAY` lo sfasamento di K6
+   sparisce, e K1/K5 tornano a 0 dB insieme allo stacco dei jack. Il failsafe deve rilasciare
+   `MUTE_CMD` per primo e tenere K6, K1/K5 e K11/K12 almeno Δ dopo, oppure provare un'altra via.
+3. **Il calore del telaio con otto blocchi** (NC-029): 6,45 W a riposo della sola scheda audio
+   contro i 3–4 W che P5 prevede per l'apparecchio intero. O P5 aggiornato al numero vero, o
+   ventilazione e montaggio con una ADR, o ADR-021 riaperta se i 60 °C non reggono.
 
-## Primo punto: ADR-045, deciso dall'utente il 2026-09-25
+## Prima di tutto: le due domande che ADR-043 lascia all'utente
 
-Il residuo di L36 **non è accettato**. È la manopola del guadagno girata fuori mute e poi il mute
-inserito: fino a ~90 dB SPL di picco a 1 m, contro ~33 dB della soglia V2. Il trim ha lo stesso
-caso. La decisione è **ADR-045**: K6 su un comando proprio, `PERMIT_CMD`.
-- **All'inserimento del mute** `PERMIT_CMD` rilascia Δ (~20 ms, più dei 3 ms di rilascio massimo)
-  **dopo** `MUTE_CMD`.
-- **Al rilascio del mute** si eccita non dopo `MUTE_CMD`.
+- **La forma del failsafe**: ADR-043 non sceglie nessuna tecnica, «la progetta L30, con
+  l'utente».
+- **La soglia in caso di guasto**: V2 per intero (100 µV), oppure una soglia di non-danno per il
+  finale e i diffusori.
 
-Lo si fa **prima** del pannello, perché cambia i fili del comando del mute.
-
-**Parla dei bump in dB SPL contro il silenzio di una stanza, non in mV** (preferenza
-dell'utente): soglia V2 ~33 dB di picco, stanza silenziosa ~25–35 dB(A).
+Si chiedono **conversando**, con le cifre davanti, non con un questionario a scelta multipla.
+**I bump si dicono in dB SPL contro il silenzio di una stanza, non in mV** (preferenza
+dell'utente): soglia V2 ~33 dB di picco a 1 m, stanza silenziosa ~25–35 dB(A). I casi di guasto
+di L29c portavano al jack **8,9–17,5 V** col relè in ritardo, e 11 mV / 0,24 mV col relè già
+chiuso. Il calcolo in dB lo fa la formula di NC-028.
 
 ## Leggi PRIMA, in quest'ordine
 
-1. **`CLAUDE.md`** e **`docs/limitations.md`** (in particolare #22).
-2. **`docs/preamp/STATE.md`**: la voce di diario di L36 e la riga L35.
-3. **ADR-045** (lo sfasamento di K6, con la nota per il failsafe), **ADR-028** (comandi e LED a
-   pannello), **ADR-033** (LED dai relè, guasto accettato), **ADR-041** e il report di L36.
-4. **`circuits/preamp/trim.py`**, **`circuits/preamp/gain_interlock.py`**,
-   **`circuits/preamp/preamp_audio.py`** (`MUTE_CMD`, J1) e **`scripts/check_relay_safe_state.py`**
-   (la visita `reach()` e le prove del trim e del guadagno).
+1. **`CLAUDE.md`** e **`docs/limitations.md`**.
+2. **`docs/preamp/STATE.md`**: le voci di diario di L35 e di L29c, e le righe L30 e L35.
+3. **ADR-043** (spegnimento e failsafe), **ADR-045** (la nota per il failsafe), **ADR-012** (lo
+   stato sicuro del mute), **ADR-021** (i 60 °C), **ADR-020** (il ripple ammesso), **ADR-032**
+   (V2 accensione e spegnimento compresi).
+4. **Il report di L29c** (`reports/2026-09-23-L29c-v2-caso-peggiore.md`, sezione dello
+   spegnimento) e il **report di L35**, sezioni 1 e 7: il contratto del temporizzatore accanto a
+   J4 e il budget delle bobine.
+5. **`circuits/preamp/preamp_audio.py`**, il blocco di J4, e **NC-028** e **NC-029** in
+   `NONCOMPLIANCE.md`.
 
-## IL LAVORO
+## Quello che L35 ti consegna
 
-0. **ADR-045 nel sorgente.**
-   - La bobina di K6 va su `PERMIT_CMD`, e `PERMIT_CMD` va al connettore con `MUTE_CMD`.
-   - Il contratto col temporizzatore si scrive accanto al connettore, come fa J3 per le LDR:
-     all'inserimento Δ dopo `MUTE_CMD`, al rilascio non dopo.
-   - Il 2e oggi vuole la bobina del permissivo sulle net del mute. Va riscritto: bobina su
-     `PERMIT_CMD`, e nella prova d'interblocco K6 trattato come «eccitato fuori mute».
-   - Va fatto fallire, per esempio con K6 di nuovo su `MUTE_CMD`.
-   - Poi NC-028 per la parte che chiude, e nessuna ADR nuova se la realizzazione è quella di
-     ADR-045.
-1. **Gli header di cablaggio** al posto dei LED sulla scheda, per il trim e il guadagno.
-   - Ref nuove **esplicite**; nessuna parte esistente si rinumera (#22).
-   - Il 2e oggi riconosce i LED del guadagno dal loro **anodo sui contatti degli ausiliari**. Se
-     i LED escono dalla scheda, la prova dei LED va riscritta sul connettore, e rifatta fallire.
-2. **SW1 e SW2 a pannello**: restano header, e il cablaggio non cambia. La tabella di SW2 è in
-   `gain_interlock.SW_TABLE` e, come dato, in `check_relay_safe_state.GAIN_KNOB`.
-3. **L'interruttore di mute combinato col temporizzatore d'accensione** (F10): il mute è inserito
-   se l'interruttore lo chiede **oppure** se il temporizzatore non è scaduto.
-   - `MUTE_CMD` va a un connettore.
-   - Il temporizzatore resta all'alimentatore: qui c'è solo il contratto.
-4. **Il LED rosso di mute** (F11), letto da un contatto che dica lo stato vero.
-5. **Il 2e esteso** a quanto sopra, e fatto fallire su varianti sabotate, come
-   `data/2026-09-25/L36/falsi/`.
-6. **Il budget delle bobine e dei LED** aggiornato, se cambia (L36: 168,8 mA a 5 V a +10 dB).
+- **Il contratto del temporizzatore**, accanto a J4 in `preamp_audio.py`:
+  - `MUTE_CMD` e `PERMIT_CMD` sfasati di Δ (nominale 20 ms, ≥ 10 ms);
+  - l'OR di F10 con l'interruttore SW3 (aperto = mute);
+  - i 13 ms dopo `VRELAY` valida su `PERMIT_CMD`.
 
-**Esito**: sorgente, 2e esteso e fatto fallire, NC-032 aggiornata o chiusa, ADR nuova solo se la
-realizzazione si scosta da ADR-028.
+  L'alimentatore lo realizza, oppure lo cambia con una ADR.
+- **Il budget di `VRELAY`**:
+  - bobine 168,8 mA a 5 V a +10 dB (72,8 a 12 V, 36,8 a 24 V);
+  - LED ~4 mA fuori mute e ~6 mA in mute, cioè ~175 mA nel caso peggiore;
+  - `VRELAY` − V_F(Schottky, 42 mA) ≥ 80 % della tensione nominale, a −5 % e a caldo.
+- **Il deck di V2** `spice/preamp/tb/tb_v2_casopeggiore.cir`, generato dalla netlist (punto 5 di
+  ADR-043: lo spegnimento si verifica lì o su un suo derivato).
 
 ## I vincoli
 
-- **Nessun cambio di topologia oltre ADR-028 e ADR-045 senza l'utente.** La logica di interblocco di trim
-  e guadagno non si tocca.
-- Il deck V2 versionato si rigenera dalla netlist e deve restare **byte-identico**: L35 non
-  tocca il segnale.
+- **Nessuna tecnica di failsafe senza l'utente.** Se il failsafe chiede un elemento in serie al
+  segnale, o un cambio dello stato sicuro di ADR-012, è una modifica di topologia e torna
+  all'utente (ADR-043, «Da riaprire se»).
+- **La logica di interblocco di trim e guadagno non si tocca.** Il deck V2 si rigenera dalla
+  netlist: se L30 non tocca la scheda audio, deve restare **byte-identico**.
 - Nel worktree `git` vengono rifiutati:
   - i comandi composti, e le pipe o i `;` attorno a comandi che eseguono script;
   - `awk -v`;
@@ -80,22 +77,21 @@ realizzazione si scosta da ADR-028.
   - i percorsi calcolati a runtime (anche `$CLAUDE_JOB_DIR` dentro un comando).
 
   Si usano comandi semplici, **percorsi assoluti**, script su file, ed Edit per i testi.
+  `git show --output=` lascia un file vuoto: per estrarre una netlist storica serve uno script
+  Python che chiami `git show` e scriva il file.
 
 ## NON fa parte di questo lotto
 
-- **L30** (lo spegnimento, le 7 corse che non finiscono, i 3,96 mV non spiegati);
-- il failsafe di ADR-043, con la nota di ADR-045: alla caduta di `VRELAY` lo sfasamento sparisce.
-  È di L30;
-- L28;
-- l'alimentatore;
+- **L28** (SS dell'LSK489, NC-027): va fatto prima di G2, ma è un altro lotto;
 - il dossier;
-- la proposta per il trim, se l'utente non la sceglie.
+- la proposta per il trim col ponte, se l'utente non la sceglie;
+- il PCB e il contenitore (entro G2).
 
 ## CHIUSURA
 
-1. `STATE.md` con L35 **fatto** e il prossimo lotto.
+1. `STATE.md` con L30 (o la parte fatta) **fatto** e il prossimo lotto.
 2. Riscrivi QUESTO file per il lotto successivo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L35`.
+4. `/bin/zsh scripts/chunk_close.sh L30` (o il nome della parte).
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**

@@ -1,0 +1,27 @@
+netlist : /Users/roberto/EDA/.claude/worktrees/L35/docs/preamp/data/2026-09-25/L35/falsi/trim_led_senza_ritorno.net
+          404 componenti, 12 rele' noti
+          K1  'G6K-2F-Y GAIN'  ruolo=GAIN
+          K2  'G6K-2F-Y MUTE1'  ruolo=MUTE
+          K3  'G6K-2F-Y MUTE2'  ruolo=MUTE
+          K4  'G6K-2F-Y MUTE3'  ruolo=MUTE
+          K5  'G6K-2F-Y GAIN10'  ruolo=GAIN
+          K6  'G6K-2F-Y PERMIT'  ruolo=PERMIT
+          K7  'G6KU-2F-Y TRIM1'  ruolo=TRIM
+          K8  'G6KU-2F-Y TRIM2'  ruolo=TRIM
+          K9  'G6KU-2F-Y SPIA1'  ruolo=SPIA
+          K10  'G6KU-2F-Y SPIA2'  ruolo=SPIA
+          K11  'G6K-2F-Y HOLD3'  ruolo=HOLD
+          K12  'G6K-2F-Y HOLD10'  ruolo=HOLD
+          mute ADR-044: 6 jack su NO, lato condensatore su COM, NC a massa, bleed su entrambi i lati
+          comandi ADR-045: MUTE_CMD e PERMIT_CMD distinti su J4 pin 1/2, interruttore SW3 su pin 3; la finestra opposta (jack eccitati, permissivo rilasciato) la esclude il contratto di J4, non la netlist
+          interblocco: 4 net di bobina bistabili, fuori mute K2, K3, K4, K6 eccitati (permissivo K6), 16 stati provati fuori mute, nella finestra D e in mute
+          interblocco del guadagno: K1+K11, K5+K12, selettore SW2; 9 coppie stato/posizione fuori mute e in mute, 3 trasferimenti di K2, K3, K4, K6 con la manopola allo stato, e la finestra D; LED a pannello 3
+          LED a pannello: GAIN_LED, MUTE_LED, TRIM_LED; trim 4 stati dei bistabili, mute in mute / fuori / finestra D
+          mute LDR L: U101 L_IN_SRC -> AL_IN, U102 AL_IN -> GND
+          mute LDR R: U301 R_IN_SRC -> AR_IN, U302 AR_IN -> GND
+
+FALLITO: 1 problemi
+
+  J5 (TRIM_LED) pin 4: il ritorno dei LED sta su None, non su RLY_RET: nessun LED si accende, o si chiude sulla massa audio (P4).
+
+Questo e' il difetto di NC-014 o di NC-023: fallisce in silenzio. Correggi la topologia, non questo controllo.
