@@ -1,0 +1,24 @@
+L36 - i falsi dei lotti precedenti rifatti col 2e esteso (diodi orientati, ruolo HOLD,
+prova del guadagno). Eseguiti il 2026-09-25 dal worktree L36.
+
+L16 (trim), docs/preamp/data/2026-09-14/L16/esplorazione/script/falsi.py, fatto girare su
+una copia della radice (circuits/preamp, library, scripts dal worktree) per non
+sovrascrivere i dati di L16:
+  permissivo_su_NO          rc=1
+  vtrim_da_vrelay           rc=1
+  bobina_K6_altra_net       rc=1
+  reset_non_0dB             rc=1
+  spia_polarita_invertita   rc=1
+  scala_fuori_finestra      rc=0   come in L16: passa il 2e e fa cadere il 2f (README di L16)
+  polo2_invertito           rc=1
+  -> sei cadono, una passa per progetto: uguale a L16.
+
+L29e (mute, geometria iii), docs/preamp/data/2026-09-25/L29e/falsi/genera_falsi.py, con la
+netlist di L36 come "vera" e quella di 1cb233a come "main prima di L29e", uscita in una
+cartella temporanea:
+  vera (oggi)               atteso 0  rc 0  ok
+  main prima di L29e        atteso 1  rc 1  ok
+  nc_no_polo2_K2            atteso 1  rc 1  ok
+  com_no_polo1_K4           atteso 1  rc 1  ok
+  senza_bleed_c_R167        atteso 1  rc 1  ok
+  senza_bleed_jack_R263     atteso 1  rc 1  ok

@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-09-25** (L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-09-25** (L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -133,6 +133,11 @@ spegnimento** (L30).
 ha rifatto le celle peggiori di L29d2 dal deck versionato, ora generato dalla netlist: 18 verdetti
 su 18 uguali al banco, 0 fuori. **La parte del mute è confermata sul sorgente**; NC-028 resta
 aperta e bloccante solo per lo spegnimento (L30).
+**L36** (2026-09-25) ha portato nel sorgente il guadagno interbloccato dal mute (ADR-041, strada
+B di ADR-030). La corsa al rilascio è chiusa per struttura, con un polo ponte del selettore:
+provata sulla netlist dal 2e, e 0 cadute su 480 celle simulate contro 373 senza ponte. NC-028
+guadagna un residuo dichiarato: la manopola girata fuori mute e poi il mute inserito, ordinato
+come il trim ma non chiuso dal datasheet. Nessuna voce nuova.
 **12 voci aperte, 2 bloccanti.**
 L'accesso a G1 non è concesso finché NC-004 e NC-028 restano aperte.
 
@@ -2524,6 +2529,34 @@ RESTA APERTA E BLOCCANTE per lo spegnimento (L30).**
 - **Le celle peggiori sul sorgente**: cambio a relè chiuso, dispersione, accensione e musica a
   1 kHz e 20 Hz. **18 verdetti su 18 uguali al banco (scarto 0), 0 fuori.** La condizione di
   ADR-044 «L29e non riproduce le celle peggiori» non scatta.
+
+**AGGIORNATA IL 2026-09-25, da L36: il guadagno interbloccato dal mute è nel sorgente. La voce
+RESTA APERTA E BLOCCANTE per lo spegnimento (L30); L36 non la tocca.**
+(`reports/2026-09-25-L36-guadagno-interbloccato.md`, dati `data/2026-09-25/L36/`)
+
+- **Cosa cambia per questa voce**: il cambio di guadagno a caldo, da cui la voce ha preso una
+  delle sue cifre (fino a ~114 mV al jack, e 69 mV misurati in L29c), **non si può più fare**. Il
+  selettore raggiunge K1 e K5 solo a mute inserito (ADR-041, strada B di ADR-030). Il cambio
+  sotto mute seguito dal rilascio è quello che L29c e L29d2 hanno misurato: 0,17 µV sulla iii.
+- **La corsa al rilascio di ADR-030 è chiusa per struttura**, non per temporizzazione.
+  - Il datasheet del G6K non dà induttanza, tempo minimo di rilascio né trasferimento: nessuna
+    cifra la chiude.
+  - Un polo «ponte» del selettore alimenta la bobina accesa da `VRELAY` attraverso il NO del suo
+    ausiliario, senza contatti di K6. È provato sulla netlist dal 2e, nello stato di
+    trasferimento, e simulato.
+  - Simulazione, 480 celle per variante: **0 cadute** col ponte. Senza ponte cade in **373** celle
+    al rilascio, secondo L, soglia e buco, cioè proprio le cifre che il datasheet non dà.
+  - La netlist resta byte-identica per il percorso del segnale: il deck V2 si rigenera identico.
+- **Un residuo, dichiarato e non chiuso dal datasheet**: la manopola girata **fuori** mute, e poi
+  il mute inserito.
+  - Il guadagno va alla manopola quando si apre il NO di K6, un rilascio di K1 dopo.
+  - K6 si muove con K2–K4 (stessa net di bobina, stessa parte), quindi il cambio segue lo stacco
+    dei jack di quel tempo. La parte elettrica simulata va da 2,6 µs (5 mH) a 1,3 ms (200 mH).
+    Il ritardo meccanico non è accreditato.
+  - Lo stesso ordinamento vale per il trim (ADR-027), che si muove al richiudersi dell'NC di K6.
+  - Se le dispersioni di rilascio fra K4 e K6 superano quel tempo, un gradino d'offset arriva al
+    jack prima dello stacco. **Non è misurato su un relè vero**: lo si porta all'utente, e al
+    prototipo.
 
 
 ### NC-029 — Con i buffer delle fisse la dissipazione a riposo raddoppia, e P5 non la copre

@@ -1,0 +1,14 @@
+variante,rc_atteso,rc,esito,prima_riga
+vera,0,0,ok,
+main_prima_di_L36,1,1,ok,rele' ausiliari attesi HOLD3 su K1 e HOLD10 su K5; trovati []. ADR-041 / ADR-030 strada B: senza ausiliari il guadagno non si tiene fuori mute; e il suo comando non e' interbloccato col mute.
+senza_ponte_K1,1,1,ok,CORSA APERTA: con K2; K3; K4; K6 in trasferimento (nessun contatto chiuso); stato e manopola a +3 dB; le bobine alimentate sono [] invece di ['3']. E' la corsa di ADR-030 al rilascio del mute: che la bobina cada o no dip
+ponte_senza_ausiliario,1,1,ok,INTERBLOCCO DEL GUADAGNO VIOLATO fuori mute: stato 0 dB; manopola in posizione 2 (+3 dB); bobine alimentate ['3'] invece di []. ADR-041: fuori mute la manopola non muove nulla; e una bobina accesa si tiene da se'.
+tenuta_da_vrelay,1,1,ok,in mute; dallo stato +3 dB con la manopola in posizione 1; le bobine alimentate sono ['3'] invece di []: a mute inserito le bobine devono seguire la manopola; nei due versi (ADR-030 punto 1; ADR-041).
+diodo_comando_in_corto,1,1,ok,INTERBLOCCO VIOLATO fuori mute (eccitati: ['K11'; 'K2'; 'K3'; 'K4'; 'K6']): da VRELAY si raggiungono le bobine del trim ['TRIM1_C1'; 'TRIM1_C8'; 'TRIM2_C1'; 'TRIM2_C8']. F8: fuori mute il comando del trim non deve raggiu
+diodo_tenuta_invertito,1,1,ok,INTERBLOCCO DEL GUADAGNO VIOLATO fuori mute: stato +3 dB; manopola in posizione 1 (0 dB); bobine alimentate [] invece di ['3']. ADR-041: fuori mute la manopola non muove nulla; e una bobina accesa si tiene da se'.
+senza_diodo_tenuta,1,1,ok,in mute; dallo stato +10 dB con la manopola in posizione 2; le bobine alimentate sono ['10'; '3'] invece di ['3']: a mute inserito le bobine devono seguire la manopola; nei due versi (ADR-030 punto 1; ADR-041).
+hold3_bobina_su_g10,1,1,ok,K11: la bobina deve stare sulle stesse net di K1; con la stessa polarita' - ('G10_HI'; 'RLY_RET') contro ('G3_HI'; 'RLY_RET'). Altrimenti la tenuta e i LED seguono un rele' che non e' quello del guadagno.
+k5_senza_k1,1,1,ok,in mute; dallo stato 0 dB con la manopola in posizione 2; le bobine alimentate sono ['10'] invece di ['3']: a mute inserito le bobine devono seguire la manopola; nei due versi (ADR-030 punto 1; ADR-041).
+led_scambiati,1,1,ok,LED del guadagno: nello stato +3 dB si accendono [10] invece di [3]. Il LED deve dire lo stato vero (ADR-030 punto 2).
+nc_no_polo2_K11,1,1,ok,LED del guadagno: nello stato 0 dB si accendono [3] invece di [0]. Il LED deve dire lo stato vero (ADR-030 punto 2).
+nc_no_polo1_K11,1,1,ok,INTERBLOCCO DEL GUADAGNO VIOLATO fuori mute: stato 0 dB; manopola in posizione 1 (0 dB); bobine alimentate ['3'] invece di []. ADR-041: fuori mute la manopola non muove nulla; e una bobina accesa si tiene da se'.
