@@ -97,8 +97,10 @@ import os
 QUI = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(QUI, *[".."] * 6))
 ap = argparse.ArgumentParser()
-ap.add_argument("--matrice", default="l29c", choices=("l29c", "controfattuale", "curve", "caldo", "sonda_l29d", "l29d2"))
+ap.add_argument("--matrice", default="sorgente", choices=("sorgente", "l29c", "controfattuale", "curve", "caldo", "sonda_l29d", "l29d2"))
 ap.add_argument("--curve", nargs=2, default=("B", "B"), metavar=("SERIE", "DERIV"))
+ap.add_argument("--netlist", default=os.path.join(REPO, "circuits", "preamp", "preamp_audio.net"),
+                help="solo --matrice sorgente: la netlist da cui leggere il mute (L29e)")
 ap.add_argument("--uscita", default=os.path.join(REPO, "spice", "preamp", "tb", "tb_v2_casopeggiore.cir"))
 ARG = ap.parse_args()
 CS, CP = ARG.curve
@@ -185,7 +187,11 @@ TT = 1e-3   # L29d: il trasferimento fra i contatti (ipotesi, come il trim)
 CK_DS = "0.1p"   # L29d2: il contatto aperto dal datasheet del G6K (c_contatto.py), per eccesso
 
 
-def geo_alter(geo, tijk, trjk):
+RBC_BANCO = {"m": "220k", "1": "470k", "2": "470k"}   # L29d2: il bleed lato condensatore
+RBC = RBC_BANCO   # --matrice sorgente lo sostituisce coi valori letti dalla netlist (L29e)
+
+
+def geo_alter(geo, tijk, trjk, rbc=RBC_BANCO):
     """L29d: le alter di una geometria, date t_ins / t_rel del rele' al jack di L29c. Vengono
     DOPO le alter vtijk / vtrjk di corsa() e le sostituiscono."""
     ks, kc, jk = (1000, 2000), (1000, 2000), (tijk, trjk)
@@ -209,9 +215,9 @@ def geo_alter(geo, tijk, trjk):
         "alter vtiser dc = %s" % ("1000" if not serie else "-10"),
         "alter vtrser dc = %s" % ("2000" if not serie else "1000"),
     ] + ["alter %s = %s" % (r, "1m" if not serie else "1e12") for r in ("rbym", "rby1", "rby2")] + [
-        "alter rbcm = %s" % ("1e12" if not serie else "220k"),
-        "alter rbc1 = %s" % ("1e12" if not serie else "470k"),
-        "alter rbc2 = %s" % ("1e12" if not serie else "470k"),
+        "alter rbcm = %s" % ("1e12" if not serie else rbc["m"]),
+        "alter rbc1 = %s" % ("1e12" if not serie else rbc["1"]),
+        "alter rbc2 = %s" % ("1e12" if not serie else rbc["2"]),
     ]
 
 
@@ -236,7 +242,7 @@ AGGIUNTE = (
     + contatto("K1", "RGB", "0", False) + contatto("K5", "RG10B", "0", False)
     + (gemello("K1", "RGB") + gemello("K5", "RG10B") if ARG.matrice == "caldo" else [])
     + (sonda_aggiunte() if ARG.matrice == "sonda_l29d" else [])
-    + (sonda_aggiunte(CK_DS, True) if ARG.matrice == "l29d2" else [])
+    + (sonda_aggiunte(CK_DS, True) if ARG.matrice in ("l29d2", "sorgente") else [])
     + ["* ---- L29c: il trim (ADR-027, trim.py candidato 2) fra OUTA e l'attenuatore ----",
        "* RATTT del blocco si apre nel .control (alter rattt = 1e12): OUTA arriva a W da qui.",
        "RL1 OUTA TAP6 845", "RL2 TAP6 TAP12 464", "RL3 TAP12 0 464"]
@@ -295,6 +301,17 @@ H = [
     "XLP ALP 0 INA 0 VTL5C4_%s" % CP,
     "",
 ] + AGGIUNTE
+
+if ARG.matrice == "sorgente":
+    H[5:5] = [
+        "* MATRICE sorgente (L29e, ADR-044): il mute al jack e' la geometria iii com'e' in",
+        "* circuits/preamp/preamp_audio.net - un deviatore per uscita, COM al lato del condensatore,",
+        "* NC a massa, NO al jack. Il generatore la LEGGE dalla netlist col controllo del 2e e rifiuta",
+        "* se non c'e'; i bleed lato condensatore (rbcm/rbc1/rbc2) sono i valori della netlist, il",
+        "* bleed del jack deve coincidere con RBLx del blocco. Dal banco restano: il contatto aperto",
+        "* 0,1 pF (datasheet, L29d2), il trasferimento 1 ms (ipotesi) e 0 pF di cavo (caso peggiore).",
+        "* Nomi e righe sono quelli di L29d2 (suffisso _iii), variante di progetto.",
+    ]
 
 MAN = "tb_v2_casopeggiore_manifest.csv"
 C = [
@@ -385,7 +402,7 @@ def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=1000,
         i, t = st[n]
         out += ["alter v%si dc = %s" % (n.lower(), i), "alter v%st dc = %.6f" % (n.lower(), t)]
     if geo is not None:
-        out += geo_alter(geo, tijk, trjk)
+        out += geo_alter(geo, tijk, trjk, RBC)
     if ck is not None:
         # L29d2: il contatto aperto e il cavo, reimpostati da ogni corsa; la tabella dell'op li
         # stampa (una variante sul nome sbagliato non cambierebbe niente: limitations #29)
@@ -950,6 +967,63 @@ def blocco_l29d2(vs, vkw, geo="iii"):
     return out
 
 
+# ======== L29e: il deck versionato dal sorgente (ADR-044)
+NET = ARG.netlist
+# il rele' di mute -> l'uscita del blocco CANALE: preamp_audio.py fa K2..K4 = MUTE1..MUTE3 su
+# mute_lists[0..2] = fissa 1, fissa 2, principale
+USCITA_DI = {"1": "1", "2": "2", "3": "m"}
+
+
+def dal_sorgente():
+    """L29e: legge circuits/preamp/preamp_audio.net e ne RICAVA la configurazione del mute al
+    jack. Rifiuta se la netlist non e' la geometria iii (lo decide lo stesso controllo del 2e,
+    importato: una sola definizione) o se il bleed del jack non e' quello del blocco CANALE.
+    Restituisce i bleed lato condensatore, {m, 1, 2}, uguali sui due canali (T3)."""
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, os.path.join(REPO, "scripts"))
+    import check_relay_safe_state as crs
+    comps, pin_net = crs.parse_netlist(Path(NET))
+    findings, relays, _ = crs.check(comps, pin_net)
+    if findings:
+        raise SystemExit("la netlist non passa il 2e, niente deck dal sorgente:\n  "
+                         + "\n  ".join(findings))
+    res = crs.resistors_between(comps, pin_net)
+    canale = {r.split()[0].upper(): r.split()[3] for r in CANALE
+              if r[:3] in ("RBL",) and len(r.split()) == 4}
+    rbc = {}
+    for ref, c in relays.items():
+        if crs.role_of(c["value"]) != "MUTE":
+            continue
+        u = USCITA_DI[crs.index_of(c["value"])]
+        pm = crs.KNOWN_RELAYS[(c["lib"], c["part"])]
+        for pole in pm["poles"]:
+            lato_c = pin_net[(ref, pole["COM"])]
+            jack = pin_net[(ref, pole["NO"])]
+            vc = sorted({comps[r]["value"] for r in res[frozenset((lato_c, "GND"))]})
+            vj = sorted({comps[r]["value"] for r in res[frozenset((jack, "GND"))]})
+            if len(vc) != 1 or len(vj) != 1:
+                raise SystemExit("%s %s: attesi un bleed lato C e uno al jack, trovati %s e %s"
+                                 % (ref, pole["name"], vc, vj))
+            if rbc.setdefault(u, vc[0]) != vc[0]:
+                raise SystemExit("uscita %s: bleed lato C diversi fra i canali (%s, %s): T3"
+                                 % (u, rbc[u], vc[0]))
+            atteso = canale["RBL" + u.upper()]
+            if vj[0] != atteso:
+                raise SystemExit("uscita %s: bleed del jack %s nella netlist, %s nel blocco CANALE "
+                                 "(RBL%s): il banco non e' il sorgente" % (u, vj[0], atteso, u.upper()))
+    if set(rbc) != {"m", "1", "2"}:
+        raise SystemExit("uscite di mute trovate: %s, attese m, 1, 2" % sorted(rbc))
+    return rbc
+
+
+def matrice_sorgente():
+    """L29e: la matrice di L29d2, variante di progetto (0 pF di cavo, 100 k), coi bleed lato
+    condensatore letti dalla netlist. Nomi e righe sono quelli di L29d2 (suffisso _iii): il
+    confronto col banco e' cella per cella."""
+    return blocco_l29d2("", {})
+
+
 def matrice_l29d2():
     out = []
     for vs, vkw in VARIANTI:
@@ -959,10 +1033,13 @@ def matrice_l29d2():
     return out
 
 
-if ARG.matrice in ("sonda_l29d", "l29d2"):
+if ARG.matrice == "sorgente":
+    RBC = dal_sorgente()
+    print("dal sorgente (%s): bleed lato C %s" % (NET, RBC))
+if ARG.matrice in ("sonda_l29d", "l29d2", "sorgente"):
     C = [("save v(mainjack) v(fixjack1) v(fixjack2) v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus)"
           " v(main_a) v(mainc) v(fixc1) v(fixc2)") if r.startswith("save ") else r for r in C]
-    C += matrice_sonda() if ARG.matrice == "sonda_l29d" else matrice_l29d2()
+    C += {"sonda_l29d": matrice_sonda, "l29d2": matrice_l29d2, "sorgente": matrice_sorgente}[ARG.matrice]()
 elif ARG.matrice == "controfattuale":
     C += controfattuale()
 elif ARG.matrice == "caldo":
