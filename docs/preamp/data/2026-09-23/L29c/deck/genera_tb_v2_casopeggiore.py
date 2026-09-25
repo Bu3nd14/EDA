@@ -76,6 +76,19 @@ Geometrie (t_ins / t_rel = chiusura / apertura del rele' al jack di L29c):
   ii   serie sola: apre a t_ins, chiude a t_rel
   iii  serie apre a t_ins, derivazione lato condensatore chiude +1 ms; rilascio all'inverso
 All'accensione ogni geometria parte a riposo (t_ins = -10): serie aperta, derivazione chiusa.
+
+MATRICE L29D2 (--matrice l29d2): la matrice di L29c sulla geometria iii. Decisioni dell'utente
+del 2026-09-25, con le sue parole:
+- geometria: «iii»;
+- stato sicuro: «Il bleed basta» (a riposo il jack va a massa attraverso il bleed, nessun polo in
+  piu');
+- valori: «C dal datasheet + cavo realistico». Contatto aperto CK_DS = 0,1 pF (0,075-0,080 pF
+  dalla curva d'isolamento del G6K, per eccesso: data/2026-09-25/L29d2/script/c_contatto.py);
+  cavo al jack 0 pF (caso peggiore) e 100 pF (variante c100). Bleed 220k / 470k e
+  trasferimento 1 ms invariati.
+Varianti nello stesso deck, scelte dal regex di corri.sh: "" (0 pF, 100 k), c100 (cavo 100 pF),
+r10k (carico 10 k), k5 (contatto 5 pF, il ponte con la sonda L29d). Nomi: la cella di L29c, poi
+_<variante>, poi _iii. Il controfattuale N ha i nomi della sonda L29d (controfattuale_N.py).
 """
 import argparse
 import math
@@ -84,7 +97,7 @@ import os
 QUI = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(QUI, *[".."] * 6))
 ap = argparse.ArgumentParser()
-ap.add_argument("--matrice", default="l29c", choices=("l29c", "controfattuale", "curve", "caldo", "sonda_l29d"))
+ap.add_argument("--matrice", default="l29c", choices=("l29c", "controfattuale", "curve", "caldo", "sonda_l29d", "l29d2"))
 ap.add_argument("--curve", nargs=2, default=("B", "B"), metavar=("SERIE", "DERIV"))
 ap.add_argument("--uscita", default=os.path.join(REPO, "spice", "preamp", "tb", "tb_v2_casopeggiore.cir"))
 ARG = ap.parse_args()
@@ -147,7 +160,7 @@ def contatto(n, a, b, cpar):
 CONTATTI = ("K1", "K5", "T1R", "T1S", "T2R", "T2S")
 
 
-def sonda_aggiunte():
+def sonda_aggiunte(ck="5p", cavo=False):
     """L29d: la serie (KS, chiusa a riposo) e la derivazione lato condensatore (KC, aperta a
     riposo), un comando per tipo sulle tre uscite. Due eventi per corsa, coi rimbalzi di L29c:
       serie        c = BREAK(t - t_apre) + MAKE(t - t_chiude)     (1 prima, 0 in mezzo, 1 dopo)
@@ -160,12 +173,16 @@ def sonda_aggiunte():
            "VKCA NKCA 0 DC 1000", "VKCB NKCB 0 DC 2000",
            "BKCR NKCR 0 V = pwl(time - V(NKCA), %s) + pwl(time - V(NKCB), %s) - 1" % (MAKE, BREAK)]
     for x, c, j in (("M", "MAINC", "MAINJACK"), ("1", "FIXC1", "FIXJACK1"), ("2", "FIXC2", "FIXJACK2")):
-        out += ["SKS%s %s %s NKSR 0 SWK" % (x, c, j), "CKS%s %s %s 5p" % (x, c, j),
+        out += ["SKS%s %s %s NKSR 0 SWK" % (x, c, j), "CKS%s %s %s %s" % (x, c, j, ck),
                 "SKC%s %s 0 NKCR 0 SWK" % (x, c)]
+        if cavo:
+            # L29d2: il cavo al jack, 1e-18 = nessun cavo; la corsa lo altera (variante c100)
+            out += ["CCAV%s %s 0 1e-18" % (x, j)]
     return out + [""]
 
 
 TT = 1e-3   # L29d: il trasferimento fra i contatti (ipotesi, come il trim)
+CK_DS = "0.1p"   # L29d2: il contatto aperto dal datasheet del G6K (c_contatto.py), per eccesso
 
 
 def geo_alter(geo, tijk, trjk):
@@ -219,6 +236,7 @@ AGGIUNTE = (
     + contatto("K1", "RGB", "0", False) + contatto("K5", "RG10B", "0", False)
     + (gemello("K1", "RGB") + gemello("K5", "RG10B") if ARG.matrice == "caldo" else [])
     + (sonda_aggiunte() if ARG.matrice == "sonda_l29d" else [])
+    + (sonda_aggiunte(CK_DS, True) if ARG.matrice == "l29d2" else [])
     + ["* ---- L29c: il trim (ADR-027, trim.py candidato 2) fra OUTA e l'attenuatore ----",
        "* RATTT del blocco si apre nel .control (alter rattt = 1e12): OUTA arriva a W da qui.",
        "RL1 OUTA TAP6 845", "RL2 TAP6 TAP12 464", "RL3 TAP12 0 464"]
@@ -340,7 +358,8 @@ def cambio_trim(p1, p2, t):
 
 def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=1000, trjk=2000,
           g1=10, g2=None, tg=1000, p1=0, p2=None, tp=1000, vos=(0, 0, 0, 0), att="max",
-          rl="100k", trim_montato=True, cwire="100p", vto=None, rail=None, stati=True, geo=None):
+          rl="100k", trim_montato=True, cwire="100p", vto=None, rail=None, stati=True, geo=None,
+          ck=None, cavo=None):
     out = [
         "alter vamp dc = %s" % amp,
         "alter vfrq dc = %s" % f,
@@ -367,6 +386,13 @@ def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=1000,
         out += ["alter v%si dc = %s" % (n.lower(), i), "alter v%st dc = %.6f" % (n.lower(), t)]
     if geo is not None:
         out += geo_alter(geo, tijk, trjk)
+    if ck is not None:
+        # L29d2: il contatto aperto e il cavo, reimpostati da ogni corsa; la tabella dell'op li
+        # stampa (una variante sul nome sbagliato non cambierebbe niente: limitations #29)
+        out += ["alter %s = %s" % (c, ck) for c in ("cksm", "cks1", "cks2")]
+        out += ["alter %s = %s" % (c, cavo) for c in ("ccavm", "ccav1", "ccav2")]
+        out += ["print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance]"
+                " @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]"]
     if vto is not None:
         out += ["altermod lsk489a vto = %s" % VTO[vto],
                 "showmod jprb : vto beta",
@@ -717,25 +743,29 @@ CLASSE_SEMPRE = {"N": "N", "iA": "i", "iB": "i", "ii": "ii", "iii": "iii"}
 GEO_DI = {"N": "N", "S": "ii", "i": "iA", "ii": "ii", "iii": "iii"}
 
 
-def matrice_sonda():
+def matrice_sonda(geometrie=GEOMETRIE, kx={}):
+    """kx: argomenti in piu' di corsa() (L29d2: ck e cavo per il controfattuale N)."""
     out = []
     tf_rif = TF_CAMBIO   # copre ogni evento della sonda (mev 17,5 s, accensione 11,6 s)
+    servono = {CLASSE_MAI[g] for g in geometrie} | {CLASSE_SEMPRE[g] for g in geometrie}
     for g in (0, 10):
         for k, cl, extra in [("mai", c, {}) for c in ("N", "S")] + [
                 ("sempre", c, dict(ti=-10, tr=1000, tijk=-10, trjk=1000)) for c in ("N", "i", "ii", "iii")]:
+            if cl not in servono:
+                continue
             n = "g%d%s_lz_%s" % (g, k, cl)
             out += ["* ---- riferimento %s ----" % n]
-            out += corsa(n, amp=0, tf=tf_rif, g1=g, geo=GEO_DI[cl], **extra)
+            out += corsa(n, amp=0, tf=tf_rif, g1=g, geo=GEO_DI[cl], **dict(extra, **kx))
             out += [riga(n, n, "rif", 1000, 0, g, "100k", TI, T_RELE + 1.0, tf_rif, 10e-6, "rif_" + k,
                          gruppo=0)]
-    for geo in GEOMETRIE:
+    for geo in geometrie:
         var = "l29d_%s" % geo
         rif = lambda g, k: "g%d%s_lz_%s" % (g, k, (CLASSE_MAI if k == "mai" else CLASSE_SEMPRE)[geo])
         # 1: il cambio 0 -> +10 a rele' chiuso, e il rilascio 2 s dopo
         n = "gm0x10_lz_%s" % geo
         out += ["* ---- %s ----" % n]
         out += corsa(n, amp=0, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO, tijk=T_RELE, trjk=TR_CAMBIO,
-                     g1=0, g2=10, tg=T_CAMBIO, geo=geo)
+                     g1=0, g2=10, tg=T_CAMBIO, geo=geo, **kx)
         out += [riga(n + "_i", n, var, 1000, 0, "0a10", "100k", TI, T_CAMBIO, TF_CAMBIO, 10e-6, "evento",
                      rif(0, "sempre"), rif(0, "mai"), TG_LDR, 1, "A_ins;B2")]
         out += [riga(n + "_c", n, var, 1000, 0, "0a10", "100k", T_CAMBIO, TR_CAMBIO, TF_CAMBIO, 10e-6,
@@ -744,7 +774,7 @@ def matrice_sonda():
         n = "mev_lz_%s" % geo
         tf = T_RELE + 1.0 + TD + 3.0
         out += ["* ---- %s ----" % n]
-        out += corsa(n, amp=0, tf=tf, ti=TI, tr=T_RELE + 1.0, tijk=T_RELE, trjk=T_RELE + 1.0, geo=geo)
+        out += corsa(n, amp=0, tf=tf, ti=TI, tr=T_RELE + 1.0, tijk=T_RELE, trjk=T_RELE + 1.0, geo=geo, **kx)
         out += [riga(n, n, var + "_ev", 1000, 0, 10, "100k", TI, T_RELE + 1.0, tf, 10e-6, "evento",
                      rif(10, "sempre"), rif(10, "mai"), TG_LDR, 4, "A_ins;A_rel;B2")]
         # 5: le due accensioni peggiori di L29c
@@ -757,16 +787,182 @@ def matrice_sonda():
                     "0 0 %g 0 %g -15 1000 -15" % (T0_ON + dm, T0_ON + dm + tr),
                     "0 0 %g 0 %g 1 1000 1" % (T0_ON + dp, T0_ON + dp + tr))
             out += ["* ---- %s ----" % n]
-            out += corsa(n, amp=0, tf=tf, ti=-100, tr=t_rel, tijk=-10, trjk=t_rel, rail=rail, geo=geo)
+            out += corsa(n, amp=0, tf=tf, ti=-100, tr=t_rel, tijk=-10, trjk=t_rel, rail=rail, geo=geo, **kx)
             out += [riga(n, n, "accensione_" + geo, 1000, 0, 10, "100k", T0_ON, t_rel, tf, 10e-6, "evento",
                          rif(10, "sempre"), rif(10, "mai"), 0.0, 5, "A_ins;A_rel")]
     return out
 
 
-if ARG.matrice == "sonda_l29d":
+# ======== L29d2: la matrice di L29c sulla geometria iii (decisioni nell'intestazione)
+VARIANTI = (("", {}), ("c100", dict(cavo="100p")), ("r10k", dict(rl="10k")), ("k5", dict(ck="5p")))
+MUTE_RELE = [("h01", T_RELE + 0.1), ("ev", T_RELE + 1.0), ("h2", T_RELE + 2.0), ("h20", T_RELE + 20.0)]
+
+
+def blocco_l29d2(vs, vkw, geo="iii"):
+    """La matrice di L29c su una geometria e una variante. Le inversioni (mute senza rele') e i
+    20 kHz non ci sono: le prime non muovono il rele', i secondi si pianificano a parte."""
+    out = []
+    sx = ("_" + vs if vs else "") + "_" + geo
+    rl = vkw.get("rl", "100k")
+    kw = dict(geo=geo, rl=rl, ck=vkw.get("ck", CK_DS), cavo=vkw.get("cavo", "1e-18"))
+    var = "l29d2_%s%s" % (geo, "_" + vs if vs else "")
+    SEMPRE = dict(ti=-10, tr=1000, tijk=-10, trjk=1000)
+
+    def nome(pref, k, fk):
+        return "%s%s_%s%s" % (pref, k, fk or "lz", sx)
+
+    def rif(pref, fk, amp, tf, g=10, p=0):
+        f, tm, _ = FREQ[fk] if fk else (1000, 10e-6, 7e-6)
+        o = []
+        for k, extra in (("mai", {}), ("sempre", SEMPRE)):
+            c = nome(pref, k, fk)
+            o += corsa(c, amp=amp, f=f, tmax=tm, tf=tf, g1=g, p1=p, **dict(kw, **extra))
+            o += [riga(c, c, "rif", f, amp, g, rl, TI, T_RELE + 1.0, tf, tm, "rif_" + k, gruppo=0)]
+        return o
+
+    SEGNALI = (("1k", A), ("20", A), (None, 0))
+    for fk, amp in SEGNALI:
+        out += ["* ---- L29d2%s: riferimenti %s ----" % (sx, fk or "senza segnale")]
+        out += rif("g10", fk, amp, TF_LUNGO, g=10)
+        out += rif("g0", fk, amp, TF_CAMBIO, g=0)
+        out += rif("g3", fk, amp, TF_CAMBIO, g=3)
+    for fk, amp in (("1k", A), (None, 0)):
+        out += rif("t6", fk, amp, TF_CAMBIO, g=10, p=6)
+        out += rif("t12", fk, amp, TF_CAMBIO, g=10, p=12)
+
+    # ---- 1: guadagno sotto mute (rele' chiuso), come matrice_l29c
+    for fk, amp in SEGNALI:
+        f, tm, _ = FREQ[fk] if fk else (1000, 10e-6, 7e-6)
+        sfx = fk or "lz"
+        for g1, g2 in [(0, 3), (3, 0), (3, 10), (10, 3), (0, 10), (10, 0)]:
+            n = "gm%dx%d_%s%s" % (g1, g2, sfx, sx)
+            out += ["* ---- L29d2 1: %s ----" % n]
+            out += corsa(n, amp=amp, f=f, tmax=tm, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO,
+                         tijk=T_RELE, trjk=TR_CAMBIO, g1=g1, g2=g2, tg=T_CAMBIO, **kw)
+            gm = "%da%d" % (g1, g2)
+            out += [riga(n + "_i", n, var, f, amp, gm, rl, TI, T_CAMBIO, TF_CAMBIO, tm, "evento",
+                         nome("g%d" % g1, "sempre", fk), nome("g%d" % g1, "mai", fk), TG_LDR, 1,
+                         "A_ins;B2" if amp == 0 else "S_ins;B2")]
+            out += [riga(n + "_c", n, var, f, amp, gm, rl, T_CAMBIO, TR_CAMBIO, TF_CAMBIO, tm, "evento",
+                         nome("g%d" % g2, "sempre", fk), nome("g%d" % g2, "mai", fk), 0.0, 1,
+                         "A_ins;A_rel;B2" if amp == 0 else "S_rel;B2")]
+    n = "gm0x10p_lz" + sx
+    out += corsa(n, amp=0, tmax=7e-6, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO, tijk=T_RELE, trjk=TR_CAMBIO,
+                 g1=0, g2=10, tg=T_CAMBIO, stati=False, **kw)
+    for k, t in enumerate((TI, T_CAMBIO, TR_CAMBIO)):
+        out += [riga("pav_gm0x10_%d%s" % (k, sx), n, "pavimento", 1000, 0, "0a10", rl, t, 1000,
+                     TF_CAMBIO, 7e-6, "pav_num", "gm0x10_lz%s_i" % sx, "-", 0.0, 0, "")]
+
+    # ---- 2: trim sotto mute, +10 dB
+    for fk, amp in (("1k", A), (None, 0)):
+        f, tm, _ = FREQ[fk] if fk else (1000, 10e-6, 7e-6)
+        sfx = fk or "lz"
+        ref = lambda p, k: nome("g10" if p == 0 else "t%d" % p, k, fk)
+        for p1, p2 in [(0, 6), (6, 0), (6, 12), (12, 6), (0, 12), (12, 0)]:
+            n = "tm%dx%d_%s%s" % (p1, p2, sfx, sx)
+            out += ["* ---- L29d2 2: %s ----" % n]
+            out += corsa(n, amp=amp, f=f, tmax=tm, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO,
+                         tijk=T_RELE, trjk=TR_CAMBIO, g1=10, p1=p1, p2=p2, tp=T_CAMBIO, **kw)
+            gm = "t%da%d" % (p1, p2)
+            out += [riga(n + "_i", n, var, f, amp, gm, rl, TI, T_CAMBIO, TF_CAMBIO, tm, "evento",
+                         ref(p1, "sempre"), ref(p1, "mai"), TG_LDR, 2,
+                         "A_ins;B2" if amp == 0 else "S_ins;B2")]
+            out += [riga(n + "_c", n, var, f, amp, gm, rl, T_CAMBIO, TR_CAMBIO, TF_CAMBIO, tm, "evento",
+                         ref(p2, "sempre"), ref(p2, "mai"), 0.0, 2,
+                         "A_ins;A_rel;B2" if amp == 0 else "S_rel;B2")]
+
+    # ---- 3: la dispersione peggiore di L29c, VOS "p" e attenuatore al massimo, tre gruppi B
+    for vt in DISP_VTO:
+        dsx = "dp%smax" % vt.replace("b_", "")
+        dkw = dict(kw, amp=0, vos=DISP_VOS["p"], att="max", vto=None if vt == "a" else vt)
+        out += ["* ---- L29d2 3: dispersione %s%s ----" % (dsx, sx)]
+        dref = lambda g, p, k: "r%s_g%dt%d_%s%s" % (k, g, p, dsx, sx)
+        for g, p in ((10, 0), (0, 0), (10, 12)):
+            for k, extra in (("mai", {}), ("sempre", SEMPRE)):
+                n = dref(g, p, k)
+                out += corsa(n, tf=TF_CAMBIO, g1=g, p1=p, **dict(dkw, **extra))
+                out += [riga(n, n, "rif_" + dsx, 1000, 0, g, rl, TI, T_RELE + 1, TF_CAMBIO, 10e-6,
+                             "rif_" + k, gruppo=3)]
+        for (g1, g2, p1, p2) in ((0, 10, 0, 0), (10, 0, 0, 0), (10, 10, 0, 12), (10, 10, 12, 0)):
+            n = "x%d%d%d%d_%s%s" % (g1, g2, p1, p2, dsx, sx)
+            out += corsa(n, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO, tijk=T_RELE, trjk=TR_CAMBIO,
+                         g1=g1, g2=g2, tg=T_CAMBIO if g1 != g2 else 1000,
+                         p1=p1, p2=p2, tp=T_CAMBIO if p1 != p2 else 1000, **dkw)
+            gm = "g%da%d_t%da%d" % (g1, g2, p1, p2)
+            out += [riga(n + "_i", n, var + "_" + dsx, 1000, 0, gm, rl, TI, T_CAMBIO, TF_CAMBIO, 10e-6,
+                         "evento", dref(g1, p1, "sempre"), dref(g1, p1, "mai"), TG_LDR, 3, "A_ins;B2")]
+            out += [riga(n + "_c", n, var + "_" + dsx, 1000, 0, gm, rl, T_CAMBIO, TR_CAMBIO, TF_CAMBIO,
+                         10e-6, "evento", dref(g2, p2, "sempre"), dref(g2, p2, "mai"), 0.0, 3,
+                         "A_ins;A_rel;B2")]
+        n = "xm_%s%s" % (dsx, sx)
+        out += corsa(n, tf=T_RELE + 1 + TD + 3, ti=TI, tr=T_RELE + 1, tijk=T_RELE, trjk=T_RELE + 1, **dkw)
+        out += [riga(n, n, var + "_" + dsx, 1000, 0, 10, rl, TI, T_RELE + 1, T_RELE + 1 + TD + 3, 10e-6,
+                     "evento", dref(10, 0, "sempre"), dref(10, 0, "mai"), TG_LDR, 3, "A_ins;A_rel;B2")]
+
+    # ---- 4: il mute col rele' (tenuto 0,1 / 1 / 2 / 20 s): la musica, S e B2 col contatto aperto
+    for fk, amp in SEGNALI:
+        f, tm, _ = FREQ[fk] if fk else (1000, 10e-6, 7e-6)
+        sfx = fk or "lz"
+        for m, tr in MUTE_RELE:
+            n = "m%s_%s%s" % (m, sfx, sx)
+            tf = tr + TD + 3.0
+            out += ["* ---- L29d2 4: %s ----" % n]
+            out += corsa(n, amp=amp, f=f, tmax=tm, tf=tf, ti=TI, tr=tr, tijk=T_RELE, trjk=tr, **kw)
+            out += [riga(n, n, var + "_" + m, f, amp, 10, rl, TI, tr, tf, tm, "evento",
+                         nome("g10", "sempre", fk), nome("g10", "mai", fk), TG_LDR, 4,
+                         "A_ins;A_rel;B2" if amp == 0 else "S_ins;S_rel;B2")]
+        if fk:
+            nn = "mnorele_%s%s" % (sfx, sx)
+            tf = T_RELE + 1.0 + TD + 3.0
+            out += corsa(nn, f=f, tmax=tm, tf=tf, ti=TI, tr=T_RELE + 1.0, **kw)
+            out += [riga(nn, nn, "rif", f, A, 10, rl, TI, T_RELE + 1, tf, tm, "rif_seq")]
+            out += [riga("rele_%s%s" % (sfx, sx), "mev_%s%s" % (sfx, sx), "rele_contro_norele", f, A, 10,
+                         rl, T_RELE, T_RELE + 1.0, tf, tm, "evento", nn, nn, 0.0, 4, "S_ins;S_rel")]
+    n = "mevp_lz" + sx
+    out += corsa(n, amp=0, tmax=7e-6, tf=T_RELE + 1 + TD + 3, ti=TI, tr=T_RELE + 1, tijk=T_RELE,
+                 trjk=T_RELE + 1, stati=False, **kw)
+    for k, t in enumerate((TI, T_RELE, T_RELE + 1)):
+        out += [riga("pav_mev_%d%s" % (k, sx), n, "pavimento", 1000, 0, 10, rl, t, 1000,
+                     T_RELE + 1 + TD + 3, 7e-6, "pav_num", "mev_lz" + sx, "-", 0.0, 0, "")]
+
+    # ---- 5: accensione (verdetto) e spegnimento (diagnostica per L30, ADR-043)
+    for tr in RAMPE:
+        for sk, (dp, dm) in SFASI.items():
+            n = "on_r%g%s%s" % (tr * 1e3, sk, sx)
+            t_rel = T0_ON + T_TIMER
+            tf = t_rel + TD + 3.0
+            rail = ("0 0 %g 0 %g 15 1000 15" % (T0_ON + dp, T0_ON + dp + tr),
+                    "0 0 %g 0 %g -15 1000 -15" % (T0_ON + dm, T0_ON + dm + tr),
+                    "0 0 %g 0 %g 1 1000 1" % (T0_ON + dp, T0_ON + dp + tr))
+            out += ["* ---- L29d2 5: %s ----" % n]
+            out += corsa(n, amp=0, tf=tf, ti=-100, tr=t_rel, tijk=-10, trjk=t_rel, rail=rail, **kw)
+            out += [riga(n, n, "accensione_" + geo, 1000, 0, 10, rl, T0_ON, t_rel, tf, 10e-6, "evento",
+                         nome("g10", "sempre", None), nome("g10", "mai", None), 0.0, 5, "A_ins;A_rel")]
+            for rr in RIT_RELE:
+                n = "off_r%g%s_d%g%s" % (tr * 1e3, sk, rr * 1e3, sx)
+                tf = T_OFF + 2.5
+                rail = ("0 15 %g 15 %g 1m 1000 1m" % (T_OFF + dp, T_OFF + dp + tr),
+                        "0 -15 %g -15 %g -1m 1000 -1m" % (T_OFF + dm, T_OFF + dm + tr),
+                        "0 1 %g 1 %g 0 1000 0" % (T_OFF + dp, T_OFF + dp + tr))
+                out += corsa(n, amp=0, tf=tf, tijk=T_OFF + rr, trjk=1000, rail=rail, **kw)
+                out += [riga(n, n, "spegnimento_" + geo, 1000, 0, 10, rl, T_OFF, 1000, tf, 10e-6, "evento",
+                             nome("g10", "sempre", None), "-", 0.0, 5, "A_ins")]
+    return out
+
+
+def matrice_l29d2():
+    out = []
+    for vs, vkw in VARIANTI:
+        out += blocco_l29d2(vs, vkw)
+    # il controfattuale: N coi nomi della sonda L29d, con le aggiunte di L29d2 in posizione neutra
+    out += matrice_sonda(("N",), dict(ck=CK_DS, cavo="1e-18"))
+    return out
+
+
+if ARG.matrice in ("sonda_l29d", "l29d2"):
     C = [("save v(mainjack) v(fixjack1) v(fixjack2) v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus)"
           " v(main_a) v(mainc) v(fixc1) v(fixc2)") if r.startswith("save ") else r for r in C]
-    C += matrice_sonda()
+    C += matrice_sonda() if ARG.matrice == "sonda_l29d" else matrice_l29d2()
 elif ARG.matrice == "controfattuale":
     C += controfattuale()
 elif ARG.matrice == "caldo":
