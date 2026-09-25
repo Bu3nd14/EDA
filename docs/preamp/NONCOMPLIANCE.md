@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-09-25** (L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-09-25** (L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -138,7 +138,14 @@ B di ADR-030). La corsa al rilascio è chiusa per struttura, con un polo ponte d
 provata sulla netlist dal 2e, e 0 cadute su 480 celle simulate contro 373 senza ponte. NC-028
 guadagna un residuo dichiarato: la manopola girata fuori mute e poi il mute inserito, ordinato
 come il trim ma non chiuso dal datasheet. Nessuna voce nuova.
-**12 voci aperte, 2 bloccanti.**
+**L35** (2026-09-25) ha portato nel sorgente ADR-045 e ADR-028. K6 ha un comando proprio,
+`PERMIT_CMD`, e il temporizzatore lo rilascia Δ (≥ 10 ms, nominale 20 ms) dopo `MUTE_CMD`: il
+residuo di L36, fino a ~90 dB SPL di picco a 1 m, torna a un cambio sotto mute, ~−22 dB, e lo
+stesso vale per il trim. Comandi e LED sono a pannello: J4 verso il temporizzatore, SW3 per
+l'interruttore di mute, J5/J6/J7 per i LED, il LED rosso letto dai due NC di K6. Il 2e lo prova e
+fallisce su 14 falsi e su `main`. **Chiude NC-032**; NC-028 resta aperta e bloccante solo per lo
+spegnimento (L30).
+**11 voci aperte, 2 bloccanti.**
 L'accesso a G1 non è concesso finché NC-004 e NC-028 restano aperte.
 
 ---
@@ -2149,7 +2156,7 @@ lasciato flottante o collegato è una scelta di layout.
 | Requisito | **V2** (transitorio del relè di mute, al rilascio) · **F6**/ADR-012 (il mute esiste per non mandare botti alle uscite) · **ADR-019** (il trim si regola a mute inserito) |
 | Severità | **bloccante** da L38 (maggiore fino a L38: V2 non aveva una soglia) |
 | Aperta da | `reports/2026-09-14-L11-mute-e-corto.md` |
-| Stato | aperta **solo per lo spegnimento** (L30, ADR-043). La parte del mute è chiusa da L29d2 (2026-09-25, decisione dell'utente, ADR-044) e **confermata sul sorgente da L29e** (2026-09-25) |
+| Stato | aperta **solo per lo spegnimento** (L30, ADR-043). La parte del mute è chiusa da L29d2 (2026-09-25, decisione dell'utente, ADR-044) e **confermata sul sorgente da L29e** (2026-09-25). Il residuo di L36 (la manopola girata fuori mute) è **chiuso nel sorgente da L35** (2026-09-25, ADR-045) |
 
 **Evidenza.** `data/2026-09-14/tb_mute_corto_transitorio.csv` e
 `tb_mute_corto_trans_{0,10}.csv`. Segnale da 2,7 V RMS a 1 kHz, manopola al
@@ -2573,6 +2580,25 @@ alla realizzazione (L35).**
   Il failsafe deve rilasciare `MUTE_CMD` per primo e tenere K6, K1/K5 e K11/K12 alimentati
   almeno Δ dopo, oppure provare un'altra via.
 
+**AGGIORNATA IL 2026-09-25, da L35: il residuo di L36 è chiuso nel sorgente. La voce RESTA APERTA
+E BLOCCANTE per lo spegnimento (L30).**
+(`reports/2026-09-25-L35-comandi-e-led-a-pannello.md`, dati `data/2026-09-25/L35/`)
+- **Il sorgente**: la bobina di K6 è su `PERMIT_CMD` (`trim.py`), e i due comandi escono su
+  **J4** (`MUTE_TIMER`) insieme all'interruttore di mute. Accanto a J4 c'è il contratto: Δ
+  nominale 20 ms e minimo 10 ms, più di tre volte i 3 ms di rilascio massimo di K2–K4
+  (en-g6k.pdf p. 3); al rilascio `PERMIT_CMD` non dopo `MUTE_CMD`; i 13 ms di ADR-027 passano
+  su `PERMIT_CMD`.
+- **Il 2e** (`check_relay_safe_state.py`): K6 conta come «il mute» (eccitato fuori mute), e
+  nella **finestra Δ** (K6 eccitato, K2–K4 già rilasciati) trim e guadagno restano fermi. Il
+  sabotaggio chiesto da ADR-045, K6 di nuovo su `MUTE_CMD`, fallisce col suo nome; con esso
+  falliscono altri 13 falsi e la netlist di `main`.
+- **In dB**: il caso lasciato aperto da L36, fino a ~90 dB SPL di picco a 1 m, torna al cambio
+  sotto mute, 0,17 µV al jack (L29d2/L29e), cioè **~−22 dB**: ~55 dB sotto la soglia V2 e ~50 dB
+  sotto il fondo di una stanza silenziosa (~25–35 dB(A)). Vale anche per il trim.
+- **Cosa non è provato**: che il temporizzatore rispetti Δ. È un contratto scritto accanto a J4
+  per il lotto dell'alimentatore, come quello delle LDR accanto a J3; la netlist non ha tempi.
+  E la nota per il failsafe resta di L30.
+
 
 ### NC-029 — Con i buffer delle fisse la dissipazione a riposo raddoppia, e P5 non la copre
 
@@ -2786,7 +2812,7 @@ Lotto **L33** (XS).
 | Requisito | **F10**, **F11** · ADR-028 · letta insieme a **F5**/ADR-030 e **P8**/ADR-029 |
 | Severità | **maggiore** |
 | Aperta da | `reports/2026-09-15-L34-decisioni-comandi-guadagno-telaio.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-25 da L35** — comandi e LED a pannello nel sorgente, provati dal 2e. Vedi «Chiusura» in fondo alla voce e «Voci chiuse» |
 
 **Evidenza.** Letta su `circuits/preamp/` e sulla netlist generata
 `circuits/preamp/preamp_audio.net`, a `3f625aa`:
@@ -2816,6 +2842,29 @@ verificare un comando che non esiste.
 4. il LED rosso di mute, da un contatto che dica lo stato;
 5. `check_relay_safe_state.py` esteso ai comandi nuovi, e fatto fallire su una
    netlist sbagliata.
+
+**Chiusura (2026-09-25, L35).** I cinque punti sono nel sorgente e il 2e li prova
+(`reports/2026-09-25-L35-comandi-e-led-a-pannello.md`, dati `data/2026-09-25/L35/`):
+1. **J5** (`TRIM_LED`) al posto di D4–D6, **J6** (`GAIN_LED`) al posto di D7–D9: tre anodi e il
+   ritorno comune su `RLY_RET`. Nessuna parte si rinumera (#22).
+2. **SW2** esiste da L36 (K5 mai senza K1, provato); resta header a 16 vie, come SW1.
+3. **SW3**, l'interruttore di mute, è un ingresso del temporizzatore su **J4** pin 3, con
+   `MUTE_CMD` e `PERMIT_CMD` sui pin 1 e 2. L'OR di F10 («interruttore aperto oppure
+   accensione non finita») è nel contratto accanto a J4, per l'alimentatore: un interruttore in
+   serie al comando perderebbe lo sfasamento di ADR-045. Chiuso = musica, quindi un filo rotto
+   mette in mute.
+4. **Il LED rosso di mute** su **J7**, da **R3** su `VTRIM`: i due NC di K6 in serie, cioè lo
+   stato di un contatto e non il comando, senza un relè in più. Con ADR-045 sbaglia solo dal
+   lato sicuro: si accende Δ dopo lo stacco dei jack e si spegne non dopo il loro riaggancio.
+   Un contatto saldato di K2–K4 non si vede: lo stesso tipo di guasto di un relè solo che
+   ADR-033 accetta.
+5. **Il 2e**: i comandi su J4, la finestra Δ, i LED sui loro header (il trim nei quattro stati
+   dei bistabili, prova nuova; il guadagno nei tre stati; il mute in mute, fuori mute e nella
+   finestra). **14 falsi e `main` falliscono**, ciascuno per la ragione voluta; i falsi di L16,
+   L29e e L36 danno gli esiti di allora, tranne due che sabotavano parti che non esistono più.
+
+**Resta fuori, e non è di questa voce**: il temporizzatore vero (Δ, l'OR di F10, il debounce)
+è del lotto dell'alimentatore, che eredita il contratto di J4.
 
 ### NC-033 — La Zout di E4 pubblicata contiene il segnale: il deck la misurava con la sorgente accesa
 
@@ -2991,6 +3040,16 @@ corrente di progetto. Il sorgente lo dice accanto al valore.
 - R128 resta select-on-test.
 
 ## Voci chiuse
+
+**NC-032 — I comandi e i LED del frontale di ADR-028 non esistono nel circuito**
+(maggiore). **CHIUSA il 2026-09-25 da L35.**
+- Header J5 e J6 al posto dei LED sulla scheda; J7 e R3 per il LED rosso di mute, letto da
+  `VTRIM` (i due NC di K6); SW3 e J4 verso il temporizzatore, col contratto di ADR-045.
+- Il 2e prova comandi, finestra Δ e LED a pannello: 14 falsi e `main` falliscono.
+- Il temporizzatore vero passa all'alimentatore come contratto.
+
+Il testo completo della voce resta sopra, con la sua «Chiusura». Report:
+`reports/2026-09-25-L35-comandi-e-led-a-pannello.md`.
 
 **NC-034 — Coi modelli del costruttore V1 cade su ogni istanza a guadagno
 unitario** (bloccante). **CHIUSA il 2026-09-23 da L40.**

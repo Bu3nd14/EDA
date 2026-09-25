@@ -55,17 +55,24 @@ any transfer. Proved on the netlist by scripts/check_relay_safe_state.py
 No charge-storing part, no extra permissive: neither "Da riaprire se" of
 ADR-030 applies.
 
-THE RESIDUE, declared (L36 report, NC-028). If the knob is turned OUT of
+THE RESIDUE OF L36, closed by ADR-045 (L35). If the knob is turned OUT of
 mute and the mute is then inserted, the gain goes to the knob when VHOLD
-dies (K6's NO opens), one K1 release time later. K6 moves with K2-K4 - same
-coil net, same part - so the change follows the jacks' disconnection by
-that release time, exactly as the trim follows it by its set time. It is
-ordered, not closed by the datasheet.
+dies (K6's NO opens), one K1 release time later. Until L35 K6 sat on
+MUTE_CMD with K2-K4 and released together with them, so whether the gain
+step reached the jack depended on the spread between two release times the
+datasheet does not bound from below (up to ~90 dB SPL peak at 1 m, against
+~33 dB for V2). Since L35 K6 has its own command, PERMIT_CMD, released a
+delay D >= 10 ms after MUTE_CMD (contract next to J4, preamp_audio.py): the
+jacks are open - 3 ms maximum release, en-g6k.pdf p. 3 - before VHOLD can
+die. What is left is a change under mute: 0.17 uV at the jack in L29d2 /
+L29e, ~-22 dB SPL. Only with VRELAY present: its collapse is L30's
+(ADR-043, and the note of ADR-045).
 
 WHAT IS DELIBERATELY NOT HERE
 -----------------------------
  - The panel: SW2 is a panel part and appears as its 16-way harness header,
-   like SW1; the LEDs sit on the board like the trim's until L35 moves them.
+   like SW1; the three LEDs are panel parts too (ADR-028, L35), wired with
+   flying leads to their harness header J6.
  - The VRELAY supply (psu-engineer). The pick-up passes through the
    Schottky: VRELAY - V_F(42 mA) must stay >= 80 % of the rated 5 V (must
    operate, en-g6k.pdf p. 3) at -5 % and warm. A 1N4148 does not fit.
@@ -77,12 +84,17 @@ from gain_block import FP_R
 FP_RELAY = "Relay_SMD:Relay_DPDT_Omron_G6K-2F-Y"
 FP_D = "Diode_THT:D_DO-35_SOD27_P7.62mm_Horizontal"
 FP_SCHOTTKY = "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal"
-FP_LED = "LED_THT:LED_D3.0mm"
+FP_CONN4 = "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical"
 FP_SW = "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical"
 
 # LED current limiter from VRELAY, as the trim's (trim.R_LED): ~2 mA in a red
 # LED at VRELAY = 5 V. VRELAY is not decided yet: re-size with it.
 R_LED = "1.5k"
+
+# J6, the gain LEDs' harness (ADR-028, L35), the trim's J5 pattern: pin ->
+# what it lights. scripts/check_relay_safe_state.py keeps the same map as
+# DATA (PANEL_LEDS); the two must agree.
+LED_PINS = {"1": "0 dB", "2": "+3 dB", "3": "+10 dB", "4": "RLY_RET"}
 
 # SW2 (Switch:SW_Rotary_4x3): commons 13 / 14 / 15 / 16, throws 1-2-3, 4-5-6,
 # 7-8-9, 10-11-12, the k-th throw of each pole being position k.
@@ -174,7 +186,9 @@ def gain_relays(vrelay, trim_parts, g6k_pins):
     # ---- the LEDs of the true gain state, pole 2 of the auxiliaries --------
     # VRELAY -R2- HOLD3 COM: rest -> LED 0 dB; energised -> HOLD10 COM:
     # rest -> LED +3 dB, energised -> LED +10 dB. One LED at a time, one
-    # resistor, the trim's pattern (F9, ADR-027).
+    # resistor, the trim's pattern (F9, ADR-027). Since L35 the LEDs are on
+    # the panel: D7-D9 are gone (refs not reused, limitations #22), their
+    # anodes leave on J6.
     feed = Net("GLED_FEED")
     rl = Part("Device", "R", value=R_LED, footprint=FP_R, ref="R2")
     rl[1] += vrelay
@@ -184,12 +198,14 @@ def gain_relays(vrelay, trim_parts, g6k_pins):
     mid = Net("GLED_MID")
     a3[no2] += mid
     a10[com2] += mid
-    for ref, label, (relay, pin) in (("D7", "LED 0dB", (a3, nc2)),
-                                     ("D8", "LED +3dB", (a10, nc2)),
-                                     ("D9", "LED +10dB", (a10, no2))):
-        led = Part("Device", "LED", value=label, footprint=FP_LED, ref=ref)
-        anode = Net(f"{ref}_A")
-        led[2] += anode             # A
-        led[1] += ret               # K
-        relay[pin] += anode
+    jl = Part("Connector_Generic", "Conn_01x04", value="GAIN_LED",
+              footprint=FP_CONN4, ref="J6")
+    for pin, (net, (relay, rpin)) in zip(("1", "2", "3"), (
+            ("GLED_0", (a3, nc2)),
+            ("GLED_3", (a10, nc2)),
+            ("GLED_10", (a10, no2)))):
+        anode = Net(net)            # the anode of the panel LED LED_PINS[pin]
+        relay[rpin] += anode
+        jl[pin] += anode
+    jl[4] += ret                    # the LEDs' common cathode
     return out["3"], out["10"]

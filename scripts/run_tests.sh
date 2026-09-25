@@ -171,6 +171,11 @@ echo "-- 2e. relay safe state on de-energised coils (NC-014) and the trim interl
 # ground" alone passed on the old shunt at the jack as well; the geometry is
 # asserted by intent, and was made to fail on main's netlist and on four
 # sabotaged copies: docs/preamp/data/2026-09-25/L29e/falsi/.
+# L35 (ADR-045, ADR-028): the permissive K6 on its own command PERMIT_CMD,
+# both commands and the mute switch on the timer harness J4, the window D,
+# and the panel LEDs proved on their headers J5 / J6 / J7. Made to fail on
+# main's netlist and on 14 sabotaged copies:
+# docs/preamp/data/2026-09-25/L35/falsi/.
 #
 # The netlists are named rather than discovered: the checker FAILS when it
 # finds no relay, deliberately, so it cannot go blind. Adding a second

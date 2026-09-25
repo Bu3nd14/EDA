@@ -30,12 +30,23 @@ WHAT THIS IS (ADR-027; REQUIREMENTS F2, F8, F9)
    driven continuously towards the knob's position, in the right polarity.
  - THE INTERLOCK (F8, ADR-019 para. 2, NC-023). VTRIM comes from VRELAY through
    the two NORMALLY CLOSED contacts of K6 in series. K6 is a monostable
-   G6K-2F-Y whose coil sits on MUTE_CMD with the three mute relays: energised
-   = out of mute = VTRIM dead = the knob moves nothing; de-energised = muted
-   (or power down, or the mute timer not yet released) = VTRIM live. The two
+   G6K-2F-Y whose coil sits on its OWN command, PERMIT_CMD (ADR-045, L35;
+   until L35 it was MUTE_CMD, with the three mute relays): energised = out
+   of mute = VTRIM dead = the knob moves nothing; de-energised = muted (or
+   power down, or the mute timer not yet released) = VTRIM live. The two
    NC in series: one welded contact alone does not defeat the interlock.
    Out of mute the bistables keep their state with no current: the value set
    stays applied when the mute is released.
+ - WHY A COMMAND OF ITS OWN (ADR-045). On the same coil net as the jack
+   relays, K6 released together with them, and whether the trim (and the
+   gain, gain_interlock.py) moved before or after the jacks were
+   disconnected depended on the spread between two release times the
+   datasheet does not bound from below. The timer now releases PERMIT_CMD
+   a delay D after MUTE_CMD on insertion (D >= 10 ms against the jack
+   relays' 3 ms maximum release, en-g6k.pdf p. 3), and energises it no
+   later than MUTE_CMD on release: the contract is written next to J4 in
+   preamp_audio.py. VTRIM live therefore also lights the red mute LED
+   (F11, ADR-028 point 5): the state of K6's contacts, not the command.
  - POWER-ON STATE: the preamp powers up muted (ADR-012), so the coils are
    driven to the knob's position BEFORE the mute releases. What the trim
    comes up in is the knob's position, not "whatever it was last".
@@ -44,8 +55,11 @@ WHAT IS DELIBERATELY NOT HERE
 -----------------------------
  - The input selector (still off-board, upstream of block A).
  - The mute timer and the VRELAY supply (psu-engineer). A constraint for
-   them, from the datasheet: the mute must release no earlier than 10 ms
-   (minimum set/reset signal width) + 3 ms (set time) after VRELAY is valid.
+   them, from the datasheet: K6 must energise - PERMIT_CMD, since ADR-045 the
+   command that ends the trim's drive - no earlier than 10 ms (minimum
+   set/reset signal width) + 3 ms (set time) after VRELAY is valid.
+ - The LEDs (ADR-028, L35): they are panel parts, wired with flying leads.
+   On the board there is their harness header, J5.
 
 THE PIN MAP, READ FROM THE DATASHEET - not inherited from the G6K-2F-Y:
 vendor/relays/omron/G6K/en-g6k.pdf (K106-E1-11) page 7 and
@@ -71,10 +85,10 @@ FP_RELAY = "Relay_SMD:Relay_DPDT_Omron_G6K-2F-Y"   # same land pattern: the
 # and KiCad's own symbol filter for G6KU-2 matches this footprint.
 FP_TVS = "Diode_SMD:D_SMA"
 FP_D = "Diode_THT:D_DO-35_SOD27_P7.62mm_Horizontal"
-FP_LED = "LED_THT:LED_D3.0mm"
 FP_SW = "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical"  # the
 # rotary switch is a PANEL part: on the board it is the 16-way harness header.
 FP_CONN1 = "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical"
+FP_CONN4 = "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical"
 
 # G6KU-2F-Y, see the docstring.
 KU_SET_PLUS, KU_SET_MINUS = "1", "8"
@@ -96,6 +110,12 @@ R1_TRIM, R2_TRIM, R3_TRIM = "845", "464", "464"
 # VRELAY is not decided yet (psu-engineer, ADR-026): re-size with it.
 R_LED = "1.5k"
 
+# J5, the trim LEDs' harness (ADR-028, L35): the three LEDs are panel parts,
+# wired with flying leads, common cathode on RLY_RET. Pin -> what it lights.
+# scripts/check_relay_safe_state.py keeps the same map as DATA (PANEL_LEDS)
+# and proves, state by state of SPIA1 / SPIA2, that only the right pin is fed.
+LED_PINS = {"1": "0 dB", "2": "-6 dB", "3": "-12 dB", "4": "RLY_RET"}
+
 # SW1 (Switch:SW_Rotary_4x3): commons 13 / 14 / 15 / 16, throws 1-2-3, 4-5-6,
 # 7-8-9, 10-11-12, the k-th throw of each pole being position k.
 SW_POLES = (("13", ("1", "2", "3")), ("14", ("4", "5", "6")),
@@ -113,11 +133,14 @@ SW_TABLE = {
 }
 
 
-def trim_relays(vrelay, mute_cmd, g6k_pins):
+def trim_relays(vrelay, permit_cmd, g6k_pins):
     """The parts both channels share. Returns {"T1": K7, "T2": K8}, plus
     "K6", "VTRIM" and "RET": since L36 the gain interlock (gain_interlock.py,
     ADR-041 "come TRIM") shares the permissive and its rails. It takes
     VHOLD from K6's pole-1 NO, free until then; nothing here changes.
+
+    permit_cmd - K6's own command (ADR-045, L35), NOT MUTE_CMD: the timer
+                 releases it a delay after the jack relays' command.
 
     g6k_pins = (coil_a, coil_b, com1, no1, nc1, com2, no2, nc2) of the
     G6K-2F-Y as preamp_audio.py holds them: ONE pin map for the monostables,
@@ -127,11 +150,13 @@ def trim_relays(vrelay, mute_cmd, g6k_pins):
     vtrim, ret = Net("VTRIM"), Net("RLY_RET")
     rails = {"VTRIM": vtrim, "RET": ret}
 
-    # ---- K6: the permissive (F8). Coil on the MUTE command, two NC in series.
+    # ---- K6: the permissive (F8). Coil on its own command, PERMIT_CMD
+    # (ADR-045: released a delay AFTER MUTE_CMD, so the knobs go live only
+    # with the jacks already disconnected), two NC in series.
     k6 = Part("Relay", "G6K-2", value="G6K-2F-Y PERMIT",
               footprint=FP_RELAY, ref="K6")
     k6[coil_a] += vrelay
-    k6[coil_b] += mute_cmd
+    k6[coil_b] += permit_cmd
     mid = Net("PERMIT_MID")
     k6[com1] += vrelay
     k6[nc1] += mid
@@ -179,6 +204,9 @@ def trim_relays(vrelay, mute_cmd, g6k_pins):
     # ---- F9: the LEDs, lit by the SPIA contacts ------------------------------
     # VRELAY -R- SPIA1 COM: reset -> LED 0 dB; set -> SPIA2 COM: reset ->
     # LED -6 dB, set -> LED -12 dB. One LED at a time, one resistor.
+    # Since L35 (ADR-028: "i LED li colleghiamo con fili") the LEDs are on
+    # the panel and the board carries J5, their harness header: D4-D6 are
+    # gone and their refs are not reused (limitations #22).
     feed = Net("LED_FEED")
     rl = Part("Device", "R", value=R_LED, footprint=FP_R, ref="R1")
     rl[1] += vrelay
@@ -188,15 +216,16 @@ def trim_relays(vrelay, mute_cmd, g6k_pins):
     s_mid = Net("SPIA_MID")
     s1[KU_SET1] += s_mid
     s2[KU_COM1] += s_mid
-    for ref, label, anode_pin in (("D4", "LED 0dB", (s1, KU_RESET1)),
-                                  ("D5", "LED -6dB", (s2, KU_RESET1)),
-                                  ("D6", "LED -12dB", (s2, KU_SET1))):
-        led = Part("Device", "LED", value=label, footprint=FP_LED, ref=ref)
-        anode = Net(f"{ref}_A")
-        led[2] += anode      # A
-        led[1] += ret        # K
-        relay, pin = anode_pin
-        relay[pin] += anode
+    jl = Part("Connector_Generic", "Conn_01x04", value="TRIM_LED",
+              footprint=FP_CONN4, ref="J5")
+    for pin, (net, (relay, rpin)) in zip(("1", "2", "3"), (
+            ("TLED_0", (s1, KU_RESET1)),
+            ("TLED_6", (s2, KU_RESET1)),
+            ("TLED_12", (s2, KU_SET1)))):
+        anode = Net(net)     # the anode of the panel LED LED_PINS[pin]
+        relay[rpin] += anode
+        jl[pin] += anode
+    jl[4] += ret             # the LEDs' common cathode
 
     # The coil and LED return leaves the board on its own pin, not on the
     # audio GND (P4, star ground).

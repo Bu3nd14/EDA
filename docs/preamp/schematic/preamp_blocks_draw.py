@@ -602,13 +602,14 @@ box(19.6, 4.95, 12.2, 2.4,
      "deviatori (ADR-044): a riposo lato C a massa, jack staccati"],
     color=RED, head_size=10)
 
-# ADR-027 (L16): il permissivo K6 sul comando del mute, i due bistabili del
-# trim e le loro due spie. Chi fa cosa lo asserisce il 2e.
+# ADR-027 (L16): il permissivo K6, i due bistabili del trim e le loro due
+# spie. Da L35 (ADR-045) K6 ha un comando proprio, PERMIT_CMD, rilasciato un
+# ritardo dopo quello del mute. Chi fa cosa lo asserisce il 2e.
 box(35.4, 4.95, 18.6, 2.4,
     [f"K6 PERMESSO {RELAY_PN} · K7 K8 TRIM, K9 K10 SPIA {TRIM_PN}",
-     "K6 sul comando del mute, due NC in serie: il trim si comanda "
-     "solo in mute (F8)",
-     "bistabili: il valore resta all'uscita dal mute; i LED leggono K9 K10"],
+     "K6 su PERMIT_CMD (ADR-045), due NC in serie: trim e guadagno "
+     "solo in mute",
+     "bistabili: il valore resta fuori mute; LED a pannello (J5) da K9 K10"],
     color=GREEN, head_size=9.5, size=8.5)
 
 txt((23.0, 3.30),
