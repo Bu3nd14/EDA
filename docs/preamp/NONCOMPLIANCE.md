@@ -115,6 +115,15 @@ di guadagno o di trim a relè chiuso (fino a 267 µV con la dispersione), l'acce
 spegnimento: il contatto in derivazione attenua solo ~1/471. L'utente ha deciso **ADR-043**
 (spegnimento e failsafe all'alimentatore, L30) e un contatto in serie al jack da misurare in
 **L29d**. **NC-028 resta aperta e bloccante**, aggiornata.
+**L29d** (2026-09-25) è diventato una sonda per decisione dell'utente. Il motivo è una previsione:
+con la serie aperta, il lato del condensatore resta sospeso, e un salto d'offset preso a mute
+inserito arriva al jack al rilascio. Confermata:
+- la serie sola e la serie con la derivazione al jack danno fino a 190 mV;
+- la serie con la derivazione **dal lato del condensatore** regge su tutto tranne un'accensione
+  (205 µV, passaggio capacitivo).
+
+La scelta della geometria e dello stato sicuro è dell'utente (**L29d2**). **NC-028 resta aperta e
+bloccante**, aggiornata.
 **12 voci aperte, 2 bloccanti.**
 L'accesso a G1 non è concesso finché NC-004 e NC-028 restano aperte.
 
@@ -2442,6 +2451,27 @@ BLOCCANTE.** (`reports/2026-09-23-L29c-v2-caso-peggiore.md`, deck generato
     taglia la musica di colpo.
 - **Cosa manca per chiuderla**: L29d (cambio sotto mute e accensione sotto 100 µV), poi L30
   (spegnimento e failsafe, ADR-043).
+
+**AGGIORNATA IL 2026-09-25, da L29d: la sonda del contatto in serie. La voce RESTA APERTA E
+BLOCCANTE.** (`reports/2026-09-25-L29d-sonda-contatto-serie.md`, dati `data/2026-09-25/L29d/`)
+
+- **Una sonda, non la matrice** (decisione dell'utente). La previsione fatta prima di correre:
+  con la serie aperta il lato condensatore resta sospeso, e il salto d'offset preso a mute
+  inserito arriva al jack al rilascio. Confermata sulle forme d'onda: 9,65 mV contro 9,6 calcolati.
+- **Celle peggiori di L29c** (A senza segnale, soglia 100 µV). N = L29c entro lo 0,09 %.
+  - **serie sola (ii)** e **serie più derivazione al jack, rilascio inverso (iA)**: 10 mV dopo il
+    cambio di guadagno, 64–190 mV dopo l'accensione. Peggio di L29c;
+  - **iA con la serie che si chiude per prima (iB)**: 0,3–5,6 mV;
+  - **serie più derivazione dal lato del condensatore (iii)**: cambio 6,8 µV, rilasci 0,03 µV,
+    accensione rapida 44 µV. **Fuori un'accensione, 205 µV sulle fisse**: il passaggio capacitivo
+    dei 5 pF ipotizzati per il contatto aperto, con zero cavo al jack.
+- **Ipotesi del banco, non del circuito**: 5 pF, nessun cavo, bleed lato condensatore
+  220 k / 470 k, trasferimento 1 ms.
+- **Cosa manca per chiuderla**:
+  - la scelta dell'utente della geometria, e dello stato sicuro di ADR-012: nella iii il jack a
+    riposo va a massa solo tramite il bleed;
+  - la matrice completa sulle geometrie scelte (**L29d2**) con una ADR;
+  - poi L30 (spegnimento e failsafe, ADR-043).
 
 
 ### NC-029 — Con i buffer delle fisse la dissipazione a riposo raddoppia, e P5 non la copre

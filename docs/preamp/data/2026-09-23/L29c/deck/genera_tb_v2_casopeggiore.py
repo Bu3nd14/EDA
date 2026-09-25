@@ -17,6 +17,9 @@ Uso:
                             comportamentale del blocco (fronte 4,55 us), che commuta al posto
                             dell'interruttore nativo. Con l'interruttore netto il cambio a caldo
                             che muove K5 si ferma su 'Timestep too small' a un rimbalzo.
+  --matrice sonda_l29d      L29d: la sonda del contatto IN SERIE al jack (NC-028), sulle celle
+                            peggiori di L29c, in cinque geometrie (N, iA, iB, ii, iii): vedi
+                            SONDA L29D in fondo a questa intestazione. Si scrive nei dati di L29d.
   --curve B B               le curve della VTL5C4 per la cella in serie e quella in derivazione
                             (A = resistenza piu' bassa ... D = piu' alta). Il deck versionato e'
                             B B, come tb_v2_mute_ldr.cir; le altre si generano nei dati di L29c.
@@ -55,6 +58,24 @@ IPOTESI DI ACCENSIONE E SPEGNIMENTO (ADR-039 non le fissa; l'alimentatore e' di 
   da 0 a +-15 V in TR_RAIL; il temporizzatore rilascia 2,5 s dopo l'inizio della rampa;
 - spegnimento: da regime, rail a 0 in TR_RAIL; nessuna dissolvenza (caso peggiore: il comando
   non se ne accorge); il rele' del jack si chiude con un ritardo dall'inizio della discesa.
+
+SONDA L29D (--matrice sonda_l29d; decisione dell'utente del 2026-09-25: sonda, poi ci si ferma).
+Il contatto in serie fra il condensatore d'uscita e il jack, sulle tre uscite, FUORI dal blocco:
+- la serie: interruttore nativo SWK (0,1 ohm) in parallelo a BSERx (tenuto aperto: vtiser = -10)
+  e al ponte RBYx (aperto: 1e12). Contatto aperto = 5 pF fra i capi (IPOTESI: "qualche pF");
+  nessun cavo al jack (caso peggiore per il passaggio capacitivo);
+- la derivazione lato CONDENSATORE (solo iii): interruttore nativo SWK da MAINC / FIXCx a massa;
+- la derivazione lato jack e' BJKx del blocco (vtijk / vtrjk), com'era in L29c;
+- con la serie il lato condensatore ha il bleed di L29a: rbcm = 220k, rbc1 = rbc2 = 470k
+  (IPOTESI; nel blocco e' 1 T: col contatto aperto il nodo sarebbe sospeso);
+- trasferimento fra i contatti 1 ms (IPOTESI, la stessa del trim).
+Geometrie (t_ins / t_rel = chiusura / apertura del rele' al jack di L29c):
+  N    neutra = L29c: serie sempre chiusa, ponte 1 m, bleed 1 T, derivazione jack t_ins..t_rel
+  iA   serie apre a t_ins, derivazione jack chiude +1 ms; rilascio: derivazione apre, serie +1 ms
+  iB   come iA all'inserzione; rilascio: serie chiude a t_rel, derivazione apre +1 ms
+  ii   serie sola: apre a t_ins, chiude a t_rel
+  iii  serie apre a t_ins, derivazione lato condensatore chiude +1 ms; rilascio all'inverso
+All'accensione ogni geometria parte a riposo (t_ins = -10): serie aperta, derivazione chiusa.
 """
 import argparse
 import math
@@ -63,7 +84,7 @@ import os
 QUI = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(QUI, *[".."] * 6))
 ap = argparse.ArgumentParser()
-ap.add_argument("--matrice", default="l29c", choices=("l29c", "controfattuale", "curve", "caldo"))
+ap.add_argument("--matrice", default="l29c", choices=("l29c", "controfattuale", "curve", "caldo", "sonda_l29d"))
 ap.add_argument("--curve", nargs=2, default=("B", "B"), metavar=("SERIE", "DERIV"))
 ap.add_argument("--uscita", default=os.path.join(REPO, "spice", "preamp", "tb", "tb_v2_casopeggiore.cir"))
 ARG = ap.parse_args()
@@ -126,6 +147,57 @@ def contatto(n, a, b, cpar):
 CONTATTI = ("K1", "K5", "T1R", "T1S", "T2R", "T2S")
 
 
+def sonda_aggiunte():
+    """L29d: la serie (KS, chiusa a riposo) e la derivazione lato condensatore (KC, aperta a
+    riposo), un comando per tipo sulle tre uscite. Due eventi per corsa, coi rimbalzi di L29c:
+      serie        c = BREAK(t - t_apre) + MAKE(t - t_chiude)     (1 prima, 0 in mezzo, 1 dopo)
+      derivazione  c = MAKE(t - t_chiude) + BREAK(t - t_apre) - 1 (0 prima, 1 in mezzo, 0 dopo)
+    Tempi di riposo 1000 / 2000: lo stato fermo. pwl() estrapola (limitations #31): i punti
+    estremi +-1e4 coprono ogni t - V(N..) di queste corse."""
+    out = ["* ---- L29d: il contatto in serie al jack e la derivazione lato condensatore ----",
+           "VKSA NKSA 0 DC 1000", "VKSB NKSB 0 DC 2000",
+           "BKSR NKSR 0 V = pwl(time - V(NKSA), %s) + pwl(time - V(NKSB), %s)" % (BREAK, MAKE),
+           "VKCA NKCA 0 DC 1000", "VKCB NKCB 0 DC 2000",
+           "BKCR NKCR 0 V = pwl(time - V(NKCA), %s) + pwl(time - V(NKCB), %s) - 1" % (MAKE, BREAK)]
+    for x, c, j in (("M", "MAINC", "MAINJACK"), ("1", "FIXC1", "FIXJACK1"), ("2", "FIXC2", "FIXJACK2")):
+        out += ["SKS%s %s %s NKSR 0 SWK" % (x, c, j), "CKS%s %s %s 5p" % (x, c, j),
+                "SKC%s %s 0 NKCR 0 SWK" % (x, c)]
+    return out + [""]
+
+
+TT = 1e-3   # L29d: il trasferimento fra i contatti (ipotesi, come il trim)
+
+
+def geo_alter(geo, tijk, trjk):
+    """L29d: le alter di una geometria, date t_ins / t_rel del rele' al jack di L29c. Vengono
+    DOPO le alter vtijk / vtrjk di corsa() e le sostituiscono."""
+    ks, kc, jk = (1000, 2000), (1000, 2000), (tijk, trjk)
+    if geo == "iA":
+        ks, jk = (tijk, trjk + TT), (tijk + TT, trjk)
+    elif geo == "iB":
+        ks, jk = (tijk, trjk), (tijk + TT, trjk + TT)
+    elif geo == "ii":
+        ks, jk = (tijk, trjk), (1000, 2000)
+    elif geo == "iii":
+        ks, kc, jk = (tijk, trjk + TT), (tijk + TT, trjk), (1000, 2000)
+    elif geo != "N":
+        raise SystemExit("geometria sconosciuta: %s" % geo)
+    serie = geo != "N"
+    return [
+        "alter vtijk dc = %.6f" % jk[0], "alter vtrjk dc = %.6f" % jk[1],
+        "alter vksa dc = %.6f" % ks[0], "alter vksb dc = %.6f" % ks[1],
+        "alter vkca dc = %.6f" % kc[0], "alter vkcb dc = %.6f" % kc[1],
+        # N: BSERx chiuso e ponte a 1 m come L29c; con la serie, l'interruttore nativo e' l'unico
+        # percorso (BSERx a 1e-12 S: stato SSER inserito da prima dell'inizio)
+        "alter vtiser dc = %s" % ("1000" if not serie else "-10"),
+        "alter vtrser dc = %s" % ("2000" if not serie else "1000"),
+    ] + ["alter %s = %s" % (r, "1m" if not serie else "1e12") for r in ("rbym", "rby1", "rby2")] + [
+        "alter rbcm = %s" % ("1e12" if not serie else "220k"),
+        "alter rbc1 = %s" % ("1e12" if not serie else "470k"),
+        "alter rbc2 = %s" % ("1e12" if not serie else "470k"),
+    ]
+
+
 def gemello(n, a):
     """Il contatto comportamentale del blocco (BSJKR: pwl coi rimbalzi, 1 k + 4,55 nF, conduttanza
     log-lineare fino a 10 S), in parallelo all'interruttore nativo. Solo nel deck 'caldo'."""
@@ -146,6 +218,7 @@ AGGIUNTE = (
      ".model SWK SW(RON=0.1 ROFF=1e12 VT=0.5 VH=0.25)"]
     + contatto("K1", "RGB", "0", False) + contatto("K5", "RG10B", "0", False)
     + (gemello("K1", "RGB") + gemello("K5", "RG10B") if ARG.matrice == "caldo" else [])
+    + (sonda_aggiunte() if ARG.matrice == "sonda_l29d" else [])
     + ["* ---- L29c: il trim (ADR-027, trim.py candidato 2) fra OUTA e l'attenuatore ----",
        "* RATTT del blocco si apre nel .control (alter rattt = 1e12): OUTA arriva a W da qui.",
        "RL1 OUTA TAP6 845", "RL2 TAP6 TAP12 464", "RL3 TAP12 0 464"]
@@ -267,7 +340,7 @@ def cambio_trim(p1, p2, t):
 
 def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=1000, trjk=2000,
           g1=10, g2=None, tg=1000, p1=0, p2=None, tp=1000, vos=(0, 0, 0, 0), att="max",
-          rl="100k", trim_montato=True, cwire="100p", vto=None, rail=None, stati=True):
+          rl="100k", trim_montato=True, cwire="100p", vto=None, rail=None, stati=True, geo=None):
     out = [
         "alter vamp dc = %s" % amp,
         "alter vfrq dc = %s" % f,
@@ -292,6 +365,8 @@ def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=1000,
     for n in CONTATTI:
         i, t = st[n]
         out += ["alter v%si dc = %s" % (n.lower(), i), "alter v%st dc = %.6f" % (n.lower(), t)]
+    if geo is not None:
+        out += geo_alter(geo, tijk, trjk)
     if vto is not None:
         out += ["altermod lsk489a vto = %s" % VTO[vto],
                 "showmod jprb : vto beta",
@@ -306,7 +381,8 @@ def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=1000,
     out += ["tran %g %s 0 %g" % (tmax, tf, tmax),
             "wrdata %s$d v(mainjack) v(fixjack1) v(fixjack2)" % nome]
     if stati:
-        out.append("wrdata %s_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)" % nome)
+        out.append("wrdata %s_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)" % nome
+                   + (" v(mainc) v(fixc1) v(fixc2)" if geo is not None else ""))
     return out + ["destroy all"]
 
 
@@ -633,7 +709,65 @@ def matrice_caldo():
     return out
 
 
-if ARG.matrice == "controfattuale":
+# ======== L29d: la sonda del contatto in serie, celle peggiori di L29c, senza segnale, +10 dB
+GEOMETRIE = ("N", "iA", "iB", "ii", "iii")
+# lo stato a riposo e' lo stesso in tutte le geometrie con la serie (S); a mute inserito iA = iB
+CLASSE_MAI = {"N": "N", "iA": "S", "iB": "S", "ii": "S", "iii": "S"}
+CLASSE_SEMPRE = {"N": "N", "iA": "i", "iB": "i", "ii": "ii", "iii": "iii"}
+GEO_DI = {"N": "N", "S": "ii", "i": "iA", "ii": "ii", "iii": "iii"}
+
+
+def matrice_sonda():
+    out = []
+    tf_rif = TF_CAMBIO   # copre ogni evento della sonda (mev 17,5 s, accensione 11,6 s)
+    for g in (0, 10):
+        for k, cl, extra in [("mai", c, {}) for c in ("N", "S")] + [
+                ("sempre", c, dict(ti=-10, tr=1000, tijk=-10, trjk=1000)) for c in ("N", "i", "ii", "iii")]:
+            n = "g%d%s_lz_%s" % (g, k, cl)
+            out += ["* ---- riferimento %s ----" % n]
+            out += corsa(n, amp=0, tf=tf_rif, g1=g, geo=GEO_DI[cl], **extra)
+            out += [riga(n, n, "rif", 1000, 0, g, "100k", TI, T_RELE + 1.0, tf_rif, 10e-6, "rif_" + k,
+                         gruppo=0)]
+    for geo in GEOMETRIE:
+        var = "l29d_%s" % geo
+        rif = lambda g, k: "g%d%s_lz_%s" % (g, k, (CLASSE_MAI if k == "mai" else CLASSE_SEMPRE)[geo])
+        # 1: il cambio 0 -> +10 a rele' chiuso, e il rilascio 2 s dopo
+        n = "gm0x10_lz_%s" % geo
+        out += ["* ---- %s ----" % n]
+        out += corsa(n, amp=0, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO, tijk=T_RELE, trjk=TR_CAMBIO,
+                     g1=0, g2=10, tg=T_CAMBIO, geo=geo)
+        out += [riga(n + "_i", n, var, 1000, 0, "0a10", "100k", TI, T_CAMBIO, TF_CAMBIO, 10e-6, "evento",
+                     rif(0, "sempre"), rif(0, "mai"), TG_LDR, 1, "A_ins;B2")]
+        out += [riga(n + "_c", n, var, 1000, 0, "0a10", "100k", T_CAMBIO, TR_CAMBIO, TF_CAMBIO, 10e-6,
+                     "evento", rif(10, "sempre"), rif(10, "mai"), 0.0, 1, "A_ins;A_rel;B2")]
+        # 4: il mute semplice, rele' tenuto 1 s
+        n = "mev_lz_%s" % geo
+        tf = T_RELE + 1.0 + TD + 3.0
+        out += ["* ---- %s ----" % n]
+        out += corsa(n, amp=0, tf=tf, ti=TI, tr=T_RELE + 1.0, tijk=T_RELE, trjk=T_RELE + 1.0, geo=geo)
+        out += [riga(n, n, var + "_ev", 1000, 0, 10, "100k", TI, T_RELE + 1.0, tf, 10e-6, "evento",
+                     rif(10, "sempre"), rif(10, "mai"), TG_LDR, 4, "A_ins;A_rel;B2")]
+        # 5: le due accensioni peggiori di L29c
+        for tr, sk in ((0.3, "p"), (0.01, "m")):
+            dp, dm = SFASI[sk]
+            n = "on_r%g%s_%s" % (tr * 1e3, sk, geo)
+            t_rel = T0_ON + T_TIMER
+            tf = t_rel + TD + 3.0
+            rail = ("0 0 %g 0 %g 15 1000 15" % (T0_ON + dp, T0_ON + dp + tr),
+                    "0 0 %g 0 %g -15 1000 -15" % (T0_ON + dm, T0_ON + dm + tr),
+                    "0 0 %g 0 %g 1 1000 1" % (T0_ON + dp, T0_ON + dp + tr))
+            out += ["* ---- %s ----" % n]
+            out += corsa(n, amp=0, tf=tf, ti=-100, tr=t_rel, tijk=-10, trjk=t_rel, rail=rail, geo=geo)
+            out += [riga(n, n, "accensione_" + geo, 1000, 0, 10, "100k", T0_ON, t_rel, tf, 10e-6, "evento",
+                         rif(10, "sempre"), rif(10, "mai"), 0.0, 5, "A_ins;A_rel")]
+    return out
+
+
+if ARG.matrice == "sonda_l29d":
+    C = [("save v(mainjack) v(fixjack1) v(fixjack2) v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus)"
+          " v(main_a) v(mainc) v(fixc1) v(fixc2)") if r.startswith("save ") else r for r in C]
+    C += matrice_sonda()
+elif ARG.matrice == "controfattuale":
     C += controfattuale()
 elif ARG.matrice == "caldo":
     C += matrice_caldo()

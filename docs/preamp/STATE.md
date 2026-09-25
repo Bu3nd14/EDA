@@ -10,17 +10,50 @@ realtà, il progetto non è ripartibile.
 
 | | |
 |---|---|
-| Ultimo aggiornamento | **2026-09-23** |
-| Ultimo lotto chiuso | **L29c** — il caso peggiore di V2 col mute reale. Con la musica regge ovunque (S ≤ 11 dB); criterio 3 di ADR-030 soddisfatto. **Fuori, senza musica**: il cambio di guadagno o trim a relè chiuso (fino a 267 µV con la dispersione), l'accensione e lo spegnimento, perché il contatto in derivazione attenua solo ~1/471. **ADR-043** (spegnimento e failsafe all'alimentatore). NC-028 resta aperta. Report `reports/2026-09-23-L29c-v2-caso-peggiore.md`. Prima: **L40** — V1 coi modelli del costruttore. Causa separata: la caduta è la **CJE dei MJE** (NC-025), non i MMBT. **ADR-042** (decisione dell'utente): Miller C124 da 470 pF a **1 nF**, corrente di riposo tenuta a **~20,3 mA** (R128 1,69 kΩ). V1 ≥ **62,08°** su ogni istanza e nel gruppo B; regressione di L39 rifatta, regge. Prezzo dichiarato: slew −1,68 V/µs, PSRR+ −6,5 dB (limiti per tono di ADR-020 ricalcolati), banda 912 kHz. **Chiude NC-034 e NC-035.** Report `reports/2026-09-23-L40-v1-costruttore.md`. Prima: **L39** |
-| **Prossimo lotto** | **L29d — il contatto in serie al jack** (NC-028): due varianti sulla matrice di L29c, poi la scelta dell'utente in una ADR. Poi **L36**. Prompt in `NEXT-SESSION.md` |
+| Ultimo aggiornamento | **2026-09-25** |
+| Ultimo lotto chiuso | **L29d** — la sonda del contatto in serie al jack. Prima di correre, una previsione: con la serie aperta il lato condensatore resta sospeso, e un salto d'offset preso a mute inserito arriva al jack al rilascio. Confermata: serie sola (ii) e serie + derivazione al jack (iA) danno 10 mV dopo il cambio di guadagno e fino a 190 mV dopo l'accensione; iB 0,3–5,6 mV. **La serie con la derivazione dal lato del condensatore (iii) regge su tutto tranne un'accensione (205 µV, passaggio capacitivo dei 5 pF ipotizzati)**. Controfattuale entro 0,09 %. Nessuna ADR: sceglie l'utente (L29d2). NC-028 resta aperta. Report `reports/2026-09-25-L29d-sonda-contatto-serie.md`. Prima: **L29c** — il caso peggiore di V2 col mute reale. Con la musica regge ovunque (S ≤ 11 dB); criterio 3 di ADR-030 soddisfatto. **Fuori, senza musica**: il cambio di guadagno o trim a relè chiuso (fino a 267 µV con la dispersione), l'accensione e lo spegnimento, perché il contatto in derivazione attenua solo ~1/471. **ADR-043** (spegnimento e failsafe all'alimentatore). NC-028 resta aperta. Report `reports/2026-09-23-L29c-v2-caso-peggiore.md`. Prima: **L40** — V1 coi modelli del costruttore. Causa separata: la caduta è la **CJE dei MJE** (NC-025), non i MMBT. **ADR-042** (decisione dell'utente): Miller C124 da 470 pF a **1 nF**, corrente di riposo tenuta a **~20,3 mA** (R128 1,69 kΩ). V1 ≥ **62,08°** su ogni istanza e nel gruppo B; regressione di L39 rifatta, regge. Prezzo dichiarato: slew −1,68 V/µs, PSRR+ −6,5 dB (limiti per tono di ADR-020 ricalcolati), banda 912 kHz. **Chiude NC-034 e NC-035.** Report `reports/2026-09-23-L40-v1-costruttore.md`. Prima: **L39** |
+| **Prossimo lotto** | **L29d2 — la matrice del contatto in serie sulle geometrie scelte dall'utente** (NC-028). Prima le decisioni dell'utente sulla sonda di L29d (geometria, stato sicuro di ADR-012, valori), poi la matrice e una ADR. Poi **L36**. Prompt in `NEXT-SESSION.md` |
 | Non conformità | **12 aperte, 2 bloccanti** |
-| Le bloccanti | NC-004 · NC-028 (L29d, poi L30 per lo spegnimento) |
+| Le bloccanti | NC-004 · NC-028 (L29d2, poi L30 per lo spegnimento) |
 | Suite | `run_tests.sh` **10 passed / 0 failed** a fine L29c (2026-09-23), eseguita dal worktree, col deck nuovo `tb_v2_casopeggiore.cir` nel 2g; `validate_models.py` 48/48 |
 
 ## Diario degli ultimi lotti
 
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
+
+### L29d — la sonda del contatto in serie al jack (2026-09-25)
+
+**NC-028 resta aperta e bloccante. Nessuna ADR.** Report:
+`reports/2026-09-25-L29d-sonda-contatto-serie.md`. Dati: `data/2026-09-25/L29d/` (README).
+
+- **Prima di correre, una previsione portata all'utente.** Il contatto in serie sta dopo il
+  4,7 µF. Con la serie aperta il lato condensatore non ha un percorso veloce verso massa: un
+  salto d'offset preso a mute inserito resta nel condensatore e arriva al jack alla richiusura.
+  Calcolo: ~9,6 mV contro i 116 µV di L29c. La geometria che in teoria risolve è una terza:
+  **serie più derivazione dal lato del condensatore**. **Decisione dell'utente**: «sonda e poi mi
+  fermo».
+- **Il banco**: il generatore di L29c esteso (`--matrice sonda_l29d`), deck
+  `data/2026-09-25/L29d/deck/tb_v2_sonda_serie.cir`. I deck di L29c rigenerati sono
+  byte-identici.
+  - Cinque geometrie: N = L29c; iA / iB, serie più derivazione al jack con due ordini di
+    rilascio; ii, serie sola; iii, serie più derivazione lato condensatore.
+  - Quattro celle peggiori di L29c, 32 corse, tutte rc=0 e partite dal punto giusto.
+  - N ridà L29c entro lo 0,09 %.
+- **Ipotesi del banco, non valori del circuito**: contatto aperto 5 pF, nessun cavo, bleed lato
+  condensatore 220 k / 470 k (L29a), trasferimento 1 ms.
+- **Risultati** (A, senza segnale, soglia 100 µV):
+  - **ii e iA**: 10 mV al rilascio dopo il cambio, 64–190 mV dopo l'accensione; la ii anche
+    115–193 mV all'accensione. **La ii è da scartare**;
+  - **iB**: 0,3–5,6 mV. La leva è il tempo fra i contatti;
+  - **iii**: cambio 6,8 µV (contro 111), rilasci 0,03 µV, accensione rapida 44 µV; **fuori
+    l'accensione da 300 ms, 205 µV**. È il passaggio capacitivo dei 5 pF del contatto aperto, con
+    zero cavo al jack.
+- **Aperto per l'utente (L29d2)**: quali geometrie; lo stato sicuro di ADR-012, perché con la iii
+  il jack a riposo va a massa solo tramite il bleed; i valori (bleed, capacità del contatto, cavo,
+  trasferimento).
+- **Trappole**: nel worktree gli `awk -v` e i percorsi calcolati vengono rifiutati: script su file
+  e percorsi assoluti.
 
 ### L29c — il caso peggiore di V2 col mute reale (2026-09-23)
 
@@ -59,7 +92,7 @@ sotto e nel report datato in `reports/`.
   - `$(jobs -r)` in una sottoshell non vede i job (usare `${#jobstates}`);
   - VOSB positivo si **somma** all'offset sistematico.
 - **Non fatto, dichiarato**: il carico da 10 kΩ sulla cella peggiore (tutta la matrice è a
-  100 kΩ). Passa a L29d.
+  100 kΩ). Passa a L29d2.
 
 ### L40 — V1 coi modelli del costruttore (2026-09-23)
 
@@ -1286,7 +1319,8 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L39 | **Fase 4 — i modelli del costruttore nel progetto** (decisione dell'utente del 2026-09-22: **prima di L29c**, perché il caso peggiore dipende dai modelli). I sette modelli sono già in `models/` da L25; si sostituiscono i segnaposto di `spice/preamp/placeholder_devices.lib` (LSK489X, NSS2N5551, PSS2N5401, PTHAT320, NMJE15032, PMJE15033, D1N4148) dal **sorgente** (`gain_block.py` / `spice_export.py`, blocco generato e derivato), poi si rimisura: punto di lavoro e classe A, V1 (margine di fase, ADR-019), E2–E5, V3, P7, l'offset del blocco B di ADR-030, il fondo di distorsione di C2. Ogni cifra che cambia oltre la sua soglia apre o aggiorna una NC. Se non entra, si divide (sostituzione e regressione, poi il resto) | M/L | **NC-017**, NC-004 (in parte: nessun modello ha il rumore 1/f) | **fatto** — sostituzione completa, blocco generato cambiato solo nei nomi dei modelli; E2–E5, V3, P7, classe A e V2 reggono; **V1 cade** a guadagno unitario (NC-034) e la corrente di riposo sale del 40 % (NC-035); chiude NC-017 |
 | L40 | **V1 coi modelli del costruttore** (NC-034), nella direzione dell'utente del 2026-09-22: margine di fase prima della banda, cioè banda ridotta (il Miller C124: 820 pF dà 60,70° sul blocco B, esplorazione di L39) **o** guadagno minimo fino a +1,5 dB. Una ADR che scelga; V1 ≥ 60° su blocco A, blocco B nei tre modi e buffer; separare la quota della f_T dei MJE (NC-025). Insieme la corrente di riposo (NC-035): tenere ~15 mA con un valore nuovo del moltiplicatore o accettare ~20 mA con una ADR. Poi la regressione di L39 rifatta | M | **NC-034**, NC-035, NC-025 | **fatto** — causa: CJE dei MJE; **ADR-042**: Miller 1 nF, I_q ~20,3 mA tenuta; V1 ≥ 62,08° ovunque, regressione regge; chiude NC-034 e NC-035 |
 | L29c | **Il caso peggiore di V2 col mute reale**, col profilo v4 e il criterio **S** di ADR-040 (C2 diagnostica). Passaggi di guadagno 0↔+3, +3↔+10, 0↔+10 dB e **criterio 3 di ADR-030** (cambio a caldo contro cambio sotto mute seguito dal rilascio: da cui dipende **L36**); trim nelle tre posizioni; dispersione LSK489 fino a ±20 mV in più posizioni dell'attenuatore; mute breve e ≥ 2 s; **accensione e spegnimento** con le rampe dei rail. Chiude NC-028 se tutto regge | M/L | NC-028 | **fatto** — banco generato `tb_v2_casopeggiore.cir` (246 corse) più `caldo/` e `curve/`; con la musica regge ovunque (S ≤ 11 dB), criterio 3 di ADR-030 soddisfatto (a caldo 69 mV, sotto mute 116 µV); **fuori**: il cambio di guadagno o trim a relè chiuso (98–116 µV, 267 µV con la dispersione), l'accensione (fino a 11 mV) e lo spegnimento (fino a 17,5 V). **ADR-043**; NC-028 resta aperta e bloccante |
-| L29d | **Il contatto in serie al jack** (decisione dell'utente del 2026-09-23, dopo L29c). Il contatto di mute in derivazione attenua solo ~1/471: il cambio sotto mute e l'accensione restano sopra 100 µV. Si misura sulla matrice di L29c (`genera_tb_v2_casopeggiore.py`, punti 1, 2, 3, 5) in due varianti: **(i) serie più derivazione**, **(ii) serie sola** (la semplificazione: la derivazione forse non serve più, perché le LDR tolgono la musica prima del relè). Le LDR restano (S). Con la musica si rifà la cella di riferimento; il residuo B col contatto aperto (la sua capacità) va misurato. Poi l'utente sceglie, e la scelta diventa una ADR (tocca lo stato sicuro di ADR-012 e il failsafe di ADR-043) | M | NC-028 | da fare — **prossimo**. Mandato in `NEXT-SESSION.md` |
+| L29d | **La sonda del contatto in serie al jack** (decisione dell'utente del 2026-09-23, ridotta a sonda il 2026-09-25 dopo la previsione sul lato condensatore sospeso). Celle peggiori di L29c in cinque geometrie (N, iA, iB, ii, iii), 32 corse | M | NC-028 | **fatto** — N ridà L29c entro 0,09 %; ii e iA fino a 190 mV, iB fino a 5,6 mV; **iii** regge tranne un'accensione (205 µV, passaggio capacitivo). Nessuna ADR; NC-028 resta aperta. Report `reports/2026-09-25-L29d-sonda-contatto-serie.md` |
+| L29d2 | **La matrice del contatto in serie sulle geometrie scelte dall'utente** (NC-028). Prima le decisioni sulla sonda di L29d: quale geometria (iii, iB con un trasferimento più lungo); lo stato sicuro di ADR-012 con la derivazione lato condensatore; i valori (bleed lato condensatore, capacità del contatto aperto dal datasheet, cavo, trasferimento). Poi la matrice di L29c (guadagno, trim, dispersione `dp…max`, accensione, musica S/B2 a 1 kHz e 20 Hz, B col contatto aperto, **10 kΩ**). La scelta diventa una ADR (tocca ADR-012 e il failsafe di ADR-043) | M | NC-028 | da fare — **prossimo**. Mandato in `NEXT-SESSION.md` |
 | L30 | **Il calore del telaio con otto blocchi.** A riposo la scheda audio dissipa 6,45 W (0,806 W per blocco, L17) contro i 3-4 W che P5 prevede per l'apparecchio intero. Stima termica del telaio con l'alimentatore; poi o P5 aggiornato al numero vero, o ventilazione e montaggio progettati con una ADR, o ADR-021 riaperta se i 60 °C non reggono. Va col lotto dell'alimentatore. **Da ADR-043 (L29c)**: lo spegnimento è un requisito dell'alimentatore (rail audio sopra ~10 V finché il mute non è completo: supervisore alla perdita di rete e tenuta dei rail, verificati col metodo di V2) e serve un **failsafe per il guasto dell'alimentatore** che non dipenda dall'alimentatore sano; forma da progettare con l'utente, dopo L29d; soglia in caso di guasto da chiedere | S | NC-029, NC-028 (spegnimento) | da fare |
 | L31 | **I vettori di rumore di `tb_noise_vectors.cir`.** Il deck cita `onoise_q123`, `onoise_r121`, `onoise_jq110`, `onoise_jq111`, dispositivi che non esistono più; il `wrdata` si ferma e non scrive niente, con rc 0. Rinominarli dall'include generato ed estendere `check_deck_refs.py` ai nomi `onoise_*`/`inoise_*`, facendolo fallire sul deck di oggi | XS | NC-030 | **fatto** — 2g esteso e fatto cadere (4 nomi morti), mappa per nodi (tre nomi vivi erano già sbagliati), quadratura = spettro |
 | L32 | **Il dossier rigenerato sui dati di oggi. Subito dopo L16.** `build_dossier.py` legge ancora `data/2026-09-09`: THAT320, C_f 22 pF, due soli guadagni. Va esteso ai tre modi (0 / +3 / +10 dB) e puntato ai dati di L27 e L16, coi margini di V1 al minimo della spazzata (ADR-024), la cifra unica di headroom che L16 sceglie per NC-009 e la «KPI riferita a 60°» rimasta da L19. Accanto a ogni numero, la provenienza dei modelli ancora segnaposto (NC-004, NC-017). **Nessun avviso di obsolescenza**: il dossier lo legge solo l'utente (deciso il 2026-09-14) | S | NC-009 (la metà del dossier), apre **NC-031** | **fatto** — tre modi, V1 al minimo della spazzata, M1 +6,58 dB, provenienza letta dagli `.include`; nove controlli fatti fallire |
