@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-09-22** (creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-09-25** (L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -124,6 +124,11 @@ inserito arriva al jack al rilascio. Confermata:
 
 La scelta della geometria e dello stato sicuro è dell'utente (**L29d2**). **NC-028 resta aperta e
 bloccante**, aggiornata.
+**L29d2** (2026-09-25) ha misurato la geometria scelta dall'utente, la iii, su tutta la matrice di
+L29c: 0 celle fuori su 253, e 0 su 47 col cavo e i 10 kΩ. Il cambio a relè chiuso scende da 111 a
+0,17 µV, l'accensione da 11 mV a 4,4 µV. L'utente ha registrato **ADR-044** e ha chiuso **la parte
+del mute di NC-028**. L29e la porta nel sorgente. **NC-028 resta aperta e bloccante solo per lo
+spegnimento** (L30).
 **12 voci aperte, 2 bloccanti.**
 L'accesso a G1 non è concesso finché NC-004 e NC-028 restano aperte.
 
@@ -2135,7 +2140,7 @@ lasciato flottante o collegato è una scelta di layout.
 | Requisito | **V2** (transitorio del relè di mute, al rilascio) · **F6**/ADR-012 (il mute esiste per non mandare botti alle uscite) · **ADR-019** (il trim si regola a mute inserito) |
 | Severità | **bloccante** da L38 (maggiore fino a L38: V2 non aveva una soglia) |
 | Aperta da | `reports/2026-09-14-L11-mute-e-corto.md` |
-| Stato | aperta |
+| Stato | aperta **solo per lo spegnimento** (L30, ADR-043). La parte del mute è chiusa da L29d2 (2026-09-25, decisione dell'utente, ADR-044) |
 
 **Evidenza.** `data/2026-09-14/tb_mute_corto_transitorio.csv` e
 `tb_mute_corto_trans_{0,10}.csv`. Segnale da 2,7 V RMS a 1 kHz, manopola al
@@ -2472,6 +2477,33 @@ BLOCCANTE.** (`reports/2026-09-25-L29d-sonda-contatto-serie.md`, dati `data/2026
     riposo va a massa solo tramite il bleed;
   - la matrice completa sulle geometrie scelte (**L29d2**) con una ADR;
   - poi L30 (spegnimento e failsafe, ADR-043).
+
+**AGGIORNATA IL 2026-09-25, da L29d2: la matrice sulla geometria iii. LA PARTE DEL MUTE È CHIUSA;
+la voce RESTA APERTA E BLOCCANTE per lo spegnimento (L30).**
+(`reports/2026-09-25-L29d2-matrice-contatto-serie.md`, dati `data/2026-09-25/L29d2/`, **ADR-044**)
+
+- **Le decisioni dell'utente**, prima di correre: geometria «iii»; stato sicuro «Il bleed basta»;
+  valori «C dal datasheet + cavo realistico». Il contatto aperto vale 0,1 pF, dalla curva
+  d'isolamento del G6K (0,075–0,080 pF); il cavo al jack è a 0 e 100 pF.
+- **La matrice di L29c sulla iii**: guadagno, trim, dispersione `dp…max`, mute col relè fino a
+  20 s, accensione; con musica a 1 kHz e 20 Hz. Sono **253 verdetti, nessuno fuori**:
+  - il cambio a relè chiuso scende da 111,5 a **0,17 µV**, e con la dispersione da 267 a
+    **≤ 0,60 µV**;
+  - l'accensione scende da 11,3 mV a **4,4 µV**;
+  - con musica S ≤ 7,16 dB, e B2 col contatto aperto ≤ 8,7 µV.
+
+  Il cavo da 100 pF e il carico da 10 kΩ sulle celle peggiori danno **0 fuori su 47**, e abbassano
+  le cifre. La cella più alta, 69,7 µV, è la dissolvenza delle LDR con la dispersione, identica a
+  L29c: non è del contatto. N ridà L29c.
+- **La chiusura della parte del mute è una decisione dell'utente**: «chiudi la parte mute di
+  NC-028» (2026-09-25). Poggia su una geometria **nel banco**. **L29e** la porta in `circuits/`
+  (un deviatore per uscita sul G6K esistente) e deve rifare le celle peggiori sul sorgente. Se non
+  le riproduce, la parte del mute si riapre.
+- **Resta aperto lo spegnimento**: con la iii è ancora fuori, da 5 µV a 2,3 V secondo la rampa e il
+  ritardo del relè. 7 corse su 24 non finiscono (Timestep too small nel trasferimento), e 3,96 mV
+  col relè immediato restano da spiegare. **Chi**: **L30** (ADR-043).
+- **Un vincolo per G2**: la capacità fra il lato condensatore e il jack, contatto più piste,
+  resta sotto ~2,4 pF.
 
 
 ### NC-029 — Con i buffer delle fisse la dissipazione a riposo raddoppia, e P5 non la copre

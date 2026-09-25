@@ -152,9 +152,10 @@ si passa verso **2,4 pF**, contatto e piste insieme. È un calcolo sui due punti
 
 ## 6. Cosa resta
 
-- **NC-028**: tutte le celle di verdetto stanno sotto 100 µV, lo spegnimento escluso. La
-  chiusura della parte del mute la decide l'utente (vedi NONCOMPLIANCE.md).
-- **Il sorgente**: il deviatore in `circuits/`, con l'utente.
+- **NC-028**: tutte le celle di verdetto stanno sotto 100 µV, lo spegnimento escluso. L'utente, il
+  2026-09-25: «chiudi la parte mute di NC-028». La voce resta aperta e bloccante per lo spegnimento.
+- **Il sorgente**: la iii (il deviatore) in `circuits/` la porta **L29e**, prima di L36 («L29e
+  prima di L36, concordo con la tua proposta»). L29e rifà sul sorgente le celle peggiori.
 - **L30**: lo spegnimento, le 7 corse che non finiscono e i 3,96 mV non spiegati.
 - **20 kHz**: non corsi. Il passaggio del contatto aperto a 20 kHz è calcolato: 0,1 pF
   valgono ~80 MΩ contro un lato condensatore tenuto a massa da 0,1 Ω. È trascurabile.

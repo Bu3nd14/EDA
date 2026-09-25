@@ -43,7 +43,8 @@ Le parole dell'utente, il 2026-09-25, a tre domande poste una alla volta:
 
 **Cosa non decide.** Il cablaggio nel sorgente non è qui. La forma naturale è **un deviatore per
 uscita**: comune al lato del condensatore, NC a massa, NO al jack. Con il G6K-2F-Y è lo stesso
-numero di relè di oggi. Va portata in `circuits/` con l'utente, nel lotto che la implementa.
+numero di relè di oggi. Va portata in `circuits/` da **L29e**, prima di L36: l'utente il 2026-09-25, «L29e prima di L36,
+concordo con la tua proposta». L29e deve rifare sul sorgente le celle peggiori di L29d2.
 Anche la necessità del bleed lato condensatore resta aperta: nel deviatore conta solo durante
 il trasferimento, e non è stato misurato senza.
 
@@ -86,6 +87,8 @@ il trasferimento, e non è stato misurato senza.
 - L30 trova che il failsafe dello spegnimento chiede un contatto a massa **sul jack**: allora il
   secondo polo torna in discussione, con l'utente.
 - Il cablaggio nel sorgente non riesce a essere un deviatore, per piedinatura o per poli.
+- L29e, sul sorgente, non riproduce le celle peggiori di L29d2. Allora si riapre anche la parte
+  del mute di NC-028, che l'utente ha chiuso su questa misura («chiudi la parte mute di NC-028»).
 
 **Precisa** ADR-012 (lo stato sicuro: il jack a massa attraverso il bleed) e **ADR-038** punto 2
 (il relè al jack diventa la geometria iii). Il punto 4 di ADR-038 («guadagno e trim si cambiano
