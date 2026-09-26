@@ -41,6 +41,8 @@ substrato, e che «it harmlessly floats». Nel SOIC «may» collegarsi a una ten
   sotto il tetto.
 - **10 non conformità aperte, 1 bloccante**: **NC-004**, per G1, il rumore 1/f fuori dalla coppia
   d'ingresso. Nessuna non conformità blocca più il layout.
+- **L'ordine dopo questo lotto**, deciso dall'utente: L42 il dossier rigenerato, L43 la sua
+  revisione umana, L44 NC-004, poi G1.
 
 ## I vincoli
 
@@ -60,8 +62,8 @@ substrato, e che «it harmlessly floats». Nel SOIC «may» collegarsi a una ten
 
 ## CHIUSURA
 
-1. `STATE.md` con L28 **fatto** e il prossimo lotto: chiedi all'utente se è NC-004 o l'avvio di
-   G2.
+1. `STATE.md` con L28 **fatto** e il prossimo lotto: **L42, il dossier rigenerato** (ordine deciso
+   dall'utente il 2026-09-26: L42 → L43 revisione umana → L44 NC-004 → G1; righe nella tabella).
 2. Riscrivi QUESTO file per il lotto successivo.
 3. Commit, push, PR.
 4. `/bin/zsh scripts/chunk_close.sh L28`.
