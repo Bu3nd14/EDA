@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-09-26** (L41b1: NC-036 aggiornata, il temporizzatore esiste come hardware in `psu.py` senza firmware; NC-037 aggiornata, la causa tolta e la chiusura legata alla perdita a vuoto di T2; NC-038 aperta, il LED della VTL5C4 non regge 20 mA nel telaio caldo — ADR-049; L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-09-26** (L41b2: NC-038 chiusa, la cima delle LDR a 12 mA — ADR-050; NC-036 aggiornata, il firmware del temporizzatore provato sull'host e sul circuito; L41b1: NC-036 aggiornata, il temporizzatore esiste come hardware in `psu.py` senza firmware; NC-037 aggiornata, la causa tolta e la chiusura legata alla perdita a vuoto di T2; NC-038 aperta, il LED della VTL5C4 non regge 20 mA nel telaio caldo — ADR-049; L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -167,6 +167,12 @@ MCP4822, Δ e Δ₂ in hardware, l'interruttore di `VRELAY`, il pilota esponenzi
 firmware. NC-036 resta aperta e bloccante per G2 (L41b2, L41c). NC-037 aggiornata: resta aperta,
 legata alla perdita a vuoto di T2. **Apre NC-038** (la corrente del LED della VTL5C4 nel telaio
 caldo). **12 voci aperte, 2 bloccanti**: NC-004 per G1, NC-036 per G2.
+
+**L41b2** (2026-09-26, **ADR-050**): il firmware del temporizzatore (`firmware/preamp_timer/src/
+timer_core.c`), provato sull'host contro 21 falsi e sul circuito col core come micro, in sette
+sequenze. **Chiude NC-038** (decisione dell'utente: la cima delle LDR a 12 mA). NC-036 resta
+aperta e bloccante per G2 (L41c, il banco di L30 col circuito vero). **11 voci aperte, 2
+bloccanti**: NC-004 per G1, NC-036 per G2.
 
 ---
 
@@ -3182,6 +3188,21 @@ Lotto **L41**.
 - **Manca**: il firmware e la sequenza sul circuito pilotata da esso (**L41b2**); il banco di L30
   col circuito vero (**L41c**).
 
+**L41b2 (2026-09-26, ADR-050): il firmware esiste ed è provato sull'host e sul circuito.**
+- `firmware/preamp_timer/src/timer_core.c`: tutte le sequenze della specifica e la legge delle
+  LDR. Sull'host 65 + 45 controlli, **21 falsi su 21** (blocco 2k di `run_tests.sh`).
+- **Sul circuito**, col core come micro del banco di L41b1 e iterato fino al punto fisso
+  (`data/2026-09-26/L41b2/seq/`), 7 sequenze su 7:
+  - accensione: `MUTE_CMD` 49,4 ms dopo `VRELAY` (≥ 13 ms, ADR-027);
+  - spegnimento: K501 aperto 63,4 ms dopo `PERMIT_CMD` (≥ 50 ms, ADR-046);
+  - buco di rete di 20 e 200 ms: jack staccati a 14,4 ms, classe 1 e classe 2 riconosciute;
+  - guasto con la rete presente: jack a 10,7 ms, K501 aperto e tenuto;
+  - `MUTE_CMD` mai senza `PERMIT_CMD`, Δ ≥ 16,9 ms a ogni rilascio.
+
+  I falsi 6 e 9 fanno fallire anche lì il criterio giusto.
+- **Manca**: il banco di L30 col circuito vero e la decisione sul corto dell'uscita di U503
+  (**L41c**). Resta aperta e bloccante per G2.
+
 ### NC-037 — In standby il consumo supera il limite europeo di 0,5 W
 
 | | |
@@ -3222,7 +3243,7 @@ col pezzo di T2 scelto, e la misura sul prototipo. Lotto **L41b**.
 | Requisito | **ADR-039** punto 3 (profilo v4: 20 mA a d = 0 sulla serie e a d = 1 sulla derivazione) · **ADR-048** punto 8 / ADR-021 (il telaio fino a ~58 °C chiuso, 60 °C il limite) · P1 |
 | Severità | **maggiore**: blocca G3 se ancora aperta |
 | Aperta da | `reports/2026-09-26-L41b1-temporizzatore-hardware.md` |
-| Stato | aperta |
+| Stato | **chiusa il 2026-09-26 da L41b2** (ADR-050) |
 
 **Evidenza.** Il datasheet della VTL5C4 (`vendor/optocoupler/excelitas/VTL5C3_VTL5C4`, blocco
 dei valori massimi assoluti) dà **40 mA di corrente del LED a 25 °C, declassati di 0,9 mA/°C
@@ -3244,7 +3265,26 @@ derivazione accesa), per tempi indefiniti. Il pilota di L41b1 li fa (limite hard
 
 Il circuito non cambia: cambia la calibrazione del firmware (L41b2).
 
+**Chiusura (2026-09-26, L41b2).** Report `reports/2026-09-26-L41b2-temporizzatore-firmware.md`.
+**Decisione dell'utente (ADR-050)**, fra quattro strade portate coi numeri: **la cima della
+tabella a 12 mA a ogni temperatura**, su tutte e due le stringhe. A 60 °C il LED regge 13 mA:
+resta l'8 %.
+- Il prezzo, rimisurato (`data/2026-09-26/L41b2/e3_e5/`): la cella in serie 113,5 Ω (curva B) o
+  163,7 Ω (curva D) contro 1 MΩ, −0,001 dB; E5 5,049 µV; E3 110,7 kΩ; il mute a LDR ~2,2 dB
+  meno profondo nei 0,5 s prima del relè.
+- La tabella sul banco in continua, calibrata come fa il firmware, entro **+0,28 dB** da 15 a
+  60 °C, la cima entro ±0,02 dB (`data/2026-09-26/L41b2/ldr/`).
+- Nel firmware: `LDR_I_TOP` 12 mA; il falso 12 (la cima a 20 mA) fa fallire `tabella`.
+
 ## Voci chiuse
+
+**NC-038 — Il LED della VTL5C4 non regge 20 mA nel telaio caldo** (maggiore). **CHIUSA il
+2026-09-26 da L41b2.**
+- **ADR-050** (decisione dell'utente): la cima delle LDR a 12 mA a ogni temperatura.
+- Rimisurati E5 (5,049 µV), E3 (110,7 kΩ) e la tabella calibrata (entro +0,28 dB).
+
+Il testo completo della voce resta sopra, con la sua «Chiusura». Report:
+`reports/2026-09-26-L41b2-temporizzatore-firmware.md`.
 
 **NC-028 — Il rilascio del mute con segnale presente porta sul jack un gradino che decade in
 0,3 s** (bloccante). **CHIUSA il 2026-09-26 da L30**, strada A (decisione dell'utente).

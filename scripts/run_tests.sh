@@ -321,5 +321,20 @@ echo "$out"
 report "no canonical deck or generated block simulates a placeholder" $rc
 echo
 
+echo "-- 2k. the supply timer's firmware on the host (L41b2, ADR-049, ADR-050) --"
+# firmware/preamp_timer/src/timer_core.c is the timer's logic, no registers;
+# SPICE cannot simulate it, so it is proven here: one test per sequence of
+# the spec, the LDR law against L41b1's bench codes and the v4 table, the
+# ADC's budget. With --falsi every one of the 21 deliberate defects
+# (FALSO_n) must make its own test fail - a test that cannot fail proves
+# nothing. Compiled with /usr/bin/clang into $SCRATCH/firmware.
+# Captured first, printed after: `cmd | tail` would report tail's status (2e).
+out=$(/bin/zsh "$ROOT/firmware/preamp_timer/test/run_host_tests.sh" \
+      --falsi "$SCRATCH/firmware_falsi.txt" 2>&1)
+rc=$?
+echo "$out" | grep -E '^(PASSA|FALLISCE|==|\[)|  FALLISCE' | sed 's/^/   /'
+report "timer firmware: host tests pass, 21 fakes fail" $rc
+echo
+
 echo "== run_tests.sh SUMMARY: $n_pass passed, $n_fail failed =="
 exit $fail

@@ -1,0 +1,12 @@
+== guasto
+   F   ok    punto fisso al giro 2 (uguali: 3 righe, scarto massimo dei tempi 0.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: 21.50 ms
+   m   ok    MUTE_CMD rilasciato 10.80 ms dopo l'evento
+   n   NO    MUTE_REQ giu' 1.300 ms dopo la caduta di MUTE_G_IN
+   p   ok    K501 aperto 83.5 ms dopo MUTE_REQ, aperto fino alla fine
+   q   ok    stato finale GUASTO, MUTE_CMD mai rieccitato
+   . stati: MUSICA -> GUASTO
+   . t_mute_g_in: 0.0107
+   . t_mute_req: 0.0120
+VERDETTO: FALLISCE
