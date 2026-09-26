@@ -828,3 +828,23 @@ il file vede lo spegnimento riuscito.
 - non basta il numero di righe, né l'ultimo istante: sono quelli chiesti, non quelli calcolati;
 - una cartella di risultati si svuota prima di rifare la corsa: un file di esito lasciato da una
   corsa precedente sopravvive al fallimento di quella nuova (`corri_seq.sh`, L41b2).
+
+## 36. Un `alter @dev[pwl] = [ … ]` con 1000 numeri o più viene ignorato: ngspice stampa solo «alter: too many args.» ed esce 0
+
+Scoperto in L41c (`docs/preamp/data/2026-09-26/L41c/`, il ponte fra le due schede).
+
+Una PWL portata da un'altra simulazione (i rail dell'alimentatore vero, campionati a 100 µs)
+entra in una corsa con `alter @vpp[pwl] = [ t v t v … ]`. Con 400 punti (800 numeri) funziona;
+con 500 punti (1000 numeri) no. ngspice scrive **una riga sola** nel log, `alter: too many args.`,
+e la sorgente **resta com'era**. Nessun `Error`, rc 0, e la `tran` corre fino in fondo.
+
+In un banco di guasti il tradimento è pieno: un rail che non scende è proprio il riferimento, e la
+corsa dà «niente al jack».
+
+**Regola operativa**:
+- una PWL si riduce prima di passarla ad `alter`. `ponte/estrai_ponte.py` usa Douglas-Peucker,
+  tiene al massimo 350 punti e scrive la tolleranza e lo scarto massimo;
+- un deck generato si controlla prima di correrlo: `deck/controlla_deck.py` rifiuta un `alter`
+  oltre 800 numeri;
+- `too many args` entra nella guardia sui log, accanto a `no such device` (#29, L30) e ai casi
+  di #33 e #35.

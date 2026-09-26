@@ -1,0 +1,129 @@
+== spegnimento_l
+   F   ok    punto fisso al giro 2 (uguali: 3473 righe, scarto massimo dei tempi 0.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: 39.80 ms
+   i   ok    MUTE_CMD rilasciato 6.5222 s dopo FRONT_IN a V5/2 (il pin a +7.10 ms dal frontale)
+   j   ok    K501 aperto 63.4 ms dopo il rilascio di PERMIT_CMD
+   k   ok    rail in regolazione fino al rilascio di MUTE_CMD
+   l   ok    stato finale del core: STANDBY
+   r   ok    jack (tardi) a +6532.30 ms, guadagno (presto) a +6569.10 ms
+   s   ok    jack (tardi) a +6532.30 ms, V+ sotto 10,6 V a +6813.00 ms
+   . stati: MUSICA -> SPEGNIMENTO -> STANDBY
+   . t_mute_off: 6.529300
+   . t_permit_off: 6.569100
+   . t_k501: 6.632500
+   . t_jack_tardi: 6.532300
+   . t_guadagno_presto: 6.569100
+   . t_vplus_10_6: 6.813000
+== perdita
+   F   ok    punto fisso al giro 3 (uguali: 3 righe, scarto massimo dei tempi 0.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: 20.30 ms
+   m   ok    MUTE_CMD rilasciato 14.40 ms dopo l'evento
+   n   ok    MUTE_REQ giu' -0.061 ms dopo la caduta di MUTE_G_IN
+   r   ok    jack (tardi) a +17.40 ms, guadagno (presto) a +34.70 ms
+   s   ok    jack (tardi) a +17.40 ms, V+ sotto 10,6 V a +183.00 ms
+   . stati: MUSICA -> BUCO_RETE -> ACCENSIONE
+   . t_mute_g_in: 0.014400
+   . t_mute_req: 0.014339
+   . t_jack_tardi: 0.017400
+   . t_guadagno_presto: 0.034700
+   . t_vplus_10_6: 0.183000
+== perdita_min
+   F   ok    punto fisso al giro 3 (uguali: 3 righe, scarto massimo dei tempi 0.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: 19.00 ms
+   m   ok    MUTE_CMD rilasciato 14.40 ms dopo l'evento
+   n   ok    MUTE_REQ giu' -0.055 ms dopo la caduta di MUTE_G_IN
+   r   ok    jack (tardi) a +17.40 ms, guadagno (presto) a +33.40 ms
+   s   ok    jack (tardi) a +17.40 ms, V+ sotto 10,6 V a +183.00 ms
+   . stati: MUSICA -> BUCO_RETE -> ACCENSIONE
+   . t_mute_g_in: 0.014400
+   . t_mute_req: 0.014345
+   . t_jack_tardi: 0.017400
+   . t_guadagno_presto: 0.033400
+   . t_vplus_10_6: 0.183000
+== guasto
+   F   ok    punto fisso al giro 2 (uguali: 4 righe, scarto massimo dei tempi 11.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: 20.30 ms
+   m   ok    MUTE_CMD rilasciato 10.70 ms dopo l'evento
+   n   ok    MUTE_REQ giu' -0.053 ms dopo la caduta di MUTE_G_IN
+   p   ok    K501 aperto 102.9 ms dopo MUTE_REQ, aperto fino alla fine
+   q   ok    stato finale GUASTO, MUTE_CMD mai rieccitato
+   . stati: MUSICA -> BUCO_RETE -> GUASTO
+   . t_mute_g_in: 0.010700
+   . t_mute_req: 0.010647
+== guasto_u501
+   F   ok    punto fisso al giro 2 (uguali: 4 righe, scarto massimo dei tempi 2.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: 20.30 ms
+   m   ok    MUTE_CMD rilasciato 10.10 ms dopo l'evento
+   n   ok    MUTE_REQ giu' -0.055 ms dopo la caduta di MUTE_G_IN
+   p   ok    K501 aperto 103.5 ms dopo MUTE_REQ, aperto fino alla fine
+   q   ok    stato finale GUASTO, MUTE_CMD mai rieccitato
+   r   ok    jack (tardi) a +13.10 ms, guadagno (presto) a +30.40 ms
+   s   ok    jack (tardi) a +13.10 ms, V+ sotto 10,6 V a +34.80 ms
+   . stati: MUSICA -> BUCO_RETE -> GUASTO
+   . t_mute_g_in: 0.010100
+   . t_mute_req: 0.010045
+   . t_jack_tardi: 0.013100
+   . t_guadagno_presto: 0.030400
+   . t_vplus_10_6: 0.034800
+== guasto_u503
+   F   ok    punto fisso al giro 2 (uguali: 4 righe, scarto massimo dei tempi 1.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: 20.30 ms
+   m   ok    MUTE_CMD rilasciato 12.80 ms dopo l'evento
+   n   ok    MUTE_REQ giu' -0.074 ms dopo la caduta di MUTE_G_IN
+   r   ok    jack (tardi) a +15.80 ms, guadagno (presto) a +33.10 ms
+   s   ok    jack (tardi) a +15.80 ms, V+ sotto 10,6 V a +253.00 ms
+   . stati: MUSICA -> BUCO_RETE -> GUASTO
+   . t_mute_g_in: 0.012800
+   . t_mute_req: 0.012726
+   . t_jack_tardi: 0.015800
+   . t_guadagno_presto: 0.033100
+   . t_vplus_10_6: 0.253000
+== guasto_u503_min
+   F   ok    punto fisso al giro 2 (uguali: 4 righe, scarto massimo dei tempi 9.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: 19.00 ms
+   m   ok    MUTE_CMD rilasciato 12.60 ms dopo l'evento
+   n   ok    MUTE_REQ giu' -0.026 ms dopo la caduta di MUTE_G_IN
+   r   ok    jack (tardi) a +15.60 ms, guadagno (presto) a +31.60 ms
+   s   ok    jack (tardi) a +15.60 ms, V+ sotto 10,6 V a +253.00 ms
+   . stati: MUSICA -> BUCO_RETE -> GUASTO
+   . t_mute_g_in: 0.012500
+   . t_mute_req: 0.012474
+   . t_jack_tardi: 0.015600
+   . t_guadagno_presto: 0.031600
+   . t_vplus_10_6: 0.253000
+== cf_nodelta
+   F   ok    punto fisso al giro 3 (uguali: 3 righe, scarto massimo dei tempi 0.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3* ok    DEVE FALLIRE: Delta ai rilasci: 0.00 ms
+   m   ok    MUTE_CMD rilasciato 14.40 ms dopo l'evento
+   n   ok    MUTE_REQ giu' -0.061 ms dopo la caduta di MUTE_G_IN
+   r*  ok    DEVE FALLIRE: jack (tardi) a +17.40 ms, guadagno (presto) a +14.40 ms
+   s   ok    jack (tardi) a +17.40 ms, V+ sotto 10,6 V a +183.00 ms
+   . stati: MUSICA -> BUCO_RETE -> ACCENSIONE
+   . t_mute_g_in: 0.014400
+   . t_mute_req: 0.014339
+   . t_jack_tardi: 0.017400
+   . t_guadagno_presto: 0.014400
+   . t_vplus_10_6: 0.183000
+== corto_u503
+   F   info  punto fisso al giro 2 (uguali: 4 righe, scarto massimo dei tempi 0.0 us), sostituzioni 0
+   C2  info  MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  info  Delta ai rilasci: 0.10 ms
+   m   info  MUTE_CMD rilasciato 0.10 ms dopo l'evento
+   n   info  MUTE_REQ giu' -0.055 ms dopo la caduta di MUTE_G_IN
+   r   info  jack (tardi) a +3.10 ms, guadagno (presto) a +0.10 ms
+   s   info  jack (tardi) a +3.10 ms, V+ sotto 10,6 V a +183.00 ms
+   . stati: MUSICA -> BUCO_RETE -> GUASTO
+   . t_mute_g_in: 0.000100
+   . t_mute_req: 0.000045
+   . t_jack_tardi: 0.003100
+   . t_guadagno_presto: 0.000100
+   . t_vplus_10_6: 0.183000
+VERDETTO: PASSA
