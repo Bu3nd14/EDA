@@ -102,8 +102,14 @@ int timer_cal_fit_x(timer_cal_t *cal, float t_c,
     float e2 = vt * logf(want2 / read2);
     if (fabsf(e1) > CAL_E_MAX || fabsf(e2) > CAL_E_MAX)
         return 0;
+    /* the two reads must be two currents, not one read twice */
+    if (fmaxf(x1, x2) < 2.0f * fminf(x1, x2))
+        return 0;
     float r = (e1 - e2) / (x1 - x2);
     float off = e2 - r * x2;
+    /* the correction where it will be used (the wanted currents) */
+    if (fabsf(off + r * want1) > CAL_E_MAX || fabsf(off + r * want2) > CAL_E_MAX)
+        return 0;
 #if FALSO == 13
     off = -off;                               /* the correction with the wrong sign */
 #endif
@@ -196,6 +202,47 @@ static float netto(float i, float zero)
 static void cal_abort(timer_state_t *st)
 {
     st->cal_active = 0;
+    /* a calibration interrupted before its read-back is not trusted */
+    if (st->cal_verifica == 1)
+        st->cal_s = st->cal_prima;
+    else if (st->cal_verifica == 2)
+        st->cal_p = st->cal_prima;
+    st->cal_verifica = 0;
+}
+
+/* fit string s (1 series, 2 shunt) and arm the read-back */
+static void cal_fit(timer_state_t *st, uint8_t s, float t_c, float top_read, float lo_read)
+{
+    timer_cal_t *c = s == 1 ? &st->cal_s : &st->cal_p;
+    st->cal_prima = *c;
+    if (timer_cal_fit(c, t_c, LDR_I_TOP, top_read, LDR_I_CAL_LO, lo_read)) {
+        st->cal_verifica = s;
+    } else {
+        st->n_cal_reject++;
+        st->cal_verifica = 0;
+    }
+}
+
+/* the read-back of the corrected top, after it settled; returns 1 if kept */
+static int cal_verifica(timer_state_t *st, float i_letta)
+{
+    uint8_t s = st->cal_verifica;
+    st->cal_verifica = 0;
+    if (!s)
+        return 0;
+#if FALSO == 21
+    (void)i_letta;
+    return 1;
+#else
+    if (fabsf(i_letta / LDR_I_TOP - 1.0f) <= CAL_VERIFY_TOL)
+        return 1;
+    if (s == 1)
+        st->cal_s = st->cal_prima;
+    else
+        st->cal_p = st->cal_prima;
+    st->n_cal_reject++;
+    return 0;
+#endif
 }
 
 /* The immediate mute of a mains hole or a fault: no fade (spec 4.5, 4.6). */
@@ -389,11 +436,7 @@ timer_out_t timer_step(timer_state_t *st, const timer_in_t *in, uint32_t dt)
         case 2: /* 2 mA, settled: fit, back to the top */
             if (st->t_fase >= T_CAL_SETTLE_US) {
 #if FALSO != 14
-                if (timer_cal_fit(&st->cal_p, in->t_c, LDR_I_TOP, st->cal_top_read,
-                                  LDR_I_CAL_LO, netto(in->i_p, st->zero_p)))
-                    st->cal_ok_p = 1;
-                else
-                    st->n_cal_reject++;
+                cal_fit(st, 2, in->t_c, st->cal_top_read, netto(in->i_p, st->zero_p));
 #endif
                 st->cal_active = 0;
                 vai(st, ST_ACCENSIONE, 3);
@@ -407,6 +450,7 @@ timer_out_t timer_step(timer_state_t *st, const timer_in_t *in, uint32_t dt)
 #else
             if (st->t_fase >= T_CAL_SETTLE_US) {
 #endif
+                st->cal_ok_p = (uint8_t)cal_verifica(st, netto(in->i_p, st->zero_p));
                 st->vrelay_en = 1;
                 vai(st, ST_ACCENSIONE, 4);
             }
@@ -420,7 +464,7 @@ timer_out_t timer_step(timer_state_t *st, const timer_in_t *in, uint32_t dt)
                 if (want_music)
                     entra_rilascio(st);
                 else
-                    entra_muto(st, 1);
+                    entra_muto(st, st->cal_ok_p);  /* a failed shunt calibration is retried */
             }
             break;
         }
@@ -456,12 +500,12 @@ timer_out_t timer_step(timer_state_t *st, const timer_in_t *in, uint32_t dt)
                 st->fase = 1;
                 st->t_fase = 0;
             } else if (st->fase == 1 && st->t_fase >= T_CAL_SETTLE_US) {
-                if (timer_cal_fit(&st->cal_p, in->t_c, LDR_I_TOP, st->cal_top_read,
-                                  LDR_I_CAL_LO, netto(in->i_p, st->zero_p)))
-                    st->cal_ok_p = 1;
-                else
-                    st->n_cal_reject++;
+                cal_fit(st, 2, in->t_c, st->cal_top_read, netto(in->i_p, st->zero_p));
                 st->cal_active = 0;
+                st->fase = 2;
+                st->t_fase = 0;
+            } else if (st->fase == 2 && st->t_fase >= T_CAL_SETTLE_US) {
+                st->cal_ok_p = (uint8_t)cal_verifica(st, netto(in->i_p, st->zero_p));
                 st->cal_done_here = 1;
                 st->fase = 0;
             }
@@ -539,12 +583,12 @@ timer_out_t timer_step(timer_state_t *st, const timer_in_t *in, uint32_t dt)
                 st->fase = 1;
                 st->t_fase = 0;
             } else if (st->fase == 1 && st->t_fase >= T_CAL_SETTLE_US) {
-                if (timer_cal_fit(&st->cal_s, in->t_c, LDR_I_TOP, st->cal_top_read,
-                                  LDR_I_CAL_LO, netto(in->i_s, st->zero_s)))
-                    st->cal_ok_s = 1;
-                else
-                    st->n_cal_reject++;
+                cal_fit(st, 1, in->t_c, st->cal_top_read, netto(in->i_s, st->zero_s));
                 st->cal_active = 0;
+                st->fase = 2;
+                st->t_fase = 0;
+            } else if (st->fase == 2 && st->t_fase >= T_CAL_SETTLE_US) {
+                st->cal_ok_s = (uint8_t)cal_verifica(st, netto(in->i_s, st->zero_s));
                 st->cal_done_here = 1;
                 st->fase = 0;
             }

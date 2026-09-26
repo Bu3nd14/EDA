@@ -448,12 +448,55 @@ static void t_guasto(void)
     CHECK(primo_stato(&M, ST_GUASTO, t0) > 0, "guasto in MUTO visto dall'ADC: non va in GUASTO");
 }
 
+/* ------------------------------------------- spec sec. 5: the calibration */
+static void t_calibrazione(void)
+{
+    /* (a) the top's read corrupted by +50 % at the power-up (a glitch, a
+     * string still moving): the read-back of the corrected top must refuse
+     * it and restore the previous calibration; MUTO retries it 1 s later */
+    mondo_init(&M, NULL);
+    M.in.mute_sw_in = 1;
+    float t_dac = -1;
+    for (int k = 0; k < 4000; k++) {
+        mondo_corri(&M, 1);
+        float t = M.t_us * 1e-6f;
+        if (t_dac < 0 && M.out.dac_on)
+            t_dac = t;
+        M.adc_gain = (t_dac > 0 && t >= t_dac + 0.150f && t <= t_dac + 0.210f) ? 0.5f : 0.0f;
+    }
+    float t_vr = primo_fronte(&M, M.vrel, 1, 0);
+    float t_muto = primo_stato(&M, ST_MUTO, 0);
+    CHECK(M.st.n_cal_reject >= 1, "la lettura falsata non e' stata rifiutata");
+    CHECK(t_muto > 0, "non arriva in MUTO");
+    /* the retry in MUTO: 1 s + 400 ms + 200 ms of read-back */
+    float e = (float)db(M.ip[idx_a(&M, t_muto + 1.9f)], 12e-3);
+    CHECK(M.st.cal_ok_p && fabsf(e) <= 0.1f, "dopo il ritentativo in MUTO la cima sta a %+.3f dB (cal_ok %d)",
+          e, M.st.cal_ok_p);
+    printf("  calibrazione: lettura falsata del 50%% rifiutata (%u rifiuti), VRELAY_EN a %.3f s, "
+           "ritentata in MUTO: cima %+.3f dB\n", M.st.n_cal_reject, t_vr, e);
+
+    /* (b) the shunt string open (J3 unplugged): no current, no calibration,
+     * and never a code above the uncalibrated top */
+    mondo_init(&M, NULL);
+    M.in.mute_sw_in = 1;
+    M.off_p = 0.5f;                     /* the plant needs 0.5 V more: ~0 A */
+    mondo_corri(&M, 4000);
+    uint16_t cmax = 0, lim = timer_law_code(LDR_I_TOP, 25.0f, NULL);
+    for (int k = 0; k < M.n; k++)
+        if (M.cp[k] > cmax) cmax = M.cp[k];
+    CHECK(!M.st.cal_ok_p && M.st.n_cal_reject >= 1, "stringa aperta: calibrazione accettata");
+    CHECK(cmax <= lim, "stringa aperta: codice della derivazione %u oltre la cima non calibrata %u", cmax, lim);
+    printf("  calibrazione: stringa aperta, %u rifiuti, codice massimo %u (cima non calibrata %u)\n",
+           M.st.n_cal_reject, cmax, lim);
+}
+
 /* ---------------------------------------------------------------- main */
 typedef struct { const char *nome; void (*f)(void); } test_t;
 static const test_t TESTS[] = {
     {"accensione", t_accensione}, {"inserzione", t_inserzione}, {"rilascio", t_rilascio},
     {"inversione", t_inversione}, {"spegnimento", t_spegnimento}, {"debounce", t_debounce},
     {"buco_classe1", t_buco_classe1}, {"buco_classe2", t_buco_classe2}, {"guasto", t_guasto},
+    {"calibrazione", t_calibrazione},
 };
 
 int main(int argc, char **argv)

@@ -12,12 +12,13 @@ falso 9 (spegnimento: rete staccata senza i 50 ms): FALLISCE spegnimento come de
 falso 10 (buco di classe 2 trattato come classe 1): FALLISCE buco_classe2 come deve  [falliti: buco_classe2 ]
 falso 11 (nessuna compensazione di Vt): FALLISCE tabella come deve  [falliti: codici tabella bilancio ]
 falso 12 (la cima a 20 mA (NC-038)): FALLISCE tabella come deve  [falliti: accensione inserzione tabella bilancio ]
-falso 13 (correzione della calibrazione col segno sbagliato): FALLISCE cal_l41b1 come deve  [falliti: accensione inserzione cal_l41b1 tabella ]
-falso 14 (nessuna calibrazione all'accensione): FALLISCE accensione come deve  [falliti: accensione inserzione bilancio ]
+falso 13 (correzione della calibrazione col segno sbagliato): FALLISCE cal_l41b1 come deve  [falliti: accensione inserzione calibrazione cal_l41b1 tabella ]
+falso 14 (nessuna calibrazione all'accensione): FALLISCE accensione come deve  [falliti: accensione inserzione calibrazione bilancio ]
 falso 15 (nessuna ritenuta dopo il guasto): FALLISCE guasto come deve  [falliti: guasto ]
-falso 16 (SW3 letto al contrario: un filo rotto suona): FALLISCE debounce come deve  [falliti: accensione inserzione rilascio inversione spegnimento debounce buco_classe1 buco_classe2 bilancio ]
+falso 16 (SW3 letto al contrario: un filo rotto suona): FALLISCE debounce come deve  [falliti: accensione inserzione rilascio inversione spegnimento debounce buco_classe1 buco_classe2 calibrazione bilancio ]
 falso 17 (Td = 3 s invece di 6): FALLISCE inserzione come deve  [falliti: accensione inserzione rilascio inversione spegnimento bilancio ]
 falso 18 (nessun limite di 2 s sui rail): FALLISCE accensione come deve  [falliti: accensione ]
 falso 19 (lo zero dell'ADC non sottratto): FALLISCE bilancio come deve  [falliti: bilancio ]
 falso 20 (VRELAY_EN subito dopo il fit, la cima corretta non assestata): FALLISCE accensione come deve  [falliti: accensione buco_classe2 ]
-== falsi: 20 su 20 fanno fallire il loro test
+falso 21 (nessuna rilettura della cima dopo la calibrazione): FALLISCE calibrazione come deve  [falliti: calibrazione ]
+== falsi: 21 su 21 fanno fallire il loro test

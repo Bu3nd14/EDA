@@ -37,7 +37,7 @@ typeset -A pre
 pre=(accensione "" rilascio muto inversione musica spegnimento musica
      buco20 musica buco200 musica guasto musica)
 typeset -A tf
-tf=(accensione 3.3 rilascio 9.6 inversione 8.3 spegnimento 9.0 buco20 3.3 buco200 3.6 guasto 3.0)
+tf=(accensione 3.3 rilascio 9.6 inversione 8.3 spegnimento 8.65 buco20 3.3 buco200 3.6 guasto 3.0)
 p=${pre[$caso]}
 cd "$OUT" || exit 1
 

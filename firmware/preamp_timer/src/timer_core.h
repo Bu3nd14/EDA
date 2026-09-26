@@ -59,6 +59,8 @@
 #define LAW_R_C         22.1e3f
 #define LAW_DAC_FS      4.096f  /* MCP4822, G = 2x */
 #define CAL_E_MAX       0.030f  /* L41b2: a fit needing > 30 mV is a broken string, not a correction */
+#define CAL_VERIFY_TOL  0.10f   /* L41b2: the corrected top read back within +-10 % (~0.8 dB), else
+                                   the previous calibration is restored */
 
 typedef enum {
     ST_STANDBY = 0, ST_ACCENSIONE, ST_MUTO, ST_RILASCIO, ST_MUSICA,
@@ -117,6 +119,11 @@ typedef struct {
      * 10 ohm): the ADC's offset and the pin's leakage through 47k, which
      * otherwise cost up to 2 dB of the profile (L41b2, test_legge bilancio) */
     float zero_s, zero_p;
+    /* the calibration being verified: 0 none, 1 series, 2 shunt; the one
+     * it replaced, restored if the corrected top reads wrong (L41b2: a fit
+     * from two inconsistent reads sent the DAC to full scale, ~30 mA) */
+    uint8_t cal_verifica;
+    timer_cal_t cal_prima;
     uint8_t cal_done_here; /* the string at its top calibrated in this stay */
 } timer_state_t;
 

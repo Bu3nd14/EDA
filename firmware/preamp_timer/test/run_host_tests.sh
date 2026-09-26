@@ -62,7 +62,8 @@ if [ -n "$falsi_out" ]; then
     attesi=(1 accensione 2 rilascio 3 inserzione 4 inserzione 5 buco_classe1
             6 buco_classe1 7 debounce 8 inversione 9 spegnimento 10 buco_classe2
             11 tabella 12 tabella 13 cal_l41b1 14 accensione 15 guasto
-            16 debounce 17 inserzione 18 accensione 19 bilancio 20 accensione)
+            16 debounce 17 inserzione 18 accensione 19 bilancio 20 accensione
+            21 calibrazione)
     typeset -A cosa
     cosa=(1 "VRELAY_EN -> MUTE_REQ 5 ms (ADR-027: 13 ms)"
           2 "d si muove col rele' ancora aperto"
@@ -83,12 +84,13 @@ if [ -n "$falsi_out" ]; then
           17 "Td = 3 s invece di 6"
           18 "nessun limite di 2 s sui rail"
           19 "lo zero dell'ADC non sottratto"
-          20 "VRELAY_EN subito dopo il fit, la cima corretta non assestata")
+          20 "VRELAY_EN subito dopo il fit, la cima corretta non assestata"
+          21 "nessuna rilettura della cima dopo la calibrazione")
     : > "$falsi_out"
     echo "# L41b2: i test sull'host contro i falsi di timer_core.c (FALSO_n)" >> "$falsi_out"
     echo "# ogni falso deve far FALLIRE il test indicato; gli altri possono passare" >> "$falsi_out"
     nf=0
-    for n in {1..20}; do
+    for n in {1..21}; do
         build "_f$n" "-DFALSO=$n" || { echo "falso $n: non compila" >> "$falsi_out"; rc=1; continue; }
         o1=$("$OUT/test_sequenze_f$n" 2>&1)
         o2=$("$OUT/test_legge_f$n" "$ROOT" 2>&1)
@@ -102,7 +104,7 @@ if [ -n "$falsi_out" ]; then
             rc=1
         fi
     done
-    echo "== falsi: $nf su 20 fanno fallire il loro test" | tee -a "$falsi_out"
+    echo "== falsi: $nf su 21 fanno fallire il loro test" | tee -a "$falsi_out"
 fi
 
 [ $rc -eq 0 ] && echo "[PASS] test sull'host del temporizzatore" || echo "[FAIL] test sull'host del temporizzatore"

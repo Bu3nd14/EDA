@@ -160,7 +160,12 @@ static void correggi(double t, const timer_state_t *st, timer_in_t *in)
     if (!npil || pilota_mute(t) == st->mute_req)
         return;
     uint8_t v = (uint8_t)(st->mute_req && sup_ok(in));
-    if (v != in->mute_g_in) n_sost++;
+    if (v != in->mute_g_in) {
+        if (n_sost < 5)
+            printf("ponte: sostituzione di MUTE_G_IN a %.6f s (pilota %d, core %d, circuito %d)\n",
+                   t, pilota_mute(t), st->mute_req, in->mute_g_in);
+        n_sost++;
+    }
     in->mute_g_in = v;
 }
 
@@ -243,11 +248,12 @@ int main(int argc, char **argv)
         }
         /* an edge the driving outputs explain and this core did not cause is
          * not an interrupt of this core */
-        /* the driving output causes an edge 0.1-0.3 ms after it falls (R513,
-         * C_MUTE_G): one that fell less than 50 us before tx did not cause it
-         * (without this margin the reaction alternated between the interrupt
-         * and the next tick, pass after pass) */
-        if (tx > 0 && mg_prima && (!npil || pilota_mute(tx - 50e-6) == st.mute_req)) {
+        /* the driving output causes an edge >= 0.13 ms after it falls (R513
+         * 10k x C_MUTE_G 22 nF, from 4.5 V to 2.5 V): one that fell less than
+         * 100 us before tx did not cause it. Without this margin the reaction
+         * alternated between the interrupt and the next tick, pass after pass
+         * (with 50 us it still did, in the fault case) */
+        if (tx > 0 && mg_prima && (!npil || pilota_mute(tx - 100e-6) == st.mute_req)) {
             pin(tx, &in);
             correggi(tx, &st, &in);
             scrivi(tx, &st, timer_step(&st, &in, 0));

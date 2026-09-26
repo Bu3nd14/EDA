@@ -650,7 +650,10 @@ CASI_SEQ = {
     "inversione": dict(front=1, sw3=[(0, 1), (TE, 1), (TE + 1e-6, 0), (TE + 3, 0), (TE + 3 + 1e-6, 1)],
                        tf=TE + 6.3, pre="musica"),
     # from MUSICA: the front switched off at TE
-    "spegnimento": dict(front=[(0, 1), (TE, 1), (TE + 1e-6, 0)], sw3=1, tf=TE + 7.0, pre="musica"),
+    # (ends 20 ms after MAINS_REQ falls, at ~TE + 6.63: ~30 ms after it, as the
+    # MCP6004 loops see V5's DAC shut down, ngspice stopped with "Timestep too
+    # small" on xu511a. Every criterion of the case lies before.)
+    "spegnimento": dict(front=[(0, 1), (TE, 1), (TE + 1e-6, 0)], sw3=1, tf=TE + 6.65, pre="musica"),
     # from MUSICA: the mains gone for 20 ms, then for 200 ms (two holes, two runs)
     "buco20": dict(front=1, sw3=1, buco=0.020, tf=TE + 1.3, pre="musica"),
     "buco200": dict(front=1, sw3=1, buco=0.200, tf=TE + 1.6, pre="musica"),
