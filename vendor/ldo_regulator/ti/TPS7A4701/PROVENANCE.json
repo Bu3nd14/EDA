@@ -1,0 +1,48 @@
+{
+  "part_name": "TPS7A4701 (positive, +36V, 1A, ultralow-noise adjustable/ANY-OUT LDO linear regulator, part of the TPS7A470x/TPS7A47 family)",
+  "vendor_name": "Texas Instruments Incorporated",
+  "device_class": "ldo_regulator",
+  "product_page": "https://www.ti.com/product/TPS7A47",
+  "date_obtained": "2026-09-26",
+  "lotto": "L41a",
+  "obtained_by": "AI agent (bom-component-manager subagent) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from ti.com. The datasheet is TI's own family document for TPS7A4700/TPS7A4701 (symlink resolves to a literature-number PDF on ti.com); the SPICE model was located via the TI.com product technical-documents listing, literature number SBVM364 (\"TPS7A4701 PSpice Transient Model, Rev. B\"), downloaded as SBVM364.ZIP from https://www.ti.com/lit/zip/sbvm364 and unzipped. Content-Type/size checked (application/pdf and application/zip respectively, both with plausible non-trivial byte counts), and the .lib was opened and read before freezing, per docs/limitations.md #20/#21 (a vendor host can serve the wrong part under the right-looking URL/filename, or vice versa) -- the file's own header explicitly says '* Part: TPS7A4701' and the .SUBCKT is literally named TPS7A4701_TRANS, so the header-vs-filename cross-check passes.",
+  "license_notes": "Manufacturer datasheet and SPICE model, redistributed here unmodified for engineering traceability only. Copyright remains Texas Instruments Incorporated. TI's own model header disclaims warranty and says the model is 'subject to change without notice.'",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "L41a requirement: a low-noise linear +15V regulator at ~265mA per rail, input up to ~23V (mains +10%), per the user's own decision recorded for the preamp power supply. TPS7A4701 is TI's adjustable-output variant of the TPS7A470x family (4uVrms typ. output noise, 10Hz-100kHz, at low VOUT; higher at 15V -- see notes below), well above the ~36V abs-max headroom needed for a 23V worst-case input, and the adjustable-mode (external feedback resistors, up to +34V) fits a fixed +15V rail without relying on the ANY-OUT PCB-trace-select scheme.",
+  "files": [
+    {
+      "original_filename": "tps7a47.pdf",
+      "role": "datasheet (covers TPS7A4700 and TPS7A4701, both in the TPS7A47 family document, SBVS204G)",
+      "url": "https://www.ti.com/lit/ds/symlink/tps7a47.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 2275327,
+      "pages": 32,
+      "sha256": "8ca46a9968923d2ec9a4deedacfe37220ee5159f4570009cb7c3163661c5dfe0",
+      "local_filename": "tps7a47.pdf",
+      "renamed": false,
+      "revision_note": "Header/footer of every page reads 'SBVS204G - JUNE 2012 - REVISED MAY 2026'. Confirmed by opening page 1 with pdftotext: title 'TPS7A4700, TPS7A4701 / TPS7A470x 36V, 1A, 4uVRMS, RF LDO Voltage Regulator'."
+    },
+    {
+      "original_filename": "tps7a4701_trans.lib",
+      "role": "SPICE model (PSpice transient macromodel), extracted unmodified from SBVM364.ZIP (subdirectory root of the zip; sibling files library/tps7a4701_trans.olb (schematic symbol) and the *-PSpiceFiles/ simulation-profile scratch directory were NOT kept, since they are Cadence-Capture-specific project artifacts irrelevant to a plain .lib -- only the model text itself is vendor content worth freezing)",
+      "url": "https://www.ti.com/lit/zip/sbvm364",
+      "literature_number": "SBVM364B",
+      "served_content_type": "application/zip",
+      "bytes_zip": 43312,
+      "sha256": "ea5a2a84d00e05ad3ac87bf3e65e95df434ef2751b80bffdb36bee60e7d20fbe",
+      "local_filename": "tps7a4701_trans.lib",
+      "renamed": false,
+      "header_says": "'* Part: TPS7A4701 / Date: 03Mar2026 / Model Type: Transient / Simulator: PSPICE / Simulator Version: 17.4 / Datasheet: SBVS204F ... / Model Version: 2.0'. Header lists explicitly what IS modeled ('Startup behavior, Line Transient, Load Transient, Current Limit, PSRR to first pole and first zero') and what is NOT ('Quiescent Current, Output Noise, Thermal Shutdown, Current Limit Foldback, Temperature variation of parameters'). Any noise/PSRR-vs-temperature figure asked of this model would be meaningless by the vendor's own admission, independent of the ngspice issues below."
+    }
+  ],
+  "spice_model_ngspice_verification": {
+    "encrypted": false,
+    "syntax_as_shipped": "Does NOT load in ngspice 47 unmodified. Two ngspice-incompatibility classes found: (1) three capacitors (C_C11, C_U1_C3, C_U1_C17) use the PSpice-only positional 'TC=v1,v2' tempco shorthand, which ngspice's capacitor model does not parse ('unknown parameter (tc)') -- ngspice wants TC1=/TC2= as separate keyworded params; (2) two switch models (_U1_S4, ESD_SW) are declared '.MODEL x VSWITCH ROFF=... RON=... VOFF=... VON=...', a PSpice model type ngspice does not have at all ('Unable to find definition of model'). ngspice's own voltage-controlled switch is model type SW with parameters VT (threshold) and VH (hysteresis), not VOFF/VON.",
+    "patch_attempted_but_NOT_committed_to_models": "In-session only (not added to models/, see rationale below): removed the three 'TC=0,0' occurrences (value is 0,0 in every case, so this is a functional no-op) and translated both VSWITCH declarations to SW with VT=(VON+VOFF)/2, VH=(VON-VOFF)/2 (a standard, documented PSpice-to-ngspice switch-parameter mapping). After these two patches the deck PARSES and completes both .op and .tran(10us,2..8ms) in ngspice 47 with zero 'Error:' lines (only one non-fatal, ignored warning: '.model r_nsls res (t_abs=-273.15) ... unrecognized parameter (t_abs) - ignored').",
+    "functional_result": "NOT VERIFIED CORRECT. In every closed-loop testbench tried in this session -- ANY-OUT pin selection targeting 15V (grounding 0P8V+6P4V1+6P4V2), the datasheet's own default test condition (all ANY-OUT pins open, SENSE tied to OUT, expected ~1.4V), and adjustable-mode with an external R1/R2 feedback divider targeting 5V, each with a 1uF CNR cap added at the NR pin (recommended per datasheet, initially omitted and also tried) and with/without the 2200uF output hold-up cap named in the L41a brief -- the DC operating point settled at a physically implausible ~1.0V regardless of the selected/targeted set-point, while an internal node (x1.u1_vref) sat at a nonphysical ~101 '(V)' value inconsistent with the model's own PARAMS default VREF=1.4. Internal digital-logic nodes (enable/UVLO/current-fold-back comparators) were traced by hand and are in the expected 'enabled, no fault' state, so this is not a latched-fault artifact of the 2200uF cap or of gmin/source stepping. Root cause NOT isolated in the time available: it may be a testbench pin-wiring mistake (this model's exact ANY-OUT/NR/SENSE external wiring was reverse-engineered from the plaintext .lib without access to TI's reference Cadence .DSN schematic, which is a binary format this session could not parse), or a real convergence/compatibility gap specific to ngspice.",
+    "verdict": "DO NOT USE for any DC operating point, AC/PSRR, or noise number until this is resolved by someone with either TI's reference PSpice/TINA-TI schematic or more debugging time than this lotto had. No models/ derivative was created from this file -- per instruction, a model that does not demonstrably work is reported as such, not shipped as a working substitute. The vendor original is frozen here purely as an audit trail (what TI actually serves) so a future session does not have to re-download and re-diagnose from zero.",
+    "command_used": "/opt/homebrew/bin/ngspice -b <testbench>.cir, testbenches and exact patch diffs recorded in this session's transcript (not committed as repo files)."
+  }
+}

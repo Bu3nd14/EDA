@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-09-26** (L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-09-26** (L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -156,6 +156,11 @@ spegnimento (L30).
 **10 voci aperte, 2 bloccanti**: NC-004 per G1, NC-036 per G2.
 L'accesso a G1 non è concesso finché NC-004 resta aperta; il layout (G2) non si apre finché
 NC-036 resta aperta.
+
+**L41a** (2026-09-26, **ADR-048**): l'alimentatore esiste in `circuits/preamp/psu.py` (potenza,
+`VRELAY`, relè di rete, sorvegliante con rivelatore di rete e sorvegliante di `VRELAY`), il
+temporizzatore no. NC-036 resta aperta e bloccante per G2 (L41b, L41c). NC-011: rimedio scelto,
+verifica aperta. **Apre NC-037** (il consumo in standby). **11 voci aperte, 2 bloccanti**.
 
 ---
 
@@ -900,6 +905,18 @@ Il verbo è stato fatto fallire su casi noti
 
 Sono del lotto dell'alimentatore, insieme al limite sopra 20 kHz che E5 non
 può dare.
+
+**L41a (2026-09-26, ADR-048): il rimedio è scelto, la verifica no.**
+- Regolatori lineari a basso rumore, **nessuno switching nel telaio** (decisione dell'utente,
+  «non accetto uno switching, siamo troppo deboli sulla PSRR»): TPS7A4701 sul rail +,
+  TPS7A3301 sul rail −. Sopra 20 kHz resta solo ciò che viene dai raddrizzatori.
+- **Il dubbio, dal datasheet** (SBVS204G p. 6 e Fig. 5-1): 12,28 µVrms a 15 V in 10 Hz–100 kHz,
+  e una densità a 1 kHz letta a occhio di ~0,1–0,15 µV/√Hz, sopra gli 87 nV/√Hz ammessi sul
+  rail +. È una lettura di grafico, con C_NR 1 µF (il sorgente ne mette 10): non è un verdetto.
+- Il banco di L41a ha regolatori comportamentali, **senza PSRR né rumore**. Il modello TI del
+  TPS7A4701 carica in ngspice ma dà un punto di lavoro sbagliato (`vendor/ldo_regulator/ti/`).
+- **Resta aperta** per la verifica contro ADR-020: lo spettro del rail + col rumore del
+  regolatore, poi il prototipo.
 
 ### NC-012 — V1 non dichiara la soglia di accettazione del margine di fase
 
@@ -3121,6 +3138,45 @@ circuito dell'alimentatore esista.
    dal datasheet delle parti scelte.
 
 Lotto **L41**.
+
+**L41a (2026-09-26, ADR-048): il punto 1 è fatto per metà, il punto 3 per intero.**
+- `circuits/preamp/psu.py` → `psu.net`, il secondo PCB. Dentro ci sono la rete (modulo IEC
+  posteriore, F501, relè K501 sul solo toroidale), i rail ±15 V con la tenuta da 2200 µF, `VRELAY`
+  12 V da un trasformatore proprio con 4700 µF di serbatoio e 2200 µF di tenuta, il sorvegliante
+  (rail a |13,5 V|, rete, `VRELAY` sotto 11 V) che spegne `MUTE_CMD` in hardware, e i due sink di
+  J4. `check_psu_harness.py` (2j) prova il cablaggio fra le schede: 8 falsi su 8.
+- **Simulato da solo** (`data/2026-09-26/L41a/`, modelli comportamentali dichiarati):
+  - perdita di rete: `MUTE_CMD` rilasciato in 14,2–14,4 ms, coi rail ancora a 15 V;
+  - regolatore + o − che cede: scatto a 13,56 / −13,52 V, prima dei 13,5 V; tenuta 19,4 ms;
+  - `VRELAY` in tolleranza 62,8 ms dopo lo scatto con la rete a −10 %, e 32,9 ms sopra l'80 %
+    se cede il suo regolatore.
+- **Manca**: il temporizzatore, il ritardo Δ in hardware, il pilota delle LDR e il taglio di
+  `VRELAY` in standby (**L41b**); il banco di L30 col circuito vero (**L41c**).
+- **Da decidere con l'utente in L41c**: un'uscita di U503 in **cortocircuito** scarica anche la
+  tenuta di `VRELAY`, e tutte le bobine cadono insieme. È il caso «senza Δ» di L30 (69 mV,
+  ~90 dB SPL di picco a 1 m): sotto il tetto di ~112 dB, sopra l'obiettivo di ~60 dB.
+- **Dipendenza dichiarata**: senza il rivelatore di rete, con la rete a −10 %, `VRELAY` esce di
+  tolleranza prima che i rail facciano scattare il sorvegliante. Il guasto del rivelatore più una
+  perdita di rete è un doppio guasto.
+
+### NC-037 — In standby il consumo supera il limite europeo di 0,5 W
+
+| | |
+|---|---|
+| Requisito | **ADR-048** punto 4 (lo standby) · Regolamento (UE) 2023/826, standby ≤ 0,5 W dal 2025-05-09 (fonte primaria non letta: `SAFETY.md`) · P2 |
+| Severità | **maggiore**: blocca G3 se ancora aperta |
+| Aperta da | `reports/2026-09-26-L41a-alimentatore-potenza-sorvegliante.md` |
+| Stato | aperta |
+
+**Evidenza.** In standby l'apparecchio è in mute, quindi K6 è rilasciato e `VTRIM` è viva: le
+quattro bobine bistabili del trim (K7–K10) sono pilotate di continuo (ADR-027, L16). A 12 V sono
+4 × 9,1 mA ≈ **0,44 W** (G6KU, en-g6k.pdf p. 3), più ~6 mA di LED a pannello, più le perdite a
+vuoto di T2 e la logica. Da sole le bobine si mangiano quasi tutto il mezzo watt. È un calcolo,
+non una misura.
+
+**Cosa serve per chiuderla.** In standby il temporizzatore toglie `VRELAY` alla scheda audio (un
+interruttore sul lato alto verso J1 pin 4), e il micro resta su V5. Poi il bilancio dello standby
+col pezzo di T2 scelto, e la misura sul prototipo. Lotto **L41b**.
 
 ## Voci chiuse
 

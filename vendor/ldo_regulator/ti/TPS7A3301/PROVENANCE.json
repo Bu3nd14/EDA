@@ -1,0 +1,52 @@
+{
+  "part_name": "TPS7A3301 (negative, -36V, 1A, ultralow-noise adjustable LDO linear regulator, part of the TPS7A33 family, VQFN-20 package)",
+  "vendor_name": "Texas Instruments Incorporated",
+  "device_class": "ldo_regulator",
+  "product_page": "https://www.ti.com/product/TPS7A33",
+  "date_obtained": "2026-09-26",
+  "lotto": "L41a",
+  "obtained_by": "AI agent (bom-component-manager subagent) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from ti.com. Datasheet is TI's TPS7A33 family document (SBVS169D). The SPICE model was located via the TI.com product technical-documents listing for TPS7A33: two distributions of a same-named file 'TPS7A3301.lib' exist under different literature numbers -- SBVM105 ('TPS7A3301 PSpice Transient Model') and SBVM665 ('TPS7A3301 Unencrypted PSpice Transient Model'). BOTH were downloaded and opened before choosing: SBVM105's TPS7A3301.lib begins with the header line '**$ENCRYPTED_LIB' (an ngspice-unusable Cadence-encrypted blob); SBVM665's TPS7A3301.lib has no such marker and is plain-text ABM/behavioral SPICE. This is the same trap documented in docs/limitations.md #17 (a vendor can ship two models of the same part under the same name) -- flagged here explicitly: the file frozen in this directory is the SBVM665 (unencrypted) one, NOT SBVM105. Anyone reaching for 'TPS7A3301.lib' by literature number must check which of the two they have.",
+  "license_notes": "Manufacturer datasheet and SPICE model, redistributed here unmodified for engineering traceability only. Copyright remains Texas Instruments Incorporated.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "L41a requirement: a low-noise linear -15V regulator at ~265mA, input up to ~-23V (mains +10%, negative rail complement of the +15V TPS7A4701). TPS7A3301 is TI's adjustable-output member of the TPS7A33 family (-3V to -36V input, adjustable -1.18V to -33V output), giving ample headroom above a -23V worst-case input and enough dropout margin for a -15V rail.",
+  "files": [
+    {
+      "original_filename": "tps7a33.pdf",
+      "role": "datasheet (TPS7A33 family, covers the TPS7A3301 adjustable variant; ordering table on page 33 lists TPS7A3301RGW*)",
+      "url": "https://www.ti.com/lit/ds/symlink/tps7a33.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 1992418,
+      "pages": 35,
+      "sha256": "1b607b7bf1350a0fcce4feb184a30e36d1a14c853157e4ae1e7966315a94d81c",
+      "local_filename": "tps7a33.pdf",
+      "renamed": false,
+      "revision_note": "Header/footer of every page reads 'SBVS169D - DECEMBER 2011 - REVISED APRIL 2015'. Page 46/page-33-printed ordering table confirms TPS7A3301RGWR / TPS7A3301RGWT / TPS7A3301RGWTG4, all VQFN-20 (RGW), Active/Production."
+    },
+    {
+      "original_filename": "TPS7A3301.lib",
+      "role": "SPICE model (PSpice transient macromodel, UNENCRYPTED variant), extracted unmodified from SBVM665.ZIP",
+      "url": "https://www.ti.com/lit/zip/sbvm665",
+      "literature_number": "SBVM665",
+      "served_content_type": "application/zip",
+      "bytes_zip": 1004,
+      "sha256": "14ec8e19713dd8cfbac0849e680c4e3e82c1e1c2b32b577740a880a12576d344",
+      "local_filename": "TPS7A3301.lib",
+      "renamed": false,
+      "header_says": "'* TLV1701 Model' -- no, corrected: header reads '* TPS7A3301 Model / ... / Part: TPS7A3301 / Date: 12/5/2011 / Model Type: TRANSIENT / Simulator: PSPICE / EVM Order Number: TPS7A3301EVM-061 / Datasheet: SBVS169 - DECEMBER 2011'. .SUBCKT is named TPS7A3301 with pins IN EN NR_SS GND FB OUT, matching the real device pinout.",
+      "sibling_encrypted_file_NOT_frozen_here": {
+        "literature_number": "SBVM105",
+        "url": "https://www.ti.com/lit/zip/sbvm105",
+        "note": "Same filename 'TPS7A3301.lib', but its first two lines are '**$ENCRYPTED_LIB' / '**$INTERFACE'. Downloaded and opened for comparison only; NOT frozen into this directory since it is unusable by ngspice and would only invite a future session to load the wrong one by literature-number habit. Recorded here so the fact is not lost."
+      }
+    }
+  ],
+  "spice_model_ngspice_verification": {
+    "encrypted": false,
+    "syntax_as_shipped": "Loads and simulates in ngspice 47 WITH ZERO PATCHES. No 'TC=v1,v2' shorthand, no VSWITCH, no unsupported syntax of any kind in this particular file -- it is a much simpler behavioral model (E/R/C elements and two nested subckts) than the TPS7A4701 model in the sibling ldo_regulator/ti/TPS7A4701 directory.",
+    "functional_result": "VERIFIED WORKING. Minimal testbench: Vin=-20V, Ven=-20V, FB tied to OUT (unity feedback, i.e. the model's own internal VREF sets the output), RL sized for ~265mA. .op gives V(OUT) = -1.18194V (matches the datasheet's typical internal reference of -1.175V within ~0.6%, consistent with a macromodel's own component tolerances) and I(VIN) = 266.8mA, i.e. within 0.7% of the 265mA load target -- both physically sane and self-consistent. A subsequent tran(10us,2ms) holds the same value flat with zero 'Error:' lines in the log.",
+    "verdict": "USABLE for load-transient/startup/current-limit qualitative checks with the same explicit caveats as any TI macromodel in this repo (docs/limitations.md and CLAUDE.md: no vendor SPICE model in this class of TI part documents quiescent current, output noise, or thermal shutdown as modeled -- check the model's own header notes before trusting any AC/noise number from it). Because it loads unmodified, no models/ derivative is needed for the ngspice-compatibility angle; if a design-specific closed-loop FB-divider testbench is wanted later, that belongs in spice/ or testbenches/, not as a models/ patch (nothing about the vendor file itself needs changing).",
+    "command_used": "/opt/homebrew/bin/ngspice -b tb_tps7a3301.cir (Vin=-20V, Ven=-20V, X1 with FB=OUT, RL=4.43ohm for ~265mA at Vref, COUT=2200uF); op + tran(10u,2m)."
+  }
+}

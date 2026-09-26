@@ -772,3 +772,25 @@ verso l'op, non l'accuratezza: il controfattuale di L29c lo prova sulla cella di
   `L29c/script/corri.sh` la registra con rc=OPT;
 - chi introduce elementi comportamentali con conduttanze esponenziali (contatti
   `pow(10, …)`) legge nel log **da dove** parte la `tran`, non solo se parte.
+
+## 34. Un `alter` sopravvive a `destroy all`: in un deck a più casi il guasto di un caso resta nei seguenti
+
+Scoperto in L41a (`docs/preamp/data/2026-09-26/L41a/guasti/`).
+
+`destroy all` cancella i **plot**, non le modifiche al **circuito**. Un `alter` (o `alter @dev[pwl]`)
+fatto per un caso resta applicato a tutti i casi dopo, finché un altro `alter` non lo riporta
+indietro. Nel primo deck dei guasti dell'alimentatore ogni caso spegneva un regolatore diverso:
+- il secondo caso girava con **due** regolatori spenti, il terzo con tre;
+- le tre perdite di rete «senza rivelatore» giravano con tutti e tre i regolatori spenti.
+
+rc 0, nessuna riga `Error`, numeri plausibili. Lo hanno tradito i numeri stessi: nel guasto del
+regolatore **−** scendeva anche il rail **+**, e la perdita di rete dava i rail sotto 13,5 V in
+10 ms invece dei 74 ms della corsa di prima.
+
+**Regola operativa**:
+- ogni caso di un deck a più casi **rimette a valore di netlist ogni grandezza che un qualunque
+  caso altera**, prima di applicare le proprie; `genera_tb_psu.py` lo fa per costruzione;
+- è la regola di #29 («una variante che rimette i valori di partenza deve ridare la prima
+  cella») estesa da `altermod` ad `alter`;
+- un caso che deve toccare **una** grandezza si controlla anche sulle grandezze che **non** deve
+  toccare (qui: l'altro rail).

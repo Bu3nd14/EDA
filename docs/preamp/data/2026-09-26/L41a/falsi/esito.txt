@@ -1,0 +1,9 @@
+buono                      rc=0 atteso=PASS ok  OK: J1 POWER, J2 RLY_RET, J3 LDR_CMD and J4 MUTE_TIMER agree pin by pin on both boards; the rails come from their regulators and the two commands from two low-side sinks to RLY_RET (ADR-045, ADR-048)
+psu_J1_1_3_scambiati       rc=1 atteso=FAIL ok  FAIL: psu: J1 pin 1 on 'VMINUS', expected 'VPLUS' | FAIL: psu: J1 pin 3 on 'VPLUS', expected 'VMINUS'
+audio_J1_1_3_scambiati     rc=1 atteso=FAIL ok  FAIL: audio: J1 pin 1 on 'VMINUS', expected 'VPLUS' | FAIL: audio: J1 pin 3 on 'VPLUS', expected 'VMINUS'
+audio_J4_1_2_scambiati     rc=1 atteso=FAIL ok  FAIL: audio: J4 pin 1 on 'PERMIT_CMD', expected 'MUTE_CMD' | FAIL: audio: J4 pin 2 on 'MUTE_CMD', expected 'PERMIT_CMD'
+audio_J3_1_3_scambiati     rc=1 atteso=FAIL ok  FAIL: audio: J3 pin 1 does not reach U101 pin 2 | FAIL: audio: J3 pin 3 does not reach U102 pin 2
+psu_Q501_source_a_GND      rc=1 atteso=FAIL ok  FAIL: psu: MUTE_CMD must be the drain of exactly one N-MOSFET with its source on RLY_RET, found ['Q501']
+psu_U501_OUT_staccato      rc=1 atteso=FAIL ok  FAIL: psu: VPLUS is not the OUT of any TPS7A4701
+psu_Q501_drain_su_PERMIT   rc=1 atteso=FAIL ok  FAIL: psu: MUTE_CMD must be the drain of exactly one N-MOSFET with its source on RLY_RET, found none
+psu_U502_pad_su_IN         rc=1 atteso=FAIL ok  FAIL: psu: U502 thermal pad on 'RAW_M', its GND on 'GND' (the pad is internally GND)

@@ -375,13 +375,18 @@ if __name__ == "__main__":
     #     driven continuously by the trim knob = 168.8 / 72.8 / 36.8 mA;
     #   in the window D of ADR-045 (K6 still on, K2-K4 already off): fewer.
     #   Moving K6 to PERMIT_CMD (L35) changes no coil count.
-    # LEDs on top, ~2 mA each at 5 V through 1.5 k (R1, R2, R3): the trim's
+    # LEDs on top, ~2 mA each through R1, R2, R3: the trim's
     # and the gain's are lit ALWAYS (they read the state, in and out of
     # mute), the red mute LED only in mute (L35) - ~4 mA out of mute, ~6 mA
-    # in mute. Worst case: 168.8 + 6 = ~175 mA at 5 V, in mute at +10 dB.
-    # The VRELAY voltage is not decided yet. One more constraint since L36:
-    # the gain pick-up passes through a Schottky (gain_interlock.py), so
-    # VRELAY - V_F(42 mA) >= 80 % of the rated coil voltage, at -5 % and warm.
+    # in mute.
+    # VRELAY = 12 V (ADR-048, L41a): every G6K / G6KU coil is the 12 VDC
+    # version (an ordering suffix; the value strings keep their roles for
+    # the 2e), the LED resistors 4.99 k. Worst case 72.8 + 6 = ~79 mA at
+    # 12 V, in mute at +10 dB (was ~175 mA at 5 V). The gain pick-up passes
+    # through a Schottky (gain_interlock.py): 11.4 - ~0.3 V = ~92 % of 12 V
+    # at -5 %, against ~78-81 % max must-operate warm (en-g6k.pdf p. 4).
+    # VRELAY comes from a transformer of its own on the supply board
+    # (psu.py), never from the audio rails' reservoirs.
 
     # Three mute relays: 6 output lines (3 outputs x 2 channels), 2 poles each.
     # ADR-012 puts mute on ALL outputs, and the reason is the headphone
@@ -574,8 +579,9 @@ if __name__ == "__main__":
     # safe side both ways: it lights D after the jacks open and goes dark no
     # later than they close, so it never says "muted" with a jack connected.
     # Declared limit: a welded K2-K4 contact does not show, the same kind of
-    # single-relay fault ADR-033 accepts. 1.5 k as R1 / R2, ~2 mA at 5 V.
-    rm = Part("Device", "R", value="1.5k", footprint=FP_R, ref="R3")
+    # single-relay fault ADR-033 accepts. 4.99 k as R1 / R2, ~2 mA at 12 V
+    # (ADR-048; 1.5 k at 5 V until L41a).
+    rm = Part("Device", "R", value="4.99k", footprint=FP_R, ref="R3")
     rm[1] += K_TRIM["VTRIM"]
     rm[2] += Net("MLED")
     jm = Part("Connector_Generic", "Conn_01x02", value="MUTE_LED",

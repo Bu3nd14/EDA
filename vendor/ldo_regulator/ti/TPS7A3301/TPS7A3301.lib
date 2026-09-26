@@ -1,0 +1,57 @@
+* TPS7A3301 Model
+***************************************************************************
+** This product is designed as an aid for customers of Texas Instruments.**
+** No warranties, either expressed or implied, with respect to this third**
+** party software (if any) or with respect to its fitness for any        **
+** particular purpose is claimed by Texas Instruments or the author. The **
+** software (if any) is provided soley on an "as is" basis. The entire   **
+** risk as to its quality and performance is with the customer           **
+********************************************************************************
+* 
+* (C) Copyright 2011 Texas Instruments Incorporated  . All rights reserved.
+*
+* Released by: Analog e-Lab Design Center, Texas Instruments Inc.
+* Part: TPS7A3301
+* Date: 12/5/2011
+* Model Type: TRANSIENT
+* Simulator: PSPICE
+* EVM Order Number: TPS7A3301EVM-061
+* EVM Users Guide: SLVU602
+* Datasheet: SBVS169 - DECEMBER 2011
+*
+*****************************************************************************
+*
+* Updates:
+*
+* Final 1.00
+* Release to Web.
+*
+*********************************************************************************
+* source TPS7A3301
+*$
+.SUBCKT TPS7A3301 IN EN NR_SS GND FB OUT
+E_U1_U1_ABM4         U1_U1_N05382 0 VALUE { V(U1_U1_N05348)  
++ * V(OUT)  
++ / (V(FB) - 1e-6)  }
+R_U1_U1_R1         GND U1_U1_N05348  1G  
+R_U1_U1_R2         GND U1_U1_N05382  1G  
+E_U1_U1_ABM5         U1_N222524 0 VALUE { MAX(V(U1_U1_N05382),  
++ MIN(V(IN) + 0.35, 0))   }
+E_U1_U1_ABM3         U1_U1_N05348 0 VALUE { MIN(MAX(10*(ABS(V(EN))-1.3), 0), 1)
++   
++ * MAX(MIN(10*(V(IN)+2.9), 0), -1.184)   }
+E_U1_E1         U1_VYY GND U1_VXX GND 1
+R_U1_R5         U1_VZZ U1_VYY  0.03  
+R_U1_R1         U1_VXX IN  10MEG  
+X_U1_F1    U1_VZZ OUT IN U1_VYY TPS7A30_U1_F1 
+R_U1_R2         U1_N222524 U1_VXX  3.16k  
+C_U1_C1         U1_VXX IN  3.2p  
+R_U1_R3         NR_SS 0  1  
+C_U1_C2         U1_VXX U1_N222524  500p
+.ENDS TPS7A3301
+*$
+.subckt TPS7A30_U1_F1 1 2 3 4  
+F_U1_F1         3 4 VF_U1_F1 1
+VF_U1_F1         1 2 0V
+.ends TPS7A30_U1_F1
+*$

@@ -201,6 +201,29 @@ done
 report "relays fail safe with de-energised coils" $rly_fail
 echo
 
+echo "-- 2j. the harness between the audio board and the supply board (L41a, ADR-048) --"
+# J1 POWER, J2 RLY_RET, J3 LDR_CMD and J4 MUTE_TIMER exist on BOTH boards
+# (preamp_audio.py, psu.py); each netlist is fine on its own and a pin on the
+# wrong wire errors nowhere - J1 pins 1 and 3 swapped put -15 V on VPLUS.
+# Made to fail on 8 sabotaged copies, and it caught a real one while psu.py
+# was written (GND renamed by a net merge, limitations #23):
+# docs/preamp/data/2026-09-26/L41a/falsi/.
+hrn_fail=0
+a="$ROOT/circuits/preamp/preamp_audio.net"
+p="$ROOT/circuits/preamp/psu.net"
+if [ ! -f "$a" ] || [ ! -f "$p" ]; then
+    echo "   MISSING: preamp_audio.net or psu.net (rigenera con env/venv/bin/python3 circuits/preamp/<nome>.py)" >&2
+    hrn_fail=1
+else
+    # Captured first, printed after: a pipe would report sed's status (2e).
+    out=$(/usr/bin/python3 "$ROOT/scripts/check_psu_harness.py" "$a" "$p" 2>&1)
+    rc=$?
+    echo "$out" | sed 's/^/   /'
+    [ $rc -ne 0 ] && hrn_fail=1
+fi
+report "harness between the two boards agrees pin by pin" $hrn_fail
+echo
+
 echo "-- 2f. block diagram regenerates and its assertions hold (NC-026) --"
 # preamp_blocks_draw.py has no manifest - a block diagram omits devices on
 # purpose - so block 2d cannot cover it. Its guarantee is that every figure it

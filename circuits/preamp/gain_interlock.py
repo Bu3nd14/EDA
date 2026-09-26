@@ -74,8 +74,11 @@ WHAT IS DELIBERATELY NOT HERE
    like SW1; the three LEDs are panel parts too (ADR-028, L35), wired with
    flying leads to their harness header J6.
  - The VRELAY supply (psu-engineer). The pick-up passes through the
-   Schottky: VRELAY - V_F(42 mA) must stay >= 80 % of the rated 5 V (must
+   Schottky: VRELAY - V_F must stay >= 80 % of the rated coil voltage (must
    operate, en-g6k.pdf p. 3) at -5 % and warm. A 1N4148 does not fit.
+   ADR-048 (L41a): VRELAY = 12 V, coils 12 VDC (ordering suffix only - the
+   value strings keep their roles): 11.4 V - ~0.3 V = ~92 % of 12 V, against
+   ~78 % (60 C) / ~81 % (70 C) max must-operate on the p. 4 curve.
 """
 from skidl import Part, Net
 
@@ -88,8 +91,8 @@ FP_CONN4 = "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical"
 FP_SW = "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical"
 
 # LED current limiter from VRELAY, as the trim's (trim.R_LED): ~2 mA in a red
-# LED at VRELAY = 5 V. VRELAY is not decided yet: re-size with it.
-R_LED = "1.5k"
+# LED at VRELAY = 12 V (ADR-048; was 1.5 k for 5 V): (12 - ~2) V / 4.99 k.
+R_LED = "4.99k"
 
 # J6, the gain LEDs' harness (ADR-028, L35), the trim's J5 pattern: pin ->
 # what it lights. scripts/check_relay_safe_state.py keeps the same map as
@@ -151,7 +154,8 @@ def gain_relays(vrelay, trim_parts, g6k_pins):
             k[coil_a] += hi         # pin 1 +, en-g6k.pdf p. 6
             k[coil_b] += ret
         # (a) the command, through the trim's permissive. Schottky, because
-        # the pick-up must see >= 80 % of 5 V after it (see the docstring).
+        # the pick-up must see >= 80 % of the coil voltage after it
+        # (see the docstring; 12 V since ADR-048).
         d = Part("Device", "D_Schottky", value="Schottky 1A",
                  footprint=FP_SCHOTTKY, ref=dcmd)
         d[1] += hi                  # K

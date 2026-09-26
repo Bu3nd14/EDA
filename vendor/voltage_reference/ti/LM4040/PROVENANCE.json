@@ -1,0 +1,47 @@
+{
+  "part_name": "LM4040AIM3-4.1 (LM4040-N family, 2-terminal precision micropower shunt voltage reference, 4.096V nominal, Grade A / ±0.1% initial tolerance, SOT-23 package)",
+  "vendor_name": "Texas Instruments Incorporated",
+  "device_class": "voltage_reference",
+  "product_page": "https://www.ti.com/product/LM4040-N",
+  "date_obtained": "2026-09-26",
+  "lotto": "L41a",
+  "obtained_by": "AI agent (bom-component-manager subagent) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from ti.com. Datasheet is TI's LM4040-N/-Q1 family document (SNOS633N). The TI.com product technical-documents listing publishes one SPICE model ZIP PER (voltage-grade x tolerance-grade) COMBINATION -- dozens of literature numbers were enumerated via the product page's simulation-models list. The 4.096V, Grade-A/B, 'Unencrypted PSpice Transient' variant (literature SNOM505, subckt name LM4040_NA4P096) was selected to match the 4.096V reference the L41a brief named as an option; the model exposes a PARAMS: TOL parameter (0/positive/negative) that internally selects among three fixed feedback-resistor values corresponding to the A/B/(implicit C) grade tolerance bins, so one .lib file covers grades A and B (TOL=0 gives the tightest/A-grade-centered value used here).",
+  "license_notes": "Manufacturer datasheet and SPICE model, redistributed here unmodified for engineering traceability only. Copyright remains Texas Instruments Incorporated.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "L41a requirement: a precision reference for the dual-comparator power-supply supervisor (undervoltage/overvoltage monitor thresholds). LM4040AIM3-4.1 gives a 4.096V reverse-breakdown reference, ±0.1% initial tolerance at 25C (Grade A), 100ppm/C max tempco, 0.5ohm typ / 1ohm max dynamic impedance at 1mA -- precise and stable enough to derive comparator trip thresholds by simple resistor division from a single reference rail.",
+  "files": [
+    {
+      "original_filename": "lm4040.pdf",
+      "role": "datasheet (LM4040-N/-Q1 family, all seven fixed voltage options: 2.048V/2.5V/3V/4.096V/5V/8.192V/10V, and grades A/B/C/D/E)",
+      "url": "https://www.ti.com/lit/ds/symlink/lm4040-n.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 1980947,
+      "pages": 87,
+      "sha256": "f3977fc3d89b4f25699e699ca2c89e0c00f45c84fc04e35692758b5390ac3880",
+      "local_filename": "lm4040.pdf",
+      "renamed": false,
+      "revision_note": "Header/footer of every page reads 'LM4040-N, LM4040-N-Q1 / SNOS633N - DECEMBER 1991 - REVISED AUGUST 2025'. Section 5.14 (page 23, printed page 23) is the Electrical Characteristics table for the 4.1V grades A/B; Section 5.15 (page 24) covers grades C/D."
+    },
+    {
+      "original_filename": "LM4040_NA4P096_TRANS.lib",
+      "role": "SPICE model (PSpice transient transistor-level macromodel), extracted unmodified from SNOM505.ZIP",
+      "url": "https://www.ti.com/lit/zip/snom505",
+      "literature_number": "SNOM505",
+      "served_content_type": "application/zip",
+      "bytes_zip": null,
+      "sha256": "453489feb797849f2ae3bfef0c3aa7bee4328580e24d91834c791685598194c4",
+      "local_filename": "LM4040_NA4P096_TRANS.lib",
+      "renamed": false,
+      "header_says": "'*LM4040_N / ... / Part: LM4040_N / Date: 10APR2013 / Model Type: TRANSIENT / Simulator: PSPICE / Simulator Version: 16.0.0 / Datasheet: SNOS633G-MAY 2004-REVISED JULY 2012'. .SUBCKT LM4040_NA4P096 V+ V- PARAMS: TOL=0, a real transistor-level (Q/R/C, not purely behavioral E/G) macromodel matching the datasheet's own Functional Block Diagram."
+    }
+  ],
+  "spice_model_ngspice_verification": {
+    "encrypted": false,
+    "syntax_as_shipped": "Does NOT load in ngspice 47 unmodified. Three ngspice-incompatibility classes found, all previously seen in other TI models frozen in this same lotto: (1) 22 resistors/capacitors use the PSpice-only 'TC=0,0' tempco shorthand; (2) the inductor 'L_Lx1 N01136 V+ 10uH' uses a bare positional value, which ngspice's inductor does NOT accept (this is exactly limitation #3 already documented in this repo's CLAUDE.md/docs/limitations.md: L requires 'inductance=<value>', not a positional value the way R accepts one); (3) one resistor value expression uses a NESTED PSpice 'IF(cond1, val1, IF(cond2, val2, val3))' to pick among the TOL-dependent feedback-resistor values, same 'no such function ''if''' failure as the TLV1701 model.",
+    "patch_attempted_and_VERIFIED_WORKING": "Removed all 22 'TC=0,0' occurrences (no-op); added 'inductance=' keyword to the one inductor; converted the nested IF(...) to nested ternary '((cond1) ? (val1) : ((cond2) ? (val2) : (val3)))' via the same recursive innermost-first mechanical translation used for the TLV1701 model. After these three patches the deck loads and simulates CORRECTLY in ngspice 47: a testbench with VCC=10V, RBIAS=5.9kohm from VCC to the reference's V+ pin, V- grounded, gives an .op point of V(V+) = 4.09026V at I(VCC) = 1.00165mA -- within 0.16% of the datasheet's 4.096V nominal breakdown voltage (page 23, IR=100uA test point; here IR is ~1mA, and the datasheet's own Reverse Breakdown Voltage Change with Operating Current spec, page 23, is 0.5-0.9mV typ/max between IRMIN and 1mA, i.e. this small offset is exactly the kind of shift the datasheet itself predicts, not a modeling artifact). A subsequent tran(10us,2ms) holds the same value flat with zero 'Error:' lines.",
+    "verdict": "USABLE. This is the one model in the L41a lotto that both needed ngspice-compatibility patches AND produced a physically correct, datasheet-consistent result after patching. The patched copy is added to models/voltage_reference/ with its own .provenance.json sidecar per the repo convention; this vendor original is left untouched.",
+    "command_used": "/opt/homebrew/bin/ngspice -b tb_lm4040.cir (VCC=10V, RBIAS=5.9k, X1 V+ V- LM4040_NA4P096); op + tran(10u,2m)."
+  }
+}
