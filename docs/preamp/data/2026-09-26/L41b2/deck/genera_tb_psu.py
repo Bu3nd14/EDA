@@ -700,6 +700,14 @@ def uscite_core(path):
         for r in righe:
             t, v = float(r[0]), float(r[c])
             if nome.startswith("code"):
+                # shut down (dac_on = 0) the output is its 500 kOhm alone and
+                # the code does not enter it (BU510x: I = den x ...): hold the
+                # last one. The core's code 0 stepping WITH the shutdown, in
+                # the same 1 us, stopped the soft power-down at 8.629 s
+                # ("Timestep too small", xu511a.bout); a 100 us edge on both
+                # did too (L41b2)
+                if r[5] == "0" and prev is not None:
+                    continue
                 v = v * DAC_FS / 4096
             if prev is None:
                 pts.append((0.0, v))
@@ -789,7 +797,13 @@ def seq_deck():
         # gear: with the DAC shut down from a cold start, trapezoidal stopped at
         # 4 ms ("Timestep too small", exp_f_s) and ngspice then printed only
         # "incomplete or empty netlist" (L41b2)
-        ".options reltol=1e-4 abstol=1e-10 vntol=1e-6 temp=25 method=gear",
+        # gmin 1e-10 (default 1e-12): with a core that shut the supply down at
+        # another instant (the fault case with FALSO 6) the transient stopped
+        # at K501's opening, 3 ms after MAINS_REQ ("Timestep too small",
+        # blamed on xu511a.bout, which was not moving); rshunt, maxord=2,
+        # trtol=1 and a smooth OPA5 did not help, gmin did. 100 pS across a
+        # junction at 0.5 V is 50 pA: 0.5 % of the 10 nA idle (L41b2)
+        ".options reltol=1e-4 abstol=1e-10 vntol=1e-6 temp=25 method=gear gmin=1e-10",
         ".control",
         "set numdgt=12",
         "set wr_singlescale", "set wr_vecnames",

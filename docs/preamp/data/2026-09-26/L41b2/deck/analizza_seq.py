@@ -240,8 +240,15 @@ def main(argv):
     d = argv[1]
     tot = True
     for caso in argv[2:]:
-        res, fatti = analizza(d, caso)
         print("== %s" % caso)
+        # a case without its fixed point has no deck to judge: it fails here,
+        # and the others are still analysed (L41b2: a traceback stopped the
+        # whole analysis at the first such case)
+        if not os.path.exists(os.path.join(d, caso, "punto_fisso.txt")):
+            print("   F   NO    nessun punto fisso (corri_%s.txt)" % caso)
+            tot = False
+            continue
+        res, fatti = analizza(d, caso)
         for nome, ok, testo in res:
             print("   %-3s %s  %s" % (nome, "ok  " if ok else "NO  ", testo))
             tot = tot and ok

@@ -30,6 +30,9 @@ if [ "$caso" = "--solo-compila" ]; then
         "$FW/test/ponte.c" "$FW/test/mondo.c" "$FW/src/timer_core.c" -lm
     exit $?
 fi
+# a clean folder: a punto_fisso.txt or a core_g<n>.csv left by an earlier
+# run would survive a failure of this one and be analysed as its result
+rm -rf "$OUT"
 mkdir -p "$OUT"
 [ -x "$BIN/ponte" ] || { echo "manca $BIN/ponte: corri_seq.sh --solo-compila"; exit 1; }
 

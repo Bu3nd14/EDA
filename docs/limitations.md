@@ -806,3 +806,25 @@ regolatore **−** scendeva anche il rail **+**, e la perdita di rete dava i rai
   cella») estesa da `altermod` ad `alter`;
 - un caso che deve toccare **una** grandezza si controlla anche sulle grandezze che **non** deve
   toccare (qui: l'altro rail).
+
+## 35. Dopo una `tran` abortita, `linearize` + `wrdata` scrivono comunque un file lungo quanto la corsa chiesta, e dopo l'aborto è tutto zero
+
+Scoperto in L41b2 (`docs/preamp/data/2026-09-26/L41b2/seq/`, lo spegnimento morbido).
+
+La `tran` si ferma con «Timestep too small; time = 8.629» (`tran simulation(s) aborted`), ma il
+blocco `.control` va avanti: `linearize` e `wrdata` scrivono un file con **tutte le righe fino a
+`tstop`** (8,65 s, 86 501 righe, 45 MB). Fino all'aborto sono i valori veri. **Dopo, ogni colonna
+vale 0**, e l'ultima riga ripete l'ultimo valore calcolato. ngspice esce con 0, e l'unico segno
+è nel log (più `Error: incomplete or empty netlist` in coda).
+
+In un deck di spegnimento il tradimento è perfetto: i rail a 0 V, i relè diseccitati, il micro
+senza alimentazione sono **proprio quello che il caso deve mostrare**. Un'analisi che legge solo
+il file vede lo spegnimento riuscito.
+
+**Regola operativa**:
+- il log di ogni corsa si legge **prima** del suo file di dati, e una riga con `Timestep too
+  small`, `aborted`, `Error` rifiuta la corsa (`corri_seq.sh` lo fa, come `analizza_timer.py`
+  di L41b1);
+- non basta il numero di righe, né l'ultimo istante: sono quelli chiesti, non quelli calcolati;
+- una cartella di risultati si svuota prima di rifare la corsa: un file di esito lasciato da una
+  corsa precedente sopravvive al fallimento di quella nuova (`corri_seq.sh`, L41b2).

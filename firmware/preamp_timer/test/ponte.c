@@ -253,9 +253,17 @@ int main(int argc, char **argv)
          * 100 us before tx did not cause it. Without this margin the reaction
          * alternated between the interrupt and the next tick, pass after pass
          * (with 50 us it still did, in the fault case) */
+        /* at tx the pin is low by definition - the falling edge is what
+         * raises the interrupt - and the guard above says the edge is the
+         * circuit's, not the driving output's: no rebuilding. Interpolated at
+         * the crossing the pin read 2.5 V +- rounding, high in one pass and
+         * low in the next: the reaction alternated between tx and the next
+         * tick (fault, no fixed point in 10 passes), or a pin the circuit had
+         * measured was rebuilt at the instant the driving output fell (hole
+         * 200 ms, 1 substitution at the fixed point) (L41b2) */
         if (tx > 0 && mg_prima && (!npil || pilota_mute(tx - 100e-6) == st.mute_req)) {
             pin(tx, &in);
-            correggi(tx, &st, &in);
+            in.mute_g_in = 0;
             scrivi(tx, &st, timer_step(&st, &in, 0));
         }
         t += TICK;
