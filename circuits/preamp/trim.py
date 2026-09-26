@@ -106,9 +106,9 @@ KU_COM2, KU_RESET2, KU_SET2 = "6", "7", "5"
 # 3.82 V peak of E6 draws 2.5 mA from a ~20 mA class A stage (ADR-042).
 R1_TRIM, R2_TRIM, R3_TRIM = "845", "464", "464"
 
-# LED current limiter from VRELAY, sized for VRELAY = 5 V (~2 mA in a red LED).
-# VRELAY is not decided yet (psu-engineer, ADR-026): re-size with it.
-R_LED = "1.5k"
+# LED current limiter from VRELAY, sized for VRELAY = 12 V (ADR-048; was 1.5 k
+# for 5 V): (12 - ~2) V / 4.99 k = ~2 mA in a red LED.
+R_LED = "4.99k"
 
 # J5, the trim LEDs' harness (ADR-028, L35): the three LEDs are panel parts,
 # wired with flying leads, common cathode on RLY_RET. Pin -> what it lights.

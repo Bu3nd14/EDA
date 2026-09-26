@@ -1,0 +1,239 @@
+*TPS7A4701
+*****************************************************************************
+* (C) Copyright 2026 Texas Instruments Incorporated. All rights reserved.
+*****************************************************************************
+** This model is designed as an aid for customers of Texas Instruments.
+** TI and its licensors and suppliers make no warranties, either expressed
+** or implied, with respect to this model, including the warranties of
+** merchantability or fitness for a particular purpose.  The model is
+** provided solely on an "as is" basis.  The entire risk as to its quality
+** and performance is with the customer
+*****************************************************************************
+*
+* This model is subject to change without notice. Texas Instruments
+* Incorporated is not responsible for updating this model.
+*
+*****************************************************************************
+*
+** Released by: Texas Instruments Inc.
+* Part: TPS7A4701
+* Date: 03Mar2026
+* Model Type: Transient
+* Simulator: PSPICE
+* Simulator Version: 17.4
+* Datasheet: SBVS204F - JUNE 2012 - REVISED SEPTEMBER 2014
+*
+* Model Version: 2.0
+*
+*****************************************************************************
+* Model Usage Notes:
+*
+* 1. The following features have been modeled:
+*      a. Startup behavior
+*      b. Line Transient
+*      c. Load Transient
+*      d. Current Limit
+*      e. PSRR (to first pole and first zero)
+* 2. The following features are not modeled:
+*      a. Quiescent Current
+*      b. Output Noise
+*      c. Thermal Shutdown
+*      d. Current Limit Foldback
+*      e. Temperature variation of parameters
+*****************************************************************************
+
+.SUBCKT TPS7A4701_TRANS 0P1V 0P2V 0P4V 0P8V 1P6V 3P2V 6P4V1 6P4V2 EN GND NR 
++ SENSE IN_0 IN_1 OUT_0 OUT_1 PARAMS: EN_THR=2.0 ZERO=4K EN_HYS=1.6 UV_HYS=.17 
++ PSRR=40U VREF=1.4 FC_THR=0.99 UV_THR=2.67 RNR=100K POLE=200 R0P1=3.2MEG 
++ ILIM=1.26 ROUT=4M I_FC=55U VDO=307M 
+C_C11       N798685 GND 10P TC=0,0
+C_U1_C3     GND N819212 32N TC=0,0
+C_U1_C17    N15343 U1_VREF 1P TC=0,0
+G_ABM5      N798685 GND VALUE {MIN(V(N819224, GND), V(N805281, GND))/-10}
+G_G6        N14485 GND N805465 0 1.005
+G_U1_ABM5   N819212 GND VALUE {MIN(V(U1_N785742, GND), MAX(V(U1_N15195, GND), 
++ 0)) / -50} 
+G_U1_ABM8   U1_N785742 GND VALUE {V(U1_N840403, GND) * (ABS(V(N14741, GND)) + 
++ 1E-6) / (ABS(V(SENSE, GND)) + 1E-6) / -10} 
+I_U1_I1     U1_N15195 N14485 DC {VDO}
+R_R45       GND N798685 R_NSLS 10
+R_R49       GND N798701 R_NSLS {ROUT}
+R_RIN       IN_0 N14485 R_NSLS 100U
+R_RIN1      IN_1 N14485 R_NSLS 100U
+R_RNR       GND NR R_NSLS 1G
+R_RNR1      GND EN R_NSLS 432K
+R_ROUT      N14741 OUT_0 R_NSLS 100U
+R_ROUT1     N14741 OUT_1 R_NSLS 100U
+R_RP1       6P4V1 N15343 R_NSLS {R0P1/64}
+R_RP2       6P4V2 N15343 R_NSLS {R0P1/64}
+R_RP9       3P2V N15343 R_NSLS {R0P1/32}
+R_RP10      1P6V N15343 R_NSLS {R0P1/16}
+R_RP11      0P8V N15343 R_NSLS {R0P1/8}
+R_RP12      0P4V N15343 R_NSLS {R0P1/4}
+R_RP13      0P2V N15343 R_NSLS {R0P1/2}
+R_RP14      0P1V N15343 R_NSLS {R0P1}
+R_RPD1      GND 6P4V1 R_NSLS 1G
+R_RPD2      GND 6P4V2 R_NSLS 1G
+R_RPD3      GND 3P2V R_NSLS 1G
+R_RPD4      GND 1P6V R_NSLS 1G
+R_RPD5      GND 0P8V R_NSLS 1G
+R_RPD6      GND 0P4V R_NSLS 1G
+R_RPD7      GND 0P2V R_NSLS 1G
+R_RPD8      GND 0P1V R_NSLS 1G
+R_U1_R3     NR U1_VREF R_NSLS {RNR}
+R_U1_R49    GND U1_N785742 R_NSLS 10
+R_U1_R51    GND N819212 R_NSLS 50
+R_U1_R102   U1_N862510 U1_VREF R_NSLS {100K*(1 - FC_THR)}
+R_U1_R103   GND U1_N862510 R_NSLS {100K * FC_THR}
+R_U1_R105   GND U1_VREF R_NSLS 1
+R_U1_R106   U1_N15195 N14485 R_NSLS 1
+R_U1_R107   GND U1_N836945 R_NSLS 1G
+R_U1_R108   GND U1_N840403 R_NSLS 1G
+R_U1_RD1    N15343 U1_VREF R_NSLS {R0P1/12}
+R_U1_RP9    GND N15343 R_NSLS {R0P1/2}
+V_U1_V1     NR U1_N882436 -200M
+V_U1_VENMAX U1_N853646 N14485 0.4
+V_U1_VINMAX U1_N16913 GND 36
+V_U1_VENABLE U1_N00350 GND {EN_THR}
+V_U1_VUVLO  U1_N00343 GND {UV_THR}
+V_V1        N805281 N798701 {ILIM*ROUT}
+X_G5        N798685 GND N798701 GND G_LIM PARAMS: GAIN={1/ROUT} IPOS={35/ROUT} 
++ INEG=-.1 
+X_H1        N798701 N14741 N805465 0 MODEL_H1
+X_U1_G2     U1_N882428 0 N14485 NR G_LIM PARAMS: GAIN=-1 IPOS=0 INEG= {-I_FC}
+X_U1_G7     U1_N14649 0 N14485 GND G_LIM PARAMS: GAIN=-1 IPOS=0 INEG=-1M
+X_U1_G11    U1_N865146 GND U1_VREF GND G_LIM PARAMS: GAIN=100 IPOS=30 INEG=-10M
+X_U1_S4     U1_N836588 0 NR GND REF_U1_S4
+X_U1_U4     N14485 U1_N00343 U1_N831733 0 COMPHYST PARAMS: VOH=1 VOL=0 VH= 
++ {UV_HYS} ROUT=1 CINT=10P TR=1U 
+X_U1_U5     EN U1_N00350 U1_N14550 0 COMPHYST PARAMS: VOH=1 VOL=0 VH= {EN_HYS} 
++ ROUT=1 CINT=10P TR=1U 
+X_U1_U7     U1_N16913 N14485 U1_N17333 0 COMPHYST PARAMS: VOH=1 VOL=0 VH=100M 
++ ROUT=1 CINT=100P TR=10U 
+X_U1_U10    U1_N14649 U1_N836588 0 0 NOT_ABM PARAMS: VIH=0.5 VOH=1 VOL=0 
++ ROUT=.1 TR=10U 
+X_U1_U11    U1_N862510 U1_N882436 U1_N882432 0 COMPHYST PARAMS: VOH=1 VOL=0 
++ VH=200M ROUT=1 CINT=10P TR=10N 
+X_U1_U15    U1_N17333 U1_N831733 U1_N854293 0 0 AND_ABM PARAMS: VIH=0.5 VOH=1 
++ VOL=0 ROUT=1 TR=1U 
+X_U1_U16    U1_N854293 U1_N854281 U1_N14649 0 0 AND_ABM PARAMS: VIH=0.5 VOH=1 
++ VOL=0 ROUT=1 TR=1U 
+X_U1_U18    U1_N853646 EN U1_N854154 0 COMPHYST PARAMS: VOH=1 VOL=0 VH=100M 
++ ROUT=1 CINT=100P TR=10U 
+X_U1_U19    U1_N854154 U1_N14550 U1_N854281 0 0 AND_ABM PARAMS: VIH=0.5 VOH=1 
++ VOL=0 ROUT=1 TR=1U 
+X_U1_U20    U1_N14649 U1_N766920 0 GND BUF_ABM PARAMS: VIH=0.5 VOH={VREF * 6/7} 
++ VOL=0 ROUT=1 TR=5M 
+X_U1_U21    U1_N14649 U1_N882432 U1_N882428 0 0 AND_ABM PARAMS: VIH=0.5 VOH=1 
++ VOL=0 ROUT=1 TR=10N 
+X_U1_X1     U1_N836945 N15343 U1_N865146 GND POLE_LIM PARAMS: GAIN=1K VMAX=10 
++ VMIN=-10 FP=1K R_INT=1K 
+X_U1_X_VN1  U1_N766920 U1_N836945 VNOISE PARAMS: FLW=10M NLF=1P NVR=1.175U
+X_U1_X_VN2  NR U1_N840403 VNOISE PARAMS: FLW=10M NLF=1P NVR=18N
+X_X1        N14485 GND N819224 N819212 ZERO_POLE PARAMS: GAIN={PSRR} FZ={POLE} 
++ FP={ZERO} R_INT=10K 
+.ENDS TPS7A4701_TRANS
+
+.SUBCKT VNOISE 1 2 PARAMS: FLW=0.1 NLF=560N NVR=3.36N
+.PARAM      GLF={PWR(FLW,0.25)* NLF * 1E9/1164}
+.PARAM      RNV={1.184*PWR(NVR * 1E9,2)}
+D1          7 0 DVN
+D2          8 0 DVN
+E1          3 6 7 8 {GLF}
+E2          6 4 5 0 10
+E3          1 2 3 4 1
+I1          0 7 10E-3
+I2          0 8 10E-3
+R1          3 0 1E9
+R2          3 0 1E9
+R3          3 6 1E9
+R4          5 0 {RNV}
+R5          5 0 {RNV}
+R6          3 4 1E9
+R7          4 0 1E9
+.MODEL      DVN D KF={PWR(FLW,0.5)/1E11} IS=1.0E-16
+.ENDS VNOISE
+
+.SUBCKT POLE_LIM IN+ IN- OUT+ OUT- PARAMS: GAIN=1 VMAX=10 VMIN=-10 FP=10K 
++ R_INT=1K 
+C1          OUT+ OUT- {1 / (6.283 * FP * R_INT)}
+G1          OUT+ OUT- VALUE={-LIMIT(GAIN * V(IN+,IN-) / R_INT, VMAX / R_INT, 
++ VMIN / R_INT)} 
+R1          OUT+ OUT- R_NSLS {R_INT}
+.ENDS POLE_LIM
+
+.SUBCKT ZERO_POLE IN+ IN- OUT+ OUT- PARAMS: GAIN=1 FZ=10K FP=100K R_INT=10K
+.PARAM      CC1 = {1 / (6.283 * FZ * R_INT)}
+.PARAM      RR2 = {R_INT / ((6.283 * FP * CC1 * R_INT) - 1)}
+.PARAM      GG1 = {GAIN * (1 + R_INT / RR2)}
+C1          1 OUT+ {CC1}
+G1          1 OUT- VALUE={-GG1 * V(IN+,IN-)}
+R1          1 OUT+ R_NSLS {R_INT}
+R2          OUT+ OUT- R_NSLS {RR2}
+RSRC        1 OUT- R_NSLS 1
+.ENDS ZERO_POLE
+
+.SUBCKT AND_ABM A B Y REF COM PARAMS: VIH=2.5 VOH=5 VOL=0 ROUT=1 TR=1U 
++ G_INT=10000 
+C1          2 0 1N
+R1          2 0 R_NSLS 1
+V_IH        1 REF {VIH}
+XG_A        A 1 2 0 G_SOFTLIM PARAMS: GAIN={G_INT} IPOS=1 INEG=0
+XG_B        B 1 2 0 G_SOFTLIM PARAMS: GAIN={G_INT} IPOS=1 INEG=0
+XOUT        2 Y 0 COM BUF_ABM PARAMS: VIH=1.5 VOH={VOH} VOL={VOL} ROUT={ROUT} 
++ TR={TR} G_INT={G_INT} 
+.ENDS AND_ABM
+
+.SUBCKT G_SOFTLIM IN+ IN- IOUT+ IOUT- PARAMS: GAIN=1E-4 IPOS=.5 INEG=-.5
+.PARAM      IRANGE={IPOS - INEG}
+.PARAM      IMID={(IPOS + INEG) / 2}
+G1          IOUT+ IOUT- VALUE={-0.5 * IRANGE * (1 + TANH(2 * GAIN * (V(IN+, 
++ IN-) - IMID / GAIN) / IRANGE)) - INEG} 
+.ENDS G_SOFTLIM
+
+.SUBCKT COMPHYST IN+ IN- OUT+ OUT- PARAMS: VOH=5 VOL=0 VH=0.2 ROUT=1 CINT=10P 
++ TR=1U G_INT=10000 
+C1          INB HYST {CINT}
+R1          INB HYST 1
+X1          INB OUT_INT 0 0 BUF_ABM PARAMS: VIH=0 VOH=1 VOL=0 ROUT=1 TR={TR/10} 
++ G_INT={G_INT} 
+X2          OUT_INT HYST 0 0 BUF_ABM PARAMS: VIH=0.5 VOH={VH} VOL=0 ROUT=1 
++ TR={TR/10} G_INT={G_INT} 
+X3          OUT_INT OUT+ 0 OUT- BUF_ABM PARAMS: VIH=0.5 VOH={VOH} VOL={VOL} 
++ ROUT={ROUT} TR={TR} G_INT={G_INT} 
+XG1         IN+ IN- INB HYST G_SOFTLIM PARAMS: GAIN=1 IPOS=10 INEG=-10
+.ENDS COMPHYST
+
+.SUBCKT REF_U1_S4 1 2 3 4
+RS_U1_S4    1 2 1G
+S_U1_S4     3 4 1 2 _U1_S4
+.MODEL      _U1_S4 VSWITCH ROFF=1G RON=200 VOFF=0.1 VON=0.9
+.ENDS REF_U1_S4
+
+.SUBCKT NOT_ABM A Y REF COM PARAMS: VIH=2.5 VOH=5 VOL=0 ROUT=1 TR=1U G_INT=10000
+C_OUT       Y COM {TR/ (2.2 * ROUT)}
+G_OUT       COM Y VALUE={(.5 * (VOH - VOL) * (1 + TANH(G_INT * (VIH - V(A, 
++ REF)))) + VOL) / ROUT} 
+R_OUT       Y COM R_NSLS {ROUT}
+.ENDS NOT_ABM
+
+.SUBCKT BUF_ABM A Y REF COM PARAMS: VIH=2.5 VOH=5 VOL=0 ROUT=1 TR=1U G_INT=10000
+C_OUT       Y COM {TR/ (2.2 * ROUT)}
+G_OUT       COM Y VALUE={(.5 * (VOH - VOL) * (1 + TANH(G_INT * (V(A, REF) - 
++ VIH))) + VOL)/ROUT} 
+R_OUT       Y COM R_NSLS {ROUT}
+.ENDS BUF_ABM
+
+.SUBCKT G_LIM IN+ IN- IOUT+ IOUT- PARAMS: GAIN=1E-4 IPOS=.5 INEG=-.5
+G1          IOUT+ IOUT- VALUE={-LIMIT(GAIN*V(IN+,IN-), INEG, IPOS)}
+.ENDS G_LIM
+
+.SUBCKT MODEL_H1 1 2 3 4
+H_H1        3 4 VH_H1 1
+VH_H1       1 2 0V
+.ENDS MODEL_H1
+
+.MODEL      D_D1 D(IS=1E-15 TT=10P RS=0.05 N=.1)
+.MODEL      ESD_SW VSWITCH(RON=50 ROFF=1E12 VON=500E-3 VOFF=450E-3)
+.MODEL      R_NSLS RES (T_ABS=-273.15)
+.MODEL      R_ROOM RES (T_ABS=25.00)

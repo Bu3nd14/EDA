@@ -1,0 +1,48 @@
+{
+  "part_name": "TLV1702 (dual, open-collector, 2.2V-36V micropower comparator, member of the TLV170x family: TLV1701 single / TLV1702 dual / TLV1704 quad, sharing one comparator core and one datasheet)",
+  "vendor_name": "Texas Instruments Incorporated",
+  "device_class": "comparator",
+  "product_page": "https://www.ti.com/product/TLV1702",
+  "date_obtained": "2026-09-26",
+  "lotto": "L41a",
+  "obtained_by": "AI agent (bom-component-manager subagent) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from ti.com. The datasheet (SBOS589D) is TI's own shared family document for TLV1701/TLV1702/TLV1704. TI's per-part SPICE model page for TLV1702 itself lists only a TINA-TI window-comparator design (SBOC516); the plain single-comparator-core PSpice transient model is published under the SINGLE-channel part number TLV1701 (literature SBOM859C, 'TLV1701 PSpice Model'). This was used deliberately: the TLV1702 datasheet's own Functional Block Diagram (Section 7.2) shows the dual part as two independent instances of the same comparator core sharing only the supply pins, so the single-channel core is the correct building block for a per-channel ngspice testbench -- but this is a substitution of convenience, not a TI-published TLV1702 dual-part-number model, and is recorded as such rather than silently presented as 'the TLV1702 model.'",
+  "license_notes": "Manufacturer datasheet and SPICE model, redistributed here unmodified for engineering traceability only. Copyright remains Texas Instruments Incorporated.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "L41a requirement: a dual-comparator supervisor with open-drain/open-collector outputs, supply headroom to >=12V, for the power-supply undervoltage/overvoltage monitor. TLV1702 offers a 2.2V-36V supply range (well above the >=12V floor), open-collector outputs pullable to any rail up to 36V above V-, 55uA/channel quiescent current, and rail-to-rail common-mode input range -- all read from the shared TLV170x datasheet.",
+  "files": [
+    {
+      "original_filename": "tlv1702.pdf",
+      "role": "datasheet (TLV1701/TLV1702/TLV1704 shared family document, SBOS589D)",
+      "url": "https://www.ti.com/lit/ds/symlink/tlv1702.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 1946071,
+      "pages": 40,
+      "sha256": "b971c8ca9ae7da43d67fa3486f202e6e688d8f5cc4b220268473fc0b4904c42b",
+      "local_filename": "tlv1702.pdf",
+      "renamed": false,
+      "revision_note": "Header/footer of every page reads 'TLV1701, TLV1702, TLV1704 / SBOS589D - DECEMBER 2013 - REVISED JUNE 2015'. Title block: 'TLV170x 2.2-V to 36-V, microPower Comparator'."
+    },
+    {
+      "original_filename": "tlv1701.lib",
+      "role": "SPICE model (PSpice transient macromodel of the single-channel comparator core shared by TLV1701/TLV1702/TLV1704), extracted unmodified from SBOM859C.ZIP",
+      "url": "https://www.ti.com/lit/zip/sbom859",
+      "literature_number": "SBOM859C",
+      "served_content_type": "application/zip",
+      "bytes_zip": 94124,
+      "sha256": "e606ad9020c40cbbf23feacfa512a3c32954bedc4a8bcf34c9b420f4566aeca7",
+      "local_filename": "tlv1701.lib",
+      "renamed": false,
+      "header_says": "'* TLV1701 / ... / Part: TLV1701 / Date: 08/30/2023 / Model Type: TRANSIENT / Simulator: PSpice / Datasheet: SBOS589D - DECEMBER 2013 - REVISED JUNE 2015'. .SUBCKT TLV1701 IN+ IN- V+ V- OUT, 5-pin single comparator, matching the datasheet's Functional Block Diagram building block. Model's own usage notes state it models 'Iq, tpd, Ibias, Vcm, Vs, tr, tf, Vhys' and explicitly floats the output at mid-supply if input/supply rails are exceeded."
+    }
+  ],
+  "spice_model_ngspice_verification": {
+    "encrypted": false,
+    "syntax_as_shipped": "Does NOT load in ngspice 47 unmodified. Three ngspice-incompatibility classes found: (1) 16 resistors/capacitors use the PSpice-only 'TC=0,0' tempco shorthand (same issue as the TPS7A4701 model in the sibling ldo_regulator directory); (2) five switch models (_S1, _S2, _SMID, _SHIZ, _SVOL) are declared as PSpice '.MODEL x VSWITCH ...' with VOFF/VON params, a model type ngspice does not have; (3) 21 occurrences of the PSpice function 'IF(cond, then, else)' inside B/E-source VALUE={} expressions, which ngspice's expression parser does not recognize ('no such function ''if'''), plus single '&'/'|' used as boolean AND/OR inside those same expressions, which ngspice's parser rejects when chained (3+ operands) even though 2-operand '&'/'|' happened to parse.",
+    "patch_attempted_but_NOT_committed_to_models": "In-session only (not added to models/): removed all 'TC=0,0' occurrences (no-op, value was always 0,0); translated each VSWITCH declaration to ngspice's SW model type with VT=(VON+VOFF)/2, VH=(VON-VOFF)/2; mechanically rewrote every 'IF(cond, then, else)' to the ternary form '((cond) ? (then) : (else))' (a standard, well-documented PSpice-to-ngspice-expression translation, applied recursively for the one nested case); replaced ' & ' / ' | ' with ' && ' / ' || '. After all four patch classes the deck PARSES with zero syntax errors and completes an .op and a tran(10us,4ms) in ngspice 47 with a comparator biased at Vs=12V, IN- held at 6V and IN+ ramped 0-12V through a PULSE source, with a 5.1kOhm pull-up to V+ on the open-drain output (matching the datasheet's own RPULLUP=5.1kOhm test condition).",
+    "functional_result": "NOT VERIFIED CORRECT. The output does not swing rail-to-rail as IN+ crosses IN- -- it moves only ~0.04V (from ~6.00V to ~5.96V, both near mid-supply) at the crossing, and stays essentially flat near mid-supply for the rest of the 4ms transient regardless of which side of the threshold the input sits on. Internal tracing shows the enable/UVLO/common-mode logic gates are in the expected non-fault state, so the flaw is most likely in the VSWITCH-to-SW parameter translation: PSpice's VSWITCH implements a SMOOTH resistance transition between RON and ROFF over the VOFF-VON control range (used here, it appears, as a soft nonlinear gain element inside the propagation-delay/output-stage chain, not as a hard on/off switch), whereas ngspice's SW model is a HARD hysteretic ideal switch -- the same VT/VH parameter substitution that produced a plausible (if unverified) result for the TPS7A4701's single VSWITCH instance does not reproduce the intended transfer function here, where five VSWITCH instances interact.",
+    "verdict": "DO NOT USE for propagation delay, output levels, or any dynamic comparator behavior until the switch-model translation is redone as a genuine behavioral rewrite (e.g. a smooth G-element with TANH/LIMIT, as TI itself uses elsewhere -- see the VNOISE-style subckts in the TPS7A4701 model) rather than a parameter substitution into a structurally different ngspice primitive. No models/ derivative was created from this file for the same reason as TPS7A4701: a model that does not demonstrably work is reported as such, not shipped as a working substitute. The vendor original is frozen here purely as an audit trail.",
+    "command_used": "/opt/homebrew/bin/ngspice -b tb_tlv1701.cir (Vs=12V single-rail, IN-=6V DC, IN+=PULSE(0,12,0,1m,1m,1m,2m), RPU=5.1k to V+); op + tran(10u,4m). Patch scripts and full diffs recorded in this session's transcript (not committed as repo files)."
+  }
+}
