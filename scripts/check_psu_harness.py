@@ -25,10 +25,17 @@ What is checked:
      name, because SKiDL does not name merged nets reproducibly
      (limitations #23);
   3. supply side: the same named nets on the same pins, and they are what
-     their name says - VPLUS / VMINUS / VRELAY on the OUT pin of a
-     TPS7A4701 / TPS7A3301 / TPS7A4701, MUTE_CMD and PERMIT_CMD each on the
-     DRAIN of its own N-MOSFET whose source is RLY_RET, MUTE_SW pulled to a
-     logic rail, and every TPS7A's thermal pad on its GND.
+     their name says - VPLUS / VMINUS on the OUT pin of a TPS7A4701 /
+     TPS7A3301, MUTE_CMD and PERMIT_CMD each on the DRAIN of its own
+     N-MOSFET whose source is RLY_RET, MUTE_SW pulled to a logic rail, and
+     every TPS7A's thermal pad on its GND;
+  4. (L41b1, ADR-049, NC-037) VRELAY is the DRAIN of a P-MOSFET - the
+     standby switch - whose source is the OUT of a TPS7A4701; the timer's
+     placeholder J509 TIMER_IO is gone, and the four requests (MUTE_REQ,
+     PERMIT_REQ, MAINS_REQ, VRELAY_EN) come from the microcontroller; J3's
+     two anodes are each the collector of a PNP (a current source), and its
+     two cathodes return to GND through a resistor (J3's contract: "cathode
+     end to GND at the source").
 
 Parser: the same as scripts/check_relay_safe_state.py (2e), copied, not
 imported, so that the two checkers cannot break each other.
@@ -47,9 +54,18 @@ HARNESS = {
 # preamp_audio.py, the J3 block). U101/U301 series cells, U102/U302 shunt.
 LDR_AUDIO = {"1": ("U101", "2"), "2": ("U301", "1"),
              "3": ("U102", "2"), "4": ("U302", "1")}
-# Supply side: which net must be the OUT of which regulator part.
-REG_OUT = {"VPLUS": "TPS7A4701", "VMINUS": "TPS7A3301", "VRELAY": "TPS7A4701"}
+# Supply side: which net must be the OUT of which regulator part. VRELAY is
+# not in the list since L41b1: it comes through the standby switch (below).
+REG_OUT = {"VPLUS": "TPS7A4701", "VMINUS": "TPS7A3301"}
 SINKS = ("MUTE_CMD", "PERMIT_CMD")
+# L41b1: the timer's requests, each driven by a pin of the microcontroller.
+MCU_PART_PREFIX = "ATtiny"
+REQUESTS = ("MUTE_REQ", "PERMIT_REQ", "MAINS_REQ", "VRELAY_EN")
+# The KiCad symbols' pin numbers (read from the symbol libraries in L41b1):
+# Transistor_FET 2N7002 / AO3401A: 1 G, 2 S, 3 D; Q_PNP_BEC (BC857): 3 C;
+# dual BC847BS / BC857BS: C1 = 6, C2 = 3.
+PNP_COLLECTORS = {"BC857": ("3",), "BC857BS": ("6", "3")}
+P_MOSFETS = ("AO3401A",)
 
 
 def parse_netlist(path):
@@ -158,6 +174,55 @@ def check_psu(components, pin_net, findings):
                  if components.get(r, {}).get("part") == "R"]
         if not pulls:
             findings.append("psu: MUTE_SW has no pull-up resistor")
+    check_timer(components, pin_net, findings)
+
+
+def check_timer(components, pin_net, findings):
+    """L41b1: the standby switch, the micro's requests, the LDR drive."""
+    # VRELAY: drain of a P-MOSFET whose source is a TPS7A4701's OUT
+    sw = [r for (r, p) in pins_of_net(pin_net, "VRELAY")
+          if components.get(r, {}).get("part") in P_MOSFETS and p == "3"]
+    good = []
+    for r in sw:
+        src = pin_net.get((r, "2"))
+        outs = [x for (x, p) in pins_of_net(pin_net, src)
+                if components.get(x, {}).get("part", "").startswith("TPS7A4701")
+                and p in ("1", "20")]
+        if outs:
+            good.append(r)
+    if len(good) != 1:
+        findings.append("psu: VRELAY must be the drain of exactly one P-MOSFET "
+                        "whose source is the OUT of a TPS7A4701 (the standby "
+                        "switch, NC-037), found %s" % (good or sw or "none"))
+    # the placeholder is gone
+    if any(c["value"] == "TIMER_IO" for c in components.values()):
+        findings.append("psu: the placeholder TIMER_IO (J509) is still there")
+    # the micro drives the four requests
+    mcus = [r for r, c in components.items()
+            if c.get("part", "").startswith(MCU_PART_PREFIX)]
+    if len(mcus) != 1:
+        findings.append("psu: expected one %s* microcontroller, found %s"
+                        % (MCU_PART_PREFIX, mcus or "none"))
+    else:
+        for net in REQUESTS:
+            if not [p for (r, p) in pins_of_net(pin_net, net) if r == mcus[0]]:
+                findings.append("psu: %s is not driven by the micro %s"
+                                % (net, mcus[0]))
+    # J3: anodes on a PNP collector, cathodes to GND through a resistor
+    for net in ("LDR_S_A", "LDR_P_A"):
+        srcs = [r for (r, p) in pins_of_net(pin_net, net)
+                if p in PNP_COLLECTORS.get(components.get(r, {}).get("part"), ())]
+        if len(srcs) != 1:
+            findings.append("psu: %s must be the collector of exactly one PNP "
+                            "(the current source of its string), found %s"
+                            % (net, srcs or "none"))
+    for net in ("LDR_S_K", "LDR_P_K"):
+        to_gnd = [r for (r, p) in pins_of_net(pin_net, net)
+                  if components.get(r, {}).get("part") == "R"
+                  and "GND" in (pin_net.get((r, "1")), pin_net.get((r, "2")))]
+        if len(to_gnd) != 1:
+            findings.append("psu: %s must return to GND through one resistor "
+                            "(J3 contract), found %s" % (net, to_gnd or "none"))
 
 
 def main(argv):
@@ -180,7 +245,9 @@ def main(argv):
         return 1
     print("OK: J1 POWER, J2 RLY_RET, J3 LDR_CMD and J4 MUTE_TIMER agree pin by "
           "pin on both boards; the rails come from their regulators and the "
-          "two commands from two low-side sinks to RLY_RET (ADR-045, ADR-048)")
+          "two commands from two low-side sinks to RLY_RET (ADR-045, ADR-048); "
+          "VRELAY through the standby switch, the requests from the micro, "
+          "J3 from two PNP sources back to GND (ADR-049)")
     return 0
 
 

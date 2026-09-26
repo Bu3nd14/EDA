@@ -773,6 +773,18 @@ verso l'op, non l'accuratezza: il controfattuale di L29c lo prova sulla cella di
 - chi introduce elementi comportamentali con conduttanze esponenziali (contatti
   `pow(10, …)`) legge nel log **da dove** parte la `tran`, non solo se parte.
 
+**Rivisto in L41b1, in un `dc` e non in una `tran`** (`docs/preamp/data/2026-09-26/L41b1/ldr/`).
+Nei punti di lavoro del pilota delle LDR, un anello d'op-amp comportamentale a guadagno 1e5 con
+morsetti a scalino faceva fallire Newton in 7 punti su 85. Il transient op restituiva lo stato a
+fine rampa, con un condensatore da 1 µF (τ 18 ms) ancora scarico sul nodo di comando: **tutte e
+due le stringhe a 25 pA**. Sembrava un aggancio del circuito, e non lo era. Rimedio:
+- una variante DC liscia dell'op-amp (tanh, guadagno 1e3 negli anelli, inseguitore ideale nel
+  buffer);
+- `.nodeset` sui nodi del convertitore.
+
+La guardia è la stessa regola: `analizza_ldr.py` rifiuta il deck se un punto è passato dal
+ripiego.
+
 ## 34. Un `alter` sopravvive a `destroy all`: in un deck a più casi il guasto di un caso resta nei seguenti
 
 Scoperto in L41a (`docs/preamp/data/2026-09-26/L41a/guasti/`).

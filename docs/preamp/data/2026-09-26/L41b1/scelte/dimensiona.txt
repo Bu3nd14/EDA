@@ -1,0 +1,46 @@
+== 1. D: PERMIT_T -> comparator vs VREF (ADR-045: D = 20 ms nominal, >= 10 ms)
+  nominale  V0 = 4.55 V, VREF = 2.500 V -> D = 19.9 ms
+  minimo    V0 = 4.35 V, VREF = 2.505 V -> D = 17.2 ms
+  massimo   V0 = 4.65 V, VREF = 2.495 V -> D = 21.9 ms
+  (C_T C0G +-5 %, R_T 1 %; MUTE_G's own fall, R513 + R_pd || R514 on 22 nF,
+   is subtracted in the bench: tau = 52 k x 22 nF = 1.1 ms with the micro high-Z)
+
+== 2. D2: VR_T charged from PERMIT_T (one diode below it), slower RC
+  nominale  PERMIT_G falls at 19.9 ms, VR_G at 49.5 ms -> D2 = 29.6 ms
+  minimo    PERMIT_G falls at 17.2 ms, VR_G at 39.2 ms -> D2 = 22.0 ms
+  corners crossed (PERMIT slowest, VR fastest): D2 >= 17.3 ms
+
+== 3. the LDR drive (per string): Q1 base = VREF, I_ref = (V5 - VREF) / R_REF
+  I_ref = 100.4 uA (R_REF = 24.9 k from V5; +-2 % of V5 -> +-4 % of I_ref, the top-end calibration of ADR-049 takes it out)
+  V_c = V(base Q2) - VREF needed, mV, per chassis temperature (15, 25, 35, 45, 60) C:
+    serie d=0                   +131.5   +136.0   +140.6   +145.1   +152.0
+    serie d=0.1                  +17.1    +17.7    +18.3    +18.9    +19.8
+    serie d=0.45                 -77.1    -79.8    -82.5    -85.1    -89.1
+    serie d=0.75 (ginocchio)    -155.7   -161.1   -166.5   -171.9   -180.0
+    riposo / d>=0.8             -228.8   -236.7   -244.7   -252.6   -264.5
+  span needed: -264.5 .. +152.0 mV
+  network R_A 100k, R_C 22.1k, R_PD 100k at the DAC pin:
+    X(code 0) = 2.0475 V, X(full scale) = 2.7887 V, slope 0.1810 V/V -> 1 LSB = 0.181 mV
+    1 LSB = 0.061 dB of LED current at 25 C
+    covers -452 .. +289 mV around VREF (needed -265 .. +152)
+  the floor with the DAC in reset (outputs 500 k typ to ground):
+    R_shdn  250k: X = 2.2145 V -> 1.0, 1.5, 2.2, 3.0, 4.8 nA at (15, 25, 35, 45, 60) C (never 0; below the 190 nA knee)
+    R_shdn  500k: X = 2.2311 V -> 2.0, 2.9, 4.0, 5.5, 8.6 nA at (15, 25, 35, 45, 60) C (never 0; below the 190 nA knee)
+    R_shdn 1000k: X = 2.2406 V -> 2.9, 4.1, 5.7, 7.8, 12.0 nA at (15, 25, 35, 45, 60) C (never 0; below the 190 nA knee)
+  Thevenin at X: 18.1 k -> with C_X = 1 uF, tau = 18 ms (smooths DAC steps; the profile is 6 s)
+
+== compliance at 20 mA, V5 = 4.90 V, LEDs at their 2.0 V max (two in series):
+    mirror emitter 10 ohm                         0.20 V
+    mirror output Vce(sat), BC857BS at 20 mA      0.25 V
+    2 x LED (VTL5C4 max 2.0 V at 20 mA)           4.00 V
+    sense 10 ohm                                  0.20 V
+    margin: 0.25 V (>= 0: it fits on V5)
+  current limit: Q_f collector 56 ohm to RET, E node ~1.88 V -> ~30 mA max
+
+== the VTL5C4 LED rating against the chassis (vendor datasheet, abs max @25 C):
+     25.0 C: LED max 40.0 mA 
+     35.0 C: LED max 35.5 mA 
+     45.0 C: LED max 26.5 mA 
+     52.2 C: LED max 20.0 mA 
+     58.0 C: LED max 14.8 mA < 20 mA of ADR-039
+     60.0 C: LED max 13.0 mA < 20 mA of ADR-039
