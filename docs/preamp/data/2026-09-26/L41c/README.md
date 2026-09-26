@@ -81,3 +81,17 @@ grep -l -i 'too many args\|no such device\|timestep too small\|aborted' <abs>/co
 | `deck/` | `tb_v2_l41c.cir` generato, `controlla_deck.py` |
 | `corse/` | manifesti, log, `tempi.txt`, `analisi.csv` |
 | `script/tabella.py`, `tabella.csv` | i criteri di L41c, scritti prima delle corse, e il verdetto |
+
+## Le cifre
+
+In `tabella.csv` e `seq/analisi_seq.txt`, e nel report:
+- **Il lato alimentatore**: 9 casi su 9 al punto fisso, criteri r e s compresi. Nel controfattuale
+  C3 e r falliscono, come devono.
+- **La scheda audio**:
+  - spegnimento morbido: 30 nV;
+  - perdita di rete: 0,12 / 0,18 µV;
+  - U501 / U502 spento: 1,03 / 1,37 mV;
+  - U503 spento: 75 nV;
+  - controfattuale senza Δ: ≥ 66,5 mV, fino all'aborto (`cf_nodelta_fino_all_aborto.txt`);
+  - corto della linea a 12 V dei relè: 69,4 mV (~90 dB SPL di picco a 1 m), accettato
+    dall'utente sotto il tetto (**ADR-051**).

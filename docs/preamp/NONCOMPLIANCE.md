@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-09-26** (L41b2: NC-038 chiusa, la cima delle LDR a 12 mA — ADR-050; NC-036 aggiornata, il firmware del temporizzatore provato sull'host e sul circuito; L41b1: NC-036 aggiornata, il temporizzatore esiste come hardware in `psu.py` senza firmware; NC-037 aggiornata, la causa tolta e la chiusura legata alla perdita a vuoto di T2; NC-038 aperta, il LED della VTL5C4 non regge 20 mA nel telaio caldo — ADR-049; L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-09-26** (L41c: **NC-036 chiusa**, il banco di L30 col circuito vero dell'alimentatore, e il corto della linea a 12 V dei relè accettato sotto il tetto — ADR-051; L41b2: NC-038 chiusa, la cima delle LDR a 12 mA — ADR-050; NC-036 aggiornata, il firmware del temporizzatore provato sull'host e sul circuito; L41b1: NC-036 aggiornata, il temporizzatore esiste come hardware in `psu.py` senza firmware; NC-037 aggiornata, la causa tolta e la chiusura legata alla perdita a vuoto di T2; NC-038 aperta, il LED della VTL5C4 non regge 20 mA nel telaio caldo — ADR-049; L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -173,6 +173,13 @@ timer_core.c`), provato sull'host contro 21 falsi e sul circuito col core come m
 sequenze. **Chiude NC-038** (decisione dell'utente: la cima delle LDR a 12 mA). NC-036 resta
 aperta e bloccante per G2 (L41c, il banco di L30 col circuito vero). **11 voci aperte, 2
 bloccanti**: NC-004 per G1, NC-036 per G2.
+
+**L41c** (2026-09-26, **ADR-051**): il banco di L30 rifatto con l'alimentatore vero di `psu.py` e
+il firmware al punto fisso. Spegnimento morbido 30 nV (V2 regge); perdita di rete e guasti dei
+regolatori ≤ 1,37 mV (~56 dB), sotto l'obiettivo di 2 mV; il controfattuale senza Δ fallisce
+(≥ 66 mV). Il corto della linea a 12 V dei relè (69,4 mV, ~90 dB SPL) è accettato come guasto
+singolo sotto il tetto (decisione dell'utente). **Chiude NC-036.** **10 voci aperte, 1
+bloccante**: NC-004 per G1. Il layout (G2) non è più bloccato da una non conformità.
 
 ---
 
@@ -3119,7 +3126,7 @@ corrente di progetto. Il sorgente lo dice accanto al valore.
 | Requisito | **P9** (spegnimento morbido e failsafe dell'alimentatore) · **ADR-046** · V2 allo spegnimento (ADR-032) · ADR-045 (l'ordine dei relè alla caduta di `VRELAY`) · P1, P2 |
 | Severità | **bloccante per G2**: non blocca G1 (decisione dell'utente del 2026-09-26, strada A), blocca il layout |
 | Aperta da | `reports/2026-09-26-L30-spegnimento-failsafe-calore.md` |
-| Stato | aperta |
+| Stato | **chiusa il 2026-09-26 da L41c** (ADR-051) |
 
 **Evidenza.** `data/2026-09-26/L30/tabella.csv`: i numeri che reggono P9 vengono dal banco
 `deck/tb_v2_l30.cir`, dove l'alimentatore è fatto di rampe PWL dei rail, di un istante di scatto
@@ -3203,6 +3210,36 @@ Lotto **L41**.
 - **Manca**: il banco di L30 col circuito vero e la decisione sul corto dell'uscita di U503
   (**L41c**). Resta aperta e bloccante per G2.
 
+**Chiusura (2026-09-26, L41c, ADR-051).** Report
+`reports/2026-09-26-L41c-banco-l30-circuito-vero.md`. Dati: `data/2026-09-26/L41c/` (README).
+Il punto 2, il banco di L30 sul circuito vero, fatto **in due tempi** e in un senso solo:
+- l'alimentatore di `psu.net` col core del firmware, al punto fisso: nove casi;
+- un ponte che ne porta alla scheda audio i rail, le correnti delle stringhe LED e gli istanti
+  dei relè, all'angolo peggiore del G6K (jack il più tardi possibile, guadagno il più presto);
+- il banco di V2 di L30 (`--matrice l41c`), sul sorgente.
+
+| Caso | Al jack | dB SPL di picco a 1 m | Criterio |
+|---|---|---|---|
+| spegnimento morbido | 30 nV | −37 | V2 regge |
+| perdita di rete (anche con Δ all'angolo minimo) | 0,12–0,18 µV | −25 / −22 | obiettivo regge |
+| U501 / U502 spento | 1,03 / 1,37 mV | 54 / 56 | obiettivo regge |
+| U503 spento (anche all'angolo minimo) | 75 nV | −29 | obiettivo regge |
+| controfattuale senza Δ (C528 a 10 pF) | ≥ 66 mV | ≥ 90 | fallisce, come deve |
+| corto della linea a 12 V dei relè | 69,4 mV | 90 | tetto regge (ADR-051) |
+
+- **Sul lato alimentatore**, in ogni caso: jack aperto prima che il guadagno possa muoversi, e
+  prima che V+ scenda a 10,6 V (criteri r, s, scritti prima delle corse).
+- **Il corto della linea a 12 V dei relè**: decisione dell'utente, «accetto la 1» (ADR-051).
+  È un guasto singolo per cui vale il solo tetto di non-danno.
+- **Hardware, scheda audio e firmware non toccati.** La netlist di `psu.py` rigenerata è uguale;
+  il deck V2 e il deck di L30 rigenerati sono byte-identici.
+- **Il punto 3** era già chiuso da L41a.
+- **Resta fuori**, perché non è di questa voce:
+  - il carico dei rail è resistivo nell'alimentatore (la catena non torna indietro);
+  - le corse dell'alimentatore girano a 25 °C;
+  - il controfattuale sulla scheda audio si ferma all'apertura del jack. Il suo numero è il
+    picco fino all'aborto, un limite inferiore.
+
 ### NC-037 — In standby il consumo supera il limite europeo di 0,5 W
 
 | | |
@@ -3277,6 +3314,16 @@ resta l'8 %.
 - Nel firmware: `LDR_I_TOP` 12 mA; il falso 12 (la cima a 20 mA) fa fallire `tabella`.
 
 ## Voci chiuse
+
+**NC-036 — L'alimentatore non esiste: P9 è verificato solo con un alimentatore comportamentale**
+(bloccante per G2). **CHIUSA il 2026-09-26 da L41c.**
+- L41a, L41b1 e L41b2 hanno fatto il circuito, il temporizzatore e il firmware; L41c il banco di L30
+  col circuito vero: tutto sotto la sua soglia, il controfattuale senza Δ fallisce.
+- **ADR-051** (decisione dell'utente): il corto della linea a 12 V dei relè, 69,4 mV (~90 dB
+  SPL), accettato sotto il tetto.
+
+Il testo completo della voce resta sopra, con la sua «Chiusura». Report:
+`reports/2026-09-26-L41c-banco-l30-circuito-vero.md`.
 
 **NC-038 — Il LED della VTL5C4 non regge 20 mA nel telaio caldo** (maggiore). **CHIUSA il
 2026-09-26 da L41b2.**
