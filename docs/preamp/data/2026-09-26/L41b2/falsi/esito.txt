@@ -1,0 +1,22 @@
+# L41b2: i test sull'host contro i falsi di timer_core.c (FALSO_n)
+# ogni falso deve far FALLIRE il test indicato; gli altri possono passare
+falso 1 (VRELAY_EN -> MUTE_REQ 5 ms (ADR-027: 13 ms)): FALLISCE accensione come deve  [falliti: accensione buco_classe2 ]
+falso 2 (d si muove col rele' ancora aperto): FALLISCE rilascio come deve  [falliti: accensione inserzione rilascio inversione spegnimento debounce buco_classe1 buco_classe2 bilancio ]
+falso 3 (MUTE_REQ 0,1 s dopo d = 1 invece di 0,5): FALLISCE inserzione come deve  [falliti: inserzione inversione spegnimento ]
+falso 4 (PERMIT_REQ insieme a MUTE_REQ, senza Delta): FALLISCE inserzione come deve  [falliti: inserzione spegnimento ]
+falso 5 (buco di rete: PERMIT_REQ resta su): FALLISCE buco_classe1 come deve  [falliti: buco_classe1 guasto ]
+falso 6 (MUTE_G_IN ignorato: solo ADC_MD): FALLISCE buco_classe1 come deve  [falliti: buco_classe1 guasto ]
+falso 7 (debounce di 2 ms invece di 20): FALLISCE debounce come deve  [falliti: accensione inserzione rilascio inversione spegnimento debounce guasto ]
+falso 8 (inserzione non reversibile): FALLISCE inversione come deve  [falliti: inversione ]
+falso 9 (spegnimento: rete staccata senza i 50 ms): FALLISCE spegnimento come deve  [falliti: spegnimento ]
+falso 10 (buco di classe 2 trattato come classe 1): FALLISCE buco_classe2 come deve  [falliti: buco_classe2 ]
+falso 11 (nessuna compensazione di Vt): FALLISCE tabella come deve  [falliti: codici tabella bilancio ]
+falso 12 (la cima a 20 mA (NC-038)): FALLISCE tabella come deve  [falliti: accensione inserzione tabella bilancio ]
+falso 13 (correzione della calibrazione col segno sbagliato): FALLISCE cal_l41b1 come deve  [falliti: accensione inserzione cal_l41b1 tabella ]
+falso 14 (nessuna calibrazione all'accensione): FALLISCE accensione come deve  [falliti: accensione inserzione bilancio ]
+falso 15 (nessuna ritenuta dopo il guasto): FALLISCE guasto come deve  [falliti: guasto ]
+falso 16 (SW3 letto al contrario: un filo rotto suona): FALLISCE debounce come deve  [falliti: accensione inserzione rilascio inversione spegnimento debounce buco_classe1 buco_classe2 bilancio ]
+falso 17 (Td = 3 s invece di 6): FALLISCE inserzione come deve  [falliti: accensione inserzione rilascio inversione spegnimento bilancio ]
+falso 18 (nessun limite di 2 s sui rail): FALLISCE accensione come deve  [falliti: accensione ]
+falso 19 (lo zero dell'ADC non sottratto): FALLISCE bilancio come deve  [falliti: bilancio ]
+== falsi: 19 su 19 fanno fallire il loro test
