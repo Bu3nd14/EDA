@@ -198,6 +198,21 @@ for net in circuits/preamp/preamp_audio.net; do
         rly_fail=$((rly_fail + 1))
     fi
 done
+# L41b1 (ADR-022 condition 1, ADR-049): the micro entered the topology on the
+# supply board, and the guardian extends to its command lines - with the
+# micro in reset or its pins high-impedance every relay it commands is at
+# rest, and the delays D and D2 are hardware. Made to fail on main's netlist
+# and on 8 sabotaged copies: docs/preamp/data/2026-09-26/L41b1/falsi/.
+p="$ROOT/circuits/preamp/psu.net"
+if [ ! -f "$p" ]; then
+    echo "   MISSING: circuits/preamp/psu.net" >&2
+    rly_fail=$((rly_fail + 1))
+else
+    out=$(/usr/bin/python3 "$ROOT/scripts/check_relay_safe_state.py" --timer "$p" 2>&1)
+    rc=$?
+    echo "$out" | sed 's/^/   /'
+    [ $rc -ne 0 ] && rly_fail=$((rly_fail + 1))
+fi
 report "relays fail safe with de-energised coils" $rly_fail
 echo
 
@@ -207,7 +222,9 @@ echo "-- 2j. the harness between the audio board and the supply board (L41a, ADR
 # wrong wire errors nowhere - J1 pins 1 and 3 swapped put -15 V on VPLUS.
 # Made to fail on 8 sabotaged copies, and it caught a real one while psu.py
 # was written (GND renamed by a net merge, limitations #23):
-# docs/preamp/data/2026-09-26/L41a/falsi/.
+# docs/preamp/data/2026-09-26/L41a/falsi/. L41b1: VRELAY through the standby
+# switch, the micro's requests, J3's PNP sources - 7 more sabotages and
+# main's netlist: docs/preamp/data/2026-09-26/L41b1/falsi/.
 hrn_fail=0
 a="$ROOT/circuits/preamp/preamp_audio.net"
 p="$ROOT/circuits/preamp/psu.net"

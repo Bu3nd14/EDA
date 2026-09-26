@@ -27,7 +27,7 @@ Aperto in L41a (2026-09-26) con ADR-048. Ogni lotto che tocca la sezione rete lo
 | Terra di protezione | modulo IEC → telaio | punto di fissaggio dedicato, conduttore, sezione; continuità misurata sul prototipo | aperto |
 | J510 `AC_IN` | scheda d'alimentazione | morsetto a vite per la rete, distanze verso il resto della scheda | aperto (layout, G2) |
 | F501 | scheda d'alimentazione | valore dal datasheet di T2 (lento), portafusibile chiuso | aperto |
-| T2 (piccolo toroidale, 12 V AC preferito) | telaio o scheda | isolamento primario/secondario (doppio o rinforzato), protezione termica o contro il corto; perdite a vuoto per lo standby | aperto |
+| T2 (piccolo toroidale, 12 V AC preferito) | telaio o scheda | isolamento primario/secondario (doppio o rinforzato), protezione termica o contro il corto; **perdita a vuoto ≤ 0,40 W a 230 V + 10 %** per lo standby (NC-037, L41b1) | aperto |
 | K501 G2RL-2A 12 VDC | scheda d'alimentazione | isolamento bobina/contatti adeguato alla rete (datasheet); contatti contro lo spunto di T1; bobina sensibile preferita (ADR-048, P5) | aperto |
 | T1 (toroidale 2×15 V 50 VA) | telaio | isolamento primario/secondario; fissaggio senza spira in corto attraverso il bullone centrale | aperto |
 | J511, J512 | scheda d'alimentazione | morsetti dei primari; distanze | aperto (layout) |
@@ -61,12 +61,23 @@ Aperto in L41a (2026-09-26) con ADR-048. Ogni lotto che tocca la sezione rete lo
     SBVS204G), MCP1703, i due comparatori (~55 µA per canale, SBOS589D), l'LM4040 (~1,2 mA
     dal partitore di R503). Va misurato sul prototipo; il pezzo di T2 va scelto anche su
     questo.
-  - **Trovato in L41a, e oggi FUORI**: in standby l'apparecchio è in mute, K6 è rilasciato,
-    `VTRIM` è viva e le quattro bobine bistabili del trim (K7–K10) sono pilotate di continuo
-    (L16, ADR-027): 4 × 9,1 mA a 12 V ≈ **0,44 W**, più ~6 mA di LED a pannello. Da sole
-    superano 0,5 W. **Rimedio per L41b**: in standby il temporizzatore toglie `VRELAY` alla
-    scheda audio (interruttore sul lato alto verso J1 pin 4); il micro resta su V5. In standby
-    i LED del pannello si spengono.
+  - **Trovato in L41a**: in standby l'apparecchio è in mute, K6 è rilasciato, `VTRIM` è viva e
+    le quattro bobine bistabili del trim (K7–K10) sono pilotate di continuo (L16, ADR-027):
+    4 × 9,1 mA a 12 V ≈ **0,44 W**, più ~6 mA di LED a pannello. Da sole superano 0,5 W.
+  - **Rimedio in L41b1 (ADR-049)**. In standby Q505 toglie `VRELAY` alla scheda audio:
+    simulato 0,000 V a J1, quindi niente bobine del trim e niente LED a pannello. L'interruttore
+    è tenuto in hardware ≥ Δ₂ dopo il permissivo. Il micro (power-down, 0,1–5 µA) resta su V5.
+    **Dal secondario di T2 escono 92,5 mW in tutto**:
+    - U503;
+    - la logica, cioè micro, DAC in shutdown, op-amp, comparatori, LM4040;
+    - i partitori e il rivelatore di rete.
+
+    Manca la perdita a vuoto di T2, che il modello non ha: per restare ≤ 0,5 W deve essere
+    **≤ 0,40 W** a 230 V + 10 %. NC-037 si chiude col datasheet del pezzo scelto e la misura
+    sul prototipo.
+  - La sezione rete non cambia in L41b1: la bobina di K501 resta sul 12 V del regolatore U503
+    (ora `VRELAY_REG`, prima dell'interruttore di standby), comandata dal micro con un
+    pull-down.
 
 ## Modi di guasto noti
 

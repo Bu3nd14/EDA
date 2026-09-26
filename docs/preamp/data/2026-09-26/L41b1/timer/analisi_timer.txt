@@ -1,0 +1,24 @@
+== tb_psu_timer_nom.log
+   micro_reset                      MUTE_CMD a +1.49 ms, D = 18.84 ms, VRELAY < 9,6 V 60.41 ms dopo PERMIT
+   micro_a_zero                     MUTE_CMD a +0.26 ms, D = 20.07 ms, VRELAY < 9,6 V 60.41 ms dopo PERMIT
+   perdita_rete_micro_reset         MUTE_CMD a +1.49 ms, D = 18.84 ms, VRELAY < 9,6 V 60.41 ms dopo PERMIT
+   guasto_U503_micro_reset          MUTE_CMD a +1.49 ms, D = 18.84 ms, VRELAY < 9,6 V 24.69 ms dopo PERMIT
+   controfattuale_senza_C528        MUTE_CMD a +0.35 ms, D = 0.00 ms, VRELAY < 9,6 V 80.38 ms dopo PERMIT
+      il controfattuale fallisce come deve (D < 10 ms)
+   perdita_rete_micro_fermo_alto    MUTE_CMD a +14.32 ms, PERMIT_CMD mai nei 400 ms
+   solo_permit_req_giu              drain di PERMIT_CMD max 0.006 V, di MUTE_CMD max 0.019 V (6 V = rilascio)
+   rilascio_solo_mute_req           PERMIT_CMD eccitato a +0.10 ms, MUTE_CMD a +0.14 ms (anticipo 0.04 ms)
+   standby                          VRELAY a J1 max -0.0000 V, VRELAY_REG 12.000 V, potenza da T2 92.5 mW, da T1 0.00 mW
+VERDETTO tb_psu_timer_nom.log: PASSA
+== tb_psu_timer_min.log
+   micro_reset                      MUTE_CMD a +1.47 ms, D = 16.91 ms, VRELAY < 9,6 V 56.48 ms dopo PERMIT
+   micro_a_zero                     MUTE_CMD a +0.26 ms, D = 18.12 ms, VRELAY < 9,6 V 56.48 ms dopo PERMIT
+   perdita_rete_micro_reset         MUTE_CMD a +1.47 ms, D = 16.91 ms, VRELAY < 9,6 V 56.48 ms dopo PERMIT
+   guasto_U503_micro_reset          MUTE_CMD a +1.47 ms, D = 16.91 ms, VRELAY < 9,6 V 26.91 ms dopo PERMIT
+   controfattuale_senza_C528        MUTE_CMD a +0.32 ms, D = 0.00 ms, VRELAY < 9,6 V 74.53 ms dopo PERMIT
+      il controfattuale fallisce come deve (D < 10 ms)
+   perdita_rete_micro_fermo_alto    MUTE_CMD a +14.81 ms, PERMIT_CMD mai nei 400 ms
+   solo_permit_req_giu              drain di PERMIT_CMD max 0.007 V, di MUTE_CMD max 0.020 V (6 V = rilascio)
+   rilascio_solo_mute_req           PERMIT_CMD eccitato a +0.10 ms, MUTE_CMD a +0.14 ms (anticipo 0.04 ms)
+   standby                          VRELAY a J1 max -0.0000 V, VRELAY_REG 12.000 V, potenza da T2 90.8 mW, da T1 0.00 mW
+VERDETTO tb_psu_timer_min.log: PASSA

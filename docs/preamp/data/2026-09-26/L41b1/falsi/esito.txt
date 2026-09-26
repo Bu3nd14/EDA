@@ -1,0 +1,19 @@
+buono_2j                           2j rc=0 atteso=PASS ok  OK: J1 POWER, J2 RLY_RET, J3 LDR_CMD and J4 MUTE_TIMER agree pin by pin on both boards; the rails come from their regulators and the two commands from two low-side sinks to RLY_RET (ADR-045, ADR-048); VRELAY through the 
+buono_2e                           2e rc=0 atteso=PASS ok  OK: col micro in reset o coi pin in alta impedenza ogni rele' che comanda e' a riposo (ADR-022 condizione 1); i ritardi D e D2 sono comparatori su RC, il permissivo e' tenuto dalla richiesta di mute, i jack non si eccita
+2j_Q505_drain_staccato             2j rc=1 atteso=FAIL ok  FAIL: psu: VRELAY must be the drain of exactly one P-MOSFET whose source is the OUT of a TPS7A4701 (the standby switch, NC-037), found none
+2j_Q505_source_da_V5               2j rc=1 atteso=FAIL ok  FAIL: psu: VRELAY must be the drain of exactly one P-MOSFET whose source is the OUT of a TPS7A4701 (the standby switch, NC-037), found ['Q505']
+2j_J509_di_nuovo                   2j rc=1 atteso=FAIL ok  FAIL: psu: the placeholder TIMER_IO (J509) is still there
+2j_MUTE_REQ_non_dal_micro          2j rc=1 atteso=FAIL ok  FAIL: psu: MUTE_REQ is not driven by the micro U509
+2j_VRELAY_EN_non_dal_micro         2j rc=1 atteso=FAIL ok  FAIL: psu: VRELAY_EN is not driven by the micro U509
+2j_anodo_S_senza_PNP               2j rc=1 atteso=FAIL ok  FAIL: psu: LDR_S_A must be the collector of exactly one PNP (the current source of its string), found none
+2j_catodo_P_a_RLY_RET              2j rc=1 atteso=FAIL ok  FAIL: psu: LDR_P_K must return to GND through one resistor (J3 contract), found none
+2e_T2_senza_pulldown_MUTE_REQ      2e rc=1 atteso=FAIL ok  FALLITO: 2 problemi | timer T2: MUTE_REQ (pin di U509) raggiunge il gate di Q501 (MUTE_CMD) senza un pull-down verso il ritorno: dopo un reset il pin e' in alta impedenza (DS40002205A 16.3.1) | timer T2: MUTE_REQ (pin di
+2e_T2_senza_pulldown_MAINS_REQ     2e rc=1 atteso=FAIL ok  FALLITO: 1 problemi | timer T2: MAINS_REQ (pin di U509) raggiunge il gate di Q503 (MAINS_COIL) senza un pull-down verso il ritorno: dopo un reset il pin e' in alta impedenza (DS40002205A 16.3.1)
+2e_T1_Q503_senza_R_gate            2e rc=1 atteso=FAIL ok  FALLITO: 1 problemi | timer T1: Q503 (MAINS_COIL) non ha una resistenza gate-source: un pilota morto lo lascia flottante
+2e_T3_senza_C_su_PERMIT_T          2e rc=1 atteso=FAIL ok  FALLITO: 1 problemi | timer T3: il gate di Q502 (PERMIT_CMD) e' tirato su da V5 ma non e' l'uscita open-drain di un comparatore con un RC sul morsetto +: il ritardo non e' in hardware
+2e_T3b_PERMIT_REQ_sul_gate         2e rc=1 atteso=FAIL ok  FALLITO: 1 problemi | timer T3b: PERMIT_REQ (pin di U509) arriva al gate ritardato di Q502 (PERMIT_CMD) senza passare dal suo RC PERMIT_T: il ritardo si scavalca
+2e_T4_senza_D522                   2e rc=1 atteso=FAIL ok  FALLITO: 1 problemi | timer T4: nessun diodo dal gate di MUTE_CMD (MUTE_G) a quello di PERMIT_CMD (PERMIT_G): i jack potrebbero eccitarsi prima del permissivo
+2e_T5_PERMIT_T_non_da_MUTE_REQ     2e rc=1 atteso=FAIL ok  FALLITO: 1 problemi | timer T5: il nodo di temporizzazione di PERMIT_CMD (['PERMIT_T']) non si carica dalla richiesta di mute (['MUTE_REQ']): il permissivo non e' tenuto mentre si chiede la musica
+2e_T5_VR_T_non_da_PERMIT_T         2e rc=1 atteso=FAIL ok  FALLITO: 1 problemi | timer T5: il nodo dell'interruttore di standby (['VR_T']) non si carica da quello del permissivo (['PERMIT_T']): VRELAY potrebbe cadere prima di PERMIT_CMD
+
+esito: tutti come attesi (17 casi)

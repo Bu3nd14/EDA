@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-09-26** (L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-09-26** (L41b1: NC-036 aggiornata, il temporizzatore esiste come hardware in `psu.py` senza firmware; NC-037 aggiornata, la causa tolta e la chiusura legata alla perdita a vuoto di T2; NC-038 aperta, il LED della VTL5C4 non regge 20 mA nel telaio caldo — ADR-049; L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -161,6 +161,12 @@ NC-036 resta aperta.
 `VRELAY`, relè di rete, sorvegliante con rivelatore di rete e sorvegliante di `VRELAY`), il
 temporizzatore no. NC-036 resta aperta e bloccante per G2 (L41b, L41c). NC-011: rimedio scelto,
 verifica aperta. **Apre NC-037** (il consumo in standby). **11 voci aperte, 2 bloccanti**.
+
+**L41b1** (2026-09-26, **ADR-049**): il temporizzatore in `psu.py` come hardware (ATtiny3216,
+MCP4822, Δ e Δ₂ in hardware, l'interruttore di `VRELAY`, il pilota esponenziale delle LDR), senza
+firmware. NC-036 resta aperta e bloccante per G2 (L41b2, L41c). NC-037 aggiornata: resta aperta,
+legata alla perdita a vuoto di T2. **Apre NC-038** (la corrente del LED della VTL5C4 nel telaio
+caldo). **12 voci aperte, 2 bloccanti**: NC-004 per G1, NC-036 per G2.
 
 ---
 
@@ -3159,6 +3165,23 @@ Lotto **L41**.
   tolleranza prima che i rail facciano scattare il sorvegliante. Il guasto del rivelatore più una
   perdita di rete è un doppio guasto.
 
+**L41b1 (2026-09-26, ADR-049): il temporizzatore esiste come hardware, senza firmware.**
+- In `psu.py`, al posto di J509:
+  - l'ATtiny3216;
+  - Δ in hardware (RC su `PERMIT_T` caricato da `MUTE_REQ` e da `PERMIT_REQ`, comparatore);
+  - l'interruttore di `VRELAY` per lo standby, tenuto Δ₂ dopo il permissivo;
+  - il pilota esponenziale delle LDR col MCP4822.
+
+  La specifica del firmware è in `firmware/preamp_timer/spec/timer_spec.md`.
+- **Simulato** (`data/2026-09-26/L41b1/`):
+  - col micro in reset, a zero, o in reset durante una perdita di rete o un guasto di U503,
+    Δ ≥ **16,9 ms** all'angolo minimo; il controfattuale senza RC dà 0;
+  - `VRELAY` a J1 resta sopra l'80 % fino a dopo `PERMIT_CMD` (≥ 25 ms dopo);
+  - il profilo v4 calibrato sta entro ±0,92 dB da 15 a 60 °C.
+- **Il 2e esteso** (`--timer`, ADR-022 condizione 1) e il 2j: 15 falsi, e `main` falliscono.
+- **Manca**: il firmware e la sequenza sul circuito pilotata da esso (**L41b2**); il banco di L30
+  col circuito vero (**L41c**).
+
 ### NC-037 — In standby il consumo supera il limite europeo di 0,5 W
 
 | | |
@@ -3177,6 +3200,49 @@ non una misura.
 **Cosa serve per chiuderla.** In standby il temporizzatore toglie `VRELAY` alla scheda audio (un
 interruttore sul lato alto verso J1 pin 4), e il micro resta su V5. Poi il bilancio dello standby
 col pezzo di T2 scelto, e la misura sul prototipo. Lotto **L41b**.
+
+**L41b1 (2026-09-26, ADR-049): la causa è tolta; resta il trasformatore.**
+- In standby Q505 toglie `VRELAY` alla scheda audio: simulato **0,000 V a J1**, quindi niente
+  bobine del trim e niente LED a pannello.
+- **Dal secondario di T2 escono 92,5 mW** (`data/2026-09-26/L41b1/timer/`). Ci sono dentro:
+  - U503;
+  - la logica, cioè micro in power-down, DAC in shutdown, op-amp, comparatori, LM4040;
+  - i partitori e il rivelatore di rete.
+
+  Non c'è la perdita a vuoto di T2, perché il modello del trasformatore non la ha.
+- **Il criterio di chiusura, numerico**: la perdita a vuoto di T2, dal datasheet del pezzo
+  scelto a 230 V + 10 %, **≤ 0,40 W** (0,5 W − 92,5 mW, con ~7 mW di margine). Poi la misura
+  sul prototipo.
+- Resta aperta, con la stessa severità. Lotto: il giro BOM di T2 (G2), la misura al prototipo.
+
+### NC-038 — Il LED della VTL5C4 non regge 20 mA nel telaio caldo, e il contratto di J3 li chiede
+
+| | |
+|---|---|
+| Requisito | **ADR-039** punto 3 (profilo v4: 20 mA a d = 0 sulla serie e a d = 1 sulla derivazione) · **ADR-048** punto 8 / ADR-021 (il telaio fino a ~58 °C chiuso, 60 °C il limite) · P1 |
+| Severità | **maggiore**: blocca G3 se ancora aperta |
+| Aperta da | `reports/2026-09-26-L41b1-temporizzatore-hardware.md` |
+| Stato | aperta |
+
+**Evidenza.** Il datasheet della VTL5C4 (`vendor/optocoupler/excelitas/VTL5C3_VTL5C4`, blocco
+dei valori massimi assoluti) dà **40 mA di corrente del LED a 25 °C, declassati di 0,9 mA/°C
+sopra 30 °C**:
+- a 45 °C il massimo è 26,5 mA;
+- a **52,2 °C** è 20 mA;
+- a **58 °C**, il telaio chiuso di ADR-048, è **14,8 mA**;
+- a 60 °C è 13 mA.
+
+Il contratto di J3 chiede 20 mA in gioco (la cella in serie accesa) e in mute pieno (la
+derivazione accesa), per tempi indefiniti. Il pilota di L41b1 li fa (limite hardware ~30 mA,
+`scelte/dimensiona.txt`): è la tabella che chiede al pezzo più di quanto regga a caldo.
+
+**Cosa serve per chiuderla.** Una decisione dell'utente con una ADR:
+- la cima della tabella abbassata a ≤ ~12 mA, con la resistenza della cella in serie a quella
+  corrente e l'effetto su E5 (oggi +0,04 µV con 118 Ω) rimisurati;
+- oppure un limite sulla temperatura del telaio, con la sua verifica;
+- oppure un altro pezzo.
+
+Il circuito non cambia: cambia la calibrazione del firmware (L41b2).
 
 ## Voci chiuse
 

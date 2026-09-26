@@ -1206,9 +1206,279 @@ def check(components, pin_net):
     return findings, relays, report
 
 
+# ---------------------------------------------------------------------------
+# THE TIMER (L41b1, ADR-022 condition 1, ADR-048 point 6, ADR-049)
+#
+# ADR-022 admits a microcontroller off the signal path on three conditions;
+# the first is that with the micro off, in reset, in brown-out or with its
+# pins high-impedance every relay it commands is AT REST, and that THIS
+# guardian extends to the command lines when the micro enters the topology.
+# It entered in L41b1, on the supply board (psu.net). Run with --timer.
+#
+# What is asserted, by intent, on the netlist:
+#   T1. every relay-command N-MOSFET (a 2N7002 whose drain is a coil command
+#       or the standby switch's gate drive) has a resistor from its gate to
+#       its source: a dead driver leaves it off;
+#   T2. every net that joins a micro pin to such a gate, through resistors
+#       and forward diodes with LESS than 1 MOhm in series (the cheapest
+#       path), carries a resistor to RLY_RET / GND at the micro's end: the
+#       ATtiny's tri-stated pins after a reset read as "at rest". A read-back
+#       through >= 1 MOhm cannot lift a gate past a threshold (psu.py, R543)
+#       and is not a command;
+#   T3. a gate that a SUPPLY can pull up (V5, through a resistor, without a
+#       micro pin in between) is the open-drain output of a comparator whose
+#       + input is an RC timing node (a capacitor AND a resistor to the
+#       return) - the delays D and D2 are hardware, not firmware;
+#   T3b. such a delayed gate is reached from a micro pin (under 1 MOhm) ONLY
+#       through its timing node or through another command gate - a request
+#       wired straight onto it would skip the RC, and the delay with it;
+#   T4. MUTE_CMD's gate can never stand above PERMIT_CMD's: a diode from the
+#       first to the second (the jack relays cannot be energised before the
+#       permissive, J4 contract);
+#   T5. the timing node of PERMIT_CMD's comparator is charged, through
+#       resistors and FORWARD diodes, from the net that drives MUTE_CMD's gate
+#       (the permissive is held while the music is requested, whatever the
+#       firmware does with PERMIT_REQ), and the timing node of the standby
+#       switch from PERMIT_CMD's (the switch opens after the permissive).
+# The timings themselves are simulated (docs/preamp/data/2026-09-26/L41b1/).
+# ---------------------------------------------------------------------------
+TIMER_SUPPLIES = ("V5", "VRELAY", "VRELAY_REG", "VPLUS", "VMINUS")
+TIMER_RETURNS = ("RLY_RET", "GND")
+TIMER_COMMANDS = ("MUTE_CMD", "PERMIT_CMD", "MAINS_COIL")
+
+
+def _two_pin(components, pin_net, part):
+    """[(ref, net pin 1, net pin 2)] for every two-pin part named `part`."""
+    return [(r, pin_net.get((r, "1")), pin_net.get((r, "2")))
+            for r, c in components.items() if c["part"] == part]
+
+
+def _timer_walk(components, pin_net, start, stop):
+    """Nets reachable from `start` through resistors (both ways) and diodes
+    (anode -> cathode only), never through a net in `stop`."""
+    edges = defaultdict(set)
+    for _, a, b in _two_pin(components, pin_net, "R"):
+        if a and b:
+            edges[a].add(b)
+            edges[b].add(a)
+    for part in ("D", "D_Schottky"):
+        # Device:D / D_Schottky: pin 1 = K, pin 2 = A
+        for _, k, a in _two_pin(components, pin_net, part):
+            if a and k:
+                edges[a].add(k)
+    seen, todo = {start}, [start]
+    while todo:
+        n = todo.pop()
+        for m in edges[n]:
+            if m not in seen:
+                seen.add(m)
+                if m not in stop:
+                    todo.append(m)
+    return seen
+
+
+def _ohms(value):
+    """'24.9k' -> 24900.0, '1M' -> 1e6 (KiCad: M is mega), '10' -> 10.0."""
+    m = re.match(r"^\s*([0-9]*\.?[0-9]+)\s*([kKM]?)", value)
+    if not m:
+        return None
+    return float(m.group(1)) * {"": 1, "k": 1e3, "K": 1e3, "M": 1e6}[m.group(2)]
+
+
+def _series_r(components, pin_net, start, goal, stop):
+    """The least series resistance from `start` to `goal` through resistors
+    (both ways) and forward diodes (0 ohm), never through `stop`; None if
+    there is no path."""
+    import heapq
+    edges = defaultdict(list)
+    for r, a, b in _two_pin(components, pin_net, "R"):
+        v = _ohms(components[r]["value"])
+        if a and b and v is not None:
+            edges[a].append((b, v))
+            edges[b].append((a, v))
+    for part in ("D", "D_Schottky"):
+        for _, k, a in _two_pin(components, pin_net, part):
+            if a and k:
+                edges[a].append((k, 0.0))
+    best, heap = {start: 0.0}, [(0.0, start)]
+    while heap:
+        d, n = heapq.heappop(heap)
+        if n == goal:
+            return d
+        if d > best.get(n, float("inf")) or (n in stop and n != start):
+            continue
+        for m, w in edges[n]:
+            if d + w < best.get(m, float("inf")):
+                best[m] = d + w
+                heapq.heappush(heap, (d + w, m))
+    return None
+
+
+COMMAND_MAX_OHMS = 1e6
+
+
+def check_timer(components, pin_net):
+    findings, report = [], []
+    mcus = [r for r, c in components.items() if c["part"].startswith("ATtiny")]
+    if len(mcus) != 1:
+        findings.append("timer: attesi un microcontrollore ATtiny*, trovati %s"
+                        % (mcus or "nessuno"))
+        return findings, report
+    mcu = mcus[0]
+    mcu_nets = {n for (r, p), n in pin_net.items() if r == mcu}
+    nfets = [r for r, c in components.items() if c["part"] == "2N7002"]
+    # the command FETs: drain on a coil command, or on the switch's gate drive
+    # (the drain of a 2N7002 that reaches a P-MOSFET's gate through a resistor)
+    pgates = {pin_net.get((r, "1")) for r, c in components.items()
+              if c["part"] in ("AO3401A",)}
+    cmd = {}
+    for q in nfets:
+        d = pin_net.get((q, "3"))
+        if d in TIMER_COMMANDS or _timer_walk(components, pin_net, d,
+                                              set(TIMER_SUPPLIES)) & pgates:
+            cmd[q] = (pin_net.get((q, "1")), pin_net.get((q, "2")), d)
+    if not cmd:
+        findings.append("timer: nessun MOSFET di comando trovato - il controllo "
+                        "non puo' passare alla cieca")
+        return findings, report
+    resistors = _two_pin(components, pin_net, "R")
+    caps = _two_pin(components, pin_net, "C")
+    # comparator outputs (LM2903 symbol: 1 out A, 3 +A; 7 out B, 5 +B)
+    comp_out = {}
+    for r, c in components.items():
+        if c["part"] == "LM2903":
+            for out, plus in (("1", "3"), ("7", "5")):
+                comp_out.setdefault(pin_net.get((r, out)), []).append(
+                    (r, pin_net.get((r, plus))))
+
+    def has_r(a, b_set):
+        return any((x == a and y in b_set) or (y == a and x in b_set)
+                   for _, x, y in resistors)
+
+    def has_c(a, b_set):
+        return any((x == a and y in b_set) or (y == a and x in b_set)
+                   for _, x, y in caps)
+
+    for q, (g, s, d) in sorted(cmd.items()):
+        # T1
+        if not has_r(g, {s}):
+            findings.append("timer T1: %s (%s) non ha una resistenza gate-source: "
+                            "un pilota morto lo lascia flottante" % (q, d))
+        # T2: micro nets that reach this gate
+        for n in sorted(mcu_nets):
+            if n in TIMER_SUPPLIES or n in TIMER_RETURNS:
+                continue
+            rs = _series_r(components, pin_net, n, g,
+                           set(TIMER_SUPPLIES) | set(TIMER_RETURNS))
+            if rs is not None and rs < COMMAND_MAX_OHMS:
+                if not has_r(n, set(TIMER_RETURNS)):
+                    findings.append(
+                        "timer T2: %s (pin di %s) raggiunge il gate di %s (%s) "
+                        "senza un pull-down verso il ritorno: dopo un reset il "
+                        "pin e' in alta impedenza (DS40002205A 16.3.1)"
+                        % (n, mcu, q, d))
+        # T3: a supply pull-up must land on a comparator output with an RC +
+        ups = [x for x in ("V5",) if has_r(g, {x})]
+        if ups:
+            outs = comp_out.get(g, [])
+            ok = [plus for _, plus in outs
+                  if has_c(plus, set(TIMER_RETURNS)) and has_r(plus, set(TIMER_RETURNS))]
+            if not ok:
+                findings.append(
+                    "timer T3: il gate di %s (%s) e' tirato su da V5 ma non e' "
+                    "l'uscita open-drain di un comparatore con un RC sul "
+                    "morsetto +: il ritardo non e' in hardware" % (q, d))
+            else:
+                report.append("timer: %s (%s) gate %s = comparatore su RC %s"
+                              % (q, d, g, ok[0]))
+                # T3b
+                others = {x for x, _, _ in cmd.values()} - {g}
+                stop = (set(TIMER_SUPPLIES) | set(TIMER_RETURNS) | set(ok)
+                        | others)
+                for n in sorted(mcu_nets - set(TIMER_SUPPLIES) - set(TIMER_RETURNS)):
+                    rs = _series_r(components, pin_net, n, g, stop)
+                    if rs is not None and rs < COMMAND_MAX_OHMS:
+                        findings.append(
+                            "timer T3b: %s (pin di %s) arriva al gate ritardato "
+                            "di %s (%s) senza passare dal suo RC %s: il "
+                            "ritardo si scavalca" % (n, mcu, q, d, ok[0]))
+    by_drain = {d: g for q, (g, s, d) in cmd.items()}
+    gm, gp = by_drain.get("MUTE_CMD"), by_drain.get("PERMIT_CMD")
+    # T4
+    diodes = [(a, k) for part in ("D", "D_Schottky")
+              for _, k, a in _two_pin(components, pin_net, part)]
+    if not gm or not gp or (gm, gp) not in diodes:
+        findings.append("timer T4: nessun diodo dal gate di MUTE_CMD (%s) a quello "
+                        "di PERMIT_CMD (%s): i jack potrebbero eccitarsi prima del "
+                        "permissivo" % (gm, gp))
+    else:
+        report.append("timer: %s <= %s (diodo), i jack mai prima del permissivo"
+                      % (gm, gp))
+
+    # T5
+    def timing_node(g):
+        return [plus for _, plus in comp_out.get(g, [])]
+
+    # the net driving MUTE_CMD's gate from the micro: the micro net that
+    # reaches gm without a comparator output in between
+    drivers = [n for n in mcu_nets if n not in TIMER_SUPPLIES + TIMER_RETURNS
+               and (_series_r(components, pin_net, n, gm,
+                              set(TIMER_SUPPLIES) | set(TIMER_RETURNS)) or 1e99)
+               < COMMAND_MAX_OHMS]
+    stop = set(TIMER_SUPPLIES) | set(TIMER_RETURNS)
+    pt = timing_node(gp)
+    if not drivers or not pt or not any(
+            pt[0] in _timer_walk(components, pin_net, n, stop | {gm})
+            for n in drivers):
+        findings.append("timer T5: il nodo di temporizzazione di PERMIT_CMD (%s) "
+                        "non si carica dalla richiesta di mute (%s): il "
+                        "permissivo non e' tenuto mentre si chiede la musica"
+                        % (pt, drivers))
+    else:
+        report.append("timer: %s si carica da %s" % (pt[0], ", ".join(drivers)))
+    sw = [g for q, (g, s, d) in cmd.items() if d not in TIMER_COMMANDS]
+    for g in sw:
+        vt_ = timing_node(g)
+        if not pt or not vt_ or vt_[0] not in _timer_walk(components, pin_net,
+                                                          pt[0], stop):
+            findings.append("timer T5: il nodo dell'interruttore di standby (%s) "
+                            "non si carica da quello del permissivo (%s): "
+                            "VRELAY potrebbe cadere prima di PERMIT_CMD"
+                            % (vt_, pt))
+        else:
+            report.append("timer: %s (interruttore) si carica da %s"
+                          % (vt_[0], pt[0]))
+    return findings, report
+
+
+def main_timer(path):
+    components, pin_net = parse_netlist(path)
+    if not components or not pin_net:
+        print(f"ERRORE: non ho interpretato nulla in {path}")
+        return 2
+    findings, report = check_timer(components, pin_net)
+    print(f"netlist : {path} (--timer)")
+    for line in report:
+        print(f"          {line}")
+    if not findings:
+        print("\nOK: col micro in reset o coi pin in alta impedenza ogni rele' "
+              "che comanda e' a riposo (ADR-022 condizione 1); i ritardi D e D2 "
+              "sono comparatori su RC, il permissivo e' tenuto dalla richiesta "
+              "di mute, i jack non si eccitano prima del permissivo e "
+              "l'interruttore di VRELAY si apre dopo il permissivo (ADR-049).")
+        return 0
+    print(f"\nFALLITO: {len(findings)} problemi\n")
+    for f in findings:
+        print("  " + f)
+    return 1
+
+
 def main(argv):
+    if len(argv) == 3 and argv[1] == "--timer":
+        return main_timer(Path(argv[2]))
     if len(argv) != 2:
-        print("USAGE: check_relay_safe_state.py <netlist.net>")
+        print("USAGE: check_relay_safe_state.py <netlist.net>\n"
+              "       check_relay_safe_state.py --timer <psu.net>")
         return 2
     path = Path(argv[1])
     if not path.is_file():
