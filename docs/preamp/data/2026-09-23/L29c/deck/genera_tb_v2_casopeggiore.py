@@ -23,6 +23,11 @@ Uso:
   --matrice l30             L30 (ADR-046): lo spegnimento morbido, il guasto dell'alimentatore e i
                             controfattuali, sul sorgente come 'sorgente', col gemello di K1/K5 come
                             'caldo'. Si scrive nei dati di L30 (README li' accanto).
+  --matrice l41c --ponte D  L41c (NC-036): il banco di l30 con le forme d'onda del circuito vero
+                            dell'alimentatore (rail, correnti delle stringhe LED, istanti dei
+                            contatti), dai JSON di data/2026-09-26/L41c/ponte/. Le correnti LED
+                            sostituiscono BILS/BILP solo in questa matrice. Si scrive nei dati di
+                            L41c (README li' accanto).
   --curve B B               le curve della VTL5C4 per la cella in serie e quella in derivazione
                             (A = resistenza piu' bassa ... D = piu' alta). Il deck versionato e'
                             B B, come tb_v2_mute_ldr.cir; le altre si generano nei dati di L29c.
@@ -100,7 +105,9 @@ import os
 QUI = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(QUI, *[".."] * 6))
 ap = argparse.ArgumentParser()
-ap.add_argument("--matrice", default="sorgente", choices=("sorgente", "l29c", "controfattuale", "curve", "caldo", "sonda_l29d", "l29d2", "l30"))
+ap.add_argument("--matrice", default="sorgente", choices=("sorgente", "l29c", "controfattuale", "curve", "caldo", "sonda_l29d", "l29d2", "l30", "l41c"))
+ap.add_argument("--ponte", default=None,
+                help="solo --matrice l41c: la cartella dei JSON di ponte/estrai_ponte.py (L41c)")
 ap.add_argument("--curve", nargs=2, default=("B", "B"), metavar=("SERIE", "DERIV"))
 ap.add_argument("--netlist", default=os.path.join(REPO, "circuits", "preamp", "preamp_audio.net"),
                 help="solo --matrice sorgente: la netlist da cui leggere il mute (L29e)")
@@ -243,9 +250,9 @@ AGGIUNTE = (
      "* pwl 0/1 dei rimbalzi, isteresi 0,25 V",
      ".model SWK SW(RON=0.1 ROFF=1e12 VT=0.5 VH=0.25)"]
     + contatto("K1", "RGB", "0", False) + contatto("K5", "RG10B", "0", False)
-    + (gemello("K1", "RGB") + gemello("K5", "RG10B") if ARG.matrice in ("caldo", "l30") else [])
+    + (gemello("K1", "RGB") + gemello("K5", "RG10B") if ARG.matrice in ("caldo", "l30", "l41c") else [])
     + (sonda_aggiunte() if ARG.matrice == "sonda_l29d" else [])
-    + (sonda_aggiunte(CK_DS, True) if ARG.matrice in ("l29d2", "sorgente", "l30") else [])
+    + (sonda_aggiunte(CK_DS, True) if ARG.matrice in ("l29d2", "sorgente", "l30", "l41c") else [])
     + ["* ---- L29c: il trim (ADR-027, trim.py candidato 2) fra OUTA e l'attenuatore ----",
        "* RATTT del blocco si apre nel .control (alter rattt = 1e12): OUTA arriva a W da qui.",
        "RL1 OUTA TAP6 845", "RL2 TAP6 TAP12 464", "RL3 TAP12 0 464"]
@@ -293,8 +300,11 @@ H = [
     "BDIN DIN 0 V = min(max((time - V(NTI))/V(NTD), 0), 1)",
     "BDEP DEP 0 V = time < V(NTR) ? V(DIN) : max(min(max((V(NTR) - V(NTI))/V(NTD), 0), 1)"
     " - (time - V(NTR))/V(NTD), 0)",
-    BILS,
-    BILP,
+] + ([BILS, BILP] if ARG.matrice != "l41c" else [
+    "* L41c: le correnti delle due stringhe LED vengono dal circuito dell'alimentatore (il ponte),",
+    "* al posto del profilo v4 per VPWL: alter @vis[pwl] / @vip[pwl] in ogni corsa",
+    "VIS NIS 0 pwl(0 0 1000 0)", "VIP NIP 0 pwl(0 0 1000 0)",
+    "BILS 0 ALS I = V(NIS)", "BILP 0 ALP I = V(NIP)"]) + [
     "* 10 M dall'anodo a massa: un LED col solo generatore non ha percorso in continua e l'op",
     "* fallisce in silenzio (trappola di L29b). E' del banco, non della scheda.",
     "RALS ALS 0 10MEG",
@@ -305,7 +315,7 @@ H = [
     "",
 ] + AGGIUNTE
 
-if ARG.matrice in ("sorgente", "l30"):
+if ARG.matrice in ("sorgente", "l30", "l41c"):
     H[5:5] = [
         "* MATRICE sorgente (L29e, ADR-044): il mute al jack e' la geometria iii com'e' in",
         "* circuits/preamp/preamp_audio.net - un deviatore per uscita, COM al lato del condensatore,",
@@ -379,7 +389,7 @@ def cambio_trim(p1, p2, t):
 def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=1000, trjk=2000,
           g1=10, g2=None, tg=1000, p1=0, p2=None, tp=1000, vos=(0, 0, 0, 0), att="max",
           rl="100k", trim_montato=True, cwire="100p", vto=None, rail=None, stati=True, geo=None,
-          ck=None, cavo=None):
+          ck=None, cavo=None, led=None):
     out = [
         "alter vamp dc = %s" % amp,
         "alter vfrq dc = %s" % f,
@@ -395,7 +405,7 @@ def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=1000,
     st = {}
     st.update(cambio_guadagno(g1, g2, tg))
     st.update(cambio_trim(p1, p2, tp))
-    if ARG.matrice in ("caldo", "l30"):
+    if ARG.matrice in ("caldo", "l30", "l41c"):
         # il guadagno lo portano i gemelli comportamentali; gli interruttori nativi restano aperti
         for n in ("K1", "K5"):
             i, t = st[n]
@@ -424,6 +434,9 @@ def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=1000,
         vp, vm, pw = rail
         out += ["alter @vpp[pwl] = [ %s ]" % vp, "alter @vmm[pwl] = [ %s ]" % vm,
                 "alter @vpwl[pwl] = [ %s ]" % pw]
+    if led is not None:
+        # L41c: the strings' currents from the bridge
+        out += ["alter @vis[pwl] = [ %s ]" % led[0], "alter @vip[pwl] = [ %s ]" % led[1]]
     out += ["tran %g %s 0 %g" % (tmax, tf, tmax),
             "wrdata %s$d v(mainjack) v(fixjack1) v(fixjack2)" % nome]
     if stati:
@@ -1126,14 +1139,59 @@ def matrice_l30():
     return out
 
 
-if ARG.matrice in ("sorgente", "l30"):
+# ======== L41c: il banco di L30 col circuito vero dell'alimentatore (NC-036)
+# Le forme d'onda disegnate a mano di L30 (rail, VPWL, istante del contatto, Δmin) sono sostituite
+# da quelle del circuito di psu.py col firmware, al punto fisso (data/2026-09-26/L41c/seq/), portate
+# qui da ponte/estrai_ponte.py: rail, correnti delle stringhe LED, e gli istanti dei contatti
+# all'angolo peggiore del G6K (jack il piu' tardi, guadagno il piu' presto; l'intestazione del
+# ponte dice come). Il resto e' L30: sorgente, geometria iii, gemello di K1/K5, senza segnale,
+# +10 dB, 100 k, 0 pF. Ogni caso ha il SUO riferimento: gli stessi punti fino a t_ins, poi fermi, e
+# i contatti fermi - A_ins legge solo quello che succede dopo t_ins.
+L41C_CASI = ("spegnimento_l", "perdita", "perdita_min", "guasto", "guasto_u501", "guasto_u503",
+             "guasto_u503_min", "cf_nodelta", "corto_u503")
+
+
+def pwl_json(p, fmt):
+    return " ".join(("%.9f " + fmt) % (t, v) for t, v in p["punti"])
+
+
+def matrice_l41c():
+    import json
+    if not ARG.ponte:
+        raise SystemExit("--matrice l41c vuole --ponte <cartella dei JSON>")
+    out = []
+    kw = dict(geo="iii", rl="100k", ck=CK_DS, cavo="1e-18", amp=0, g1=10)
+    for caso in L41C_CASI:
+        j = json.load(open(os.path.join(ARG.ponte, caso + ".json")))
+        n_ev, n_rif = "%s_l41c" % caso, "rif_%s_l41c" % caso
+        tf, ti = j["t_fine"], j["t_ins"]
+        for n, suf in ((n_rif, "_rif"), (n_ev, "")):
+            rail = (pwl_json(j["vpp" + suf], "%.6f"), pwl_json(j["vmm" + suf], "%.6f"), "0 1 1000 1")
+            led = (pwl_json(j["is" + suf], "%.6e"), pwl_json(j["ip" + suf], "%.6e"))
+            ev = {}
+            if not suf:
+                if j["t_jack"] is not None:
+                    ev["tijk"] = j["t_jack"]
+                if j["t_gain"] is not None:
+                    ev.update(g2=0, tg=j["t_gain"])
+            out += ["* ---- L41c: %s (dal ponte: %s, giro %d) ----" % (n, caso, j["giro"])]
+            out += corsa(n, tf=tf, trjk=1000, rail=rail, led=led, **dict(kw, **ev))
+            if suf:
+                out += [riga(n, n, "rif", 1000, 0, 10, "100k", "%.9f" % ti, 1000, tf, 10e-6, "rif_mai")]
+            else:
+                out += [riga(n, n, "l41c_" + caso, 1000, 0, "10a0" if "g2" in ev else 10, "100k",
+                             "%.9f" % ti, 1000, tf, 10e-6, "evento", n_rif, "-", 0.0, 6, "A_ins")]
+    return out
+
+
+if ARG.matrice in ("sorgente", "l30", "l41c"):
     RBC = dal_sorgente()
     print("dal sorgente (%s): bleed lato C %s" % (NET, RBC))
-if ARG.matrice in ("sonda_l29d", "l29d2", "sorgente", "l30"):
+if ARG.matrice in ("sonda_l29d", "l29d2", "sorgente", "l30", "l41c"):
     C = [("save v(mainjack) v(fixjack1) v(fixjack2) v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus)"
           " v(main_a) v(mainc) v(fixc1) v(fixc2)") if r.startswith("save ") else r for r in C]
     C += {"sonda_l29d": matrice_sonda, "l29d2": matrice_l29d2, "sorgente": matrice_sorgente,
-          "l30": matrice_l30}[ARG.matrice]()
+          "l30": matrice_l30, "l41c": matrice_l41c}[ARG.matrice]()
 elif ARG.matrice == "controfattuale":
     C += controfattuale()
 elif ARG.matrice == "caldo":
