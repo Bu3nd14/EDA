@@ -1,0 +1,33 @@
+{
+  "addendum_to": "PROVENANCE.json",
+  "written_by_lotto": "L28",
+  "date": "2026-09-26",
+  "author": "AI agent (Claude Opus 5.5) on behalf of roberto.carmeli@gmail.com",
+  "why_an_addendum_and_not_an_edit": "PROVENANCE.json is frozen read-only by scripts/freeze_vendor.sh. A new document for the same part is ADDED alongside, with its own record, as L7 did for its correction.",
+  "added_file": {
+    "title": "Linear Systems LSK489 Application Note, by Bob Cordell",
+    "revision": "Rev A2 (printed in the footer of the pages; PDF CreationDate 2026-07-16)",
+    "role": "application_note",
+    "url": "https://www.linearsystems.com/_files/ugd/4be30b_49c5a96bc52f4868a7bf2a5c17150351.pdf",
+    "redirected_to": "https://c06d776a-66b9-49fd-bc0b-a9f0bad8162c.filesusr.com/ugd/4be30b_49c5a96bc52f4868a7bf2a5c17150351.pdf",
+    "served_content_disposition": null,
+    "served_content_type": "application/pdf",
+    "served_last_modified": "Thu, 16 Jul 2026 02:04:04 GMT",
+    "bytes": 644546,
+    "pages": 17,
+    "sha256": "84f21b11763404e7fd4c9d8d461a86a833b0aea9c8459fdd9babe777149f1d8f",
+    "sha256_expected_before_download": "84f21b11763404e7fd4c9d8d461a86a833b0aea9c8459fdd9babe777149f1d8f",
+    "sha256_matches_expected": true,
+    "local_filename": "4be30b_49c5a96bc52f4868a7bf2a5c17150351.pdf",
+    "renamed": false,
+    "rename_note": "The server sends no Content-Disposition, so the only name it gives the file is the last segment of the URL. Kept as served, byte-for-byte."
+  },
+  "obtained_from": "Downloaded with curl -L directly from the manufacturer's site (linearsystems.com, which 301-redirects to its own Wix file host), not from a distributor mirror. Nothing was converted, re-saved or edited.",
+  "how_the_source_was_found": "Found by the user on 2026-09-22, verified in L29b2 (URL and sha256 recorded in docs/preamp/STATE.md, lot table row L28). L28 re-downloaded it on 2026-09-26 and the hash matched the one recorded before the download.",
+  "what_it_defines": "Page 6, section 'The Common Substrate', and Figure 2 on page 7: the SS pins (3 and 7 of the SOIC-8) are the substrate common to the two JFETs; the gates are isolated from it by reverse-biased diodes with the ANODES on the gates and the CATHODES on the substrate; 'The substrate is not normally accessible, and it harmlessly floats as a result'; 'the 8-pin SOIC package brings out the substrate for possible connection by the user'; 'In some applications it may be useful to connect the substrate to a fixed DC voltage'. This is the definition of SS FOR THE LSK489 that NC-027 asked for.",
+  "decision_that_uses_it": "docs/preamp/decisions/ADR-052-ss-lsk489-substrato-flottante.md",
+  "license_notes": "Manufacturer application note, redistributed here unmodified for engineering traceability only. Copyright remains Linear Integrated Systems, Inc.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "full_record": "docs/preamp/reports/2026-09-26-L28-ss-lsk489.md"
+}

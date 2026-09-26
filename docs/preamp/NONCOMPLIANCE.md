@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-09-26** (L41c: **NC-036 chiusa**, il banco di L30 col circuito vero dell'alimentatore, e il corto della linea a 12 V dei relè accettato sotto il tetto — ADR-051; L41b2: NC-038 chiusa, la cima delle LDR a 12 mA — ADR-050; NC-036 aggiornata, il firmware del temporizzatore provato sull'host e sul circuito; L41b1: NC-036 aggiornata, il temporizzatore esiste come hardware in `psu.py` senza firmware; NC-037 aggiornata, la causa tolta e la chiusura legata alla perdita a vuoto di T2; NC-038 aperta, il LED della VTL5C4 non regge 20 mA nel telaio caldo — ADR-049; L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-09-26** (L28: **NC-027 chiusa**, i pin SS dell'LSK489 definiti dalla nota applicativa del costruttore, flottanti — ADR-052; L41c: **NC-036 chiusa**, il banco di L30 col circuito vero dell'alimentatore, e il corto della linea a 12 V dei relè accettato sotto il tetto — ADR-051; L41b2: NC-038 chiusa, la cima delle LDR a 12 mA — ADR-050; NC-036 aggiornata, il firmware del temporizzatore provato sull'host e sul circuito; L41b1: NC-036 aggiornata, il temporizzatore esiste come hardware in `psu.py` senza firmware; NC-037 aggiornata, la causa tolta e la chiusura legata alla perdita a vuoto di T2; NC-038 aperta, il LED della VTL5C4 non regge 20 mA nel telaio caldo — ADR-049; L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -180,6 +180,12 @@ regolatori ≤ 1,37 mV (~56 dB), sotto l'obiettivo di 2 mV; il controfattuale se
 (≥ 66 mV). Il corto della linea a 12 V dei relè (69,4 mV, ~90 dB SPL) è accettato come guasto
 singolo sotto il tetto (decisione dell'utente). **Chiude NC-036.** **10 voci aperte, 1
 bloccante**: NC-004 per G1. Il layout (G2) non è più bloccato da una non conformità.
+
+**L28** (2026-09-26, **ADR-052**): la nota applicativa di Cordell per l'LSK489 (Rev A2, pag. 6,
+«The Common Substrate») congelata in `vendor/`, SHA-256 uguale a quello registrato prima del
+download. SS è il substrato comune, isolato dai gate da diodi con l'anodo sul gate: i pin 3 e 7
+restano flottanti; se mai collegati, sopra la massima escursione dei gate, mai al negativo.
+Nessuna modifica al circuito. **Chiude NC-027.** **9 voci aperte, 1 bloccante**: NC-004 per G1.
 
 ---
 
@@ -2170,7 +2176,7 @@ il che basta, perché lo script asserisce già da sé tutto ciò che legge.
 | Requisito | ADR-013 · precondizione di **G2** (il layout deve sapere cosa fare di ogni pin) |
 | Severità | **minore** |
 | Aperta da | `reports/2026-09-13-L10-simbolo-lsk489.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-26 da L28** — ADR-052, la nota applicativa del costruttore congelata in `vendor/`. Vedi «Chiusura» in fondo alla voce e «Voci chiuse» |
 
 **Evidenza.** Il datasheet congelato
 `vendor/jfet/linear_systems/LSK489/LSK489DSRevA38.pdf` (Rev A40), pag. 1,
@@ -2193,6 +2199,23 @@ risposta scritta di Linear Systems — congelato in `vendor/` come addendum; o
 una ADR che accetti esplicitamente di applicare l'istruzione dell'LSK389 in
 forza della compatibilità dichiarata. Prima di G2, perché un substrato
 lasciato flottante o collegato è una scelta di layout.
+
+**Chiusura (2026-09-26, L28).** Report `reports/2026-09-26-L28-ss-lsk489.md`. È la prima delle
+due strade: un documento del costruttore per **questa** parte.
+- **La fonte**: Bob Cordell, *LSK489 Application Note*, Rev A2, pag. 6 «The Common Substrate» e
+  Figura 2 a pag. 7, trovata dall'utente il 2026-09-22. Congelata come
+  `vendor/jfet/linear_systems/LSK489/4be30b_49c5a96bc52f4868a7bf2a5c17150351.pdf` con
+  `PROVENANCE-L28-addendum.json`; SHA-256 `84f21b11…149f1d8f`, uguale a quello registrato prima
+  del download.
+- **Cosa dice**: SS è il substrato comune alle due JFET; i gate ne sono isolati da diodi in
+  inversa con l'anodo sul gate e il catodo sul substrato; «it harmlessly floats»; il SOIC lo porta
+  fuori «for possible connection by the user».
+- **ADR-052**: pin 3 e 7 flottanti come oggi; se mai collegati, a una tensione fissa sopra la
+  massima escursione dei gate, **mai al negativo** (porterebbe in diretta i diodi). Il simbolo
+  resta `passive`: `no_connect` vieterebbe un collegamento che la nota ammette.
+- **Nessuna modifica al circuito**: in `gain_block.py` cambia solo il commento, che ora punta ad
+  ADR-052. Le netlist rigenerate sono uguali salvo i campi volatili di SKiDL; il deck V2
+  (`--matrice sorgente`) è byte-identico.
 
 ### NC-028 — Il rilascio del mute con segnale presente porta sul jack un gradino che decade in 0,3 s
 
@@ -3314,6 +3337,16 @@ resta l'8 %.
 - Nel firmware: `LDR_I_TOP` 12 mA; il falso 12 (la cima a 20 mA) fa fallire `tabella`.
 
 ## Voci chiuse
+
+**NC-027 — I pin SS dell'LSK489 sono disegnati dal suo datasheet ma non definiti** (minore).
+**CHIUSA il 2026-09-26 da L28.**
+- La nota applicativa di Cordell (Rev A2, pag. 6) definisce SS per l'LSK489: il substrato comune,
+  isolato dai gate da diodi con l'anodo sul gate. Congelata in `vendor/`.
+- **ADR-052**: flottanti; se mai collegati, sopra i gate, mai al negativo. Nessuna modifica al
+  circuito.
+
+Il testo completo della voce resta sopra, con la sua «Chiusura». Report:
+`reports/2026-09-26-L28-ss-lsk489.md`.
 
 **NC-036 — L'alimentatore non esiste: P9 è verificato solo con un alimentatore comportamentale**
 (bloccante per G2). **CHIUSA il 2026-09-26 da L41c.**
