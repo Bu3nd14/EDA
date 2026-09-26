@@ -309,12 +309,15 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # "fit, form and pin compatible", draws the identical symbol at legible
     # resolution; it was used to check the reading, never as the source.
     #
-    # SS (pins 3, 7) is NOT CONNECTED, and that is not a decision taken here:
-    # nothing was connected before either. The frozen LSK489 datasheet draws
-    # SS but never defines it. The only definition found - "SS: SUBSTRATE,
-    # LEAVE THESE PINS FLOATING (N/C)" - is printed for the LSK389 (its
-    # datasheet Rev A27 p.7, and the Linear Systems Data Book p.15), not for
-    # this part. Registered as NC-027: to be confirmed before G2.
+    # SS (pins 3, 7) is NOT CONNECTED: ADR-052 (L28, closes NC-027). SS is
+    # the substrate common to both JFETs, isolated from each gate by a diode
+    # with the ANODE on the gate - Cordell, LSK489 Application Note Rev A2,
+    # p.6 "The Common Substrate" (vendor/jfet/linear_systems/LSK489/
+    # 4be30b_49c5a96bc52f4868a7bf2a5c17150351.pdf): "it harmlessly floats".
+    # If it is ever connected, only to a fixed DC voltage at or above the
+    # highest gate swing, NEVER to the negative rail: that forward-biases the
+    # gate-substrate diodes. The datasheet itself draws SS but never defines
+    # it; the LSK389's "LEAVE THESE PINS FLOATING (N/C)" agrees.
     R(R_GATE_STOP, IN, G1)
     R(R_GATE_STOP, FB, G2)
     i[0] += 1
