@@ -538,11 +538,21 @@ if __name__ == "__main__":
     #     the jack relays and K6 together, and D would be lost. SW3 closed =
     #     music: a broken wire mutes. Debouncing is the timer's;
     #   the LDR contract next to J3 is unchanged.
-    # NOTE FOR THE FAILSAFE (ADR-045 -> ADR-043, L30): the delay exists only
-    # while VRELAY is present. When VRELAY collapses every coil drops at once
-    # and K1 / K5 go back to 0 dB with the jacks' disconnection: the failsafe
-    # must release MUTE_CMD first and hold K6, K1 / K5 and K11 / K12 for at
-    # least D after, or prove another way that the gain does not move first.
+    # POWER-OFF AND FAILSAFE (ADR-046, L30; answers ADR-043 and the note of
+    # ADR-045 - the delay D exists only while VRELAY is present):
+    #   the mains switch is an INPUT of this timer, like SW3 (soft switch):
+    #     switched off, the timer runs the full mute insertion (fade, then
+    #     MUTE_CMD, then PERMIT_CMD D later) and only then, >= 50 ms after,
+    #     drops the mains relay (~7 s in all). V2 applies: 12 of 12 bench
+    #     runs <= 2.7 uV (data/2026-09-26/L30);
+    #   mains loss or a supply fault is the FAILSAFE: a supervisor releases
+    #     MUTE_CMD within 1 ms of either audio rail falling below |13.5 V|,
+    #     with no fade; MUTE_CMD is active-for-music, so a dead supervisor
+    #     mutes. VRELAY is held within tolerance >= 25 ms after the trip, and
+    #     the timer, on the same hold, releases PERMIT_CMD D after MUTE_CMD:
+    #     K6, K1 / K5 and K11 / K12 drop after the jacks. Ceiling 0.87 V at
+    #     the main jack, design target 2 mV; bench <= 1.77 mV, and 69 mV
+    #     without D. The rail hold-up is on J1 below.
     MUTE_SW = Net("MUTE_SW")
     jt = Part("Connector_Generic", "Conn_01x03", value="MUTE_TIMER",
               footprint=FP_CONN3, ref="J4")
@@ -573,6 +583,14 @@ if __name__ == "__main__":
     jm[1] += rm[2]           # the red LED's anode
     jm[2] += K_TRIM["RET"]   # its cathode
 
+    # J1, the supply (off board, the supply lot). What it owes this board at
+    # power-off (ADR-046, L30): a hold-up AFTER the +/-15 V regulators of
+    # >= 1500 uF EFFECTIVE per rail (2200 uF nominal, -20 %). At ~265 mA per
+    # rail (eight blocks, ADR-042) the + rail then takes >= 16 ms from the
+    # supervisor's 13.5 V to 10.6 V, where the blocks lose regulation
+    # (re-measured in L30: 10.2-10.6 V on the + rail, the - rail alone holds
+    # to -7.5 V), against 3 ms release + 1 ms transfer of the jack relays.
+    # Dissipation in the chassis ~15-18 W, supply included (ADR-047, P5).
     pc = Part("Connector_Generic", "Conn_01x04", value="POWER",
               footprint="Connector_PinHeader_2.54mm:"
                         "PinHeader_1x04_P2.54mm_Vertical", ref="J1")

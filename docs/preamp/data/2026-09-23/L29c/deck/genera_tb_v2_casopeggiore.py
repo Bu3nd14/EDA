@@ -20,6 +20,9 @@ Uso:
   --matrice sonda_l29d      L29d: la sonda del contatto IN SERIE al jack (NC-028), sulle celle
                             peggiori di L29c, in cinque geometrie (N, iA, iB, ii, iii): vedi
                             SONDA L29D in fondo a questa intestazione. Si scrive nei dati di L29d.
+  --matrice l30             L30 (ADR-046): lo spegnimento morbido, il guasto dell'alimentatore e i
+                            controfattuali, sul sorgente come 'sorgente', col gemello di K1/K5 come
+                            'caldo'. Si scrive nei dati di L30 (README li' accanto).
   --curve B B               le curve della VTL5C4 per la cella in serie e quella in derivazione
                             (A = resistenza piu' bassa ... D = piu' alta). Il deck versionato e'
                             B B, come tb_v2_mute_ldr.cir; le altre si generano nei dati di L29c.
@@ -97,7 +100,7 @@ import os
 QUI = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(QUI, *[".."] * 6))
 ap = argparse.ArgumentParser()
-ap.add_argument("--matrice", default="sorgente", choices=("sorgente", "l29c", "controfattuale", "curve", "caldo", "sonda_l29d", "l29d2"))
+ap.add_argument("--matrice", default="sorgente", choices=("sorgente", "l29c", "controfattuale", "curve", "caldo", "sonda_l29d", "l29d2", "l30"))
 ap.add_argument("--curve", nargs=2, default=("B", "B"), metavar=("SERIE", "DERIV"))
 ap.add_argument("--netlist", default=os.path.join(REPO, "circuits", "preamp", "preamp_audio.net"),
                 help="solo --matrice sorgente: la netlist da cui leggere il mute (L29e)")
@@ -240,9 +243,9 @@ AGGIUNTE = (
      "* pwl 0/1 dei rimbalzi, isteresi 0,25 V",
      ".model SWK SW(RON=0.1 ROFF=1e12 VT=0.5 VH=0.25)"]
     + contatto("K1", "RGB", "0", False) + contatto("K5", "RG10B", "0", False)
-    + (gemello("K1", "RGB") + gemello("K5", "RG10B") if ARG.matrice == "caldo" else [])
+    + (gemello("K1", "RGB") + gemello("K5", "RG10B") if ARG.matrice in ("caldo", "l30") else [])
     + (sonda_aggiunte() if ARG.matrice == "sonda_l29d" else [])
-    + (sonda_aggiunte(CK_DS, True) if ARG.matrice in ("l29d2", "sorgente") else [])
+    + (sonda_aggiunte(CK_DS, True) if ARG.matrice in ("l29d2", "sorgente", "l30") else [])
     + ["* ---- L29c: il trim (ADR-027, trim.py candidato 2) fra OUTA e l'attenuatore ----",
        "* RATTT del blocco si apre nel .control (alter rattt = 1e12): OUTA arriva a W da qui.",
        "RL1 OUTA TAP6 845", "RL2 TAP6 TAP12 464", "RL3 TAP12 0 464"]
@@ -302,7 +305,7 @@ H = [
     "",
 ] + AGGIUNTE
 
-if ARG.matrice == "sorgente":
+if ARG.matrice in ("sorgente", "l30"):
     H[5:5] = [
         "* MATRICE sorgente (L29e, ADR-044): il mute al jack e' la geometria iii com'e' in",
         "* circuits/preamp/preamp_audio.net - un deviatore per uscita, COM al lato del condensatore,",
@@ -392,7 +395,7 @@ def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=1000,
     st = {}
     st.update(cambio_guadagno(g1, g2, tg))
     st.update(cambio_trim(p1, p2, tp))
-    if ARG.matrice == "caldo":
+    if ARG.matrice in ("caldo", "l30"):
         # il guadagno lo portano i gemelli comportamentali; gli interruttori nativi restano aperti
         for n in ("K1", "K5"):
             i, t = st[n]
@@ -1033,13 +1036,104 @@ def matrice_l29d2():
     return out
 
 
-if ARG.matrice == "sorgente":
+# ======== L30: lo spegnimento e il failsafe dell'alimentatore (ADR-043, ADR-045, ADR-046)
+# Sul sorgente (geometria iii, bleed dalla netlist), senza segnale, +10 dB, 100 k, 0 pF di cavo.
+# I tempi del relè al jack sono quelli del contatto: il comando cade a t_cmd, il contatto in
+# serie si apre al rilascio MASSIMO del G6K, 3 ms dopo (en-g6k.pdf p. 3), la derivazione 1 ms
+# dopo ancora (TT). L'alimentatore e' comportamentale: rampe lineari dei rail.
+I_RAIL = 0.265        # A per rail: otto blocchi a riposo (ADR-042, tb_op: ~33 mA per rail)
+V_TRIP = 13.5         # V: la soglia del sorvegliante sui rail (ADR-046)
+T_RIL = 3e-3          # s: rilascio massimo dei relè del jack
+DELTA_MIN = 10e-3     # s: Δ garantito di ADR-045 (nominale 20 ms)
+C_TENUTA = (470e-6, 1000e-6, 2200e-6)
+TF_L30 = T_OFF + 2.5
+
+
+def rail_lineare(t0, s, v=15.0):
+    """PWL di un rail che scende da v a 1 mV con pendenza s (V/s) a partire da t0."""
+    return "0 %g %.9f %g %.9f %g 1000 %g" % (v, t0, v, t0 + abs(v) / s, 1e-3 * v / 15, 1e-3 * v / 15)
+
+
+def matrice_l30():
+    out = []
+    kw = dict(geo="iii", rl="100k", ck=CK_DS, cavo="1e-18")
+    SEMPRE = dict(ti=-10, tr=1000, tijk=-10, trjk=1000)
+    rif_mai, rif_sempre = "g10mai_lz_l30", "g10sempre_lz_l30"
+    out += ["* ---- L30: riferimenti senza segnale, +10 dB ----"]
+    out += corsa(rif_mai, amp=0, tf=TF_L30, g1=10, **kw)
+    out += [riga(rif_mai, rif_mai, "rif", 1000, 0, 10, "100k", T_OFF, 1000, TF_L30, 10e-6, "rif_mai")]
+    out += corsa(rif_sempre, amp=0, tf=TF_L30, g1=10, **dict(kw, **SEMPRE))
+    out += [riga(rif_sempre, rif_sempre, "rif", 1000, 0, 10, "100k", T_OFF, 1000, TF_L30, 10e-6,
+                 "rif_sempre")]
+
+    # ---- N: lo spegnimento morbido (ADR-046). Il mute e' completo da secondi (jack isolati, lato
+    # condensatore a massa, LDR a d = 1); poi il relè di rete stacca: i rail scendono come in L29c,
+    # e K1 / K5 cadono a 0 dB quando cade VRELAY: all'inizio della discesa (gi) o a meta' di quella
+    # del rail piu' lento (gm), mentre il blocco perde la regolazione. Non alla fine: a rail spenti
+    # non ha senso fisico, e il JFET si ferma su 'Timestep too small' (prima prova di L30).
+    for tr in RAMPE:
+        for sk, (dp, dm) in SFASI.items():
+            for gk in ("gi", "gm"):
+                n = "n_r%g%s_%s_l30" % (tr * 1e3, sk, gk)
+                tg = T_OFF if gk == "gi" else T_OFF + max(dp, dm) + tr / 2
+                rail = ("0 15 %g 15 %g 1m 1000 1m" % (T_OFF + dp, T_OFF + dp + tr),
+                        "0 -15 %g -15 %g -1m 1000 -1m" % (T_OFF + dm, T_OFF + dm + tr),
+                        "0 1 %g 1 %g 0 1000 0" % (T_OFF + dp, T_OFF + dp + tr))
+                out += ["* ---- L30 N: %s ----" % n]
+                out += corsa(n, amp=0, tf=TF_L30, g1=10, g2=0, tg=tg, rail=rail, **dict(kw, **SEMPRE))
+                out += [riga(n, n, "spegnimento_morbido", 1000, 0, "10a0", "100k", T_OFF, 1000, TF_L30,
+                             10e-6, "evento", rif_sempre, "-", 0.0, 6, "A_ins")]
+
+    # ---- F / G: il guasto (ADR-043 §2, ADR-046). Un rail (p, m) o entrambi (s) scendono con la
+    # pendenza I_RAIL / C della tenuta dopo il regolatore; il sorvegliante scatta quando il rail
+    # passa V_TRIP (t = T_OFF). F: VRELAY sana, il guadagno resta +10. G: VRELAY persa, K1 / K5
+    # tenuti dall'alimentazione con tenuta e caduti DELTA_MIN dopo il comando (ADR-045).
+    for c in C_TENUTA:
+        s = I_RAIL / c
+        t0 = T_OFF - (15 - V_TRIP) / s
+        for sk in ("s", "p", "m"):
+            for gk in (("f", "g") if sk == "s" else ("f",)):
+                n = "%s_c%d%s_l30" % (gk, round(c * 1e6), sk)
+                vp = rail_lineare(t0, s) if sk in "sp" else "0 15 1000 15"
+                vm = rail_lineare(t0, s, -15.0) if sk in "sm" else "0 -15 1000 -15"
+                pw = ("0 1 %.9f 1 %.9f 0 1000 0" % (t0, t0 + 15 / s)) if sk in "sp" else "0 1 1000 1"
+                g = dict(g2=0, tg=T_OFF + DELTA_MIN) if gk == "g" else {}
+                out += ["* ---- L30 %s: %s ----" % (gk.upper(), n)]
+                out += corsa(n, amp=0, tf=TF_L30, g1=10, tijk=T_OFF + T_RIL, trjk=1000,
+                             rail=(vp, vm, pw), **dict(kw, **g))
+                out += [riga(n, n, "guasto_" + gk, 1000, 0, "10a0" if g else 10, "100k", "%.9f" % t0,
+                             1000, TF_L30, 10e-6, "evento", rif_mai, "-", 0.0, 6, "A_ins")]
+
+    # ---- i controfattuali: devono andare MALE, e dicono perche' serve ciascun pezzo
+    s = I_RAIL / 1000e-6
+    t0 = T_OFF - (15 - V_TRIP) / s
+    both = (rail_lineare(t0, s), rail_lineare(t0, s, -15.0), "0 1 %.9f 1 %.9f 0 1000 0" % (t0, t0 + 15 / s))
+    cfs = [
+        # senza Δ: K1 / K5 cadono col comando, prima che il contatto del jack si apra (ADR-045)
+        ("cf_nodelta_l30", dict(g2=0, tg=T_OFF, tijk=T_OFF + T_RIL), both, t0),
+        # senza sorvegliante: il relè cade solo quando il rail e' gia' a 10 V
+        ("cf_tardi_l30", dict(tijk=T_OFF + (V_TRIP - 10) / s), both, t0),
+        # il corto franco istantaneo del rail + (il caso accettato da ADR-046): 100 us, istantaneo
+        # contro i 3 ms del relè (a 10 us il JFET si ferma su 'Timestep too small')
+        ("cf_corto_p_l30", dict(tijk=T_OFF + T_RIL),
+         ("0 15 %g 15 %g 1m 1000 1m" % (T_OFF, T_OFF + 100e-6), "0 -15 1000 -15", "0 1 1000 1"), T_OFF),
+    ]
+    for n, extra, rail, tev in cfs:
+        out += ["* ---- L30 controfattuale: %s ----" % n]
+        out += corsa(n, amp=0, tf=TF_L30, g1=10, trjk=1000, rail=rail, **dict(kw, **extra))
+        out += [riga(n, n, "controfattuale", 1000, 0, "10a0" if "g2" in extra else 10, "100k",
+                     "%.9f" % tev, 1000, TF_L30, 10e-6, "evento", rif_mai, "-", 0.0, 6, "A_ins")]
+    return out
+
+
+if ARG.matrice in ("sorgente", "l30"):
     RBC = dal_sorgente()
     print("dal sorgente (%s): bleed lato C %s" % (NET, RBC))
-if ARG.matrice in ("sonda_l29d", "l29d2", "sorgente"):
+if ARG.matrice in ("sonda_l29d", "l29d2", "sorgente", "l30"):
     C = [("save v(mainjack) v(fixjack1) v(fixjack2) v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus)"
           " v(main_a) v(mainc) v(fixc1) v(fixc2)") if r.startswith("save ") else r for r in C]
-    C += {"sonda_l29d": matrice_sonda, "l29d2": matrice_l29d2, "sorgente": matrice_sorgente}[ARG.matrice]()
+    C += {"sonda_l29d": matrice_sonda, "l29d2": matrice_l29d2, "sorgente": matrice_sorgente,
+          "l30": matrice_l30}[ARG.matrice]()
 elif ARG.matrice == "controfattuale":
     C += controfattuale()
 elif ARG.matrice == "caldo":

@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-09-25** (L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-09-26** (L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -145,8 +145,17 @@ stesso vale per il trim. Comandi e LED sono a pannello: J4 verso il temporizzato
 l'interruttore di mute, J5/J6/J7 per i LED, il LED rosso letto dai due NC di K6. Il 2e lo prova e
 fallisce su 14 falsi e su `main`. **Chiude NC-032**; NC-028 resta aperta e bloccante solo per lo
 spegnimento (L30).
-**11 voci aperte, 2 bloccanti.**
-L'accesso a G1 non è concesso finché NC-004 e NC-028 restano aperte.
+**L30** (2026-09-26) ha risposto alle due domande di ADR-043 con l'utente: **ADR-046** e **P9**.
+- Lo spegnimento è l'interruttore morbido: V2 regge, 12 corse su 12, peggiore 2,7 µV (~+2 dB SPL
+  di picco a 1 m).
+- La perdita di rete è un guasto: tetto di non-danno 0,87 V, obiettivo 2 mV, 12 corse su 12
+  ≤ 1,77 mV (~58 dB).
+- Il calore: **ADR-047**, P5 a ~15–18 W, i 60 °C reggono per stima.
+
+**Chiude NC-028 e NC-029**; **apre NC-036** (l'alimentatore che realizza P9), bloccante per G2.
+**10 voci aperte, 2 bloccanti**: NC-004 per G1, NC-036 per G2.
+L'accesso a G1 non è concesso finché NC-004 resta aperta; il layout (G2) non si apre finché
+NC-036 resta aperta.
 
 ---
 
@@ -2156,7 +2165,7 @@ lasciato flottante o collegato è una scelta di layout.
 | Requisito | **V2** (transitorio del relè di mute, al rilascio) · **F6**/ADR-012 (il mute esiste per non mandare botti alle uscite) · **ADR-019** (il trim si regola a mute inserito) |
 | Severità | **bloccante** da L38 (maggiore fino a L38: V2 non aveva una soglia) |
 | Aperta da | `reports/2026-09-14-L11-mute-e-corto.md` |
-| Stato | aperta **solo per lo spegnimento** (L30, ADR-043). La parte del mute è chiusa da L29d2 (2026-09-25, decisione dell'utente, ADR-044) e **confermata sul sorgente da L29e** (2026-09-25). Il residuo di L36 (la manopola girata fuori mute) è **chiuso nel sorgente da L35** (2026-09-25, ADR-045) |
+| Stato | **CHIUSA il 2026-09-26 da L30** — lo spegnimento è l'interruttore morbido, e la perdita di rete è un guasto col suo failsafe (ADR-046, P9), verificati sul banco con un alimentatore comportamentale; decisione dell'utente (strada A). Il circuito dell'alimentatore che realizza P9 è **NC-036**. Prima: la parte del mute chiusa da L29d2 e confermata da L29e, il residuo di L36 chiuso da L35. Vedi «Chiusura» in fondo alla voce e «Voci chiuse» |
 
 **Evidenza.** `data/2026-09-14/tb_mute_corto_transitorio.csv` e
 `tb_mute_corto_trans_{0,10}.csv`. Segnale da 2,7 V RMS a 1 kHz, manopola al
@@ -2599,6 +2608,27 @@ E BLOCCANTE per lo spegnimento (L30).**
   per il lotto dell'alimentatore, come quello delle LDR accanto a J3; la netlist non ha tempi.
   E la nota per il failsafe resta di L30.
 
+**Chiusura (2026-09-26, L30).** Report `reports/2026-09-26-L30-spegnimento-failsafe-calore.md`,
+dati `data/2026-09-26/L30/` (banco `deck/tb_v2_l30.cir`, generato sul sorgente, metodo di V2).
+**ADR-046**, **P9**.
+- **Le decisioni dell'utente**, sulle due domande di ADR-043:
+  - «in caso di guasto una soglia di non-danno basta»;
+  - «le soglie vanno bene come tetto, non come target, dobbiamo stare più bassi»;
+  - «sì, interruttore morbido va bene»;
+  - sulla chiusura: strada A, «A, e chiudi NC-029».
+- **Lo spegnimento è l'interruttore morbido.** Il temporizzatore completa il mute e poi stacca il
+  relè di rete. **V2 regge: 12 corse su 12, peggiore 2,7 µV (~+2 dB SPL di picco a 1 m)**, 31 dB
+  sotto la soglia.
+- **La perdita di rete è un guasto**: sorvegliante a |13,5 V|, tenuta dei rail ≥ 1500 µF
+  effettivi, `VRELAY` tenuta ≥ 25 ms per l'ordine di ADR-045.
+  - Tetto di non-danno 0,87 V (~112 dB), obiettivo 2 mV (~60 dB).
+  - **12 corse su 12 ≤ 1,77 mV (~58 dB).**
+  - Senza Δ il controfattuale dà 69 mV (~90 dB).
+- **Il corto istantaneo di un rail è accettato** (30 W del finale contro 100–105 W delle Heresy).
+- **Cosa non è provato, e passa a NC-036**: il circuito dell'alimentatore che realizza P9. Il
+  banco usa rampe e un sorvegliante comportamentali. La scheda audio non cambia: il deck V2
+  rigenerato è byte-identico.
+
 
 ### NC-029 — Con i buffer delle fisse la dissipazione a riposo raddoppia, e P5 non la copre
 
@@ -2607,7 +2637,7 @@ E BLOCCANTE per lo spegnimento (L30).**
 | Requisito | **P5** (~3-4 W in mobile chiuso) · **ADR-021** (60 °C nel telaio) · ADR-003 (~0,55 W per blocco) |
 | Severità | **maggiore** |
 | Aperta da | `reports/2026-09-14-L17-buffer-uscite-fisse.md` |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-09-26 da L30** — stima termica col totale, P5 aggiornato (ADR-047); i 60 °C reggono. La conferma resta la misura nel prototipo. Vedi «Chiusura» in fondo alla voce e «Voci chiuse» |
 
 **Evidenza.** `data/2026-09-14/L17/tb_mute_corto_regime.csv`, colonna
 `p_rail`, caso 0 senza segnale. È la potenza media che i due rail erogano a un
@@ -2650,6 +2680,20 @@ dissipazione a riposo per blocco sale a **0,993 W** (`tb_op`: 15 V × (32,6 + 33
 cioè **~7,9 W** per gli otto blocchi della scheda audio, contro 6,45 W. La strada
 pronta, se la stima termica di L30 non regge, è R128 a 1,33 kΩ: 14,6 mA,
 0,822 W per blocco, 0,5° di V1 in meno.
+
+**Chiusura (2026-09-26, L30).** Report `reports/2026-09-26-L30-spegnimento-failsafe-calore.md`,
+stima `data/2026-09-26/L30/termica/stima_telaio.py` (CALCOLATA). Decisione dell'utente: «chiudi
+NC-029».
+1. **La stima col totale**: **15,4 W nominali, 17,8 W nel caso peggiore**, alimentatore
+   compreso (scheda audio 7,94 W). Il modello ha due salti in serie, il telaio sigillato e il
+   vano chiuso della libreria.
+2. **L'aumento resta dentro i 60 °C**: nel telaio 51–55 °C col vano stretto (3 cm di gioco),
+   47–50 °C con 10 cm, con la stanza a 35 °C. **P5 si aggiorna al numero vero**: ADR-047. P7
+   non cambia, e R128 resta a 1,69 kΩ.
+3. Non serve.
+4. **La conferma finale** resta la temperatura misurata nel telaio del prototipo (ADR-047 e
+   ADR-021, «Da riaprire se»). La condizione è che nel vano non ci siano altre sorgenti di
+   calore.
 
 ### NC-030 — `tb_noise_vectors.cir` non scrive dati: cita vettori di rumore di dispositivi che non esistono più
 
@@ -3039,7 +3083,66 @@ corrente di progetto. Il sorgente lo dice accanto al valore.
 - Classe A e P7 reggono (MJE peggiore 0,371 W contro 1,04 W).
 - R128 resta select-on-test.
 
+### NC-036 — L'alimentatore non esiste: P9 è verificato solo con un alimentatore comportamentale
+
+| | |
+|---|---|
+| Requisito | **P9** (spegnimento morbido e failsafe dell'alimentatore) · **ADR-046** · V2 allo spegnimento (ADR-032) · ADR-045 (l'ordine dei relè alla caduta di `VRELAY`) · P1, P2 |
+| Severità | **bloccante per G2**: non blocca G1 (decisione dell'utente del 2026-09-26, strada A), blocca il layout |
+| Aperta da | `reports/2026-09-26-L30-spegnimento-failsafe-calore.md` |
+| Stato | aperta |
+
+**Evidenza.** `data/2026-09-26/L30/tabella.csv`: i numeri che reggono P9 vengono dal banco
+`deck/tb_v2_l30.cir`, dove l'alimentatore è fatto di rampe PWL dei rail, di un istante di scatto
+e di un istante d'apertura del relè al jack. In `circuits/` non esiste nessun alimentatore:
+- non c'è il relè di rete né l'interruttore morbido;
+- non c'è il sorvegliante, né il temporizzatore di `MUTE_CMD` / `PERMIT_CMD` / LDR;
+- non c'è la tenuta dei rail né quella di `VRELAY`.
+
+Il contratto sta in P9, accanto a J4 e accanto a J1 in `preamp_audio.py`.
+
+**Perché bloccante per G2 e non per G1.** G1 congela la topologia della scheda audio, che P9 non
+tocca: il deck V2 si rigenera byte-identico. Il layout dei due PCB (P4) chiede invece che il
+circuito dell'alimentatore esista.
+
+**Cosa serve per chiuderla.**
+1. **Il circuito dell'alimentatore in `circuits/`**, sul modello di sicurezza di P2:
+   - trasformatore, raddrizzatore e regolatori;
+   - il relè di rete con l'interruttore morbido;
+   - il sorvegliante;
+   - il temporizzatore (mute, Δ, LDR, i 13 ms di ADR-027);
+   - le due tenute.
+2. **Il banco di L30 sul circuito vero**, al posto delle rampe:
+   - lo spegnimento morbido sotto V2;
+   - la perdita di rete, un regolatore aperto, un rail solo e `VRELAY` persa sotto
+     l'obiettivo di 2 mV;
+   - i controfattuali che falliscono.
+3. **Lo scatto del sorvegliante entro 1 ms** e la tenuta con la tolleranza dei condensatori,
+   dal datasheet delle parti scelte.
+
+Lotto **L41**.
+
 ## Voci chiuse
+
+**NC-028 — Il rilascio del mute con segnale presente porta sul jack un gradino che decade in
+0,3 s** (bloccante). **CHIUSA il 2026-09-26 da L30**, strada A (decisione dell'utente).
+- La parte del mute l'avevano chiusa L29d2 e L29e (ADR-044), il residuo di L36 L35 (ADR-045).
+- **Lo spegnimento (ADR-046, P9)**:
+  - interruttore morbido: V2 regge, 12 su 12, peggiore 2,7 µV (~+2 dB);
+  - perdita di rete come guasto: tetto 0,87 V, obiettivo 2 mV, 12 su 12 ≤ 1,77 mV (~58 dB).
+- **Apre NC-036**: il circuito dell'alimentatore che realizza P9, bloccante per G2.
+
+Il testo completo della voce resta sopra, con la sua «Chiusura». Report:
+`reports/2026-09-26-L30-spegnimento-failsafe-calore.md`.
+
+**NC-029 — Con i buffer delle fisse la dissipazione a riposo raddoppia, e P5 non la copre**
+(maggiore). **CHIUSA il 2026-09-26 da L30.**
+- Stima col totale: 15,4 W nominali, 17,8 W nel caso peggiore.
+- Nel telaio ≤ 55 °C anche in un vano chiuso stretto: i 60 °C reggono.
+- **ADR-047**: P5 al numero vero. La conferma resta la misura nel prototipo.
+
+Il testo completo della voce resta sopra, con la sua «Chiusura». Report:
+`reports/2026-09-26-L30-spegnimento-failsafe-calore.md`.
 
 **NC-032 — I comandi e i LED del frontale di ADR-028 non esistono nel circuito**
 (maggiore). **CHIUSA il 2026-09-25 da L35.**

@@ -3,7 +3,7 @@
 **Documento vivo.** Riscritto quando i requisiti cambiano. Ogni modifica
 sostanziale deve avere una ADR corrispondente in `decisions/`.
 
-Ultimo aggiornamento: 2026-09-22 (L29b2: V2, il taglio con musica si giudica sul salto di livello S ≤ 20 dB in 100 ms, C2 diventa diagnostica — ADR-040; L29a: C di V2 per differenza dal riferimento e soglia di C a 1 mV, A e B invariati — ADR-035; A di V2 solo senza segnale — ADR-036; L38: V2 con soglia e metodo di misura, Nota su F5, Aperti — ADR-032; L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
+Ultimo aggiornamento: 2026-09-26 (L30: P5 al numero vero del calore, ~15-18 W nel telaio — ADR-047; P9 nuovo, lo spegnimento morbido e il failsafe dell'alimentatore, e V2 precisato allo spegnimento — ADR-046; L29b2: V2, il taglio con musica si giudica sul salto di livello S ≤ 20 dB in 100 ms, C2 diventa diagnostica — ADR-040; L29a: C di V2 per differenza dal riferimento e soglia di C a 1 mV, A e B invariati — ADR-035; A di V2 solo senza segnale — ADR-036; L38: V2 con soglia e metodo di misura, Nota su F5, Aperti — ADR-032; L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
 
 Le motivazioni non stanno qui: stanno nelle ADR referenziate e nel
 report `reports/2026-09-08-analisi-catena.md`.
@@ -280,10 +280,11 @@ ADR-031 «da riaprire se») li ha misurati sul circuito di ADR-042:
 | P2 | **Analisi di sicurezza rete obbligatoria** — assente = BLOCK automatico a G3 | ADR-010 |
 | P3 | Trasformatore toroidale, massima distanza e orientamento ottimale rispetto agli ingressi | ADR-010 |
 | P4 | Due circuiti stampati (alimentazione / audio), massa a stella | ADR-010 |
-| P5 | Ventilazione prevista: ~3-4 W in mobile chiuso | ADR-010 |
+| P5 | **Dissipazione nel telaio ~15 W nominali, ≤ 18 W nel caso peggiore, alimentatore compreso** (scheda audio 7,94 W). Per stima regge i 60 °C di ADR-021 anche in un vano chiuso della libreria che lascia 3 cm attorno al telaio (≤ 55 °C con la stanza a 35 °C), purché nel vano non ci siano altre sorgenti di calore. Le feritoie restano previste. La conferma è la temperatura misurata nel prototipo | ADR-010, **ADR-047** |
 | P6 | **Condensatori di segnale e resistenze critiche facilmente sostituibili** — passi multipli, per permettere all'utente di provare per ascolto | vedi nota |
 | P7 | **Ogni uscita regge un corto, e il mute si tiene a tempo indefinito.** Con un corto franco al connettore di una qualsiasi uscita, o a mute inserito, con segnale e senza limite di tempo, **nessun componente esce dai propri limiti termici e SOA**: Tj ≤ 125 °C a 60 °C ambiente, a regime e nel transitorio prima di un'eventuale protezione. La tecnica è libera | **ADR-021** — vedi nota |
 | P8 | **Ingombro del telaio: L ≤ 450 mm · A ≤ 130 mm (3U, piedini esclusi) · P ≤ 367 mm.** È l'impronta del Technics SU-9070 che l'apparecchio sostituisce, misurata con la stessa convenzione: manopole e cavi non sporgono più di oggi. Esempi entro l'ingombro: Modushop Pesante 03PN 3U (esterni 435 × 305 × 122, 415 mm fra i fianchi) e Audiophonics 430×315×120 con dissipatori (interni 330 × 300 × 112). **I PCB si verificano sulle misure interne del contenitore scelto, e il contenitore si sceglie entro G2** | **ADR-029** |
+| P9 | **Spegnimento e guasto dell'alimentatore.** (a) **L'interruttore di rete è morbido**: è un ingresso del temporizzatore, che completa il mute (dissolvenza, `MUTE_CMD`, poi `PERMIT_CMD` Δ dopo) e solo dopo, con ≥ 50 ms di margine, rilascia il relè di rete (diseccitato = rete staccata). Vale **V2**. (b) **Alla perdita di rete o a un guasto dell'alimentatore**, un sorvegliante rilascia `MUTE_CMD` entro 1 ms da quando un rail audio scende sotto \|13,5 V\|, senza dissolvenza; il comando è attivo-per-la-musica. La tenuta dopo i regolatori è ≥ 1500 µF **effettivi** per rail; `VRELAY` resta in tolleranza per ≥ 25 ms dallo scatto, e il temporizzatore rilascia `PERMIT_CMD` Δ dopo. Al jack principale il **tetto di non-danno** è 0,87 V di picco (~112 dB SPL a 1 m) e l'**obiettivo** è ≤ 2 mV (~60 dB). (c) **Caso accettato**: il corto franco istantaneo di un rail. Si verifica col banco `data/2026-09-26/L30/deck/tb_v2_l30.cir`, sul circuito dell'alimentatore | **ADR-046**, ADR-043, ADR-045 |
 
 **Nota su P6.** Nessun agente di questo progetto giudica come suona un
 circuito: è una regola di `AGENTS.md`. La valutazione soggettiva spetta
@@ -439,6 +440,11 @@ di regime della catena ne vale da sola 0,65–0,96 mV coi modelli segnaposto (L2
 
 Alla soglia corrispondono ≈ 33 dB SPL di picco a 1 m con la formula di NC-028: una
 cifra **calcolata**, un limite superiore.
+
+**Lo spegnimento** (ADR-046, L30). «Spegnimento» è quello dall'interruttore di rete, che è
+morbido (P9): lì vale V2 per intero. La perdita di rete improvvisa e il guasto
+dell'alimentatore non sono uno spegnimento ma un guasto: valgono il tetto di non-danno e
+l'obiettivo di P9.
 
 **Metodo di misura** (ADR-032). Una misura che non lo segue non verifica V2.
 - **Nodo**: il jack, `MAINJACK`, `FIXJACK1` e `FIXJACK2`, a valle dei 47 Ω e del
