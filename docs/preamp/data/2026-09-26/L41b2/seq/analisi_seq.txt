@@ -1,0 +1,84 @@
+== accensione
+   F   ok    punto fisso al giro 5 (uguali: 367 righe, scarto massimo dei tempi 0.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: nessun rilascio
+   a   ok    DAC acceso 100.7 ms dopo i rail in regolazione
+   b   ok    serie durante la calibrazione della derivazione: max 1.23e-08 A
+   c   ok    derivazione a d = 1 dopo la calibrazione: 12.0162 mA, +0.012 dB
+   d   ok    MUTE_CMD eccitato 49.4 ms dopo VRELAY >= 9,6 V
+   e   ok    derivazione quando MUTE_CMD si eccita: 12.016 mA
+   . stati: STANDBY -> ACCENSIONE -> RILASCIO
+   . t_mains: 0.0210
+   . t_rail: 0.0533
+   . t_dac: 0.1540
+   . t_vren: 0.7540
+   . t_mute_on: 0.8041
+== rilascio
+   F   ok    punto fisso al giro 4 (uguali: 3458 righe, scarto massimo dei tempi 0.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: nessun rilascio
+   e   ok    derivazione quando MUTE_CMD si eccita: 12.016 mA
+   f   ok    serie alla fine, dopo la calibrazione in MUSICA: 12.0162 mA, +0.012 dB
+   . stati: MUTO -> RILASCIO -> MUSICA
+   . t_mute_on: 0.0211
+   . t_musica: 6.0320
+== inversione
+   F   ok    punto fisso al giro 2 (uguali: 2420 righe, scarto massimo dei tempi 0.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: nessun rilascio
+   g   ok    MUTE_CMD rilasciato: mai
+   h   ok    serie minima 2.78e-06 A contro 2.69e-06 A della tabella a d = 0.4987 (+0.28 dB)
+   h2  ok    derivazione massima 1.23e-08 A
+   f   ok    serie alla fine: 12.0162 mA, +0.012 dB
+   . stati: MUSICA -> INSERZIONE -> RILASCIO -> MUSICA
+   . dmax: 0.4987
+== spegnimento
+   F   ok    punto fisso al giro 2 (uguali: 3473 righe, scarto massimo dei tempi 0.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: 39.80 ms
+   i   ok    MUTE_CMD rilasciato 6.5222 s dopo FRONT_IN a V5/2 (il pin a +7.10 ms dal frontale)
+   j   ok    K501 aperto 63.4 ms dopo il rilascio di PERMIT_CMD
+   k   ok    rail in regolazione fino al rilascio di MUTE_CMD
+   l   ok    stato finale del core: STANDBY
+   . stati: MUSICA -> SPEGNIMENTO -> STANDBY
+   . t_mute_off: 6.5293
+   . t_permit_off: 6.5691
+   . t_k501: 6.6325
+== buco20
+   F   ok    punto fisso al giro 2 (uguali: 554 righe, scarto massimo dei tempi 0.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: 20.30 ms
+   m   ok    MUTE_CMD rilasciato 14.40 ms dopo l'evento
+   n   ok    MUTE_REQ giu' -0.061 ms dopo la caduta di MUTE_G_IN
+   o   ok    classe 1; MUTE_CMD di nuovo eccitato 0.501 s dopo il ritorno della rete
+   . stati: MUSICA -> BUCO_RETE -> RILASCIO
+   . t_mute_g_in: 0.0144
+   . t_mute_req: 0.0143
+   . classe: 1
+   . sup_p_min: 2.7673
+   . vplus_min: 14.9988
+== buco200
+   F   ok    punto fisso al giro 4 (uguali: 447 righe, scarto massimo dei tempi 0.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: 20.30 ms
+   m   ok    MUTE_CMD rilasciato 14.40 ms dopo l'evento
+   n   ok    MUTE_REQ giu' -0.061 ms dopo la caduta di MUTE_G_IN
+   o   ok    classe 2; MUTE_CMD di nuovo eccitato 0.785 s dopo il ritorno della rete
+   . stati: MUSICA -> BUCO_RETE -> ACCENSIONE -> RILASCIO
+   . t_mute_g_in: 0.0144
+   . t_mute_req: 0.0143
+   . classe: 2
+   . sup_p_min: 1.8424
+   . vplus_min: 9.9856
+== guasto
+   F   ok    punto fisso al giro 2 (uguali: 4 righe, scarto massimo dei tempi 11.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: 20.30 ms
+   m   ok    MUTE_CMD rilasciato 10.70 ms dopo l'evento
+   n   ok    MUTE_REQ giu' -0.053 ms dopo la caduta di MUTE_G_IN
+   p   ok    K501 aperto 102.9 ms dopo MUTE_REQ, aperto fino alla fine
+   q   ok    stato finale GUASTO, MUTE_CMD mai rieccitato
+   . stati: MUSICA -> BUCO_RETE -> GUASTO
+   . t_mute_g_in: 0.0107
+   . t_mute_req: 0.0106
+VERDETTO: PASSA

@@ -3188,6 +3188,21 @@ Lotto **L41**.
 - **Manca**: il firmware e la sequenza sul circuito pilotata da esso (**L41b2**); il banco di L30
   col circuito vero (**L41c**).
 
+**L41b2 (2026-09-26, ADR-050): il firmware esiste ed è provato sull'host e sul circuito.**
+- `firmware/preamp_timer/src/timer_core.c`: tutte le sequenze della specifica e la legge delle
+  LDR. Sull'host 65 + 45 controlli, **21 falsi su 21** (blocco 2k di `run_tests.sh`).
+- **Sul circuito**, col core come micro del banco di L41b1 e iterato fino al punto fisso
+  (`data/2026-09-26/L41b2/seq/`), 7 sequenze su 7:
+  - accensione: `MUTE_CMD` 49,4 ms dopo `VRELAY` (≥ 13 ms, ADR-027);
+  - spegnimento: K501 aperto 63,4 ms dopo `PERMIT_CMD` (≥ 50 ms, ADR-046);
+  - buco di rete di 20 e 200 ms: jack staccati a 14,4 ms, classe 1 e classe 2 riconosciute;
+  - guasto con la rete presente: jack a 10,7 ms, K501 aperto e tenuto;
+  - `MUTE_CMD` mai senza `PERMIT_CMD`, Δ ≥ 16,9 ms a ogni rilascio.
+
+  I falsi 6 e 9 fanno fallire anche lì il criterio giusto.
+- **Manca**: il banco di L30 col circuito vero e la decisione sul corto dell'uscita di U503
+  (**L41c**). Resta aperta e bloccante per G2.
+
 ### NC-037 — In standby il consumo supera il limite europeo di 0,5 W
 
 | | |

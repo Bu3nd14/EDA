@@ -235,6 +235,11 @@ mai 0**, su tutte e due le stringhe. Con il DAC in reset l'hardware dà 2–9 nA
   - la tabella a 15, 25, 35, 45 e 60 °C;
   - il bilancio dell'ADC e del sensore.
 
-`--falsi <file>`: 20 difetti (`FALSO_n` in `timer_core.c`), ognuno deve far fallire il proprio
+`--falsi <file>`: 21 difetti (`FALSO_n` in `timer_core.c`), ognuno deve far fallire il proprio
 test. Le forme d'onda delle uscite si scrivono in CSV (`--csv`), e `test/ponte.c` fa girare il
 core sui pin del circuito simulato (`docs/preamp/data/2026-09-26/L41b2/deck/`).
+
+**Sul circuito** (L41b2, `docs/preamp/data/2026-09-26/L41b2/seq/`): accensione, rilascio,
+inversione, spegnimento, buco di 20 e di 200 ms, guasto, ognuno iterato fino al punto fisso fra
+il core e il circuito; 7 su 7 passano i criteri di § 4. I falsi 6 e 9 fanno fallire anche lì il
+criterio giusto.
