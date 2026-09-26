@@ -80,8 +80,17 @@ static void t_accensione(void)
     CHECK(VICINO(t_mains, 0.020f, TICK), "MAINS_REQ a %.4f s, voluto 0,020 (debounce 20 ms)", t_mains);
     CHECK(t_dac >= t_rail + 0.100f - 1e-6f && t_dac <= t_rail + 0.100f + TICK,
           "DAC acceso %.4f s dopo i rail, voluto 100 ms (4.1 passo 2)", t_dac - t_rail);
-    CHECK(VICINO(t_vr - t_dac, 0.400f, TICK), "VRELAY_EN %.4f s dopo il DAC: la calibrazione "
-          "della derivazione sono 2 x 200 ms", t_vr - t_dac);
+    CHECK(VICINO(t_vr - t_dac, 0.600f, TICK), "VRELAY_EN %.4f s dopo il DAC: la calibrazione "
+          "della derivazione sono 2 x 200 ms, piu' 200 ms per la cima corretta", t_vr - t_dac);
+    /* the corrected top reached before VRELAY_EN (L41b2: on the circuit it
+     * was not); in this world the string is instantaneous, so the check is
+     * that the corrected code is held >= 200 ms before VRELAY_EN */
+    {
+        int kv = idx_a(&M, t_vr), k = kv;
+        while (k > 0 && M.cp[k - 1] == M.cp[kv]) k--;
+        CHECK(t_vr - M.t[k] >= 0.200f - 1e-5f, "la cima corretta tenuta solo %.4f s prima di VRELAY_EN",
+              t_vr - M.t[k]);
+    }
     CHECK(t_mu - t_vr >= 0.050f - 1e-6f && t_mu - t_vr <= 0.050f + TICK,
           "MUTE_REQ %.4f s dopo VRELAY_EN, voluto >= 50 ms (ADR-027: 13 ms)", t_mu - t_vr);
     CHECK(t_pe == t_mu, "PERMIT_REQ (%.4f) e MUTE_REQ (%.4f) nello stesso istante (4.3)", t_pe, t_mu);
@@ -253,8 +262,9 @@ static void t_spegnimento(void)
     float t_dac = primo_fronte(&M, M.dac, 0, t0);
     float t_sb = primo_stato(&M, ST_STANDBY, t0);
     CHECK(t_pe - t_mu >= 0.020f - 1e-6f, "PERMIT_REQ %.4f s dopo MUTE_REQ", t_pe - t_mu);
-    CHECK(t_vr - t_pe >= 0.050f - 1e-6f && t_vr - t_pe <= 0.050f + TICK,
-          "VRELAY_EN giu' %.4f s dopo PERMIT_REQ, voluto >= 50 ms (ADR-046)", t_vr - t_pe);
+    CHECK(t_vr - t_pe >= 0.080f - 1e-6f && t_vr - t_pe <= 0.080f + TICK,
+          "VRELAY_EN giu' %.4f s dopo PERMIT_REQ, voluto 80 ms: 50 dopo PERMIT_CMD (ADR-046) "
+          "piu' il Delta dell'hardware", t_vr - t_pe);
     CHECK(t_ma == t_vr, "MAINS_REQ (%.4f) e VRELAY_EN (%.4f) non insieme (4.4 passo 3)", t_ma, t_vr);
     CHECK(t_dac == t_ma && t_sb == t_ma, "DAC spento %.4f, STANDBY %.4f, rete %.4f", t_dac, t_sb, t_ma);
     CHECK(t_ma - t0 > 6.5f && t_ma - t0 < 7.0f, "spegnimento in %.3f s, ADR-046: ~7 s", t_ma - t0);
@@ -392,8 +402,8 @@ static void t_buco_classe2(void)
     float t_acc = primo_stato(&M, ST_ACCENSIONE, t0);
     float t_rel = primo_fronte(&M, M.mute, 1, t0 + 0.001f);
     CHECK(t_acc > 0, "classe 2: l'accensione non si rifa'");
-    CHECK(t_rel - t_ok >= 0.100f + 0.400f + 0.050f - 1e-6f,
-          "RILASCIO %.4f s dopo i rail, voluto >= 100 + 400 + 50 ms (4.1 dal passo 2)", t_rel - t_ok);
+    CHECK(t_rel - t_ok >= 0.100f + 0.600f + 0.050f - 1e-6f,
+          "RILASCIO %.4f s dopo i rail, voluto >= 100 + 600 + 50 ms (4.1 dal passo 2)", t_rel - t_ok);
     CHECK(primo_stato(&M, ST_GUASTO, t0) < 0, "classe 2 finita in GUASTO");
     printf("  buco di rete, classe 2: ACCENSIONE a +%.3f s, RILASCIO %.3f s dopo i rail\n",
            t_acc - t0, t_rel - t_ok);
@@ -413,8 +423,8 @@ static void t_guasto(void)
     float t_ma = primo_fronte(&M, M.mains, 0, t0);
     float t_vr = primo_fronte(&M, M.vrel, 0, t0);
     CHECK(t_g > 0 && t_g - t0 <= 0.021f, "GUASTO a +%.4f s, voluto entro la finestra di 20 ms", t_g - t0);
-    CHECK(t_ma - t0 >= 0.050f - 1e-6f && t_ma == t_vr,
-          "MAINS_REQ %.4f / VRELAY_EN %.4f s dopo il mute, voluti insieme e >= 50 ms", t_ma - t0, t_vr - t0);
+    CHECK(t_ma - t0 >= 0.080f - 1e-6f && t_ma == t_vr,
+          "MAINS_REQ %.4f / VRELAY_EN %.4f s dopo il mute, voluti insieme e >= 80 ms", t_ma - t0, t_vr - t0);
     CHECK(primo_fronte(&M, M.mains, 1, t_ma) < 0, "la rete si riaccende col frontale ancora acceso");
     /* front off, then on: only now the power-up */
     M.in.front_in = 1;

@@ -305,10 +305,13 @@ timer_out_t timer_step(timer_state_t *st, const timer_in_t *in, uint32_t dt)
     const int want_music = st->sw.level == 0;
 #endif
 
-    if (alim_ok(in))
-        st->t_alim_ok = SAT_ADD(st->t_alim_ok, dt);
-    else
+    if (alim_ok(in)) {
+        st->t_alim_ok = st->alim_prev ? SAT_ADD(st->t_alim_ok, dt) : 0;
+        st->alim_prev = 1;
+    } else {
         st->t_alim_ok = 0;
+        st->alim_prev = 0;
+    }
     if (!mains_absent(in) && rail_fail(in))
         st->t_fault = SAT_ADD(st->t_fault, dt);
     else
@@ -383,7 +386,7 @@ timer_out_t timer_step(timer_state_t *st, const timer_in_t *in, uint32_t dt)
                 vai(st, ST_ACCENSIONE, 2);
             }
             break;
-        case 2: /* 2 mA, settled: fit, back to the top, VRELAY on (step 5) */
+        case 2: /* 2 mA, settled: fit, back to the top */
             if (st->t_fase >= T_CAL_SETTLE_US) {
 #if FALSO != 14
                 if (timer_cal_fit(&st->cal_p, in->t_c, LDR_I_TOP, st->cal_top_read,
@@ -393,11 +396,22 @@ timer_out_t timer_step(timer_state_t *st, const timer_in_t *in, uint32_t dt)
                     st->n_cal_reject++;
 #endif
                 st->cal_active = 0;
-                st->vrelay_en = 1;
                 vai(st, ST_ACCENSIONE, 3);
             }
             break;
-        case 3: /* step 6: >= 50 ms from VRELAY_EN */
+        case 3: /* the corrected top settles (C_X), then VRELAY on (step 5).
+                   L41b2: on the circuit the top was still 10.6 mA, -1 dB, when
+                   the release began 50 ms after the fit */
+#if FALSO == 20
+            if (1) {
+#else
+            if (st->t_fase >= T_CAL_SETTLE_US) {
+#endif
+                st->vrelay_en = 1;
+                vai(st, ST_ACCENSIONE, 4);
+            }
+            break;
+        case 4: /* step 6: >= 50 ms from VRELAY_EN */
 #if FALSO == 1
             if (st->t_fase >= 5000u) {         /* 5 ms: under the 13 ms of ADR-027 */
 #else

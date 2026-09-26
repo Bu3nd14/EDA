@@ -25,8 +25,14 @@
 #define T_FADE_US         6000000u   /* ADR-039: Td = 6 s from d = 0 to d = 1 */
 #define T_MUTE_HOLD_US    500000u    /* ADR-039 (J3 contract): MUTE_REQ low 0.5 s after d = 1 */
 #define T_DELTA_US         20000u    /* ADR-045: PERMIT_REQ 20 ms after MUTE_REQ */
-#define T_OFF_GAP_US       50000u    /* ADR-046: >= 50 ms from PERMIT_REQ low to VRELAY_EN / MAINS_REQ */
-#define T_FAULT_GAP_US     50000u    /* ADR-048 point 5: >= 50 ms from the mute to the toroid off */
+/* ADR-046: the mains relay >= 50 ms after PERMIT_CMD's release; ADR-048
+ * point 5: after a fault, "the mute completed". The firmware cannot read
+ * PERMIT_CMD: the hardware releases it D after PERMIT_REQ (18.8 ms nominal,
+ * ~21 ms at the upper corner of C528 and R534), so from PERMIT_REQ it is
+ * 50 + 21 ms, rounded up. L41b2: with 50 ms from PERMIT_REQ the circuit
+ * released K501 only 33 ms after PERMIT_CMD. */
+#define T_OFF_GAP_US       80000u
+#define T_FAULT_GAP_US     80000u
 #define T_HOLE_OK_US      500000u    /* ADR-048 point 5: rails good 500 ms after a mains hole */
 #define T_CLASSIFY_US      20000u    /* L41b2: MUTE_G can fall ~1 ms before ADC_MD crosses (L41b1:
                                         jacks at +14.3 ms, the detector's 2.5 V at ~15 ms) */
@@ -93,7 +99,10 @@ typedef struct {
     timer_deb_t front, sw; /* debounced: front.level 0 = on; sw.level 1 = mute */
     uint8_t front_seen_off;/* GUASTO: the front has gone off since */
     uint8_t mute_req, permit_req, mains_req, vrelay_en, dac_on;
-    uint32_t t_alim_ok;    /* us of rails and VRELAY_REG in regulation, mains present */
+    uint32_t t_alim_ok;    /* us of rails and VRELAY_REG in regulation, mains present,
+                              counted from the first good sample (L41b2: counting the
+                              tick that found them good gave 99.7 ms on the circuit) */
+    uint8_t alim_prev;     /* the last sample was good */
     uint32_t t_fault;      /* us of a rail out with the mains present */
     uint8_t rail_dipped;   /* BUCO_RETE: a rail went below |13.5 V| */
     uint8_t mains_absent;  /* BUCO_RETE: the detector saw the mains go */
