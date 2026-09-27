@@ -43,6 +43,31 @@ export_fab.sh sulla DRC:
   7. (L42a) il calore: stima_telaio.py rieseguito contro il suo .txt, e la
      scheda audio della stima contro le correnti dei rail di tb_op di oggi.
 
+L42b: l'alimentatore, la seconda scheda. Le cartelle dei lotti (L41a-L41c,
+L30) sono la prima strada; le ricorse del 2026-09-27 la seconda
+(data/2026-09-27/L42b, L42b-L41c, L42b-L41b2, con gli script dei lotti copiati
+identici). Ogni log si legge prima dei suoi dati (limitations #33-#36), e ogni
+deck rigenerato oggi da psu.net deve essere quello corso allora, a meno dei
+percorsi del worktree: se no il circuito misurato non e' quello di oggi.
+  8. la potenza: i banchi di L41a corsero sul psu.py di L41a, che L41b1 ha
+     riscritto, e FORBIDDEN li rifiuta come prima strada. La prima e' la
+     ricorsa di oggi; la seconda, lo stesso banco col carico di L41a, che
+     deve ridare L41a su ogni colonna (0,5 ms o 1 %, 10 mV). Ogni scarto di
+     oggi da L41a si pubblica; R512 si controlla caso per caso (#34);
+     raddrizzatore.py rieseguito uguale byte per byte;
+  9. il sorvegliante e i guasti (L41c): la catena ricorsa, analisi_seq.txt,
+     i JSON del ponte, i deck al punto fisso e le uscite del core uguali;
+ 10. il temporizzatore (L41b1): analizza_timer.py rieseguito sui log di
+     allora e su quelli corsi oggi, e i deck rigenerati uguali;
+ 11. il firmware (L41b2): la catena ricorsa come in 9; i falsi sull'host
+     ricorsi uguali; i due falsi sul circuito caduti sul criterio giusto;
+ 12. le LDR (L41b2): analizza_ldr.py rieseguito sui log, le ricorse di oggi
+     uguali, l'errore ricalcolato dalle correnti;
+ 13. spegnimento e failsafe al jack (L41c, L30): tabella.py rieseguito, le
+     corse di oggi uguali, i deck rigenerati uguali, i dB SPL ricalcolati con
+     la catena di NC-028 letta da NONCOMPLIANCE.md; le soglie di P9 lette da
+     REQUIREMENTS.md.
+
 E la provenienza dei modelli non e' scritta a mano: e' letta dagli `.include`
 di ogni deck e dai nomi di modello che il blocco istanzia.
 
@@ -80,12 +105,25 @@ SCHEM = os.path.join(REPO, "docs", "preamp", "schematic")
 # Un <img src="../schematic/..."> esce dalla cartella della pagina, e un
 # visualizzatore che serve solo quella cartella li perdeva in silenzio,
 # mentre le figure fig_*.svg accanto alla pagina restavano visibili.
-SCHEMATICS = ("gain_block.svg", "preamp_blocks.svg")
+SCHEMATICS = ("gain_block.svg", "preamp_blocks.svg", "psu_blocks.svg")
 # L42a: i giorni in cui il blocco simulava i segnaposto (L39 li ha sostituiti il
 # 2026-09-22), e le cartelle `prima` di L39 e L40, corse sul blocco di prima.
 FORBIDDEN = ("2026-09-09", "2026-09-10", "2026-09-13", "2026-09-14", "2026-09-15",
              "2026-09-16", "2026-09-21", os.path.join("L39", "prima"),
-             os.path.join("L40", "prima"))
+             os.path.join("L40", "prima"),
+             # L42b: i banchi di L41a corsero sul psu.py di L41a, che L41b1 ha
+             # riscritto (il temporizzatore, Q505, il pilota delle LDR). Entrano
+             # solo come seconda strada, da vecchio(); la prima e' la ricorsa
+             os.path.join("L41a", "rete"), os.path.join("L41a", "guasti"),
+             os.path.join("L41a", "varianti"))
+# L42b: l'alimentatore. Le cartelle dei lotti e le ricorse di oggi.
+L41A = os.path.join(DATAROOT, "2026-09-26", "L41a")
+L41B1 = os.path.join(DATAROOT, "2026-09-26", "L41b1")
+L41C = os.path.join(DATAROOT, "2026-09-26", "L41c")
+L42B = os.path.join(DATAROOT, "2026-09-27", "L42b")
+L42B_C = os.path.join(DATAROOT, "2026-09-27", "L42b-L41c")
+L42B_B2 = os.path.join(DATAROOT, "2026-09-27", "L42b-L41b2")
+PSU_NET = os.path.join(REPO, "circuits", "preamp", "psu.net")
 
 MODES = ("0db", "3db", "10db")
 MLAB = {"0db": "0 dB", "3db": "+3 dB", "10db": "+10 dB"}
@@ -117,8 +155,9 @@ def src(root, *parts):
     p = os.path.join(root, *parts)
     for bad in FORBIDDEN:
         if bad in p:
-            raise SystemExit(f"RIFIUTATO: {rel(p)} viene da {bad}, dati corsi coi modelli "
-                             "segnaposto o sul blocco di prima di ADR-042. "
+            raise SystemExit(f"RIFIUTATO: {rel(p)} viene da {bad}, dati corsi su un circuito "
+                             "che non e' quello di oggi (i modelli segnaposto, il blocco di "
+                             "prima di ADR-042, o il psu.py di L41a). "
                              "Nessun file e' stato scritto.")
     return p
 
@@ -1458,6 +1497,523 @@ def measure_heat(op):
             "gioco": float(gm.group(1)) if gm else None, "p_blk": p_blk}
 
 
+# ================================================================ L42b ===
+# L'alimentatore. Le cartelle dei lotti (L41a-L41c, L30) sono la prima strada;
+# le ricorse di oggi (data/2026-09-27/L42b, L42b-L41c, L42b-L41b2) la seconda.
+# Una ricorsa che non ridice il lotto fa rifiutare, e anche un deck rigenerato
+# oggi da psu.net che non e' quello corso allora: vorrebbe dire che il circuito
+# misurato non e' quello di oggi.
+
+# ngspice esce 0 su tutto questo (limitations #29, #33, #35, #36): il log si
+# legge prima dei dati
+LOG_GUARD = re.compile(r"error|singular|no such|too many args|transient op|"
+                       r"timestep too small|aborted", re.I)
+# i percorsi assoluti di un deck (il worktree in cui e' stato scritto) non sono
+# il circuito: si tolgono prima del confronto
+_ROOTP = re.compile(r"/Users/\S*?/(?=(?:circuits|models|docs|firmware|spice)/)")
+
+
+def log_pulito(path):
+    """Un log di ngspice senza nessuna delle righe che invalidano una corsa."""
+    bad = [ln.strip() for ln in open(path, errors="replace") if LOG_GUARD.search(ln)]
+    if bad:
+        refuse(f"{rel(path)}: il log ha {len(bad)} righe che invalidano la corsa, "
+               f"la prima: {bad[0][:80]!r}")
+    return not bad
+
+
+def rows_of(path):
+    with open(path) as f:
+        return list(csv.DictReader(f))
+
+
+def stessi_byte(label, a, b):
+    with open(a, "rb") as fa, open(b, "rb") as fb:
+        if fa.read() != fb.read():
+            refuse(f"{label}: {rel(a)} e {rel(b)} non sono uguali byte per byte")
+            return False
+    return True
+
+
+def deck_norm(path, swap=()):
+    """Le righe di un deck, coi percorsi assoluti ridotti a @/ e le cartelle
+    delle ricorse riportate a quelle dei lotti."""
+    with open(path) as f:
+        text = f.read()
+    for a, b in swap:
+        text = text.replace(a, b)
+    return _ROOTP.sub("@/", text)
+
+
+def stesso_deck(label, a, b, swap=()):
+    if deck_norm(a, swap) != deck_norm(b, swap):
+        refuse(f"{label}: {rel(a)} non e' {rel(b)} (a meno dei percorsi del worktree): "
+               "il circuito corso non e' quello di oggi")
+        return False
+    return True
+
+
+def in_tmp(script, files, args, cwd_files=True):
+    """Esegue uno script di un lotto su COPIE dei suoi file d'ingresso, in una
+    cartella temporanea: alcuni scrivono accanto ai dati (analizza_timer.py,
+    analizza_ldr.py), e il generatore non scrive mai nelle cartelle versionate.
+    Ritorna (stdout, cartella)."""
+    import tempfile
+    d = tempfile.mkdtemp(prefix="l42b_")
+    for f in files:
+        shutil.copy(f, d)
+    a = [x.replace("@TMP@", d) for x in args]
+    proc = subprocess.run([sys.executable, script] + a, capture_output=True, text=True,
+                          cwd=d if cwd_files else REPO)
+    if proc.returncode not in (0, 1):
+        refuse(f"{rel(script)} {' '.join(args)}: rc {proc.returncode} ({proc.stderr.strip()[-120:]})")
+    return proc.stdout, d
+
+
+def p9_soglie():
+    """Le soglie di P9, lette dalla sua riga di REQUIREMENTS.md, non scritte qui."""
+    with open(os.path.join(REPO, "docs", "preamp", "REQUIREMENTS.md")) as f:
+        row = next((ln for ln in f if ln.startswith("| P9 |")), "")
+    pats = {"entro_ms": r"rilascia `MUTE_CMD` entro (\d+) ms",
+            "vrelay_ms": r"`VRELAY` resta in tolleranza per ≥ (\d+) ms",
+            "margine_ms": r"≥ (\d+) ms di margine",
+            "tetto_V": r"\*\*tetto di non-danno\*\* è ([\d,]+) V",
+            "obiettivo_mV": r"\*\*obiettivo\*\* è ≤ (\d+) mV",
+            "soglia_V": r"sotto \\\|(\d+,\d+) V\\\|"}
+    out = {}
+    for k, p in pats.items():
+        m = re.search(p, row)
+        if not m:
+            refuse(f"REQUIREMENTS.md, riga di P9: non trovo {k} ({p})")
+            out[k] = float("nan")
+        else:
+            out[k] = float(m.group(1).replace(",", "."))
+    return out
+
+
+def nc028_formula():
+    """La catena di NC-028 (finale e diffusore), letta da NONCOMPLIANCE.md: la
+    seconda strada dei dB SPL che le tabelle di L30 e L41c scrivono."""
+    with open(os.path.join(REPO, "docs", "preamp", "NONCOMPLIANCE.md")) as f:
+        m = re.search(r"(\d+) \+ 20·log\((\d+,\d+)·ΔV / (\d+,\d+)\) dB SPL", f.read())
+    if not m:
+        refuse("NONCOMPLIANCE.md: la formula di NC-028 non si legge")
+        return None
+    spl, g, v = (float(x.replace(",", ".")) for x in m.groups())
+    return {"spl": spl, "g": g, "v1w": v, "db": lambda dv: spl + 20 * math.log10(g * dv / v)}
+
+
+# ---- potenza, VRELAY, sorvegliante sul lato alimentatore (L41a, ricorsa L42b)
+# le colonne di analisi.csv di L41a; la ricorsa ne ha tre in piu' (vrelay_reg e
+# la tenuta a J1). Tolleranze della ricorsa col carico di L41a contro L41a:
+# 0,5 ms o l'1 % sui tempi, 10 mV sulle tensioni (i regolatori di oggi hanno la
+# corrente di riposo per parte, L41b1; L41a caricava 1 mA a tutti).
+T_COLS = ("t_off_ms", "t_md_ms", "t_p135_ms", "t_p106_ms", "t_m135_ms", "t_m106_ms",
+          "trip_after_135_ms", "vr_hold_ms", "vr80_hold_ms")
+V_COLS = ("vplus", "vminus", "vrelay", "v5", "raw_p_min", "raw_m_min_abs", "raw_v_min",
+          "vplus_at_off", "vminus_at_off")
+
+
+def _cella(r, k):
+    s = (r.get(k) or "").strip()
+    if not s:
+        return None
+    return (">", float(s[1:])) if s.startswith(">") else ("=", float(s))
+
+
+def _uguali(k, a, b):
+    if a is None or b is None:
+        return a is None and b is None
+    if a[0] != b[0]:
+        return False
+    # le tensioni lette ALL'ISTANTE dello scatto ereditano la tolleranza del
+    # tempo: il rail scende di 265 mA / 1760 uF ~ 0,15 V/ms, e 0,3 ms sono 50 mV
+    tol = (max(0.5, 0.01 * abs(b[1])) if k in T_COLS else
+           0.050 if k.endswith("_at_off") else 0.010)
+    return abs(a[1] - b[1]) <= tol
+
+
+def _psu_log(path, r512):
+    """I casi di un deck rete / guasti, e R512 com'era in ciascuno: la guardia
+    di limitations #34 (ogni caso rimette R512 prima delle sue alterazioni)."""
+    casi, cur = [], None
+    for ln in open(path, errors="replace"):
+        m = re.match(r"@rr512\[resistance\] = (\S+)", ln.strip())
+        if m:
+            cur = float(m.group(1))
+        m = re.match(r"CASO (\S+)", ln.strip())
+        if m:
+            casi.append((m.group(1), cur))
+            cur = None
+    for nome, r in casi:
+        want = 1e15 if "senza_rivelatore" in nome else r512
+        if r is None or abs(r - want) > 1e-6 * want:
+            refuse(f"{rel(path)}: nel caso {nome} R512 vale {r}, atteso {want:g} (#34)")
+    return [c for c, _ in casi]
+
+
+def measure_psu_power():
+    d = src(L42B)
+    net = open(PSU_NET).read()
+    m = re.search(r'\(ref "R512"\)\s*\(value "([\d.]+)k"\)', net)
+    r512 = float(m.group(1)) * 1e3 if m else float("nan")
+    gen = tool(L42B, "deck", "genera_tb_psu.py")
+    out = {}
+    for tag, sub, extra in (("oggi", "", ()), ("carico", "carico_l41a", ("--carico", "l41a"))):
+        rows = {}
+        for nome in ("rete", "guasti"):
+            dd = os.path.join(d, sub, nome)
+            deck = os.path.join(dd, f"tb_psu_{nome}{'_carico_l41a' if sub else ''}.cir")
+            log = deck[:-4] + ".log"
+            log_pulito(log)
+            casi = _psu_log(log, r512)
+            # il deck si rigenera oggi da psu.net e dev'essere quello corso
+            _, tmp = in_tmp(gen, [], ["--nome", nome, "--cima", "12e-3", *extra,
+                                      "--uscita", "@TMP@"], cwd_files=False)
+            stesso_deck(f"deck {nome} {tag}", os.path.join(tmp, os.path.basename(deck)), deck,
+                        swap=((tmp, dd),))
+            rr = rows_of(src(dd, "analisi.csv"))
+            if sorted(r["file"] for r in rr) != sorted(casi):
+                refuse(f"{rel(dd)}/analisi.csv: casi {sorted(r['file'] for r in rr)}, il log {sorted(casi)}")
+            rows.update({r["file"]: r for r in rr})
+        out[tag] = rows
+    # la seconda strada: L41a (sul psu.py di L41a). Il banco di oggi col carico di
+    # L41a deve ridarla su ogni colonna; allora ogni scarto di oggi e' il carico.
+    old = {}
+    for nome in ("rete", "guasti"):
+        old.update({r["file"]: r for r in rows_of(vecchio(L41A, nome, "analisi.csv"))})
+    if sorted(old) != sorted(out["carico"]):
+        refuse(f"L41a e la ricorsa col carico di L41a non hanno gli stessi casi")
+    for caso, ro in old.items():
+        rc = out["carico"].get(caso, {})
+        for k in T_COLS + V_COLS:
+            kc = "vrelay_reg" if k == "vrelay" else k   # il VRELAY di L41a e' VRELAY_REG
+            if not _uguali(k, _cella(rc, kc), _cella(ro, k)):
+                refuse(f"carico di L41a, {caso}, {k}: oggi {rc.get(kc)!r}, L41a {ro.get(k)!r}")
+    scarti = []
+    for caso, ro in old.items():
+        rt = out["oggi"].get(caso, {})
+        for k in T_COLS + V_COLS:
+            kt = "vrelay_reg" if k == "vrelay" else k
+            if not _uguali(k, _cella(rt, kt), _cella(ro, k)):
+                scarti.append((caso, k, ro.get(k), rt.get(kt), out["carico"][caso].get(kt)))
+    # il raddrizzatore (le scelte portate all'utente prima di ADR-048), rieseguito
+    rad = src(L41A, "scelte", "raddrizzatore.csv")
+    stessi_byte("raddrizzatore", src(L42B, "scelte", "raddrizzatore.csv"), rad)
+    rad_rows = [r for r in rows_of(rad) if r["vn_ac"] == "15" and r["va"] == "50"]
+    if len(rad_rows) != 6:
+        refuse(f"raddrizzatore.csv: righe per 2x15 V 50 VA {len(rad_rows)}, attese 6")
+    return {"dir": d, "oggi": out["oggi"], "carico": out["carico"], "old": old,
+            "scarti": scarti, "rad": rad_rows}
+
+
+def prov_psu(deck, datadir, note=""):
+    """La provenienza di un deck dell'alimentatore: i file inclusi (dagli
+    `.include`) e i sottocircuiti comportamentali che il deck definisce. Non
+    ci sono modelli del costruttore: i regolatori, i comparatori, il micro, il
+    DAC e gli op-amp sono comportamentali, dichiarati nell'intestazione del
+    generatore (L41a, L41b1)."""
+    incs, subs = [], []
+    for ln in open(deck):
+        m = re.match(r"^\.include\s+(\S+)", ln.strip(), re.I)
+        if m:
+            r = _resolve_include(m.group(1))
+            if r is None or not os.path.exists(os.path.join(REPO, r)):
+                refuse(f"provenienza {rel(deck)}: include non risolvibile {m.group(1)}")
+                continue
+            incs.append(r)
+        m = re.match(r"^\.subckt\s+(\S+)", ln.strip(), re.I)
+        if m:
+            subs.append(m.group(1))
+    if not incs or not subs:
+        refuse(f"provenienza {rel(deck)}: include {incs}, sottocircuiti {subs}")
+    return (f'<p class="prov">Deck <code>{html_escape(rel(deck))}</code>'
+            f' &middot; dati <code>{html_escape(rel(datadir))}/</code>{note}<br>'
+            f'Inclusi: {", ".join(f"<code>{i}</code>" for i in incs)} (generici, dichiarati)'
+            f' &middot; comportamentali: <strong>{", ".join(subs)}</strong> &middot; '
+            'nessun modello del costruttore: regolatori, comparatori, micro, DAC e op-amp '
+            'sono modelli dichiarati</p>')
+
+
+def vecchio(root, *parts):
+    """I dati di L41a sul psu.py di L41a: SOLO come seconda strada. Non passano da
+    src(), che li rifiuta come prima strada (FORBIDDEN)."""
+    p = os.path.join(root, *parts)
+    if not os.path.isfile(p):
+        raise SystemExit(f"RIFIUTATO: manca {rel(p)}. Nessun file e' stato scritto.")
+    return p
+
+
+# ---- le sequenze sul circuito (L41b2, L41c): analizza_seq.txt -----------
+def parse_seq(path):
+    """{caso: {"crit": {nome: (ok, testo)}, "fatti": {k: v}}, "_verdetto": ...}."""
+    out, cur = {}, None
+    verd = None
+    for ln in open(path):
+        m = re.match(r"^== (\S+)", ln)
+        if m:
+            cur = out.setdefault(m.group(1), {"crit": {}, "fatti": {}})
+            continue
+        m = re.match(r"^   (\S+)\s+(ok|NO|info)\s+(.*)$", ln.rstrip("\n"))
+        if m and cur is not None:
+            cur["crit"][m.group(1)] = (m.group(2), m.group(3).strip())
+            continue
+        m = re.match(r"^   \. (\S+): (.*)$", ln.rstrip("\n"))
+        if m and cur is not None:
+            cur["fatti"][m.group(1)] = m.group(2).strip()
+            continue
+        m = re.match(r"^VERDETTO: (\S+)", ln)
+        if m:
+            verd = m.group(1)
+    out["_verdetto"] = verd
+    return out
+
+
+def ms_in(text, pat):
+    m = re.search(pat, text or "")
+    return float(m.group(1)) if m else None
+
+
+def seq_ricorsa(label, orig_dir, rerun_dir, casi, swap):
+    """La ricorsa di una catena di sequenze: lo stesso verdetto, e per ogni caso
+    lo stesso giro al punto fisso, lo stesso deck (da psu.net di oggi) e le
+    stesse uscite del core."""
+    stessi_byte(f"{label}: analisi_seq.txt", os.path.join(rerun_dir, "analisi_seq.txt"),
+                os.path.join(orig_dir, "analisi_seq.txt"))
+    for c in casi:
+        pf = [open(os.path.join(x, c, "punto_fisso.txt")).read().strip() for x in (orig_dir, rerun_dir)]
+        if pf[0] != pf[1]:
+            refuse(f"{label}, {c}: punto fisso al giro {pf[0]} allora, {pf[1]} oggi")
+            continue
+        g = pf[0]
+        stesso_deck(f"{label}, {c}", os.path.join(rerun_dir, c, f"tb_psu_seq_{c}_g{g}.cir"),
+                    os.path.join(orig_dir, c, f"tb_psu_seq_{c}_g{g}.cir"), swap)
+        stessi_byte(f"{label}, {c}: core_g{g}.csv", os.path.join(rerun_dir, c, f"core_g{g}.csv"),
+                    os.path.join(orig_dir, c, f"core_g{g}.csv"))
+
+
+L41C_CASI = ("spegnimento_l", "perdita", "perdita_min", "guasto", "guasto_u501", "guasto_u503",
+             "guasto_u503_min", "cf_nodelta", "corto_u503")
+L41B2_CASI = ("accensione", "rilascio", "inversione", "spegnimento", "buco20", "buco200", "guasto")
+
+
+def measure_supervisor():
+    """Il sorvegliante e i guasti sul circuito vero (L41c), lato alimentatore."""
+    d = src(L41C, "seq")
+    s = parse_seq(os.path.join(d, "analisi_seq.txt"))
+    if s.get("_verdetto") != "PASSA" or sorted(k for k in s if k != "_verdetto") != sorted(L41C_CASI):
+        refuse(f"L41c analisi_seq.txt: verdetto {s.get('_verdetto')}, casi {sorted(s)}")
+    rr = src(L42B_C, "seq")
+    seq_ricorsa("L41c", d, rr, L41C_CASI,
+                ((os.path.join("2026-09-27", "L42b-L41c"), os.path.join("2026-09-26", "L41c")),))
+    for j in L41C_CASI:
+        stessi_byte(f"L41c ponte {j}", src(L42B_C, "ponte", j + ".json"), src(L41C, "ponte", j + ".json"))
+    righe = []
+    for c in L41C_CASI:
+        cr = s.get(c, {}).get("crit", {})
+        get = lambda k: cr.get(k, (None, ""))[1]
+        # i casi che DEVONO fallire (il controfattuale) portano l'asterisco
+        c3 = cr.get("C3") or cr.get("C3*") or (None, "")
+        rr_ = cr.get("r") or cr.get("r*") or (None, "")
+        righe.append({
+            "caso": c, "ok": all(v[0] in ("ok", "info") for v in cr.values()),
+            "info": all(v[0] == "info" for v in cr.values()),
+            "n_crit": len(cr),
+            "m": ms_in(get("m"), r"rilasciato ([\d.]+) ms"),
+            "delta": ms_in(c3[1], r"Delta ai rilasci: ([\d.]+) ms"),
+            "deve_fallire": "C3*" in cr,
+            "jack": ms_in(rr_[1], r"jack \(tardi\) a \+([\d.]+) ms"),
+            "guad": ms_in(rr_[1], r"guadagno \(presto\) a \+([\d.]+) ms"),
+            "v106": ms_in(get("s"), r"V\+ sotto 10,6 V a \+([\d.]+) ms"),
+            "k501": ms_in(get("p"), r"K501 aperto ([\d.]+) ms dopo MUTE_REQ") or
+                    ms_in(get("j"), r"K501 aperto ([\d.]+) ms dopo il rilascio di PERMIT_CMD"),
+            "i_s": ms_in(get("i"), r"rilasciato ([\d.]+) s dopo FRONT_IN"),
+            "finale": (re.search(r"stato finale (?:del core: )?(\w+)", get("q") or get("l")) or [None, None])[1],
+        })
+    return {"dir": d, "rows": righe}
+
+
+def measure_timer():
+    """Δ e lo standby (L41b1): il testo del lotto, lo script rieseguito sui suoi
+    log e sui log corsi oggi dai deck rigenerati da psu.net di oggi."""
+    d = src(L41B1, "timer")
+    saved = open(os.path.join(d, "analisi_timer.txt")).read()
+    an = tool(L41B1, "deck", "analizza_timer.py")
+    logs = [os.path.join(d, f"tb_psu_timer_{a}.log") for a in ("nom", "min")]
+    for lg in logs:
+        log_pulito_timer(lg)
+    out1, _ = in_tmp(an, logs, [os.path.basename(x) for x in logs])
+    if out1 != saved:
+        refuse("analizza_timer.py rieseguito sui log di L41b1 non ridà analisi_timer.txt")
+    oggi = [src(L42B, "timer", f"tb_psu_timer_{a}.log") for a in ("nom", "min")]
+    out2, _ = in_tmp(an, oggi, [os.path.basename(x) for x in oggi])
+    if out2 != saved:
+        refuse("i deck del temporizzatore corsi oggi non ridanno analisi_timer.txt di L41b1")
+    gen = tool(L41B1, "deck", "genera_tb_psu.py")
+    for a, extra in (("nom", ()), ("min", ("--angolo", "min", "--v5", "4.9"))):
+        _, tmp = in_tmp(gen, [], ["--uscita", "@TMP@", "--nome", "timer", *extra], cwd_files=False)
+        stesso_deck(f"deck del temporizzatore {a}", os.path.join(tmp, f"tb_psu_timer_{a}.cir"),
+                    os.path.join(d, f"tb_psu_timer_{a}.cir"))
+    res = {}
+    blk = None
+    for ln in saved.splitlines():
+        m = re.match(r"^== tb_psu_timer_(\w+)\.log", ln)
+        if m:
+            blk = res.setdefault(m.group(1), {})
+            continue
+        m = re.match(r"^   (\S+)\s+(.*)$", ln)
+        if m and blk is not None and not ln.startswith("      "):
+            blk[m.group(1)] = m.group(2)
+    if sorted(res) != ["min", "nom"] or saved.count(": PASSA") != 2:
+        refuse(f"analisi_timer.txt: blocchi {sorted(res)}, verdetti PASSA {saved.count(': PASSA')}")
+    t = {}
+    for a in ("nom", "min"):
+        r = res.get(a, {})
+        t[a] = {k: {"d": ms_in(r.get(k), r"D = ([\d.]+) ms"),
+                    "vr": ms_in(r.get(k), r"VRELAY < 9,6 V ([\d.]+) ms"),
+                    "mute": ms_in(r.get(k), r"MUTE_CMD a \+([\d.]+) ms")}
+                for k in ("micro_reset", "micro_a_zero", "perdita_rete_micro_reset",
+                          "guasto_U503_micro_reset", "controfattuale_senza_C528")}
+        t[a]["fermo_alto"] = ms_in(r.get("perdita_rete_micro_fermo_alto"), r"MUTE_CMD a \+([\d.]+) ms")
+        t[a]["fermo_alto_mai"] = "PERMIT_CMD mai" in (r.get("perdita_rete_micro_fermo_alto") or "")
+        t[a]["drain"] = ms_in(r.get("solo_permit_req_giu"), r"di MUTE_CMD max ([\d.]+) V")
+        t[a]["anticipo"] = ms_in(r.get("rilascio_solo_mute_req"), r"anticipo ([\d.]+) ms")
+        t[a]["standby_j1"] = ms_in(r.get("standby"), r"VRELAY a J1 max (-?[\d.]+) V")
+        t[a]["standby_mw"] = ms_in(r.get("standby"), r"potenza da T2 ([\d.]+) mW")
+    # la soglia di Δ (ADR-045: >= 10 ms garantiti) e' quella che lo script usa
+    dmin = ms_in(saved, r"fallisce come deve \(D < ([\d.]+) ms\)")
+    if dmin is None:
+        refuse("analisi_timer.txt: la soglia di Δ del controfattuale non si legge")
+    return {"dir": d, "t": t, "dmin": dmin if dmin is not None else float("nan")}
+
+
+def log_pulito_timer(path):
+    """La guardia di analizza_timer.py: le `meas` che non trovano l'evento
+    scrivono «Error» e sono misure, lette come tali; il resto rifiuta."""
+    for ln in open(path, errors="replace"):
+        if LOG_GUARD.search(ln) and not re.search(r"meas|out of interval|not found|failed",
+                                                  ln, re.I):
+            refuse(f"{rel(path)}: {ln.strip()[:80]!r}")
+            return
+
+
+def measure_fw():
+    """Il firmware sul circuito (L41b2): le sette sequenze e i falsi."""
+    d = src(L41B2, "seq")
+    s = parse_seq(os.path.join(d, "analisi_seq.txt"))
+    if s.get("_verdetto") != "PASSA" or sorted(k for k in s if k != "_verdetto") != sorted(L41B2_CASI):
+        refuse(f"L41b2 analisi_seq.txt: verdetto {s.get('_verdetto')}, casi {sorted(s)}")
+    seq_ricorsa("L41b2", d, src(L42B_B2, "seq"), L41B2_CASI,
+                ((os.path.join("2026-09-27", "L42b-L41b2"), os.path.join("2026-09-26", "L41b2")),))
+    rows = []
+    for c in L41B2_CASI:
+        cr = s.get(c, {}).get("crit", {})
+        f = s.get(c, {}).get("fatti", {})
+        pf = ms_in(cr.get("F", (0, ""))[1], r"punto fisso al giro (\d+)")
+        rows.append({"caso": c, "n": len(cr), "ok": sum(v[0] == "ok" for v in cr.values()),
+                     "giro": pf, "stati": f.get("stati", ""), "crit": cr})
+    # i falsi sull'host (L41b2) e la loro ricorsa di oggi (L42b/falsi)
+    es = src(L41B2, "falsi", "esito.txt")
+    stessi_byte("falsi sull'host", src(L42B, "falsi", "esito.txt"), es)
+    txt = open(es).read()
+    fall = re.findall(r"^falso (\d+) .*: FALLISCE .* come deve", txt, re.M)
+    tot = re.search(r"^== falsi: (\d+) su (\d+) fanno fallire il loro test", txt, re.M)
+    if not tot or int(tot.group(1)) != len(fall) or int(tot.group(2)) != len(fall):
+        refuse(f"esito.txt dei falsi: {len(fall)} righe che falliscono, sintesi "
+               f"{tot.group(0) if tot else 'assente'}")
+    # due falsi fatti fallire anche sul circuito: sul criterio giusto
+    circ = {}
+    for n, caso, crit in (("6", "guasto", "n"), ("9", "spegnimento", "j")):
+        p = src(L41B2, "falsi", f"seq_falso{n}_{caso}.txt")
+        sf = parse_seq(p)
+        no = [k for k, v in sf.get(caso, {}).get("crit", {}).items() if v[0] == "NO"]
+        if sf.get("_verdetto") != "FALLISCE" or no != [crit]:
+            refuse(f"{rel(p)}: verdetto {sf.get('_verdetto')}, criteri caduti {no}, atteso [{crit}]")
+        circ[n] = (caso, no, sf.get(caso, {}).get("crit", {}).get(crit, (None, ""))[1])
+    return {"dir": d, "rows": rows, "falsi": len(fall), "circ": circ}
+
+
+LDR_FILES = ("tb_psu_ldr_cima12mA", "tb_psu_ldr_ledmax_v5_4.9_cima12mA",
+             "tb_psu_ldr_cal_cima12mA", "tb_psu_ldr_cal_ledmax_v5_4.9_cima12mA")
+
+
+def measure_ldr_drive():
+    """Il pilota delle LDR con la cima a 12 mA (ADR-050), dai CSV di L41b2."""
+    d = src(L41B2, "ldr")
+    an = tool(L41B2, "deck", "analizza_ldr.py")
+    data = {}
+    for f in LDR_FILES:
+        log = os.path.join(d, f + ".log")
+        out, tmp = in_tmp(an, [log], [os.path.basename(log)])
+        stessi_byte(f"analizza_ldr.py rieseguito su {f}", os.path.join(tmp, f + ".log.csv"),
+                    log + ".csv")
+        if "VERDETTO" not in out or "PASSA" not in out.split("VERDETTO", 1)[1]:
+            refuse(f"analizza_ldr.py su {f}: il verdetto non e' PASSA")
+        stessi_byte(f"LDR corse oggi, {f}", src(L42B, "ldr", f + ".log.csv"), log + ".csv")
+        data[f] = rows_of(log + ".csv")
+    for c in ("cal_cima12mA.json", "cal_ledmax_v5_4.9_cima12mA.json"):
+        stessi_byte(f"calibrazione {c}", src(L42B, "ldr", c), os.path.join(d, c))
+    cal = [r for r in data["tb_psu_ldr_cal_cima12mA"] if r["modo"] == "cal"]
+    calx = [r for r in data["tb_psu_ldr_cal_ledmax_v5_4.9_cima12mA"] if r["modo"] == "cal"]
+    comp = [r for r in data["tb_psu_ldr_cal_cima12mA"] if r["modo"] == "comp"]
+    noc = [r for r in data["tb_psu_ldr_cal_cima12mA"] if r["modo"] == "nocomp"]
+    rst = [r for r in data["tb_psu_ldr_cal_cima12mA"] if r["modo"] == "dac_reset"]
+    tops = {float(r["target"]) for r in cal if r["nome"] in ("d0", "d1")}
+    if len(tops) != 1:
+        refuse(f"LDR: la cima non e' una sola: {sorted(tops)}")
+    # la seconda strada dell'errore: ricalcolato dalle correnti, non letto
+    for r in cal + calx + comp + noc:
+        e = 20 * math.log10(float(r["i_meas"]) / float(r["target"]))
+        if abs(e - float(r["err_db"])) > 1e-6:
+            refuse(f"LDR {r['modo']} {r['s']} {r['nome']} {r['t']} C: err_db {r['err_db']}, "
+                   f"dalle correnti {e:.6f}")
+    worst = lambda rr, riposo: max((abs(float(r["err_db"])), r) for r in rr
+                                   if (r["nome"] == "riposo") == riposo)
+    rst_i = [float(r["i(vls)"]) for r in rst] + [float(r["i(vlp)"]) for r in rst]
+    return {"dir": d, "cima": tops.pop() if tops else None, "cal": cal, "calx": calx,
+            "comp": comp, "noc": noc,
+            "w_cal": worst(cal, False), "w_calx": worst(calx, False),
+            "w_cal_rip": worst(cal, True), "w_comp": worst(comp, False),
+            "w_noc": max((abs(float(r["err_db"])), r) for r in noc),
+            "reset": (min(rst_i), max(rst_i)) if rst_i else (None, None)}
+
+
+def measure_shutdown():
+    """Spegnimento e failsafe al jack: L41c (il circuito vero) e L30 (le PWL)."""
+    f = nc028_formula()
+    out = {}
+    for tag, root, tab, rerun, extra in (
+            ("l41c", L41C, os.path.join("script", "tabella.py"), L42B_C,
+             ("cf_nodelta_fino_all_aborto.txt",)),
+            ("l30", L30, os.path.join("script", "tabella.py"), os.path.join(L42B, "l30"), ())):
+        d = src(root)
+        t = os.path.join(d, "tabella.csv")
+        ins = [os.path.join(d, "corse", "analisi.csv"), os.path.join(d, "corse", "fallite.txt")] + \
+              [os.path.join(d, x) for x in extra]
+        _, tmp = in_tmp(tool(root, tab), ins,
+                        [os.path.basename(ins[0]), os.path.basename(ins[1]), "tabella.csv"]
+                        + [os.path.basename(x) for x in ins[2:]])
+        stessi_byte(f"{tag}: tabella.py rieseguito", os.path.join(tmp, "tabella.csv"), t)
+        # la ricorsa di oggi: le stesse corse, la stessa analisi, la stessa tabella
+        stessi_byte(f"{tag}: analisi.csv corso oggi", src(rerun, "corse", "analisi.csv"), ins[0])
+        stessi_byte(f"{tag}: tabella corsa oggi", src(rerun, "tabella.csv"), t)
+        rows = rows_of(t)
+        for r in rows:
+            v, db = r.get("picco_V", "-"), r.get("dB_SPL_picco_1m", "-")
+            if v in ("-", "") or f is None:
+                continue
+            if abs(f["db"](float(v)) - float(db)) > 0.05:
+                refuse(f"{tag} {r.get('caso') or r.get('corsa')}: {db} dB SPL in tabella, "
+                       f"la formula di NC-028 da' {f['db'](float(v)):.2f}")
+        out[tag] = rows
+    # i deck della scheda audio: rigenerati oggi e uguali a quelli corsi
+    stessi_byte("il deck di L30 rigenerato oggi", src(L42B, "l30", "tb_v2_l30.cir"),
+                src(L30, "deck", "tb_v2_l30.cir"))
+    stessi_byte("il deck di L41c rigenerato oggi", src(L42B_C, "deck", "tb_v2_l41c.cir"),
+                src(L41C, "deck", "tb_v2_l41c.cir"))
+    return {"rows": out, "f": f}
+
+
 # --------------------------------------------------------------- figure ---
 def mcol(m, alt=False):
     return {"0db": (sp.C_0DB, sp.C_0DB_ALT), "3db": (sp.C_3DB, sp.C_3DB_ALT),
@@ -1629,6 +2185,32 @@ def fig_mute(mu):
     body = ax.render() + "\n" + ax.legend(80, ax.y0 + ax.h + 56, cols=1, colw=600)
     return sp.document(W, H, body, "Dati: L42 mute/profilo.csv · il livello è il fit del tono "
                        "su 10 ms di v2_metodo.py; S è il salto massimo in 100 ms")
+
+
+# L42b: una tinta per temperatura del telaio, dal freddo al caldo
+T_COL = {15: "#1f5c99", 25: "#2e7d4f", 35: "#8a7a1a", 45: "#c0662a", 60: "#a8452a"}
+
+
+def fig_ldr_drive(ld):
+    """L'errore del pilota delle LDR contro la tabella v4, la stringa in serie:
+    compensato col sensore del micro (tratteggio) e calibrato (pieno)."""
+    W, H = 900, 460
+    ax = sp.Axes(72, 46, W - 130, H - 170, (5e-9, 3e-2), (-3.0, 1.5),
+                 xlabel="corrente chiesta dalla tabella v4 [A]",
+                 ylabel="errore [dB] contro la tabella",
+                 title=f"Il pilota delle LDR, cima a {it(ld['cima'] * 1000, 3)} mA (ADR-050): "
+                       "stringa in serie, 15–60 °C")
+    for modo, dash, lab in (("comp", "5,3", "compensato"), ("cal", None, "calibrato")):
+        for t in sorted(T_COL):
+            pts = sorted((float(r["target"]), float(r["err_db"])) for r in ld[modo]
+                         if r["s"] == "S" and int(r["t"]) == t)
+            ax.line([x for x, _ in pts], [y for _, y in pts], T_COL[t],
+                    f"{lab} · {t} °C", dash)
+    ax.hline(1.0, sp.C_REQ, "±1 dB, il criterio (L41b1)")
+    ax.hline(-1.0, sp.C_REQ, None)
+    body = ax.render() + "\n" + ax.legend(80, ax.y0 + ax.h + 56, cols=5, colw=160)
+    return sp.document(W, H, body, "Dati: L41b2 ldr/tb_psu_ldr_cal_cima12mA.log.csv · ricorso "
+                       "il 2026-09-27 in L42b/ldr, uguale byte per byte")
 
 
 # ----------------------------------------------------------------- pagina --
@@ -1804,6 +2386,13 @@ SECTIONS = (("s1", "Il blocco di guadagno"), ("s2", "Il preamplificatore intero"
             ("s11", "I relè di guadagno: V2"), ("smute", "Il mute: LDR e relè al jack, V2"),
             ("sint", "Il guadagno interbloccato e i comandi"),
             ("s12", "Sovraccarico e corto: V3, P7"), ("sheat", "Il calore del telaio"),
+            ("spsu", "L&rsquo;alimentatore: schema e decisioni"),
+            ("spow", "Potenza, rail e VRELAY"),
+            ("ssup", "Il sorvegliante e i guasti, sul circuito"),
+            ("stim", "Il temporizzatore: Δ in hardware e lo standby"),
+            ("sfw", "Il firmware sul circuito"),
+            ("sldr", "Il pilota delle LDR"),
+            ("soff", "Spegnimento e failsafe al jack"),
             ("s13", "Requisiti a fronte del misurato"), ("s14", "Cosa questo dossier non dice"),
             ("s15", "Provenienza"))
 
@@ -1842,12 +2431,14 @@ def build_page(M, inline=False):
     A('<div class="wrap">')
     A('<p class="eyebrow">Scheda audio &middot; deck veloci corsi il 2026-09-27 (L42a) sul '
       'circuito di L28 &middot; mute da L29d2, L29e e L41b2 &middot; interblocco da L35 e L36 '
-      '&middot; calore da L30</p>')
+      '&middot; calore da L30 &middot; alimentatore da L41a–L41c e L30, ricorso il 2026-09-27 '
+      '(L42b)</p>')
     A('<h1>Dossier di misura del preamplificatore di linea</h1>')
     A('<p class="lede">Classe A pura a componenti discreti, senza operazionali nel '
       'percorso del segnale. Guadagno 0 / +3 / +10 dB, trim 0 / &minus;6 / &minus;12 dB '
-      'sull&rsquo;uscita variabile, mute graduale a LDR a monte e relè al jack. Questa pagina '
-      'racconta la scheda audio; l&rsquo;alimentatore è la seconda scheda.</p>')
+      'sull&rsquo;uscita variabile, mute graduale a LDR a monte e relè al jack. Le due schede: '
+      'la scheda audio, poi l&rsquo;alimentatore, coi rail lineari, il sorvegliante in hardware '
+      'e il temporizzatore che ordina mute, guadagno e rete.</p>')
 
     shape, level = adr014(resp)
     worst_shape = max(shape.values(), key=abs)
@@ -1855,6 +2446,8 @@ def build_page(M, inline=False):
     nc9 = hr["modes"]["10db"]["trim"]["6"]["M1"]
     gains = " · ".join(sg(resp[(m, "1.5")]["g1k"]) if m != "0db"
                        else fx(resp[(m, "1.5")]["g1k"]) for m in MODES)
+    off_db = [M["off"]["f"]["db"](float(r["picco_V"])) for r in M["off"]["rows"]["l41c"]
+              if r["criterio"].startswith("<= 0.002")]
     A('<dl class="synopsis">')
     for lab, val, unit in (
             ("Guadagni a 1 kHz", gains, "dB &middot; 0 / +3 / +10 &middot; sorgente 1,5 Ω"),
@@ -1872,7 +2465,12 @@ def build_page(M, inline=False):
              "dB a 20 kHz rif. 1 kHz &middot; peggiore dei 3 modi"),
             ("PSRR, peggiore", f"{fx(weak_psrr)} dB", "a 10 kHz"),
             ("E4, Re(Z<sub>out</sub>) max", f"{fx(max(e4_main, e4_fix))} Ω",
-             "al jack &middot; 20 Hz–20 kHz &middot; 3 uscite, costante col volume")):
+             "al jack &middot; 20 Hz–20 kHz &middot; 3 uscite, costante col volume"),
+            ("Δ, angolo minimo", f"{fx(M['tm']['t']['min']['micro_reset']['d'])} ms",
+             f"col micro in reset &middot; soglia {fx(M['tm']['dmin'], 0)} ms (ADR-045)"),
+            ("Guasto dell&rsquo;alimentatore, al jack",
+             f"{fx(max(off_db), 1)} dB SPL" if off_db else "&mdash;",
+             "il peggiore sul circuito vero (L41c) &middot; di picco a 1 m")):
         A(f'<div><dt>{lab}</dt><dd>{val}<span class="u">{unit}</span></dd></div>')
     A('</dl>')
 
@@ -2476,6 +3074,362 @@ def build_page(M, inline=False):
       f'|i<sub>&minus;</sub>|) = {it(8 * heat["p_blk"], 4)} W. La conferma è la temperatura '
       'nel telaio del prototipo (ADR-021, «Da riaprire se»).</p>')
 
+    # ============================================== L42b: l'alimentatore ===
+    pw, sv, tm, fw, ld, off, p9 = M["pw"], M["sv"], M["tm"], M["fw"], M["ld"], M["off"], M["p9"]
+    dbf = off["f"]["db"]
+
+    def volt(v):
+        """Una tensione piccola nella sua unita', virgola italiana."""
+        for k, u in ((1, "V"), (1e-3, "mV"), (1e-6, "µV"), (1e-9, "nV")):
+            if abs(v) >= k:
+                return f"{it(v / k, 3)} {u}"
+        return f"{it(v / 1e-9, 3)} nV"
+
+    def spl(v):
+        return f"{fx(dbf(v), 1)} dB SPL <span class=\"na\">({volt(v)})</span>"
+
+    def cella(r, k, u=""):
+        """Una cella di analisi.csv: '>x' e' un limite (la corsa finisce prima),
+        vuota e' «non si applica»; il meno e' tipografico."""
+        s = (r.get(k) or "").strip()
+        if not s:
+            return "&mdash;"
+        v = ("&gt; " + it(float(s[1:]), 4)) if s.startswith(">") else it(float(s), 4)
+        return v.replace("-", "&minus;") + (f" {u}" if u else "")
+
+    t_nom, t_min = tm["t"]["nom"], tm["t"]["min"]
+    today = pw["oggi"]
+    rl = {r["caso"]: r for r in sv["rows"]}
+    offl = {r["caso"]: r for r in off["rows"]["l41c"]}
+
+    A(h2("spsu"))
+    A(f'<p class="prov">Disegno <code>docs/preamp/schematic/psu_blocks_draw.py</code>, ogni cifra '
+      f'letta da <code>{rel(PSU_NET)}</code> e asserita &middot; sorgente '
+      '<code>circuits/preamp/psu.py</code></p>')
+    A('<p>La seconda scheda. Porta i rail audio, <code>VRELAY</code> per le bobine della scheda '
+      'audio e la logica; decide <em>quando</em> il mute si inserisce e si rilascia, e lo '
+      'fa in un ordine che sta nell&rsquo;hardware, non nel firmware. Il diagramma è a '
+      'blocchi: le soglie e le costanti di tempo stampate sono calcolate dai valori della '
+      'netlist, le cifre misurate stanno nelle sezioni che seguono.</p>')
+    A(figure("psu_blocks.svg", "Diagramma a blocchi dell'alimentatore"))
+    A('<div class="tablewrap"><table><tr><th>Decisione</th><th>Che cosa</th>'
+      '<th>La cifra che la regge, dai dati</th></tr>')
+    pn = today.get("perdita_rete_nom", {})
+    A(f'<tr><td>ADR-048</td><td>rail lineari (nessuno switching), <code>VRELAY</code> da un '
+      'trasformatore proprio, standby con l&rsquo;interruttore posteriore, sorvegliante in '
+      'hardware sul gate del sink di <code>MUTE_CMD</code></td>'
+      f'<td class="num">alla perdita di rete <code>MUTE_CMD</code> rilasciato a '
+      f'{cella(pn, "t_off_ms", "ms")}, coi rail ancora a '
+      f'{cella(pn, "vplus_at_off")} / {cella(pn, "vminus_at_off", "V")}</td></tr>')
+    A(f'<tr><td>ADR-049</td><td>Δ e Δ₂ come RC su comparatori; <code>VRELAY</code> tolta '
+      'alla scheda audio in standby (NC-037)</td>'
+      f'<td class="num">Δ ≥ {fx(t_min["micro_reset"]["d"], 2)} ms all&rsquo;angolo minimo col micro '
+      f'in reset &middot; standby: {fx(abs(t_nom["standby_j1"]), 3)} V a J1, '
+      f'{fx(t_nom["standby_mw"], 1)} mW da T2</td></tr>')
+    A(f'<tr><td>ADR-050</td><td>la cima delle LDR a 12 mA a ogni temperatura</td>'
+      f'<td class="num">cima della tabella {it(ld["cima"] * 1000, 3)} mA &middot; calibrato entro '
+      f'{fx(ld["w_cal"][0], 2)} dB</td></tr>')
+    if "corto_u503" in offl:
+        A(f'<tr><td>ADR-051</td><td>il corto della linea a 12 V dei relè accettato sotto il '
+          'tetto (guasto singolo)</td>'
+          f'<td class="num">{spl(float(offl["corto_u503"]["picco_V"]))} al jack &middot; tetto '
+          f'{fx(dbf(p9["tetto_V"]), 1)} dB SPL</td></tr>')
+    A('</table></div>')
+
+    # --- potenza ---
+    A(h2("spow"))
+    A(prov_psu(os.path.join(pw["dir"], "rete", "tb_psu_rete.cir"), pw["dir"],
+               " &middot; corso il 2026-09-27 sul <code>psu.net</code> di oggi"))
+    A('<p><strong>Una cosa trovata rigenerando.</strong> I banchi della potenza di L41a sono '
+      'corsi sul <code>psu.py</code> di L41a, che L41b1 ha riscritto (il temporizzatore, '
+      'Q505, il pilota delle LDR). Queste cifre sono una ricorsa di oggi: gli stessi casi e '
+      'le stesse sonde di L41a, sul circuito di oggi, col micro che gira e resta fermo '
+      'durante l&rsquo;evento (il solo percorso hardware, come le sorgenti fisse di L41a). '
+      'Lo stesso banco <em>col carico di L41a</em> (senza le bistabili del trim, le stringhe '
+      'delle LDR alla cima e il micro) ridà L41a su ogni colonna, entro 0,5 ms o l&rsquo;1 % '
+      'e 10 mV: la parte di potenza è quella, e ogni scarto qui sotto è il carico.</p>')
+    A('<h3>A regime</h3>')
+    A('<div class="tablewrap"><table><tr><th>Rete</th><th class="num">V+</th><th class="num">V−</th>'
+      '<th class="num">VRELAY_REG</th><th class="num">VRELAY a J1</th><th class="num">V5</th>'
+      '<th class="num">valle del grezzo +</th><th class="num">valle −</th>'
+      '<th class="num">valle di VRELAY</th></tr>')
+    for f_, lab in (("m10", "−10 %"), ("nom", "nominale"), ("p10", "+10 %")):
+        r = today.get(f"regime_{f_}", {})
+        A(f'<tr><td>{lab}</td>' + "".join(f'<td class="num">{cella(r, k)} V</td>' for k in (
+            "vplus", "vminus", "vrelay_reg", "vrelay", "v5", "raw_p_min", "raw_m_min_abs",
+            "raw_v_min")) + '</tr>')
+    A('</table></div>')
+    A('<h3>La perdita di rete, col rivelatore</h3>')
+    A('<div class="tablewrap"><table><tr><th>Rete</th><th class="num">MUTE_CMD rilasciato</th>'
+      '<th class="num">rivelatore</th><th class="num">rail + a 13,5 / 10,6 V</th>'
+      '<th class="num">rail al rilascio</th>'
+      f'<th class="num">VRELAY_REG ≥ 11,4 V dopo</th><th>P9: ≥ {fx(p9["vrelay_ms"], 0)} ms</th></tr>')
+    for f_, lab in (("m10", "−10 %"), ("nom", "nominale"), ("p10", "+10 %")):
+        r = today.get(f"perdita_rete_{f_}", {})
+        vh = float(r.get("vr_hold_ms") or "nan")
+        A(f'<tr><td>{lab}</td><td class="num">{cella(r, "t_off_ms")} ms</td>'
+          f'<td class="num">{cella(r, "t_md_ms")} ms</td>'
+          f'<td class="num">{cella(r, "t_p135_ms")} / {cella(r, "t_p106_ms")} ms</td>'
+          f'<td class="num">{cella(r, "vplus_at_off")} / {cella(r, "vminus_at_off")} V</td>'
+          f'<td class="num">{cella(r, "vr_hold_ms")} ms</td>{verdict(vh >= p9["vrelay_ms"])}</tr>')
+    A('</table></div>')
+    A('<h3>Un regolatore che cede, e il rivelatore guasto</h3>')
+    A('<div class="tablewrap"><table><tr><th>Caso</th><th class="num">MUTE_CMD rilasciato</th>'
+      f'<th class="num">dopo lo scatto a |{fx(p9["soglia_V"], 1)} V|</th>'
+      '<th class="num">rail al rilascio</th><th class="num">VRELAY_REG ≥ 11,4 / ≥ 9,6 V</th>'
+      f'<th>P9: entro {fx(p9["entro_ms"], 0)} ms</th></tr>')
+    for c, lab in (("guasto_u501", "U501 (rail +) spento"), ("guasto_u502", "U502 (rail −) spento"),
+                   ("guasto_u503", "U503 (<code>VRELAY_REG</code>) spento"),
+                   ("perdita_senza_rivelatore_m10", "perdita di rete, rivelatore guasto, −10 %"),
+                   ("perdita_senza_rivelatore_nom", "idem, nominale"),
+                   ("perdita_senza_rivelatore_p10", "idem, +10 %")):
+        r = today.get(c, {})
+        tr = (r.get("trip_after_135_ms") or "").strip()
+        ok = (float(tr) <= p9["entro_ms"]) if tr else None
+        A(f'<tr><td>{lab}</td><td class="num">{cella(r, "t_off_ms")} ms</td>'
+          f'<td class="num">{cella(r, "trip_after_135_ms", "ms")}</td>'
+          f'<td class="num">{cella(r, "vplus_at_off")} / {cella(r, "vminus_at_off")} V</td>'
+          f'<td class="num">{cella(r, "vr_hold_ms")} / {cella(r, "vr80_hold_ms")} ms</td>'
+          + (verdict(ok) if ok is not None else '<td class="na">scatta su VRELAY_REG</td>') + '</tr>')
+    A('</table></div>')
+    A('<p>Un tempo negativo dopo lo scatto vuol dire che il mute è già rilasciato prima '
+      'che un rail arrivi alla soglia. Col rivelatore di rete guasto il caso è doppio (la '
+      'rete persa e il rivelatore rotto), come L41a lo dichiarò: a rete bassa scatta per '
+      'primo il sorvegliante di <code>VRELAY_REG</code>, e i rail sono ancora sopra la soglia.</p>')
+    A('<h3>Cosa è cambiato da L41a</h3>')
+    A('<div class="tablewrap"><table><tr><th>Caso</th><th>Grandezza</th><th class="num">L41a</th>'
+      '<th class="num">oggi</th><th class="num">oggi, col carico di L41a</th></tr>')
+    names = {"vr_hold_ms": "VRELAY_REG ≥ 11,4 V [ms]", "vr80_hold_ms": "VRELAY_REG ≥ 9,6 V [ms]",
+             "raw_v_min": "valle di VRELAY [V]", "t_off_ms": "MUTE_CMD rilasciato [ms]",
+             "trip_after_135_ms": "dopo lo scatto a 13,5 V [ms]", "vplus_at_off": "V+ al rilascio [V]",
+             "vminus_at_off": "V− al rilascio [V]"}
+    for caso, k, a, b, c in pw["scarti"]:
+        A(f'<tr><td>{html_escape(caso)}</td><td>{names.get(k, html_escape(k))}</td>'
+          f'<td class="num">{html_escape((a or "").replace(".", ","))}</td>'
+          f'<td class="num"><strong>{html_escape((b or "").replace(".", ","))}</strong></td>'
+          f'<td class="num">{html_escape((c or "").replace(".", ","))}</td></tr>')
+    A('</table></div>')
+    vr_m10 = float(today.get("perdita_rete_m10", {}).get("vr_hold_ms") or "nan")
+    vr_old = float(pw["old"].get("perdita_rete_m10", {}).get("vr_hold_ms") or "nan")
+    A(f'<p>Ogni scarto sta su <code>VRELAY_REG</code>, o sui casi in cui è lei a far scattare '
+      f'il sorvegliante. A rete −10 % la tenuta scende da {it(vr_old, 4)} a '
+      f'<strong>{it(vr_m10, 4)} ms</strong>: P9 regge ancora (≥ {fx(p9["vrelay_ms"], 0)} ms), '
+      f'con {it(vr_m10 - p9["vrelay_ms"], 3)} ms di margine invece di '
+      f'{it(vr_old - p9["vrelay_ms"], 3)}. La causa è il carico che L41b1 e L41b2 hanno messo '
+      'su <code>VRELAY_REG</code>, soprattutto il ramo d&rsquo;ingresso dello specchio delle LDR '
+      'alla cima, che attraverso V5 la scarica. Il commento di <code>C_VRELAY</code> in '
+      '<code>psu.py</code> cita ancora le cifre di L41a; il sorgente non si tocca in questo '
+      'lotto.</p>')
+    A('<h3>Il raddrizzatore: il dimensionamento, non il circuito</h3>')
+    A(f'<p class="prov">Script <code>{rel(os.path.join(L41A, "scelte", "raddrizzatore.py"))}</code>, '
+      'modello ipotetico dichiarato (un Thevenin per semi-avvolgimento, i regolatori come '
+      'carichi costanti), rieseguito il 2026-09-27 in '
+      f'<code>{rel(os.path.join(L42B, "scelte"))}/</code>: la tabella è uguale byte per byte</p>')
+    A('<div class="tablewrap"><table><tr><th>Rete</th><th class="num">carico del +</th>'
+      '<th class="num">V+ min / medio</th><th class="num">margine della valle</th></tr>')
+    for r in pw["rad"]:
+        rete = float(r["rete"]) * 100 - 100
+        A(f'<tr><td>{sg(rete, 0) if abs(rete) > 1e-9 else "nominale"}'
+          f'{" %" if abs(rete) > 1e-9 else ""}</td><td class="num">{r["carico_plus_mA"]} mA</td>'
+          f'<td class="num">{it(float(r["v_plus_min"]), 4)} / {it(float(r["v_plus_avg"]), 4)} V</td>'
+          f'<td class="num">{sg(float(r["margine_valle_V"]), 3)} V</td></tr>')
+    A('</table></div>')
+    carichi = sorted({int(r["carico_plus_mA"]) for r in pw["rad"]})
+    A('<p>Sono le righe del toroidale scelto con ADR-048 (2 &times; 15 V, 50 VA), portate '
+      'all&rsquo;utente prima della decisione; il margine è la valle del grezzo sopra 15 V più '
+      f'il dropout. La riga a {carichi[-1]} mA è il rail + con <code>VRELAY</code> ricavata da lì, '
+      'la strada che ADR-048 ha scartato per un trasformatore proprio. Il trasformatore vero va '
+      'confermato sul pezzo.</p>')
+
+    # --- sorvegliante ---
+    A(h2("ssup"))
+    A(prov_psu(os.path.join(L41C, "seq", "perdita", "tb_psu_seq_perdita_g3.cir"), sv["dir"],
+               " &middot; ricorso il 2026-09-27 in "
+               f'<code>{rel(L42B_C)}/</code>: lo stesso verdetto byte per byte, e per ogni caso lo '
+               'stesso punto fisso, lo stesso deck rigenerato da <code>psu.net</code> e le stesse '
+               'uscite del firmware'))
+    A('<p>Il circuito dell&rsquo;alimentatore col firmware del temporizzatore come micro, '
+      'iterati fino al punto fisso (L41c). I relè sono presi all&rsquo;angolo peggiore del '
+      'G6K: il jack staccato <em>il più tardi possibile</em>, il guadagno a 0 dB <em>il più '
+      'presto possibile</em>. Il criterio r chiede che il guadagno non si muova mai col jack '
+      'collegato (ADR-045); s che il jack si stacchi prima che il rail + perda la '
+      'regolazione (L30).</p>')
+    A('<div class="tablewrap"><table><tr><th>Caso</th><th class="num">MUTE_CMD rilasciato</th>'
+      '<th class="num">Δ ai rilasci</th><th class="num">jack, tardi</th>'
+      '<th class="num">guadagno, presto</th><th class="num">V+ &lt; 10,6 V</th>'
+      '<th class="num">K501</th><th>Criteri</th></tr>')
+    labs = {"spegnimento_l": "spegnimento morbido", "perdita": "perdita di rete",
+            "perdita_min": "idem, Δ all&rsquo;angolo minimo", "guasto": "U502 (rail −) spento",
+            "guasto_u501": "U501 (rail +) spento", "guasto_u503": "U503 (<code>VRELAY_REG</code>) spento",
+            "guasto_u503_min": "idem, angolo minimo", "cf_nodelta": "controfattuale senza Δ",
+            "corto_u503": "corto dell&rsquo;uscita di U503"}
+    for r in sv["rows"]:
+        o = lambda x, u="ms", nd=4: "&mdash;" if x is None else f"{it(x, nd)} {u}"
+        mm = o(r["i_s"], "s") if r["caso"] == "spegnimento_l" else o(r["m"])
+        esito = ('<td class="na">nessun verdetto: decisione dell&rsquo;utente (ADR-051)</td>' if r["info"]
+                 else f'<td class="ok">C3 e r cadono, come devono ({r["n_crit"]} criteri)</td>'
+                 if r["deve_fallire"] else verdict(r["ok"], f'{r["n_crit"]} su {r["n_crit"]}'))
+        A(f'<tr><td>{labs[r["caso"]]}</td><td class="num">{mm}</td><td class="num">{o(r["delta"])}</td>'
+          f'<td class="num">{o(r["jack"])}</td><td class="num">{o(r["guad"])}</td>'
+          f'<td class="num">{o(r["v106"])}</td><td class="num">{o(r["k501"])}</td>{esito}</tr>')
+    A('</table></div>')
+    k501 = rl.get("spegnimento_l", {}).get("k501")
+    A(f'<p>Allo spegnimento morbido il mute si rilascia {it(rl.get("spegnimento_l", {}).get("i_s") or float("nan"), 5)} s '
+      f'dopo l&rsquo;interruttore frontale (la dissolvenza intera), e K501 stacca il toroidale '
+      f'{it(k501 or float("nan"), 3)} ms dopo il rilascio di <code>PERMIT_CMD</code>: P9 ne chiede '
+      f'≥ {fx(p9["margine_ms"], 0)}. I tempi dopo l&rsquo;evento sono in ms, tranne il '
+      'rilascio dello spegnimento morbido.</p>')
+
+    # --- temporizzatore ---
+    A(h2("stim"))
+    A(prov_psu(os.path.join(tm["dir"], "tb_psu_timer_nom.cir"), tm["dir"],
+               " &middot; ricorso il 2026-09-27 in "
+               f'<code>{rel(os.path.join(L42B, "timer"))}/</code>: deck rigenerati uguali, '
+               '<code>analizza_timer.py</code> ridà lo stesso testo sui log di allora e di oggi'))
+    A('<p>Il ritardo Δ fra il rilascio di <code>MUTE_CMD</code> e quello di '
+      '<code>PERMIT_CMD</code> sta in un RC su un comparatore, e deve reggere <em>qualunque '
+      'cosa faccia il micro</em>. L&rsquo;angolo minimo prende C<sub>T</sub> e C<sub>T2</sub> '
+      '−5 %, R<sub>T</sub> e R<sub>T2</sub> −1 %, V5 a 4,90 V e il riferimento a 2,505 V.</p>')
+    A('<div class="tablewrap"><table><tr><th>Caso</th><th class="num">Δ nominale</th>'
+      '<th class="num">Δ angolo minimo</th><th class="num">VRELAY a J1 &lt; 9,6 V dopo PERMIT</th>'
+      f'<th>Δ ≥ {fx(tm["dmin"], 0)} ms</th></tr>')
+    for k, lab in (("micro_reset", "il micro in reset (uscite in alta impedenza)"),
+                   ("micro_a_zero", "il micro porta tutto a zero"),
+                   ("perdita_rete_micro_reset", "perdita di rete, micro in reset"),
+                   ("guasto_U503_micro_reset", "U503 spento, micro in reset"),
+                   ("controfattuale_senza_C528", "controfattuale: senza C528")):
+        a, b = t_nom[k], t_min[k]
+        senza_c528 = k.startswith("controfattuale")
+        ok = ((a["d"] < tm["dmin"] and b["d"] < tm["dmin"]) if senza_c528
+              else min(a["d"], b["d"]) >= tm["dmin"])
+        A(f'<tr><td>{lab}</td><td class="num">{it(a["d"], 4)} ms</td><td class="num">{it(b["d"], 4)} ms</td>'
+          f'<td class="num">{it(a["vr"], 4)} / {it(b["vr"], 4)} ms</td>'
+          + (f'<td class="{"ok" if ok else "no"}">{"cade, come deve" if ok else "NON cade"}</td>'
+             if senza_c528 else verdict(ok)) + '</tr>')
+    A('</table></div>')
+    A(f'<p>Col micro bloccato alto durante una perdita di rete <code>MUTE_CMD</code> si rilascia '
+      f'a +{it(t_nom["fermo_alto"], 4)} ms (il sorvegliante) e <code>PERMIT_CMD</code> '
+      f'{"non si rilascia mai" if t_nom["fermo_alto_mai"] else "SI RILASCIA"} nei 400 ms: il '
+      'guadagno resta dov&rsquo;è, a jack staccati. Un firmware che abbassa solo '
+      f'<code>PERMIT_REQ</code> non muove niente (drain ≤ {it(max(t_nom["drain"], t_min["drain"]), 3)} V, '
+      f'contro i 6 V del rilascio). Al rilascio del mute <code>PERMIT_CMD</code> si eccita '
+      f'{it(t_nom["anticipo"], 3)} ms prima di <code>MUTE_CMD</code>. In standby <code>VRELAY</code> a '
+      f'J1 vale {fx(abs(t_nom["standby_j1"]), 3)} V e T2 eroga {fx(t_nom["standby_mw"], 1)} / '
+      f'{fx(t_min["standby_mw"], 1)} mW (nominale / angolo minimo): le perdite a vuoto di T2 non '
+      'sono qui, e NC-037 si chiude con quelle (giro BOM).</p>')
+
+    # --- firmware ---
+    A(h2("sfw"))
+    A(prov_psu(os.path.join(fw["dir"], "accensione", "tb_psu_seq_accensione_g5.cir"), fw["dir"],
+               " &middot; firmware <code>firmware/preamp_timer/src/timer_core.c</code> &middot; "
+               f'ricorso il 2026-09-27 in <code>{rel(L42B_B2)}/</code>: lo stesso verdetto, gli '
+               'stessi deck e le stesse uscite del core'))
+    A('<p>Il core del firmware fa da micro del banco: circuito e firmware si iterano finché '
+      'le uscite del core non cambiano più fra due giri (il punto fisso), senza che il ponte '
+      'debba ricostruire un pin. I criteri sono scritti prima delle corse, nell&rsquo;intestazione '
+      'di <code>analizza_seq.py</code>.</p>')
+    A('<div class="tablewrap"><table><tr><th>Sequenza</th><th>Stati del firmware</th>'
+      '<th class="num">giro del punto fisso</th><th>Criteri</th></tr>')
+    for r in fw["rows"]:
+        quanti = "%d su %d" % (r["ok"], r["n"])
+        A(f'<tr><td>{r["caso"]}</td><td>{html_escape(r["stati"]).replace("-&gt;", "→")}</td>'
+          f'<td class="num">{int(r["giro"]) if r["giro"] else "&mdash;"}</td>'
+          f'{verdict(r["ok"] == r["n"], quanti)}</tr>')
+    A('</table></div>')
+    c6, c9 = fw["circ"].get("6"), fw["circ"].get("9")
+    A(f'<p><strong>I falsi.</strong> Sull&rsquo;host {fw["falsi"]} falsi del core su {fw["falsi"]} '
+      'fanno fallire il loro test (<code>run_host_tests.sh --falsi</code>, rieseguito il '
+      '2026-09-27: lo stesso esito byte per byte; lo riesegue anche il blocco 2k di '
+      '<code>run_tests.sh</code>). Sul circuito ne sono stati fatti fallire due'
+      + (f', ciascuno sul criterio giusto: il falso 6 nel {c6[0]} cade su <code>{c6[1][0]}</code> '
+         f'(«{html_escape(c6[2])}»), il falso 9 nello {c9[0]} su <code>{c9[1][0]}</code> '
+         f'(«{html_escape(c9[2])}»)' if c6 and c9 else '')
+      + '. Questi due non sono stati ricorsi oggi: richiedono di ricompilare il ponte col '
+      'falso dentro. <code>src/main_attiny.c</code> non è scritto.</p>')
+
+    # --- LDR ---
+    A(h2("sldr"))
+    A(prov_psu(os.path.join(ld["dir"], "tb_psu_ldr_cal_cima12mA.cir"), ld["dir"],
+               " &middot; ricorso il 2026-09-27 in "
+               f'<code>{rel(os.path.join(L42B, "ldr"))}/</code>: calibrazioni e CSV uguali byte per '
+               'byte; <code>analizza_ldr.py</code> rieseguito sui log di allora'))
+    A('<p>Il DAC comanda due convertitori esponenziali, uno per stringa; il firmware calcola il '
+      'codice dalla legge esponenziale alla temperatura del telaio (il sensore del micro), e '
+      'corregge la parte ohmica in cima con una calibrazione a due punti letta sul sense. '
+      'L&rsquo;errore è ricalcolato qui dalle correnti del CSV, non letto dalla sua colonna.</p>')
+    A(figure("fig_ldr_drive.svg", "Errore del pilota delle LDR contro la tabella v4"))
+    wc, wx, wr, wp, wn = ld["w_cal"], ld["w_calx"], ld["w_cal_rip"], ld["w_comp"], ld["w_noc"]
+    lr = lambda r: f'{r["s"]} {r["nome"]}, {r["t"]} °C'
+    A('<div class="tablewrap"><table><tr><th>Modo</th><th class="num">errore peggiore</th>'
+      '<th>dove</th><th>±1 dB</th></tr>')
+    for lab, w, ok in (("letto a 25 °C, senza compensazione", wn, None),
+                       ("compensato col sensore del micro", wp, None),
+                       ("compensato e calibrato", wc, wc[0] <= 1.0),
+                       ("calibrato, LED al massimo e V5 a 4,90 V", wx, wx[0] <= 1.0)):
+        A(f'<tr><td>{lab}</td><td class="num">{fx(w[0], 2)} dB</td><td>{lr(w[1])}</td>'
+          + (verdict(ok) if ok is not None else '<td class="na">riferimento</td>') + '</tr>')
+    A('</table></div>')
+    lo, hi = ld["reset"]
+    A(f'<p>Il riposo a 10 nA, calibrato, sta entro {fx(wr[0], 2)} dB ({lr(wr[1])}); il '
+      'criterio è 5–20 nA, cioè buio e mai zero. Col DAC in reset le stringhe portano '
+      f'{it(lo * 1e9, 3)}–{it(hi * 1e9, 3)} nA: mai zero, sotto il ginocchio di 190 nA.</p>')
+
+    # --- spegnimento e failsafe al jack ---
+    A(h2("soff"))
+    A(f'<p class="prov">Scheda audio <code>{rel(os.path.join(L41C, "deck", "tb_v2_l41c.cir"))}</code> '
+      f'(dal ponte di L41c) e <code>{rel(os.path.join(L30, "deck", "tb_v2_l30.cir"))}</code> (PWL), '
+      'col metodo di V2 &middot; i due deck rigenerati oggi sono uguali byte per byte, le corse '
+      'rifatte oggi ridanno le stesse analisi e le stesse tabelle &middot; i dB SPL ricalcolati '
+      f'con la catena di NC-028 (finale ×{it(off["f"]["g"], 3)}, {fx(off["f"]["spl"], 0)} dB con '
+      f'{it(off["f"]["v1w"], 3)} V): un limite superiore, di picco, a 1 m</p>')
+    A(f'<p>Un gradino al jack, detto contro una stanza silenziosa (25–35 dB(A), un livello pesato '
+      f'contro un picco): V2 è {fx(dbf(1e-4), 1)} dB SPL, l&rsquo;obiettivo di P9 '
+      f'{fx(dbf(p9["obiettivo_mV"] * 1e-3), 1)} dB, il tetto di non-danno {fx(dbf(p9["tetto_V"]), 1)} dB.</p>')
+    A('<h3>Sul circuito vero (L41c)</h3>')
+    A('<div class="tablewrap"><table><tr><th>Caso</th><th class="num">picco al jack</th>'
+      '<th>Criterio</th><th>Esito</th></tr>')
+    for r in off["rows"]["l41c"]:
+        v = r["picco_V"]
+        esito = r["esito"]
+        good = esito.startswith(("sotto", "fallisce, come deve", "tetto sotto"))
+        A(f'<tr><td>{labs.get(r["caso"], html_escape(r["caso"]))}</td>'
+          f'<td class="num">{spl(float(v)) if v not in ("-", "") else "&mdash;"}</td>'
+          f'<td>{html_escape(r["criterio"].replace("<=", "≤").replace(".", ","))}</td>'
+          f'<td class="{"ok" if good else "no"}">{html_escape(esito)}</td></tr>')
+    A('</table></div>')
+    A('<h3>Sul banco di L30 (i rail come PWL)</h3>')
+    cls = {"n": "spegnimento morbido", "f": "guasto di un rail o di entrambi",
+           "g": "guasto con VRELAY persa", "cf": "controfattuali"}
+    A('<div class="tablewrap"><table><tr><th>Classe</th><th class="num">corse</th>'
+      '<th class="num">picco peggiore</th><th>Soglia</th><th>Esito</th></tr>')
+    for c in ("n", "f", "g", "cf"):
+        rr = [r for r in off["rows"]["l30"] if r["classe"] == c]
+        corse = [r for r in rr if r["picco_V"] not in ("-", "")]
+        w = max(corse, key=lambda r: float(r["picco_V"])) if corse else None
+        non = [r["corsa"] for r in rr if r not in corse]
+        ok = all(r["esito"] == "sotto" for r in corse) if c != "cf" else None
+        A(f'<tr><td>{cls[c]}</td><td class="num">{len(corse)}'
+          + (f' + {len(non)} non corse' if non else '') + '</td>'
+          f'<td class="num">{spl(float(w["picco_V"])) if w else "&mdash;"}</td>'
+          f'<td>{"≤ " + volt(float(w["soglia_V"])) if w and w["soglia_V"] != "-" else "&mdash;"}</td>'
+          + (verdict(ok, "tutte sotto", "una sopra") if ok is not None else
+             f'<td class="na">senza Δ: {spl(float(w["picco_V"])) if w else "—"}; '
+             f'{len(non)} non corse («Timestep too small» nel JFET)</td>') + '</tr>')
+    A('</table></div>')
+    l30s = [r for r in off["rows"]["l30"] if r["corsa"].startswith("f_") and
+            r["corsa"].endswith("s_l30") and r["picco_V"] not in ("-", "")]
+    l30w = max(l30s, key=lambda r: float(r["picco_V"])) if l30s else None
+    l41p = offl.get("perdita")
+    l41g = max((r for r in off["rows"]["l41c"] if r["caso"].startswith("guasto")),
+               key=lambda r: float(r["picco_V"]), default=None)
+    if l30w and l41p and l41g:
+        A(f'<p>L30 disegnava i rail a mano; L41c li prende dall&rsquo;alimentatore vero. La '
+          f'perdita di rete passa da {spl(float(l30w["picco_V"]))} (L30, entrambi i rail che '
+          f'scendono da subito) a {spl(float(l41p["picco_V"]))}: il rivelatore stacca il jack '
+          'coi rail ancora in regolazione. Il caso peggiore resta un regolatore che cede '
+          f'({labs.get(l41g["caso"], l41g["caso"])}): {spl(float(l41g["picco_V"]))}, sotto '
+          'l&rsquo;obiettivo.</p>')
+
     # --- 13 requisiti ---
     A(h2("s13"))
     A('<p>Solo i requisiti che queste misure toccano. Il resto non è qui perché non è '
@@ -2535,6 +3489,36 @@ def build_page(M, inline=False):
           f'&middot; {fx(heat["tot"][3], 2)} W</td>'
           f'<td class="{"ok" if hworst[5] <= TA else "no"}">stima calcolata, da confermare sul '
           'prototipo</td></tr>')
+    # L42b: P9, dall'alimentatore
+    sp_l = offl.get("spegnimento_l")
+    if sp_l:
+        okp9a = float(sp_l["picco_V"]) <= 1e-4 and (k501 or 0) >= p9["margine_ms"]
+        A(f'<tr><td>P9 (a)</td><td>spegnimento morbido: V2 al jack, K501 ≥ {fx(p9["margine_ms"], 0)} ms '
+          'dopo il mute (ADR-046, ADR-048)</td>'
+          f'<td class="num">{spl(float(sp_l["picco_V"]))} &middot; K501 a {it(k501 or float("nan"), 3)} ms</td>'
+          f'{verdict(okp9a)}</tr>')
+    gv = [r for r in off["rows"]["l41c"] if r["criterio"].startswith("<= 0.002")]
+    gw = max(gv, key=lambda r: float(r["picco_V"])) if gv else None
+    trips = [float(today[c]["trip_after_135_ms"]) for c in ("guasto_u501", "guasto_u502")
+             if today.get(c, {}).get("trip_after_135_ms")]
+    vrmin = min(float(today[f"perdita_rete_{x}"]["vr_hold_ms"]) for x in ("m10", "nom", "p10")
+                if today.get(f"perdita_rete_{x}", {}).get("vr_hold_ms"))
+    if gw and trips:
+        okp9b = (float(gw["picco_V"]) <= p9["obiettivo_mV"] * 1e-3 and max(trips) <= p9["entro_ms"]
+                 and vrmin >= p9["vrelay_ms"])
+        A(f'<tr><td>P9 (b)</td><td>perdita di rete e guasto: <code>MUTE_CMD</code> entro '
+          f'{fx(p9["entro_ms"], 0)} ms dallo scatto, <code>VRELAY</code> ≥ {fx(p9["vrelay_ms"], 0)} ms, '
+          f'al jack ≤ {fx(p9["obiettivo_mV"], 0)} mV</td>'
+          f'<td class="num">scatto {sg(max(trips), 3)} ms al peggio &middot; VRELAY {it(vrmin, 4)} ms &middot; '
+          f'{spl(float(gw["picco_V"]))} ({labs.get(gw["caso"], gw["caso"])})</td>'
+          f'{verdict(okp9b, "conforme; tenuta di VRELAY ridotta dal carico di oggi")}</tr>')
+    A(f'<tr><td>ADR-045</td><td>Δ ≥ {fx(tm["dmin"], 0)} ms qualunque cosa faccia il micro</td>'
+      f'<td class="num">{it(min(t_min[k]["d"] for k in ("micro_reset", "micro_a_zero", "perdita_rete_micro_reset", "guasto_U503_micro_reset")), 4)} ms '
+      'all&rsquo;angolo minimo</td>'
+      f'{verdict(min(t_min[k]["d"] for k in ("micro_reset", "micro_a_zero", "perdita_rete_micro_reset", "guasto_U503_micro_reset")) >= tm["dmin"])}</tr>')
+    A(f'<tr><td>NC-037</td><td>standby ≤ 0,5 W (Reg. UE 2023/826)</td>'
+      f'<td class="num">{fx(t_nom["standby_mw"], 1)} mW dal secondario di T2</td>'
+      '<td class="na">aperta: mancano le perdite a vuoto di T2 (giro BOM) e la misura</td></tr>')
     A('<tr><td>V4</td><td>THD/THD+N</td><td class="na">assente</td>'
       '<td class="na">non misurata in questo dossier</td></tr>')
     A('</table></div>')
@@ -2566,6 +3550,20 @@ def build_page(M, inline=False):
       'non del costruttore: il datasheet non dà la dinamica della bobina.</li>')
     A('<li><strong>Il calore</strong> è una stima calcolata con coefficienti da letteratura, '
       'non una simulazione termica.</li>')
+    A('<li><strong>L&rsquo;alimentatore è simulato con modelli dichiarati</strong>, nessuno del '
+      'costruttore: regolatori e comparatori comportamentali (il modello TI del TPS7A4701 dà un '
+      'punto di lavoro sbagliato, quello del TLV1701 non commuta in ngspice), micro, DAC e op-amp '
+      'comportamentali, i trasformatori come Thevenin ipotetici da confermare sui pezzi. '
+      '<strong>Niente PSRR né rumore dei regolatori</strong>: la quota di ADR-020 non è verificata '
+      '(NC-011).</li>')
+    A('<li><strong>Il carico della scheda audio sull&rsquo;alimentatore</strong> è un carico '
+      'dichiarato (265 mA per rail, le bobine come resistenze senza induttanza, i LED delle LDR '
+      'come diodi): la catena di L41c va dall&rsquo;alimentatore alla scheda audio, mai indietro.</li>')
+    A('<li><strong>Il commento di <code>C_VRELAY</code> in <code>psu.py</code></strong> cita la '
+      'tenuta di L41a, più lunga di quella del circuito di oggi (sezione della potenza).</li>')
+    A('<li><strong>L&rsquo;autoriscaldamento di Q2</strong> nel pilota delle LDR non è modellato: la '
+      'calibrazione è il rimedio, e la conferma è il prototipo. <code>src/main_attiny.c</code> non '
+      'è scritto, e il firmware è provato sull&rsquo;host e come core del banco, non sul micro.</li>')
     A('<li><strong>Nessuno qui giudica come suona.</strong> La simulazione copre '
       'stabilità, risposta, PSRR e impedenze; non copre l&rsquo;ascolto.</li>')
     A('</ul>')
@@ -2627,6 +3625,10 @@ def main():
     M["hr"] = measure_headroom(M["trim"])
     M["heat"] = measure_heat(M["op"])
     M["l40"] = measure_l40(DECKS)
+    # L42b: l'alimentatore
+    M.update({"pw": measure_psu_power(), "sv": measure_supervisor(), "tm": measure_timer(),
+              "fw": measure_fw(), "ld": measure_ldr_drive(), "off": measure_shutdown(),
+              "p9": p9_soglie()})
     M["decks"] = ([os.path.join(TB, d) for d in DECKS]
                   + [os.path.join(TB, "tb_v2_casopeggiore.cir"),
                      os.path.join(L29D2, "deck", "tb_v2_l29d2.cir"),
@@ -2654,6 +3656,7 @@ def main():
         "fig_headroom.svg": fig_headroom(M["hr"]),
         "fig_counterfactual.svg": fig_counterfactual(M["cf"], M["hr"]),
         "fig_mute.svg": fig_mute(M["mute"]),
+        "fig_ldr_drive.svg": fig_ldr_drive(M["ld"]),
     }
     page = build_page(M, inline=False)
     spage = build_page(M, inline=True) if standalone else None
@@ -2705,6 +3708,21 @@ def main():
                            for g in M["e4"]["groups"]},
         "e4_dispersione_volume_ohm": max(g["disp"] for g in M["e4"]["groups"]),
         "p7_tj_massima_C": M["p7"]["tjmax"],
+        # L42b: l'alimentatore
+        "alimentatore_dati": [rel(L42B), rel(L42B_C), rel(L42B_B2), rel(L41B1), rel(L41B2),
+                              rel(L41C), rel(L30)],
+        "psu_tenuta_vrelay_ms": {f: float(M["pw"]["oggi"][f"perdita_rete_{f}"]["vr_hold_ms"])
+                                 for f in ("m10", "nom", "p10")},
+        "psu_tenuta_vrelay_ms_L41a": {f: float(M["pw"]["old"][f"perdita_rete_{f}"]["vr_hold_ms"])
+                                      for f in ("m10", "nom", "p10")},
+        "psu_scarti_da_L41a": len(M["pw"]["scarti"]),
+        "delta_ms_angolo_minimo_micro_reset": M["tm"]["t"]["min"]["micro_reset"]["d"],
+        "standby_mW_da_T2": M["tm"]["t"]["nom"]["standby_mw"],
+        "firmware_sequenze": {r["caso"]: f'{r["ok"]} su {r["n"]}' for r in M["fw"]["rows"]},
+        "firmware_falsi_host": M["fw"]["falsi"],
+        "ldr_calibrato_peggiore_dB": M["ld"]["w_cal"][0],
+        "jack_L41c_V": {r["caso"]: float(r["picco_V"]) for r in M["off"]["rows"]["l41c"]
+                        if r["picco_V"] not in ("-", "")},
     }
     with open(os.path.join(HERE, "dossier.summary.json"), "w") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)

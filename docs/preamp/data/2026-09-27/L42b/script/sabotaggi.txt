@@ -1,0 +1,52 @@
+log_di_oggi_diverso_da_L40           caduto  rc=1  - tb_ac: oggi e L40 differiscono fino a 1.43e-06 (relativo)
+tabella_di_L40_diversa               caduto  rc=1  - tb_loop/tb_loop_margini.csv: la tabella di oggi non e' quella di L40 byte per byte
+verdetto_L29d2_riscritto             caduto  rc=1  - L29d2 verdetto.csv: gm0x3_1k_iii_i S_ins scritto 7.100 MAINJACK regge, ricalcolato 7.163 MAINJACK regge
+soglia_di_S_nel_verdetto             caduto  rc=1  - L29d2 verdetto.csv: soglia 30.0 per S_ins, il dossier usa 20.0 (ADR-032, ADR-040)
+tabella_del_sorgente_L29e            caduto  rc=1  - L29e tabella_sorgente.csv: gm0x10_lz_iii_c A_ins sorgente scritto 1.604e-07, ricalcolato 1.704e-07
+analisi_del_mute_di_oggi             caduto  rc=1  - L42 mute analisi.csv: 2 righe diverse da L29e sulle stesse celle, la prima ('mh01_1k_iii', 'S_ins', 'MAINJACK', '6.040000', '7.163')
+curva_del_livello                    caduto  rc=1  - S S_ins dalla curva del livello: calcolato 37.1399, ngspice 7.163 (scarto relativo 4.18e+00 > 5e-04)
+corsa_L36_ricontata                  caduto  rc=1  - L36 progetto: sintesi.txt (480, 0, 0), corsa.csv ricontato (480, 1, 0)
+falso_L35_che_passa                  caduto  rc=1  - L35 falsi: main_prima_di_L35 rc 0, atteso 1
+stima_termica_ritoccata              caduto  rc=1  - stima_telaio.py rieseguito non ridà stima_telaio.txt
+rail_di_tb_op                        caduto  rc=1  - calore: la scheda audio della stima vale 7.94 W, 8 x 15 V x i(rail) di tb_op di oggi da' 8.0652 W
+e3_con_le_ldr                        caduto  rc=1  - tb_e3_e5_ldr_cima12mA_e3.csv [zmin_ohm]: riga 3, colonna zmin_ohm: tabella '277705', log 277605.2
+cima_dei_led_a_12_mA_nel_deck        caduto  rc=1  - spice/preamp/tb/tb_v2_casopeggiore.cir: cima della serie 0.012 A, della derivazione 0.02 A
+print_spezzata_non_ricucibile        caduto  rc=1  - docs/preamp/data/2026-09-27/L42/dopo/tb_e4_uscite/tb_e4_uscite.log: una print spezzata da una Note non si ricuce ('zn20k = 5' seguita da 'x.720894e-
+ausiliario_del_guadagno_sparito      caduto  rc=1  - check_relay_safe_state.py esce 1 sulla netlist di oggi
+---- L42b
+log_rete_con_un_errore               caduto  rc=1  - docs/preamp/data/2026-09-27/L42b/rete/tb_psu_rete.log: il log ha 1 righe che invalidano la corsa, la prima: 'Error: singular matrix'
+r512_non_rimessa_a_posto             caduto  rc=1  - docs/preamp/data/2026-09-27/L42b/guasti/tb_psu_guasti.log: nel caso perdita_senza_rivelatore_m10 R512 vale 220000.0, atteso 1e+15 (#34)
+un_caso_perso_dall_analisi           caduto  rc=1  - docs/preamp/data/2026-09-27/L42b/rete/analisi.csv: casi ['perdita_rete_m10', 'perdita_rete_nom', 'perdita_rete_p10', 'regime_m10', 'regime_nom', 're
+deck_rete_non_da_psu_net             caduto  rc=1  - deck rete oggi: ../../../../../../var/folders/ym/6mbt1h757kg3811rcy9555000000gn/T/l42b_q2kt02o2/tb_psu_rete.cir non e' docs/preamp/data/2026-09-27/L
+carico_l41a_non_ridice_L41a          caduto  rc=1  - carico di L41a, perdita_rete_m10, t_off_ms: oggi '15.225', L41a '14.211'
+raddrizzatore_ricorso_diverso        caduto  rc=1  - raddrizzatore: docs/preamp/data/2026-09-27/L42b/scelte/raddrizzatore.csv e docs/preamp/data/2026-09-26/L41a/scelte/raddrizzatore.csv non sono uguali
+L41a_rete_come_prima_strada          caduto  rc=1  RIFIUTATO: docs/preamp/data/2026-09-26/L41a/rete/analisi.csv viene da L41a/rete, dati corsi su un circuito che non e' quello di oggi (i modelli segnap
+L41c_verdetto_riscritto              caduto  rc=1  - L41c analisi_seq.txt: verdetto FALLISCE, casi ['_verdetto', 'cf_nodelta', 'corto_u503', 'guasto', 'guasto_u501', 'guasto_u503', 'guasto_u503_min', '
+L41c_ricorsa_diversa                 caduto  rc=1  - L41c: analisi_seq.txt: docs/preamp/data/2026-09-27/L42b-L41c/seq/analisi_seq.txt e docs/preamp/data/2026-09-26/L41c/seq/analisi_seq.txt non sono ugu
+L41c_deck_al_punto_fisso             caduto  rc=1  - L41c, perdita: docs/preamp/data/2026-09-27/L42b-L41c/seq/perdita/tb_psu_seq_perdita_g3.cir non e' docs/preamp/data/2026-09-26/L41c/seq/perdita/tb_ps
+L41c_uscite_del_core                 caduto  rc=1  - L41c, perdita: core_g3.csv: docs/preamp/data/2026-09-27/L42b-L41c/seq/perdita/core_g3.csv e docs/preamp/data/2026-09-26/L41c/seq/perdita/core_g3.csv
+L41c_ponte                           caduto  rc=1  - L41c ponte perdita: docs/preamp/data/2026-09-27/L42b-L41c/ponte/perdita.json e docs/preamp/data/2026-09-26/L41c/ponte/perdita.json non sono uguali b
+timer_testo_ritoccato                caduto  rc=1  - analizza_timer.py rieseguito sui log di L41b1 non ridà analisi_timer.txt
+timer_corso_oggi_diverso             caduto  rc=1  - i deck del temporizzatore corsi oggi non ridanno analisi_timer.txt di L41b1
+timer_deck_non_da_psu_net            caduto  rc=1  - deck del temporizzatore nom: ../../../../../../var/folders/ym/6mbt1h757kg3811rcy9555000000gn/T/l42b_oxxtcz40/tb_psu_timer_nom.cir non e' docs/preamp
+timer_log_con_singular               caduto  rc=1  - docs/preamp/data/2026-09-26/L41b1/timer/tb_psu_timer_nom.log: 'singular matrix at TEMP = 27.000000 and TNOM = 27.000000'
+L41b2_ricorsa_diversa                caduto  rc=1  - L41b2: analisi_seq.txt: docs/preamp/data/2026-09-27/L42b-L41b2/seq/analisi_seq.txt e docs/preamp/data/2026-09-26/L41b2/seq/analisi_seq.txt non sono 
+falsi_host_ricorsi_diversi           caduto  rc=1  - falsi sull'host: docs/preamp/data/2026-09-27/L42b/falsi/esito.txt e docs/preamp/data/2026-09-26/L41b2/falsi/esito.txt non sono uguali byte per byte
+falsi_host_sintesi_falsa             caduto  rc=1  - esito.txt dei falsi: 21 righe che falliscono, sintesi == falsi: 20 su 21 fanno fallire il loro test
+falso6_sul_criterio_sbagliato        caduto  rc=1  - docs/preamp/data/2026-09-26/L41b2/falsi/seq_falso6_guasto.txt: verdetto FALLISCE, criteri caduti [], atteso [n]
+ldr_csv_non_da_analizza              caduto  rc=1  - LDR comp S d0 15 C: err_db -2.190051009173111, dalle correnti -2.090051
+ldr_corse_oggi_diverse               caduto  rc=1  - LDR corse oggi, tb_psu_ldr_cima12mA: docs/preamp/data/2026-09-27/L42b/ldr/tb_psu_ldr_cima12mA.log.csv e docs/preamp/data/2026-09-26/L41b2/ldr/tb_psu
+calibrazione_ricorsa_diversa         caduto  rc=1  - calibrazione cal_cima12mA.json: docs/preamp/data/2026-09-27/L42b/ldr/cal_cima12mA.json e docs/preamp/data/2026-09-26/L41b2/ldr/cal_cima12mA.json non
+tabella_L30_ritoccata                caduto  rc=1  - l30: tabella.py rieseguito: ../../../../../../var/folders/ym/6mbt1h757kg3811rcy9555000000gn/T/l42b_4y2lr373/tabella.csv e docs/preamp/data/2026-09-2
+formula_di_nc028                     caduto  rc=1  - l41c spegnimento_l: -37.0 dB SPL in tabella, la formula di NC-028 da' -35.98
+L30_corse_oggi_diverse               caduto  rc=1  - l30: analisi.csv corso oggi: docs/preamp/data/2026-09-27/L42b/l30/corse/analisi.csv e docs/preamp/data/2026-09-26/L30/corse/analisi.csv non sono ugu
+L41c_tabella_corsa_oggi              caduto  rc=1  - l41c: tabella corsa oggi: docs/preamp/data/2026-09-27/L42b-L41c/tabella.csv e docs/preamp/data/2026-09-26/L41c/tabella.csv non sono uguali byte per 
+deck_L30_rigenerato_diverso          caduto  rc=1  - il deck di L30 rigenerato oggi: docs/preamp/data/2026-09-27/L42b/l30/tb_v2_l30.cir e docs/preamp/data/2026-09-26/L30/deck/tb_v2_l30.cir non sono ugu
+soglia_di_P9_illeggibile             caduto  rc=1  - REQUIREMENTS.md, riga di P9: non trovo entro_ms (rilascia `MUTE_CMD` entro (\d+) ms)
+---- il disegnatore dell'alimentatore
+soglia_del_rail_piu                  caduto  rc=1  AssertionError: soglie dei rail 11.05 / -13.50 V: ADR-046 dice |13,5 V|
+q505_fuori_da_vrelay                 caduto  rc=1  assert {PIN[("Q505", "2")], PIN[("Q505", "3")]} == {"VRELAY_REG", "VRELAY"}, "Q505"
+u506_non_tira_mute_g                 caduto  rc=1  KeyError: ('U506', '7')
+
+di nuovo sui file veri: generatore rc=0, disegnatore rc=0
+47 sabotaggi su 47 caduti (15 di L42a, 32 di L42b)

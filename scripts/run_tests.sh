@@ -261,6 +261,12 @@ out=$(PREAMP_BLOCKS_SVG="$SCRATCH/preamp_blocks.svg" \
 rc=$?
 echo "$out" | tail -12 | sed 's/^/   /'
 report "block diagram assertions against preamp_audio.net" $rc
+# L42b: the supply board's block diagram, the same guarantee on psu.net
+out=$(PSU_BLOCKS_SVG="$SCRATCH/psu_blocks.svg" \
+      "$VENV_PY" "$ROOT/docs/preamp/schematic/psu_blocks_draw.py" 2>&1)
+rc=$?
+echo "$out" | tail -7 | sed 's/^/   /'
+report "supply block diagram assertions against psu.net" $rc
 echo
 
 echo "-- 2g. every device a testbench names exists, every block contact node is terminated --"
