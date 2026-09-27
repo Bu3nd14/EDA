@@ -1,0 +1,18 @@
+log_di_oggi_diverso_da_L40           caduto  rc=1  - tb_ac: oggi e L40 differiscono fino a 1.43e-06 (relativo)
+tabella_di_L40_diversa               caduto  rc=1  - tb_loop/tb_loop_margini.csv: la tabella di oggi non e' quella di L40 byte per byte
+verdetto_L29d2_riscritto             caduto  rc=1  - L29d2 verdetto.csv: gm0x3_1k_iii_i S_ins scritto 7.100 MAINJACK regge, ricalcolato 7.163 MAINJACK regge
+soglia_di_S_nel_verdetto             caduto  rc=1  - L29d2 verdetto.csv: soglia 30.0 per S_ins, il dossier usa 20.0 (ADR-032, ADR-040)
+tabella_del_sorgente_L29e            caduto  rc=1  - L29e tabella_sorgente.csv: gm0x10_lz_iii_c A_ins sorgente scritto 1.604e-07, ricalcolato 1.704e-07
+analisi_del_mute_di_oggi             caduto  rc=1  - L42 mute analisi.csv: 2 righe diverse da L29e sulle stesse celle, la prima ('mh01_1k_iii', 'S_ins', 'MAINJACK', '6.040000', '7.163')
+curva_del_livello                    caduto  rc=1  - S S_ins dalla curva del livello: calcolato 37.1399, ngspice 7.163 (scarto relativo 4.18e+00 > 5e-04)
+corsa_L36_ricontata                  caduto  rc=1  - L36 progetto: sintesi.txt (480, 0, 0), corsa.csv ricontato (480, 1, 0)
+falso_L35_che_passa                  caduto  rc=1  - L35 falsi: main_prima_di_L35 rc 0, atteso 1
+stima_termica_ritoccata              caduto  rc=1  - stima_telaio.py rieseguito non ridà stima_telaio.txt
+rail_di_tb_op                        caduto  rc=1  - calore: la scheda audio della stima vale 7.94 W, 8 x 15 V x i(rail) di tb_op di oggi da' 8.0652 W
+e3_con_le_ldr                        caduto  rc=1  - tb_e3_e5_ldr_cima12mA_e3.csv [zmin_ohm]: riga 3, colonna zmin_ohm: tabella '277705', log 277605.2
+cima_dei_led_a_12_mA_nel_deck        caduto  rc=1  - spice/preamp/tb/tb_v2_casopeggiore.cir: cima della serie 0.012 A, della derivazione 0.02 A
+print_spezzata_non_ricucibile        caduto  rc=1  - docs/preamp/data/2026-09-27/L42/dopo/tb_e4_uscite/tb_e4_uscite.log: una print spezzata da una Note non si ricuce ('zn20k = 5' seguita da 'x.720894e-
+ausiliario_del_guadagno_sparito      caduto  rc=1  - check_relay_safe_state.py esce 1 sulla netlist di oggi
+
+di nuovo sui file veri: rc=0
+15 sabotaggi su 15 caduti
