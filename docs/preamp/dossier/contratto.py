@@ -372,7 +372,7 @@ def section_prb(prb):
             if not body.startswith(head):
                 REFUSE(f"PRB.md: PR-{n}, titolo non riconosciuto")
             rest = body[len(head):]
-            h.append(f'<div class="voce" id="pr-{n}"><p><strong class="prn">PR-{n}</strong> '
+            h.append(f'<div class="voce" id="pr-{n}"><p><strong class="prn">{self_id(f"PR-{n}")}</strong> '
                      f'<strong>{_rids(inline(v["title"]))}</strong>{_rids(inline(rest))}</p>'
                      f'<p class="det">{_rids(inline(v["det"][1:-1]))}</p></div>')
     for b in prb["coda"]:
@@ -498,4 +498,11 @@ def linkify(page, prb, req, adrs, nonreq):
     ids = set(re.findall(r'\bid="([^"]+)"', page))
     for h in sorted(set(re.findall(r'href="#([^"]+)"', page)) - ids):
         REFUSE(f"ancora rotta: href=\"#{h}\" senza un id nella pagina")
+    # un rimando dentro la propria destinazione non porta da nessuna parte: l'utente
+    # l'ha trovato cliccando PR-1 nella voce PR-1 (dopo L42d)
+    for m in re.finditer(r'<(div|tr)\b[^>]*\bid="((?:pr|adr|req)-[\w]+)"', page):
+        tag, anchor = m.group(1), m.group(2)
+        end = page.find(f"</{tag}>", m.end())
+        if f'href="#{anchor}"' in page[m.end():end]:
+            REFUSE(f"link a se stesso: dentro #{anchor} c'e' un rimando a #{anchor}")
     return page, count["n"]
