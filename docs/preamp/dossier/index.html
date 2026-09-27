@@ -162,9 +162,9 @@ hr.end{border:0;border-top:1px solid var(--rule);margin:56px 0 0}
 }
 </style>
 <div class="wrap">
-<p class="eyebrow">Scheda audio &middot; deck veloci corsi il 2026-09-27 (L42a) sul circuito di L28 &middot; mute da L29d2, L29e e L41b2 &middot; interblocco da L35 e L36 &middot; calore da L30</p>
+<p class="eyebrow">Scheda audio &middot; deck veloci corsi il 2026-09-27 (L42a) sul circuito di L28 &middot; mute da L29d2, L29e e L41b2 &middot; interblocco da L35 e L36 &middot; calore da L30 &middot; alimentatore da L41a–L41c e L30, ricorso il 2026-09-27 (L42b)</p>
 <h1>Dossier di misura del preamplificatore di linea</h1>
-<p class="lede">Classe A pura a componenti discreti, senza operazionali nel percorso del segnale. Guadagno 0 / +3 / +10 dB, trim 0 / &minus;6 / &minus;12 dB sull&rsquo;uscita variabile, mute graduale a LDR a monte e relè al jack. Questa pagina racconta la scheda audio; l&rsquo;alimentatore è la seconda scheda.</p>
+<p class="lede">Classe A pura a componenti discreti, senza operazionali nel percorso del segnale. Guadagno 0 / +3 / +10 dB, trim 0 / &minus;6 / &minus;12 dB sull&rsquo;uscita variabile, mute graduale a LDR a monte e relè al jack. Le due schede: la scheda audio, poi l&rsquo;alimentatore, coi rail lineari, il sorvegliante in hardware e il temporizzatore che ordina mute, guadagno e rete.</p>
 <dl class="synopsis">
 <div><dt>Guadagni a 1 kHz</dt><dd>&minus;0,01 · +3,04 · +9,96<span class="u">dB &middot; 0 / +3 / +10 &middot; sorgente 1,5 Ω</span></dd></div>
 <div><dt>V1, margine minimo</dt><dd>62,08°<span class="u">soglia 60° &middot; guardia 2,08° &middot; Blocco B &middot; 0 dB</span></dd></div>
@@ -175,6 +175,8 @@ hr.end{border:0;border-top:1px solid var(--rule);margin:56px 0 0}
 <div><dt>Scarto ADR-014</dt><dd>3,29&middot;10<sup>&minus;4</sup><span class="u">dB a 20 kHz rif. 1 kHz &middot; peggiore dei 3 modi</span></dd></div>
 <div><dt>PSRR, peggiore</dt><dd>23,03 dB<span class="u">a 10 kHz</span></dd></div>
 <div><dt>E4, Re(Z<sub>out</sub>) max</dt><dd>60,09 Ω<span class="u">al jack &middot; 20 Hz–20 kHz &middot; 3 uscite, costante col volume</span></dd></div>
+<div><dt>Δ, angolo minimo</dt><dd>16,91 ms<span class="u">col micro in reset &middot; soglia 10 ms (ADR-045)</span></dd></div>
+<div><dt>Guasto dell&rsquo;alimentatore, al jack</dt><dd>56,2 dB SPL<span class="u">il peggiore sul circuito vero (L41c) &middot; di picco a 1 m</span></dd></div>
 </dl>
 <div class="note"><strong>Leggere prima questo.</strong> Dei 7 dispositivi attivi che questi deck simulano, <strong>7 usano il modello del costruttore</strong> (1N4148, LS352, LSK489, MJE15032, MJE15033, MMBT5401, MMBT5551), nessuno è un segnaposto. <strong>Solo LSK489 porta il rumore 1/f</strong>: specchio, VAS e buffer ne sono senza, e le cifre di E5 restano un pavimento per quella parte (NC-004, bloccante per G1). Nessuna cifra di distorsione. La provenienza è scritta sotto ogni titolo di sezione, ed è letta dagli <code>.include</code> dei deck, non dichiarata.</div>
 <p>Il progetto sostituisce un Technics SU-9070 la cui struttura di guadagno richiede <strong>46 dB di attenuazione</strong>, causa misurabile della mancanza di dinamica lamentata. La topologia canonica è in <code>circuits/preamp/</code>; i banchi di prova in <code>spice/preamp/tb/</code>; i dati dei deck veloci in <code>docs/preamp/data/2026-09-27/L42/dopo/</code>, corsi oggi sul circuito di <code>main</code>; quelli del mute, dell&rsquo;interblocco e del calore nelle cartelle dei loro lotti, nominate sotto ogni sezione.</p>
@@ -194,6 +196,13 @@ hr.end{border:0;border-top:1px solid var(--rule);margin:56px 0 0}
 <li><a href="#sint">Il guadagno interbloccato e i comandi</a></li>
 <li><a href="#s12">Sovraccarico e corto: V3, P7</a></li>
 <li><a href="#sheat">Il calore del telaio</a></li>
+<li><a href="#spsu">L&rsquo;alimentatore: schema e decisioni</a></li>
+<li><a href="#spow">Potenza, rail e VRELAY</a></li>
+<li><a href="#ssup">Il sorvegliante e i guasti, sul circuito</a></li>
+<li><a href="#stim">Il temporizzatore: Δ in hardware e lo standby</a></li>
+<li><a href="#sfw">Il firmware sul circuito</a></li>
+<li><a href="#sldr">Il pilota delle LDR</a></li>
+<li><a href="#soff">Spegnimento e failsafe al jack</a></li>
 <li><a href="#s13">Requisiti a fronte del misurato</a></li>
 <li><a href="#s14">Cosa questo dossier non dice</a></li>
 <li><a href="#s15">Provenienza</a></li>
@@ -497,7 +506,150 @@ hr.end{border:0;border-top:1px solid var(--rule);margin:56px 0 0}
 <tr><td>all'aria</td><td>peggiore</td><td class="num">17,8 W</td><td class="num">10,4 °C</td><td class="num">0,0 °C</td><td class="num"><strong>45,4 °C</strong></td><td class="ok">conforme</td></tr>
 </table></div>
 <p>Il vano chiuso regge i 60 °C nel caso peggiore con almeno <strong>0,5 cm</strong> di gioco per lato. La scheda audio della stima coincide coi rail di <code>tb_op</code> di oggi: 8 &times; 15 V &times; (|i<sub>+</sub>| + |i<sub>&minus;</sub>|) = 7,9452 W. La conferma è la temperatura nel telaio del prototipo (ADR-021, «Da riaprire se»).</p>
-<h2 id="s13"><span class="secno">16</span><span>Requisiti a fronte del misurato</span></h2>
+<h2 id="spsu"><span class="secno">16</span><span>L&rsquo;alimentatore: schema e decisioni</span></h2>
+<p class="prov">Disegno <code>docs/preamp/schematic/psu_blocks_draw.py</code>, ogni cifra letta da <code>circuits/preamp/psu.net</code> e asserita &middot; sorgente <code>circuits/preamp/psu.py</code></p>
+<p>La seconda scheda. Porta i rail audio, <code>VRELAY</code> per le bobine della scheda audio e la logica; decide <em>quando</em> il mute si inserisce e si rilascia, e lo fa in un ordine che sta nell&rsquo;hardware, non nel firmware. Il diagramma è a blocchi: le soglie e le costanti di tempo stampate sono calcolate dai valori della netlist, le cifre misurate stanno nelle sezioni che seguono.</p>
+<div class="plate"><img src="psu_blocks.svg" alt="Diagramma a blocchi dell'alimentatore" loading="lazy"></div>
+<div class="tablewrap"><table><tr><th>Decisione</th><th>Che cosa</th><th>La cifra che la regge, dai dati</th></tr>
+<tr><td>ADR-048</td><td>rail lineari (nessuno switching), <code>VRELAY</code> da un trasformatore proprio, standby con l&rsquo;interruttore posteriore, sorvegliante in hardware sul gate del sink di <code>MUTE_CMD</code></td><td class="num">alla perdita di rete <code>MUTE_CMD</code> rilasciato a 14,316 ms, coi rail ancora a 15 / &minus;15,053 V</td></tr>
+<tr><td>ADR-049</td><td>Δ e Δ₂ come RC su comparatori; <code>VRELAY</code> tolta alla scheda audio in standby (NC-037)</td><td class="num">Δ ≥ 16,91 ms all&rsquo;angolo minimo col micro in reset &middot; standby: 0,000 V a J1, 92,5 mW da T2</td></tr>
+<tr><td>ADR-050</td><td>la cima delle LDR a 12 mA a ogni temperatura</td><td class="num">cima della tabella 12 mA &middot; calibrato entro 0,22 dB</td></tr>
+<tr><td>ADR-051</td><td>il corto della linea a 12 V dei relè accettato sotto il tetto (guasto singolo)</td><td class="num">90,3 dB SPL <span class="na">(69,36 mV)</span> al jack &middot; tetto 112,2 dB SPL</td></tr>
+</table></div>
+<h2 id="spow"><span class="secno">17</span><span>Potenza, rail e VRELAY</span></h2>
+<p class="prov">Deck <code>docs/preamp/data/2026-09-27/L42b/rete/tb_psu_rete.cir</code> &middot; dati <code>docs/preamp/data/2026-09-27/L42b/</code> &middot; corso il 2026-09-27 sul <code>psu.net</code> di oggi<br>Inclusi: <code>models/diodes/1n4148.lib</code>, <code>models/mosfet_n/generic_nmos.lib</code>, <code>models/mosfet_p/generic_pmos.lib</code>, <code>models/bjt_npn/generic_npn.lib</code>, <code>models/bjt_pnp/generic_pnp.lib</code> (generici, dichiarati) &middot; comportamentali: <strong>REGP, REGM, CMPOD, SHUNT25, OPA5, OPA5DC</strong> &middot; nessun modello del costruttore: regolatori, comparatori, micro, DAC e op-amp sono modelli dichiarati</p>
+<p><strong>Una cosa trovata rigenerando.</strong> I banchi della potenza di L41a sono corsi sul <code>psu.py</code> di L41a, che L41b1 ha riscritto (il temporizzatore, Q505, il pilota delle LDR). Queste cifre sono una ricorsa di oggi: gli stessi casi e le stesse sonde di L41a, sul circuito di oggi, col micro che gira e resta fermo durante l&rsquo;evento (il solo percorso hardware, come le sorgenti fisse di L41a). Lo stesso banco <em>col carico di L41a</em> (senza le bistabili del trim, le stringhe delle LDR alla cima e il micro) ridà L41a su ogni colonna, entro 0,5 ms o l&rsquo;1 % e 10 mV: la parte di potenza è quella, e ogni scarto qui sotto è il carico.</p>
+<h3>A regime</h3>
+<div class="tablewrap"><table><tr><th>Rete</th><th class="num">V+</th><th class="num">V−</th><th class="num">VRELAY_REG</th><th class="num">VRELAY a J1</th><th class="num">V5</th><th class="num">valle del grezzo +</th><th class="num">valle −</th><th class="num">valle di VRELAY</th></tr>
+<tr><td>−10 %</td><td class="num">14,9997 V</td><td class="num">&minus;15,0525 V</td><td class="num">11,9999 V</td><td class="num">11,9959 V</td><td class="num">5 V</td><td class="num">18,047 V</td><td class="num">18,045 V</td><td class="num">12,852 V</td></tr>
+<tr><td>nominale</td><td class="num">14,9997 V</td><td class="num">&minus;15,0525 V</td><td class="num">11,9999 V</td><td class="num">11,9959 V</td><td class="num">5 V</td><td class="num">20,286 V</td><td class="num">20,284 V</td><td class="num">14,766 V</td></tr>
+<tr><td>+10 %</td><td class="num">14,9997 V</td><td class="num">&minus;15,0525 V</td><td class="num">11,9999 V</td><td class="num">11,9959 V</td><td class="num">5 V</td><td class="num">22,529 V</td><td class="num">22,527 V</td><td class="num">16,688 V</td></tr>
+</table></div>
+<h3>La perdita di rete, col rivelatore</h3>
+<div class="tablewrap"><table><tr><th>Rete</th><th class="num">MUTE_CMD rilasciato</th><th class="num">rivelatore</th><th class="num">rail + a 13,5 / 10,6 V</th><th class="num">rail al rilascio</th><th class="num">VRELAY_REG ≥ 11,4 V dopo</th><th>P9: ≥ 25 ms</th></tr>
+<tr><td>−10 %</td><td class="num">14,225 ms</td><td class="num">14,228 ms</td><td class="num">73,942 / 134,382 ms</td><td class="num">15 / &minus;15,053 V</td><td class="num">36,117 ms</td><td class="ok">conforme</td></tr>
+<tr><td>nominale</td><td class="num">14,316 ms</td><td class="num">14,319 ms</td><td class="num">105,753 / 166,193 ms</td><td class="num">15 / &minus;15,053 V</td><td class="num">102,137 ms</td><td class="ok">conforme</td></tr>
+<tr><td>+10 %</td><td class="num">14,391 ms</td><td class="num">14,394 ms</td><td class="num">137,586 / 198,026 ms</td><td class="num">15 / &minus;15,053 V</td><td class="num">168,455 ms</td><td class="ok">conforme</td></tr>
+</table></div>
+<h3>Un regolatore che cede, e il rivelatore guasto</h3>
+<div class="tablewrap"><table><tr><th>Caso</th><th class="num">MUTE_CMD rilasciato</th><th class="num">dopo lo scatto a |13,5 V|</th><th class="num">rail al rilascio</th><th class="num">VRELAY_REG ≥ 11,4 / ≥ 9,6 V</th><th>P9: entro 1 ms</th></tr>
+<tr><td>U501 (rail +) spento</td><td class="num">9,589 ms</td><td class="num">&minus;0,367 ms</td><td class="num">13,555 / &minus;15,053 V</td><td class="num">&gt; 290,411 / &gt; 290,411 ms</td><td class="ok">conforme</td></tr>
+<tr><td>U502 (rail −) spento</td><td class="num">10,191 ms</td><td class="num">&minus;0,127 ms</td><td class="num">15 / &minus;13,518 V</td><td class="num">&gt; 289,809 / &gt; 289,809 ms</td><td class="ok">conforme</td></tr>
+<tr><td>U503 (<code>VRELAY_REG</code>) spento</td><td class="num">13,29 ms</td><td class="num">&mdash;</td><td class="num">15 / &minus;15,053 V</td><td class="num">0 / 25,664 ms</td><td class="na">scatta su VRELAY_REG</td></tr>
+<tr><td>perdita di rete, rivelatore guasto, −10 %</td><td class="num">59,945 ms</td><td class="num">&minus;13,996 ms</td><td class="num">14,171 / &minus;14,183 V</td><td class="num">0 / 80,216 ms</td><td class="ok">conforme</td></tr>
+<tr><td>idem, nominale</td><td class="num">104,517 ms</td><td class="num">&minus;1,226 ms</td><td class="num">13,558 / &minus;13,567 V</td><td class="num">0 / 90,606 ms</td><td class="ok">conforme</td></tr>
+<tr><td>idem, +10 %</td><td class="num">136,374 ms</td><td class="num">&minus;1,204 ms</td><td class="num">13,558 / &minus;13,564 V</td><td class="num">16,004 / 117,144 ms</td><td class="ok">conforme</td></tr>
+</table></div>
+<p>Un tempo negativo dopo lo scatto vuol dire che il mute è già rilasciato prima che un rail arrivi alla soglia. Col rivelatore di rete guasto il caso è doppio (la rete persa e il rivelatore rotto), come L41a lo dichiarò: a rete bassa scatta per primo il sorvegliante di <code>VRELAY_REG</code>, e i rail sono ancora sopra la soglia.</p>
+<h3>Cosa è cambiato da L41a</h3>
+<div class="tablewrap"><table><tr><th>Caso</th><th>Grandezza</th><th class="num">L41a</th><th class="num">oggi</th><th class="num">oggi, col carico di L41a</th></tr>
+<tr><td>perdita_rete_m10</td><td>VRELAY_REG ≥ 11,4 V [ms]</td><td class="num">62,821</td><td class="num"><strong>36,117</strong></td><td class="num">62,677</td></tr>
+<tr><td>perdita_rete_m10</td><td>VRELAY_REG ≥ 9,6 V [ms]</td><td class="num">191,101</td><td class="num"><strong>137,257</strong></td><td class="num">190,817</td></tr>
+<tr><td>perdita_rete_nom</td><td>VRELAY_REG ≥ 11,4 V [ms]</td><td class="num">144,918</td><td class="num"><strong>102,137</strong></td><td class="num">144,683</td></tr>
+<tr><td>perdita_rete_nom</td><td>VRELAY_REG ≥ 9,6 V [ms]</td><td class="num">273,198</td><td class="num"><strong>203,277</strong></td><td class="num">272,823</td></tr>
+<tr><td>perdita_rete_p10</td><td>VRELAY_REG ≥ 11,4 V [ms]</td><td class="num">227,315</td><td class="num"><strong>168,455</strong></td><td class="num">226,995</td></tr>
+<tr><td>perdita_rete_p10</td><td>VRELAY_REG ≥ 9,6 V [ms]</td><td class="num">355,595</td><td class="num"><strong>269,595</strong></td><td class="num">355,155</td></tr>
+<tr><td>regime_m10</td><td>valle di VRELAY [V]</td><td class="num">13,210</td><td class="num"><strong>12,852</strong></td><td class="num">13,209</td></tr>
+<tr><td>regime_nom</td><td>valle di VRELAY [V]</td><td class="num">15,137</td><td class="num"><strong>14,766</strong></td><td class="num">15,135</td></tr>
+<tr><td>regime_p10</td><td>valle di VRELAY [V]</td><td class="num">17,070</td><td class="num"><strong>16,688</strong></td><td class="num">17,069</td></tr>
+<tr><td>guasto_u503</td><td>MUTE_CMD rilasciato [ms]</td><td class="num">15,830</td><td class="num"><strong>13,290</strong></td><td class="num">15,791</td></tr>
+<tr><td>guasto_u503</td><td>VRELAY_REG ≥ 9,6 V [ms]</td><td class="num">32,946</td><td class="num"><strong>25,664</strong></td><td class="num">32,684</td></tr>
+<tr><td>perdita_senza_rivelatore_m10</td><td>MUTE_CMD rilasciato [ms]</td><td class="num">72,545</td><td class="num"><strong>59,945</strong></td><td class="num">72,720</td></tr>
+<tr><td>perdita_senza_rivelatore_m10</td><td>dopo lo scatto a 13,5 V [ms]</td><td class="num">-1,260</td><td class="num"><strong>-13,996</strong></td><td class="num">-1,227</td></tr>
+<tr><td>perdita_senza_rivelatore_m10</td><td>VRELAY_REG ≥ 9,6 V [ms]</td><td class="num">114,780</td><td class="num"><strong>80,216</strong></td><td class="num">114,307</td></tr>
+<tr><td>perdita_senza_rivelatore_m10</td><td>V+ al rilascio [V]</td><td class="num">13,560</td><td class="num"><strong>14,171</strong></td><td class="num">13,558</td></tr>
+<tr><td>perdita_senza_rivelatore_m10</td><td>V− al rilascio [V]</td><td class="num">-13,577</td><td class="num"><strong>-14,183</strong></td><td class="num">-13,569</td></tr>
+<tr><td>perdita_senza_rivelatore_nom</td><td>VRELAY_REG ≥ 11,4 V [ms]</td><td class="num">27,140</td><td class="num"><strong>0,000</strong></td><td class="num">26,663</td></tr>
+<tr><td>perdita_senza_rivelatore_nom</td><td>VRELAY_REG ≥ 9,6 V [ms]</td><td class="num">155,420</td><td class="num"><strong>90,606</strong></td><td class="num">154,803</td></tr>
+<tr><td>perdita_senza_rivelatore_p10</td><td>VRELAY_REG ≥ 11,4 V [ms]</td><td class="num">68,040</td><td class="num"><strong>16,004</strong></td><td class="num">67,414</td></tr>
+<tr><td>perdita_senza_rivelatore_p10</td><td>VRELAY_REG ≥ 9,6 V [ms]</td><td class="num">196,320</td><td class="num"><strong>117,144</strong></td><td class="num">195,554</td></tr>
+</table></div>
+<p>Ogni scarto sta su <code>VRELAY_REG</code>, o sui casi in cui è lei a far scattare il sorvegliante. A rete −10 % la tenuta scende da 62,821 a <strong>36,117 ms</strong>: P9 regge ancora (≥ 25 ms), con 11,117 ms di margine invece di 37,821. La causa è il carico che L41b1 e L41b2 hanno messo su <code>VRELAY_REG</code>, soprattutto il ramo d&rsquo;ingresso dello specchio delle LDR alla cima, che attraverso V5 la scarica. Il commento di <code>C_VRELAY</code> in <code>psu.py</code> cita ancora le cifre di L41a; il sorgente non si tocca in questo lotto.</p>
+<h3>Il raddrizzatore: il dimensionamento, non il circuito</h3>
+<p class="prov">Script <code>docs/preamp/data/2026-09-26/L41a/scelte/raddrizzatore.py</code>, modello ipotetico dichiarato (un Thevenin per semi-avvolgimento, i regolatori come carichi costanti), rieseguito il 2026-09-27 in <code>docs/preamp/data/2026-09-27/L42b/scelte/</code>: la tabella è uguale byte per byte</p>
+<div class="tablewrap"><table><tr><th>Rete</th><th class="num">carico del +</th><th class="num">V+ min / medio</th><th class="num">margine della valle</th></tr>
+<tr><td>&minus;10 %</td><td class="num">265 mA</td><td class="num">18,105 / 18,324 V</td><td class="num">+2,505 V</td></tr>
+<tr><td>&minus;10 %</td><td class="num">345 mA</td><td class="num">17,781 / 18,059 V</td><td class="num">+2,181 V</td></tr>
+<tr><td>nominale</td><td class="num">265 mA</td><td class="num">20,345 / 20,566 V</td><td class="num">+4,745 V</td></tr>
+<tr><td>nominale</td><td class="num">345 mA</td><td class="num">20,011 / 20,292 V</td><td class="num">+4,411 V</td></tr>
+<tr><td>+10 %</td><td class="num">265 mA</td><td class="num">22,588 / 22,81 V</td><td class="num">+6,988 V</td></tr>
+<tr><td>+10 %</td><td class="num">345 mA</td><td class="num">22,245 / 22,528 V</td><td class="num">+6,645 V</td></tr>
+</table></div>
+<p>Sono le righe del toroidale scelto con ADR-048 (2 &times; 15 V, 50 VA), portate all&rsquo;utente prima della decisione; il margine è la valle del grezzo sopra 15 V più il dropout. La riga a 345 mA è il rail + con <code>VRELAY</code> ricavata da lì, la strada che ADR-048 ha scartato per un trasformatore proprio. Il trasformatore vero va confermato sul pezzo.</p>
+<h2 id="ssup"><span class="secno">18</span><span>Il sorvegliante e i guasti, sul circuito</span></h2>
+<p class="prov">Deck <code>docs/preamp/data/2026-09-26/L41c/seq/perdita/tb_psu_seq_perdita_g3.cir</code> &middot; dati <code>docs/preamp/data/2026-09-26/L41c/seq/</code> &middot; ricorso il 2026-09-27 in <code>docs/preamp/data/2026-09-27/L42b-L41c/</code>: lo stesso verdetto byte per byte, e per ogni caso lo stesso punto fisso, lo stesso deck rigenerato da <code>psu.net</code> e le stesse uscite del firmware<br>Inclusi: <code>models/diodes/1n4148.lib</code>, <code>models/mosfet_n/generic_nmos.lib</code>, <code>models/mosfet_p/generic_pmos.lib</code>, <code>models/bjt_npn/generic_npn.lib</code>, <code>models/bjt_pnp/generic_pnp.lib</code> (generici, dichiarati) &middot; comportamentali: <strong>REGP, REGM, CMPOD, SHUNT25, OPA5, OPA5DC</strong> &middot; nessun modello del costruttore: regolatori, comparatori, micro, DAC e op-amp sono modelli dichiarati</p>
+<p>Il circuito dell&rsquo;alimentatore col firmware del temporizzatore come micro, iterati fino al punto fisso (L41c). I relè sono presi all&rsquo;angolo peggiore del G6K: il jack staccato <em>il più tardi possibile</em>, il guadagno a 0 dB <em>il più presto possibile</em>. Il criterio r chiede che il guadagno non si muova mai col jack collegato (ADR-045); s che il jack si stacchi prima che il rail + perda la regolazione (L30).</p>
+<div class="tablewrap"><table><tr><th>Caso</th><th class="num">MUTE_CMD rilasciato</th><th class="num">Δ ai rilasci</th><th class="num">jack, tardi</th><th class="num">guadagno, presto</th><th class="num">V+ &lt; 10,6 V</th><th class="num">K501</th><th>Criteri</th></tr>
+<tr><td>spegnimento morbido</td><td class="num">6,5222 s</td><td class="num">39,8 ms</td><td class="num">6532 ms</td><td class="num">6569 ms</td><td class="num">6813 ms</td><td class="num">63,4 ms</td><td class="ok">9 su 9</td></tr>
+<tr><td>perdita di rete</td><td class="num">14,4 ms</td><td class="num">20,3 ms</td><td class="num">17,4 ms</td><td class="num">34,7 ms</td><td class="num">183 ms</td><td class="num">&mdash;</td><td class="ok">7 su 7</td></tr>
+<tr><td>idem, Δ all&rsquo;angolo minimo</td><td class="num">14,4 ms</td><td class="num">19 ms</td><td class="num">17,4 ms</td><td class="num">33,4 ms</td><td class="num">183 ms</td><td class="num">&mdash;</td><td class="ok">7 su 7</td></tr>
+<tr><td>U502 (rail −) spento</td><td class="num">10,7 ms</td><td class="num">20,3 ms</td><td class="num">&mdash;</td><td class="num">&mdash;</td><td class="num">&mdash;</td><td class="num">102,9 ms</td><td class="ok">7 su 7</td></tr>
+<tr><td>U501 (rail +) spento</td><td class="num">10,1 ms</td><td class="num">20,3 ms</td><td class="num">13,1 ms</td><td class="num">30,4 ms</td><td class="num">34,8 ms</td><td class="num">103,5 ms</td><td class="ok">9 su 9</td></tr>
+<tr><td>U503 (<code>VRELAY_REG</code>) spento</td><td class="num">12,8 ms</td><td class="num">20,3 ms</td><td class="num">15,8 ms</td><td class="num">33,1 ms</td><td class="num">253 ms</td><td class="num">&mdash;</td><td class="ok">7 su 7</td></tr>
+<tr><td>idem, angolo minimo</td><td class="num">12,6 ms</td><td class="num">19 ms</td><td class="num">15,6 ms</td><td class="num">31,6 ms</td><td class="num">253 ms</td><td class="num">&mdash;</td><td class="ok">7 su 7</td></tr>
+<tr><td>controfattuale senza Δ</td><td class="num">14,4 ms</td><td class="num">0 ms</td><td class="num">17,4 ms</td><td class="num">14,4 ms</td><td class="num">183 ms</td><td class="num">&mdash;</td><td class="ok">C3 e r cadono, come devono (7 criteri)</td></tr>
+<tr><td>corto dell&rsquo;uscita di U503</td><td class="num">0,1 ms</td><td class="num">0,1 ms</td><td class="num">3,1 ms</td><td class="num">0,1 ms</td><td class="num">183 ms</td><td class="num">&mdash;</td><td class="na">nessun verdetto: decisione dell&rsquo;utente (ADR-051)</td></tr>
+</table></div>
+<p>Allo spegnimento morbido il mute si rilascia 6,5222 s dopo l&rsquo;interruttore frontale (la dissolvenza intera), e K501 stacca il toroidale 63,4 ms dopo il rilascio di <code>PERMIT_CMD</code>: P9 ne chiede ≥ 50. I tempi dopo l&rsquo;evento sono in ms, tranne il rilascio dello spegnimento morbido.</p>
+<h2 id="stim"><span class="secno">19</span><span>Il temporizzatore: Δ in hardware e lo standby</span></h2>
+<p class="prov">Deck <code>docs/preamp/data/2026-09-26/L41b1/timer/tb_psu_timer_nom.cir</code> &middot; dati <code>docs/preamp/data/2026-09-26/L41b1/timer/</code> &middot; ricorso il 2026-09-27 in <code>docs/preamp/data/2026-09-27/L42b/timer/</code>: deck rigenerati uguali, <code>analizza_timer.py</code> ridà lo stesso testo sui log di allora e di oggi<br>Inclusi: <code>models/diodes/1n4148.lib</code>, <code>models/mosfet_n/generic_nmos.lib</code>, <code>models/mosfet_p/generic_pmos.lib</code>, <code>models/bjt_npn/generic_npn.lib</code>, <code>models/bjt_pnp/generic_pnp.lib</code> (generici, dichiarati) &middot; comportamentali: <strong>REGP, REGM, CMPOD, SHUNT25, OPA5, OPA5DC</strong> &middot; nessun modello del costruttore: regolatori, comparatori, micro, DAC e op-amp sono modelli dichiarati</p>
+<p>Il ritardo Δ fra il rilascio di <code>MUTE_CMD</code> e quello di <code>PERMIT_CMD</code> sta in un RC su un comparatore, e deve reggere <em>qualunque cosa faccia il micro</em>. L&rsquo;angolo minimo prende C<sub>T</sub> e C<sub>T2</sub> −5 %, R<sub>T</sub> e R<sub>T2</sub> −1 %, V5 a 4,90 V e il riferimento a 2,505 V.</p>
+<div class="tablewrap"><table><tr><th>Caso</th><th class="num">Δ nominale</th><th class="num">Δ angolo minimo</th><th class="num">VRELAY a J1 &lt; 9,6 V dopo PERMIT</th><th>Δ ≥ 10 ms</th></tr>
+<tr><td>il micro in reset (uscite in alta impedenza)</td><td class="num">18,84 ms</td><td class="num">16,91 ms</td><td class="num">60,41 / 56,48 ms</td><td class="ok">conforme</td></tr>
+<tr><td>il micro porta tutto a zero</td><td class="num">20,07 ms</td><td class="num">18,12 ms</td><td class="num">60,41 / 56,48 ms</td><td class="ok">conforme</td></tr>
+<tr><td>perdita di rete, micro in reset</td><td class="num">18,84 ms</td><td class="num">16,91 ms</td><td class="num">60,41 / 56,48 ms</td><td class="ok">conforme</td></tr>
+<tr><td>U503 spento, micro in reset</td><td class="num">18,84 ms</td><td class="num">16,91 ms</td><td class="num">24,69 / 26,91 ms</td><td class="ok">conforme</td></tr>
+<tr><td>controfattuale: senza C528</td><td class="num">0 ms</td><td class="num">0 ms</td><td class="num">80,38 / 74,53 ms</td><td class="ok">cade, come deve</td></tr>
+</table></div>
+<p>Col micro bloccato alto durante una perdita di rete <code>MUTE_CMD</code> si rilascia a +14,32 ms (il sorvegliante) e <code>PERMIT_CMD</code> non si rilascia mai nei 400 ms: il guadagno resta dov&rsquo;è, a jack staccati. Un firmware che abbassa solo <code>PERMIT_REQ</code> non muove niente (drain ≤ 0,02 V, contro i 6 V del rilascio). Al rilascio del mute <code>PERMIT_CMD</code> si eccita 0,04 ms prima di <code>MUTE_CMD</code>. In standby <code>VRELAY</code> a J1 vale 0,000 V e T2 eroga 92,5 / 90,8 mW (nominale / angolo minimo): le perdite a vuoto di T2 non sono qui, e NC-037 si chiude con quelle (giro BOM).</p>
+<h2 id="sfw"><span class="secno">20</span><span>Il firmware sul circuito</span></h2>
+<p class="prov">Deck <code>docs/preamp/data/2026-09-26/L41b2/seq/accensione/tb_psu_seq_accensione_g5.cir</code> &middot; dati <code>docs/preamp/data/2026-09-26/L41b2/seq/</code> &middot; firmware <code>firmware/preamp_timer/src/timer_core.c</code> &middot; ricorso il 2026-09-27 in <code>docs/preamp/data/2026-09-27/L42b-L41b2/</code>: lo stesso verdetto, gli stessi deck e le stesse uscite del core<br>Inclusi: <code>models/diodes/1n4148.lib</code>, <code>models/mosfet_n/generic_nmos.lib</code>, <code>models/mosfet_p/generic_pmos.lib</code>, <code>models/bjt_npn/generic_npn.lib</code>, <code>models/bjt_pnp/generic_pnp.lib</code> (generici, dichiarati) &middot; comportamentali: <strong>REGP, REGM, CMPOD, SHUNT25, OPA5, OPA5DC</strong> &middot; nessun modello del costruttore: regolatori, comparatori, micro, DAC e op-amp sono modelli dichiarati</p>
+<p>Il core del firmware fa da micro del banco: circuito e firmware si iterano finché le uscite del core non cambiano più fra due giri (il punto fisso), senza che il ponte debba ricostruire un pin. I criteri sono scritti prima delle corse, nell&rsquo;intestazione di <code>analizza_seq.py</code>.</p>
+<div class="tablewrap"><table><tr><th>Sequenza</th><th>Stati del firmware</th><th class="num">giro del punto fisso</th><th>Criteri</th></tr>
+<tr><td>accensione</td><td>STANDBY → ACCENSIONE → RILASCIO</td><td class="num">5</td><td class="ok">8 su 8</td></tr>
+<tr><td>rilascio</td><td>MUTO → RILASCIO → MUSICA</td><td class="num">4</td><td class="ok">5 su 5</td></tr>
+<tr><td>inversione</td><td>MUSICA → INSERZIONE → RILASCIO → MUSICA</td><td class="num">2</td><td class="ok">7 su 7</td></tr>
+<tr><td>spegnimento</td><td>MUSICA → SPEGNIMENTO → STANDBY</td><td class="num">2</td><td class="ok">7 su 7</td></tr>
+<tr><td>buco20</td><td>MUSICA → BUCO_RETE → RILASCIO</td><td class="num">2</td><td class="ok">6 su 6</td></tr>
+<tr><td>buco200</td><td>MUSICA → BUCO_RETE → ACCENSIONE → RILASCIO</td><td class="num">4</td><td class="ok">6 su 6</td></tr>
+<tr><td>guasto</td><td>MUSICA → BUCO_RETE → GUASTO</td><td class="num">2</td><td class="ok">7 su 7</td></tr>
+</table></div>
+<p><strong>I falsi.</strong> Sull&rsquo;host 21 falsi del core su 21 fanno fallire il loro test (<code>run_host_tests.sh --falsi</code>, rieseguito il 2026-09-27: lo stesso esito byte per byte; lo riesegue anche il blocco 2k di <code>run_tests.sh</code>). Sul circuito ne sono stati fatti fallire due, ciascuno sul criterio giusto: il falso 6 nel guasto cade su <code>n</code> («MUTE_REQ giu' 1.300 ms dopo la caduta di MUTE_G_IN»), il falso 9 nello spegnimento su <code>j</code> («K501 aperto -15.6 ms dopo il rilascio di PERMIT_CMD»). Questi due non sono stati ricorsi oggi: richiedono di ricompilare il ponte col falso dentro. <code>src/main_attiny.c</code> non è scritto.</p>
+<h2 id="sldr"><span class="secno">21</span><span>Il pilota delle LDR</span></h2>
+<p class="prov">Deck <code>docs/preamp/data/2026-09-26/L41b2/ldr/tb_psu_ldr_cal_cima12mA.cir</code> &middot; dati <code>docs/preamp/data/2026-09-26/L41b2/ldr/</code> &middot; ricorso il 2026-09-27 in <code>docs/preamp/data/2026-09-27/L42b/ldr/</code>: calibrazioni e CSV uguali byte per byte; <code>analizza_ldr.py</code> rieseguito sui log di allora<br>Inclusi: <code>models/diodes/1n4148.lib</code>, <code>models/mosfet_n/generic_nmos.lib</code>, <code>models/mosfet_p/generic_pmos.lib</code>, <code>models/bjt_npn/generic_npn.lib</code>, <code>models/bjt_pnp/generic_pnp.lib</code> (generici, dichiarati) &middot; comportamentali: <strong>REGP, REGM, CMPOD, SHUNT25, OPA5, OPA5DC</strong> &middot; nessun modello del costruttore: regolatori, comparatori, micro, DAC e op-amp sono modelli dichiarati</p>
+<p>Il DAC comanda due convertitori esponenziali, uno per stringa; il firmware calcola il codice dalla legge esponenziale alla temperatura del telaio (il sensore del micro), e corregge la parte ohmica in cima con una calibrazione a due punti letta sul sense. L&rsquo;errore è ricalcolato qui dalle correnti del CSV, non letto dalla sua colonna.</p>
+<div class="plate"><img src="fig_ldr_drive.svg" alt="Errore del pilota delle LDR contro la tabella v4" loading="lazy"></div>
+<div class="tablewrap"><table><tr><th>Modo</th><th class="num">errore peggiore</th><th>dove</th><th>±1 dB</th></tr>
+<tr><td>letto a 25 °C, senza compensazione</td><td class="num">8,68 dB</td><td>P riposo, 60 °C</td><td class="na">riferimento</td></tr>
+<tr><td>compensato col sensore del micro</td><td class="num">2,09 dB</td><td>S d0, 15 °C</td><td class="na">riferimento</td></tr>
+<tr><td>compensato e calibrato</td><td class="num">0,22 dB</td><td>S d0.75, 15 °C</td><td class="ok">conforme</td></tr>
+<tr><td>calibrato, LED al massimo e V5 a 4,90 V</td><td class="num">0,19 dB</td><td>S d0.75, 35 °C</td><td class="ok">conforme</td></tr>
+</table></div>
+<p>Il riposo a 10 nA, calibrato, sta entro 0,28 dB (P riposo, 15 °C); il criterio è 5–20 nA, cioè buio e mai zero. Col DAC in reset le stringhe portano 2,073–8,89 nA: mai zero, sotto il ginocchio di 190 nA.</p>
+<h2 id="soff"><span class="secno">22</span><span>Spegnimento e failsafe al jack</span></h2>
+<p class="prov">Scheda audio <code>docs/preamp/data/2026-09-26/L41c/deck/tb_v2_l41c.cir</code> (dal ponte di L41c) e <code>docs/preamp/data/2026-09-26/L30/deck/tb_v2_l30.cir</code> (PWL), col metodo di V2 &middot; i due deck rigenerati oggi sono uguali byte per byte, le corse rifatte oggi ridanno le stesse analisi e le stesse tabelle &middot; i dB SPL ricalcolati con la catena di NC-028 (finale ×21,1, 96 dB con 2,83 V): un limite superiore, di picco, a 1 m</p>
+<p>Un gradino al jack, detto contro una stanza silenziosa (25–35 dB(A), un livello pesato contro un picco): V2 è 33,4 dB SPL, l&rsquo;obiettivo di P9 59,5 dB, il tetto di non-danno 112,2 dB.</p>
+<h3>Sul circuito vero (L41c)</h3>
+<div class="tablewrap"><table><tr><th>Caso</th><th class="num">picco al jack</th><th>Criterio</th><th>Esito</th></tr>
+<tr><td>spegnimento morbido</td><td class="num">&minus;37,0 dB SPL <span class="na">(30,11 nV)</span></td><td>≤ 0,0001 V</td><td class="ok">sotto</td></tr>
+<tr><td>perdita di rete</td><td class="num">&minus;24,6 dB SPL <span class="na">(124,5 nV)</span></td><td>≤ 0,002 V</td><td class="ok">sotto</td></tr>
+<tr><td>idem, Δ all&rsquo;angolo minimo</td><td class="num">&minus;21,7 dB SPL <span class="na">(175,4 nV)</span></td><td>≤ 0,002 V</td><td class="ok">sotto</td></tr>
+<tr><td>U502 (rail −) spento</td><td class="num">56,2 dB SPL <span class="na">(1,372 mV)</span></td><td>≤ 0,002 V</td><td class="ok">sotto</td></tr>
+<tr><td>U501 (rail +) spento</td><td class="num">53,7 dB SPL <span class="na">(1,026 mV)</span></td><td>≤ 0,002 V</td><td class="ok">sotto</td></tr>
+<tr><td>U503 (<code>VRELAY_REG</code>) spento</td><td class="num">&minus;29,1 dB SPL <span class="na">(74,64 nV)</span></td><td>≤ 0,002 V</td><td class="ok">sotto</td></tr>
+<tr><td>idem, angolo minimo</td><td class="num">&minus;29,0 dB SPL <span class="na">(75,33 nV)</span></td><td>≤ 0,002 V</td><td class="ok">sotto</td></tr>
+<tr><td>controfattuale senza Δ</td><td class="num">89,9 dB SPL <span class="na">(66,47 mV)</span></td><td>&gt; 0,002 V (deve fallire)</td><td class="ok">fallisce, come deve (fino all'aborto: limite inferiore, grezzo)</td></tr>
+<tr><td>corto dell&rsquo;uscita di U503</td><td class="num">90,3 dB SPL <span class="na">(69,36 mV)</span></td><td>decisione dell'utente</td><td class="ok">tetto sotto</td></tr>
+</table></div>
+<h3>Sul banco di L30 (i rail come PWL)</h3>
+<div class="tablewrap"><table><tr><th>Classe</th><th class="num">corse</th><th class="num">picco peggiore</th><th>Soglia</th><th>Esito</th></tr>
+<tr><td>spegnimento morbido</td><td class="num">12</td><td class="num">2,2 dB SPL <span class="na">(2,734 µV)</span></td><td>≤ 100 µV</td><td class="ok">tutte sotto</td></tr>
+<tr><td>guasto di un rail o di entrambi</td><td class="num">9</td><td class="num">58,4 dB SPL <span class="na">(1,773 mV)</span></td><td>≤ 2 mV</td><td class="ok">tutte sotto</td></tr>
+<tr><td>guasto con VRELAY persa</td><td class="num">3</td><td class="num">56,1 dB SPL <span class="na">(1,357 mV)</span></td><td>≤ 2 mV</td><td class="ok">tutte sotto</td></tr>
+<tr><td>controfattuali</td><td class="num">1 + 2 non corse</td><td class="num">90,3 dB SPL <span class="na">(69,35 mV)</span></td><td>&mdash;</td><td class="na">senza Δ: 90,3 dB SPL <span class="na">(69,35 mV)</span>; 2 non corse («Timestep too small» nel JFET)</td></tr>
+</table></div>
+<p>L30 disegnava i rail a mano; L41c li prende dall&rsquo;alimentatore vero. La perdita di rete passa da 56,1 dB SPL <span class="na">(1,357 mV)</span> (L30, entrambi i rail che scendono da subito) a &minus;24,6 dB SPL <span class="na">(124,5 nV)</span>: il rivelatore stacca il jack coi rail ancora in regolazione. Il caso peggiore resta un regolatore che cede (U502 (rail −) spento): 56,2 dB SPL <span class="na">(1,372 mV)</span>, sotto l&rsquo;obiettivo.</p>
+<h2 id="s13"><span class="secno">23</span><span>Requisiti a fronte del misurato</span></h2>
 <p>Solo i requisiti che queste misure toccano. Il resto non è qui perché non è ancora stato misurato, non perché sia soddisfatto.</p>
 <div class="tablewrap"><table><tr><th>Req.</th><th>Chiede</th><th>Misurato</th><th>Esito</th></tr>
 <tr><td>E1</td><td>guadagno nominale 0 dB</td><td class="num">&minus;0,0070 dB a 1 kHz</td><td class="ok">conforme</td></tr>
@@ -512,9 +664,13 @@ hr.end{border:0;border-top:1px solid var(--rule);margin:56px 0 0}
 <tr><td>V3</td><td>recupero dalla saturazione</td><td class="num">clipping +13,228 / &minus;13,787 V &middot; &minus;10,72 mV al jack a fine corsa</td><td class="na">impaginato dal CSV, senza controllo incrociato</td></tr>
 <tr><td>P7</td><td>corto e mute a tempo indefinito, Tj ≤ 125 °C</td><td class="num">Tj massima 83,2 °C &middot; 0 righe ascoltabili fuori classe A</td><td class="ok">conforme</td></tr>
 <tr><td>P5</td><td>60 °C nel telaio, vano chiuso, stanza a 35 °C (ADR-021, ADR-047)</td><td class="num">55,2 °C col gioco di 3 cm &middot; 17,78 W</td><td class="ok">stima calcolata, da confermare sul prototipo</td></tr>
+<tr><td>P9 (a)</td><td>spegnimento morbido: V2 al jack, K501 ≥ 50 ms dopo il mute (ADR-046, ADR-048)</td><td class="num">&minus;37,0 dB SPL <span class="na">(30,11 nV)</span> &middot; K501 a 63,4 ms</td><td class="ok">conforme</td></tr>
+<tr><td>P9 (b)</td><td>perdita di rete e guasto: <code>MUTE_CMD</code> entro 1 ms dallo scatto, <code>VRELAY</code> ≥ 25 ms, al jack ≤ 2 mV</td><td class="num">scatto &minus;0,127 ms al peggio &middot; VRELAY 36,117 ms &middot; 56,2 dB SPL <span class="na">(1,372 mV)</span> (U502 (rail −) spento)</td><td class="ok">conforme; tenuta di VRELAY ridotta dal carico di oggi</td></tr>
+<tr><td>ADR-045</td><td>Δ ≥ 10 ms qualunque cosa faccia il micro</td><td class="num">16,91 ms all&rsquo;angolo minimo</td><td class="ok">conforme</td></tr>
+<tr><td>NC-037</td><td>standby ≤ 0,5 W (Reg. UE 2023/826)</td><td class="num">92,5 mW dal secondario di T2</td><td class="na">aperta: mancano le perdite a vuoto di T2 (giro BOM) e la misura</td></tr>
 <tr><td>V4</td><td>THD/THD+N</td><td class="na">assente</td><td class="na">non misurata in questo dossier</td></tr>
 </table></div>
-<h2 id="s14"><span class="secno">17</span><span>Cosa questo dossier non dice</span></h2>
+<h2 id="s14"><span class="secno">24</span><span>Cosa questo dossier non dice</span></h2>
 <ul>
 <li><strong>Niente distorsione.</strong> Nessuna cifra di THD è stata misurata per questo dossier.</li>
 <li><strong>Il rumore è un pavimento fuori dalla coppia d&rsquo;ingresso.</strong> Solo LSK489 porta KF; specchio, VAS e buffer sono senza 1/f. NC-004 resta aperta, ed è bloccante per G1.</li>
@@ -523,9 +679,13 @@ hr.end{border:0;border-top:1px solid var(--rule);margin:56px 0 0}
 <li><strong>Le forme d&rsquo;onda dei transitori</strong> non sono versionate, tranne la curva del livello del mute: di V2 del guadagno ci sono le finestre, della matrice del mute le analisi, di V3 il CSV.</li>
 <li><strong>Il relè nella corsa dell&rsquo;interblocco</strong> è un modello dichiarato, non del costruttore: il datasheet non dà la dinamica della bobina.</li>
 <li><strong>Il calore</strong> è una stima calcolata con coefficienti da letteratura, non una simulazione termica.</li>
+<li><strong>L&rsquo;alimentatore è simulato con modelli dichiarati</strong>, nessuno del costruttore: regolatori e comparatori comportamentali (il modello TI del TPS7A4701 dà un punto di lavoro sbagliato, quello del TLV1701 non commuta in ngspice), micro, DAC e op-amp comportamentali, i trasformatori come Thevenin ipotetici da confermare sui pezzi. <strong>Niente PSRR né rumore dei regolatori</strong>: la quota di ADR-020 non è verificata (NC-011).</li>
+<li><strong>Il carico della scheda audio sull&rsquo;alimentatore</strong> è un carico dichiarato (265 mA per rail, le bobine come resistenze senza induttanza, i LED delle LDR come diodi): la catena di L41c va dall&rsquo;alimentatore alla scheda audio, mai indietro.</li>
+<li><strong>Il commento di <code>C_VRELAY</code> in <code>psu.py</code></strong> cita la tenuta di L41a, più lunga di quella del circuito di oggi (sezione della potenza).</li>
+<li><strong>L&rsquo;autoriscaldamento di Q2</strong> nel pilota delle LDR non è modellato: la calibrazione è il rimedio, e la conferma è il prototipo. <code>src/main_attiny.c</code> non è scritto, e il firmware è provato sull&rsquo;host e come core del banco, non sul micro.</li>
 <li><strong>Nessuno qui giudica come suona.</strong> La simulazione copre stabilità, risposta, PSRR e impedenze; non copre l&rsquo;ascolto.</li>
 </ul>
-<h2 id="s15"><span class="secno">18</span><span>Provenienza</span></h2>
+<h2 id="s15"><span class="secno">25</span><span>Provenienza</span></h2>
 <p>Ogni sezione dichiara il deck, la cartella dei dati e i modelli, e questi ultimi sono letti dagli <code>.include</code> del deck: un modello è «del costruttore» se sta in <code>models/</code> con la sua <code>.provenance.json</code>, «segnaposto» se sta in <code>spice/preamp/placeholder_devices.lib</code>.</p>
 <div class="tablewrap"><table><tr><th>Modello istanziato</th><th>Parte</th><th>File</th><th>Tipo</th><th class="num">KF</th></tr>
 <tr><td><code>D1N914</code></td><td>1N4148</td><td><code>models/diodes/1n4148.lib</code></td><td class="ok">costruttore</td><td class="num">0</td></tr>
