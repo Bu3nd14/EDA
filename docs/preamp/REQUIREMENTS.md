@@ -3,10 +3,15 @@
 **Documento vivo.** Riscritto quando i requisiti cambiano. Ogni modifica
 sostanziale deve avere una ADR corrispondente in `decisions/`.
 
-Ultimo aggiornamento: 2026-09-26 (L41a: P3 con due trasformatori toroidali, P5 ~17 W e ≤ 20 W, P9 (a) con lo standby e l'interruttore posteriore, P9 (b) col rivelatore di rete e la ritenuta dopo un guasto — ADR-048; L30: P5 al numero vero del calore, ~15-18 W nel telaio — ADR-047; P9 nuovo, lo spegnimento morbido e il failsafe dell'alimentatore, e V2 precisato allo spegnimento — ADR-046; L29b2: V2, il taglio con musica si giudica sul salto di livello S ≤ 20 dB in 100 ms, C2 diventa diagnostica — ADR-040; L29a: C di V2 per differenza dal riferimento e soglia di C a 1 mV, A e B invariati — ADR-035; A di V2 solo senza segnale — ADR-036; L38: V2 con soglia e metodo di misura, Nota su F5, Aperti — ADR-032; L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
+Ultimo aggiornamento: 2026-09-27 (L42c: **E9–E13** nuovi, **V4**, **F1**, **P6** e **P9 (a)** precisati, e il Product Requirements Book sopra questo documento — **ADR-053**; L41a: P3 con due trasformatori toroidali, P5 ~17 W e ≤ 20 W, P9 (a) con lo standby e l'interruttore posteriore, P9 (b) col rivelatore di rete e la ritenuta dopo un guasto — ADR-048; L30: P5 al numero vero del calore, ~15-18 W nel telaio — ADR-047; P9 nuovo, lo spegnimento morbido e il failsafe dell'alimentatore, e V2 precisato allo spegnimento — ADR-046; L29b2: V2, il taglio con musica si giudica sul salto di livello S ≤ 20 dB in 100 ms, C2 diventa diagnostica — ADR-040; L29a: C di V2 per differenza dal riferimento e soglia di C a 1 mV, A e B invariati — ADR-035; A di V2 solo senza segnale — ADR-036; L38: V2 con soglia e metodo di misura, Nota su F5, Aperti — ADR-032; L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
 
 Le motivazioni non stanno qui: stanno nelle ADR referenziate e nel
 report `reports/2026-09-08-analisi-catena.md`.
+
+**Il contratto sta sopra questo documento**: `PRB.md`, il Product Requirements Book approvato
+dall'utente (ADR-053), dice *cosa* l'apparecchio deve fare in al più tre righe per voce. Qui c'è
+*come si misura*. Se un requisito di qui e una voce del PRB si contraddicono, è un difetto da
+decidere con l'utente.
 
 ## Contesto d'uso
 
@@ -23,7 +28,7 @@ report `reports/2026-09-08-analisi-catena.md`.
 
 | # | Requisito | ADR |
 |---|---|---|
-| F1 | **4 ingressi** sbilanciati RCA, commutati a **relè** | ADR-009 |
+| F1 | **4 ingressi** sbilanciati RCA, commutati a **relè**. **Il cambio d'ingresso si fa a caldo, senza clic** (L42c): senza segnale lascia su ogni uscita al più 100 µV di picco (V2, A); con la musica il salto fra i due programmi è accettato. Ogni ingresso, anche non selezionato, è tenuto a 0 V e nessuno resta sospeso durante lo scambio | ADR-009, **ADR-053** |
 | F2 | **Trim di livello comune, sul solo ramo dell'uscita variabile**: fra il blocco A e l'attenuatore, 0 / −6 / −12 dB, **a relè bistabili**. **Le uscite fisse restano copia fedele della sorgente**: guadagno 1, il trim non le tocca. Uno solo per tutti gli ingressi: cambiando sorgente si ritocca il trim o il volume | ADR-011, **ADR-027** |
 | F3 | **3 uscite sbilanciate RCA**: principale (attenuata) + 2 a livello fisso, **ciascuna fissa col proprio buffer** | ADR-008, **ADR-023** |
 | F4 | **Attenuatore a scatti**, commutatore rotativo, 10 kΩ, resistenze 0,1% | ADR-009 |
@@ -88,6 +93,11 @@ ADR-024, non si riscrivono.
 | E6 | Livello massimo d'ingresso | 2,7 V RMS | FiiO K11 R2R |
 | E7 | Alimentazione | **±15 V** regolati — confermati contro ±18 V. Ripple e rumore dei rail: **≤ 1 µV RMS riportati in uscita** (nota su E5) | ADR-015, **ADR-020** |
 | E8 | Accoppiamento d'uscita | Capacitivo, **4,7 µF su tutte e tre le uscite** | ADR-007 |
+| E9 | Risposta in frequenza | **±0,2 dB da 20 Hz a 20 kHz**, riferita a 1 kHz, su ogni uscita, in ogni modo di guadagno, posizione del trim e del volume, coi carichi del contesto d'uso. Nessuna banda minima o massima oltre questo | **ADR-053** |
+| E10 | Equilibrio fra i canali | **≤ 0,2 dB** fra sinistro e destro, 20 Hz–20 kHz, in ogni posizione di volume, trim e guadagno. Si garantisce con la tolleranza delle parti (giro della distinta) | **ADR-053** |
+| E11 | Diafonia fra i canali | **≤ −70 dB**, 20 Hz–20 kHz, su ogni uscita. Si verifica al layout (G2) e sul prototipo. La sorgente non selezionata è fuori dal requisito | **ADR-053** |
+| E12 | Continua al jack | **≤ 1 mV a regime** su ogni uscita, con qualunque condensatore della lista ammessa per le prove d'ascolto (P6). L'offset interno, prima del condensatore, resta senza soglia | ADR-007, **ADR-053** |
+| E13 | Guadagno delle uscite fisse | **0 dB ± 0,1 dB**; per il resto le fisse soddisfano ogni requisito della principale. Rilassabile con l'utente se costosa | ADR-023, **ADR-053** |
 
 **Nota su E5.** Con il guadagno del finale (21,1×) e le Heresy a
 96 dB/1W/1m, 10 µV in uscita dal preamplificatore producono circa
@@ -281,10 +291,10 @@ ADR-031 «da riaprire se») li ha misurati sul circuito di ADR-042:
 | P3 | **Trasformatori toroidali**, massima distanza e orientamento ottimale rispetto agli ingressi. Sono due, entrambi standard: il 2×15 V 50 VA dei rail e un piccolo toroidale per `VRELAY`, la logica e lo standby. **Nessuno switching nel telaio** | ADR-010, **ADR-048** |
 | P4 | Due circuiti stampati (alimentazione / audio), massa a stella | ADR-010 |
 | P5 | **Dissipazione nel telaio ~17 W nominali, ≤ 20 W nel caso peggiore, alimentatore compreso** (scheda audio 7,94 W). Per stima regge i 60 °C di ADR-021 anche in un vano chiuso della libreria che lascia 3 cm attorno al telaio (≤ 58 °C con la stanza a 35 °C; gioco minimo 2 cm), purché nel vano non ci siano altre sorgenti di calore. Preferenze per il giro componenti: il piccolo trasformatore a 12 V AC e un relè di rete a bobina sensibile (~19,5 W). Le feritoie restano previste. La conferma è la temperatura misurata nel prototipo | ADR-010, ADR-047, **ADR-048** |
-| P6 | **Condensatori di segnale e resistenze critiche facilmente sostituibili** — passi multipli, per permettere all'utente di provare per ascolto | vedi nota |
+| P6 | **Condensatori di segnale e resistenze critiche facilmente sostituibili** — passi multipli, per permettere all'utente di provare per ascolto. **Le prove si fanno coi tipi di una lista ammessa** (L42c), che il giro della distinta scrive qui accanto: ogni tipo della lista rispetta E12 | vedi nota · **ADR-053** |
 | P7 | **Ogni uscita regge un corto, e il mute si tiene a tempo indefinito.** Con un corto franco al connettore di una qualsiasi uscita, o a mute inserito, con segnale e senza limite di tempo, **nessun componente esce dai propri limiti termici e SOA**: Tj ≤ 125 °C a 60 °C ambiente, a regime e nel transitorio prima di un'eventuale protezione. La tecnica è libera | **ADR-021** — vedi nota |
 | P8 | **Ingombro del telaio: L ≤ 450 mm · A ≤ 130 mm (3U, piedini esclusi) · P ≤ 367 mm.** È l'impronta del Technics SU-9070 che l'apparecchio sostituisce, misurata con la stessa convenzione: manopole e cavi non sporgono più di oggi. Esempi entro l'ingombro: Modushop Pesante 03PN 3U (esterni 435 × 305 × 122, 415 mm fra i fianchi) e Audiophonics 430×315×120 con dissipatori (interni 330 × 300 × 112). **I PCB si verificano sulle misure interne del contenitore scelto, e il contenitore si sceglie entro G2** | **ADR-029** |
-| P9 | **Spegnimento e guasto dell'alimentatore.** (a) **L'interruttore frontale è morbido**: è un ingresso a bassa tensione del temporizzatore, che completa il mute (dissolvenza, `MUTE_CMD`, poi `PERMIT_CMD` Δ dopo) e solo dopo, con ≥ 50 ms di margine, rilascia il relè di rete (diseccitato = toroidale dei rail staccato). Vale **V2**. Col retro acceso l'apparecchio resta in **standby** sul piccolo trasformatore; l'**interruttore bipolare posteriore** (modulo IEC con fusibile) stacca la rete da tutto: usato mentre suona, è una perdita di rete, cioè (b). (b) **Alla perdita di rete o a un guasto dell'alimentatore**, un sorvegliante rilascia `MUTE_CMD` entro 1 ms da quando un rail audio scende sotto \|13,5 V\|, o quando mancano le semionde della rete, senza dissolvenza; il comando è attivo-per-la-musica e il sorvegliante lo spegne in hardware. Dopo un buco di rete che i rail hanno retto il mute si rilascia con la sequenza normale; dopo un guasto con la rete presente il temporizzatore stacca il toroidale e resta spento fino a un nuovo comando dall'interruttore frontale. La tenuta dopo i regolatori è ≥ 1500 µF **effettivi** per rail; `VRELAY` resta in tolleranza per ≥ 25 ms dallo scatto, e il temporizzatore rilascia `PERMIT_CMD` Δ dopo. Al jack principale il **tetto di non-danno** è 0,87 V di picco (~112 dB SPL a 1 m) e l'**obiettivo** è ≤ 2 mV (~60 dB). (c) **Caso accettato**: il corto franco istantaneo di un rail. Si verifica col banco `data/2026-09-26/L30/deck/tb_v2_l30.cir`, sul circuito dell'alimentatore | **ADR-046**, ADR-043, ADR-045, **ADR-048** |
+| P9 | **Spegnimento e guasto dell'alimentatore** (standby precisato da **ADR-053**). (a) **L'interruttore frontale è morbido**: è un ingresso a bassa tensione del temporizzatore, che completa il mute (dissolvenza, `MUTE_CMD`, poi `PERMIT_CMD` Δ dopo) e solo dopo, con ≥ 50 ms di margine, rilascia il relè di rete (diseccitato = toroidale dei rail staccato). Vale **V2**. Col retro acceso l'apparecchio resta in **standby** sul piccolo trasformatore, e consuma **≤ 0,5 W alla presa**, trasformatore compreso: un obiettivo del progetto, non il testo del Reg. (UE) 2023/826, rilassabile con l'utente (ADR-053); l'**interruttore bipolare posteriore** (modulo IEC con fusibile) stacca la rete da tutto: usato mentre suona, è una perdita di rete, cioè (b). (b) **Alla perdita di rete o a un guasto dell'alimentatore**, un sorvegliante rilascia `MUTE_CMD` entro 1 ms da quando un rail audio scende sotto \|13,5 V\|, o quando mancano le semionde della rete, senza dissolvenza; il comando è attivo-per-la-musica e il sorvegliante lo spegne in hardware. Dopo un buco di rete che i rail hanno retto il mute si rilascia con la sequenza normale; dopo un guasto con la rete presente il temporizzatore stacca il toroidale e resta spento fino a un nuovo comando dall'interruttore frontale. La tenuta dopo i regolatori è ≥ 1500 µF **effettivi** per rail; `VRELAY` resta in tolleranza per ≥ 25 ms dallo scatto, e il temporizzatore rilascia `PERMIT_CMD` Δ dopo. Al jack principale il **tetto di non-danno** è 0,87 V di picco (~112 dB SPL a 1 m) e l'**obiettivo** è ≤ 2 mV (~60 dB). (c) **Caso accettato**: il corto franco istantaneo di un rail. Si verifica col banco `data/2026-09-26/L30/deck/tb_v2_l30.cir`, sul circuito dell'alimentatore | **ADR-046**, ADR-043, ADR-045, **ADR-048** |
 
 **Nota su P6.** Nessun agente di questo progetto giudica come suona un
 circuito: è una regola di `AGENTS.md`. La valutazione soggettiva spetta
@@ -566,6 +576,18 @@ THD/THD+N, risposta, rumore in banda (target E5), PSRR, Zout in
 funzione della frequenza. Ognuna con la **provenienza del modello**
 dichiarata accanto: una cifra di distorsione ottenuta da un modello
 trascritto a mano da PDF (ADR-013) va riportata con quel caveat.
+
+**La distorsione: niente di aspro** (L42c, **ADR-053**). Conta il carattere più del numero, e
+nessuna armonica ha una forma preferita. Su ogni uscita, in ogni modo di guadagno:
+- **la distorsione non cresce verso gli acuti**: la THD a 20 kHz resta dello stesso ordine di
+  quella a 1 kHz;
+- **le armoniche dalla 5ª in su** restano molto sotto la 2ª e la 3ª, e lo spettro cala in modo
+  ordinato;
+- **l'intermodulazione è bassa**, col test a due toni vicini (19 + 20 kHz);
+- **un tetto complessivo di THD+N** fa da garanzia.
+
+**Le soglie numeriche non ci sono ancora**: si fissano con l'utente sulle prime misure coi
+modelli del costruttore, con un'ADR. Fino ad allora V4 si misura e si riporta, senza verdetto.
 
 ### V5 — Equivalenza fra netlist SPICE e netlist KiCad
 

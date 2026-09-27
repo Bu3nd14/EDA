@@ -20,7 +20,8 @@ ciclo di vita e non per fase:
 | Percorso | Tipo | Regola |
 |---|---|---|
 | `docs/preamp/STATE.md` | vivo | Il punto di ripresa. Sempre vero al presente |
-| `docs/preamp/REQUIREMENTS.md` | vivo | Requisiti congelati; ogni modifica sostanziale vuole una ADR |
+| `docs/preamp/PRB.md` | vivo | **Il contratto con l'utente**: 29 voci di al più tre righe, firmate (ADR-053). Sta sopra `REQUIREMENTS.md`; ingresso di ogni revisione. Cambiarlo vuole una ADR |
+| `docs/preamp/REQUIREMENTS.md` | vivo | Requisiti congelati: *come si misura* il PRB; ogni modifica sostanziale vuole una ADR |
 | `docs/preamp/decisions/ADR-*.md` | **immutabile** | Mai riscritte. Una decisione superata si supera con una ADR nuova |
 | `docs/preamp/reports/` | datato | Output di un'esecuzione: misure, giri BOM, verdetti dei gate |
 
