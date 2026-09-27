@@ -80,11 +80,28 @@ resistenze critiche si cambiano senza dissaldare, per provarli all'ascolto. Ness
 dichiara come suona il circuito.
 *Dettagli: P6 · `AGENTS.md`.*
 
+**PR-28 · Niente continua verso il finale.** A regime ogni uscita porta al jack al più 1 mV di
+continua, anche coi condensatori montati per prova d'ascolto (PR-8): le prove si fanno con i
+tipi di una lista ammessa, scritta accanto a P6.
+*Dettagli: E8, P6, T4 (l'offset interno resta senza soglia) · la lista dei tipi è da
+scrivere · decisione dell'utente del 2026-09-27.*
+
 ## C. L'uso e i comandi
 
 **PR-9 · Quattro ingressi, tre uscite.** Quattro ingressi RCA a relè. Un'uscita principale col
 volume, per il finale; due uscite fisse, copia fedele della sorgente, per Singxer e Stax.
 *Dettagli: F1, F3, T5 · ADR-008, ADR-009, ADR-023.*
+
+**PR-27 · L'ingresso si cambia quando si vuole, senza clic.** Senza musica, cambiare sorgente
+lascia sulle uscite al più 100 µV (~33 dB SPL, come PR-14); con la musica il salto fra i due
+programmi è accettato. Ogni ingresso, anche non selezionato, sta a 0 V.
+*Dettagli: F1, V2 · il selettore è ancora da progettare (scarichi sugli ingressi, nessun
+ingresso sospeso) · decisione dell'utente del 2026-09-27: a caldo, non in mute.*
+
+**PR-29 · Le uscite fisse sono fedeli quanto la principale**: soddisfano ogni requisito che
+vale per lei, a guadagno 0 dB ± 0,1 dB. Se la tolleranza si rivela costosa, si rilassa con
+l'utente (e con una ADR).
+*Dettagli: E1, F3, T5 · ADR-023 · decisione dell'utente del 2026-09-27.*
 
 **PR-10 · Il volume è un attenuatore a scatti**, con un commutatore rotativo e resistenze di
 precisione.
@@ -131,9 +148,11 @@ in reset, l'apparecchio resta muto e il guadagno non può cambiare con le uscite
 *Dettagli: F7 · ADR-022, ADR-045, ADR-049.*
 
 **PR-19 · Accensione e spegnimento morbidi dal frontale; l'interruttore posteriore stacca
-tutto.** Da spento sul frontale l'apparecchio resta in standby, con un consumo entro il
-regolamento europeo.
-*Dettagli: P9 (a) · ADR-046, ADR-048 · NC-037.*
+tutto.** Da spento sul frontale l'apparecchio resta in standby e consuma ≤ 0,5 W alla presa,
+trasformatore compreso: un obiettivo nostro (l'apparecchio è per uso personale), rilassabile
+se troppo difficile.
+*Dettagli: P9 (a) · ADR-046, ADR-048 · NC-037 · decisione dell'utente del 2026-09-27: non il
+testo del Reg. (UE) 2023/826.*
 
 **PR-20 · Collegato alla rete, sicuro.** Un'analisi di sicurezza di rete è obbligatoria prima
 della fabbricazione; senza, il progetto non va avanti.
@@ -167,11 +186,13 @@ domande del contratto, da decidere con l'utente.
    in banda e nient'altro.
 3. ~~**L'equilibrio fra i canali e la diafonia** non sono requisiti.~~ **Deciso il
    2026-09-27: PR-26**, ≤ 0,2 dB e ≤ −70 dB; la sorgente non selezionata fuori.
-4. **Il cambio d'ingresso a caldo** sta in V2 come caso da coprire, ma il dossier non ha
-   ancora una sua misura.
-5. **L'offset in continua alle uscite** non ha una soglia (T4: «è di L29»). Il condensatore
-   d'uscita lo blocca a regime, e i transitori sono V2.
-6. **Le uscite fisse** sono «copia fedele della sorgente»: fedele quanto? Oggi vale lo stesso
-   blocco (PR-4) e il guadagno 1, nessun numero.
-7. **Il consumo in standby** è «entro il regolamento europeo»: il testo del Reg. (UE) 2023/826
-   non è stato letto (L41a), e il numero di NC-037 (0,5 W) viene da lì.
+4. ~~**Il cambio d'ingresso a caldo**~~ **Deciso il 2026-09-27: PR-27**, a caldo senza clic.
+   Il selettore resta da progettare e da misurare.
+5. ~~**L'offset in continua alle uscite**~~ **Deciso il 2026-09-27: PR-28**, ≤ 1 mV al jack
+   e prove d'ascolto dentro una lista di tipi ammessi.
+6. ~~**Le uscite fisse**, fedeli quanto?~~ **Deciso il 2026-09-27: PR-29**, come la principale e
+   0 dB ± 0,1 dB, rilassabile se costosa.
+7. ~~**Il consumo in standby**, «entro il regolamento europeo»~~ **Deciso il 2026-09-27:
+   PR-19**, ≤ 0,5 W alla presa, obiettivo nostro e rilassabile.
+
+Tutti e sette i punti sono decisi (2026-09-27, sessione interattiva con l'utente).
