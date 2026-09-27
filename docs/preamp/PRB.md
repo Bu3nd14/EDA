@@ -57,6 +57,24 @@ finale e i cavi con Zout < 100 Ω costante col volume, e accetta i 2,7 V del K11
 margine di fase ≥ 60°, una scelta severa e consapevole.
 *Dettagli: V1 · ADR-019, ADR-024, ADR-025, ADR-042.*
 
+**PR-24 · Niente di aspro.** La distorsione non cresce verso gli acuti, le armoniche alte
+(dalla 5ª in su) restano molto sotto le basse, e l'intermodulazione è bassa; un tetto
+complessivo di THD+N fa da garanzia. Le soglie si fissano con l'utente sulle prime misure.
+*Dettagli: V4 (le soglie vanno scritte) · decisione dell'utente del 2026-09-27: il carattere
+conta più del numero, ma niente preferenza sulla 2ª armonica.*
+
+**PR-25 · Piatto in banda.** Su ogni uscita, in ogni modo, posizione di trim e volume, coi
+carichi reali: entro ±0,2 dB da 20 Hz a 20 kHz, riferito a 1 kHz. Nessuna banda minima o
+massima imposta oltre questo.
+*Dettagli: V4 (la soglia va scritta), E4 · ADR-014 · decisione dell'utente del 2026-09-27.*
+
+**PR-26 · I due canali uguali e separati.** Fra sinistro e destro al più 0,2 dB di differenza
+di livello, in ogni posizione di volume, trim e guadagno, da 20 Hz a 20 kHz; la diafonia fra i
+canali ≤ −70 dB nella stessa banda.
+*Dettagli: da scrivere in `REQUIREMENTS.md` · l'equilibrio si garantisce con la tolleranza delle
+parti (giro della distinta), la diafonia al layout (G2) e sul prototipo · decisione
+dell'utente del 2026-09-27: la sorgente non selezionata resta fuori.*
+
 **PR-8 · Il giudizio del suono è dell'utente, sull'hardware.** Condensatori di segnale e
 resistenze critiche si cambiano senza dissaldare, per provarli all'ascolto. Nessun agente
 dichiara come suona il circuito.
@@ -143,11 +161,12 @@ Rileggendo `REQUIREMENTS.md` per scrivere le voci di qui sopra, questi punti **n
 requisito**, o ne hanno uno che non si può verificare. Non sono difetti del circuito: sono
 domande del contratto, da decidere con l'utente.
 
-1. **La distorsione non ha una soglia.** V4 chiede di misurarla, ma nessun requisito dice
-   quanto basta. «Suonare bene» oggi è PR-4 (la tecnica) più PR-8 (l'ascolto), e nessun numero.
-2. **La risposta in frequenza non ha una soglia**: né la banda, né la piattezza, né il taglio
-   in basso. ADR-014 ne afferma una sulla forma, e il dossier la misura; il requisito manca.
-3. **L'equilibrio fra i canali e la diafonia** non sono requisiti.
+1. ~~**La distorsione non ha una soglia.**~~ **Deciso il 2026-09-27: PR-24**, «niente di
+   aspro»; le soglie numeriche sulle prime misure coi modelli del costruttore.
+2. ~~**La risposta in frequenza non ha una soglia.**~~ **Deciso il 2026-09-27: PR-25**, ±0,2 dB
+   in banda e nient'altro.
+3. ~~**L'equilibrio fra i canali e la diafonia** non sono requisiti.~~ **Deciso il
+   2026-09-27: PR-26**, ≤ 0,2 dB e ≤ −70 dB; la sorgente non selezionata fuori.
 4. **Il cambio d'ingresso a caldo** sta in V2 come caso da coprire, ma il dossier non ha
    ancora una sua misura.
 5. **L'offset in continua alle uscite** non ha una soglia (T4: «è di L29»). Il condensatore
