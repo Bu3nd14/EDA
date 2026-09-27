@@ -1,6 +1,6 @@
 # ADR-041 — Il cambio di guadagno si interblocca col mute come il trim: si cambia solo a mute inserito, niente mute automatico, e il guadagno ha i suoi LED
 
-Data: 2026-09-22 · Stato: accettata
+Data: 2026-09-22 · Stato: accettata — nel sorgente da L36; il residuo della manopola girata fuori mute è chiuso da ADR-045
 
 ## Contesto
 

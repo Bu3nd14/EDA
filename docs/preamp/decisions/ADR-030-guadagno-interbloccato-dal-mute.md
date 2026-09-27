@@ -1,6 +1,6 @@
 # ADR-030 — Il cambio di guadagno interbloccato dal mute: monostabili con autoritenuta, solo se la misura lo giustifica
 
-Data: 2026-09-15 · Stato: accettata
+Data: 2026-09-15 · Stato: accettata — criterio 3 al caso peggiore da ADR-032, LED precisati da ADR-033 — l'interblocco del guadagno non è più «solo se» (ADR-038), la forma è decisa da ADR-041 (interblocco da premere, strada B)
 
 ## Contesto
 

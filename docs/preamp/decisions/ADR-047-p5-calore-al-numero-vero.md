@@ -1,6 +1,6 @@
 # ADR-047 — P5 al numero vero: ~15–18 W nel telaio, e i 60 °C di ADR-021 reggono per stima
 
-Data: 2026-09-26 · Stato: accettata
+Data: 2026-09-26 · Stato: accettata — la cifra di P5 è superata da ADR-048 (~17 W, ≤ 20 W)
 
 ## Contesto
 

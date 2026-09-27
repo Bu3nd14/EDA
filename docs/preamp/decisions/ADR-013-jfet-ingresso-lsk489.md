@@ -1,6 +1,6 @@
 # ADR-013 — JFET d'ingresso: LSK489
 
-Data: 2026-09-08 · Stato: accettata
+Data: 2026-09-08 · Stato: accettata — gruppo precisato da ADR-031
 
 ## Contesto
 

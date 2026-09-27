@@ -1,6 +1,6 @@
 # ADR-049 — Il temporizzatore: ATtiny3216 e MCP4822, firmware provato sull'host, Δ e Δ₂ in hardware, `VRELAY` tolta alla scheda audio in standby
 
-Data: 2026-09-26 · Stato: accettata
+Data: 2026-09-26 · Stato: accettata — la cima della calibrazione, l'ascissa del fit e lo zero dell'ADC sono precisati da ADR-050 (aggiunta all'indice in L41b2)
 
 ## Contesto
 

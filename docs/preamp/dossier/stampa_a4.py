@@ -47,7 +47,9 @@ p, ul, .col, .lede, .note, .meta { max-width: none !important; }
 h1 { font-size: 22pt; margin-top: 0; }
 h2 { break-after: avoid; page-break-after: avoid; margin-top: 18pt; }
 h3 { break-after: avoid; page-break-after: avoid; }
-h2#s1, h2#s13, h2#spsu { break-before: page; page-break-before: always; }
+h2#s0, h2#s1, h2#s13, h2#spsu, h2#appA { break-before: page; page-break-before: always; }
+.voce { break-inside: avoid; page-break-inside: avoid; }
+table.adrreg td:nth-child(2) { white-space: nowrap !important; }
 p.prov { break-after: avoid; }
 .tablewrap { overflow: visible !important; margin: 8pt 0; }
 table { font-size: 7.9pt; width: 100%; table-layout: auto; }
@@ -63,6 +65,9 @@ thead { display: table-header-group; }
 .synopsis div, .note { break-inside: avoid; page-break-inside: avoid; }
 nav.toc { break-after: page; page-break-after: always; }
 a { color: inherit; text-decoration: none; }
+/* L42d: i rimandi PR-n, ADR-0xx, E1...V5 restano riconoscibili sulla carta, e nel PDF
+   sono link interni (Chrome converte gli href="#id") */
+a.ref { text-decoration: underline dotted #1f5c99; text-underline-offset: 1.5pt; }
 </style>
 """
 
