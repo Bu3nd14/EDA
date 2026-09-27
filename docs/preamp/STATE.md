@@ -22,6 +22,16 @@ realtà, il progetto non è ripartibile.
 Il più recente in alto. Il dettaglio di ciascuno sta nella sua sezione più
 sotto e nel report datato in `reports/`.
 
+### Dopo L42b — la stampa A4 del dossier, senza una seconda copia (2026-09-27)
+
+- L'utente ha chiesto un PDF A4 stampabile, poi: «teniamo almeno lo script, il pdf no, non mi
+  va di avere due source of truth». Nel repo c'è solo `docs/preamp/dossier/stampa_a4.py`:
+  rigenera la pagina (`build_dossier.py --standalone`, coi suoi controlli), aggiunge un foglio
+  di stampa e stampa con Chrome headless. **Rifiuta un percorso d'uscita dentro il repo.**
+- La regola che conta: le celle delle tabelle vanno a capo agli spazi. Senza, una tabella
+  larga esce dal margine e Chrome rimpicciolisce tutto il documento (23 pagine illeggibili
+  invece di 37 a 10 pt).
+
 ### L42b — il dossier rigenerato, l'alimentatore (2026-09-27)
 
 Dati e README: `data/2026-09-27/L42b/` (più le ricorse sorelle `L42b-L41c/`, `L42b-L41b2/`).
