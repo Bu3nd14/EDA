@@ -1,85 +1,92 @@
-# Prompt per la sessione successiva — L42b (il dossier, l'alimentatore)
+# Prompt per la sessione successiva — L43 (la revisione umana del dossier)
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L42b** e si ferma. Non iniziarne un secondo.
+LOTTI PICCOLI: questa sessione fa **L43** e si ferma. Non iniziarne un secondo.
 
 ## Il mandato
 
-L42 è stato diviso dall'utente il 2026-09-27: la scheda audio è fatta (il lotto precedente), qui
-si porta nel dossier **la seconda scheda, l'alimentatore**. Il dossier è `docs/preamp/dossier/`,
-generato da `build_dossier.py`; è l'ingresso di **L43**, la revisione umana. L'ordine resta:
-L42b → L43 → L44 (NC-004) → G1.
+**L43 lo fa l'utente**: legge il dossier rigenerato in L42a (la scheda audio) e L42b
+(l'alimentatore), e ogni cosa che trova diventa una voce di `docs/preamp/NONCOMPLIANCE.md`, col
+suo requisito, la sua severità e la sua evidenza, come nella prima revisione umana (L5e).
+L'ordine resta: **L43 → L44 (NC-004) → G1**.
 
-Da portare dentro, coi numeri dei lotti e dalle loro cartelle `data/`:
-- **potenza, `VRELAY`, relè di rete, sorvegliante** (L41a, ADR-048): `data/2026-09-26/L41a/`
-  (`rete/analisi.csv`, `guasti/analisi.csv`, `scelte/`);
-- **temporizzatore, hardware** (L41b1, ADR-049): Δ in hardware, standby, pilota delle LDR
-  (`data/2026-09-26/L41b1/timer/`, `ldr/`);
-- **firmware** (L41b2, ADR-050): le 7 sequenze sul circuito (`seq/`), la tabella delle LDR a 12 mA
-  (`ldr/`); i test sull'host stanno già nel 2k di `run_tests.sh`;
-- **spegnimento e failsafe sul circuito vero** (L30, L41c, ADR-046, ADR-051):
-  `data/2026-09-26/L41c/tabella.csv`, `data/2026-09-26/L30/tabella.csv` (i gradini al jack si
-  dicono in dB SPL, come nelle tabelle);
-- **lo schema a blocchi di `psu.py`**: oggi non esiste nessun disegno dell'alimentatore. Sul
-  modello di `docs/preamp/schematic/preamp_blocks_draw.py`: un diagramma a blocchi, ogni cifra
-  letta da `circuits/preamp/psu.net` e asserita, il builder che lo copia accanto alla pagina.
+Il ruolo della sessione è **trascrivere e dare evidenza**, non revisionare:
 
-Le regole di `build_dossier.py` restano:
-- **nessuna cifra scritta a mano**: ogni numero letto dai dati versionati;
-- ogni numero passa per una **seconda strada** indipendente (una ricorsa, un ricalcolo da un file
-  a monte, uno script rieseguito);
-- rifiuta invece di scrivere quando le due strade divergono;
-- nessun flag di bypass;
-- ogni controllo nuovo si fa fallire: si aggiunge a `data/2026-09-27/L42/script/sabotaggi.py`, o
-  a una copia nella cartella di L42b.
+- **Non cercare difetti per conto tuo**, né prima né durante la lettura dell'utente. Se l'utente
+  ha trovato qualcosa, il suo giudizio è il dato del lotto; un difetto trovato da te al suo posto
+  distrugge l'informazione su cosa la revisione umana vede. Se ti chiede di verificare una sua
+  osservazione, verifica **quella**, sui dati, e dì che cosa hai guardato.
+- **Il soggetto è il prodotto**: il circuito, il suo comportamento misurato, le decisioni (ADR) e
+  i disegni che lo rappresentano. Gli script, i banchi e la toolchain restano fuori: un loro
+  difetto si annota a parte, senza aprire una non conformità di prodotto.
+- **Le domande una alla volta, conversando**, quando servono davvero: niente questionari.
+- I gradini al jack si dicono in **dB SPL di picco a 1 m** contro una stanza silenziosa, come il
+  dossier; le tensioni solo fra parentesi.
 
-**Nessun avviso di obsolescenza** e nessun banner: il dossier lo legge solo l'utente. Niente PDF.
+## Come si legge il dossier
+
+- La pagina: `/Users/roberto/EDA/docs/preamp/dossier/index.html` (dal checkout principale, dopo
+  il merge di L42b). Le figure e i tre schemi (`gain_block.svg`, `preamp_blocks.svg`,
+  `psu_blocks.svg`) stanno accanto, nella stessa cartella. Una copia autoconsistente, se serve:
+  `/usr/bin/python3 docs/preamp/dossier/build_dossier.py --standalone <file.html>`.
+- Venticinque sezioni: 1–15 la scheda audio, 16–22 l'alimentatore, poi i requisiti, «Cosa questo
+  dossier non dice» e la provenienza. Sotto ogni titolo c'è il deck e la cartella dei dati da cui
+  vengono i numeri: è l'evidenza che una voce deve nominare.
+- Già scritti nella pagina, e **l'utente decide se diventano voci**: S del mute con la cima dei
+  LED a 12 mA mai misurato (sezione del mute); la tenuta di `VRELAY` scesa da 62,8 a 36,1 ms a
+  rete −10 % col carico di L41b1/L41b2, e il commento di `C_VRELAY` in `psu.py` che cita ancora
+  L41a (sezione della potenza); i limiti di «Cosa questo dossier non dice».
+
+## Come si scrive una voce
+
+Il formato è in `NONCOMPLIANCE.md`, sezione «Formato di una voce»: requisito, severità
+(bloccante / maggiore / minore, con la tabella «Severità, e cosa blocca davvero»), «Aperta da»,
+stato; poi **Evidenza** (il file di dati sotto `docs/preamp/data/<data>/` e la misura) e **Cosa
+serve per chiuderla**. Il numero è il successivo libero (l'ultimo aperto è NC-038, chiusa). La
+severità la decide l'utente; tu proponi la tua lettura del requisito solo se te la chiede.
 
 ## Prima di tutto
 
-- Leggi `CLAUDE.md` e `docs/limitations.md` (ora 37 voci; la **#37** è di L42a e riguarda ogni
-  log letto riga per riga).
-- In `docs/preamp/STATE.md`: «In breve», le voci di diario da L30 a L42a, e le righe L42–L44 della
-  tabella dei lotti.
-- `docs/preamp/data/2026-09-27/L42/README.md`: come L42a ha costruito le seconde strade.
-- `docs/preamp/dossier/build_dossier.py`: la docstring, `measure_l40`, `measure_mute`,
-  `measure_heat`, `log_lines` (le `print` spezzate).
-- **Proponi all'utente la scaletta delle sezioni dell'alimentatore prima di scrivere codice**:
-  quali grafici e quali tabelle è una sua scelta, come per L42a.
+- Leggi `CLAUDE.md` e, in `docs/preamp/STATE.md`, «In breve» e le voci di diario di L42a e L42b.
+- In `NONCOMPLIANCE.md`: «A cosa serve», «Severità», «Formato di una voce», e l'elenco delle voci
+  aperte (9, una bloccante: **NC-004**).
+- `docs/preamp/data/2026-09-27/L42/README.md` e `docs/preamp/data/2026-09-27/L42b/README.md`:
+  come sono state costruite le seconde strade, se l'utente chiede da dove viene una cifra.
 
 ## Lo stato che trovi
 
-- Il dossier della scheda audio è rigenerato sul circuito di oggi; `build_dossier.py` passa,
-  15 sabotaggi su 15 cadono.
+- Il dossier è rigenerato su tutte e due le schede; `build_dossier.py` passa, 47 sabotaggi su 47
+  cadono (`data/2026-09-27/L42b/script/sabotaggi.txt`).
 - **9 non conformità aperte, 1 bloccante**: **NC-004**, per G1.
-- **Trovato in L42a, non in questo lotto**: S del mute con la cima dei LED a 12 mA (ADR-050) non è
-  mai stato misurato; la matrice di V2 è corsa a 20 mA. È scritto nel dossier ed è materia per L43.
 
 ## I vincoli
 
 - Nel worktree `git` vengono rifiutati:
   - i comandi composti, e le pipe o i `;` attorno a comandi che eseguono script (anche
     `run_tests.sh` va lanciato da solo, senza redirezioni);
-  - `awk` con programmi, e i percorsi calcolati a runtime.
+  - `awk` con programmi, i cicli con variabili e i percorsi calcolati a runtime.
 
   Si usano comandi semplici, **percorsi assoluti**, script scritti su file con Write, ed Edit per
   i testi.
 - `vendor/` è di sola lettura, tranne che con `freeze_vendor.sh`.
-- Le forme d'onda grandi (`.dat`, `wrdata`) non si committano: si tengono analisi, tabelle, log.
 
 ## NON fa parte di questo lotto
 
-- **NC-004** (è L44), **NC-011**, **NC-037**; la misura di S a 12 mA;
-- qualsiasi modifica al circuito, al firmware o ai deck: il dossier legge, non cambia il progetto;
-- la revisione umana (L43, la fa l'utente);
+- **Correggere** quello che l'utente trova: L43 apre le voci, i rimedi sono lotti successivi (e
+  una modifica sostanziale ai requisiti vuole una ADR);
+- **NC-004** (è L44), la misura di S a 12 mA, qualsiasi modifica al circuito, al firmware, ai
+  deck o al dossier;
 - il layout dei PCB (G2) e `src/main_attiny.c`.
 
 ## CHIUSURA
 
-1. `STATE.md` con L42b **fatto** e il prossimo lotto (L43) nella tabella.
-2. Riscrivi QUESTO file per il lotto successivo (L43 lo fa l'utente: il prompt gli dice come
-   leggere il dossier e dove scrivere ciò che trova).
-3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L42b`.
-5. Rimuovi il worktree coi comandi che lo script stampa.
-6. **Fermati.**
+1. Le voci nuove in `NONCOMPLIANCE.md`, con la riga «Ultimo aggiornamento»; un report datato in
+   `docs/preamp/reports/<data>-L43-revisione-umana.md` con le osservazioni dell'utente, **con le
+   sue parole**, e dove sono finite.
+2. `STATE.md` con L43 **fatto** e il prossimo lotto (L44) nella tabella.
+3. Riscrivi QUESTO file per il lotto successivo (L44, NC-004: il modo si decide con l'utente
+   all'inizio del lotto).
+4. Commit, push, PR.
+5. `/bin/zsh scripts/chunk_close.sh L43`.
+6. Rimuovi il worktree coi comandi che lo script stampa.
+7. **Fermati.**
