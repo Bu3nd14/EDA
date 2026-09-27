@@ -321,6 +321,19 @@ assert ("PERMIT" in K_TRIM[0] and all("TRIM" in k for k in K_TRIM[1:3])
     f"i rele' del trim non sono quelli attesi: {K_TRIM}"
 TRIM_PN = K_TRIM[1].split()[0]                # "G6KU-2F-Y"
 
+# L42a: il guadagno interbloccato (ADR-041, L36) e i comandi a pannello (ADR-028,
+# ADR-045, L35). Qui si asseriscono solo i NOMI che il disegno stampa: che gli
+# ausiliari siano in autoritenuta, che SW2 abbia il polo ponte e che J4 porti
+# MUTE_CMD e PERMIT_CMD lo prova, per intento e coi sabotaggi, il 2e.
+K_HOLD = [v("K11"), v("K12")]
+assert (all("HOLD" in k and k.split()[0] == RELAY_PN for k in K_HOLD)), \
+    f"gli ausiliari del guadagno non sono quelli attesi: {K_HOLD}"
+HDR = {r: v(r) for r in ("J3", "J4", "J5", "J6", "J7", "SW2", "SW3")}
+assert (HDR["J3"] == "LDR_CMD" and HDR["J4"] == "MUTE_TIMER" and HDR["J5"] == "TRIM_LED"
+        and HDR["J6"] == "GAIN_LED" and HDR["J7"] == "MUTE_LED"
+        and HDR["SW2"].startswith("GAIN") and HDR["SW3"] == "MUTE"), \
+    f"header e comandi a pannello non sono quelli attesi: {HDR}"
+
 
 def pretty(val, unit):
     """'470k' -> '470 kOhm' scritto come si scrive: cifra, prefisso, unita'.
@@ -592,9 +605,10 @@ panel(0.4, 0.2, 45.6, 7.9,
       "mute e i cinque del trim servono entrambi.")
 
 box(6.6, 4.95, 11.0, 2.4,
-    [f"K1 K5 — GUADAGNO   {RELAY_PN}",
-     "K1 → R_g3, K5 → R_g10; polo 1 canale L, polo 2 canale R",
-     "servono NORMALMENTE APERTI: a riposo 0 dB"], head_size=10)
+    [f"K1 K5 GUADAGNO · K11 K12 AUSILIARI   {RELAY_PN}",
+     "K1 → R_g3, K5 → R_g10; NORMALMENTE APERTI: a riposo 0 dB",
+     "K11 K12 in autoritenuta (ADR-041): SW2 con polo ponte, LED su J6"],
+    head_size=9.5, size=8.5)
 
 box(19.6, 4.95, 12.2, 2.4,
     [f"K2 K3 K4 — MUTE   {RELAY_PN}",
@@ -637,8 +651,8 @@ txt((23.1, 1.15), "blocchi A, B e 2 buffer ×2 canali, trim, contatti di mute,\n
     size=8, color=DIM)
 
 dashed_frame(30.8, 0.5, 44.4, 2.4, "PANNELLO E ALIMENTAZIONE")
-txt((37.6, 1.15), "attenuatore rotativo e commutatori sul pannello;\n"
-                  "alimentatore su scheda separata, massa a stella (P4)",
+txt((37.6, 1.15), "attenuatore, SW2, SW3 e LED (J5 J6 J7) a pannello;\n"
+                  "alimentatore e temporizzatore a parte, via J4 e J3",
     size=8, color=DIM)
 
 # ---------------------------------------------------------------------------
@@ -657,6 +671,9 @@ print(f"  guadagno +3 dB (K1) ..... 1 + {RF}/{RG3} = "
 print(f"  guadagno +10 dB (K1+K5) . 1 + {RF}/({RG3}||{RG10}) = "
       f"{GAIN_LIN:.4f}x = +{GAIN_DB:.3f} dB   (solo K5: +{GAIN_K5_DB:.3f} dB)")
 print("  rele' ................... " + " | ".join([K_GAIN, K_GAIN10] + K_MUTE))
+print("  interblocco (ADR-041) .... " + " | ".join(K_HOLD) + f"   {HDR['SW2']}")
+print("  header (ADR-028, -045) ... " + " | ".join(f"{r} {HDR[r]}" for r in
+                                                   ("J3", "J4", "J5", "J6", "J7", "SW3")))
 print("  trim (ADR-027) ........... " + " | ".join(K_TRIM)
       + f"   {TR1}/{TR2}/{TR3}: {TRIM6_DB:.3f} / {TRIM12_DB:.3f} dB")
 if os.environ.get("PREVIEW_PNG"):

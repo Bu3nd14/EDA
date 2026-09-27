@@ -848,3 +848,34 @@ corsa dà «niente al jack».
   oltre 800 numeri;
 - `too many args` entra nella guardia sui log, accanto a `no such device` (#29, L30) e ai casi
   di #33 e #35.
+
+## 37. Una Note del gmin stepping può cadere **dentro** una `print`, e il valore esce spezzato su due righe lontane
+
+Scoperto in L42a (`docs/preamp/data/2026-09-27/L42/`, il dossier rigenerato).
+
+ngspice scrive le `Note:`/`Warning:` del gmin stepping su stderr senza buffer, e le `print` su
+stdout con buffer; `run_simulation.sh` li unisce nello stesso `.log`. In `tb_e4_uscite.log` si
+legge:
+
+```
+zn20k = 5Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+...
+.720894e-01
+```
+
+cioè `zn20k = 5.720894e-01` tagliato in due. Non è casuale: il log di L40 (2026-09-23, un altro
+worktree) ha lo stesso taglio alla stessa riga. Nessun `Error`, rc 0, la tabella scritta con
+`echo` è intera. Chi legge le `print` con un'espressione ancorata a fine riga **perde un valore
+in silenzio**, e un controllo «tabella = log» riga per riga lo dà per assente (così cadeva il
+controllo B di `e4.py` di L13 sui dati di oggi); chi conta le righe che **iniziano** con
+`zn20k = ` ne conta una di troppo buona.
+
+**Regola operativa**:
+- una riga `nome = <cifre>Note: …` si ricuce col primo rigo di sole cifre dopo le Note:
+  `build_dossier.py` (`log_lines`) e `L42/script/e4_l42.py` lo fanno, e il dossier pubblica
+  quante ricuciture ha fatto;
+- una riga tagliata che **non** si ricuce (dopo le Note arriva altro) è un rifiuto, non un
+  valore mancante;
+- il confronto fra due corse si fa sulle righe ricucite: due log con lo stesso taglio sembrano
+  uguali anche se il valore tagliato non si è mai letto.
