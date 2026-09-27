@@ -68,6 +68,18 @@ percorsi del worktree: se no il circuito misurato non e' quello di oggi.
      la catena di NC-028 letta da NONCOMPLIANCE.md; le soglie di P9 lette da
      REQUIREMENTS.md.
 
+L42d: il contratto. La sezione 0 e' il PRB, l'appendice A il registro delle
+ADR, l'appendice B l'indice dei requisiti tecnici, tutti letti dai loro file
+(contratto.py); i rimandi PR-n, ADR-0xx, E1...V5 del testo diventano link, anche
+nel PDF di stampa_a4.py.
+ 14. il contratto (contratto.py, docstring): le voci del PRB contigue, con
+     «Dettagli» e al piu' tre righe; ogni requisito, ADR, NC e PR che nominano
+     esiste; una ADR superata viaggia con chi la supera; le ADR in biiezione con
+     l'indice, e lo Stato del file UGUALE a quello dell'indice (le due strade);
+     nel testo, un rimando a qualcosa che non esiste e' un rifiuto, e un token
+     che e' anche un non-requisito (T2 il trasformatore, V5 il rail) deve essere
+     marcato con des() o rid(); ogni ancora ha il suo id.
+
 E la provenienza dei modelli non e' scritta a mano: e' letta dagli `.include`
 di ogni deck e dai nomi di modello che il blocco istanzia.
 
@@ -138,12 +150,17 @@ TJ_MAX = 125.0         # °C, P7
 
 sys.path.insert(0, HERE)
 import svgplot as sp                                   # noqa: E402
+import contratto as ct                                 # noqa: E402  (L42d)
 
 FAILURES = []
 
 
 def refuse(msg):
     FAILURES.append(msg)
+
+
+ct.init(REPO, refuse)
+des = ct.des      # un non-requisito nel testo (T2, V5): il linker lo salta
 
 
 def rel(p):
@@ -2354,7 +2371,7 @@ nav.toc a{
   border-bottom:1px solid transparent; font-size:14.5px;
 }
 nav.toc a::before{
-  content:counter(toc,decimal-leading-zero) "  ";
+  content:attr(data-n) "  ";
   font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;
   color:var(--accent); font-size:12px;
 }
@@ -2378,7 +2395,10 @@ def html_escape(s):
     return (str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
 
 
-SECTIONS = (("s1", "Il blocco di guadagno"), ("s2", "Il preamplificatore intero"),
+# L42d: il PRB e' la sezione 0, le appendici sono A e B; i numeri 1...N restano
+# quelli di prima, perche' il testo li cita a mano («sezione 6»).
+SECTIONS = (("s0", "Il contratto: il Product Requirements Book"),
+            ("s1", "Il blocco di guadagno"), ("s2", "Il preamplificatore intero"),
             ("s3", "Punti di lavoro"), ("s4", "Risposta in frequenza"),
             ("s5", "Stabilità: la matrice V1"), ("s6", "Il trim e l&rsquo;impedenza d&rsquo;ingresso"),
             ("s7", "Rumore in uscita"), ("s8", "Escursione e headroom"),
@@ -2394,7 +2414,16 @@ SECTIONS = (("s1", "Il blocco di guadagno"), ("s2", "Il preamplificatore intero"
             ("sldr", "Il pilota delle LDR"),
             ("soff", "Spegnimento e failsafe al jack"),
             ("s13", "Requisiti a fronte del misurato"), ("s14", "Cosa questo dossier non dice"),
-            ("s15", "Provenienza"))
+            ("s15", "Provenienza"),
+            ("appA", "Appendice: il registro delle ADR"),
+            ("appB", "Appendice: l&rsquo;indice dei requisiti tecnici"))
+SECNO = {"s0": "0", "appA": "A", "appB": "B"}
+
+
+def secno(anchor):
+    if anchor in SECNO:
+        return SECNO[anchor]
+    return str([a for a, _ in SECTIONS if a not in SECNO].index(anchor) + 1)
 
 
 def build_page(M, inline=False):
@@ -2415,9 +2444,8 @@ def build_page(M, inline=False):
                 f'alt="{html_escape(alt)}" loading="lazy"></div>')
 
     def h2(anchor):
-        n = [a for a, _ in SECTIONS].index(anchor) + 1
         lab = dict(SECTIONS)[anchor]
-        return f'<h2 id="{anchor}"><span class="secno">{n}</span><span>{lab}</span></h2>'
+        return f'<h2 id="{anchor}"><span class="secno">{secno(anchor)}</span><span>{lab}</span></h2>'
 
     allm = [m for deck in M["decks"] for m in provenance(deck)]
     vendors = sorted({m["part"] for m in allm if m["vendor"]})
@@ -2499,7 +2527,8 @@ def build_page(M, inline=False):
 
     A('<nav class="toc" aria-label="Indice"><ol>')
     for anchor, label in SECTIONS:
-        A(f'<li><a href="#{anchor}">{label}</a></li>')
+        n = secno(anchor)
+        A(f'<li><a href="#{anchor}" data-n="{n.zfill(2) if n.isdigit() else n + " "}">{label}</a></li>')
     A('</ol></nav>')
 
     A('<p class="meta">Nessuna cifra di questa pagina è scritta a mano. Le curve sono '
@@ -2518,6 +2547,10 @@ def build_page(M, inline=False):
           'sono state ricucite (limitations #37). ' if l40["spliced"] > 1 else
           'Una <code>print</code> spezzata nel log da una Note del gmin stepping è stata '
           'ricucita (limitations #37). ') if l40["spliced"] else '') + '</p>')
+
+    # --- 0 il contratto (L42d) ---
+    A(h2("s0"))
+    A(ct.section_prb(M["ct"]["prb"]))
 
     # --- 1-2 schemi ---
     A(h2("s1"))
@@ -3125,7 +3158,7 @@ def build_page(M, inline=False):
       'alla scheda audio in standby (NC-037)</td>'
       f'<td class="num">Δ ≥ {fx(t_min["micro_reset"]["d"], 2)} ms all&rsquo;angolo minimo col micro '
       f'in reset &middot; standby: {fx(abs(t_nom["standby_j1"]), 3)} V a J1, '
-      f'{fx(t_nom["standby_mw"], 1)} mW da T2</td></tr>')
+      f'{fx(t_nom["standby_mw"], 1)} mW da {des("T2")}</td></tr>')
     A(f'<tr><td>ADR-050</td><td>la cima delle LDR a 12 mA a ogni temperatura</td>'
       f'<td class="num">cima della tabella {it(ld["cima"] * 1000, 3)} mA &middot; calibrato entro '
       f'{fx(ld["w_cal"][0], 2)} dB</td></tr>')
@@ -3150,7 +3183,7 @@ def build_page(M, inline=False):
       'e 10 mV: la parte di potenza è quella, e ogni scarto qui sotto è il carico.</p>')
     A('<h3>A regime</h3>')
     A('<div class="tablewrap"><table><tr><th>Rete</th><th class="num">V+</th><th class="num">V−</th>'
-      '<th class="num">VRELAY_REG</th><th class="num">VRELAY a J1</th><th class="num">V5</th>'
+      '<th class="num">VRELAY_REG</th><th class="num">VRELAY a J1</th><th class="num"><span class="des">V5</span></th>'
       '<th class="num">valle del grezzo +</th><th class="num">valle −</th>'
       '<th class="num">valle di VRELAY</th></tr>')
     for f_, lab in (("m10", "−10 %"), ("nom", "nominale"), ("p10", "+10 %")):
@@ -3217,7 +3250,7 @@ def build_page(M, inline=False):
       f'con {it(vr_m10 - p9["vrelay_ms"], 3)} ms di margine invece di '
       f'{it(vr_old - p9["vrelay_ms"], 3)}. La causa è il carico che L41b1 e L41b2 hanno messo '
       'su <code>VRELAY_REG</code>, soprattutto il ramo d&rsquo;ingresso dello specchio delle LDR '
-      'alla cima, che attraverso V5 la scarica. Il commento di <code>C_VRELAY</code> in '
+      'alla cima, che attraverso <span class="des">V5</span> la scarica. Il commento di <code>C_VRELAY</code> in '
       '<code>psu.py</code> cita ancora le cifre di L41a; il sorgente non si tocca in questo '
       'lotto.</p>')
     A('<h3>Il raddrizzatore: il dimensionamento, non il circuito</h3>')
@@ -3289,7 +3322,7 @@ def build_page(M, inline=False):
     A('<p>Il ritardo Δ fra il rilascio di <code>MUTE_CMD</code> e quello di '
       '<code>PERMIT_CMD</code> sta in un RC su un comparatore, e deve reggere <em>qualunque '
       'cosa faccia il micro</em>. L&rsquo;angolo minimo prende C<sub>T</sub> e C<sub>T2</sub> '
-      '−5 %, R<sub>T</sub> e R<sub>T2</sub> −1 %, V5 a 4,90 V e il riferimento a 2,505 V.</p>')
+      '−5 %, R<sub>T</sub> e R<sub>T2</sub> −1 %, <span class="des">V5</span> a 4,90 V e il riferimento a 2,505 V.</p>')
     A('<div class="tablewrap"><table><tr><th>Caso</th><th class="num">Δ nominale</th>'
       '<th class="num">Δ angolo minimo</th><th class="num">VRELAY a J1 &lt; 9,6 V dopo PERMIT</th>'
       f'<th>Δ ≥ {fx(tm["dmin"], 0)} ms</th></tr>')
@@ -3314,8 +3347,8 @@ def build_page(M, inline=False):
       f'<code>PERMIT_REQ</code> non muove niente (drain ≤ {it(max(t_nom["drain"], t_min["drain"]), 3)} V, '
       f'contro i 6 V del rilascio). Al rilascio del mute <code>PERMIT_CMD</code> si eccita '
       f'{it(t_nom["anticipo"], 3)} ms prima di <code>MUTE_CMD</code>. In standby <code>VRELAY</code> a '
-      f'J1 vale {fx(abs(t_nom["standby_j1"]), 3)} V e T2 eroga {fx(t_nom["standby_mw"], 1)} / '
-      f'{fx(t_min["standby_mw"], 1)} mW (nominale / angolo minimo): le perdite a vuoto di T2 non '
+      f'J1 vale {fx(abs(t_nom["standby_j1"]), 3)} V e <span class="des">T2</span> eroga {fx(t_nom["standby_mw"], 1)} / '
+      f'{fx(t_min["standby_mw"], 1)} mW (nominale / angolo minimo): le perdite a vuoto di <span class="des">T2</span> non '
       'sono qui, e NC-037 si chiude con quelle (giro BOM).</p>')
 
     # --- firmware ---
@@ -3365,7 +3398,8 @@ def build_page(M, inline=False):
     for lab, w, ok in (("letto a 25 °C, senza compensazione", wn, None),
                        ("compensato col sensore del micro", wp, None),
                        ("compensato e calibrato", wc, wc[0] <= 1.0),
-                       ("calibrato, LED al massimo e V5 a 4,90 V", wx, wx[0] <= 1.0)):
+                       ("calibrato, LED al massimo e " + des("V5") + " a 4,90 V", wx,
+                        wx[0] <= 1.0)):
         A(f'<tr><td>{lab}</td><td class="num">{fx(w[0], 2)} dB</td><td>{lr(w[1])}</td>'
           + (verdict(ok) if ok is not None else '<td class="na">riferimento</td>') + '</tr>')
     A('</table></div>')
@@ -3517,8 +3551,8 @@ def build_page(M, inline=False):
       'all&rsquo;angolo minimo</td>'
       f'{verdict(min(t_min[k]["d"] for k in ("micro_reset", "micro_a_zero", "perdita_rete_micro_reset", "guasto_U503_micro_reset")) >= tm["dmin"])}</tr>')
     A(f'<tr><td>NC-037</td><td>standby ≤ 0,5 W (Reg. UE 2023/826)</td>'
-      f'<td class="num">{fx(t_nom["standby_mw"], 1)} mW dal secondario di T2</td>'
-      '<td class="na">aperta: mancano le perdite a vuoto di T2 (giro BOM) e la misura</td></tr>')
+      f'<td class="num">{fx(t_nom["standby_mw"], 1)} mW dal secondario di {des("T2")}</td>'
+      '<td class="na">aperta: mancano le perdite a vuoto di <span class="des">T2</span> (giro BOM) e la misura</td></tr>')
     A('<tr><td>V4</td><td>THD/THD+N</td><td class="na">assente</td>'
       '<td class="na">non misurata in questo dossier</td></tr>')
     A('</table></div>')
@@ -3589,7 +3623,16 @@ def build_page(M, inline=False):
       '<code>/usr/bin/python3 docs/preamp/dossier/build_dossier.py</code>. Rieseguire una '
       'misura: <code>/bin/zsh scripts/run_simulation.sh spice/preamp/tb/&lt;deck&gt;.cir '
       'results/preamp/&lt;deck&gt;</code>.</p>')
+    # --- appendici (L42d) ---
+    A(h2("appA"))
+    A(ct.section_adr(M["ct"]["adrs"]))
+    A(h2("appB"))
+    A(ct.section_req(M["ct"]["req"], M["ct"]["used"]))
     A('<hr class="end">')
+
+    # e. i rimandi PR-n, ADR-0xx, E1...V5 diventano link (L42d)
+    body, M["ct"]["rimandi"] = ct.linkify("\n".join(h), M["ct"]["prb"], M["ct"]["req"],
+                                          M["ct"]["adrs"], M["ct"]["nonreq"])
     A('</div>')
 
     return ('<meta charset="utf-8">\n<title>Dossier del preamp di linea</title>\n'
@@ -3599,7 +3642,17 @@ def build_page(M, inline=False):
             'family=IBM+Plex+Mono:wght@400;500&'
             'family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&'
             'display=swap">\n'
-            f"<style>{CSS}</style>\n" + "\n".join(h))
+            f"<style>{CSS}{ct.CSS}</style>\n" + body)
+
+
+def contratto():
+    """14. (L42d) il PRB, le ADR, i requisiti e le NC, letti e controllati."""
+    req = ct.read_requirements()
+    adrs = ct.read_adrs()
+    ncs = ct.read_nc_ids()
+    prb = ct.read_prb()
+    used = ct.check_prb(prb, req, adrs, ncs)
+    return {"req": req, "adrs": adrs, "prb": prb, "used": used, "nonreq": ct.non_req(req)}
 
 
 # ------------------------------------------------------------------ main ---
@@ -3615,7 +3668,8 @@ def main():
     if "--standalone" in sys.argv:
         standalone = sys.argv[sys.argv.index("--standalone") + 1]
 
-    M = {"resp": measure_response(), "v1": measure_v1(),
+    M = {"ct": contratto(),
+         "resp": measure_response(), "v1": measure_v1(),
          "psrr": measure_psrr(), "noise": measure_noise(), "trim": measure_trim(),
          "cf": measure_counterfactual(), "v2": measure_v2(), "v3": measure_v3(),
          "p7": measure_p7(), "op": measure_oppoint(),
@@ -3721,6 +3775,8 @@ def main():
         "firmware_sequenze": {r["caso"]: f'{r["ok"]} su {r["n"]}' for r in M["fw"]["rows"]},
         "firmware_falsi_host": M["fw"]["falsi"],
         "ldr_calibrato_peggiore_dB": M["ld"]["w_cal"][0],
+        "contratto": {"voci_prb": len(M["ct"]["prb"]["voci"]), "adr": len(M["ct"]["adrs"]),
+                      "requisiti": len(M["ct"]["req"]), "rimandi": M["ct"]["rimandi"]},
         "jack_L41c_V": {r["caso"]: float(r["picco_V"]) for r in M["off"]["rows"]["l41c"]
                         if r["picco_V"] not in ("-", "")},
     }

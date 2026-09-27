@@ -1,6 +1,6 @@
 # ADR-043 — Lo spegnimento è un requisito dell'alimentatore, e la protezione del jack non deve dipendere dall'alimentatore sano
 
-Data: 2026-09-23 · Stato: accettata
+Data: 2026-09-23 · Stato: accettata — le due domande e i due requisiti hanno risposta in ADR-046 (L30)
 
 ## Contesto
 

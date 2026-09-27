@@ -1,6 +1,6 @@
 # ADR-017 — I dispositivi attivi che soddisfano T7 e T8: si cambia costruttore e package, non topologia
 
-Data: 2026-09-10 · Stato: accettata
+Data: 2026-09-10 · Stato: accettata — accoppiamento termico del moltiplicatore precisato da ADR-034
 
 ## Contesto
 

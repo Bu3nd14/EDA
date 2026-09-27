@@ -1,6 +1,6 @@
 # ADR-046 — Spegnimento morbido dall'interruttore, e alla perdita di rete un failsafe con tetto di non-danno
 
-Data: 2026-09-26 · Stato: accettata
+Data: 2026-09-26 · Stato: accettata — la frase «relè di rete diseccitato = rete staccata» è superata da ADR-048 (il relè stacca il toroidale; la rete si stacca dal retro)
 
 ## Contesto
 

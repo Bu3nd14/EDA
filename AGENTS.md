@@ -27,6 +27,7 @@ The roster above is the *environment* team — the agents that built and validat
 |---|---|---|---|
 | Circuit design | `analog-topology-designer` | opus | `circuits/*.py` — the canonical topology, operating points, gain structure, predicted figures of merit. **Also owns the human-reviewable schematic drawing of its own circuit** (`docs/<project>/schematic/`) — the person who designed it draws it, because readability depends on knowing which structures matter |
 | Gate review | `design-reviewer` | opus | Independent challenge at gates only. No write access by design |
+| Architecture challenge | `adversarial-architect` | opus | Contests whether what the product declares is *right* — PRB, requirements and ADRs against the literature and technique, including simplifications and over-engineering. Read-only, **with the web** (WebSearch, WebFetch). Launched as a fresh agent, blind to the user's parallel review (added 2026-09-27, L42d; first run in L43) |
 | Measurement | `measurement-analyst` | sonnet | THD/THD+N, response, noise, PSRR, Zout, phase margin — verifies the designer's predictions |
 | Power supply | `psu-engineer` | sonnet | Rails, ripple, regulation, thermal, **mains safety** |
 | Layout | `pcb-automation-engineer` | sonnet | Placement, routing, **grounding/return paths/EMC**, DRC, fabrication export |
@@ -150,11 +151,26 @@ iscritto**. Non blocca invece i lotti che procurano i modelli vendor
 (L6-L7): quelli sono il rimedio naturale a metà delle voci prevedibili, non
 un avanzamento di fase.
 
-**G0 è anche la risposta alla domanda sul «revisore avversariale».** Non
-serve un agente nuovo: serve `design-reviewer` con questo mandato. Ha già le
-proprietà che contano — nessun accesso in scrittura per costruzione, e
-l'obbligo di rieseguire le verifiche invece di fidarsi dei resoconti — e G0
-le punta sul prodotto invece che sul processo.
+**Il «revisore avversariale» è un agente suo, dal 2026-09-27 (L42d).** Il
+2026-09-09 questo file diceva che non serviva un agente nuovo, perché bastava
+`design-reviewer` col mandato di G0. **Quella frase è superata.** L'utente,
+prima di L43: «nel team dovremmo avere un architetto avversariale […] gli
+passiamo i requisiti, il dossier e il target di un preamplificatore che suoni
+bene (basandosi sulla letteratura e sulla tecnica), che non abbia bump
+fastidiosi sulle uscite ai cambi di configurazione e che fallisca senza
+danneggiare altri elementi della catena». E, approvandone il mandato: che
+cerchi sul web, e che dica se sono possibili semplificazioni e se c'è
+over-engineering.
+
+La ragione per cui G0 non bastava è la divisione dei compiti.
+`design-reviewer` giudica se il progetto **fa quello che dichiara**, rieseguendo
+le verifiche, e non ha il web. `adversarial-architect` giudica se quello che
+dichiara **è giusto**, contro il PRB e la letteratura, e può contestare anche le
+ADR e il PRB stesso. Resta in comune ciò che contava nel 2026-09-09: nessuno
+dei due ha accesso in scrittura, ed entrambi rieseguono invece di fidarsi.
+L'architetto si lancia sempre come **agente nuovo, mai come fork**, e **alla
+cieca**: forma i rilievi prima di leggere `NONCOMPLIANCE.md`, `STATE.md` e
+`reports/`, e il suo prompt non contiene le osservazioni dell'utente.
 
 **A gate is triggered by test results, not by a pull request** (decided
 2026-09-09). A diff is the wrong artefact to judge an analog design on: the

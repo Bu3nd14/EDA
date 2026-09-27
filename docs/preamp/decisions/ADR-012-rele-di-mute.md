@@ -1,6 +1,6 @@
 # ADR-012 — Relè di mute su tutte le uscite
 
-Data: 2026-09-08 · Stato: accettata — la durata «per qualche secondo» è superata da ADR-021 (mute tenibile a tempo indefinito)
+Data: 2026-09-08 · Stato: accettata — la durata «per qualche secondo» è superata da ADR-021 (mute tenibile a tempo indefinito); il relè resta come stato sicuro e non taglia mai la musica, precisata da ADR-038; lo stato sicuro è il jack a massa attraverso il bleed, con la geometria iii (ADR-044)
 
 ## Contesto
 

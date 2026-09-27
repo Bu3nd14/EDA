@@ -1,6 +1,6 @@
 # ADR-045 — Il permissivo K6 ha un comando proprio, e all'inserimento del mute rilascia dopo i relè del jack
 
-Data: 2026-09-25 · Stato: accettata
+Data: 2026-09-25 · Stato: accettata — la realizza L35
 
 ## Contesto
 

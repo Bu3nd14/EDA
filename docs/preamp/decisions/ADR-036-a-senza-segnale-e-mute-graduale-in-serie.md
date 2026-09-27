@@ -1,6 +1,6 @@
 # ADR-036 — A si giudica senza segnale; il mute è graduale e in serie, con rampa da 3 s, accettato con C fuori soglia sulla principale
 
-Data: 2026-09-16 · Stato: accettata
+Data: 2026-09-16 · Stato: accettata — il graduale passa a monte, con LDR, precisata da ADR-038
 
 ## Contesto
 
