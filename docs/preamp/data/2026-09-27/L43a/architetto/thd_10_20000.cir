@@ -1,0 +1,29 @@
+thd trend
+.include /Users/roberto/EDA/.claude/worktrees/L43a-architetto/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L43a-architetto/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L43a-architetto/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L43a-architetto/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L43a-architetto/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L43a-architetto/models/diodes/1n4148.lib
+.include /Users/roberto/EDA/.claude/worktrees/L43a-architetto/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L43a-architetto/spice/preamp/gain_block_flat.inc
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VS VSN 0 SIN(0 0.895 20000)
+RSRC VSN IN 2500
+CSTRAY RG 0 15p
+CSTRAY10 RG10 0 15p
+RRG RG 0 0.1
+RRG10 RG10 0 0.1
+RISO OUT OUTA 47
+COUT OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD JACK 0 10k
+.options reltol=1e-6 abstol=1e-15 vntol=1e-9
+.control
+set numdgt=10
+set fourgridsize=8192
+tran 0.02u 3m 2m 0.02u
+fourier 20000 v(OUT)
+.endc
+.end

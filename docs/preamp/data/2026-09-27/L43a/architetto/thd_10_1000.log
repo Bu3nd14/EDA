@@ -1,0 +1,83 @@
+warning, model type mismatch in line
+    q121a nmiri nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: thd trend
+
+Warning: Model issue on line 122 :
+  .model lsk489a njf(beta=2.2m betatce=-.5 rd=11 rs=30 lambda=4.3m vto=-1. ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+unrecognized parameter (mj) - ignored
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+nref                                  -13.6698
+vminus                                     -15
+ncasc                                   9.8682
+nx                                    0.971367
+nhi                                     13.717
+out                                 -0.0487014
+fb                                  -0.0154507
+vplus                                       15
+nrefm                                 -14.3349
+d1n                                    9.18037
+g1                                 2.41013e-08
+s1                                   0.0622989
+d2n                                    9.18089
+g2                                  -0.0154507
+s2                                   0.0578886
+src                                  -0.165893
+nte                                   -14.3752
+nmiri                                  13.8068
+nme1                                   14.5134
+nme2                                   14.5131
+nve                                    14.3767
+ny                                    -1.03988
+nvle                                   -14.386
+nbb                                  -0.326409
+nbn                                   0.969392
+nen                                   0.401796
+nbp                                     -1.039
+nep                                  -0.499686
+in                                 2.31721e-08
+rg                                -4.32779e-07
+rg10                              -1.78393e-06
+vsn                                          0
+outa                                -0.0487014
+jack                                         0
+vs#branch                          9.26882e-12
+vmm#branch                           0.0336255
+vpp#branch                          -0.0325829
+
+ Reference value :  7.46113e-03
+No. of Data Rows : 50001
+Fourier analysis for v(out):
+  No. Harmonics: 10, THD: 0.000398757 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -0.0487012068   0               0               0              
+ 1       1000            2.813032947     -0.532696055    1               0              
+ 2       2000            1.116317255e-05 167.1511002     3.968376041e-06 167.6837962    
+ 3       3000            1.098945973e-06 42.74921035     3.906623184e-07 43.2819064     
+ 4       4000            2.621671435e-08 78.29600947     9.319732421e-09 78.82870552    
+ 5       5000            6.042350254e-09 -123.528834     2.147984175e-09 -122.996138    
+ 6       6000            1.60302904e-10  -121.903981     5.698578972e-11 -121.371285    
+ 7       7000            3.963308627e-11 116.4811803     1.408909423e-11 117.0138764    
+ 8       8000            2.618258591e-11 -178.189388     9.307600161e-12 -177.656692    
+ 9       9000            2.298299419e-11 -179.012612     8.170183081e-12 -178.479916    
+
+Note: Simulation executed from .control section 

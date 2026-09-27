@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-09-27** (L42c: il requisito di NC-037 è ora P9 (a), ≤ 0,5 W alla presa, obiettivo del progetto — ADR-053; nessuna voce aperta o chiusa; L28: **NC-027 chiusa**, i pin SS dell'LSK489 definiti dalla nota applicativa del costruttore, flottanti — ADR-052; L41c: **NC-036 chiusa**, il banco di L30 col circuito vero dell'alimentatore, e il corto della linea a 12 V dei relè accettato sotto il tetto — ADR-051; L41b2: NC-038 chiusa, la cima delle LDR a 12 mA — ADR-050; NC-036 aggiornata, il firmware del temporizzatore provato sull'host e sul circuito; L41b1: NC-036 aggiornata, il temporizzatore esiste come hardware in `psu.py` senza firmware; NC-037 aggiornata, la causa tolta e la chiusura legata alla perdita a vuoto di T2; NC-038 aperta, il LED della VTL5C4 non regge 20 mA nel telaio caldo — ADR-049; L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-09-27** (L43a: **aperte NC-039…NC-046**, i rilievi dell'architetto avversariale accettati dall'utente, con la severità decisa da lui — NC-039, NC-040, NC-041 bloccanti per G1, NC-043 e NC-044 bloccanti per G2, NC-042 maggiore, NC-045 e NC-046 minori; report `reports/2026-09-27-L43a-esiti-architetto.md`; L42c: il requisito di NC-037 è ora P9 (a), ≤ 0,5 W alla presa, obiettivo del progetto — ADR-053; nessuna voce aperta o chiusa; L28: **NC-027 chiusa**, i pin SS dell'LSK489 definiti dalla nota applicativa del costruttore, flottanti — ADR-052; L41c: **NC-036 chiusa**, il banco di L30 col circuito vero dell'alimentatore, e il corto della linea a 12 V dei relè accettato sotto il tetto — ADR-051; L41b2: NC-038 chiusa, la cima delle LDR a 12 mA — ADR-050; NC-036 aggiornata, il firmware del temporizzatore provato sull'host e sul circuito; L41b1: NC-036 aggiornata, il temporizzatore esiste come hardware in `psu.py` senza firmware; NC-037 aggiornata, la causa tolta e la chiusura legata alla perdita a vuoto di T2; NC-038 aperta, il LED della VTL5C4 non regge 20 mA nel telaio caldo — ADR-049; L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -3335,6 +3335,222 @@ resta l'8 %.
 - La tabella sul banco in continua, calibrata come fa il firmware, entro **+0,28 dB** da 15 a
   60 °C, la cima entro ±0,02 dB (`data/2026-09-26/L41b2/ldr/`).
 - Nel firmware: `LDR_I_TOP` 12 mA; il falso 12 (la cima a 20 mA) fa fallire `tabella`.
+
+### NC-039 — Coi modelli la distorsione cresce verso gli acuti, e il Miller da 1 nF ne costa 20–27 dB
+
+| | |
+|---|---|
+| Requisito | **PR-8** (la distorsione non cresce verso gli acuti) · PR-7 · **V4**, V1 · **ADR-042** («Da riaprire se: lo slew a 20 kHz si sente o si misura»), ADR-019 §1, ADR-053 |
+| Severità | **bloccante** (decisione dell'utente, 2026-09-27: «il suono é quello che conta di piú alla fine»): impedisce G1 |
+| Aperta da | `reports/2026-09-27-L43a-architetto-avversariale.md`, rilievo **R1**. Trovata dall'**architetto avversariale**, accettata dall'utente in L43a |
+| Stato | aperta |
+
+**Evidenza.** Deck dell'architetto, un blocco di `gain_block_flat.inc` coi 7 modelli del
+costruttore, sorgente 2,5 kΩ, carico 10 kΩ dopo 47 Ω e 4,7 µF, 2 V RMS, `.four`
+(`data/2026-09-27/L43a/architetto/`, `thd_*.log`, `imd_A*.log`). **Cifre di modello, non misure**:
+conta il trend.
+- THD a 1 kHz 0,00044 % (0 dB) / 0,00040 % (+10 dB); a 20 kHz **0,0616 %** / **0,168 %** con
+  1 nF, 0,0060 % / 0,0118 % con 470 pF.
+- IMD CCIF (19 + 20 kHz, K11 a fondo scala, blocco A): prodotto a 1 kHz **−59,6 dB** con 1 nF,
+  −85,4 dB con 470 pF.
+- Lo spettro a 20 kHz scende in ordine (h2 −66, h3 −70, h5 −85 dB): la clausola «spettro» di
+  PR-8 regge nel modello; è la crescita con la frequenza che non regge.
+- La radice indicata: la CJE di 3,06 nF dei MJE15032/33, per cui ADR-042 portò il Miller a 1 nF;
+  ADR-042 valutò solo alternative di compensazione.
+
+Lo stesso deck a livello ridotto (`thd_10_20000_lo.log`, sorgente −12 dB, dell'architetto ma non
+citato nel suo report) dà **0,00543 %** contro 0,168 %: ~30 dB in meno per 12 dB di livello. Il
+difetto dipende fortemente dal livello; va giudicato a un livello musicale dichiarato.
+
+In sessione, l'orchestratore ha osservato (dalla letteratura, non rieseguito) che le armoniche
+di un acuto cadono fuori dall'udito, e che l'effetto udibile è l'**intermodulazione** in centro
+banda. Il livello musicale reale a 19–20 kHz è molto sotto il fondo scala del CCIF.
+
+**Cosa serve per chiuderla.**
+- La topologia rivista in modo che la distorsione non cresca verso gli acuti con margine. Le
+  strade dell'architetto, da valutare: un dispositivo d'uscita con CJE bassa, uno stadio driver,
+  più corrente di coda con degenerazione, e con loro un Miller più piccolo. ADR nuova che supera
+  ADR-042 in parte.
+- **V4** con un criterio decidibile (proposta dell'architetto: un tetto assoluto a 20 kHz e sui
+  prodotti IMD in banda, a un livello dichiarato), con ADR.
+- Il margine di 60° di PR-7 sul caso peggiore di 4,7 nF: l'architetto lo chiama «margine su
+  margine». Si riesamina insieme, non si tocca senza l'utente.
+- Da rivedere quando si riscrive V4: la frase di ADR-053 «la coppia differenziale cancella la
+  2ª» nel modello non regge a 20 kHz, dove la h2 è l'armonica più alta (osservazione
+  dell'architetto, non un rilievo).
+
+### NC-040 — L'ingresso è accoppiato in continua: il cambio d'ingresso porta sulle uscite la differenza fra le continue delle sorgenti
+
+| | |
+|---|---|
+| Requisito | **PR-14** (cambio d'ingresso senza clic) · PR-20 · **F1**, V2 (A) · ADR-038 |
+| Severità | **bloccante** (proposta dell'architetto, accettata dall'utente il 2026-09-27): impedisce G1 |
+| Aperta da | `reports/2026-09-27-L43a-architetto-avversariale.md`, rilievo **R2**. Trovata dall'**architetto avversariale**, accettata dall'utente in L43a |
+| Stato | aperta |
+
+**Evidenza.**
+- Netlist `circuits/preamp/preamp_audio.net`: IN_SRC → LDR in serie → ingresso del blocco A
+  (R113 da 1 MΩ a massa, nessun condensatore) → uscita del blocco A → buffer delle fisse, tutto
+  in continua. Il gradino arriva **intero** ai jack fissi, e scalato dal volume al principale.
+- Stima dell'architetto, non una misura: un'uscita di phono a valvole con un film da 1 µF
+  (isolamento minimo 10 000 MΩ·µF, datasheet WIMA MKS 4) e 100 V di catodo dà ~10 nA su 1 MΩ,
+  **~10 mV**, 100 volte i 100 µV del jack fisso; con un elettrolitico, peggio. La continua del
+  K11 non è pubblicata.
+- Il selettore d'ingresso non è progettato (già noto, L42c). Nuovo è il meccanismo che rende
+  PR-14 difficile per costruzione.
+
+**Cosa serve per chiuderla.** Il selettore progettato insieme all'accoppiamento dell'ingresso.
+Il rimedio classico indicato: un condensatore per ingresso, ciascuno con la sua resistenza a
+massa dal lato del preamp. L'alternativa è commutare sotto mute, ~13 s col profilo di oggi.
+E3 ed E5 si rimisurano sull'ingresso nuovo, e F1 va provato sul banco con due sorgenti a
+continue diverse. ADR con la scelta dell'utente.
+
+### NC-041 — La continua del blocco A attraversa trim e volume: ogni scatto del volume lascia un gradino al jack, e il dossier dice il contrario
+
+| | |
+|---|---|
+| Requisito | **PR-20** (il volume non è fra gli eventi elencati) · PR-16 · **V2**, F4 · ADR-007 |
+| Severità | **bloccante** (decisione dell'utente il 2026-09-27; l'architetto proponeva maggiore): impedisce G1 |
+| Aperta da | `reports/2026-09-27-L43a-architetto-avversariale.md`, rilievo **R3**. Trovata dall'**architetto avversariale**, accettata dall'utente in L43a |
+| Stato | aperta |
+
+**Evidenza.**
+- Netlist `circuits/preamp/preamp_audio.net`: la rete d'uscita del blocco A L contiene
+  R134/R135/R136/C137, R901 (la cima della scala del trim), K7 pin 2 e R508/R608 (i buffer delle
+  fisse), **nessun condensatore** fino al blocco B. Il blocco B ha `r_in=None`: la sua continua
+  la dà l'attenuatore (`preamp_audio.py`).
+- Offset del blocco A −15,45 mV (`data/2026-09-27/L42/dopo/tb_op/tb_op.log`).
+- Calcolo dell'architetto, non una simulazione: gradino = V_A · Δ(rapporto dell'attenuatore) ·
+  G_B. Da 0 a −2 dB: **3,2 mV, 63,5 dB SPL** a 0 dB; **10 mV, 73,5 dB SPL** a +10 dB. Da −29 a
+  −27 dB: 0,14 / 0,45 mV (36,5 / 46,5 dB SPL). V2 è 33 dB SPL; la dispersione dell'LSK489
+  aggiunge fino a +7 dB, la continua della sorgente (NC-040) si somma.
+- **Il dossier**, sezione 3 (`build_dossier.py`, riga ~2568): «Il trim sta dopo il condensatore
+  d'uscita del blocco A e non tocca la continua». Sulla netlist è **falso**.
+
+**Cosa serve per chiuderla.**
+- La continua tolta dal trim e dal volume. Il rimedio indicato è un condensatore all'ingresso
+  del blocco B, con la sua resistenza di gate. E5 e il V1 del blocco B si rimisurano.
+- Il volume aggiunto agli eventi del banco di V2, con uno scatto in cima alla corsa a ogni
+  guadagno.
+- La frase del dossier corretta, rigenerando il dossier.
+
+### NC-042 — Nessuna analisi dei guasti singoli della scheda audio: il tetto di non-danno vale solo per l'alimentatore
+
+| | |
+|---|---|
+| Requisito | **PR-22, PR-23, PR-24** · P7, P9 · ADR-027 («Da riaprire se» sulla bobina di K6), ADR-033, ADR-051 |
+| Severità | **maggiore**, da chiudere **prima di G2** (proposta dell'architetto, accettata dall'utente il 2026-09-27) |
+| Aperta da | `reports/2026-09-27-L43a-architetto-avversariale.md`, rilievo **R5**. Trovata dall'**architetto avversariale**, accettata dall'utente in L43a |
+| Stato | aperta — la FMEA è a piano come **L45** (richiesta dell'utente) |
+
+**Evidenza.** Nel repo «guasto singolo», «FMEA» e «analisi dei guasti» portano solo ad ADR-051 e
+alle clausole di ADR-027 e ADR-033; `psu.py` non ha rivelatori di continua sulle uscite dei
+blocchi. Casi mai esaminati, stimati dall'architetto con un calcolo e mai simulati:
+- un MJE d'uscita in corto: OUT vicino al rail, gradino attraverso il 4,7 µF (τ 0,32 s), **~23 dB
+  sopra il tetto** di 0,87 V; 0,68 A probabilmente non portano il rail sotto 13,5 V, quindi il
+  sorvegliante non interviene;
+- la bobina di K6 aperta: trim e guadagno comandabili fuori mute, gradini fino a ~95 dB SPL;
+- un contatto del relè di mute saldato: l'accensione al jack senza protezione;
+- un errore del firmware che accende tutte e due le stringhe delle LDR: ~226 Ω verso la
+  sorgente, evitato solo dal firmware (ADR-038 punto 3);
+- il condensatore d'uscita in corto: −15 / −49 mV di continua verso il cj.
+
+Le uscite fisse vanno a una Stax SRM-T1 da 60 dB di guadagno: un gradino di rail passa l'intera
+escursione alle elettrostatiche, e sulle fisse non è dichiarato nessun tetto.
+
+**Cosa serve per chiuderla.** La FMEA della scheda audio (**L45**): ogni guasto singolo con il suo
+effetto al jack principale e alle fisse in dB SPL, contro il tetto; i casi che lo superano,
+simulati. Poi la decisione dell'utente, con ADR, se un rivelatore di continua sulle uscite debba
+comandare il sink di `MUTE_CMD` che esiste già, e se serve un tetto di non-danno sulle fisse.
+
+### NC-043 — La VTL5C4 dell'Excelitas è fuori produzione, e il progetto la usa ancora
+
+| | |
+|---|---|
+| Requisito | **PR-29** · **T8** (nessuna parte con fine vita annunciata) · ADR-038 e ADR-039 («Da riaprire se la VTL5C4 non si trova»), ADR-050 |
+| Severità | **bloccante** (decisione dell'utente il 2026-09-27, «non possiamo produrre se non cambiamo»; l'architetto proponeva maggiore): impedisce **G2** (il layout ha bisogno del pezzo vero) |
+| Aperta da | `reports/2026-09-27-L43a-architetto-avversariale.md`, rilievo **R6**. Trovata dall'**architetto avversariale**, accettata dall'utente in L43a |
+| Stato | aperta |
+
+**Evidenza.** Il sorgente nomina la VTL5C4 dell'Excelitas, e il modello viene dal suo datasheet
+(`vendor/optocoupler/excelitas/VTL5C3_VTL5C4`). Excelitas ha chiuso la serie VTL (ultimo ordine
+2015): [modularsynthesis.com](https://modularsynthesis.com/vactrols/vactrols.htm), «Excelitas
+manufactured vactrols until 2015», con i sostituti CoolAudio e Xvive e una variabilità
+significativa fra i campioni. La disponibilità presso i distributori non è verificata (403).
+**Già noto** in STATE da L29b2 («fuori produzione», la riedizione Xvive, «prima di G2»), mai
+registrato come NC fino a qui.
+
+**Cosa serve per chiuderla.** La parte sostitutiva (Xvive o altra) verificata disponibile dal
+`bom-component-manager`, col datasheet congelato in `vendor/` e il modello rigenerato con la
+provenienza. Poi, rimisurati sulla cella nuova: il profilo v4 e la sua calibrazione (la cima a
+12 mA e il declassamento del LED, ADR-050), S del mute, E3, E5. ADR che supera in parte ADR-038 e
+ADR-039.
+
+### NC-044 — Il ronzio da anello di massa non ha requisiti, e nessuno ha deciso come la massa audio si lega alla terra
+
+| | |
+|---|---|
+| Requisito | **PR-5**, PR-2 · E5 (conta solo il rumore proprio e il ripple), P4 · `SAFETY.md` |
+| Severità | **bloccante per G2**, il layout (decisione dell'utente il 2026-09-27; l'architetto proponeva maggiore, da decidere prima di G2) |
+| Aperta da | `reports/2026-09-27-L43a-architetto-avversariale.md`, rilievo **R7**. Trovata dall'**architetto avversariale**, accettata dall'utente in L43a |
+| Stato | aperta |
+
+**Evidenza.** Il preamp collega cinque apparecchi alimentati da rete e sbilanciati (il cj, il
+Singxer, la Stax e due sorgenti). Nessun requisito, nessuna ADR e nessuna voce di `SAFETY.md`
+dicono come la massa di segnale si lega alla terra di protezione: `SAFETY.md` porta la terra
+direttamente al telaio, e non dice dove si collega la massa audio. Stima dell'architetto: 500 µV
+di ronzio al jack principale (10 mA d'anello su 0,05 Ω di schermo) valgono **~47 dB SPL a 1 m**,
+sopra la stanza silenziosa. Rod Elliott documenta ~1 V fra le terre di prese diverse, e il
+rimedio 10 Ω ∥ C ∥ diodi fra massa del circuito e terra ([ESP, Earthing](https://sound-au.com/earthing.htm)).
+
+**Cosa serve per chiuderla.** Un requisito sul ronzio indotto con il suo metodo di misura, e una
+decisione dell'utente, con ADR, sulla messa a terra (dove la massa audio incontra la terra di
+protezione, e con quale rete), scritta anche in `SAFETY.md`. Precede il layout, perché ne fissa
+la massa.
+
+### NC-045 — Il pilota delle LDR e il profilo di 6 s servono un criterio che non c'è più: più complessi e più lenti del necessario
+
+| | |
+|---|---|
+| Requisito | **PR-21**, PR-24 · V2 (S) · ADR-039 (Td = 6 s), ADR-040, ADR-049, ADR-050 |
+| Severità | **minore** (proposta dell'architetto, accettata dall'utente il 2026-09-27: «sono disposto a cambiare e a ridurre il tempo di mute») |
+| Aperta da | `reports/2026-09-27-L43a-architetto-avversariale.md`, rilievo **R8** e semplificazioni 3 e 4. Trovata dall'**architetto avversariale**, accettata dall'utente in L43a |
+| Stato | aperta — dopo NC-043 (la cella nuova ha tempi suoi) |
+
+**Evidenza.**
+- DAC a 12 bit, due convertitori esponenziali, compensazione in temperatura e calibrazione a due
+  punti (ADR-049, «La compensazione e la calibrazione») non citano nessun requisito. S misura
+  **7,16 dB** contro 20 (dossier, sezione 12): 12,8 dB di margine.
+- Td = 6 s fu scelto il 2026-09-21 sul criterio C ≤ 1 mV (a 20 Hz servivano oltre 14 s). ADR-040
+  ha cambiato il criterio senza riesaminare Td. Oggi i primi 100 ms del mute tolgono ~7 dB; il
+  PRB non fissa un tempo massimo del mute.
+
+**Cosa serve per chiuderla.** Con l'utente, e con ADR che supera in parte ADR-039, ADR-049 e
+ADR-050:
+- un tempo massimo del mute nel PRB, e Td più corto (l'architetto indica 1–2 s), con S ≤ 20 dB
+  verificato su `tb_v2_casopeggiore.cir` e il tempo di spegnimento della cella scelta in NC-043;
+- il pilota delle LDR semplificato (RC più generatore di corrente al posto di DAC, convertitori
+  e calibrazione), con S e la calibrazione di E3 ed E5 rimisurati. Il micro resta per il trim e
+  il permissivo (R4 respinto dall'utente).
+
+### NC-046 — La metrica dei gradini in dB SPL è solo quella delle Heresy: le due uscite a cuffia non hanno la loro
+
+| | |
+|---|---|
+| Requisito | **PR-20**, PR-23 · l'intestazione del PRB (i gradini in dB SPL di picco a 1 m) · ADR-012 |
+| Severità | **minore** (proposta dell'architetto, accettata dall'utente il 2026-09-27) |
+| Aperta da | `reports/2026-09-27-L43a-architetto-avversariale.md`, rilievo **R9**. Trovata dall'**architetto avversariale**, accettata dall'utente in L43a |
+| Stato | aperta |
+
+**Evidenza.** Due uscite su tre vanno a cuffie (Singxer SA-1, +11 dB nel guadagno alto; Stax
+SRM-T1, 60 dB, con SR-L300 a 101 dB con 100 V RMS). Calcolo dell'architetto: 100 µV al jack fisso
+danno **~41 dB SPL all'orecchio** con la Stax al massimo, ~6 dB SPL a un volume realistico
+(−35 dB). La soglia di 100 µV **regge** anche in cuffia; il tetto di non-danno sulle fisse manca,
+ed è in NC-042.
+
+**Cosa serve per chiuderla.** Nel PRB, con ADR (ADR-053), la traduzione dei gradini delle uscite
+fisse in dB SPL all'orecchio con la catena delle cuffie dichiarata, accanto a quella delle
+Heresy. Il tetto di non-danno sulle fisse lo chiude NC-042.
 
 ## Voci chiuse
 
