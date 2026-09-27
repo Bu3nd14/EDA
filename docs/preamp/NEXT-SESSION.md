@@ -1,92 +1,90 @@
-# Prompt per la sessione successiva — L43 (la revisione umana del dossier)
+# Prompt per la sessione successiva — L42d (il PRB e le ADR nel dossier, e l'architetto avversariale)
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L43** e si ferma. Non iniziarne un secondo.
+LOTTI PICCOLI: questa sessione fa **L42d** e si ferma. Non iniziarne un secondo.
 
 ## Il mandato
 
-**L43 lo fa l'utente**: legge il dossier rigenerato in L42a (la scheda audio) e L42b
-(l'alimentatore), e ogni cosa che trova diventa una voce di `docs/preamp/NONCOMPLIANCE.md`, col
-suo requisito, la sua severità e la sua evidenza, come nella prima revisione umana (L5e).
-L'ordine resta: **L43 → L44 (NC-004) → G1**.
+Due cose, entrambe decise dall'utente il 2026-09-27, prima della sua revisione del dossier (L43).
+L'ordine è: **L42d → L43** (la revisione dell'utente e quella dell'architetto, in parallelo)
+**→ L44 (NC-004) → G1**.
 
-Il ruolo della sessione è **trascrivere e dare evidenza**, non revisionare:
+**1. Il contratto dentro il dossier.** L'utente: «molto difficile leggere un dossier senza un
+file di requisiti e ADR». Il dossier (`docs/preamp/dossier/build_dossier.py`) porta:
+- **il PRB** (`docs/preamp/PRB.md`, le 29 voci firmate, ADR-053), in testa o in appendice (lo
+  proponi all'utente);
+- **un registro delle ADR**: numero, titolo, data, stato (accettata, superata da…) e la decisione
+  in una o due righe. **Non il testo intero**: sarebbero 120–150 pagine (ADR-053, alternative
+  scartate). Il testo resta in `decisions/`;
+- i rimandi del testo (**PR-n, ADR-0xx, E1…P9, V1…V5**) che diventano link alle voci, anche nel
+  PDF di `stampa_a4.py`.
 
-- **Non cercare difetti per conto tuo**, né prima né durante la lettura dell'utente. Se l'utente
-  ha trovato qualcosa, il suo giudizio è il dato del lotto; un difetto trovato da te al suo posto
-  distrugge l'informazione su cosa la revisione umana vede. Se ti chiede di verificare una sua
-  osservazione, verifica **quella**, sui dati, e dì che cosa hai guardato.
-- **Il soggetto è il prodotto**: il circuito, il suo comportamento misurato, le decisioni (ADR) e
-  i disegni che lo rappresentano. Gli script, i banchi e la toolchain restano fuori: un loro
-  difetto si annota a parte, senza aprire una non conformità di prodotto.
-- **Le domande una alla volta, conversando**, quando servono davvero: niente questionari.
-- I gradini al jack si dicono in **dB SPL di picco a 1 m** contro una stanza silenziosa, come il
-  dossier; le tensioni solo fra parentesi.
+Tutto **generato dai file**, nessuna copia a mano (è la regola del builder). Un controllo nuovo,
+da far fallire come gli altri: ogni requisito e ogni ADR che il PRB nomina esistono davvero, e
+ogni ADR del registro ha uno stato. È anche la prima verifica che il contratto sia univoco.
 
-## Come si legge il dossier
+**2. L'architetto avversariale.** L'utente: «nel team dovremmo avere un architetto avversariale,
+se non c'é lo creiamo, gli passiamo i requisiti, il dossier e il target di un preamplificatore
+che suoni bene (basandosi sulla letteratura e sulla tecnica), che non abbia bump fastidiosi sulle
+uscite ai cambi di configurazione e che fallisca senza danneggiare altri elementi della catena e
+gli facciamo fare una review in parallelo a me».
+- `design-reviewer` esiste, ma verifica che il progetto faccia **quello che dichiara**, e non ha
+  il web. L'utente chiede chi contesti se ciò che dichiara sia **giusto**. `AGENTS.md` dice, dal
+  2026-09-09, che un revisore nuovo non serve: la frase va superata, dichiarandolo.
+- Crea `.claude/agents/adversarial-architect.md`: **sola lettura** (Read, Grep, Glob, Bash) più
+  **WebSearch e WebFetch**. Il mandato:
+  - i tre obiettivi dell'utente, contro il **PRB** come contratto e contro la letteratura;
+  - può contestare anche le ADR, dicendo quali riaprirebbe e perché;
+  - i gradini in dB SPL di picco a 1 m;
+  - il soggetto è il prodotto, non la toolchain;
+  - forma i suoi rilievi **prima** di leggere `NONCOMPLIANCE.md` e il diario di `STATE.md`, poi
+    segna quali sono già noti;
+  - consegna un report datato in `docs/preamp/reports/`, con requisito, evidenza e severità
+    proposta per ogni rilievo.
+- Aggiorna `AGENTS.md` (il roster e il paragrafo sul «revisore avversariale»).
+- **Non lanciarlo in questa sessione**: le definizioni degli agenti si caricano all'avvio di una
+  sessione, e la sua revisione va in parallelo a quella dell'utente (L43). Riscrivi il prompt di
+  L43 perché la sessione di L43 lo lanci come **agente nuovo, mai come fork**, senza passargli
+  niente delle osservazioni dell'utente, e alla fine scriva entrambi gli esiti con chi ha
+  trovato cosa.
 
-- La pagina: `/Users/roberto/EDA/docs/preamp/dossier/index.html` (dal checkout principale, dopo
-  il merge di L42b). Le figure e i tre schemi (`gain_block.svg`, `preamp_blocks.svg`,
-  `psu_blocks.svg`) stanno accanto, nella stessa cartella. Una copia autoconsistente, se serve:
-  `/usr/bin/python3 docs/preamp/dossier/build_dossier.py --standalone <file.html>`.
-- Venticinque sezioni: 1–15 la scheda audio, 16–22 l'alimentatore, poi i requisiti, «Cosa questo
-  dossier non dice» e la provenienza. Sotto ogni titolo c'è il deck e la cartella dei dati da cui
-  vengono i numeri: è l'evidenza che una voce deve nominare.
-- Già scritti nella pagina, e **l'utente decide se diventano voci**: S del mute con la cima dei
-  LED a 12 mA mai misurato (sezione del mute); la tenuta di `VRELAY` scesa da 62,8 a 36,1 ms a
-  rete −10 % col carico di L41b1/L41b2, e il commento di `C_VRELAY` in `psu.py` che cita ancora
-  L41a (sezione della potenza); i limiti di «Cosa questo dossier non dice».
-
-## Come si scrive una voce
-
-Il formato è in `NONCOMPLIANCE.md`, sezione «Formato di una voce»: requisito, severità
-(bloccante / maggiore / minore, con la tabella «Severità, e cosa blocca davvero»), «Aperta da»,
-stato; poi **Evidenza** (il file di dati sotto `docs/preamp/data/<data>/` e la misura) e **Cosa
-serve per chiuderla**. Il numero è il successivo libero (l'ultimo aperto è NC-038, chiusa). La
-severità la decide l'utente; tu proponi la tua lettura del requisito solo se te la chiede.
+**Proponi all'utente come impaginare il PRB e il registro, e il testo del mandato dell'agente,
+prima di scrivere codice.**
 
 ## Prima di tutto
 
-- Leggi `CLAUDE.md` e, in `docs/preamp/STATE.md`, «In breve» e le voci di diario di L42a e L42b.
-- In `NONCOMPLIANCE.md`: «A cosa serve», «Severità», «Formato di una voce», e l'elenco delle voci
-  aperte (9, una bloccante: **NC-004**).
-- `docs/preamp/data/2026-09-27/L42/README.md` e `docs/preamp/data/2026-09-27/L42b/README.md`:
-  come sono state costruite le seconde strade, se l'utente chiede da dove viene una cifra.
-
-## Lo stato che trovi
-
-- Il dossier è rigenerato su tutte e due le schede; `build_dossier.py` passa, 47 sabotaggi su 47
-  cadono (`data/2026-09-27/L42b/script/sabotaggi.txt`).
-- **9 non conformità aperte, 1 bloccante**: **NC-004**, per G1.
+- Leggi `CLAUDE.md`, `docs/limitations.md`, e in `docs/preamp/STATE.md` «In breve» e le voci di
+  diario di L42b e L42c.
+- `docs/preamp/PRB.md` e `decisions/ADR-053-product-requirements-book.md`.
+- `docs/preamp/decisions/README.md`: l'indice delle ADR ha già titolo e stato di ciascuna.
+- `docs/preamp/dossier/build_dossier.py`: la docstring e come L42b ha aggiunto le sezioni;
+  `docs/preamp/data/2026-09-27/L42b/script/sabotaggi.py` per i sabotaggi.
+- `.claude/agents/design-reviewer.md` e `AGENTS.md` (G0).
 
 ## I vincoli
 
 - Nel worktree `git` vengono rifiutati:
   - i comandi composti, e le pipe o i `;` attorno a comandi che eseguono script (anche
     `run_tests.sh` va lanciato da solo, senza redirezioni);
-  - `awk` con programmi, i cicli con variabili e i percorsi calcolati a runtime.
+  - `awk` con programmi, i cicli con variabili e i percorsi calcolati a runtime;
+  - un titolo di PR con l'apostrofo (`gh pr create`): il corpo va su file (`--body-file`).
 
   Si usano comandi semplici, **percorsi assoluti**, script scritti su file con Write, ed Edit per
   i testi.
-- `vendor/` è di sola lettura, tranne che con `freeze_vendor.sh`.
+- Il PDF del dossier non si versiona (`stampa_a4.py` rifiuta un percorso dentro il repo).
 
 ## NON fa parte di questo lotto
 
-- **Correggere** quello che l'utente trova: L43 apre le voci, i rimedi sono lotti successivi (e
-  una modifica sostanziale ai requisiti vuole una ADR);
-- **NC-004** (è L44), la misura di S a 12 mA, qualsiasi modifica al circuito, al firmware, ai
-  deck o al dossier;
-- il layout dei PCB (G2) e `src/main_attiny.c`.
+- la revisione dell'utente e quella dell'architetto (L43);
+- le soglie numeriche di V4, la lista dei condensatori ammessi (P6), il selettore d'ingresso;
+- qualsiasi modifica al circuito, al firmware o ai deck; NC-004 (L44).
 
 ## CHIUSURA
 
-1. Le voci nuove in `NONCOMPLIANCE.md`, con la riga «Ultimo aggiornamento»; un report datato in
-   `docs/preamp/reports/<data>-L43-revisione-umana.md` con le osservazioni dell'utente, **con le
-   sue parole**, e dove sono finite.
-2. `STATE.md` con L43 **fatto** e il prossimo lotto (L44) nella tabella.
-3. Riscrivi QUESTO file per il lotto successivo (L44, NC-004: il modo si decide con l'utente
-   all'inizio del lotto).
-4. Commit, push, PR.
-5. `/bin/zsh scripts/chunk_close.sh L43`.
-6. Rimuovi il worktree coi comandi che lo script stampa.
-7. **Fermati.**
+1. `STATE.md` con L42d **fatto** e il prossimo lotto (L43) nella tabella.
+2. Riscrivi QUESTO file per L43: la revisione dell'utente col PRB come contratto, e l'architetto
+   avversariale lanciato in parallelo, alla cieca (vedi sopra).
+3. Commit, push, PR.
+4. `/bin/zsh scripts/chunk_close.sh L42d`.
+5. Rimuovi il worktree coi comandi che lo script stampa.
+6. **Fermati.**
