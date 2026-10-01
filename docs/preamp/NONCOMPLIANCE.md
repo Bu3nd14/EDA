@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-10-01** (L43b, la revisione dell'utente: **aperte NC-047**, il PSRR del rail positivo, e **NC-048**, nessun placement e routing di prova, entrambe bloccanti per G1; report `reports/2026-10-01-L43b-revisione-dossier.md`; L43a: **aperte NC-039…NC-046**, i rilievi dell'architetto avversariale accettati dall'utente, con la severità decisa da lui — NC-039, NC-040, NC-041 bloccanti per G1, NC-043 e NC-044 bloccanti per G2, NC-042 maggiore, NC-045 e NC-046 minori; report `reports/2026-09-27-L43a-esiti-architetto.md`; L42c: il requisito di NC-037 è ora P9 (a), ≤ 0,5 W alla presa, obiettivo del progetto — ADR-053; nessuna voce aperta o chiusa; L28: **NC-027 chiusa**, i pin SS dell'LSK489 definiti dalla nota applicativa del costruttore, flottanti — ADR-052; L41c: **NC-036 chiusa**, il banco di L30 col circuito vero dell'alimentatore, e il corto della linea a 12 V dei relè accettato sotto il tetto — ADR-051; L41b2: NC-038 chiusa, la cima delle LDR a 12 mA — ADR-050; NC-036 aggiornata, il firmware del temporizzatore provato sull'host e sul circuito; L41b1: NC-036 aggiornata, il temporizzatore esiste come hardware in `psu.py` senza firmware; NC-037 aggiornata, la causa tolta e la chiusura legata alla perdita a vuoto di T2; NC-038 aperta, il LED della VTL5C4 non regge 20 mA nel telaio caldo — ADR-049; L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-10-01** (L43b, la revisione dell'utente: **aperte NC-047**, il PSRR del rail positivo, e **NC-048**, nessun placement e routing di prova, entrambe bloccanti per G1, trovate dall'utente; **NC-049** S del mute a 12 mA mai misurato (maggiore), **NC-050** la tenuta di `VRELAY` scesa (minore), **NC-051** il commento di `C_VRELAY` (minore), **NC-052** i CSV citati dalla nota su E5 che non esistono (minore), trovate dall'orchestratore e presentate dopo la lettura dell'utente; report `reports/2026-10-01-L43b-revisione-dossier.md`; L43a: **aperte NC-039…NC-046**, i rilievi dell'architetto avversariale accettati dall'utente, con la severità decisa da lui — NC-039, NC-040, NC-041 bloccanti per G1, NC-043 e NC-044 bloccanti per G2, NC-042 maggiore, NC-045 e NC-046 minori; report `reports/2026-09-27-L43a-esiti-architetto.md`; L42c: il requisito di NC-037 è ora P9 (a), ≤ 0,5 W alla presa, obiettivo del progetto — ADR-053; nessuna voce aperta o chiusa; L28: **NC-027 chiusa**, i pin SS dell'LSK489 definiti dalla nota applicativa del costruttore, flottanti — ADR-052; L41c: **NC-036 chiusa**, il banco di L30 col circuito vero dell'alimentatore, e il corto della linea a 12 V dei relè accettato sotto il tetto — ADR-051; L41b2: NC-038 chiusa, la cima delle LDR a 12 mA — ADR-050; NC-036 aggiornata, il firmware del temporizzatore provato sull'host e sul circuito; L41b1: NC-036 aggiornata, il temporizzatore esiste come hardware in `psu.py` senza firmware; NC-037 aggiornata, la causa tolta e la chiusura legata alla perdita a vuoto di T2; NC-038 aperta, il LED della VTL5C4 non regge 20 mA nel telaio caldo — ADR-049; L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -3623,6 +3623,71 @@ scheda audio e dell'alimentatore, **subito dopo la progettazione del selettore d
 contenitore candidato di P8, i toroidali e i comandi a pannello al loro posto, un routing
 automatico che completi, e DRC. L'esito dice se ci sta e quali vincoli di piazzamento tornano al
 progetto. È un draft: non sostituisce il layout di G2, né i requisiti di massa di NC-044.
+
+### NC-049 — S del mute con la cima delle LDR a 12 mA non è mai stato misurato
+
+| | |
+|---|---|
+| Requisito | **PR-21** (il mute sfuma, non taglia) · **V2** (S ≤ 20 dB in 100 ms) · **ADR-050** (la cima a 12 mA), ADR-040 |
+| Severità | **maggiore** (proposta dell'orchestratore, accettata dall'utente il 2026-10-01) |
+| Aperta da | `reports/2026-10-01-L43b-revisione-dossier.md`. Trovata dall'**orchestratore** in L42a (punto «per L43» di `STATE.md`), presentata all'utente dopo la sua lettura; né l'utente né l'architetto l'avevano trovata |
+| Stato | aperta |
+
+**Evidenza.** ADR-050 (L41b2) ha portato la cima delle LDR a 12 mA. Il profilo v4 al jack del
+dossier (S 7,16 / 5,45 dB, L42a) e la matrice di V2 sono corsi **prima**, con la cima precedente;
+L42a lo registra come «trovato, non risolto» (`STATE.md`, diario di L42a).
+
+**Cosa serve per chiuderla.** S misurato con la cima a 12 mA, nel lotto che cambia il pilota delle
+LDR (NC-045) e sul pilota nuovo, prima di G1.
+
+### NC-050 — La tenuta di `VRELAY` è scesa da 62,8 a 36,1 ms: P9 regge con 11 ms di margine
+
+| | |
+|---|---|
+| Requisito | **PR-23** · **P9 (b)** (`VRELAY` ≥ 11,4 V per ≥ 25 ms dopo lo scatto) · ADR-045, ADR-048 |
+| Severità | **minore** (decisione dell'utente, 2026-10-01): requisito soddisfatto, margine da tenere d'occhio |
+| Aperta da | `reports/2026-10-01-L43b-revisione-dossier.md`. Trovata dall'**orchestratore** in L42b (punto «per L43»), presentata all'utente dopo la sua lettura |
+| Stato | aperta |
+
+**Evidenza.** `data/2026-09-27/L42b/`: `VRELAY_REG` ≥ 11,4 V per **36,1 / 102,1 / 168,5 ms** a rete
+−10 / nom / +10 %, contro 62,8 / 144,9 / 227,3 ms di L41a. La causa è il carico aggiunto da
+L41b1/L41b2, provata col controfattuale (il carico di L41a ridà L41a).
+
+**Cosa serve per chiuderla.** Ogni lotto che aggiunge carico su `VRELAY` ricorre la tenuta a rete
+−10 %; la voce si chiude quando il carico è congelato (G2) con P9 (b) ancora soddisfatto.
+
+### NC-051 — Il commento di `C_VRELAY` in `psu.py` cita le tenute superate di L41a
+
+| | |
+|---|---|
+| Requisito | La regola di tracciabilità di `CLAUDE.md` (ogni valore non ovvio porta il commento che lo giustifica) · P9 (b) · ADR-048 |
+| Severità | **minore** (decisione dell'utente, 2026-10-01) |
+| Aperta da | `reports/2026-10-01-L43b-revisione-dossier.md`. Trovata dall'**orchestratore** in L42b (punto «per L43»), presentata all'utente dopo la sua lettura |
+| Stato | aperta |
+
+**Evidenza.** `circuits/preamp/psu.py` righe 122–127: «4700 uF holds 51 / 134 / 216 ms», dalle
+varianti di L41a. Sul circuito di oggi le tenute sono 36,1 / 102,1 / 168,5 ms (NC-050).
+
+**Cosa serve per chiuderla.** Il commento riscritto con le cifre e i dati di oggi, nel prossimo lotto
+che tocca `psu.py`; netlist uguale salvo i campi volatili.
+
+### NC-052 — La nota su E5 cita come fonte della tabella del PSRR dei CSV che non esistono
+
+| | |
+|---|---|
+| Requisito | **E5**, E7 · **ADR-020** · la regola del registro: «una non conformità senza evidenza apribile è un'opinione», e lo stesso vale per un requisito |
+| Severità | **minore** (decisione dell'utente, 2026-10-01) |
+| Aperta da | `reports/2026-10-01-L43b-revisione-dossier.md`. Trovata dall'**orchestratore** in L43b, per caso, cercando il PSRR per NC-047; presentata all'utente dopo la sua lettura |
+| Stato | aperta |
+
+**Evidenza.** `REQUIREMENTS.md`, «Nota su E5», cita
+`data/2026-09-23/L40/dopo/tb_zout_psrr_noise/tb_zout_psrr_noise_psrr{p,m}_10db.csv`; la cartella
+contiene solo `tb_zout_psrr_noise.log` e `tb_zout_psrr_noise_resolved.cir`. Il dato ricorso sul
+circuito di oggi c'è: `data/2026-09-27/L42/dopo/tb_zout_psrr_noise/`, 23,01 dB a 10,02 kHz sul
+rail + a +10 dB, coerente coi 23,03 dB della tabella.
+
+**Cosa serve per chiuderla.** La nota ripuntata a CSV esistenti, nel lotto di NC-047 che ricalcola
+comunque i limiti di ADR-020. È una correzione di fonte, non del requisito: nessuna ADR.
 
 ## Voci chiuse
 
