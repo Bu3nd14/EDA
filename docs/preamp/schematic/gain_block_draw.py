@@ -109,11 +109,11 @@ DEVICES = {
     "Q117":  {"C": "NHI",    "B": "NCASC", "E": "D1N"},
     "Q118":  {"C": "NMIRI",  "B": "NCASC", "E": "D2N"},
     # ---- panel 2: current mirror + VAS --------------------------------------
-    "R119":  {"1": "VPLUS",  "2": "NME1"},
-    "R120":  {"1": "VPLUS",  "2": "NME2"},
+    "R119":  {"1": "VPF",    "2": "NME1"},
+    "R120":  {"1": "VPF",    "2": "NME2"},
     "Q121A":  {"C": "NMIRI",  "B": "NMIRI", "E": "NME1"},
     "Q121B":  {"C": "NHI",    "B": "NMIRI", "E": "NME2"},
-    "R123":  {"1": "VPLUS",  "2": "NVE"},
+    "R123":  {"1": "VPF",    "2": "NVE"},
     "Q122":  {"C": "NX",     "B": "NHI",   "E": "NVE"},
     "C124":  {"1": "NX",     "2": "NHI"},
     "Q125":  {"C": "NY",     "B": "NREF",  "E": "NVLE"},
@@ -145,6 +145,9 @@ DEVICES = {
     "C140":  {"1": "VMINUS", "2": "0"},
     "C141":  {"1": "VPLUS",  "2": "0"},
     "C142":  {"1": "VMINUS", "2": "0"},
+    # ADR-056 (L46b): the RC cell that makes VPF for the mirror and the VAS
+    "R144":  {"1": "VPLUS",  "2": "VPF"},
+    "C145":  {"1": "VPF",    "2": "0"},
 }
 
 # =============================================================================
@@ -153,6 +156,7 @@ DEVICES = {
 NODE_XY, NODE_NET, TOUCHED = {}, {}, set()
 
 RED, BLUE, GREEN, GREY = "#c00000", "#00449e", "#1a7a1a", "#8c8c8c"
+ORANGE = "#b45f06"   # VPF, the filtered V+ of the mirror and the VAS (ADR-056)
 NETCOL, DIM = "#0b5394", "#555555"
 
 d = schemdraw.Drawing(show=False)
@@ -384,14 +388,16 @@ txt((9.0, -5.3), "V_ds = 8,75 V su entrambi i JFET      g_m = 4,38 mS",
 frame(21.0, -6.0, 42.0, 17.0,
       "2.   SPECCHIO DI CORRENTE  +  VAS",
       "carico attivo LS352 appaiato; VAS PNP compensato a Miller")
-rail(22.0, 41.0, 13.6, "V+", RED)
+# ADR-056 (L46b): the mirror and the VAS sit on VPF, the filtered V+ made by
+# R144 + C145 in panel 4 - BOTH of them, on the same node.
+rail(22.0, 41.0, 13.6, "VPF", ORANGE)
 rail(22.0, 41.0, -3.4, "V-", BLUE)
 
 # --- the mirror. rev=True mirrors Q121A's base so the two bases face each -----
 # --- other across the gap: that is what makes it READ as a mirror. -----------
 res("R119", (26.0, 13.6), (26.0, 10.6), value="220",
     lbl=((25.52, 12.35), "right"))
-res("R120", (31.0, 13.6), (31.0, 10.6), value="220",
+res("R120", (31.0, 13.6), (31.0, 10.6), value="226",
     lbl=((31.48, 12.35), "left"))
 d.add(elm.Dot().at(NODE_XY["R119.1"]))
 d.add(elm.Dot().at(NODE_XY["R120.1"]))
@@ -428,7 +434,7 @@ flag("P2.nhi_in", "NHI", direction="down", length=0.8)
 txt((31.0, 5.05), "dal cascode Q117", size=7.5, color=NETCOL)
 
 # --- VAS --------------------------------------------------------------------
-res("R123", (36.5, 13.6), (36.5, 10.6), value="91",
+res("R123", (36.5, 13.6), (36.5, 10.6), value="56",
     lbl=((36.98, 12.35), "left"))
 d.add(elm.Dot().at(NODE_XY["R123.1"]))
 TOUCHED.add("R123.1")
@@ -436,7 +442,7 @@ pnp("Q122", "emitter", (36.5, 9.0))
 wire("R123.2", "Q122.E")
 wire("P2.nhi_vas", "Q122.B", first="h")
 txt((37.65, 9.2), "Q122   2N5401", size=8.5, halign="left")
-txt((37.65, 8.74), "VAS,  6,44 mA", size=8, color=RED, halign="left")
+txt((37.65, 8.74), "VAS,  10,7 mA", size=8, color=RED, halign="left")
 
 node("P2.nx_c126", "NX", (36.5, 5.6))
 node("P2.nx_out", "NX", (39.8, 4.2))
@@ -459,23 +465,23 @@ wire("Q125.C", "P2.ny_out", via=[(31.0, 2.6)])
 flag("P2.ny_out", "NY", direction="right", length=0.9)
 flag("Q125.B", "NREF", direction="left", length=1.6)
 txt((32.05, 1.5), "Q125   2N5551", size=8.5, halign="left")
-txt((32.05, 1.04), "carico VAS,  6,44 mA", size=8, color=RED, halign="left")
-res("R126", NODE_XY["Q125.E"], (31.0, -3.4), value="91",
+txt((32.05, 1.04), "carico VAS,  10,7 mA", size=8, color=RED, halign="left")
+res("R126", NODE_XY["Q125.E"], (31.0, -3.4), value="56",
     lbl=((31.48, -1.65), "left"))
 d.add(elm.Dot().at(NODE_XY["R126.2"]))
 TOUCHED.add("R126.2")
 
 txt((31.5, -4.7),
-    "V+ e' il rail debole per il PSRR (59,5 dB a 1 kHz):", size=8, color=DIM)
+    "specchio e VAS su VPF, filtrato da R144 + C145 (ADR-056):", size=8, color=DIM)
 txt((31.5, -5.2),
-    "specchio e VAS poggiano entrambi su V+", size=8, color=DIM)
+    "PSRR+ a 10 kHz da 29,5 a 71,8 dB (+10 dB, L46b)", size=8, color=DIM)
 
 # =============================================================================
 # PANEL 3 - Class A complementary follower + feedback
 # =============================================================================
 frame(43.0, -6.0, 71.0, 17.0,
       "3.   INSEGUITORE COMPLEMENTARE CLASSE A   +   CONTROREAZIONE",
-      "MJE15032/33 a 14,7 mA, e la rete che il rele' commuta")
+      "MJE15032/33 a ~20,5 mA, e la rete che il rele' commuta")
 rail(44.0, 62.5, 13.6, "V+", RED)
 rail(44.0, 62.5, -3.4, "V-", BLUE)
 
@@ -502,7 +508,7 @@ txt((48.85, 6.19), "2N5551", size=8, color=DIM, halign="right")
 txt((48.85, 5.58), "moltiplicatore", size=7.5, color=DIM, halign="right")
 txt((48.85, 5.12), "di V_be:  1,96 V", size=7.5, color=DIM, halign="right")
 
-res("R128", NODE_XY["P3.nx_r130"], (53.0, 7.4), value="1.69k",
+res("R128", NODE_XY["P3.nx_r130"], (53.0, 7.4), value="1.58k",
     lbl=((53.48, 9.3), "left"))
 res("R129", NODE_XY["R128.2"], (53.0, 4.3), value="1.00k",
     lbl=((53.48, 6.2), "left"))
@@ -538,7 +544,7 @@ res("R135", NODE_XY["Q133.E"], (NODE_XY["Q133.E"][0], 4.2), value="22",
 node("P3.out", "OUT", (NODE_XY["R134.2"][0], 5.5))
 wire("R134.2", "P3.out")
 wire("P3.out", "R135.2", dots=[NODE_XY["P3.out"]])
-txt((44.4, 4.0), "14,71 mA di riposo:", size=8, color=RED, halign="left")
+txt((44.4, 4.0), "20,5 mA di riposo:", size=8, color=RED, halign="left")
 txt((44.4, 3.5), "Classe A coi carichi V1 -", size=8, color=RED, halign="left")
 txt((44.4, 3.0), "il carico piu' pesante", size=8, color=RED,
     halign="left")
@@ -659,8 +665,8 @@ txt((22.6, -11.9), "9,89 V", size=8, color=RED, halign="left")
 
 # --- rail decoupling --------------------------------------------------------
 rail(33.0, 40.5, -9.7, "V+", RED)
-rail(33.0, 40.5, -16.0, "V-", BLUE)
-node("P4.dg", "0", (39.8, -12.85))
+rail(33.0, 38.6, -16.0, "V-", BLUE)
+node("P4.dg", "0", (38.6, -12.85))
 d.add(elm.Line().at((34.0, -12.85)).to(NODE_XY["P4.dg"]))
 gnd(NODE_XY["P4.dg"])
 for ref, x, val, top in (("C139", 35.0, "100n", True),
@@ -677,6 +683,20 @@ for ref, x, val, top in (("C139", 35.0, "100n", True),
     d.add(elm.Dot().at(NODE_XY[f"{ref}.2"]))
     TOUCHED.update({f"{ref}.1", f"{ref}.2"})
 txt((36.5, -17.2), "disaccoppiamento locale dei rail", size=7.5, color=DIM)
+
+# --- RC cell for the mirror and the VAS (ADR-056, L46b) ---------------------
+res("R144", (40.0, -9.7), (40.0, -12.0), value="10",
+    lbl=((39.52, -10.6), "right"), color=ORANGE)
+d.add(elm.Dot().at(NODE_XY["R144.1"]))
+TOUCHED.add("R144.1")
+cap("C145", (40.0, -12.0), (40.0, -14.6), value="1000u",
+    lbl=((39.52, -13.6), "right"), color=ORANGE)
+wire("R144.2", "C145.1", color=ORANGE)
+gnd(NODE_XY["C145.2"])
+TOUCHED.add("C145.2")
+flag("R144.2", "VPF", direction="right", length=0.5, color=ORANGE)
+txt((36.5, -17.75), "R144 + C145: VPF, il V+ filtrato di specchio e VAS (ADR-056)",
+    size=7.5, color=ORANGE)
 
 # =============================================================================
 # CALLOUT - the property the whole feedback arrangement exists to guarantee
@@ -732,8 +752,8 @@ txt((34.0, -20.5),
     "Punti di lavoro: simulati in spice/preamp/tb/tb_op.cir.",
     size=8, color="#333333")
 txt((34.0, -21.2),
-    "I modelli SPICE usati per quei punti di lavoro sono SEGNAPOSTO scritti "
-    "a mano: nessuna cifra di distorsione e' ricavabile da essi.",
+    "Dal L39 i modelli SPICE sono quelli del costruttore (models/), senza "
+    "dispersione fra esemplari: le cifre restano cifre di modello.",
     size=8, color="#333333")
 
 # =============================================================================

@@ -1,6 +1,6 @@
 # ADR-054 — Il VAS a ~10,7 mA e il Miller a 470 pF
 
-Data: 2026-10-01 · Stato: accettata
+Data: 2026-10-01 · Stato: accettata — la continua d'uscita del blocco è −6,6 mV con R120 226 Ω, non −26 (ADR-056)
 
 ## Contesto
 
