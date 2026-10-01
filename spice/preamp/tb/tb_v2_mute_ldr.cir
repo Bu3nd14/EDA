@@ -6,8 +6,8 @@ tb_v2_mute_ldr.cir - V2 al jack col mute graduale a monte: due LDR VTL5C4 all'in
 * IL MODELLO DELLE CELLE e' comportamentale dal datasheet, con estrapolazione dichiarata
 * sopra ~10 kOhm (models/optocoupler/vtl5c4_comportamentale.lib, curva B per entrambe).
 * Ogni cifra di questo deck porta quell'etichetta. Il resto e' come nei deck di V2: da
-* L39 (NC-017) ogni dispositivo attivo e' il modello del costruttore in models/, e solo
-* l'LSK489A ha KF (1/f). [Riga cambiata in L39: fino a L29b2 diceva segnaposto.]
+* L39 (NC-017) ogni dispositivo attivo e' il modello del costruttore in models/, e da L44
+* tutti hanno KF (1/f; ADR-057). [Riga cambiata in L39: fino a L29b2 diceva segnaposto.]
 *
 * IL PROFILO v4. Serie, log-lineare a tratti in d: 0.02 A a d = 0; 0.0002 A a d = 0.1; 4.5e-06 A a d = 0.45; 1.9e-07 A a d = 0.75; 1e-08 A a d = 0.8; 1e-08 A a d = 1.
 * Derivazione: 10 nA fino a d = 0,5, poi log-lineare fino a 20 mA a d = 1. d va da 0 a 1

@@ -40,8 +40,8 @@ tb_trim.cir - L16: the common trim on the variable-output branch. Attenuation, E
 *
 * Both blocks are subcircuits: no node of this deck can collide with a node of
 * a block (limitations #24). Every RG/RG10 port is terminated (#27).
-* NOISE IS A FLOOR (since L39 only the LSK489A carries KF; no other model
-* has 1/f: NC-004).
+* NOISE IS AN UPPER BOUND (since L44 every bipolar model carries KF at the
+* declared bound of ADR-057; NC-004).
 *
 * TABLES (echo; no wrdata writes these names, #25):
 *   tb_trim_e3.csv  cand,r1,r2,r3,pos,csel,zmin_ohm,z20_ohm,z1k_ohm,z20k_ohm,att1k_db

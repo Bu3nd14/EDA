@@ -7,10 +7,10 @@ tb_zout_psrr_noise.cir - E4 (Zout), PSRR, and E5 (output noise)
 *         20*log10(Vrail/Vout), so BIGGER IS BETTER.
 * NOISE : output noise integrated 20 Hz - 20 kHz, unweighted (E5 < 10 uV).
 *
-* *** THE NOISE NUMBER IS A FLOOR, NOT A PREDICTION ***
-* Since L39 the models are the manufacturer's, and only the LSK489A carries
-* KF: the input pair has its 1/f, the mirror/VAS flicker noise is missing.
-* Treat the result as a floor for everything but the input pair.
+* THE NOISE NUMBER IS AN UPPER BOUND, NOT A FLOOR (since L44)
+* Since L39 the models are the manufacturer's; since L44 the mirror, VAS,
+* cascode and output devices carry KF at the declared bound of ADR-057,
+* the input pair its vendor KF.
 
 .include @REPO@/models/jfet/lsk489.lib
 .include @REPO@/models/bjt_npn/mmbt5551.lib
@@ -28,8 +28,8 @@ tb_zout_psrr_noise.cir - E4 (Zout), PSRR, and E5 (output noise)
 *   MJE15032 - vendor model Qmje15032, onsemi (NC-024, NC-025)
 *   MJE15033 - vendor model Qmje15033, onsemi (NC-025)
 *   1N4148   - vendor model D1N914, onsemi (docs/limitations.md #20)
-* Only the LSK489A carries KF: 1/f noise is on the input pair and nowhere
-* else. No model carries part-to-part spread.
+* Since L44 every bipolar model carries KF as well (ADR-057: a declared
+* upper bound). No model carries part-to-part spread.
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block_flat.inc
 

@@ -11,11 +11,11 @@ tb_idss_op_noise.cir - L20: the gain block at five I_DSS of its input JFET, oper
 * THE MODELS. The input pair here is LSK489A, the vendor model of
 * models/jfet/lsk489.lib, included untouched, and it has 1/f noise (Kf =
 * 0.0009f, Af = 1). The mirror LS352 is the vendor model of
-* models/bjt_pnp/ls350.lib, without KF. Since L39 (NC-017) every other device
-* is a vendor model of models/ too (MMBT5551, MMBT5401, Qmje15032, Qmje15033,
-* D1N914), none with KF; until L39 they were the hand-written models of
-* placeholder_devices.lib. So every noise figure here is a FLOOR WITHOUT
-* FLICKER for every device but the input pair.
+* models/bjt_pnp/ls350.lib. Since L39 (NC-017) every other device is a vendor
+* model of models/ too (MMBT5551, MMBT5401, Qmje15032, Qmje15033, D1N914);
+* until L39 they were the hand-written models of placeholder_devices.lib.
+* Since L44 every bipolar model carries KF at the declared bound of ADR-057,
+* so the noise figures here are bounds with flicker, not floors without it.
 *
 * THE BLOCK is the generated spice/preamp/gain_block_flat.inc. Until L39 it was
 * a copy derived by scripts/derive_jfet_variant.py with LSK489A on its two JFET

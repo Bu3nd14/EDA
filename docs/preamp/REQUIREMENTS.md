@@ -3,7 +3,7 @@
 **Documento vivo.** Riscritto quando i requisiti cambiano. Ogni modifica
 sostanziale deve avere una ADR corrispondente in `decisions/`.
 
-Ultimo aggiornamento: 2026-10-01 (L46b: Nota su E5 — quota del ripple, limiti per tono ricalcolati sul blocco di **ADR-056**, fonte ripuntata a CSV che esistono, lo spettro dei rail limitato per eccesso; L42c: **E9–E13** nuovi, **V4**, **F1**, **P6** e **P9 (a)** precisati, e il Product Requirements Book sopra questo documento — **ADR-053**; L41a: P3 con due trasformatori toroidali, P5 ~17 W e ≤ 20 W, P9 (a) con lo standby e l'interruttore posteriore, P9 (b) col rivelatore di rete e la ritenuta dopo un guasto — ADR-048; L30: P5 al numero vero del calore, ~15-18 W nel telaio — ADR-047; P9 nuovo, lo spegnimento morbido e il failsafe dell'alimentatore, e V2 precisato allo spegnimento — ADR-046; L29b2: V2, il taglio con musica si giudica sul salto di livello S ≤ 20 dB in 100 ms, C2 diventa diagnostica — ADR-040; L29a: C di V2 per differenza dal riferimento e soglia di C a 1 mV, A e B invariati — ADR-035; A di V2 solo senza segnale — ADR-036; L38: V2 con soglia e metodo di misura, Nota su F5, Aperti — ADR-032; L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
+Ultimo aggiornamento: 2026-10-01 (L44: Nota su E5 — come si verifica, col flicker dei bipolari al tetto di **ADR-057**; riga E5 della nota su T4; L46b: Nota su E5 — quota del ripple, limiti per tono ricalcolati sul blocco di **ADR-056**, fonte ripuntata a CSV che esistono, lo spettro dei rail limitato per eccesso; L42c: **E9–E13** nuovi, **V4**, **F1**, **P6** e **P9 (a)** precisati, e il Product Requirements Book sopra questo documento — **ADR-053**; L41a: P3 con due trasformatori toroidali, P5 ~17 W e ≤ 20 W, P9 (a) con lo standby e l'interruttore posteriore, P9 (b) col rivelatore di rete e la ritenuta dopo un guasto — ADR-048; L30: P5 al numero vero del calore, ~15-18 W nel telaio — ADR-047; P9 nuovo, lo spegnimento morbido e il failsafe dell'alimentatore, e V2 precisato allo spegnimento — ADR-046; L29b2: V2, il taglio con musica si giudica sul salto di livello S ≤ 20 dB in 100 ms, C2 diventa diagnostica — ADR-040; L29a: C di V2 per differenza dal riferimento e soglia di C a 1 mV, A e B invariati — ADR-035; A di V2 solo senza segnale — ADR-036; L38: V2 con soglia e metodo di misura, Nota su F5, Aperti — ADR-032; L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
 
 Le motivazioni non stanno qui: stanno nelle ADR referenziate e nel
 report `reports/2026-09-08-analisi-catena.md`.
@@ -106,6 +106,16 @@ rumore di fondo di una stanza silenziosa (25-30 dB SPL). A 2 µV si
 scende a −0,5 dB SPL a 1 m. Il margine è ampio ma **non illimitato**: le
 trombe da 96 dB rendono il rumore più udibile che su diffusori normali,
 quindi il target va rispettato, non trattato come formalità.
+
+**Come si verifica E5** (2026-10-01, L44, **ADR-057**). In simulazione, coi
+modelli del costruttore e il rumore 1/f dei bipolari (specchio, cascode, VAS,
+pozzi, moltiplicatore di Vbe, finali) al **tetto dichiarato** KF = 1·10⁻¹³,
+AF = 1,4, ricavato dalle curve pubblicate della classe (2N5087 Motorola, famiglia
+LS310/LS350 di Linear Systems) e portato anche dove le curve mancano. Le cifre
+sono **limiti per eccesso**, non pavimenti. Caso peggiore oggi:
+`tb_e3_e5_ldr.cir`, curva D, +10 dB, 430 Ω, **5,531 µV** (~8,3 dB SPL a 1 m),
+5,1 dB dentro 9,95 µV; E5 tocca il tetto solo con un flicker ~15 volte il tetto.
+Sul prototipo vale la misura.
 
 **Nota su E5 — la quota del ripple d'alimentazione** (2026-09-13, L18,
 **ADR-020**; chiude la metà «scritta» di **NC-011**).
@@ -277,7 +287,7 @@ soddisfare il criterio qui sotto a **ogni** I_DSS della finestra. Misurato a
 | Gate in inversa a riposo | I_G < 0 | −10,3 … −11,2 pA |
 | Q106 in zona attiva su tutto il modo comune | V_CE > 1 V | 11,40 V |
 | Classe A: coda, cascode, VAS e uscita | entro lo 0,5 % del modello com'è | 0,15 % (coda) |
-| E5, i cinque casi di `tb_noise_breakdown` | ≤ √(10² − 1²) = 9,95 µV (ADR-020) | **4,308 µV** (+10 dB, 2,5 kΩ) |
+| E5, i cinque casi di `tb_noise_breakdown` | ≤ √(10² − 1²) = 9,95 µV (ADR-020) | **4,308 µV** (+10 dB, 2,5 kΩ). Col flicker dei bipolari al tetto di **ADR-057** (L44): **4,577 µV** (I_DSS 15 mA), `data/2026-10-01/L44/regressione/dopo/tb_idss_op_noise/` |
 | V1, blocco B a 0 dB, caso peggiore di L27/L16 | ≥ 60° | **62,19°** (L40, modelli del costruttore, C124 1 nF di ADR-042); dispersione nel gruppo ≤ 0,16°. Blocco A 67,71°, buffer 63,23°, dispersione ≤ 0,06° |
 | Offset in uscita | **nessuna soglia**: è di L29 (NC-028) | −17,28 … −17,30 mV |
 
@@ -285,8 +295,10 @@ soddisfare il criterio qui sotto a **ogni** I_DSS della finestra. Misurato a
 V_GS e il nodo di sorgente, non gm né il rumore. La grandezza che si consuma è il
 margine di saturazione a modo comune alto. Le cifre B sono l'`LSK489A` del
 costruttore con `Vto` spostato e `Beta` invariato: **non esiste un modello del
-costruttore del gruppo B**, e va detto accanto a ogni cifra (V4). Il rumore è un
-pavimento senza flicker per ogni dispositivo tranne la coppia d'ingresso. Il
+costruttore del gruppo B**, e va detto accanto a ogni cifra (V4). Il rumore era un
+pavimento senza flicker per ogni dispositivo tranne la coppia d'ingresso; da L44
+(ADR-057) i bipolari portano il flicker a un tetto dichiarato, e le cifre di
+rumore sono limiti per eccesso. Il
 buffer delle fisse e il blocco A non erano rimisurati fino a L39. L40 (2026-09-23,
 ADR-031 «da riaprire se») li ha misurati sul circuito di ADR-042:
 `data/2026-09-23/L40/dopo_idss/`.

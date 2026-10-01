@@ -1,0 +1,38 @@
+{
+  "part_name": "2N5087 (Motorola small-signal PNP, TO-92) - PROXY for the PNP small-signal class, not a project part",
+  "vendor_name": "Motorola (now onsemi)",
+  "device_class": "bjt_pnp",
+  "date_obtained": "2026-10-01",
+  "lotto": "L44",
+  "obtained_by": "AI agent (Claude Sonnet 5.5, sourcing agent, L44) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "https://www.mit.edu/~6.301/2N5087o.pdf (MIT 6.301 course copy of the Motorola 'Small-Signal Transistors, FETs and Diodes Device Data' sheet). A copy, not the manufacturer host. Byte-for-byte as served.",
+  "license_notes": "Historic manufacturer datasheet kept unmodified for engineering traceability; copyright remains the original owner.",
+  "why_this_part": "Only published frequency-resolved noise-current curves found for a small-signal PNP at several collector currents. Used for a class limit on KF/AF of PNP bipolars (the project's MMBT5401 and LS350 have no such curve).",
+  "files": [
+    {"original_filename": "2N5087o.pdf", "role": "datasheet", "bytes": 307988, "pages": 6, "sha256": "b7ffa1699645ef7aeaa012b26596b1cf91aa62a30c1ba34b9dd0581093c62f68", "local_filename": "2N5087o.pdf", "renamed": false}
+  ],
+  "noise_evidence": {
+    "where": "PDF page 3 (printed page 3), 'TYPICAL NOISE CHARACTERISTICS', Figure 1 (noise voltage, Rs ~ 0) and Figure 2 (noise current, Rs ~ infinity). Raster/vector render read by eye.",
+    "conditions": "Vce = -5 V, TA = 25 C, bandwidth 1 Hz, Ic = 10, 30, 100, 300 uA and 1 mA; f = 10 Hz .. 10 kHz",
+    "figure_2_noise_current_pA_per_rtHz": {
+      "10 Hz": {"10uA": 0.46, "30uA": 0.89, "100uA": 1.95, "300uA": 4.4, "1mA": 10.0},
+      "~290 Hz": {"10uA": 0.17, "30uA": 0.31, "100uA": 0.62, "300uA": 1.2, "1mA": 3.3},
+      "10 kHz (floor)": {"10uA": 0.11, "30uA": "~0.20", "1mA": "~1.3"}
+    },
+    "figure_1_noise_voltage_nV_per_rtHz": {
+      "10 Hz": {"10uA": 6.0, "30uA": "~3.9", "100uA": "~3.3", "300uA": "~3.5", "1mA": 2.6},
+      "10 kHz": {"10uA": 5.0, "30uA": 3.1, "100uA": 2.45, "300uA": 2.0, "1mA": 1.9}
+    },
+    "reading_uncertainty": "about +/-10-15 percent on the value; curves are smoothed 'typical'",
+    "consistency_check": "White floor at 10 uA = 0.11 pA matches 2qIb for Ib = 40 nA (hFE ~ 250): 0.10 pA. Floor at 1 mA = 1.3 pA vs 2qIb at Ib = 4 uA = 1.1 pA. So the curves are base-current shot + 1/f.",
+    "derived_by_agent_not_published": {
+      "assumed_hFE": "250 (datasheet min for this part; real value unknown)",
+      "excess_i2_at_10Hz_A2_per_Hz": {"10uA": "2.0e-25", "30uA": "7.5e-25", "100uA": "3.7e-24", "300uA": "1.9e-23", "1mA": "1.0e-22"},
+      "AF": 1.35,
+      "KF_at_1Hz_extrapolation_A_units": "1.9e-14 (fitted at 10 Hz, assuming 1/f)",
+      "spectral_slope_note": "At 1 mA the excess falls as f^-0.7 between 10 and 290 Hz, not f^-1; fitting at ~300 Hz instead gives KF about 5e-14 with the same AF.",
+      "corner_where_excess_equals_2qIb": {"10uA": "150-350 Hz", "1mA": "2-5 kHz"}
+    }
+  },
+  "what_was_not_verified": "Not the project's part and a different die (2N5087 is a very-high-gain low-noise type). Not read from the manufacturer's own host."
+}

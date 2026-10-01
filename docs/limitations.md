@@ -910,3 +910,25 @@ ogni nodo.
   falliva, contando i ripieghi e confrontando le cifre: non si copia da un altro banco;
 - la si mette in tutte le varianti di un'esplorazione, perché il banco resti uno, e si rieseguono
   i controlli.
+
+## 39. Un editor che riscrive il file normalizza i CRLF del costruttore, e la copia «byte per byte» smette di esserlo senza un errore
+
+Scoperto in L44, aggiungendo il flicker ai modelli di `models/`.
+
+I quattro modelli Diodes e onsemi in `models/` (`mmbt5551.lib`, `mmbt5401.lib`, `mje15032.lib`,
+`mje15033.lib`) hanno **fine riga misti**: la nostra intestazione LF, il blocco del costruttore
+CRLF, com'è servito. La provenienza lo dichiara apposta: il `diff` delle righe non di commento
+fra `vendor/` e `models/` deve restare vuoto.
+
+Correggere una frase dell'**intestazione** con lo strumento Edit ha riscritto **tutto il file**
+con LF. ngspice non se ne accorge (le cifre non cambiano), `validate_models.py` passa,
+`--check-provenance` passa (rifà l'hash del file in `vendor/`, non di quello in `models/`). Solo
+il confronto delle righe non di commento lo vede: ogni riga della scheda risulta tolta e
+riaggiunta.
+
+**Regola operativa**:
+- un file di `models/` con un blocco del costruttore si modifica **sui byte**, con uno script
+  (`open(p, "rb")`, sostituzione esatta, `open(p, "wb")`): l'esempio è
+  `docs/preamp/data/2026-10-01/L44/script/aggiungi_kf.py`;
+- dopo la modifica, le righe non di commento si confrontano con il file in `vendor/` **coi
+  CR**: l'unica differenza ammessa è quella dichiarata nella provenienza.

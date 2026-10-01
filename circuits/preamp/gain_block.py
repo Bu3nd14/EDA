@@ -677,8 +677,9 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 # docs/preamp/data/2026-10-01/L46b/ (and L46a/). Reports:
 # docs/preamp/reports/2026-10-01-L46b-psrr-rail-positivo.md, ...-L46a-compensazione.md.
 # Models: LSK489A (published corner sample, I_DSS 2.59 mA), MMBT5551, MMBT5401,
-# LS350, Qmje15032, Qmje15033, D1N914 - all from models/. Only the LSK489A has
-# KF; no model has spread. The MJE miss their datasheet f_T (NC-025) and the
+# LS350, Qmje15032, Qmje15033, D1N914 - all from models/. The LSK489A has its
+# vendor KF; since L44 every bipolar model carries KF = 1e-13 AF = 1.4, the
+# declared upper bound of ADR-057; no model has spread. The MJE miss their datasheet f_T (NC-025) and the
 # MJE15032 its h_FE (NC-024); the LS352 f_T sits 35 % low (NC-020).
 #
 #   OPERATING POINT (tb_op.cir)
@@ -728,10 +729,14 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 #     V-: 76.2 dB at 100 Hz, 71.3 at 50 Hz (L46a 70.7 / 65.6: R120 balances the
 #     pair). ADR-020, rail spectrum bounded from the datasheets: 0.098 uV out,
 #     20 dB inside the 1 uV quota (data/2026-10-01/L46b/quota_adr020.csv).
-#   NOISE (tb_noise_breakdown.cir), 20 Hz-20 kHz: 1.18 / 1.24 / 1.49 uV at 0 dB,
-#     4.30 uV at +10 dB (2.5 kOhm); E5 worst 5.08 uV (tb_e3_e5_ldr.cir). 1/f only
-#     on the input pair: still a floor (NC-004). The cell's 10 Ohm adds nothing
-#     visible: its noise is shunted by the 1000 uF.
+#   NOISE (tb_noise_breakdown.cir), 20 Hz-20 kHz: 1.28 / 1.34 / 1.57 uV at 0 dB,
+#     4.57 uV at +10 dB (2.5 kOhm); E5 worst 5.53 uV (tb_e3_e5_ldr.cir), 5.1 dB
+#     inside 9.95. L44 (ADR-057): every bipolar device has 1/f at the declared
+#     bound, so these are UPPER BOUNDS, no longer floors (L46b, without flicker
+#     outside the input pair: 1.18 / 1.24 / 1.49, 4.30, E5 5.08). With flicker
+#     the VAS dominates below 1 kHz, then the mirror output side and the
+#     cascodes (data/2026-10-01/L44/dispositivi.csv). The cell's 10 Ohm adds
+#     nothing visible: its noise is shunted by the 1000 uF.
 #   E3 (tb_e3_e5_ldr.cir): worst 110.7 kOhm (>= 100 kOhm).
 #   V3 (tb_v3_overload.cir): clips +13.14 / -13.84 V (+13.28 before the cell),
 #     DC at the jack +3.6 mV 13-14 ms after the overload. Recovery with gain

@@ -29,6 +29,7 @@ Usage:
 """
 import hashlib
 import json
+import math
 import os
 import subprocess
 import sys
@@ -1442,6 +1443,87 @@ wrdata {csv} {" ".join(f"i(V{k})" for k in range(len(pts)))}
 
 
 # ---------------------------------------------------------------------
+# L44 (ADR-057): the flicker bound on the bipolar models, read BACK from
+# the noise rather than from the file text
+# ---------------------------------------------------------------------
+
+# rel -> (model name, polarity, |Vbe| high, |Vbe| low). KF/AF are the
+# declared upper bound of ADR-057, the same on all five.
+FLICKER_KF, FLICKER_AF = 1e-13, 1.4
+FLICKER = {
+    "bjt_pnp/ls350.lib": ("LS350", -1, 0.62, 0.56),
+    "bjt_pnp/mmbt5401.lib": ("MMBT5401", -1, 0.62, 0.56),
+    "bjt_npn/mmbt5551.lib": ("MMBT5551", +1, 0.62, 0.56),
+    "bjt_npn/mje15032.lib": ("Qmje15032", +1, 0.46, 0.40),
+    "bjt_pnp/mje15033.lib": ("Qmje15033", -1, 0.46, 0.40),
+}
+
+
+def tb_flicker(model_file, rel):
+    """REGRESSION LOCK on the L44 flicker bound (ADR-057), measured, not grepped.
+
+    Why measured: on the four vendor files the KF/AF line is a '+' line
+    appended at the END of the file, after the vendor's comment block, and
+    on the MJE pair it must OVERRIDE the vendor's own KF=0 AF=1. Both rest
+    on how ngspice joins continuation lines and resolves a repeated
+    parameter. Checked in L44 by measurement; this keeps checking it. A
+    grep for 'KF=' would pass on a line ngspice ignores.
+
+    How: the base sits on a voltage source, so ALL the base-current noise
+    flows through it, and H1 turns that current into the output voltage.
+        S(f) = 2 q Ib + KF Ib^AF / f     (plus a little rb thermal noise)
+    The excess S(10 Hz) - S(10 kHz) = KF Ib^AF (1/10 - 1/1e4). Two bias
+    points give AF from the ratio of the excesses, then KF from the higher
+    one. Tolerances: AF +/- 0.03, KF +/- 3 %. At a high base current the
+    rb / r_pi divider eats a few percent (the MJE at |Vbe| = 0.55 V read
+    6.6 % low in L44), so the MJE run at lower |Vbe|.
+    """
+    model, pol, v_hi, v_lo = FLICKER[rel]
+    stem = os.path.basename(rel).replace(".lib", "")
+    csvs = [os.path.join(SCRATCH_DIR, f"{stem}_flicker_{t}.csv") for t in ("hi", "lo")]
+    cir = f"""* validate {stem} - L44 flicker bound read back from the base-current noise
+.include {model_file}
+Q1 c b 0 {model}
+VB b 0 DC {pol * v_hi} AC 1
+VC c 0 DC {pol * 5}
+H1 o 0 VB 1
+RO o 0 1k
+.control
+"""
+    for v, path in ((v_hi, csvs[0]), (v_lo, csvs[1])):
+        cir += f"""alter vb dc = {pol * v}
+op
+let ibv = abs(@q1[ib])
+set ibs = "$&ibv"
+noise v(o) VB lin 2 10 10000 1
+setplot noise1
+let ibn = 0 * onoise_spectrum + $ibs
+wrdata {path} onoise_spectrum ibn
+destroy all
+"""
+    cir += ".endc\n.end\n"
+
+    def check(sets):
+        ex, ib = [], []
+        for rows in sets:
+            if len(rows) != 2:
+                return False, f"expected 2 noise points, got {len(rows)}"
+            s10, s10k = rows[0]["y0"] ** 2, rows[1]["y0"] ** 2
+            ex.append((s10 - s10k) / (0.1 - 1e-4))
+            ib.append(rows[0]["y1"])
+        if min(ex) <= 0:
+            return False, f"no 1/f excess at all (KF dropped?): S10-S10k = {ex}"
+        af = math.log(ex[0] / ex[1]) / math.log(ib[0] / ib[1])
+        kf = ex[0] / ib[0] ** FLICKER_AF
+        ok = abs(af - FLICKER_AF) <= 0.03 and abs(kf / FLICKER_KF - 1) <= 0.03
+        corner = kf * ib[0] ** (FLICKER_AF - 1) / (2 * 1.602176634e-19)
+        msg = (f"AF={af:.3f} (declared {FLICKER_AF}), KF={kf:.4g} (declared {FLICKER_KF:g}) "
+               f"at Ib={ib[0]:.3g} A, 1/f corner {corner:.0f} Hz")
+        return ok, msg if ok else msg + " - not as declared (ADR-057)"
+    return cir, csvs, [2, 2], check
+
+
+# ---------------------------------------------------------------------
 # Registry: relative path (from MODELS_DIR) -> builder function
 # ---------------------------------------------------------------------
 
@@ -1490,6 +1572,53 @@ def discover_lib_files():
     return sorted(found)
 
 
+def run_recipe(rel, suffix, build):
+    """Build, run and check one recipe. Returns (status, message).
+    (L44: lifted out of main() unchanged, so the [flicker] check runs the
+    same path as [electrical].)"""
+    try:
+        cir_text, csv_path, ncols, check_fn = build()
+    except Exception as e:
+        return "FAIL", f"error building testbench: {e}"
+
+    cir_path = os.path.join(SCRATCH_DIR, os.path.basename(rel).replace(".lib", "") + suffix)
+    with open(cir_path, "w") as f:
+        f.write(cir_text)
+
+    # A recipe may write MORE THAN ONE output file: fT, C_obo and C_T
+    # are AC quantities while hFE and V_F are DC, and wrdata writes one
+    # plot at a time. When csv_path is a list, ncols is a list of the
+    # same length and check_fn receives the list of row-sets in the same
+    # order. Single-output recipes are unaffected.
+    multi = isinstance(csv_path, (list, tuple))
+    csv_paths = list(csv_path) if multi else [csv_path]
+    ncols_list = list(ncols) if multi else [ncols]
+
+    # Delete the outputs before running. Otherwise a deck that fails to
+    # write one of them leaves the PREVIOUS run's file on disk and the
+    # check reads stale numbers - a green result for a run that did not
+    # happen. Same family as the marker file run_simulation.sh uses.
+    for p in csv_paths:
+        if os.path.isfile(p):
+            os.remove(p)
+
+    rc, output = run_ngspice(cir_path)
+    if rc != 0:
+        return "FAIL", f"ngspice exited {rc}: {output.strip().splitlines()[-1] if output.strip() else '(no output)'}"
+
+    missing = [p for p in csv_paths
+               if not os.path.isfile(p) or os.path.getsize(p) == 0]
+    if missing:
+        return "FAIL", f"expected output file(s) missing/empty: {', '.join(missing)}"
+
+    try:
+        sets = [read_wrdata(p, n) for p, n in zip(csv_paths, ncols_list)]
+        ok, msg = check_fn(sets if multi else sets[0])
+    except Exception as e:
+        return "FAIL", f"error parsing/checking results: {e}"
+    return ("PASS" if ok else "FAIL"), msg
+
+
 def main():
     check_provenance_only = "--check-provenance" in sys.argv
 
@@ -1517,58 +1646,15 @@ def main():
             any_fail = True
             continue
 
-        try:
-            cir_text, csv_path, ncols, check_fn = registry[rel](abs_path)
-        except Exception as e:
-            results.append((f"{rel} [electrical]", "FAIL", f"error building testbench: {e}"))
-            any_fail = True
-            continue
-
-        cir_path = os.path.join(SCRATCH_DIR, os.path.basename(rel).replace(".lib", "") + "_tb.cir")
-        with open(cir_path, "w") as f:
-            f.write(cir_text)
-
-        # A recipe may write MORE THAN ONE output file: fT, C_obo and C_T
-        # are AC quantities while hFE and V_F are DC, and wrdata writes one
-        # plot at a time. When csv_path is a list, ncols is a list of the
-        # same length and check_fn receives the list of row-sets in the same
-        # order. Single-output recipes are unaffected.
-        multi = isinstance(csv_path, (list, tuple))
-        csv_paths = list(csv_path) if multi else [csv_path]
-        ncols_list = list(ncols) if multi else [ncols]
-
-        # Delete the outputs before running. Otherwise a deck that fails to
-        # write one of them leaves the PREVIOUS run's file on disk and the
-        # check reads stale numbers - a green result for a run that did not
-        # happen. Same family as the marker file run_simulation.sh uses.
-        for p in csv_paths:
-            if os.path.isfile(p):
-                os.remove(p)
-
-        rc, output = run_ngspice(cir_path)
-        if rc != 0:
-            results.append((f"{rel} [electrical]", "FAIL", f"ngspice exited {rc}: {output.strip().splitlines()[-1] if output.strip() else '(no output)'}"))
-            any_fail = True
-            continue
-
-        missing = [p for p in csv_paths
-                   if not os.path.isfile(p) or os.path.getsize(p) == 0]
-        if missing:
-            results.append((f"{rel} [electrical]", "FAIL", f"expected output file(s) missing/empty: {', '.join(missing)}"))
-            any_fail = True
-            continue
-
-        try:
-            sets = [read_wrdata(p, n) for p, n in zip(csv_paths, ncols_list)]
-            ok, msg = check_fn(sets if multi else sets[0])
-        except Exception as e:
-            results.append((f"{rel} [electrical]", "FAIL", f"error parsing/checking results: {e}"))
-            any_fail = True
-            continue
-
-        results.append((f"{rel} [electrical]", "PASS" if ok else "FAIL", msg))
-        if not ok:
-            any_fail = True
+        # 3. (L44) the flicker bound, on the five bipolar models of ADR-057
+        checks = [("electrical", "_tb.cir", lambda: registry[rel](abs_path))]
+        if rel in FLICKER:
+            checks.append(("flicker", "_flicker_tb.cir", lambda: tb_flicker(abs_path, rel)))
+        for tag, suffix, build in checks:
+            status, msg = run_recipe(rel, suffix, build)
+            results.append((f"{rel} [{tag}]", status, msg))
+            if status != "PASS":
+                any_fail = True
 
     # print report
     print()
