@@ -3,7 +3,7 @@
 **Documento vivo.** Riscritto quando i requisiti cambiano. Ogni modifica
 sostanziale deve avere una ADR corrispondente in `decisions/`.
 
-Ultimo aggiornamento: 2026-09-27 (L42c: **E9–E13** nuovi, **V4**, **F1**, **P6** e **P9 (a)** precisati, e il Product Requirements Book sopra questo documento — **ADR-053**; L41a: P3 con due trasformatori toroidali, P5 ~17 W e ≤ 20 W, P9 (a) con lo standby e l'interruttore posteriore, P9 (b) col rivelatore di rete e la ritenuta dopo un guasto — ADR-048; L30: P5 al numero vero del calore, ~15-18 W nel telaio — ADR-047; P9 nuovo, lo spegnimento morbido e il failsafe dell'alimentatore, e V2 precisato allo spegnimento — ADR-046; L29b2: V2, il taglio con musica si giudica sul salto di livello S ≤ 20 dB in 100 ms, C2 diventa diagnostica — ADR-040; L29a: C di V2 per differenza dal riferimento e soglia di C a 1 mV, A e B invariati — ADR-035; A di V2 solo senza segnale — ADR-036; L38: V2 con soglia e metodo di misura, Nota su F5, Aperti — ADR-032; L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
+Ultimo aggiornamento: 2026-10-01 (L46b: Nota su E5 — quota del ripple, limiti per tono ricalcolati sul blocco di **ADR-056**, fonte ripuntata a CSV che esistono, lo spettro dei rail limitato per eccesso; L42c: **E9–E13** nuovi, **V4**, **F1**, **P6** e **P9 (a)** precisati, e il Product Requirements Book sopra questo documento — **ADR-053**; L41a: P3 con due trasformatori toroidali, P5 ~17 W e ≤ 20 W, P9 (a) con lo standby e l'interruttore posteriore, P9 (b) col rivelatore di rete e la ritenuta dopo un guasto — ADR-048; L30: P5 al numero vero del calore, ~15-18 W nel telaio — ADR-047; P9 nuovo, lo spegnimento morbido e il failsafe dell'alimentatore, e V2 precisato allo spegnimento — ADR-046; L29b2: V2, il taglio con musica si giudica sul salto di livello S ≤ 20 dB in 100 ms, C2 diventa diagnostica — ADR-040; L29a: C di V2 per differenza dal riferimento e soglia di C a 1 mV, A e B invariati — ADR-035; A di V2 solo senza segnale — ADR-036; L38: V2 con soglia e metodo di misura, Nota su F5, Aperti — ADR-032; L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
 
 Le motivazioni non stanno qui: stanno nelle ADR referenziate e nel
 report `reports/2026-09-08-analisi-catena.md`.
@@ -124,34 +124,43 @@ del blocco e sommati in quadratura su 20 Hz–20 kHz, devono restare
 
 **Come si decide.** Si prende lo spettro dei rail, prima simulato da chi
 progetta l'alimentatore e poi misurato sul prototipo, e la PSRR(f) dai CSV
-vigenti: oggi `data/2026-09-23/L40/dopo/tb_zout_psrr_noise/tb_zout_psrr_noise_psrr{p,m}_10db.csv`
-(modelli del costruttore, C124 1 nF). La modalità +10 dB è la peggiore su tutti
-gli 81 punti di entrambi i rail. Il vincolo passa se la somma resta ≤ 1 µV. La verifica finale
-è la misura in uscita sul prototipo.
+vigenti: oggi `data/2026-10-01/L46b/run/adr056_esr005/tb_zout_psrr_noise/tb_zout_psrr_noise_psrr{p,m}_{0db,3db,10db}.csv`
+(modelli del costruttore, il blocco di **ADR-056** con 0,05 Ω di ESR ipotizzati sul condensatore
+della cella; il sorgente rigenerato, a condensatore ideale, è in
+`data/2026-10-01/L46b/regressione/dopo/tb_zout_psrr_noise/` e dà cifre più alte sopra 1 kHz). La
+modalità +10 dB è la peggiore ai cinque toni della tabella su entrambi i rail. Il vincolo passa se
+la somma resta ≤ 1 µV. La verifica finale è la misura in uscita sul prototipo.
+
+**Lo spettro dei rail, limitato per eccesso** (L46b, `data/2026-10-01/L46b/script/quota_adr020.py`):
+non è una simulazione dei rail (il modello TI del TPS7A4701 non ha rumore), ma un limite dai
+datasheet dei regolatori con ogni ipotesi dal lato sfavorevole: rumore del TPS7A4701 a 15 V con
+C_NR 1 µF (il progetto ne ha 10), del TPS7A3301 a −5 V moltiplicato per 3, dente di sega da 0,8 Vpp
+dal serbatoio, PSRR dei regolatori piatto a 66 / 50 dB. In uscita fa **0,098 µV**, 20 dB dentro la
+quota; il rail + da solo può peggiorare di 37,5 dB prima di sforarla. Senza la cella di ADR-056
+faceva 0,51 µV, con 6,3 dB di tolleranza sul rail +.
 
 **I limiti per tono, se tutta la quota cade su una sola frequenza**
 (1 µV · 10^(PSRR/20), PSRR minimo fra i tre modi, che è +10 dB ovunque;
 interpolato in log f). Con più componenti vale la somma, non la tabella.
-**Ricalcolati il 2026-09-23 (L40)** sui modelli del costruttore e sul Miller da
-1 nF di **ADR-042**, come ADR-020 prevede quando il PSRR+ scende. Fonte:
-`data/2026-09-23/L40/dopo/tb_zout_psrr_noise/`, script
-`data/2026-09-23/L40/script/limiti_psrr.py`, che riproduce esattamente la tabella di
-L18 dai suoi CSV.
+**Ricalcolati il 2026-10-01 (L46b)** sul blocco di **ADR-056** (la cella RC su specchio e VAS,
+R120 226 Ω), come ADR-020 prevede quando il PSRR cambia. Fonte: i CSV qui sopra, script
+`data/2026-09-23/L40/script/limiti_psrr.py`, che riproduce ancora esattamente la tabella di L18
+dai suoi CSV (ricontrollato in L46b).
 
 | f | PSRR rail + | V+ massimo | PSRR rail − | V− massimo |
 |---|---|---|---|---|
-| 50 Hz | 67,70 dB | 2,43 mV RMS | 68,22 dB | 2,57 mV RMS |
-| 100 Hz | 62,63 dB | 1,35 mV RMS (1,91 mV pk) | 73,26 dB | 4,60 mV RMS |
-| 1 kHz | 42,99 dB | **0,141 mV RMS** | 85,44 dB | 18,7 mV RMS |
-| 10 kHz | 23,03 dB | **14,2 µV RMS** | 76,44 dB | 6,64 mV RMS |
-| 20 kHz | 17,11 dB | **7,17 µV RMS** | 69,64 dB | 3,03 mV RMS |
+| 50 Hz | 77,38 dB | 7,40 mV RMS | 71,27 dB | **3,66 mV RMS** |
+| 100 Hz | 78,97 dB | 8,88 mV RMS | 76,21 dB | 6,46 mV RMS |
+| 1 kHz | 79,50 dB | 9,44 mV RMS | 86,32 dB | 20,7 mV RMS |
+| 10 kHz | 71,66 dB | 3,83 mV RMS | 80,24 dB | 10,3 mV RMS |
+| 20 kHz | 66,18 dB | 2,04 mV RMS | 74,64 dB | 5,40 mV RMS |
 
-Rumore bianco sul solo rail +, su 20 Hz–20 kHz: **≤ 87 nV/√Hz**.
+Rumore bianco sul solo rail +, su 20 Hz–20 kHz: **≤ 23,9 µV/√Hz**.
 
-Fino a L40 la tabella era quella di L18 (topologia LS352, segnaposto): 1 kHz
-0,303 mV, 10 kHz 31,0 µV, 20 kHz 15,5 µV, 190 nV/√Hz. Il Miller da 1 nF abbassa il
-guadagno d'anello e con lui il PSRR+ di ~6,5 dB da 1 a 20 kHz: i limiti del rail +
-in quella banda **si dimezzano circa**.
+**La storia della tabella.** L18 (topologia LS352, segnaposto): 1 kHz 0,303 mV, 10 kHz 31,0 µV,
+20 kHz 15,5 µV, 190 nV/√Hz. L40 (Miller da 1 nF di ADR-042): 0,141 mV, 14,2 µV, 7,17 µV,
+87 nV/√Hz. L46a (ADR-054) non l'aveva ricalcolata: 0,297 mV, 29,9 µV, 15,0 µV, 183 nV/√Hz. Con la
+cella il rail + non è più il rail debole: sotto 1 kHz il limite più stretto è quello del rail −.
 
 **Perché c'è una ADR, e non solo questa nota.** Col criterio di L15 la
 ripartizione è **sostanziale**. Un progetto con 5 µV di rumore e 5 µV di
@@ -162,13 +171,13 @@ ADR-010 o ADR-015.
 
 **Cosa la nota non copre.**
 - **Sopra 20 kHz** E5 non vede niente, e il vincolo nemmeno: 100 mV a 100 kHz
-  sul rail + passano. Eppure lì il PSRR+ vale **5,5 dB** (L40; 10,20 dB in L18) e lavora uno
-  switching. Il limite fuori banda, come la scelta del rimedio, è del lotto
-  dell'alimentatore.
+  sul rail + passano. Lì il PSRR+ vale **52,6 dB** a 100 kHz con la cella di ADR-056 (L46b;
+  10,7 dB in L46a, 5,5 in L40, 10,20 in L18); nel telaio non c'è nessuno switching (ADR-048).
+  Il limite fuori banda resta non deciso.
 - **Il ronzio indotto dal toroide** (ADR-010) non passa dai rail.
 - **Le cifre di PSRR** vengono dai modelli del costruttore da L39 (NC-017
-  chiusa), col Miller di ADR-042 da L40. Quando la PSRR cambia, i limiti per tono si ricalcolano; la quota
-  no.
+  chiusa), sul blocco di ADR-056 da L46b. Quando la PSRR cambia, i limiti per tono si ricalcolano;
+  la quota no.
 
 Ragionamento completo: `reports/2026-09-13-L18-vincolo-psrr.md`.
 

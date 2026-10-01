@@ -644,14 +644,16 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 # ============================================================================
 # HEADROOM - the arithmetic the simulation has to confirm or refute
 # ============================================================================
-# Positive clip: V+ - I*R_vase - Vce(sat,VAS) - Vbe(Qn) - Iq*R_en
-#              = 15 - 0.55 - 0.5 - 0.65 - 0.33 = 12.97 V pk
+# Positive clip: V+ - I*R_cell - I*R_vase - Vce(sat,VAS) - Vbe(Qn) - Iq*R_en
+#              = 15 - 0.15 - 0.55 - 0.5 - 0.65 - 0.33 = 12.82 V pk
+#   (R_cell: the RC cell of ADR-056, ~15 mA x 10 Ohm; simulated 13.28 -> 13.14 V)
 # Negative clip: symmetric by construction (see the VAS comment).
-#              => ~12.97 V pk = 9.17 V RMS
+#              => ~12.8 V pk = 9.1 V RMS
 #
 # *** REQUIREMENT TENSION - reported, not silently absorbed ***
 # E6 (2.7 V RMS max input) x E2 (+10 dB) demands 8.54 V RMS out. Against
-# ~9.2 V RMS of clipping that is ~0.6 dB of margin. Positive, so the
+# ~9.2 V RMS of clipping that is ~0.6 dB of margin (simulated: 0.73 dB with
+# the cell of ADR-056, 0.82 dB without). Positive, so the
 # requirements ARE satisfiable - but only just, and the shortfall is
 # structural: +/-15 V rails (E7/ADR-003) do not have room for 2.7 x 3.16.
 # Three ways out, none of which this file takes unilaterally:
@@ -665,73 +667,90 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 # ============================================================================
 
 # ============================================================================
-# SIMULATED RESULTS - L46a, 2026-10-01, MANUFACTURER MODELS, VAS ~10.7 mA,
-# C124 470p (ADR-054)
+# SIMULATED RESULTS - L46b, 2026-10-01, MANUFACTURER MODELS, VAS ~10.7 mA,
+# C124 470p (ADR-054), RC CELL 10 Ohm + 1000 uF AND R120 226 Ohm (ADR-056)
 # Every number below came out of a deck in spice/preamp/tb/, not out of a
-# calculation: docs/preamp/data/2026-10-01/L46a/regressione/dopo/ (and prima/
-# for the same decks on the block of ADR-042: VAS 6.8 mA, C124 1n). The
-# exploration of 25 variants is in docs/preamp/data/2026-10-01/L46a/. Report:
-# docs/preamp/reports/2026-10-01-L46a-compensazione.md.
+# calculation: docs/preamp/data/2026-10-01/L46b/regressione/dopo/ (and prima/
+# for the same decks on the block of ADR-054 without the cell). Where a line
+# says "was", the first figure is ADR-042 (L40) and the arrow is L46a, as
+# L46a left them; L46b's changes are marked "L46b". The variants are in
+# docs/preamp/data/2026-10-01/L46b/ (and L46a/). Reports:
+# docs/preamp/reports/2026-10-01-L46b-psrr-rail-positivo.md, ...-L46a-compensazione.md.
 # Models: LSK489A (published corner sample, I_DSS 2.59 mA), MMBT5551, MMBT5401,
 # LS350, Qmje15032, Qmje15033, D1N914 - all from models/. Only the LSK489A has
 # KF; no model has spread. The MJE miss their datasheet f_T (NC-025) and the
 # MJE15032 its h_FE (NC-024); the LS352 f_T sits 35 % low (NC-020).
 #
 #   OPERATING POINT (tb_op.cir)
-#     LSK489 halves     2.290/2.215 mA, gm 4.58/4.50 mS
+#     LSK489 halves     2.262/2.243 mA, gm 4.55/4.53 mS (L46b; were 2.290/2.215
+#                       with the VAS base current unbalancing the mirror)
 #     tail sink         4.505 mA        VAS (MMBT5401) 10.71 mA (was 6.80)
 #     output pair       20.50 / 20.61 mA  - the ~20 mA of ADR-042, R128 1.58k
 #     rail currents     36.7 / 37.7 mA per block (was 32.6 / 33.6): +0.12 W
-#     output DC offset  -26.1 mV (was -15.45; x3.15 = -79 mV at +10 dB)
+#     VPF               0.152 V below V+ (L46b, the cell's drop)
+#     output DC offset  -6.6 mV (L46b, R120 226; was -15.45 -> -26.1 in L46a;
+#                       x3.15 = -20 mV at +10 dB)
 #
 #   LOOP - V1 (ADR-019, >= 60 deg; ADR-024 cell: cable at the jack, min over
 #   0-4.7 nF, every V1 source, 100 k and 10 k; block A harness <= 1 nF)
-#     block B 0 dB    62.08 -> 64.94 deg   (ADR-042 -> ADR-054)
-#     block B +3 dB   76.20 -> 73.24 deg
-#     block B +10 dB  96.66 -> 104.97 deg
-#     block A         67.68 -> 68.19 deg;  trim 69.80 -> 73.10 deg
-#     buffer          63.21 -> 65.12 deg
-#     I_DSS group B (ADR-031): B 65.14-65.24, A 68.24, buffer 65.13 deg.
-#     Loop gain at 10 Hz 78.8 dB; crossover at 0 dB 430 -> 876 kHz.
-#     NOT verdict cells (ADR-024), and they fall: probe on the block node
-#     0 dB 57.99 -> 48.31, +3 dB 73.11 -> 55.83 deg; block A with a 4.7 nF
-#     harness 58.12 -> 44.73 deg.
+#     block B 0 dB    62.08 -> 64.94 -> 65.16 deg   (ADR-042 -> 054 -> 056)
+#     block B +3 dB   76.20 -> 73.24 -> 73.56 deg
+#     block B +10 dB  96.66 -> 104.97 -> 105.08 deg
+#     block A         67.68 -> 68.19 -> 68.50 deg;  trim 69.80 -> 73.10 -> 73.32
+#     buffer          63.21 -> 65.12 -> 65.37 deg
+#     I_DSS group B (ADR-031): B 65.36-65.45, A 68.56, buffer 65.38 deg (L46b).
+#     Loop gain at 10 Hz 78.7 dB; crossover at 0 dB 430 -> 876 -> 865 kHz.
+#     NOT verdict cells (ADR-024), and they fell in L46a: probe on the block
+#     node 0 dB 57.99 -> 48.31 -> 48.98, +3 dB 73.11 -> 55.83 -> 56.65 deg;
+#     block A with a 4.7 nF harness 58.12 -> 44.73 -> 45.56 deg.
 #
 #   RESPONSE (tb_ac.cir): 1 kHz gain -0.007 / +3.039 / +9.962 dB (E2 holds);
-#     -3 dB at 0 / +3 / +10 dB 1.55 MHz / 489 / 178 kHz (was 912 / 303 / 113
-#     kHz); at +10 dB, 20 kHz is 0.055 dB below 1 kHz (was 0.133). NB: in
-#     tb_ac.cir the meas named `flo` is the UPPER corner and `fhi` the lower.
-#   SLEW (data/2026-10-01/L46a/run/vas56_cm470p/slew/, +10 dB): step 8.03 /
-#     -3.80 V/us (was 4.42 / -1.68); 20 kHz at 12 V peak: -0.03 V of DC behind
-#     the stage (was +0.57 V).
-#   DISTORTION (V4, ADR-055; data/2026-10-01/L46a/, block B, worst mode): at
-#     0.2 V RMS out THD 0.000032 / 0.00030 / 0.00059 % at 1 / 10 / 20 kHz
-#     (ceiling 0.001 %), 5th and up -185 dB (-140), CCIF IMD -119.2 dB (-110);
-#     at 2 V RMS THD at 20 kHz 0.0070 % (0.01 %). Was 0.0017 % / -96.3 dB /
-#     0.17 %. Model figures: the trend counts.
+#     -3 dB at 0 / +3 / +10 dB 1.52 MHz / 483 / 177 kHz (912 / 303 / 113 kHz
+#     before L46a); at +10 dB, 20 kHz is 0.055 dB below 1 kHz (was 0.133). NB:
+#     in tb_ac.cir the meas named `flo` is the UPPER corner and `fhi` the lower.
+#   SLEW (data/2026-10-01/L46b/run/sv_r10_esr0_r120_226/slew/, +10 dB): falling
+#     -3.75 V/us (L46a -3.80, ADR-042 -1.68); 20 kHz at 12 V peak: +0.03 V of DC
+#     behind the stage.
+#   DISTORTION (V4, ADR-055; data/2026-10-01/L46b/, block B, worst mode): at
+#     0.2 V RMS out THD 0.000032 / 0.00030 / 0.00060 % at 1 / 10 / 20 kHz
+#     (ceiling 0.001 %), 5th and up -192 dB (-140), CCIF IMD -125.6 dB (-110);
+#     at 2 V RMS THD at 20 kHz 0.0068 % (0.01 %). L46a: 0.00059 % / -185 /
+#     -119.2 / 0.0070; ADR-042: 0.0017 % / -96.3 dB / 0.17 %. Model figures:
+#     the trend counts.
 #   Zout (tb_e4_uscite.cir): Re(Z) max at the jack 60.08 ohm main, 53.12 ohm
 #     fixed (E4 < 100 ohm); at the block node 0.026 / 0.27 ohm at 1 / 20 kHz
 #     (was 0.037 / 0.57).
-#   PSRR (tb_zout_psrr_noise.cir), from V+, worst mode (+10 dB): 66.9 / 49.5 /
-#     29.5 dB at 100 Hz / 1 kHz / 10 kHz (was 62.6 / 43.0 / 23.0). From V-,
-#     +10 dB, 100 Hz: 70.7 dB (was 73.3). The per-tone limits of ADR-020 are
-#     L46b's to recompute (NC-047, NC-052).
-#   NOISE (tb_noise_breakdown.cir), 20 Hz-20 kHz: 1.19 / 1.25 / 1.50 uV at 0 dB,
-#     4.31 uV at +10 dB (2.5 kOhm); E5 worst 5.10 uV (tb_e3_e5_ldr.cir). 1/f only
-#     on the input pair: still a floor (NC-004).
+#   PSRR (tb_zout_psrr_noise.cir), worst mode (+10 dB), at 100 Hz / 1 / 10 /
+#     20 kHz. From V+: 79.0 / 79.7 / 78.5 / 75.8 dB as generated (ideal
+#     1000 uF); 79.0 / 79.5 / 71.7 / 66.2 dB with 0.05 Ohm of ESR, the figures
+#     ADR-056 and REQUIREMENTS use (data/2026-10-01/L46b/run/adr056_esr005/).
+#     L46a: 66.9 / 49.5 / 29.5 / 23.5. At 100 kHz 10.7 -> 52.6 dB (ESR). From
+#     V-: 76.2 dB at 100 Hz, 71.3 at 50 Hz (L46a 70.7 / 65.6: R120 balances the
+#     pair). ADR-020, rail spectrum bounded from the datasheets: 0.098 uV out,
+#     20 dB inside the 1 uV quota (data/2026-10-01/L46b/quota_adr020.csv).
+#   NOISE (tb_noise_breakdown.cir), 20 Hz-20 kHz: 1.18 / 1.24 / 1.49 uV at 0 dB,
+#     4.30 uV at +10 dB (2.5 kOhm); E5 worst 5.08 uV (tb_e3_e5_ldr.cir). 1/f only
+#     on the input pair: still a floor (NC-004). The cell's 10 Ohm adds nothing
+#     visible: its noise is shunted by the 1000 uF.
 #   E3 (tb_e3_e5_ldr.cir): worst 110.7 kOhm (>= 100 kOhm).
-#   V3 (tb_v3_overload.cir): clips +13.28 / -13.84 V, DC at the jack +3.2 mV.
-#     Recovery with gain AND DC fitted (L46a regressione/script/
-#     v3_con_continua.py): 0.65 us (1.49 before). L40's v3.py, which does not
-#     remove DC, now reports "14000 us": the -79 mV at the node at +10 dB sits
-#     above its 78.7 mV threshold for the whole run. Not a failed recovery.
-#   P7 (tb_mute_corto.cir): worst MJE 0.365 W (1.04 W allowed), Q122 / Q125
-#     0.144 / 0.143 W (310 mW in SOT-23); 22 ohm emitter 0.28 W, 47 ohm main
-#     1.13 W (the BOM ratings follow, preamp_audio.py). Class A holds on every
+#   V3 (tb_v3_overload.cir): clips +13.14 / -13.84 V (+13.28 before the cell),
+#     DC at the jack +3.6 mV 13-14 ms after the overload. Recovery with gain
+#     AND DC fitted (regressione/script/v3_con_continua.py): 0.65 us; DC at OUT
+#     at +10 dB -19.7 mV (L46a -79.3). L40's v3.py, which does not remove DC,
+#     reported "14000 us" in L46a because of that -79 mV: not a failed recovery.
+#   P7 (tb_mute_corto.cir): worst MJE 0.361 W (1.04 W allowed), Q122 / Q125
+#     0.142 / 0.144 W (310 mW in SOT-23); 22 ohm emitter 0.28 W, 47 ohm main
+#     1.12 W (the BOM ratings follow, preamp_audio.py). Class A holds on every
 #     listening path.
 #   V2 - GAIN RELAYS (tb_switch_v2.cir): window peaks -2.2 %, nothing else.
-#     Mute (tb_v2_mute_ldr.cir): NOT re-run in L46a; L40's figures stand
-#     (S 7.16 / 5.32 dB, A <= 3.75 uV, B2 0.33 uV).
+#     Mute (tb_v2_mute_ldr.cir): NOT re-run in L46a nor in L46b; L40's figures
+#     stand (S 7.16 / 5.32 dB, A <= 3.75 uV, B2 0.33 uV) - L47's to redo.
+#   SUPPLY FAULTS AT THE JACK (L41c's chain re-run in L46b on this block,
+#     data/2026-10-01/L46b/l41c/): U502 off 0.90 mV (objective 2 mV; 1.93 mV on
+#     L46a's block, 1.37 on L40's), U501 off 0.56 mV, mains loss <= 0.09 uV,
+#     soft switch-off 13 nV, 12 V relay-line short 29.7 mV (~83 dB SPL; 117 mV
+#     on L46a's block, 69.4 in ADR-051), counterfactual without Delta 29.7 mV
+#     (fails, as it must).
 #
 #   THD: tb_v3_overload.cir prints a .four figure. Since L39 it is a MODEL
 #     figure of manufacturer models that miss parts of their own datasheet and

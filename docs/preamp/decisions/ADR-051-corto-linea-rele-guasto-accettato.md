@@ -1,6 +1,6 @@
 # ADR-051 — Il corto della linea a 12 V dei relè è un guasto singolo accettato sotto il tetto
 
-Data: 2026-09-26 · Stato: accettata
+Data: 2026-09-26 · Stato: accettata — col blocco di ADR-056 il corto vale 29,7 mV, non 69,4 (L46b)
 
 ## Contesto
 

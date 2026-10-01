@@ -1,6 +1,6 @@
 # ADR-020 — Quota del ripple d'alimentazione nel budget di E5: 1 µV RMS in uscita
 
-Data: 2026-09-13 · Stato: accettata
+Data: 2026-09-13 · Stato: accettata — il rimedio del PSRR+ sta nel blocco e i limiti per tono sono ricalcolati da ADR-056 (L46b)
 
 ## Contesto
 
