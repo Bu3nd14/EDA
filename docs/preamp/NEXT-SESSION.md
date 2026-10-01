@@ -1,68 +1,58 @@
-# Prompt per la sessione successiva — L43b (la revisione dell'utente col PRB come contratto, e la sintesi con l'architetto)
+# Prompt per la sessione successiva — L46 (il blocco di guadagno: compensazione, distorsione verso gli acuti, PSRR+)
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L43b** e si ferma. Non iniziarne un secondo.
+LOTTI PICCOLI: questa sessione fa **L46**, o la sua prima metà se va diviso, e si ferma. Non
+iniziarne un secondo.
+
+## Perché questo lotto, e perché adesso
+
+La revisione del dossier (L43a l'architetto, L43b l'utente) ha aperto sei bloccanti per G1.
+L'utente ha scelto l'ordine dei rimedi il 2026-10-01: **L46 → L44 → L47 → L48 → L49 → G1 → L45 →
+L50** (tabella dei lotti in `STATE.md`). L46 è il primo perché tutto il resto poggia sul blocco di
+guadagno, e due bloccanti hanno la stessa radice, **il Miller da 1 nF di ADR-042** (C124):
+
+- **NC-039 — la distorsione cresce verso gli acuti.** Coi modelli del costruttore la THD a 20 kHz
+  è 0,0616 % (0 dB) / 0,168 % (+10 dB) con 1 nF, contro 0,0060 % / 0,0118 % con 470 pF; l'IMD
+  CCIF −59,6 dB contro −85,4 dB. A −12 dB di livello la THD a 20 kHz scende di ~30 dB (0,0054 %):
+  il difetto dipende molto dal livello, e va giudicato a un livello musicale dichiarato. La radice
+  indicata è la CJE di 3,06 nF dei MJE15032/33, per cui ADR-042 portò il Miller a 1 nF valutando
+  solo alternative di compensazione. Deck: `data/2026-09-27/L43a/architetto/` (README dentro).
+- **NC-047 — il PSRR del rail positivo è troppo basso per contare sul solo alimentatore**
+  (rilievo dell'utente: «dovremo mettere mano al circuito audio per aumentare la PSRR»). PSRR+ a
+  +10 dB: 23,01 dB a 10 kHz (`data/2026-09-27/L42/dopo/tb_zout_psrr_noise/`), contro 76 dB del
+  rail −; il Miller da 1 nF ne è costato ~6,5 dB (L40). Il budget di ADR-020 sul rail + è 14,2 µV
+  RMS per un tono a 10 kHz, ≤ 87 nV/√Hz di rumore bianco; il residuo dei rail **non è mai stato
+  simulato** (regolatori comportamentali; il modello TI del TPS7A4701 dà un punto di lavoro
+  sbagliato). NC-011 resta la verifica sul prototipo.
+- **NC-052** (minore): la «Nota su E5» di `REQUIREMENTS.md` cita
+  `data/2026-09-23/L40/dopo/tb_zout_psrr_noise/*_psrr{p,m}_10db.csv`, che non esistono. Si
+  ripunta quando si ricalcolano i limiti.
 
 ## Il mandato
 
-L43 è stato diviso dall'utente il 2026-09-27. La prima metà è **fatta**: la revisione
-dell'architetto avversariale, con i suoi rilievi già discussi e decisi. Report verbatim in
-`reports/2026-09-27-L43a-architetto-avversariale.md`, esiti in
-`reports/2026-09-27-L43a-esiti-architetto.md`, voci **NC-039…NC-046**. L43b è la **seconda
-revisione umana del dossier** (la prima fu L5e), **col PRB come contratto**, e il **report di
-sintesi** delle due revisioni.
-
-**L'architetto non si rilancia.** L'utente ha già visto i suoi rilievi, quindi la sua revisione
-non è cieca rispetto all'architetto; lo è ancora rispetto all'orchestratore.
-
-La sessione **non cerca difetti per conto suo**. È un controllo cieco: se l'utente sta cercando
-un difetto e l'orchestratore lo trova prima, la taratura è persa. L'orchestratore fa tre cose:
-1. accompagna l'utente nella lettura: apre le pagine, risponde alle domande, riesegue una verifica
-   quando l'utente la chiede;
-2. registra gli esiti;
-3. scrive la sintesi.
-
-### 1. La revisione dell'utente
-
-- L'utente legge il dossier: `docs/preamp/dossier/index.html`, oppure il PDF A4 di
-  `stampa_a4.py`, scritto **fuori** dal repo. La sezione 0 è il PRB; l'appendice A è il registro
-  delle ADR, l'appendice B l'indice dei requisiti. I rimandi PR-n, ADR-0xx ed E1…V5 sono
-  cliccabili. **Il dossier non è stato rigenerato dopo L43a**: non contiene NC-039…NC-046, e la
-  frase della sezione 3 sul trim (NC-041) è ancora quella falsa. Si legge così com'è: lo legge
-  solo l'utente, niente avvisi di obsolescenza.
-- **Il PRB è il contratto**. Ogni cosa che l'utente trova diventa una voce di `NONCOMPLIANCE.md`
-  (da **NC-047**) con la voce del PRB e il requisito tecnico, l'evidenza e la **severità decisa
-  dall'utente**. Una proposta di severità dell'orchestratore resta una proposta.
-- Se l'utente trova una voce del PRB ambigua o sbagliata, cambiarla vuole una ADR (ADR-053).
-- Un rilievo dell'utente che coincide con una voce di L43a si registra **in quella voce**, non
-  come voce nuova: «trovato anche dall'utente, dopo aver letto l'architetto».
-
-### 2. Alla fine: la sintesi, con chi ha trovato cosa
-
-`docs/preamp/reports/<data>-L43b-revisione-dossier.md`:
-- ogni rilievo, dell'utente e dell'architetto, con **chi l'ha trovato** (utente, architetto o
-  entrambi) e se era già noto (NC-0xx) o già deciso (ADR-0xx);
-- la taratura dell'architetto: cosa ha trovato che l'utente non ha visto, e viceversa, **letta
-  sapendo che l'utente l'aveva già letto**;
-- i tre punti «per L43» di `STATE.md`, segnati come sono andati. L'architetto non li ha trovati.
-  I punti sono tre: S del mute con la cima delle LDR a 12 mA mai misurato (ADR-050); la tenuta di
-  `VRELAY` scesa da 62,8 a 36,1 ms (P9 ≥ 25 regge); il commento di `C_VRELAY` in `psu.py` con le
-  cifre di L41a. **Non vanno detti all'utente prima che finisca la sua lettura.**
-
-### 3. L'ordine dei lotti dopo L43b
-
-L'ordine deciso il 2026-09-27 era **L44 (NC-004) → G1**. L43a ha aperto tre bloccanti per G1
-(NC-039, NC-040, NC-041) e due per G2 (NC-043, NC-044), e ha messo a piano **L45**, la FMEA
-(NC-042, prima di G2). Alla fine di L43b si propone all'utente un ordine dei lotti di rimedio;
-**sceglie lui**. La tabella dei lotti in `STATE.md` si aggiorna con la sua scelta.
+1. **All'inizio, con l'utente**: il livello musicale a cui si giudica la distorsione verso gli
+   acuti (NC-039 lo chiede), e se il lotto va diviso (probabile: **L46a** compensazione e
+   distorsione, **L46b** PSRR+ e ADR-020). Le domande si fanno **per nome**, non per sigle: «non
+   ricordo sigle a memoria, devi essere più leggibile nelle domande».
+2. **La compensazione**: alternative al Miller da 1 nF (non solo valori di Miller: la CJE dei MJE
+   è la causa), ciascuna misurata su V1 (≥ 60° su ogni istanza e nel gruppo B, ADR-019), THD e
+   IMD a 1 / 10 / 20 kHz al livello deciso, slew, PSRR+ e rumore. Il controfattuale (470 pF, 1 nF)
+   corre sullo stesso banco.
+3. **Il PSRR+ nel blocco**, se la compensazione non basta: cella di filtro locale o alimentazione
+   separata dello stadio d'ingresso. La scelta di dove sta il rimedio (blocco o alimentatore) è
+   dell'utente, e diventa una **ADR**.
+4. **ADR-020 ricalcolato** sul blocco nuovo con `data/2026-09-23/L40/script/limiti_psrr.py`, la
+   tabella per tono in `REQUIREMENTS.md` aggiornata, la nota ripuntata a CSV che esistono
+   (chiude NC-052).
+5. **Tracciabilità**: ogni valore nuovo in `circuits/preamp/*.py` col commento che punta alla
+   ADR. Netlist rigenerate; deck versionati rigenerati e confrontati.
 
 ## Prima di tutto
 
-- Leggi `CLAUDE.md`, `docs/limitations.md`, e in `docs/preamp/STATE.md` «In breve» e la voce di
-  diario di L43a.
-- `docs/preamp/PRB.md`, i due report di L43a e le voci NC-039…NC-046 di `NONCOMPLIANCE.md`.
-- `docs/preamp/reports/2026-09-09-revisione-utente-dossier.md`: com'è andata la prima revisione
-  umana.
+- `CLAUDE.md`, `docs/limitations.md` (le trappole che falliscono in silenzio), e in
+  `docs/preamp/STATE.md` «In breve» e le voci di diario di L43b, L43a e L40.
+- `NONCOMPLIANCE.md`: NC-039, NC-047, NC-011, NC-052.
+- `decisions/ADR-042*`, `decisions/ADR-020*`, `reports/2026-09-23-L40-v1-costruttore.md`.
 
 ## I vincoli
 
@@ -75,22 +65,21 @@ L'ordine deciso il 2026-09-27 era **L44 (NC-004) → G1**. L43a ha aperto tre bl
 
   Si usano comandi semplici, **percorsi assoluti**, script scritti su file con Write, ed Edit per
   i testi.
-- Il PDF del dossier non si versiona (`stampa_a4.py` rifiuta un percorso dentro il repo).
+- Le cifre di THD dai modelli sono cifre di modello: conta il trend, non il valore assoluto
+  (`CLAUDE.md`, «Nessun agente giudica come suona un circuito»).
 
 ## NON fa parte di questo lotto
 
-- correggere quello che la revisione trova, comprese NC-039…NC-046: si registra, e i rimedi sono
-  lotti successivi;
+- il rumore 1/f (NC-004, è L44, dopo questo); la cella del mute (L47); il selettore d'ingresso e
+  la continua (L48); il placement e routing di prova (L49); la FMEA (L45); massa e terra (L50);
 - rigenerare il dossier;
-- le soglie numeriche di V4, la lista dei condensatori ammessi (P6), il selettore d'ingresso;
-- qualsiasi modifica al circuito, al firmware o ai deck; NC-004 (L44); la FMEA (L45).
+- l'alimentatore, salvo quello che il rimedio del PSRR+ deciso dall'utente richiede.
 
 ## CHIUSURA
 
-1. `STATE.md` con L43b **fatto** e il prossimo lotto, secondo l'ordine scelto dall'utente, nella
-   tabella.
+1. `STATE.md` con L46 (o L46a) **fatto** e il prossimo lotto nella tabella.
 2. Riscrivi QUESTO file per il lotto successivo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L43b`.
+4. `/bin/zsh scripts/chunk_close.sh L46` (o `L46a`).
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**
