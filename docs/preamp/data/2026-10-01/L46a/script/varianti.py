@@ -60,6 +60,19 @@ def tpc(c1, c2, rt):
             ("add", "RT1 NTPC 0 %s" % rt)]
 
 
+def zxt(rbb):
+    """e. I dispositivi d'uscita della ricerca di L46a: Diodes ZXTN25040DZ /
+    ZXTP25040DZ (SOT-89), modelli del costruttore in models/ (CJE ~190 pF contro
+    3,06 nF dei MJE). L'include sta nel .inc, con un percorso relativo alla
+    cartella inc/ (run_simulation.sh risolve @REPO@ solo nel deck). R128 (rbb) si
+    ritara sulla corrente di riposo: la Vbe dei ZXT non e' quella dei MJE."""
+    return [("add", ".include ../../../../../../models/bjt_npn/zxtn25040dz.lib"),
+            ("add", ".include ../../../../../../models/bjt_pnp/zxtp25040dz.lib"),
+            ("set", "Q132", "Q132 VPLUS NBN NEN ZXTN25040DZ"),
+            ("set", "Q133", "Q133 VMINUS NBP NEP ZXTP25040DZ"),
+            ("set", "R128", "R128 NX NBB %s" % rbb)]
+
+
 VARIANTI = {
     # a. solo Miller (la griglia di L40, ora misurata anche in distorsione)
     "cm1n": miller("1n"),          # controllo: il blocco di oggi, invariato
@@ -76,6 +89,15 @@ for cm in ("680p", "470p", "330p", "220p"):
     VARIANTI["drv_cm%s" % cm] = driver("3.48k") + miller(cm)
 
 # c. il VAS a ~10 mA (56 Ohm: 0,55 V / 56 = 9,8 mA), da solo e col driver
+# e. i ZXT: prima la taratura di R128 a 1 nF
+for rbb in ("1.69k", "1.87k", "2.05k", "2.26k", "2.49k"):
+    VARIANTI["zxt_r%s_cm1n" % rbb] = zxt(rbb) + miller("1n")
+# R128 1,87k: ~20,3 mA (run/zxt_r*/tb_op); col VAS a 10,7 mA, 1,74k (stima, come 1,69 -> 1,58k)
+for cm in ("470p", "330p", "220p", "150p"):
+    VARIANTI["zxt_cm%s" % cm] = zxt("1.87k") + miller(cm)
+for cm in ("330p", "220p", "150p"):
+    VARIANTI["zxt_vas56_cm%s" % cm] = zxt("1.74k") + vas("56") + miller(cm)
+
 # Col VAS a 10,7 mA la corrente d'uscita sale (22,4 mA a R128 1,69k; 24,2 col driver
 # e 3,48k): R128 riportato a ~20,3 mA, 1,58k da solo e 3,24k col driver
 R128_VAS = [("set", "R128", "R128 NX NBB 1.58k")]

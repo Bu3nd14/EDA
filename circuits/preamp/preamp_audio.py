@@ -313,9 +313,11 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole):
     # capacitance inside the loop, which is the classic way to make a
     # discrete stage ring on a long interconnect.
     # ADR-021 rating constraint for the BOM: with a short at MAIN_OUT and the
-    # block at +10 dB, 20 kHz full scale, this resistor dissipates 1.10 W
-    # (tb_mute_corto.cir, docs/preamp/data/2026-09-14/). It must be rated
-    # >= 1.1 W at 60 C; the DIN0207 footprint alone does not guarantee that.
+    # block at +10 dB, 20 kHz full scale, this resistor dissipates 1.13 W
+    # (tb_mute_corto.cir: 1.10 W in L11, 0.95 W in L40 where the 1 nF Miller
+    # slew-limited the stage, 1.128 W with the faster VAS of ADR-054,
+    # docs/preamp/data/2026-10-01/L46a/regressione/). It must be rated
+    # >= 1.13 W at 60 C; the DIN0207 footprint alone does not guarantee that.
     R("47", b["OUT"], main_a, base + 100)
     # C_out: 4.7u film - ADR-007. Sized for a FUTURE 10 kOhm power amp
     # (3.4 Hz), not for the cj EV250's 100 kOhm, on the same logic that put
@@ -591,8 +593,10 @@ if __name__ == "__main__":
 
     # J1, the supply (off board, the supply lot). What it owes this board at
     # power-off (ADR-046, L30): a hold-up AFTER the +/-15 V regulators of
-    # >= 1500 uF EFFECTIVE per rail (2200 uF nominal, -20 %). At ~265 mA per
-    # rail (eight blocks, ADR-042) the + rail then takes >= 16 ms from the
+    # >= 1500 uF EFFECTIVE per rail (2200 uF nominal, -20 %). At ~298 mA per
+    # rail (eight blocks: ~265 mA with ADR-042, +33 mA with the faster VAS of
+    # ADR-054; by hand, 1500 uF x 2.9 V / 298 mA, not re-simulated in L46a)
+    # the + rail then takes >= 14.6 ms (16 ms at 265 mA) from the
     # supervisor's 13.5 V to 10.6 V, where the blocks lose regulation
     # (re-measured in L30: 10.2-10.6 V on the + rail, the - rail alone holds
     # to -7.5 V), against 3 ms release + 1 ms transfer of the jack relays.

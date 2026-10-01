@@ -879,3 +879,34 @@ controllo B di `e4.py` di L13 sui dati di oggi); chi conta le righe che **inizia
   valore mancante;
 - il confronto fra due corse si fa sulle righe ricucite: due log con lo stesso taglio sembrano
   uguali anche se il valore tagliato non si è mai letto.
+
+## 38. Il rimedio di #33 dipende dal circuito: `gminsteps=40` può **causare** il «transient op» che altrove toglie
+
+Scoperto in L46a (`docs/preamp/data/2026-10-01/L46a/`, i deck `thd` e `imd`).
+
+Un deck a più casi fa `alter` sul modo di guadagno e poi una `tran` per caso, e ogni `tran`
+rifà l'op. Coi dispositivi d'uscita ZXT del costruttore l'op falliva (spice3 gmin e source
+stepping) e ripiegava sul «transient op» in 23 deck su 32: rc 0, nessuna riga `Error`, e la
+`fourier` dava una THD del **73 %** invece di 0,00003 % (lo stato sbagliato di #33).
+
+Il rimedio di #33 (L29c), `option gminsteps=40`, qui fa il **contrario**: col blocco di oggi (MJE),
+che senza opzione non ripiegava mai, fa ripiegare anche quello (73 % al primo caso). Provato su due
+deck con nessuna opzione e con quattro (`gminsteps=40`, `itl1=1000`, `rshunt=1e12`,
+`srcsteps=100`), contando le righe «Transient op started»:
+
+| Deck | nessuna | gminsteps=40 | itl1=1000 | rshunt=1e12 | srcsteps=100 |
+|---|---|---|---|---|---|
+| ZXT, 470 pF, `thd_1k` | 2 ripieghi | 2 | **0** | 0 | 2 |
+| MJE, 1 nF, `thd_1k` | 0 | **1** | 0 | 0 | 0 |
+
+`itl1=1000` (più iterazioni di Newton per l'op) non tocca il circuito, e sul blocco MJE dà le stesse
+cifre di nessuna opzione alla sesta cifra. `rshunt` regge anche lui, ma aggiunge una conduttanza a
+ogni nodo.
+
+**Regola operativa**:
+- la guardia di #33 resta quella: «Transient op started» nel log rifiuta la corsa
+  (`L46a/script/leggi_four.py` lo fa);
+- un'opzione di convergenza si sceglie **provandola** sul deck che fallisce e su uno che non
+  falliva, contando i ripieghi e confrontando le cifre: non si copia da un altro banco;
+- la si mette in tutte le varianti di un'esplorazione, perché il banco resti uno, e si rieseguono
+  i controlli.

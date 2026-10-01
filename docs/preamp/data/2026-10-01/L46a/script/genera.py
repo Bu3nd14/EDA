@@ -88,7 +88,13 @@ def thd(v, f):
     # Il primo imd sembrava a sorgente spenta: era una Note dentro la tabella (#37)
     a0 = LIVELLI[0][1] / MODI[0][1]
     t += ["VS VSN 0 SIN(0 %.6g %d)" % (a0, f), "RSRC VSN IN 2500"] + CARICO
-    c = [".control", "set numdgt=10", "set fourgridsize=8192", "set nfreqs=10", "save out vsn"]
+    # itl1=1000: coi ZXT l'op della tran, dopo l'alter del modo, ripiegava sul
+    # «transient op» (#33) e la THD usciva al 73 %. Il rimedio di L29c
+    # (gminsteps=40) qui fa il contrario: fa ripiegare anche i MJE. Con itl1=1000
+    # nessun ripiego, e sul blocco di oggi le cifre sono quelle senza opzione alla
+    # sesta cifra (prova in L46a, report §1). Su tutti i deck: il banco resta uno
+    c = [".control", "option itl1=1000", "set numdgt=10", "set fourgridsize=8192",
+         "set nfreqs=10", "save out vsn"]
     for modo, g, rg, rg10 in MODI:
         for liv, vpk in LIVELLI:
             a = vpk / g
@@ -105,7 +111,8 @@ def imd(v):
     a0 = LIVELLI[0][1] / 2 / MODI[0][1]     # vedi thd(): il primo caso nella netlist
     t += ["VS1 VSN VMIDS SIN(0 %.6g 19000)" % a0, "VS2 VMIDS 0 SIN(0 %.6g 20000)" % a0,
           "RSRC VSN IN 2500"] + CARICO
-    c = [".control", "set numdgt=10", "set fourgridsize=16384", "set nfreqs=24", "save out vsn"]
+    c = [".control", "option itl1=1000", "set numdgt=10", "set fourgridsize=16384",
+         "set nfreqs=24", "save out vsn"]     # itl1: vedi thd()
     for modo, g, rg, rg10 in MODI:
         for liv, vpk in LIVELLI:
             a = vpk / 2 / g

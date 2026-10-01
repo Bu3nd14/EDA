@@ -1,0 +1,12 @@
+{
+  "canonical_file": "zxtn25040dz.lib",
+  "device_class": "bjt_npn",
+  "origin": "vendor_derived",
+  "vendor_source_path": "vendor/bjt_npn/diodes_inc/ZXTN25040DZ/ZXTN25040DZ.spice.txt",
+  "vendor_source_sha256": "fbdb446480688d842987d6baedeb0bbe98f3d3af1a94a97c540046004759338c",
+  "date_created": "2026-10-01",
+  "author": "AI agent (Claude Sonnet 5.5, sourcing agent, L46a) on behalf of roberto.carmeli@gmail.com",
+  "changes": "NOTHING WAS CHANGED. The manufacturer serves this model as a text file, so it was frozen byte-for-byte under vendor/ and the whole file (model text and the vendor's own AS-IS disclaimer) was appended below a comment header of our own. No parameter removed, rounded or reordered; model NAME left as served (ZXTN25040DZ). Verifiable: diff <(grep -v '^\\*' <vendor file>) <(grep -v '^\\*' <this file>) is empty (checked 2026-10-01 with cmp). The vendor file uses CRLF and our header uses LF, so the assembled file has MIXED line endings on purpose.",
+  "reason": "Candidate NPN half of a faster complementary output pair for the Class A emitter follower, to be MEASURED against the MJE15032/MJE15033 (NC-024, NC-025: model CJE 3.06 nF, fT below datasheet minimum). Not yet used by any circuit.",
+  "notes": "Cross-check against the manufacturer datasheet DS33699 Rev. 3-2 (ngspice 47, temp = 25): fT 194.7 MHz at IC 50 mA / VCE 10 V / 100 MHz (typ 190, no min); fT 149.4 MHz at IC 20 mA / VCE 10 V; Cobo 12.18 pF at VCB 10 V (typ 11.7, max 20); hFE 452 at 10 mA / VCE 2 V (min 300, typ 450); hFE 310 at 1 A (min 300, typ 450). Everything inside the published windows; the model sits on the typicals and the datasheet gives no fT minimum, so 'inside' is a weaker statement than for a part with a guaranteed minimum. NO KF/AF: no 1/f noise, any noise figure is a floor without flicker. QUASIMOD/RCO/GAMMA accepted by ngspice 47 without warning. Model is a 2007 Zetex model (header: 'Spice Model v1.0 Last revision 01/06/07'). scripts/validate_models.py has NO electrical recipe for this file yet: it will report SKIP and the suite fails until one is registered."
+}
