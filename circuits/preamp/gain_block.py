@@ -221,6 +221,9 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     NX, NY, NBB = n("NX"), n("NY"), n("NBB")  # spreader top / bottom / base
     NBN, NBP = n("NBN"), n("NBP")             # output base stoppers
     NEN, NEP = n("NEN"), n("NEP")             # output emitters
+    # Filtered V+ for the input mirror AND the VAS (ADR-056, L46b): the RC cell
+    # that makes it is at the END of this function (designator numbering).
+    VPF = n("VPF")
 
     i = [base]
 
@@ -416,18 +419,39 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # Vce this transistor has, so the junction sits far closer to the knee
     # than the terminal voltage suggests. It is not a model artefact - the
     # datasheet's own VCE(sat) <= 0.5 V at 1 mA implies exactly such an RC.
+    # ADR-056 (L46b): the mirror emitters sit on VPF, the filtered rail, and
+    # MUST sit on the SAME node as the VAS emitter below. Filtering only one of
+    # the two is worse than filtering neither: the rail difference lands across
+    # the VAS base-emitter. PSRR+ at 10 kHz, +10 dB: mirror alone filtered
+    # -12 dB, VAS alone 47 dB, both 71.8 dB, neither 29.5 dB
+    # (docs/preamp/data/2026-10-01/L46b/psrr.csv).
+    #
+    # 226 OHM ON THE OUTPUT SIDE, NOT 220 (ADR-056, L46b): the VAS base current
+    # (~83 uA at 10.7 mA, beta ~129 on the vendor model) flows INTO NHI, so with
+    # a symmetric mirror the cascoded JFET on that side carries ~75 uA more and
+    # the block sits at -26 mV (x3.15 = -82 mV at +10 dB). That DC step is what
+    # reached the jack when the gain relays drop before the jack contact in the
+    # supply faults of L41c: 1.93 mV with U502 off (objective 2 mV) and 117 mV
+    # on the 12 V relay-line short, against 1.37 / 69.4 mV before ADR-054. A
+    # 6 Ohm larger R120 makes Q121B deliver ~83 uA less: offset -26.1 -> -6.6 mV
+    # (232 Ohm: +12.4, ~3.2 mV per Ohm), U502 off 0.90 mV, short 29.7 mV; V1
+    # 64.93 -> 65.16 deg, CCIF IMD -119 -> -126 dB, PSRR- at 100 Hz +5.5 dB,
+    # noise and clip unchanged (data/2026-10-01/L46b/).
+    # BOM: R119 and R120 1 %, same series; a 1 % ratio error is ~7 mV, below the
+    # LSK489's own VGS1-VGS2 (8 mV typ, 20 mV max) and the VAS beta spread
+    # (-36...+6 mV for hFE 60-250). A 0.1 % pair removes this term if wanted.
     NME1, NME2 = n("NME1"), n("NME2")
-    R("220", VP, NME1)
-    R("220", VP, NME2)
+    R("220", VPF, NME1)
+    R("226", VPF, NME2)
     i[0] += 1
     qm = Part("preamp", "LS352", value="LS352", footprint=FP_SOIC8,
               ref=f"Q{i[0]}")
     qm["1"] += NMIRI      # C1 -> mirror diode side (collector to its base)
     qm["2"] += NMIRI      # B1 -> common base node
-    qm["3"] += NME1       # E1 -> its own 47 Ohm degeneration
+    qm["3"] += NME1       # E1 -> its own degeneration, R119 220 Ohm
     qm["8"] += NHI        # C2 -> mirror output, into the VAS
     qm["7"] += NMIRI      # B2 -> common base node
-    qm["6"] += NME2       # E2 -> its own 47 Ohm degeneration
+    qm["6"] += NME2       # E2 -> its own degeneration, R120 226 Ohm
     sx.spice_dev(qm, "Q", ["1", "2", "3"], "LS350", suffix="A")
     sx.spice_dev(qm, "Q", ["8", "7", "6"], "LS350", suffix="B")
 
@@ -445,9 +469,13 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # could not, and that - not the Miller value alone - is what made the
     # distortion rise towards the treble (NC-039). Q122 now dissipates 0.142 W
     # (P7: 310 mW in SOT-23); the block draws +4.1 mA per rail.
+    # ADR-056 (L46b): the emitter goes to VPF, the filtered rail, together with
+    # the mirror. The VAS and the mirror on V+ are how V+ got into the output:
+    # the VAS base follows the rail and C124 turns that into a current into the
+    # output node, which is why PSRR+ tracked the Miller value (L46a).
     NVE = n("NVE")
     Q("pnp", "MMBT5401", "MMBT5401", NX, NHI, NVE)
-    R("56", VP, NVE)
+    R("56", VPF, NVE)
 
     # Miller compensation - the dominant pole of the whole amplifier.
     # MUST be C0G/NP0: it sees ~13 V of DC bias and carries the entire
@@ -580,6 +608,34 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
         # and every reference designator that existed before L27 keeps its
         # number. A renumbering breaks decks in silence (limitations.md #22).
         R(R_G10, FB, RG10)
+
+    # ========================================================================
+    # 7. RC CELL FOR THE MIRROR AND THE VAS (ADR-056, L46b, NC-047)
+    # ========================================================================
+    # Appended LAST, after R_G10, for the same reason R_G10 is: every
+    # designator that existed before L46b keeps its number (limitations.md
+    # #22). Its own number depends on the instance, like every number after
+    # R_G3: R144 / C145 on this file's block; on the audio board R142 / C143
+    # (block A), R243 / C244 (block B), R541 / C542 (first fixed buffer), and
+    # the same pattern per channel (data/2026-10-01/L46b/script/celle_netlist.py
+    # reads them off preamp_audio.net).
+    # 10 Ohm from V+ to VPF, 1000 uF from VPF to ground. The user's choice of
+    # 2026-10-01, among four measured ways (data/2026-10-01/L46b/). PSRR+ at
+    # +10 dB 66.9 / 49.5 / 29.5 / 23.5 -> 79.1 / 79.6 / 71.8 / 66.3 dB at
+    # 100 Hz / 1 / 10 / 20 kHz; V1, distortion, E5 noise, slew unchanged.
+    # Above a few kHz the attenuation tends to R / ESR (1000 uF is 16 mOhm at
+    # 10 kHz): measured with 0.05 Ohm of ESR; a general-purpose part at 0.2 Ohm
+    # still gives 62.7 dB at 10 kHz, so low-ESR is NOT required.
+    # Cost: ~15 mA (mirror + VAS) x 10 Ohm = 0.15 V; positive clip at +10 dB
+    # 13.28 -> 13.14 V (margin over E6 x E2 0.82 -> 0.73 dB, see HEADROOM).
+    # Power in the resistor ~2 mW. tau = 10 ms, far below the ~1.4 s soft-start
+    # of the TPS7A4701 (C_NR 10 uF, SBVS204G eq. 5): eight cells draw ~0.16 A
+    # while the rail ramps, against a 1.26 A current limit.
+    # NOT on the cascode reference (R114: already ~1 Hz, it made no difference)
+    # and NOT on the MJE15032 collector (an emitter follower rejects its rail).
+    # The 1000 uF electrolytic: >= 25 V, + terminal on VPF.
+    R("10", VP, VPF)
+    C("1000u", VPF, GND, fp="Capacitor_THT:CP_Radial_D10.0mm_P5.00mm")
 
     return dict(IN=IN, OUT=OUT, FB=FB, RG=RG, RG10=RG10, VP=VP, VM=VM,
                 GND=GND)
