@@ -1,0 +1,12 @@
+{
+  "canonical_file": "zxtp25040dz.lib",
+  "device_class": "bjt_pnp",
+  "origin": "vendor_derived",
+  "vendor_source_path": "vendor/bjt_pnp/diodes_inc/ZXTP25040DZ/ZXTP25040DZ.spice.txt",
+  "vendor_source_sha256": "e3440ab61bd9cf023d9b86761380f162edf756e28874ee2f35fab173a3db64e6",
+  "date_created": "2026-10-01",
+  "author": "AI agent (Claude Sonnet 5.5, sourcing agent, L46a) on behalf of roberto.carmeli@gmail.com",
+  "changes": "NOTHING WAS CHANGED. The manufacturer serves this model as a text file, so it was frozen byte-for-byte under vendor/ and the whole file (the single .MODEL statement) was appended below a comment header of our own. No parameter removed, rounded or reordered; model NAME left as served (ZXTP25040DZ). Verifiable: diff <(grep -v '^\\*' <vendor file>) <(grep -v '^\\*' <this file>) is empty (checked 2026-10-01 with cmp). The vendor file uses CRLF and our header uses LF, so the assembled file has MIXED line endings on purpose. The vendor file has no trailing newline after its last parameter line.",
+  "reason": "Candidate PNP half of a faster complementary output pair for the Class A emitter follower, to be MEASURED against the MJE15032/MJE15033 (NC-024, NC-025). Not yet used by any circuit.",
+  "notes": "Cross-check against the manufacturer datasheet DS33755 Rev. 2-2 (ngspice 47, temp = 25): fT 275.9 MHz at IC -50 mA / VCE -10 V / 100 MHz (typ 270, no min); fT 194.1 MHz at IC -20 mA / VCE -10 V; Cobo 18.10 pF at VCB -10 V (typ 17.4, no max published); hFE 414 at -10 mA / VCE -2 V (min 300, typ 450); hFE 295 at -1 A (min 200, typ 300). Inside the published windows, on the typicals. WEAK POINT: VAF = 23 V, VAR = 4.5 V (low Early voltage) - expect hFE and output conductance to move with VCE over a +/-15 V swing. NO KF/AF: no 1/f noise. QUASIMOD/RCO/GAMMA accepted by ngspice 47 without warning. The model file carries no date or version. scripts/validate_models.py has NO electrical recipe for this file yet: it will report SKIP and the suite fails until one is registered."
+}

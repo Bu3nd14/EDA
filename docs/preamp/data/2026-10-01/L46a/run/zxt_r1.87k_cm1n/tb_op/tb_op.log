@@ -1,0 +1,111 @@
+warning, model type mismatch in line
+    q121a nmiri nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: tb_op.cir - l46a esplorazione, variante zxt_r1.87k_cm1n (blocco da inc/zxt_r1.87k_cm1n.inc)
+
+Warning: Model issue on line 122 :
+  .model lsk489a njf(beta=2.2m betatce=-.5 rd=11 rs=30 lambda=4.3m vto=-1. ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+unrecognized parameter (mj) - ignored
+
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 1
+=== NODE VOLTAGES ===
+v(in) = 0.000000e+00
+v(fb) = -1.51389e-02
+v(out) = -1.51389e-02
+v(jack) = 0.000000e+00
+v(nref) = -1.36698e+01
+v(nrefm) = -1.43349e+01
+v(ncasc) = 9.868207e+00
+v(src) = -1.65737e-01
+v(g1) = 9.292106e-10
+v(g2) = -1.51389e-02
+v(s1) = 6.240997e-02
+v(s2) = 5.808865e-02
+v(d1n) = 9.180379e+00
+v(d2n) = 9.180892e+00
+v(nmiri) = 1.380668e+01
+v(nhi) = 1.372668e+01
+v(nx) = 1.060851e+00
+v(ny) = -1.09027e+00
+v(nbb) = -3.76550e-01
+v(nbn) = 1.060456e+00
+v(nbp) = -1.08997e+00
+v(nen) = 4.316215e-01
+v(nep) = -4.61899e-01
+v(nve) = 1.438594e+01
+v(nvle) = -1.43860e+01
+v(nte) = -1.43752e+01
+=== INPUT JFET PAIR (LSK489 halves) ===
+@jq110a[id] = 2.281469e-03
+@jq110b[id] = 2.238256e-03
+@jq110a[vgs] = -1.30854e-01
+@jq110b[vgs] = -1.40375e-01
+@jq110a[gm] = 4.566839e-03
+@jq110b[gm] = 4.523444e-03
+=== RAIL CURRENTS (A) ===
+i(vpp) = -3.24702e-02
+i(vmm) = 3.349068e-02
+=== BJT OPERATING POINTS: ic / vce ===
+@q106[ic] = 4.519725e-03
+@q106[ib] = 4.050138e-05
+@q106[vbe] = 7.044090e-01
+@q106[vbc] = -1.27162e+01
+@q117[ic] = 2.260471e-03
+@q117[ib] = 2.099789e-05
+@q117[vbe] = 6.872973e-01
+@q117[vbc] = -3.46881e+00
+@q118[ic] = 2.217659e-03
+@q118[ib] = 2.059696e-05
+@q118[vbe] = 6.867947e-01
+@q118[vbc] = -3.55626e+00
+@q121a[ic] = -2.20502e-03
+@q121a[ib] = -7.35543e-06
+@q121a[vbe] = 7.037420e-01
+@q121a[vbc] = 5.094032e-01
+@q121b[ic] = -2.20846e-03
+@q121b[ib] = -5.28729e-06
+@q121b[vbe] = 7.036241e-01
+@q121b[vbc] = 4.303917e-01
+@q122[ic] = -6.69591e-03
+@q122[ib] = -5.20138e-05
+@q122[vbe] = 6.575165e-01
+@q122[vbc] = -1.25707e+01
+@q125[ic] = 6.687116e-03
+@q125[ib] = 6.005659e-05
+@q125[vbe] = 7.146592e-01
+@q125[vbc] = -1.14012e+01
+@q127[ic] = 5.887690e-03
+@q127[ib] = 5.493988e-05
+@q127[vbe] = 7.123430e-01
+@q127[vbc] = -4.04099e-01
+@q132[ic] = 2.026773e-02
+@q132[ib] = 3.955979e-05
+@q132[vbe] = 6.285947e-01
+@q132[vbc] = -1.39006e+01
+@q133[ic] = -2.02765e-02
+@q133[ib] = -3.07620e-05
+@q133[vbe] = 6.277794e-01
+@q133[vbc] = -1.38919e+01
+=== KEY BRANCH CURRENTS ===
+@riso[i] = 0.000000e+00
+@r136[i] = -3.95954e-11
+@r134[i] = 2.030729e-02
+@r135[i] = -2.03073e-02
+@r107[i] = 4.560226e-03
+@r123[i] = 6.747928e-03
+@r126[i] = 6.747173e-03
+Note: Simulation executed from .control section 

@@ -1,58 +1,63 @@
-# Prompt per la sessione successiva — L46 (il blocco di guadagno: compensazione, distorsione verso gli acuti, PSRR+)
+# Prompt per la sessione successiva — L46b (il PSRR del rail positivo: nel blocco o nell'alimentatore)
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L46**, o la sua prima metà se va diviso, e si ferma. Non
-iniziarne un secondo.
+LOTTI PICCOLI: questa sessione fa **L46b**, e si ferma. Non iniziarne un secondo.
 
 ## Perché questo lotto, e perché adesso
 
-La revisione del dossier (L43a l'architetto, L43b l'utente) ha aperto sei bloccanti per G1.
-L'utente ha scelto l'ordine dei rimedi il 2026-10-01: **L46 → L44 → L47 → L48 → L49 → G1 → L45 →
-L50** (tabella dei lotti in `STATE.md`). L46 è il primo perché tutto il resto poggia sul blocco di
-guadagno, e due bloccanti hanno la stessa radice, **il Miller da 1 nF di ADR-042** (C124):
+L'ordine dei rimedi scelto dall'utente il 2026-10-01 è **L46 → L44 → L47 → L48 → L49 → G1 → L45 →
+L50**. L46 è stato diviso dall'utente all'inizio: **L46a** (fatto, 2026-10-01) ha rifatto la
+compensazione del blocco di guadagno; **L46b** è la seconda metà, il PSRR del rail positivo.
 
-- **NC-039 — la distorsione cresce verso gli acuti.** Coi modelli del costruttore la THD a 20 kHz
-  è 0,0616 % (0 dB) / 0,168 % (+10 dB) con 1 nF, contro 0,0060 % / 0,0118 % con 470 pF; l'IMD
-  CCIF −59,6 dB contro −85,4 dB. A −12 dB di livello la THD a 20 kHz scende di ~30 dB (0,0054 %):
-  il difetto dipende molto dal livello, e va giudicato a un livello musicale dichiarato. La radice
-  indicata è la CJE di 3,06 nF dei MJE15032/33, per cui ADR-042 portò il Miller a 1 nF valutando
-  solo alternative di compensazione. Deck: `data/2026-09-27/L43a/architetto/` (README dentro).
-- **NC-047 — il PSRR del rail positivo è troppo basso per contare sul solo alimentatore**
-  (rilievo dell'utente: «dovremo mettere mano al circuito audio per aumentare la PSRR»). PSRR+ a
-  +10 dB: 23,01 dB a 10 kHz (`data/2026-09-27/L42/dopo/tb_zout_psrr_noise/`), contro 76 dB del
-  rail −; il Miller da 1 nF ne è costato ~6,5 dB (L40). Il budget di ADR-020 sul rail + è 14,2 µV
-  RMS per un tono a 10 kHz, ≤ 87 nV/√Hz di rumore bianco; il residuo dei rail **non è mai stato
-  simulato** (regolatori comportamentali; il modello TI del TPS7A4701 dà un punto di lavoro
-  sbagliato). NC-011 resta la verifica sul prototipo.
+- **NC-047 (bloccante per G1)** — il rilievo dell'utente: «Temo che l'alimentatore non riuscirà ad
+  essere abbastanza silenzioso e quindi dovremo mettere mano al circuito audio per aumentare la
+  PSRR.» Col blocco di **ADR-054** (VAS ~10,7 mA, C124 470 pF) il PSRR+ a +10 dB è **66,9 / 49,5
+  / 29,5 / 23,5 dB** a 100 Hz / 1 / 10 / 20 kHz: +6,5 dB rispetto al blocco di prima, ma ancora
+  ~50 dB sotto il rail − a 10 kHz. Dati: `data/2026-10-01/L46a/regressione/dopo/
+  tb_zout_psrr_noise/`.
+- **Quello che L46a ha imparato**: il PSRR+ **dipende solo dal Miller** (470 pF → 29,5 dB a 10 kHz
+  in ogni topologia misurata; 330 pF → 32,6; 220 pF → 36,0). Il rail + entra nel blocco
+  attraverso C124 e il VAS, che sta sul rail +. Un Miller più piccolo, coi dispositivi d'uscita
+  ZXT, arrivava a 36 dB: l'utente l'ha scartato (ADR-054, «Da riaprire se» cita proprio L46b).
+- **Il residuo dei rail non è mai stato simulato**: nel banco di `psu.py` i regolatori sono
+  comportamentali, senza PSRR né rumore; il modello TI del TPS7A4701 dà un punto di lavoro
+  sbagliato (~1 V). NC-011 resta la verifica sul prototipo.
 - **NC-052** (minore): la «Nota su E5» di `REQUIREMENTS.md` cita
   `data/2026-09-23/L40/dopo/tb_zout_psrr_noise/*_psrr{p,m}_10db.csv`, che non esistono. Si
-  ripunta quando si ricalcolano i limiti.
+  ripunta ai CSV di L46a quando si ricalcolano i limiti.
 
 ## Il mandato
 
-1. **All'inizio, con l'utente**: il livello musicale a cui si giudica la distorsione verso gli
-   acuti (NC-039 lo chiede), e se il lotto va diviso (probabile: **L46a** compensazione e
-   distorsione, **L46b** PSRR+ e ADR-020). Le domande si fanno **per nome**, non per sigle: «non
-   ricordo sigle a memoria, devi essere più leggibile nelle domande».
-2. **La compensazione**: alternative al Miller da 1 nF (non solo valori di Miller: la CJE dei MJE
-   è la causa), ciascuna misurata su V1 (≥ 60° su ogni istanza e nel gruppo B, ADR-019), THD e
-   IMD a 1 / 10 / 20 kHz al livello deciso, slew, PSRR+ e rumore. Il controfattuale (470 pF, 1 nF)
-   corre sullo stesso banco.
-3. **Il PSRR+ nel blocco**, se la compensazione non basta: cella di filtro locale o alimentazione
-   separata dello stadio d'ingresso. La scelta di dove sta il rimedio (blocco o alimentatore) è
-   dell'utente, e diventa una **ADR**.
-4. **ADR-020 ricalcolato** sul blocco nuovo con `data/2026-09-23/L40/script/limiti_psrr.py`, la
-   tabella per tono in `REQUIREMENTS.md` aggiornata, la nota ripuntata a CSV che esistono
-   (chiude NC-052).
-5. **Tracciabilità**: ogni valore nuovo in `circuits/preamp/*.py` col commento che punta alla
-   ADR. Netlist rigenerate; deck versionati rigenerati e confrontati.
+1. **All'inizio, con l'utente** (le domande **per nome**, mai per sigle: «non ricordo sigle a
+   memoria»; i livelli di rumore in **dB SPL** contro una stanza silenziosa, non in µV): dove sta il
+   rimedio. Le strade da mettere in tabella, ciascuna misurata prima di chiedere la scelta:
+   - **nel blocco**: una cella RC (o RC + condensatore grande) che alimenti il VAS e/o lo stadio
+     d'ingresso dal rail + filtrato, oppure un'alimentazione separata dello stadio d'ingresso; i
+     costi in caduta di tensione (headroom, V3, clip), in rumore della resistenza, in parti;
+   - **nell'alimentatore**: la quota di ADR-020 verificata su uno spettro simulato dei rail
+     (serve un modello credibile del TPS7A4701 o un limite per eccesso dichiarato);
+   - **entrambe**.
+   La scelta è dell'utente, e diventa una **ADR**.
+2. **Ogni variante del blocco** misurata col banco di L46a (`data/2026-10-01/L46a/script/`,
+   README dentro): V1 su ogni istanza e nel gruppo B (≥ 60°, ADR-019), PSRR± a 100 Hz / 1 / 10 /
+   20 kHz, rumore E5, i tetti di V4 di **ADR-055**, slew, punto di lavoro e clip. Il blocco di oggi
+   (`cm1n` non è più il blocco di oggi: è `vas56_cm470p`) corre per primo come controllo.
+3. **ADR-020 ricalcolato** sul circuito che ne esce con `data/2026-09-23/L40/script/limiti_psrr.py`,
+   la tabella per tono in `REQUIREMENTS.md` aggiornata, la nota ripuntata a CSV che esistono
+   (chiude **NC-052**). Il rail − ha perso 2,5 dB a 100 Hz con ADR-054 (73,3 → 70,7): entra nel
+   ricalcolo.
+4. **Tracciabilità**: ogni valore nuovo in `circuits/preamp/*.py` col commento che punta alla ADR.
+   Netlist rigenerate; la regressione dei 21 deck veloci con `script/regressione.sh` di L46a (le
+   cartelle `prima/` e `dopo/` si rifanno: copiale o cambia il nome delle fasi).
 
 ## Prima di tutto
 
-- `CLAUDE.md`, `docs/limitations.md` (le trappole che falliscono in silenzio), e in
-  `docs/preamp/STATE.md` «In breve» e le voci di diario di L43b, L43a e L40.
-- `NONCOMPLIANCE.md`: NC-039, NC-047, NC-011, NC-052.
-- `decisions/ADR-042*`, `decisions/ADR-020*`, `reports/2026-09-23-L40-v1-costruttore.md`.
+- `CLAUDE.md`, `docs/limitations.md` (le trappole che falliscono in silenzio; la **#38** è nuova: il
+  rimedio del «transient op» dipende dal circuito), e in `docs/preamp/STATE.md` «In breve» e le
+  voci di diario di L46a e L40.
+- `NONCOMPLIANCE.md`: NC-047, NC-011, NC-052.
+- `decisions/ADR-020*`, `decisions/ADR-048*` (l'alimentatore), `decisions/ADR-054*`, e il report
+  `reports/2026-10-01-L46a-compensazione.md`.
 
 ## I vincoli
 
@@ -65,21 +70,24 @@ guadagno, e due bloccanti hanno la stessa radice, **il Miller da 1 nF di ADR-042
 
   Si usano comandi semplici, **percorsi assoluti**, script scritti su file con Write, ed Edit per
   i testi.
-- Le cifre di THD dai modelli sono cifre di modello: conta il trend, non il valore assoluto
-  (`CLAUDE.md`, «Nessun agente giudica come suona un circuito»).
+- Le cifre dai modelli sono cifre di modello: conta il trend, non il valore assoluto.
+- Un deck con `tran` dopo un `alter` va guardato nel log: «Transient op started» invalida la corsa
+  (#33, #38).
 
 ## NON fa parte di questo lotto
 
-- il rumore 1/f (NC-004, è L44, dopo questo); la cella del mute (L47); il selettore d'ingresso e
-  la continua (L48); il placement e routing di prova (L49); la FMEA (L45); massa e terra (L50);
-- rigenerare il dossier;
-- l'alimentatore, salvo quello che il rimedio del PSRR+ deciso dall'utente richiede.
+- il rumore 1/f (NC-004, è L44, subito dopo); la cella del mute (L47); il selettore d'ingresso e
+  la continua del blocco A, salita a −26 mV con ADR-054 (L48); il placement e routing di prova
+  (L49); la FMEA (L45); massa e terra (L50);
+- la compensazione: è decisa (ADR-054), salvo che la strada del PSRR+ la rimetta in discussione
+  come dice il suo «Da riaprire se»;
+- rigenerare il dossier.
 
 ## CHIUSURA
 
-1. `STATE.md` con L46 (o L46a) **fatto** e il prossimo lotto nella tabella.
+1. `STATE.md` con L46b **fatto** e il prossimo lotto (L44) nella tabella.
 2. Riscrivi QUESTO file per il lotto successivo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L46` (o `L46a`).
+4. `/bin/zsh scripts/chunk_close.sh L46b`.
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**

@@ -1,0 +1,74 @@
+{
+  "part_name": "ZXTP25040DZ (40 V PNP low-saturation medium-power transistor, SOT-89; orderable ZXTP25040DZTA, marking 1L6)",
+  "vendor_name": "Diodes Incorporated (ex Zetex)",
+  "device_class": "bjt_pnp",
+  "product_page": "https://www.diodes.com/part/view/ZXTP25040DZ (returns HTTP 403 to automated clients, re-checked 2026-10-01; the manufacturer evidence used is the datasheet, which the same host serves normally)",
+  "date_obtained": "2026-10-01",
+  "lotto": "L46a",
+  "obtained_by": "AI agent (Claude Sonnet 5.5, sourcing agent, L46a) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from Diodes Incorporated's own host (www.diodes.com), not from a distributor and not from a mirror. Byte-for-byte as served.",
+  "license_notes": "Manufacturer datasheet and manufacturer-published SPICE model, redistributed here unmodified for engineering traceability only. Copyright remains Diodes Incorporated. The model file carries the vendor's own AS-IS warranty disclaimer, reproduced unaltered.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh (must be run: files were added with default mode and are frozen by that script)",
+  "why_this_part": "PNP half of the candidate fast complementary output pair (see vendor/bjt_npn/diodes_inc/ZXTN25040DZ/PROVENANCE.json for the full rationale and the rejected alternatives): alternative to the MJE15033 in the Class A emitter follower (NC-024, NC-025).",
+  "files": [
+    {
+      "original_filename": "ZXTP25040DZ.spice.txt",
+      "role": "spice_model",
+      "url": "https://www.diodes.com/spice/download/2987/ZXTP25040DZ.spice.txt",
+      "served_content_type": "text/plain; name=\"ZXTP25040DZ.spice.txt\";charset=UTF-8",
+      "bytes": 1564,
+      "sha256": "e3440ab61bd9cf023d9b86761380f162edf756e28874ee2f35fab173a3db64e6",
+      "local_filename": "ZXTP25040DZ.spice.txt",
+      "renamed": false
+    },
+    {
+      "original_filename": "ZXTP25040DZ.pdf",
+      "role": "datasheet",
+      "url": "https://www.diodes.com/assets/Datasheets/ZXTP25040DZ.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 598740,
+      "pages": 8,
+      "sha256": "596f1e0fda6373e30f0be60479d06a8d7a1a9e12b1e558421deb87f390020bee",
+      "local_filename": "ZXTP25040DZ.pdf",
+      "renamed": false
+    }
+  ],
+  "how_the_model_url_was_found": "Same procedure as the NPN: ids probed, response Content-Type name read (limitations #21). id 2987 answers name=\"ZXTP25040DZ.spice.txt\". The file has no comment header of its own; its single line is '.MODEL ZXTP25040DZ PNP ...' (right part, limitations #20). Neighbouring ids carry other parts (2986 = ZXTP25040DFL, 2985 = ZXTP25040DFH): not to be confused.",
+  "revision_note": "Datasheet footer: 'Document number: DS33755 Rev. 2 - 2', November 2020. The model file carries no date or version string.",
+  "limits_read_with_their_conditions": {
+    "BV_CEO": "-40 V MINIMUM (-65 V typ) at IC = -10 mA. Against +/-15 V rails (30 V) it is 1.33x.",
+    "hFE": "300 min / 450 typ at IC = -10 mA, VCE = -2 V (max 900); 200 min / 300 typ at IC = -1 A; 20 min at -3.5 A.",
+    "fT": "270 MHz TYPICAL, no minimum published, at IC = -50 mA, VCE = -10 V, f = 100 MHz.",
+    "C_obo": "17.4 pF typ (no maximum published) at VCB = -10 V, f = 1 MHz; C_ibo 142 pF typ at VEB = -0.5 V.",
+    "P_D": "Same SOT-89 thermal table as the NPN (see its provenance); not re-read separately for the PNP.",
+    "I_C": "-3.5 A continuous.",
+    "package": "SOT-89, tab = collector."
+  },
+  "lifecycle": {
+    "status": "NOT CONFIRMED ACTIVE by the manufacturer's page (403). Datasheet Rev. 2 November 2020 carries no NRND/OBSOLETE/DISCONTINUED text. Farnell lists ZXTP25040DZTA with prices but stock 0 on findchips.com on 2026-10-01.",
+    "honest_limit": "Weaker than an explicit 'Active' string; and franchised stock of this PNP is the weak point of the pair."
+  },
+  "spice_model": {
+    "status": "FOUND, published by the manufacturer, PROVEN to load and run in ngspice 47 (no warnings).",
+    "model_name": "ZXTP25040DZ",
+    "model_count_in_file": 1,
+    "no_flicker_noise": "No KF/AF: NO 1/f noise.",
+    "low_early_voltage": "VAF = 23 V and VAR = 4.5 V: unusually low for a 40 V device; hFE and output conductance will vary with VCE across a +/-15 V swing. Whether it reflects the silicon or the fit is not known.",
+    "pspice_quasi_saturation_parameters": "QUASIMOD=1, RCO=0.88, GAMMA=0.6E-9; ngspice 47 accepts them silently."
+  },
+  "datasheet_cross_check_L46a": {
+    "method": "Same as the NPN, polarities mirrored.",
+    "fT_IC_-50mA_VCE_-10V_at_100MHz": "275.9 MHz vs 270 MHz typ.",
+    "fT_IC_-20mA_VCE_-10V": "194.1 MHz.",
+    "C_obo_VCB_-10V_1MHz": "18.10 pF vs 17.4 typ.",
+    "hFE_-10mA_VCE_-2V": "414 vs 300 min / 450 typ.",
+    "hFE_-1A_VCE_-2V": "295 vs 200 min / 300 typ.",
+    "dc_hFE_at_follower_point_IC_-20mA_VCE_-10V": "571 (IB = 35.0 uA).",
+    "verdict": "INSIDE every published window; model sits on the datasheet typicals."
+  },
+  "what_was_NOT_verified": {
+    "stock_quantities_at_mouser_digikey_lcsc": "Mouser and DigiKey 403/bot-wall; LCSC search is JavaScript. Findchips.com 2026-10-01: Farnell 0 (EUR 1.00 at 1, 0.389 at 100), Avnet 0, Bristol Electronics 880, Chip Stock 35000 (broker).",
+    "manufacturer_status_string": "See lifecycle."
+  }
+}

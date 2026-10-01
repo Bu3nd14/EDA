@@ -1,0 +1,68 @@
+* zxtn25040dz.lib - Diodes Incorporated ZXTN25040DZ, 40 V NPN medium-power transistor, SOT-89.
+* VENDOR MODEL, COPIED VERBATIM FROM THE MANUFACTURER'S OWN FILE.
+*
+* USAGE:
+*   .include models/bjt_npn/zxtn25040dz.lib
+*   Q1 collector base emitter ZXTN25040DZ
+*
+* Role: CANDIDATE fast NPN for the complementary Class A emitter follower
+* output stage (alternative to the MJE15032, whose model has CJE = 3.06 nF
+* and fT 27.7 MHz, NC-024/NC-025). Complement: ZXTP25040DZ
+* (models/bjt_pnp/zxtp25040dz.lib). NOT yet used by any circuit.
+*
+* PINOUT (datasheet DS33699 Rev. 3-2, page 1, top view pin-out figure;
+* the figure carries no pin numbers): B / C / E on the three leads, the
+* tab is COLLECTOR. Standard SOT-89 numbering is pin 1 = B, pin 2 = C
+* (and tab), pin 3 = E - confirm against the KiCad footprint before layout.
+*
+* PROVENANCE - short version. Full record in
+* models/bjt_npn/zxtn25040dz.provenance.json and the freeze in
+* vendor/bjt_npn/diodes_inc/ZXTN25040DZ/PROVENANCE.json.
+* Source: https://www.diodes.com/spice/download/2802/ZXTN25040DZ.spice.txt
+* (Content-Type name="ZXTN25040DZ.spice.txt" checked, docs/limitations.md
+* #21; header and .MODEL name read, #20). Frozen byte-for-byte, then
+* appended below this header with NOTHING changed:
+*
+*   diff <(grep -v '^\*' vendor/bjt_npn/diodes_inc/ZXTN25040DZ/ZXTN25040DZ.spice.txt) \
+*        <(grep -v '^\*' models/bjt_npn/zxtn25040dz.lib)      # empty
+*
+* The vendor file uses CRLF, this header uses LF: MIXED line endings on
+* purpose, as in the other vendor-derived models. Do not normalise.
+*
+* CROSS-CHECK AGAINST THE DATASHEET (ngspice 47, set temp = 25, L46a):
+*   fT   @ IC = 50 mA, VCE = 10 V, ftest = 100 MHz   194.7 MHz  (typ 190, no min)
+*   fT   @ IC = 20 mA, VCE = 10 V (the follower)     149.4 MHz  (|hfe|=1: 149.4)
+*   Cobo @ VCB = 10 V, 1 MHz                         12.18 pF   (typ 11.7, max 20)
+*   hFE  @ IC = 10 mA, VCE = 2 V                     452        (min 300, typ 450)
+*   hFE  @ IC = 1 A,   VCE = 2 V                     310        (min 300, typ 450)
+* The model lands on the datasheet TYPICALS; the datasheet publishes no
+* fT minimum. NO KF/AF in the model: NO 1/f noise, any noise figure with
+* this device is a floor without flicker. CJE = 192 pF, CJC = 35 pF at
+* zero bias. QUASIMOD/RCO/GAMMA are accepted by ngspice 47 with no warning.
+*
+* BELOW THIS LINE: THE VENDOR FILE, BYTE FOR BYTE
+* DIODES INCORPORATED AND ITS AFFILIATED COMPANIES AND SUBSIDIARIES (COLLECTIVELY, "DIODES") 
+* PROVIDE THESE SPICE MODELS AND DATA (COLLECTIVELY, THE "SM DATA") "AS IS" AND WITHOUT ANY 
+* REPRESENTATIONS OR WARRANTIES, EXPRESS OR IMPLIED, INCLUDING ANY WARRANTY OF MERCHANTABILITY 
+* OR FITNESS FOR A PARTICULAR PURPOSE, ANY WARRANTY ARISING FROM COURSE OF DEALING OR COURSE OF 
+* PERFORMANCE, OR ANY WARRANTY THAT ACCESS TO OR OPERATION OF THE SM DATA WILL BE UNINTERRUPTED, 
+* OR THAT THE SM DATA OR ANY SIMULATION USING THE SM DATA WILL BE ERROR FREE. TO THE MAXIMUM 
+* EXTENT PERMITTED BY LAW, IN NO EVENT WILL DIODES BE LIABLE FOR ANY DIRECT OR INDIRECT, 
+* SPECIAL, INCIDENTAL, PUNITIVE OR CONSEQUENTIAL DAMAGES ARISING OUT OF OR IN CONNECTION WITH 
+* THE PRODUCTION OR USE OF SM DATA, HOWEVER CAUSED AND UNDER WHATEVER CAUSE OF ACTION OR THEORY 
+* OF LIABILITY BROUGHT (INCLUDING, WITHOUT LIMITATION, UNDER ANY CONTRACT, NEGLIGENCE OR OTHER 
+* TORT THEORY OF LIABILITY), EVEN IF DIODES HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES, 
+* AND DIODES' TOTAL LIABILITY (WHETHER IN CONTRACT, TORT OR OTHERWISE) WITH REGARD TO THE SM 
+* DATA WILL NOT, IN THE AGGREGATE, EXCEED ANY SUMS PAID BY YOU TO DIODES FOR THE SM DATA.
+
+
+
+*ZETEX ZXTN25040DZ Spice Model v1.0 Last revision 01/06/07
+    *
+    .MODEL ZXTN25040DZ NPN IS=5.1E-13 BF=480 NF=1 VAF=99 IKF=3.3 ISE=1.2E-13
+    +NE=1.49 BR=65 NR=1 VAR=24 IKR=1 ISC=1.1E-13 NC=1.31 RE=0.0115 RB=0.15 RC=0.012
+    +CJE=192E-12 VJE=0.75 MJE=0.38 CJC=35E-12 VJC=0.47 MJC=0.34 TF=0.62E-9 TR=20E-9
+    +RCO=1.9 GAMMA=1E-8 QUASIMOD=1 XTB=1.35 TRE1=0.005 TRB1=0.005 TRC1=0.005
+    *
+    *$
+    *

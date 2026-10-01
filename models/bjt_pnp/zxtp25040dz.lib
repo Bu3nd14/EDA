@@ -1,0 +1,66 @@
+* zxtp25040dz.lib - Diodes Incorporated ZXTP25040DZ, 40 V PNP medium-power transistor, SOT-89.
+* VENDOR MODEL, COPIED VERBATIM FROM THE MANUFACTURER'S OWN FILE.
+*
+* USAGE:
+*   .include models/bjt_pnp/zxtp25040dz.lib
+*   Q1 collector base emitter ZXTP25040DZ
+*
+* Role: CANDIDATE fast PNP for the complementary Class A emitter follower
+* output stage (alternative to the MJE15033, whose model has CJE = 3.06 nF,
+* NC-024/NC-025). Complement: ZXTN25040DZ (models/bjt_npn/zxtn25040dz.lib).
+* NOT yet used by any circuit.
+*
+* PINOUT (datasheet DS33755 Rev. 2-2, page 1, top view pin-out figure;
+* the figure carries no pin numbers): B / C / E on the three leads, the
+* tab is COLLECTOR. Standard SOT-89 numbering is pin 1 = B, pin 2 = C
+* (and tab), pin 3 = E - confirm against the KiCad footprint before layout.
+*
+* PROVENANCE - short version. Full record in
+* models/bjt_pnp/zxtp25040dz.provenance.json and the freeze in
+* vendor/bjt_pnp/diodes_inc/ZXTP25040DZ/PROVENANCE.json.
+* Source: https://www.diodes.com/spice/download/2987/ZXTP25040DZ.spice.txt
+* (Content-Type name="ZXTP25040DZ.spice.txt" checked, docs/limitations.md
+* #21; header and .MODEL name read, #20). Frozen byte-for-byte, then
+* appended below this header with NOTHING changed:
+*
+*   diff <(grep -v '^\*' vendor/bjt_pnp/diodes_inc/ZXTP25040DZ/ZXTP25040DZ.spice.txt) \
+*        <(grep -v '^\*' models/bjt_pnp/zxtp25040dz.lib)      # empty
+*
+* The vendor file uses CRLF, this header uses LF: MIXED line endings on
+* purpose, as in the other vendor-derived models. Do not normalise.
+*
+* CROSS-CHECK AGAINST THE DATASHEET (ngspice 47, set temp = 25, L46a):
+*   fT   @ IC = -50 mA, VCE = -10 V, ftest = 100 MHz  275.9 MHz  (typ 270, no min)
+*   fT   @ IC = -20 mA, VCE = -10 V (the follower)    194.1 MHz  (|hfe|=1: 194.1)
+*   Cobo @ VCB = -10 V, 1 MHz                         18.10 pF   (typ 17.4, no max)
+*   hFE  @ IC = -10 mA, VCE = -2 V                    414        (min 300, typ 450)
+*   hFE  @ IC = -1 A,   VCE = -2 V                    295        (min 200, typ 300)
+* The model lands on the datasheet TYPICALS; the datasheet publishes no
+* fT minimum. WEAK POINT: VAF = 23 V and VAR = 4.5 V - a low forward Early
+* voltage, so hFE and output conductance move noticeably with VCE over a
+* +/-15 V swing. NO KF/AF in the model: NO 1/f noise. CJE = 183 pF,
+* CJC = 58 pF at zero bias. QUASIMOD/RCO/GAMMA accepted by ngspice 47
+* with no warning.
+*
+* BELOW THIS LINE: THE VENDOR FILE, BYTE FOR BYTE
+* DIODES INCORPORATED AND ITS AFFILIATED COMPANIES AND SUBSIDIARIES (COLLECTIVELY, "DIODES") 
+* PROVIDE THESE SPICE MODELS AND DATA (COLLECTIVELY, THE "SM DATA") "AS IS" AND WITHOUT ANY 
+* REPRESENTATIONS OR WARRANTIES, EXPRESS OR IMPLIED, INCLUDING ANY WARRANTY OF MERCHANTABILITY 
+* OR FITNESS FOR A PARTICULAR PURPOSE, ANY WARRANTY ARISING FROM COURSE OF DEALING OR COURSE OF 
+* PERFORMANCE, OR ANY WARRANTY THAT ACCESS TO OR OPERATION OF THE SM DATA WILL BE UNINTERRUPTED, 
+* OR THAT THE SM DATA OR ANY SIMULATION USING THE SM DATA WILL BE ERROR FREE. TO THE MAXIMUM 
+* EXTENT PERMITTED BY LAW, IN NO EVENT WILL DIODES BE LIABLE FOR ANY DIRECT OR INDIRECT, 
+* SPECIAL, INCIDENTAL, PUNITIVE OR CONSEQUENTIAL DAMAGES ARISING OUT OF OR IN CONNECTION WITH 
+* THE PRODUCTION OR USE OF SM DATA, HOWEVER CAUSED AND UNDER WHATEVER CAUSE OF ACTION OR THEORY 
+* OF LIABILITY BROUGHT (INCLUDING, WITHOUT LIMITATION, UNDER ANY CONTRACT, NEGLIGENCE OR OTHER 
+* TORT THEORY OF LIABILITY), EVEN IF DIODES HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES, 
+* AND DIODES' TOTAL LIABILITY (WHETHER IN CONTRACT, TORT OR OTHERWISE) WITH REGARD TO THE SM 
+* DATA WILL NOT, IN THE AGGREGATE, EXCEED ANY SUMS PAID BY YOU TO DIODES FOR THE SM DATA.
+
+
+
+.MODEL ZXTP25040DZ PNP IS=4E-13 NF=1 BF=470 IKF=3.5 VAF=23 ISE=10E-14
++ NE=1.49 NR=1 BR=97 IKR=1 VAR=4.5 ISC=7.5e-14 NC=1.2 RE=0.014 RB=0.12
++ RC=0.0111 RCO=0.88 GAMMA=0.6E-9 CJC=58E-12 MJC=0.41 VJC=0.62 CJE=183E-12
++ MJE=0.5 VJE=0.95 TF=3.9E-10 TR=7.8e-9 XTB=1.5 TRE1=0.003 TRB1=0.003
++ TRC1=0.003 QUASIMOD=1

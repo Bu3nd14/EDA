@@ -820,6 +820,151 @@ def tb_mmbt5551(model_file):
         ft_locked=175.683e6, cobo_locked=2.2207e-12, cobo_max=6e-12)
 
 
+# L46a locks for the ZXT pair. ib: the base current that gives IC = 50 mA at
+# VCE = 10 V with the model as frozen. hfe points: (IC, locked, datasheet min).
+IB_FT_ZXTN, IB_FT_ZXTP = 102.789e-6, 88.8475e-6
+HFE_ZXTN = [(10e-3, 447.819, 300.0), (1.0, 311.2, 300.0)]
+HFE_ZXTP = [(10e-3, 409.172, 300.0), (1.0, 291.133, 200.0)]
+FT_ZXTN, FT_ZXTP = 194.6e6, 275.5e6
+COBO_ZXTN, COBO_ZXTP = 12.178e-12, 18.087e-12
+
+
+def _tb_zxt(model_file, model_name, csv_base, sign, ib_ft, hfe_points,
+            ft_locked, cobo_locked, cobo_max):
+    """Shared body of tb_zxtn25040dz() and tb_zxtp25040dz(), the faster
+    output pair L46a measured as an alternative to the MJE15032/33. Diodes
+    datasheets DS33699 (NPN) and DS33755 (PNP) specify hFE at VCE = 2 V
+    (10 mA and 1 A), fT at IC = 50 mA, VCE = 10 V, f = 100 MHz, and C_obo at
+    VCB = 10 V, 1 MHz. The structure is _tb_diodes_bjt()'s - three devices,
+    because the three quantities sit at three operating points - with the
+    datasheet's own conditions, which differ from the MMBT's.
+
+    NO fT MINIMUM IS PUBLISHED for either part, only a typical (190 / 270
+    MHz): the fT check is a regression lock and nothing more. hFE has
+    published minima at both points, and C_obo a maximum on the NPN only;
+    the PNP's cobo_max is None.
+
+    As in _tb_diodes_bjt() the fT bias is a hard-coded base current and the
+    op row must give the datasheet's 50 mA, or the recipe refuses.
+    """
+    op_csv = os.path.join(SCRATCH_DIR, csv_base + "_op.csv")
+    hfe_csv = os.path.join(SCRATCH_DIR, csv_base + "_hfe.csv")
+    ac_csv = os.path.join(SCRATCH_DIR, csv_base + "_ac.csv")
+    v2, v10 = 2.0 * sign, 10.0 * sign
+    vb_start, vb_stop, vb_step = 0.45 * sign, 1.20 * sign, 0.0002 * sign
+    ib_nodes = "b2 0" if sign < 0 else "0 b2"
+    cir = f"""* validate {csv_base}.lib - {model_name} at the datasheet's own conditions
+.include {model_file}
+Q1 c1 b1 0 {model_name}
+Vc1 c1 0 DC {v2}
+Vb1 b1 0 DC {0.6 * sign}
+Q2 c2 b2 0 {model_name}
+Vc2 c2 0 DC {v10}
+Ib2 {ib_nodes} DC {ib_ft:.9g} AC 1
+Q3 c3 0 e3 {model_name}
+Re3 e3 0 1T
+Vc3 c3 0 DC {v10} AC 1
+.control
+set temp = 25
+save @q1[ic] @q1[ib] @q2[ic] i(Vc2) i(Vc3)
+op
+wrdata {op_csv} @q2[ic]
+destroy all
+dc Vb1 {vb_start} {vb_stop} {vb_step}
+wrdata {hfe_csv} @q1[ic] @q1[ib]
+destroy all
+ac dec 2 1meg 100meg
+let hfe = mag(i(Vc2))
+let cre = real(i(Vc3))
+let cim = imag(i(Vc3))
+wrdata {ac_csv} hfe cre cim
+destroy all
+.endc
+.end
+"""
+    TOL_PCT = 0.5
+
+    def check(sets):
+        op_rows, hfe_rows, ac_rows = sets
+        problems, report = [], []
+
+        if len(op_rows) != 1:
+            return False, f"expected one op row, got {len(op_rows)}"
+        ic_ft = abs(op_rows[0]["y0"])
+        if abs(ic_ft - 50e-3) / 50e-3 > 0.001:
+            problems.append(
+                f"the fT bias is off: IC = {ic_ft * 1e3:.4f} mA where the "
+                f"datasheet specifies 50 mA")
+
+        if len(hfe_rows) < 3000:
+            return False, f"expected the full Vb sweep, got {len(hfe_rows)} rows"
+        for target, locked, minimum in hfe_points:
+            hfe = _interp_hfe(hfe_rows, target)
+            if hfe is None:
+                problems.append(f"IC never reached {target:g} A in the sweep")
+                continue
+            if hfe < minimum:
+                problems.append(f"hFE={hfe:.3f} at IC={target:g}A is below the "
+                                f"datasheet minimum {minimum:g}")
+            if abs(hfe - locked) / locked * 100 > TOL_PCT:
+                problems.append(
+                    f"hFE={hfe:.3f} at IC={target:g}A has moved from the value "
+                    f"L46a measured ({locked}) by more than {TOL_PCT}%")
+            report.append(f"hFE@{target:g}A={hfe:.1f}")
+
+        if len(ac_rows) < 3:
+            return False, f"expected the AC sweep, got {len(ac_rows)} rows"
+        r100 = _row_at(ac_rows, 100e6)
+        ft = r100["x"] * r100["y0"]
+        if abs(ft - ft_locked) / ft_locked * 100 > TOL_PCT:
+            problems.append(
+                f"fT={ft / 1e6:.3f}MHz has moved from the value L46a measured "
+                f"({ft_locked / 1e6:.3f}MHz) by more than {TOL_PCT}%")
+        report.append(f"fT={ft / 1e6:.1f}MHz (no published minimum)")
+
+        r1 = _row_at(ac_rows, 1e6)
+        cobo, ratio = _cap_from(r1, "y1", "y2")
+        if ratio > 0.05:
+            problems.append(
+                f"the C_obo reading is not capacitive: |Re/Im| = {ratio:.3g}")
+        if cobo_max is not None and cobo > cobo_max:
+            problems.append(
+                f"C_obo={cobo * 1e12:.4f}pF exceeds the datasheet maximum "
+                f"{cobo_max * 1e12:.0f}pF")
+        if abs(cobo - cobo_locked) / cobo_locked * 100 > TOL_PCT:
+            problems.append(
+                f"C_obo={cobo * 1e12:.4f}pF has moved from the value L46a "
+                f"measured ({cobo_locked * 1e12:.4f}pF) by more than {TOL_PCT}%")
+        report.append(f"C_obo={cobo * 1e12:.3f}pF")
+
+        if problems:
+            return False, "; ".join(problems)
+        return True, ", ".join(report) + ", at IC verified to 50.000 mA"
+    return cir, [op_csv, hfe_csv, ac_csv], [1, 2, 3], check
+
+
+def tb_zxtn25040dz(model_file):
+    """REGRESSION LOCK on the L46a cross-check of the ZXTN25040DZ (Diodes,
+    DS33699 Rev. 3-2), the NPN of the faster output pair L46a measured
+    against the MJE15032. Datasheet: hFE 300 min / 450 typ at 10 mA and
+    1 A (VCE 2 V); fT 190 MHz typ, no minimum; C_obo 11.7 typ, 20 max."""
+    return _tb_zxt(
+        model_file, "ZXTN25040DZ", "bjt_npn_zxtn25040dz", +1,
+        ib_ft=IB_FT_ZXTN, hfe_points=HFE_ZXTN, ft_locked=FT_ZXTN,
+        cobo_locked=COBO_ZXTN, cobo_max=20e-12)
+
+
+def tb_zxtp25040dz(model_file):
+    """REGRESSION LOCK on the L46a cross-check of the ZXTP25040DZ (Diodes,
+    DS33755 Rev. 2-2), the PNP of the pair. Datasheet: hFE 300 min / 450
+    typ at 10 mA, 200 min / 300 typ at 1 A (VCE 2 V); fT 270 MHz typ, no
+    minimum; C_obo 17.4 typ, no maximum published."""
+    return _tb_zxt(
+        model_file, "ZXTP25040DZ", "bjt_pnp_zxtp25040dz", -1,
+        ib_ft=IB_FT_ZXTP, hfe_points=HFE_ZXTP, ft_locked=FT_ZXTP,
+        cobo_locked=COBO_ZXTP, cobo_max=None)
+
+
 def _tb_mje(model_file, model_name, csv_base, sign, ib_ft, hfe_points,
             ft_locked):
     """Shared body of tb_mje15032() and tb_mje15033(), the two halves of
@@ -1326,6 +1471,9 @@ def build_registry():
     reg["mosfet_n/dmn6040svt_sottosoglia.lib"] = lambda p: tb_dmn6040svt_sub(p)
     reg["optocoupler/vom1271.lib"] = lambda p: tb_vom1271(p)
     reg["optocoupler/vtl5c4_comportamentale.lib"] = lambda p: tb_vtl5c4(p)
+    # L46a - the faster output pair measured against the MJE15032/33.
+    reg["bjt_npn/zxtn25040dz.lib"] = lambda p: tb_zxtn25040dz(p)
+    reg["bjt_pnp/zxtp25040dz.lib"] = lambda p: tb_zxtp25040dz(p)
     reg["opamp/generic_opamp.lib"] = lambda p: tb_opamp(p)
     reg["subckt_generic/generic_transformer.lib"] = lambda p: tb_transformer(p)
     return reg

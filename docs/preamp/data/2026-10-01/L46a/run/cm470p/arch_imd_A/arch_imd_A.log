@@ -1,0 +1,101 @@
+warning, model type mismatch in line
+    q121a nmiri nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: arch_imd_a - l46a: il deck dell'architetto (l43a) col blocco della variante cm470p
+
+Warning: Model issue on line 122 :
+  .model lsk489a njf(beta=2.2m betatce=-.5 rd=11 rs=30 lambda=4.3m vto=-1. ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+unrecognized parameter (mj) - ignored
+
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+nref                                  -13.6698
+vminus                                     -15
+ncasc                                   9.8682
+nx                                      1.0048
+nhi                                     13.717
+out                                 -0.0154538
+fb                                  -0.0154537
+vplus                                       15
+nrefm                                 -14.3349
+d1n                                    9.18037
+g1                                 9.43137e-10
+s1                                   0.0622975
+d2n                                    9.18089
+g2                                  -0.0154537
+s2                                   0.0578863
+src                                  -0.165895
+nte                                   -14.3752
+nmiri                                  13.8068
+nme1                                   14.5134
+nme2                                   14.5131
+nve                                    14.3767
+ny                                    -1.00645
+nvle                                   -14.386
+nbb                                   -0.29298
+nbn                                    1.00282
+nen                                   0.435185
+nbp                                   -1.00558
+nep                                   -0.46632
+in                                  1.3938e-11
+rg                                  -0.0154537
+rg10                                -0.0154537
+vsn                                          0
+vmid                                         0
+outa                                -0.0154538
+jack                                         0
+vs2#branch                         9.29198e-12
+vs1#branch                         9.29198e-12
+vmm#branch                           0.0336203
+vpp#branch                          -0.0325896
+
+ Reference value :  2.00001e-03 Reference value :  2.42673e-03 Reference value :  2.83637e-03 Reference value :  3.21555e-03 Reference value :  3.67309e-03
+No. of Data Rows : 100001
+Fourier analysis for v(out):
+  No. Harmonics: 24, THD: 2.65371e+06 %, Gridsize: 16384, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -0.0153692228   0               0               0              
+ 1       1000            0.0001017697814 89.04063788     1               0              
+ 2       2000            1.83231975e-05  90.29048592     0.1800455621    1.249848042    
+ 3       3000            1.073402964e-06 90.37184585     0.01054736435   1.331207965    
+ 4       4000            2.500776589e-08 90.43788273     0.0002457287964 1.397244844    
+ 5       5000            4.96185424e-10  -93.6125679     4.875567356e-06 -182.653206    
+ 6       6000            6.187064511e-11 -128.723512     6.079471162e-07 -217.76415     
+ 7       7000            3.672486446e-11 177.6244574     3.60862173e-07  88.58381949    
+ 8       8000            3.551318081e-11 177.8715896     3.489560489e-07 88.83095167    
+ 9       9000            3.48824842e-11  -179.429718     3.427587612e-07 -268.470355    
+ 10      10000           3.237464716e-11 -179.920658     3.181165049e-07 -268.961295    
+ 11      11000           3.200244381e-11 179.6843303     3.144591977e-07 90.6436924     
+ 12      12000           5.573073172e-11 -14.1427214     5.476157162e-07 -103.183359    
+ 13      13000           4.361494632e-11 -7.3982982      4.285648031e-07 -96.4389361    
+ 14      14000           1.977937075e-10 97.85844734     1.943540654e-06 8.817809464    
+ 15      15000           1.177566451e-09 -103.740469     1.157088513e-05 -192.781106    
+ 16      16000           1.74151473e-07  -95.9844794     0.001711229705  -185.025117    
+ 17      17000           4.416147867e-06 -95.5105719     0.04339350843   -184.55121     
+ 18      18000           4.868367275e-05 -95.6996424     0.4783706134    -184.74028     
+ 19      19000           1.909621235     -0.8595493      18764.12829     -89.9001872    
+ 20      20000           1.909714115     -0.904848159    18765.04095     -89.945486     
+ 21      21000           5.078719113e-05 -95.1960635     0.4990399943    -184.236701    
+ 22      22000           4.630409338e-06 -94.886133      0.04549886297   -183.926771    
+ 23      23000           1.833425843e-07 -95.2072894     0.00180154248   -184.247927    
+
+Note: Simulation executed from .control section 

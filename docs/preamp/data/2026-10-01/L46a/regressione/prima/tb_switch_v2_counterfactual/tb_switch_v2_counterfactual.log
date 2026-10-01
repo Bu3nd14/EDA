@@ -1,0 +1,46 @@
+warning, model type mismatch in line
+    q121a nmiri nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: tb_switch_v2_counterfactual.cir - what the rejected arrangement would do
+
+Warning: Model issue on line 122 :
+  .model lsk489a njf(beta=2.2m betatce=-.5 rd=11 rs=30 lambda=4.3m vto=-1. ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+unrecognized parameter (mj) - ignored
+
+--- A: contact CLOSED (R_f = 1.50k), R_g strapped: the +10 dB state ---
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 1
+v(out) = -4.87014e-02
+v(fb) = -1.54507e-02
+v(nx) = 9.713668e-01
+v(ny) = -1.03988e+00
+--- B: contact OPEN (R_f = 1e12), R_g still strapped: loop is BROKEN ---
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 1
+v(out) = -1.38711e+01
+v(fb) = -2.89520e-09
+v(nx) = -1.30435e+01
+v(ny) = -1.47149e+01
+--- C: closed again, to prove B was not a solver artefact ---
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 1
+v(out) = -4.87014e-02
+v(fb) = -1.54507e-02
+Note: Simulation executed from .control section 

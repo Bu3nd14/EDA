@@ -1,0 +1,248 @@
+warning, model type mismatch in line
+    q121a nmiri nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: tb_zout_psrr_noise.cir - l46a esplorazione, variante zxt_cm330p (blocco da inc/zxt_cm330p.inc)
+
+Warning: Model issue on line 122 :
+  .model lsk489a njf(beta=2.2m betatce=-.5 rd=11 rs=30 lambda=4.3m vto=-1. ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+unrecognized parameter (mj) - ignored
+
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Note: True gmin stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Note: True gmin stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Note: True gmin stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+########## Zout at the jack, load removed, both gain modes ##########
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 81
+z20                 =  1.69338e+03
+z1k                 =  5.79233e+01
+z20k                =  4.70210e+01
+za20                =  6.21505e-03
+za1k                =  1.08333e-02
+za20k               =  1.77714e-01
+za100k              =  8.96934e-01
+MODE=0db
+z20 = 1.693378e+03
+z1k = 5.792333e+01
+z20k = 4.702102e+01
+za20 = 6.215055e-03
+za1k = 1.083332e-02
+za20k = 1.777136e-01
+za100k = 8.969343e-01
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 81
+z20                 =  1.69338e+03
+z1k                 =  5.79233e+01
+z20k                =  4.70286e+01
+za20                =  8.82647e-03
+za1k                =  1.53847e-02
+za20k               =  2.51922e-01
+za100k              =  1.22230e+00
+MODE=3db
+z20 = 1.693378e+03
+z1k = 5.792329e+01
+z20k = 4.702862e+01
+za20 = 8.826469e-03
+za1k = 1.538471e-02
+za20k = 2.519217e-01
+za100k = 1.222300e+00
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 81
+z20                 =  1.69338e+03
+z1k                 =  5.79232e+01
+z20k                =  4.70693e+01
+za20                =  1.95917e-02
+za1k                =  3.41445e-02
+za20k               =  5.57265e-01
+za100k              =  2.52405e+00
+MODE=10db
+z20 = 1.693378e+03
+z1k = 5.792316e+01
+z20k = 4.706927e+01
+za20 = 1.959171e-02
+za1k = 3.414449e-02
+za20k = 5.572652e-01
+za100k = 2.524047e+00
+########## PSRR (input source silenced) ##########
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 81
+p100                =  8.08411e+01
+p1k                 =  6.25162e+01
+p10k                =  4.25356e+01
+p100k               =  2.24465e+01
+PSRR+ MODE=0db (dB, bigger is better)
+p100 = 8.084109e+01
+p1k = 6.251615e+01
+p10k = 4.253564e+01
+p100k = 2.244646e+01
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 81
+p100                =  7.77946e+01
+p1k                 =  5.94697e+01
+p10k                =  3.94931e+01
+p100k               =  1.97580e+01
+PSRR+ MODE=3db (dB, bigger is better)
+p100 = 7.779464e+01
+p1k = 5.946973e+01
+p10k = 3.949309e+01
+p100k = 1.975799e+01
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 81
+p100                =  7.08708e+01
+p1k                 =  5.25457e+01
+p10k                =  3.25760e+01
+p100k               =  1.34595e+01
+PSRR+ MODE=10db (dB, bigger is better)
+p100 = 7.087082e+01
+p1k = 5.254566e+01
+p10k = 3.257604e+01
+p100k = 1.345947e+01
+########## PSRR from V- ##########
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 81
+p100                =  8.39354e+01
+p1k                 =  1.01554e+02
+p10k                =  1.00842e+02
+p100k               =  7.78628e+01
+PSRR- MODE=0db (dB, bigger is better)
+p100 = 8.393543e+01
+p1k = 1.015542e+02
+p10k = 1.008422e+02
+p100k = 7.786276e+01
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 81
+p100                =  8.08890e+01
+p1k                 =  9.85062e+01
+p10k                =  9.77923e+01
+p100k               =  7.51654e+01
+PSRR- MODE=3db (dB, bigger is better)
+p100 = 8.088904e+01
+p1k = 9.850622e+01
+p10k = 9.779234e+01
+p100k = 7.516539e+01
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 81
+p100                =  7.39652e+01
+p1k                 =  9.15776e+01
+p10k                =  9.08603e+01
+p100k               =  6.88493e+01
+PSRR- MODE=10db (dB, bigger is better)
+p100 = 7.396521e+01
+p1k = 9.157757e+01
+p10k = 9.086029e+01
+p100k = 6.884931e+01
+########## output noise 20 Hz - 20 kHz ##########
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPNote: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Note: True gmin stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+ARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+MODE=0db  RSRC=430 (phono cathode follower)
+onoise_total = 1.234417e-06
+inoise_total = 1.235685e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+MODE=3db  RSRC=430 (phono cathode follower)
+onoise_total = 1.661007e-06
+inoise_total = 1.171560e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+MODE=10db  RSRC=430 (phono cathode follower)
+onoise_total = 3.405816e-06
+inoise_total = 1.083668e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+RRG=1G  RSRC=1 ohm (intrinsic)
+onoise_total = 1.175558e-06
+inoise_total = 1.176261e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 151
+
+No. of Data Rows : 1
+RRG=0.1  RSRC=2500 (attenuator at mid-rotation, +10 dB) - WORST CASE
+onoise_total = 4.284664e-06
+inoise_total = 1.366117e-06
+Note: Simulation executed from .control section 

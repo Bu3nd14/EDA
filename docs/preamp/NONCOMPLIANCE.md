@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-10-01** (L43b, la revisione dell'utente: **aperte NC-047**, il PSRR del rail positivo, e **NC-048**, nessun placement e routing di prova, entrambe bloccanti per G1, trovate dall'utente; **NC-049** S del mute a 12 mA mai misurato (maggiore), **NC-050** la tenuta di `VRELAY` scesa (minore), **NC-051** il commento di `C_VRELAY` (minore), **NC-052** i CSV citati dalla nota su E5 che non esistono (minore), trovate dall'orchestratore e presentate dopo la lettura dell'utente; report `reports/2026-10-01-L43b-revisione-dossier.md`; L43a: **aperte NC-039…NC-046**, i rilievi dell'architetto avversariale accettati dall'utente, con la severità decisa da lui — NC-039, NC-040, NC-041 bloccanti per G1, NC-043 e NC-044 bloccanti per G2, NC-042 maggiore, NC-045 e NC-046 minori; report `reports/2026-09-27-L43a-esiti-architetto.md`; L42c: il requisito di NC-037 è ora P9 (a), ≤ 0,5 W alla presa, obiettivo del progetto — ADR-053; nessuna voce aperta o chiusa; L28: **NC-027 chiusa**, i pin SS dell'LSK489 definiti dalla nota applicativa del costruttore, flottanti — ADR-052; L41c: **NC-036 chiusa**, il banco di L30 col circuito vero dell'alimentatore, e il corto della linea a 12 V dei relè accettato sotto il tetto — ADR-051; L41b2: NC-038 chiusa, la cima delle LDR a 12 mA — ADR-050; NC-036 aggiornata, il firmware del temporizzatore provato sull'host e sul circuito; L41b1: NC-036 aggiornata, il temporizzatore esiste come hardware in `psu.py` senza firmware; NC-037 aggiornata, la causa tolta e la chiusura legata alla perdita a vuoto di T2; NC-038 aperta, il LED della VTL5C4 non regge 20 mA nel telaio caldo — ADR-049; L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-10-01** (L46a, la compensazione del blocco: **NC-039 chiusa** — il VAS a ~10,7 mA e il Miller a 470 pF, ADR-054, e V4 a tetti assoluti a 0,2 V RMS, ADR-055; NC-047 aggiornata col PSRR+ del blocco nuovo, resta a L46b; NC-041 aggiornata, la continua del blocco a −26 mV; report `reports/2026-10-01-L46a-compensazione.md`; L43b, la revisione dell'utente: **aperte NC-047**, il PSRR del rail positivo, e **NC-048**, nessun placement e routing di prova, entrambe bloccanti per G1, trovate dall'utente; **NC-049** S del mute a 12 mA mai misurato (maggiore), **NC-050** la tenuta di `VRELAY` scesa (minore), **NC-051** il commento di `C_VRELAY` (minore), **NC-052** i CSV citati dalla nota su E5 che non esistono (minore), trovate dall'orchestratore e presentate dopo la lettura dell'utente; report `reports/2026-10-01-L43b-revisione-dossier.md`; L43a: **aperte NC-039…NC-046**, i rilievi dell'architetto avversariale accettati dall'utente, con la severità decisa da lui — NC-039, NC-040, NC-041 bloccanti per G1, NC-043 e NC-044 bloccanti per G2, NC-042 maggiore, NC-045 e NC-046 minori; report `reports/2026-09-27-L43a-esiti-architetto.md`; L42c: il requisito di NC-037 è ora P9 (a), ≤ 0,5 W alla presa, obiettivo del progetto — ADR-053; nessuna voce aperta o chiusa; L28: **NC-027 chiusa**, i pin SS dell'LSK489 definiti dalla nota applicativa del costruttore, flottanti — ADR-052; L41c: **NC-036 chiusa**, il banco di L30 col circuito vero dell'alimentatore, e il corto della linea a 12 V dei relè accettato sotto il tetto — ADR-051; L41b2: NC-038 chiusa, la cima delle LDR a 12 mA — ADR-050; NC-036 aggiornata, il firmware del temporizzatore provato sull'host e sul circuito; L41b1: NC-036 aggiornata, il temporizzatore esiste come hardware in `psu.py` senza firmware; NC-037 aggiornata, la causa tolta e la chiusura legata alla perdita a vuoto di T2; NC-038 aperta, il LED della VTL5C4 non regge 20 mA nel telaio caldo — ADR-049; L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -3347,7 +3347,7 @@ resta l'8 %.
 | Requisito | **PR-8** (la distorsione non cresce verso gli acuti) · PR-7 · **V4**, V1 · **ADR-042** («Da riaprire se: lo slew a 20 kHz si sente o si misura»), ADR-019 §1, ADR-053 |
 | Severità | **bloccante** (decisione dell'utente, 2026-09-27: «il suono é quello che conta di piú alla fine»): impedisce G1 |
 | Aperta da | `reports/2026-09-27-L43a-architetto-avversariale.md`, rilievo **R1**. Trovata dall'**architetto avversariale**, accettata dall'utente in L43a |
-| Stato | aperta |
+| Stato | **CHIUSA il 2026-10-01 da L46a** — il VAS a ~10,7 mA e il Miller a 470 pF (ADR-054), V4 con tetti assoluti a 0,2 V RMS (ADR-055), decisioni dell'utente. Vedi «Chiusura» in fondo alla voce |
 
 **Evidenza.** Deck dell'architetto, un blocco di `gain_block_flat.inc` coi 7 modelli del
 costruttore, sorgente 2,5 kΩ, carico 10 kΩ dopo 47 Ω e 4,7 µF, 2 V RMS, `.four`
@@ -3382,6 +3382,26 @@ banda. Il livello musicale reale a 19–20 kHz è molto sotto il fondo scala del
 - Da rivedere quando si riscrive V4: la frase di ADR-053 «la coppia differenziale cancella la
   2ª» nel modello non regge a 20 kHz, dove la h2 è l'armonica più alta (osservazione
   dell'architetto, non un rilievo).
+
+**Chiusura (L46a, 2026-10-01).** Report `reports/2026-10-01-L46a-compensazione.md`, dati
+`data/2026-10-01/L46a/`.
+- **Il livello**: l'utente ha deciso −20 dB, 0,2 V RMS in uscita (~99 dB SPL a 1 m); i 2 V
+  dell'architetto restano come stress.
+- **La topologia** (ADR-054, opzione A dell'utente fra tre): R123 e R126 da 91 a 56 Ω (VAS da
+  6,8 a ~10,7 mA), R128 1,58 kΩ, C124 470 pF. Nessuna parte nuova. La radice era il nodo del VAS
+  che non riusciva a pilotare la CJE dei MJE: driver o dispositivi d'uscita più veloci (ZXT) da
+  soli compravano margine ma non distorsione. Al livello deciso, peggiore sui tre modi: THD a
+  20 kHz **0,0017 → 0,00059 %**, IMD CCIF **−96,3 → −119,2 dB** (prodotto a ~−26 dB SPL),
+  armoniche dalla 5ª −185 dB; a 2 V **0,17 → 0,0070 %**. V1 ≥ **64,94°** (gruppo B 65,14°).
+- **V4 decidibile** (ADR-055): tetti assoluti a 0,2 V RMS (THD a 20 kHz ≤ 0,001 %, dalla 5ª
+  ≤ −140 dB, IMD ≤ −110 dB) e a 2 V (≤ 0,01 %). La clausola «dello stesso ordine» non era
+  soddisfacibile: la crescita minima su 25 varianti è ~25 dB, la pendenza dell'anello. Il blocco
+  nuovo regge tutti i tetti; quello di ADR-042 nessuno dei tre a 20 kHz.
+- **Il margine di 60°** di PR-7 non è stato riesaminato: nessuna delle tre finaliste lo chiedeva, e
+  la scelta lo regge con 4,9°. La voce «si riesamina insieme» resta all'utente, se vuole.
+- **La frase di ADR-053 sulla 2ª** resta un'osservazione: nel modello la h2 domina a ogni
+  frequenza anche col blocco nuovo (−105 dB a 20 kHz e 0,2 V). Non è riscritta qui.
+- **Resta fuori**: il tetto di THD+N (al prototipo), e le cifre sono di modello (NC-024, NC-025).
 
 ### NC-040 — L'ingresso è accoppiato in continua: il cambio d'ingresso porta sulle uscite la differenza fra le continue delle sorgenti
 
@@ -3437,6 +3457,11 @@ continue diverse. ADR con la scelta dell'utente.
 - Il volume aggiunto agli eventi del banco di V2, con uno scatto in cima alla corsa a ogni
   guadagno.
 - La frase del dossier corretta, rigenerando il dossier.
+
+**Aggiornamento (L46a, 2026-10-01): la continua è peggiorata.** Col VAS a ~10,7 mA (ADR-054) la
+continua all'uscita del blocco passa da **−15,45 a −26,1 mV** (`tb_op`, corrente di base del VAS
+più alta), e il blocco A la porta su trim e volume. Il rimedio indicato sopra la toglie in ogni
+caso; L48 la misura sul circuito nuovo.
 
 ### NC-042 — Nessuna analisi dei guasti singoli della scheda audio: il tetto di non-danno vale solo per l'alimentatore
 
@@ -3593,6 +3618,15 @@ la quota di ADR-020 verificata su uno spettro simulato dei rail. In entrambi i c
 ADR-020 ≤ 1 µV calcolata sul circuito che ne esce. La verifica finale resta la misura sul
 prototipo (NC-011).
 
+**Aggiornamento (L46a, 2026-10-01): la compensazione nuova ne recupera una parte.** Col blocco di
+ADR-054 (VAS ~10,7 mA, C124 470 pF) il PSRR+ a +10 dB è **66,9 / 49,5 / 29,5 / 23,5 dB** a
+100 Hz / 1 / 10 / 20 kHz (era 62,6 / 43,0 / 23,0 / 17,1), `data/2026-10-01/L46a/regressione/dopo/
+tb_zout_psrr_noise/`. Il rail − a +10 dB perde 2,5 dB a 100 Hz (73,3 → 70,7) e ne guadagna
+3,7 a 10 kHz. In L46a il PSRR+ è risultato **dipendere solo dal Miller** (470 pF dà 29,5 dB a
+10 kHz in ogni topologia misurata): un Miller più piccolo, coi dispositivi d'uscita ZXT, arrivava
+a 36,0 dB, e l'utente l'ha scartato (ADR-054). La voce resta aperta: il rimedio, i limiti di
+ADR-020 ricalcolati e la decisione sono di **L46b**.
+
 ### NC-048 — Il dossier non garantisce che il progetto sia fattibile: nessun placement e routing di prova
 
 | | |
@@ -3690,6 +3724,15 @@ rail + a +10 dB, coerente coi 23,03 dB della tabella.
 comunque i limiti di ADR-020. È una correzione di fonte, non del requisito: nessuna ADR.
 
 ## Voci chiuse
+
+**NC-039 — Coi modelli la distorsione cresce verso gli acuti, e il Miller da 1 nF ne costa 20–27 dB**
+(bloccante per G1). **CHIUSA il 2026-10-01 da L46a.**
+- Il VAS a ~10,7 mA, C124 470 pF, R128 1,58 kΩ, nessuna parte nuova (ADR-054, opzione A
+  dell'utente): a 0,2 V RMS THD a 20 kHz 0,00059 %, IMD −119,2 dB; a 2 V 0,0070 %; V1 ≥ 64,94°.
+- V4 con tetti assoluti a un livello dichiarato (ADR-055); il tetto di THD+N resta al prototipo.
+
+Il testo completo della voce resta sopra, con la sua «Chiusura». Report:
+`reports/2026-10-01-L46a-compensazione.md`.
 
 **NC-027 — I pin SS dell'LSK489 sono disegnati dal suo datasheet ma non definiti** (minore).
 **CHIUSA il 2026-09-26 da L28.**

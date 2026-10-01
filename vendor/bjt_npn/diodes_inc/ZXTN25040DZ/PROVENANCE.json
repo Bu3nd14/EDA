@@ -1,0 +1,74 @@
+{
+  "part_name": "ZXTN25040DZ (40 V NPN low-saturation medium-power transistor, SOT-89; orderable ZXTN25040DZTA, marking 1C8)",
+  "vendor_name": "Diodes Incorporated (ex Zetex)",
+  "device_class": "bjt_npn",
+  "product_page": "https://www.diodes.com/part/view/ZXTN25040DZ (returns HTTP 403 to automated clients, re-checked 2026-10-01; the manufacturer evidence used is the datasheet, which the same host serves normally)",
+  "date_obtained": "2026-10-01",
+  "lotto": "L46a",
+  "obtained_by": "AI agent (Claude Sonnet 5.5, sourcing agent, L46a) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from Diodes Incorporated's own host (www.diodes.com), not from a distributor and not from a mirror. Byte-for-byte as served.",
+  "license_notes": "Manufacturer datasheet and manufacturer-published SPICE model, redistributed here unmodified for engineering traceability only. Copyright remains Diodes Incorporated. The model file carries the vendor's own AS-IS warranty disclaimer, reproduced unaltered.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh (must be run: files were added with default mode and are frozen by that script)",
+  "why_this_part": "Candidate for the 'faster complementary output pair' alternative to the MJE15032/MJE15033 emitter follower (NC-024, NC-025: model CJE 3.06 nF, model fT below datasheet minimum, forcing a 1 nF Miller). The manufacturer's model has CJE = 192 pF and fT about 150 MHz at the follower's 20 mA. Chosen over onsemi KSC3503/KSA1381 (which also have manufacturer models for both polarities and even smaller capacitances) because onsemi lists KSC3503DS as 'Last Shipments' and KSC3503DSTU as 'Obsolete' on its own product page (read 2026-10-01): the NPN half is end-of-life, which fails the project's T8. Chosen over BD139/BD140 because those datasheets specify no fT or Cob at all and half the grades are discontinued.",
+  "files": [
+    {
+      "original_filename": "ZXTN25040DZ.spice.txt",
+      "role": "spice_model",
+      "url": "https://www.diodes.com/spice/download/2802/ZXTN25040DZ.spice.txt",
+      "served_content_type": "text/plain; name=\"ZXTN25040DZ.spice.txt\";charset=UTF-8",
+      "bytes": 1664,
+      "sha256": "fbdb446480688d842987d6baedeb0bbe98f3d3af1a94a97c540046004759338c",
+      "local_filename": "ZXTN25040DZ.spice.txt",
+      "renamed": false
+    },
+    {
+      "original_filename": "ZXTN25040DZ.pdf",
+      "role": "datasheet",
+      "url": "https://www.diodes.com/assets/Datasheets/ZXTN25040DZ.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 553942,
+      "pages": 8,
+      "sha256": "e58c8083203ebe3cc0e204b44d00b4f46013302eb045043f649f009a6ce58ce5",
+      "local_filename": "ZXTN25040DZ.pdf",
+      "renamed": false
+    }
+  ],
+  "how_the_model_url_was_found": "Diodes' model index page answers 403. Per docs/limitations.md #21 the id alone selects the file, so ids 2800-3060 were probed and the NAME in the response Content-Type was read for each. id 2802 answers name=\"ZXTN25040DZ.spice.txt\". The file was then opened and its own header read: '*ZETEX ZXTN25040DZ Spice Model v1.0 Last revision 01/06/07' and '.MODEL ZXTN25040DZ NPN' - the right part, SOT-89 variant (limitations #20).",
+  "revision_note": "Datasheet footer: 'Document number: DS33699 Rev. 3 - 2', January 2021. Model: 'Spice Model v1.0 Last revision 01/06/07' (a 2007 Zetex model).",
+  "limits_read_with_their_conditions": {
+    "BV_CEO": "40 V MINIMUM (63 V typ) at IC = 10 mA. Against +/-15 V rails (30 V rail-to-rail) it is 1.33x: adequate, not generous. Absolute-maximum and sustaining values for this part are not separately verified here.",
+    "hFE": "300 min / 450 typ at IC = 10 mA, VCE = 2 V (max 900); 300 min / 450 typ at IC = 1 A; 20 min at 5 A.",
+    "fT": "190 MHz TYPICAL, no minimum published, at IC = 50 mA, VCE = 10 V, f = 100 MHz.",
+    "C_obo": "11.7 pF typ, 20 pF MAX at VCB = 10 V, f = 1 MHz.",
+    "P_D": "1.1 W (Note 5, minimum pad, R_thJA 117 C/W), 1.8 W (Note 6, 63 C/W), 2.4 W (Note 7, 51 C/W), 4.46 W (Note 8, 28 C/W). At ~0.37 W per device on the minimum pad: 43 C rise, Tj about 103 C at 60 C ambient against 150 C max.",
+    "I_C": "5 A continuous (design uses 20 mA).",
+    "package": "SOT-89, tab = collector."
+  },
+  "lifecycle": {
+    "status": "NOT CONFIRMED ACTIVE by the manufacturer's page: diodes.com part pages answer 403. Evidence: the datasheet is Rev. 3 January 2021 with no NRND/OBSOLETE/DISCONTINUED text (same control as the MMBT5401 provenance), and Farnell lists ZXTN25040DZTA with prices and stock 101 on findchips.com on 2026-10-01.",
+    "honest_limit": "This is weaker than an explicit 'Active' status string. Recorded as such."
+  },
+  "spice_model": {
+    "status": "FOUND, published by the manufacturer, PROVEN to load and run in ngspice 47 (no warnings).",
+    "model_name": "ZXTN25040DZ",
+    "model_count_in_file": 1,
+    "no_flicker_noise": "No KF/AF: NO 1/f noise. Any noise figure with this device is a floor without flicker.",
+    "pspice_quasi_saturation_parameters": "QUASIMOD=1, RCO=1.9, GAMMA=1E-8 present; ngspice 47 accepts them silently."
+  },
+  "datasheet_cross_check_L46a": {
+    "method": "ngspice 47, set temp = 25 and tnom = 25, bias set by a DC sweep of IB until IC hits the target (printed), AC with the collector AC-shorted by its DC source.",
+    "fT_IC_50mA_VCE_10V_at_100MHz": "194.7 MHz (|hfe| = 1 crossing 194.66 MHz) vs 190 MHz typ.",
+    "fT_IC_20mA_VCE_10V": "149.4 MHz - the current dependence: 23% below the datasheet-condition value.",
+    "C_obo_VCB_10V_1MHz": "12.18 pF vs 11.7 typ / 20 max.",
+    "hFE_10mA_VCE_2V": "452 vs 300 min / 450 typ.",
+    "hFE_1A_VCE_2V": "310 vs 300 min / 450 typ (just inside the minimum).",
+    "dc_hFE_at_follower_point_IC_20mA_VCE_10V": "491 (IB = 40.7 uA).",
+    "verdict": "INSIDE every published window; model sits on the datasheet typicals."
+  },
+  "what_was_NOT_verified": {
+    "stock_quantities_at_mouser_digikey_lcsc": "Mouser and DigiKey answer 403/bot-wall to automated clients; LCSC search is JavaScript-rendered. Stock figures come from findchips.com aggregation (2026-10-01): Farnell 101 pcs (EUR 1.24 at 1, 0.485 at 100), Bristol Electronics 849, IBS Electronics 26000, New Advantage 49000, Avnet 0. Franchised stock is thin.",
+    "manufacturer_status_string": "See lifecycle.",
+    "absolute_maximum_ratings_table": "Not read in detail here; only the electrical characteristics and thermal values above."
+  }
+}

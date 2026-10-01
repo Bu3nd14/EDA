@@ -337,8 +337,8 @@ righe, nessuno stadio ascoltabile fuori dalla classe A.
 
 | Resistenza | Potenza misurata | Nominale richiesta a 60 °C |
 |---|---|---|
-| 47 Ω dell'uscita principale | 1,10 W (corto MAIN, +10 dB, 20 kHz fondo scala) | **≥ 1,1 W** |
-| 22 Ω d'emettitore, blocco B | 0,27 W | ≥ 0,27 W |
+| 47 Ω dell'uscita principale | 1,13 W (corto MAIN, +10 dB, 20 kHz fondo scala; L46a, ADR-054) | **≥ 1,13 W** |
+| 22 Ω d'emettitore, blocco B | 0,28 W (L46a, ADR-054) | ≥ 0,28 W |
 | 47 Ω delle uscite fisse | 0,155 W | ≥ 0,16 W |
 | 22 Ω d'emettitore dei buffer delle fisse (L17) | 0,037 W | ≥ 0,04 W |
 
@@ -577,17 +577,24 @@ funzione della frequenza. Ognuna con la **provenienza del modello**
 dichiarata accanto: una cifra di distorsione ottenuta da un modello
 trascritto a mano da PDF (ADR-013) va riportata con quel caveat.
 
-**La distorsione: niente di aspro** (L42c, **ADR-053**). Conta il carattere più del numero, e
-nessuna armonica ha una forma preferita. Su ogni uscita, in ogni modo di guadagno:
-- **la distorsione non cresce verso gli acuti**: la THD a 20 kHz resta dello stesso ordine di
-  quella a 1 kHz;
-- **le armoniche dalla 5ª in su** restano molto sotto la 2ª e la 3ª, e lo spettro cala in modo
-  ordinato;
-- **l'intermodulazione è bassa**, col test a due toni vicini (19 + 20 kHz);
-- **un tetto complessivo di THD+N** fa da garanzia.
+**La distorsione: niente di aspro** (L42c, **ADR-053**; soglie da **ADR-055**, L46a). Conta il
+carattere più del numero, e nessuna armonica ha una forma preferita. Su ogni uscita, in ogni modo
+di guadagno, sorgente 2,5 kΩ, carico 47 Ω + 4,7 µF + 10 kΩ:
 
-**Le soglie numeriche non ci sono ancora**: si fissano con l'utente sulle prime misure coi
-modelli del costruttore, con un'ADR. Fino ad allora V4 si misura e si riporta, senza verdetto.
+| Clausola | Livello | Tetto |
+|---|---|---|
+| **la distorsione non cresce verso gli acuti**: THD a 20 kHz | 0,2 V RMS in uscita (−20 dB, ~99 dB SPL a 1 m) | **≤ 0,001 %** |
+| **le armoniche dalla 5ª in su** (somma), e lo spettro cala in modo ordinato | 0,2 V RMS, 1 / 10 / 20 kHz | **≤ −140 dB** |
+| **l'intermodulazione è bassa**: CCIF 19 + 20 kHz, prodotto a 1 kHz contro un tono | toni uguali, picco composto di 0,2 V RMS | **≤ −110 dB** |
+| prova di stress: THD a 20 kHz | 2 V RMS in uscita | **≤ 0,01 %** |
+| **un tetto complessivo di THD+N** | — | **da fissare** con l'utente sulle prime misure del prototipo |
+
+La versione di ADR-053 diceva «la THD a 20 kHz resta dello stesso ordine di quella a 1 kHz»: in
+L46a nessuna di 25 varianti scende sotto ~25 dB di crescita, che è la pendenza del guadagno
+d'anello, e la clausola non decideva niente (ADR-055). Il banco è
+`data/2026-10-01/L46a/script/genera.py` (famiglie `thd` e `imd`); al blocco di ADR-054 dà
+0,00059 % / −185 dB / −119,2 dB / 0,0070 % (`data/2026-10-01/L46a/sintesi.csv`, riga
+`vas56_cm470p`). Cifre di modello: dove la misura sul prototipo diverge, vale la misura.
 
 ### V5 — Equivalenza fra netlist SPICE e netlist KiCad
 
