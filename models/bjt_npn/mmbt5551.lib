@@ -94,9 +94,11 @@
 * WHAT THIS MODEL DOES NOT HAVE
 * ------------------------------------------------------------------
 *
-* NO FLICKER NOISE: no KF, no AF. In this repo only models/jfet/lsk489.lib
-* has 1/f noise, so every noise figure that leans on this device is a
-* floor without flicker (NC-004), and that belongs next to the number.
+* NO FLICKER NOISE FROM THE MANUFACTURER: the vendor line has no KF, no
+* AF. Until L44 every noise figure that leaned on this device was a floor
+* without flicker (NC-004). Since L44 (ADR-057) a declared upper bound,
+* KF = 1e-13 AF = 1.4, is appended at the END of this file, outside the
+* vendor block - read the L44 section there before quoting a noise figure.
 *
 * No SPICE magnitude suffix appears in the model line, so
 * docs/limitations.md #13 has nothing to bite on here.
@@ -133,3 +135,36 @@
 + TR=1.5E-6 XTB=1.4 QUASIMOD=1 RCO=170 VO=35 GAMMA=2.2E-7
 *
 *$
+*
+* ------------------------------------------------------------------
+* L44 (ADR-057): FLICKER NOISE ADDED - NOT FROM THE MANUFACTURER
+* ------------------------------------------------------------------
+* The '+' line at the very end CONTINUES the .MODEL card above: ngspice
+* joins it to the last card and skips the comment lines in between, and
+* when a parameter repeats the LAST value wins. Measured in L44, not
+* assumed, and re-measured on every run by the [flicker] check in
+* scripts/validate_models.py (base-current noise, KF read back from
+* S(10 Hz) - S(10 kHz)). It sits OUTSIDE the vendor block so that the
+* vendor bytes stay exactly as served: the non-comment diff against the
+* file under vendor/ is this one line and nothing else.
+*
+* WHAT THE NUMBERS ARE. ngspice: i_n^2 = 2 q Ib + KF Ib^AF / f. KF = 1e-13
+* with AF = 1.4 is a DECLARED UPPER BOUND for the small-signal bipolar
+* class, not a fit to this part. Sources (PDFs and readings under vendor/,
+* PROVENANCE files next to them):
+*   - 2N5087, Motorola, Fig. 2 p. 3 (vendor/bjt_pnp/motorola/2N5087/):
+*     AF = 1.35 consistent over 10 uA..1 mA, KF ~2e-14 at 10 Hz, ~5e-14
+*     at 300 Hz;
+*   - Linear Systems databook, "Solving the Noise Puzzle", Fig. 3 p. 329
+*     (LS310/LS350 family): AF ~1.46, KF ~6e-14; worst case ~2x typical.
+*   Typical class value 5e-14; the bound is 2x that.
+*
+* FOR THIS PART THERE IS NO CURVE: the L44 search found none for the
+* 2N5551/MMBT5551 (NXP, Fairchild, Motorola sheets give a single NF
+* figure). The NPN gets the PNP-class bound by DECLARED CHOICE; the
+* nearest NPN curve found (2N5089, a very-high-gain type) is weaker
+* evidence and was not used for a number.
+* What it buys: E5 with this bound on every bipolar device is 5.53 uV
+* worst case against 9.95 (5.1 dB margin); a bound 10x higher still gives
+* 8.57 uV. data/2026-10-01/L44/, report 2026-10-01-L44-rumore-1f.md.
++ KF=1e-13 AF=1.4

@@ -15,8 +15,8 @@ tb_noise_vectors.cir - list the per-device noise vectors ngspice keeps
 *   MJE15032 - vendor model Qmje15032, onsemi (NC-024, NC-025)
 *   MJE15033 - vendor model Qmje15033, onsemi (NC-025)
 *   1N4148   - vendor model D1N914, onsemi (docs/limitations.md #20)
-* Only the LSK489A carries KF: 1/f noise is on the input pair and nowhere
-* else. No model carries part-to-part spread.
+* Since L44 every bipolar model carries KF as well (ADR-057: a declared
+* upper bound). No model carries part-to-part spread.
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block_flat.inc
 VPP VPLUS 0 DC 15
@@ -81,9 +81,9 @@ print all
 *  col13 onoise_r119      col15 onoise_rsrc      col17 onoise_jq110a
 *  col19 onoise_jq110b
 *
-* ATTENZIONE: da L39 i modelli sono del costruttore, ma solo l'LSK489A porta
-* KF. Fuori dalla coppia d'ingresso e' un pavimento senza rumore 1/f
-* (NC-004), non una previsione.
+* ATTENZIONE: da L39 i modelli sono del costruttore; da L44 i bipolari
+* portano KF al tetto dichiarato di ADR-057: un limite per eccesso col
+* flicker (NC-004).
 * ---------------------------------------------------------------------
 wrdata tb_noise_vectors_wrdata.txt onoise_spectrum inoise_spectrum onoise_q121b onoise_q121a onoise_r136 onoise_r120 onoise_r119 onoise_rsrc onoise_jq110a onoise_jq110b
 .endc

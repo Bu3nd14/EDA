@@ -1,0 +1,44 @@
+rumore_dispositivi - L44: spettro per dispositivo, blocco B +10 dB; variante vas_fc1000
+* generato da L44/script/banco.py. Colonne: coppie (frequenza, valore) nell'ordine:
+* onoise_spectrum onoise_q106 onoise_q117 onoise_q118 onoise_q121a onoise_q121b onoise_q122 onoise_q125 onoise_q127 onoise_q132 onoise_q133 onoise_jq110a onoise_jq110b onoise_r119 onoise_r120 onoise_r136 onoise_rsrc
+.include /Users/roberto/EDA/.claude/worktrees/L44/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L44/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L44/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L44/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L44/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L44/models/diodes/1n4148.lib
+.include /Users/roberto/EDA/.claude/worktrees/L44/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L44/docs/preamp/data/2026-10-01/L44/inc/vas_fc1000_flat.inc
+.include /Users/roberto/EDA/.claude/worktrees/L44/docs/preamp/data/2026-10-01/L44/inc/vas_fc1000_modelli.lib
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VSRC SRCN 0 DC 0 AC 1
+RSRC SRCN IN 430
+CSTRAY RG 0 15p
+RRG RG 0 0.1
+CSTRAY10 RG10 0 15p
+RRG10 RG10 0 0.1
+RISO OUT OUTA 47
+COUT OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD JACK 0 100k
+
+.control
+set t = .txt
+alter rsrc = 430
+noise v(JACK) VSRC dec 10 10 20000 1
+setplot noise1
+wrdata rumore_dispositivi_r430$t onoise_spectrum onoise_q106 onoise_q117 onoise_q118 onoise_q121a onoise_q121b onoise_q122 onoise_q125 onoise_q127 onoise_q132 onoise_q133 onoise_jq110a onoise_jq110b onoise_r119 onoise_r120 onoise_r136 onoise_rsrc
+setplot noise2
+print onoise_total
+destroy all
+alter rsrc = 2500
+noise v(JACK) VSRC dec 10 10 20000 1
+setplot noise1
+wrdata rumore_dispositivi_r2500$t onoise_spectrum onoise_q106 onoise_q117 onoise_q118 onoise_q121a onoise_q121b onoise_q122 onoise_q125 onoise_q127 onoise_q132 onoise_q133 onoise_jq110a onoise_jq110b onoise_r119 onoise_r120 onoise_r136 onoise_rsrc
+setplot noise2
+print onoise_total
+destroy all
+.endc
+.end

@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-10-01** (L46b, il PSRR del rail positivo: **NC-047 chiusa** — la cella RC 10 Ω + 1000 µF su specchio e VAS e R120 226 Ω, ADR-056, decisioni dell'utente; la quota di ADR-020 regge con 20 dB su un limite per eccesso dei rail; **NC-052 chiusa**, la nota su E5 ripuntata a CSV che esistono; NC-011 aggiornata, resta la misura sul prototipo; NC-041 aggiornata, la continua nominale del blocco a −6,6 mV; 20 voci aperte, 6 bloccanti; report `reports/2026-10-01-L46b-psrr-rail-positivo.md`; L46a, la compensazione del blocco: **NC-039 chiusa** — il VAS a ~10,7 mA e il Miller a 470 pF, ADR-054, e V4 a tetti assoluti a 0,2 V RMS, ADR-055; NC-047 aggiornata col PSRR+ del blocco nuovo, resta a L46b; NC-041 aggiornata, la continua del blocco a −26 mV; report `reports/2026-10-01-L46a-compensazione.md`; L43b, la revisione dell'utente: **aperte NC-047**, il PSRR del rail positivo, e **NC-048**, nessun placement e routing di prova, entrambe bloccanti per G1, trovate dall'utente; **NC-049** S del mute a 12 mA mai misurato (maggiore), **NC-050** la tenuta di `VRELAY` scesa (minore), **NC-051** il commento di `C_VRELAY` (minore), **NC-052** i CSV citati dalla nota su E5 che non esistono (minore), trovate dall'orchestratore e presentate dopo la lettura dell'utente; report `reports/2026-10-01-L43b-revisione-dossier.md`; L43a: **aperte NC-039…NC-046**, i rilievi dell'architetto avversariale accettati dall'utente, con la severità decisa da lui — NC-039, NC-040, NC-041 bloccanti per G1, NC-043 e NC-044 bloccanti per G2, NC-042 maggiore, NC-045 e NC-046 minori; report `reports/2026-09-27-L43a-esiti-architetto.md`; L42c: il requisito di NC-037 è ora P9 (a), ≤ 0,5 W alla presa, obiettivo del progetto — ADR-053; nessuna voce aperta o chiusa; L28: **NC-027 chiusa**, i pin SS dell'LSK489 definiti dalla nota applicativa del costruttore, flottanti — ADR-052; L41c: **NC-036 chiusa**, il banco di L30 col circuito vero dell'alimentatore, e il corto della linea a 12 V dei relè accettato sotto il tetto — ADR-051; L41b2: NC-038 chiusa, la cima delle LDR a 12 mA — ADR-050; NC-036 aggiornata, il firmware del temporizzatore provato sull'host e sul circuito; L41b1: NC-036 aggiornata, il temporizzatore esiste come hardware in `psu.py` senza firmware; NC-037 aggiornata, la causa tolta e la chiusura legata alla perdita a vuoto di T2; NC-038 aperta, il LED della VTL5C4 non regge 20 mA nel telaio caldo — ADR-049; L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-10-01** (L44, il rumore 1/f fuori dalla coppia d'ingresso: **NC-004 chiusa** — il flicker dei bipolari a un tetto dichiarato dalle curve pubblicate, ADR-057, E5 peggiore 5,531 µV, 5,1 dB dentro 9,95; decisione dell'utente; 19 voci aperte, 5 bloccanti; report `reports/2026-10-01-L44-rumore-1f.md`; L46b, il PSRR del rail positivo: **NC-047 chiusa** — la cella RC 10 Ω + 1000 µF su specchio e VAS e R120 226 Ω, ADR-056, decisioni dell'utente; la quota di ADR-020 regge con 20 dB su un limite per eccesso dei rail; **NC-052 chiusa**, la nota su E5 ripuntata a CSV che esistono; NC-011 aggiornata, resta la misura sul prototipo; NC-041 aggiornata, la continua nominale del blocco a −6,6 mV; 20 voci aperte, 6 bloccanti; report `reports/2026-10-01-L46b-psrr-rail-positivo.md`; L46a, la compensazione del blocco: **NC-039 chiusa** — il VAS a ~10,7 mA e il Miller a 470 pF, ADR-054, e V4 a tetti assoluti a 0,2 V RMS, ADR-055; NC-047 aggiornata col PSRR+ del blocco nuovo, resta a L46b; NC-041 aggiornata, la continua del blocco a −26 mV; report `reports/2026-10-01-L46a-compensazione.md`; L43b, la revisione dell'utente: **aperte NC-047**, il PSRR del rail positivo, e **NC-048**, nessun placement e routing di prova, entrambe bloccanti per G1, trovate dall'utente; **NC-049** S del mute a 12 mA mai misurato (maggiore), **NC-050** la tenuta di `VRELAY` scesa (minore), **NC-051** il commento di `C_VRELAY` (minore), **NC-052** i CSV citati dalla nota su E5 che non esistono (minore), trovate dall'orchestratore e presentate dopo la lettura dell'utente; report `reports/2026-10-01-L43b-revisione-dossier.md`; L43a: **aperte NC-039…NC-046**, i rilievi dell'architetto avversariale accettati dall'utente, con la severità decisa da lui — NC-039, NC-040, NC-041 bloccanti per G1, NC-043 e NC-044 bloccanti per G2, NC-042 maggiore, NC-045 e NC-046 minori; report `reports/2026-09-27-L43a-esiti-architetto.md`; L42c: il requisito di NC-037 è ora P9 (a), ≤ 0,5 W alla presa, obiettivo del progetto — ADR-053; nessuna voce aperta o chiusa; L28: **NC-027 chiusa**, i pin SS dell'LSK489 definiti dalla nota applicativa del costruttore, flottanti — ADR-052; L41c: **NC-036 chiusa**, il banco di L30 col circuito vero dell'alimentatore, e il corto della linea a 12 V dei relè accettato sotto il tetto — ADR-051; L41b2: NC-038 chiusa, la cima delle LDR a 12 mA — ADR-050; NC-036 aggiornata, il firmware del temporizzatore provato sull'host e sul circuito; L41b1: NC-036 aggiornata, il temporizzatore esiste come hardware in `psu.py` senza firmware; NC-037 aggiornata, la causa tolta e la chiusura legata alla perdita a vuoto di T2; NC-038 aperta, il LED della VTL5C4 non regge 20 mA nel telaio caldo — ADR-049; L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -454,7 +454,7 @@ Report: `reports/2026-09-14-L11-mute-e-corto.md`.
 | Requisito | **E5** (rumore in uscita < 10 µV RMS) · **V4** |
 | Severità | **bloccante** |
 | Aperta da | `reports/2026-09-09-gate-G0.md` |
-| Stato | aperta |
+| Stato | **chiusa il 2026-10-01 da L44** (ADR-057, decisione dell'utente) |
 
 **Evidenza.** `docs/preamp/data/2026-09-09/` non contiene alcun file di
 rumore, per scelta dichiarata nel suo `README.md` («`KF = 0` su ogni
@@ -513,6 +513,27 @@ d'ingresso, e nessuna dispersione. E5 peggiore **5,050 µV** (era 4,957,
 V4 il `.four` di `tb_v3_overload.cir` è ora una cifra **di modello**; il fondo di
 distorsione della catena a 1 kHz scende da 0,96 a 0,27 mV (C_pav di V2, principale).
 Né l'una né l'altra sono una misura.
+
+**Chiusura (L44, 2026-10-01): il rumore col flicker a un tetto dichiarato, ADR-057.** Report
+`reports/2026-10-01-L44-rumore-1f.md`, dati `data/2026-10-01/L44/` (README dentro).
+- **Il modo** l'ha scelto l'utente all'inizio: cercare curve pubblicate, e un limite per eccesso
+  dove mancano. Trovate: 2N5087 Motorola (Fig. 2, cinque correnti) e la famiglia LS310/LS350 di
+  Linear Systems (databook, Fig. 3 p. 329); nessuna per MMBT/2N5401–5551 né per i MJE. PDF e
+  letture in `vendor/` coi PROVENANCE.
+- **Il tetto**: KF = 1·10⁻¹³, AF = 1,4 (2× il tipico letto), nei cinque modelli bipolari di
+  `models/`; sui quattro copiati byte per byte la riga è in coda, fuori dal blocco del
+  costruttore. Il controllo `[flicker]` di `validate_models.py` lo rilegge dal rumore, e fallisce
+  sui tre sabotaggi provati.
+- **E5**: caso peggiore 5,083 → **5,531 µV** (~8,3 dB SPL a 1 m), 5,1 dB dentro 9,95; gruppo B
+  4,308 → 4,577 µV. E5 tocca il tetto solo con un flicker ~15 volte il tetto. Col flicker domina il
+  VAS, poi il lato d'uscita dello specchio e i cascode; finali, pozzi e moltiplicatore non pesano
+  (< 0,001 µV anche a un angolo di 100 kHz). Nessuna modifica al circuito.
+- **La regressione**: dei 249 CSV dei 21 deck cambiano solo i 26 delle analisi di rumore.
+- **V4**: le cifre di distorsione coi modelli del costruttore stanno dentro i tetti di ADR-055
+  (L46a); il tetto di THD+N e l'ascolto restano al prototipo, come ADR-055 e P6 già dicono.
+- **Chiusa per decisione dell'utente** («chiuderla tutta», fra chiuderla, chiudere il solo
+  rumore e lasciarla aperta fino al prototipo). Si riapre se il prototipo misura più del tetto
+  (ADR-057, «Da riaprire se»).
 
 ### NC-010 — Le uscite fisse non sono isolate: un apparecchio spento a valle porta il Blocco A in Classe B
 
@@ -3764,6 +3785,15 @@ tabella di L18 dai suoi CSV. La sorgente rigenerata (condensatore ideale) è in
 `data/2026-10-01/L46b/regressione/dopo/tb_zout_psrr_noise/`, anch'essa coi CSV.
 
 ## Voci chiuse
+
+**NC-004 — E5 e V4 senza alcuna evidenza: rumore e distorsione non sono note** (bloccante per
+G1). **CHIUSA il 2026-10-01 da L44.**
+- Il flicker dei bipolari a un tetto dichiarato dalle curve pubblicate (ADR-057): E5 peggiore
+  5,531 µV, 5,1 dB dentro 9,95; si rompe solo a ~15× il tetto. V4 coi tetti di ADR-055 (L46a).
+- Decisione dell'utente; la misura sul prototipo resta il riscontro (ADR-057, «Da riaprire se»).
+
+Il testo completo della voce resta sopra, con la sua «Chiusura». Report:
+`reports/2026-10-01-L44-rumore-1f.md`.
 
 **NC-047 — Il PSRR del rail positivo del blocco è troppo basso per contare sul solo alimentatore**
 (bloccante per G1). **CHIUSA il 2026-10-01 da L46b.**

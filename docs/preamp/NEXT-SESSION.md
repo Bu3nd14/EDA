@@ -1,64 +1,71 @@
-# Prompt per la sessione successiva — L44 (il rumore 1/f fuori dalla coppia d'ingresso)
+# Prompt per la sessione successiva — L47 (la cella del mute)
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L44**, e si ferma. Non iniziarne un secondo.
+LOTTI PICCOLI: questa sessione fa **L47**, e si ferma. Non iniziarne un secondo.
 
 ## Perché questo lotto, e perché adesso
 
 L'ordine dei rimedi scelto dall'utente il 2026-10-01 è **L46 → L44 → L47 → L48 → L49 → G1 → L45 →
-L50**. L46 è chiuso: **L46a** (ADR-054, la compensazione) e **L46b** (ADR-056, la cella RC 10 Ω +
-1000 µF su specchio e VAS, e R120 226 Ω). Il blocco su cui misurare è quello di ADR-056.
+L50**. L46 (a e b) e L44 sono chiusi: il blocco di guadagno è quello di ADR-056, e da L44
+(ADR-057) i bipolari portano il flicker a un tetto dichiarato; NC-004 è chiusa.
 
-- **NC-004 (bloccante per G1)**: E5 e V4 senza evidenza piena. Dopo L39 tutti i dispositivi sono
-  modelli del costruttore, ma **solo l'LSK489A porta KF**: specchio (LS352), VAS e pozzo
-  (MMBT5401/5551), moltiplicatore di Vbe, MJE sono senza flicker. E5 oggi: **5,08 µV** peggiore
-  (`tb_e3_e5_ldr.cir`, +10 dB, 430 Ω), 4,30 µV in `tb_noise_breakdown.cir`, contro 9,95 µV di
-  budget del circuito (ADR-020 ne riserva 1 all'alimentazione): un **pavimento**, non una cifra.
-- I contributori dominanti, da L22 in poi, sono lo **specchio** e le sue degenerazioni (220 /
-  226 Ω), non i JFET: se il loro 1/f è grande, E5 può muoversi molto sotto 1 kHz.
-- La cella di ADR-056 non aggiunge rumore visibile (il 10 Ω è shuntato dai 1000 µF), ma alimenta
-  proprio specchio e VAS: un 1/f su quel nodo ora è filtrato, uno nei dispositivi no.
+L47 viene **prima del placement di prova (L49)** perché cambia una parte, e quindi un footprint:
+
+- **NC-043 (bloccante per G2)**: la VTL5C4 dell'Excelitas è fuori produzione (ultimo ordine 2015).
+  Serve una cella sostitutiva disponibile (Xvive, CoolAudio o altro), col datasheet in `vendor/` e
+  il modello con la provenienza.
+- **NC-045 (minore)**: il pilota delle LDR (DAC a 12 bit, due convertitori esponenziali,
+  compensazione in temperatura, calibrazione a due punti) e Td = 6 s servono un criterio che
+  ADR-040 ha cambiato. L'utente ha già detto «sono disposto a cambiare e a ridurre il tempo di
+  mute»; l'architetto indica Td 1–2 s e un pilota RC più un generatore di corrente.
+- **NC-049 (maggiore)**: S del mute con la cima a 12 mA (ADR-050) non è mai stato misurato.
+- **NC-050 e NC-051 (minori)**: il pilota sta in `psu.py`; chi lo tocca ricorre la tenuta di
+  `VRELAY` a rete −10 % (oggi 36,1 ms contro ≥ 25) e riscrive il commento di `C_VRELAY`.
 
 ## Il mandato
 
 1. **All'inizio, con l'utente** (le domande **per nome**, mai per sigle: «non ricordo sigle a
-   memoria»; i livelli di rumore in **dB SPL** contro una stanza silenziosa, non in µV): **il modo**
-   di dare il 1/f ai dispositivi che non ce l'hanno. Le strade, da mettere in tabella con quello che
-   costano e quanto valgono come evidenza:
-   - **KF/AF ricavati dai datasheet** (curve di rumore in funzione della frequenza, dove ci sono:
-     LS352/LS350, MMBT5401/5551 e famiglie 2N5401/2N5551, MJE15032/33), con la provenienza scritta
-     come per gli altri modelli (`validate_models.py`, ricette);
-   - **un limite per eccesso dichiarato** (un angolo 1/f pessimista per classe di dispositivo),
-     se i datasheet non bastano;
-   - **la misura sul prototipo**, lasciando NC-004 aperta fino a lì (e allora G1 resta bloccato:
-     chiederlo esplicitamente).
-   La scelta è dell'utente; se cambia l'insieme dei progetti conformi o il modo di verificare E5,
-   diventa una **ADR**.
-2. **E5 rimisurato** col 1/f: `tb_e3_e5_ldr.cir` e `tb_noise_breakdown.cir` (e `tb_noise_vectors`
-   per dispositivo), sul banco di L46b (`data/2026-10-01/L46b/script/`, README dentro: famiglia
-   `psrr` = `tb_zout_psrr_noise` + `tb_noise_breakdown`; il controllo `ctrl` deve ridare L46b).
-   Il breakdown per dispositivo a 100 Hz e 1 kHz dice chi domina.
-3. **Se E5 non regge** (> 9,95 µV, o margine che l'utente giudica sottile): le leve vanno misurate
-   e portate all'utente in tabella, non scelte da soli (degenerazione dello specchio, dispositivo
-   dello specchio, corrente). Una modifica al blocco **ricorre anche le catene a valle** (la lezione
-   di L46b, report §8): i 21 deck con `script/regressione.sh`, e la catena dei guasti di L41c coi
-   comandi in `data/2026-10-01/L46b/README.md`.
-4. **Tracciabilità**: ogni valore nuovo in `circuits/preamp/*.py` o in `models/` col commento che
-   punta alla ADR o al lotto; provenienza dei modelli aggiornata e `validate_models.py
-   --check-provenance` pulito.
+   memoria»; i gradini e i livelli in **dB SPL** contro una stanza silenziosa, non in mV):
+   - **se dividere il lotto**. Tre decisioni diverse: la parte (NC-043), il tempo di mute e il
+     pilota (NC-045), e le misure che ne seguono (S, E3, E5, `VRELAY`). L46 è stato diviso così;
+     proporre una divisione, non deciderla;
+   - **il tempo massimo del mute**: oggi il PRB non lo fissa. Se l'utente ne vuole uno, va nel PRB
+     con un'ADR (il PRB si cambia solo con un'ADR, ADR-053).
+2. **La parte** (`bom-component-manager`): sostituti della VTL5C4 verificati disponibili, coi
+   datasheet in `vendor/` (`freeze_vendor.sh`) e le curve resistenza/corrente del LED. Mai un
+   numero di parte plausibile non controllato. In tabella per l'utente: disponibilità, dispersione
+   dichiarata fra esemplari, tempi di salita e discesa, corrente massima del LED a 60 °C (ADR-050 e
+   NC-038 hanno insegnato che il declassamento conta).
+3. **Il modello** della cella scelta, comportamentale dal datasheet come
+   `models/optocoupler/vtl5c4_comportamentale.lib` (la sua intestazione dice come è fatto e cosa
+   non ha: niente rumore), con la provenienza e una ricetta in `validate_models.py`.
+4. **Il pilota e Td**, se l'utente sceglie di semplificarli: le strade misurate e in tabella prima
+   della domanda, non scelte da soli. Poi S ≤ 20 dB in 100 ms su `tb_v2_casopeggiore.cir` e la
+   matrice di V2 (il metodo è in `REQUIREMENTS.md`, V2; gli script in `data/2026-09-25/L29d2/` e
+   `data/2026-09-26/L41c/`), E3 ed E5 su `tb_e3_e5_ldr.cir`, la calibrazione della cima.
+5. **`psu.py`**: la tenuta di `VRELAY` a rete −10 % ricorsa col carico nuovo (NC-050), il commento
+   di `C_VRELAY` riscritto con le cifre di oggi (NC-051), netlist uguale salvo i campi volatili
+   dove il circuito non cambia.
+6. **Le catene a valle** (la lezione di L46b, report §8): una modifica che tocca la scheda audio o
+   l'alimentatore ricorre i 21 deck veloci (`data/2026-10-01/L44/script/regressione.sh` e
+   `confronta_regressione.py`, il riferimento è `data/2026-10-01/L44/regressione/dopo/`), la catena
+   dei guasti di L41c (i comandi in `data/2026-10-01/L46b/README.md`) e il firmware sull'host
+   (blocco 2k di `run_tests.sh`).
+7. **Tracciabilità**: ogni valore nuovo in `circuits/preamp/*.py` col commento che punta alla ADR o
+   al lotto; la provenienza dei modelli aggiornata e `validate_models.py --check-provenance`
+   pulito.
 
 ## Prima di tutto
 
-- `CLAUDE.md`, `docs/limitations.md` (le trappole che falliscono in silenzio: #22 rinumerazione, #24
-  nodi del blocco, #33/#38 il «transient op», #37 le Note dentro le tabelle), e in
-  `docs/preamp/STATE.md` «In breve» e le voci di diario di L46b, L46a, L39, L22.
-- `NONCOMPLIANCE.md`: **NC-004** (tutta, con gli aggiornamenti di L24, L20, L39), NC-020 (f_T
-  dell'LS352), NC-024/NC-025 (i MJE).
-- `decisions/ADR-020*` (la quota e il budget di 9,95 µV), `decisions/ADR-056*`, il report
-  `reports/2026-10-01-L46b-psrr-rail-positivo.md`.
-- I `*.provenance.json` accanto ai modelli in `models/` e le ricette in
-  `scripts/validate_models.py`: come entra un modello con provenienza (l'ultimo esempio sono i
-  ZXT di L46a).
+- `CLAUDE.md`, `docs/limitations.md` (le trappole che falliscono in silenzio: #22 rinumerazione,
+  #24 nodi del blocco, #33/#38 il «transient op», #34 un `alter` che sopravvive a `destroy all`,
+  #36 la PWL lunga ignorata, #37 le Note dentro le tabelle, **#39** un editor che normalizza i
+  CRLF dei file del costruttore), e in `docs/preamp/STATE.md` «In breve» e le voci di diario di
+  L44, L46b, L41b1, L41b2, L29b2.
+- `NONCOMPLIANCE.md`: **NC-043**, **NC-045**, **NC-049**, **NC-050**, **NC-051**, e la chiusa
+  NC-038 (il LED nel telaio caldo).
+- `decisions/ADR-038*`, `ADR-039*`, `ADR-040*`, `ADR-049*`, `ADR-050*`, `ADR-053*` (il PRB);
+  `firmware/preamp_timer/spec/timer_spec.md`.
 
 ## I vincoli
 
@@ -71,7 +78,9 @@ L50**. L46 è chiuso: **L46a** (ADR-054, la compensazione) e **L46b** (ADR-056, 
 
   Si usano comandi semplici, **percorsi assoluti**, script scritti su file con Write, ed Edit per
   i testi. Il venv non è nel worktree: `/Users/roberto/EDA/env/venv/bin/python3`.
-- Le cifre dai modelli sono cifre di modello: conta il trend, non il valore assoluto.
+- I file di `models/` con un blocco del costruttore si modificano **sui byte**, mai con Edit (#39).
+- Le cifre dai modelli sono cifre di modello: conta il trend, non il valore assoluto. Il modello
+  della cella è comportamentale: va scritto accanto a ogni cifra.
 - Un deck con `tran` dopo un `alter` va guardato nel log: «Transient op started» invalida la corsa
   (#33, #38).
 - `docs/preamp/data/` è versionato per regola (`!docs/preamp/data/**`): forme d'onda grosse vanno
@@ -79,18 +88,17 @@ L50**. L46 è chiuso: **L46a** (ADR-054, la compensazione) e **L46b** (ADR-056, 
 
 ## NON fa parte di questo lotto
 
-- la cella del mute, la VTL5C4 e S del mute (L47, che ricorre anche V2 del mute, non rieseguito né
-  in L46a né in L46b); il selettore d'ingresso e la continua del blocco A (L48: con R120 226 Ω è
-  −6,6 mV nominale, ma la dispersione resta); il placement e routing di prova (L49); la FMEA (L45);
-  massa e terra (L50);
-- la compensazione (ADR-054) e la cella (ADR-056): decise;
-- rigenerare il dossier.
+- il selettore d'ingresso e la continua del blocco A (L48); il placement e routing di prova (L49);
+  la FMEA (L45); massa e terra (L50);
+- il blocco di guadagno (ADR-054, ADR-056) e il flicker (ADR-057): decisi;
+- rigenerare il dossier. Quando lo si rigenera, il §14 di `build_dossier.py` dice ancora «solo
+  l'LSK489A porta KF» e «niente distorsione»: testo superato da L44 e L46a.
 
 ## CHIUSURA
 
-1. `STATE.md` con L44 **fatto** e il prossimo lotto (L47) nella tabella.
+1. `STATE.md` con L47 **fatto** (o L47a, se l'utente lo divide) e il prossimo lotto nella tabella.
 2. Riscrivi QUESTO file per il lotto successivo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L44`.
+4. `/bin/zsh scripts/chunk_close.sh L47` (o il nome del sotto-lotto).
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**

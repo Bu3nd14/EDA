@@ -1,0 +1,44 @@
+{
+  "addendum_to": "PROVENANCE.json",
+  "written_by_lotto": "L44",
+  "date": "2026-10-01",
+  "author": "AI agent (Claude Sonnet 5.5, sourcing agent, L44) on behalf of roberto.carmeli@gmail.com",
+  "why_an_addendum_and_not_an_edit": "PROVENANCE.json is frozen read-only. A new document for the same part is added alongside.",
+  "purpose": "Published evidence of 1/f (flicker) noise of Linear Systems bipolar pairs, to derive SPICE KF/AF for the LS350 input mirror.",
+  "added_file": {
+    "title": "Linear Systems Company Data Book, Rev no. A01, 01012024 (347 pages)",
+    "role": "databook_with_application_note",
+    "url": "https://www.linearsystems.com/_files/ugd/4be30b_607189520e6a46f6a40c6d98393625e8.pdf",
+    "linked_from": "https://www.linearsystems.com/bipolartransistors/it120-series ('Company Data Book')",
+    "bytes": 17065226,
+    "pages": 347,
+    "sha256": "0647cbe11b0a6d5c411e58e7f7fc294bf0f98dc4ca780ccc1cea12e98a5da5f8",
+    "local_filename": "4be30b_607189520e6a46f6a40c6d98393625e8.pdf",
+    "renamed": false
+  },
+  "noise_evidence": {
+    "where": "Application note 'Solving the Noise Puzzle with Low-Noise Matched Bipolar Transistor Pairs - LS310 & LS350', databook pages 325-332; Figure 3 'Noise Voltage and Noise Current Density as a Function of Frequency and Collector Current' on databook page 329 of 347 (PDF page 329). The figure is a raster image; read by eye from a 200 dpi render.",
+    "WARNING_attribution": "The figure caption does NOT say which device (LS310 NPN or LS350 PNP) the curves belong to. The note covers both. Treat as 'LS31x/LS35x family, unattributed'. The LS350 datasheet (LS350SeriesDSRevA5.pdf) itself has no noise curves; the LS350 pages of the databook (139-140) contain only the table.",
+    "conditions": "TA = 25 C; Ic = 10 uA (typical and worst case) and 300 uA (typical); Vce and Rs NOT stated (Rs ~ 0 for en, Rs ~ infinity for in is implied by the quantity, not stated); bandwidth 1 Hz density.",
+    "axes_calibration_noise_current": "x: 0.1 Hz .. 10 kHz log; y: 0.1 .. 100 pA/rtHz log",
+    "points_noise_current_pA_per_rtHz": {
+      "Ic_300uA_typ": {"0.63 Hz": 10.0, "100 Hz": 1.0, "~8 kHz": 0.1, "note": "straight line of slope -1/2 in amplitude (pure 1/f in power) over 3.9 decades, no white floor visible"},
+      "Ic_10uA_typ": {"0.1 Hz": 2.8, "1 Hz": 0.9, "~80 Hz": 0.1, "note": "ends at ~0.1 pA, which is about the shot level of Ib ~ 33 nA (0.1 pA)"},
+      "Ic_10uA_worst_case": {"0.1 Hz": 3.8, "~100 Hz": 0.1}
+    },
+    "points_noise_voltage_nV_per_rtHz": {
+      "Ic_300uA_typ": {"0.1 Hz": 18, "1 Hz": 6, "10 Hz": 4.2, "1 kHz and up": 3.3},
+      "Ic_10uA_typ": {"0.1 Hz": 28, "1 Hz": 10, "100 Hz": 7, "10 kHz": 6},
+      "Ic_10uA_worst_case": {"0.1 Hz": 50, "1 Hz": 18, "10 Hz": 11, "1 kHz and up": 7}
+    },
+    "reading_uncertainty": "about +/-15 percent on the value, about +/-0.1 decade on the abscissa (raster, coarse log grid)",
+    "derived_by_agent_not_published": {
+      "excess_1_over_f_current_noise_at_1Hz_A2_per_Hz": {"Ic_300uA": "1e-22 (+/-40 percent)", "Ic_10uA_typ": "7e-25 (+/-40 percent)"},
+      "assumed_hFE": "300 (datasheet: hFE >= 200 at 10 uA..1 mA; actual unknown) so Ib = 1 uA and 33 nA",
+      "AF_from_two_currents": 1.46,
+      "KF_with_AF_1.46_A_units": "5.7e-14 (order of magnitude; depends on assumed hFE)",
+      "corner_where_excess_equals_2qIb": {"Ic_300uA": "about 300 Hz (500 Hz if hFE=500)", "Ic_10uA_typ": "about 65 Hz", "Ic_10uA_worst": "about 130 Hz"}
+    }
+  },
+  "what_was_not_verified": "Which device the Figure 3 curves are. No data at 0.5-1 mA, the LS350 operating point of the project mirror: it is an extrapolation with AF about 1.4."
+}

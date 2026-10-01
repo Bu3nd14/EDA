@@ -1,0 +1,77 @@
+warning, model type mismatch in line
+    q121a nmiri nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: tb_noise_breakdown.cir - l44, variante cascode_fc100000 (modelli da inc/cascode_fc100000_modelli.lib)
+
+Warning: Model issue on line 122 :
+  .model lsk489a njf(beta=2.2m betatce=-.5 rd=11 rs=30 lambda=4.3m vto=-1. ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+unrecognized parameter (mj) - ignored
+
+===== per-device noise contributions at 1 kHz, 0 dB mode, Rsrc=430 =====
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 2
+
+No. of Data Rows : 1
+===== integrated totals, 20 Hz - 20 kHz =====
+A) 0 dB, source 1 ohm      (block A intrinsic)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.590040e-06
+inoise_total = 1.591179e-06
+B) 0 dB, source 430 ohm    (block A on the tube phono)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.634033e-06
+inoise_total = 1.635899e-06
+C) 0 dB, source 2500 ohm   (block B, attenuator mid-rotation)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.831047e-06
+inoise_total = 1.836907e-06
+D) +10 dB, source 2500 ohm (block B worst case)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 5.449778e-06
+inoise_total = 1.737883e-06
+E) +3 dB, source 2500 ohm  (block B, K1 closed, K5 open)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 2.538490e-06
+inoise_total = 1.794220e-06
+Note: Simulation executed from .control section 

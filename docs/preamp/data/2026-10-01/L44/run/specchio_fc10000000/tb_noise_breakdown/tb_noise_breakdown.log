@@ -1,0 +1,73 @@
+
+Note: No compatibility mode selected!
+
+
+Circuit: tb_noise_breakdown.cir - l44, variante specchio_fc10000000 (modelli da inc/specchio_fc10000000_modelli.lib)
+
+Warning: Model issue on line 122 :
+  .model lsk489a njf(beta=2.2m betatce=-.5 rd=11 rs=30 lambda=4.3m vto=-1. ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+unrecognized parameter (mj) - ignored
+
+===== per-device noise contributions at 1 kHz, 0 dB mode, Rsrc=430 =====
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 2
+
+No. of Data Rows : 1
+===== integrated totals, 20 Hz - 20 kHz =====
+A) 0 dB, source 1 ohm      (block A intrinsic)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 9.536525e-06
+inoise_total = 9.544054e-06
+B) 0 dB, source 430 ohm    (block A on the tube phono)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 9.543959e-06
+inoise_total = 9.555589e-06
+C) 0 dB, source 2500 ohm   (block B, attenuator mid-rotation)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 9.579660e-06
+inoise_total = 9.611166e-06
+D) +10 dB, source 2500 ohm (block B worst case)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 3.011304e-05
+inoise_total = 9.592862e-06
+E) +3 dB, source 2500 ohm  (block B, K1 closed, K5 open)
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.359021e-05
+inoise_total = 9.603133e-06
+Note: Simulation executed from .control section 

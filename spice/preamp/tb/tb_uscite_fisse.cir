@@ -26,8 +26,8 @@ tb_uscite_fisse.cir - E4 (Zout) ed E5 (rumore) sulle uscite fisse coi buffer (L1
 *   meno le quote di ADR-020 e ADR-022. Piu', per scomporre, il rumore del
 *   solo blocco A al suo nodo d'uscita con la sorgente da 430 ohm.
 *
-* *** IL RUMORE E' UN PAVIMENTO, NON UNA PREVISIONE *** (tb_zout_psrr_noise):
-* da L39 solo l'LSK489A porta KF; fuori dalla coppia d'ingresso nessun 1/f.
+* IL RUMORE (tb_zout_psrr_noise): da L44 tutti i bipolari portano KF al tetto
+* dichiarato di ADR-057, quindi e' un limite per eccesso, non un pavimento.
 *
 * NOISE E PLOT: ogni `noise` e' seguita da `destroy all`, altrimenti il
 * `setplot noise2` della successiva legge il plot vecchio (limitations #10).

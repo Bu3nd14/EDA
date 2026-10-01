@@ -22,8 +22,8 @@ tb_bias_sweep.cir - find the Vbe-multiplier resistor that centres Iq on 15 mA
 *   MJE15032 - vendor model Qmje15032, onsemi (NC-024, NC-025)
 *   MJE15033 - vendor model Qmje15033, onsemi (NC-025)
 *   1N4148   - vendor model D1N914, onsemi (docs/limitations.md #20)
-* Only the LSK489A carries KF: 1/f noise is on the input pair and nowhere
-* else. No model carries part-to-part spread.
+* Since L44 every bipolar model carries KF as well (ADR-057: a declared
+* upper bound). No model carries part-to-part spread.
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block_flat.inc
 
