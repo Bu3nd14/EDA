@@ -1,0 +1,31 @@
+arch_imd_A - L46a: il deck dell'architetto (L43a) col blocco della variante cm470p
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/docs/preamp/data/2026-10-01/L46a/inc/cm470p.inc
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VS1 VSN VMID SIN(0 1.909 19000)
+VS2 VMID 0 SIN(0 1.909 20000)
+RSRC VSN IN 1.5
+CSTRAY RG 0 15p
+CSTRAY10 RG10 0 15p
+RRG RG 0 1e12
+RRG10 RG10 0 1e12
+RISO OUT OUTA 47
+COUT OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD OUT 0 1.5k
+.options reltol=1e-6 abstol=1e-15 vntol=1e-9
+.control
+set numdgt=10
+set fourgridsize=16384
+set nfreqs=24
+tran 0.02u 4m 2m 0.02u
+fourier 1000 v(OUT)
+.endc
+.end

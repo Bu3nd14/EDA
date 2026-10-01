@@ -1,0 +1,538 @@
+warning, model type mismatch in line
+    q121a nmiri nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: thd_20k - l46a: thd a 20000 hz, blocco b nei tre modi, livelli lo/hi; variante drv_cm220p
+
+Warning: Model issue on line 122 :
+  .model lsk489a njf(beta=2.2m betatce=-.5 rd=11 rs=30 lambda=4.3m vto=-1. ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+unrecognized parameter (mj) - ignored
+
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+nref                                  -13.6698
+vminus                                     -15
+ncasc                                  9.86821
+nx                                     1.72153
+nhi                                    13.7267
+out                                 -0.0151684
+fb                                  -0.0151683
+vplus                                       15
+nrefm                                 -14.3349
+d1n                                    9.18038
+g1                                 2.41015e-08
+s1                                    0.062405
+d2n                                    9.18089
+g2                                  -0.0151683
+s2                                   0.0580753
+src                                  -0.165744
+nte                                   -14.3753
+nmiri                                  13.8067
+nme1                                   14.5133
+nme2                                    14.513
+nve                                     14.386
+ny                                    -1.66491
+nvle                                  -14.3861
+nbb                                   -0.95138
+nbn                                    1.00524
+nen                                   0.437452
+nbp                                   -1.00718
+nep                                  -0.467789
+in                                 2.31723e-08
+rg                                  -0.0151683
+rg10                                -0.0151683
+nd1                                    1.00723
+nd2                                   -1.00806
+vsn                                          0
+outa                                -0.0151684
+jack                                         0
+vs#branch                          9.26893e-12
+vmm#branch                           0.0398463
+vpp#branch                          -0.0388258
+
+ Reference value :  3.48747e-04 Reference value :  7.27467e-04 Reference value :  1.12391e-03 Reference value :  1.50111e-03 Reference value :  1.88933e-03Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+
+No. of Data Rows : 105053
+L46A_CASO modo=0 livello=lo freq=20000 ampin=0.282843
+Fourier analysis for v(vsn):
+  No. Harmonics: 10, THD: 1.91665e-10 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -2.51396126e-14 0               0               0              
+ 1       20000           0.2828428511    -2.48723462e-11 1               0              
+ 2       40000           1.18247085e-13  -117.018464     4.180663735e-13 -117.018464    
+ 3       60000           2.954368856e-13 178.6263386     1.044526614e-12 178.6263386    
+ 4       80000           1.228007527e-13 -68.8437882     4.341660121e-13 -68.8437882    
+ 5       100000          3.750577416e-13 -30.5689705     1.326028712e-12 -30.5689705    
+ 6       120000          9.382656762e-14 -124.017494     3.317268485e-13 -124.017494    
+ 7       140000          9.633465824e-14 -138.949214     3.405942836e-13 -138.949214    
+ 8       160000          9.696266851e-14 -75.3776064     3.428146341e-13 -75.3776064    
+ 9       180000          9.687902128e-14 -49.0741799     3.425188966e-13 -49.0741799    
+
+Fourier analysis for v(out):
+  No. Harmonics: 10, THD: 0.000339469 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -0.015168257    0               0               0              
+ 1       20000           0.2822456486    -0.260432124    1               0              
+ 2       40000           9.58135638e-07  173.5022138     3.394687014e-06 173.7626459    
+ 3       60000           1.494898684e-09 135.2826453     5.29644546e-09  135.5430774    
+ 4       80000           8.089369291e-11 51.2359472      2.86607405e-10  51.49637932    
+ 5       100000          1.254166154e-12 -72.4896727     4.443526976e-12 -72.2292406    
+ 6       120000          2.052682757e-13 -119.137794     7.272681677e-13 -118.877362    
+ 7       140000          1.638401368e-13 -152.287901     5.804877334e-13 -152.027469    
+ 8       160000          1.969374457e-13 -159.045739     6.977519287e-13 -158.785307    
+ 9       180000          1.915910684e-14 23.95126501     6.788096446e-14 24.21169713    
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+nref                                  -13.6698
+vminus                                     -15
+ncasc                                  9.86821
+nx                                     1.72153
+nhi                                    13.7267
+out                                 -0.0151684
+fb                                  -0.0151683
+vplus                                       15
+nrefm                                 -14.3349
+d1n                                    9.18038
+g1                                 2.41015e-08
+s1                                    0.062405
+d2n                                    9.18089
+g2                                  -0.0151683
+s2                                   0.0580753
+src                                  -0.165744
+nte                                   -14.3753
+nmiri                                  13.8067
+nme1                                   14.5133
+nme2                                    14.513
+nve                                     14.386
+ny                                    -1.66491
+nvle                                  -14.3861
+nbb                                   -0.95138
+nbn                                    1.00524
+nen                                   0.437452
+nbp                                   -1.00718
+nep                                  -0.467789
+in                                 2.31723e-08
+rg                                  -0.0151683
+rg10                                -0.0151683
+nd1                                    1.00723
+nd2                                   -1.00806
+vsn                                          0
+outa                                -0.0151684
+jack                                         0
+vs#branch                          9.26893e-12
+vmm#branch                           0.0398463
+vpp#branch                          -0.0388258
+
+ Reference value :  1.48201e-04 Reference value :  5.13901e-04 Reference value :  8.76361e-04 Reference value :  1.22264e-03 Reference value :  1.60922e-03 Reference value :  1.98936e-03Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+
+No. of Data Rows : 105093
+L46A_CASO modo=0 livello=hi freq=20000 ampin=2.82843
+Fourier analysis for v(vsn):
+  No. Harmonics: 10, THD: 1.86507e-10 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -1.39818712e-13 0               0               0              
+ 1       20000           2.828428511     2.473639784e-12 1               0              
+ 2       40000           1.626831689e-13 92.45803182     5.751715777e-14 92.45803182    
+ 3       60000           3.375061398e-12 -7.46085679     1.193263816e-12 -7.46085679    
+ 4       80000           3.948756133e-13 -26.5521498     1.396095435e-13 -26.5521498    
+ 5       100000          3.636949015e-12 -179.754275     1.285855025e-12 -179.754275    
+ 6       120000          6.673616559e-13 -128.849403     2.359478605e-13 -128.849403    
+ 7       140000          9.944424528e-13 156.3614146     3.515883286e-13 156.3614146    
+ 8       160000          2.465130925e-13 149.5274627     8.715549695e-14 149.5274627    
+ 9       180000          1.237797915e-12 -38.8094728     4.376274352e-13 -38.8094728    
+
+Fourier analysis for v(out):
+  No. Harmonics: 10, THD: 0.00343643 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -0.0151534742   0               0               0              
+ 1       20000           2.822456674     -0.260771883    1               0              
+ 2       40000           9.69769846e-05  172.4096998     3.435906935e-05 172.6704717    
+ 3       60000           1.461844217e-06 138.936031      5.17933271e-07  139.1968029    
+ 4       80000           8.550281409e-07 51.19682192     3.02937561e-07  51.4575938     
+ 5       100000          1.21081378e-07  -80.4502195     4.289928669e-08 -80.1894477    
+ 6       120000          8.29834908e-09  170.7115027     2.940115665e-09 170.9722746    
+ 7       140000          9.808534613e-10 118.9544618     3.475176326e-10 119.2152337    
+ 8       160000          1.656844927e-10 23.88875643     5.870222712e-11 24.14952831    
+ 9       180000          1.913945314e-11 -111.035092     6.781132662e-12 -110.77432     
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+nref                                  -13.6698
+vminus                                     -15
+ncasc                                  9.86821
+nx                                      1.7151
+nhi                                    13.7267
+out                                 -0.0215409
+fb                                   -0.015168
+vplus                                       15
+nrefm                                 -14.3349
+d1n                                    9.18038
+g1                                 2.41015e-08
+s1                                   0.0624052
+d2n                                    9.18089
+g2                                   -0.015168
+s2                                   0.0580756
+src                                  -0.165744
+nte                                   -14.3753
+nmiri                                  13.8067
+nme1                                   14.5133
+nme2                                    14.513
+nve                                     14.386
+ny                                    -1.67134
+nvle                                  -14.3861
+nbb                                  -0.957812
+nbn                                   0.998813
+nen                                   0.431031
+nbp                                   -1.01361
+nep                                  -0.474207
+in                                 2.31723e-08
+rg                                -4.24861e-07
+rg10                                 -0.015168
+nd1                                     1.0008
+nd2                                   -1.01449
+vsn                                          0
+outa                                -0.0215409
+jack                                         0
+vs#branch                          9.26893e-12
+vmm#branch                           0.0398484
+vpp#branch                          -0.0388236
+
+ Reference value :  2.47403e-04 Reference value :  6.33823e-04 Reference value :  9.65643e-04 Reference value :  1.31330e-03 Reference value :  1.70850e-03 Reference value :  2.06552e-03Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+
+No. of Data Rows : 105016
+L46A_CASO modo=3 livello=lo freq=20000 ampin=0.199185
+Fourier analysis for v(vsn):
+  No. Harmonics: 10, THD: 1.93009e-10 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -4.65114058e-14 0               0               0              
+ 1       20000           0.1991848952    -2.26584549e-11 1               0              
+ 2       40000           7.429338988e-14 -124.920923     3.729870672e-13 -124.920923    
+ 3       60000           1.693267204e-13 110.482996      8.500981976e-13 110.482996     
+ 4       80000           5.339569695e-14 -63.8848165     2.680710146e-13 -63.8848165    
+ 5       100000          3.047475469e-13 -82.6707479     1.529973177e-12 -82.6707479    
+ 6       120000          8.936181633e-14 -88.2935655     4.486375147e-13 -88.2935655    
+ 7       140000          2.162713218e-14 -2.96203866     1.085781739e-13 -2.96203866    
+ 8       160000          3.429056492e-14 -57.8644925     1.721544442e-13 -57.8644925    
+ 9       180000          9.086079114e-14 -104.328268     4.561630593e-13 -104.328268    
+
+Fourier analysis for v(out):
+  No. Harmonics: 10, THD: 0.000371283 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -0.0215407601   0               0               0              
+ 1       20000           0.2818180862    -1.76609263     1               0              
+ 2       40000           1.046342172e-06 164.3981658     3.712828323e-06 166.1642585    
+ 3       60000           1.020221352e-09 -150.675679     3.620141509e-09 -148.909587    
+ 4       80000           8.434890994e-11 48.71679415     2.993026852e-10 50.48288678    
+ 5       100000          2.663010855e-12 -95.9561169     9.449396563e-12 -94.1900243    
+ 6       120000          1.479479965e-12 -85.2038414     5.249769399e-12 -83.4377488    
+ 7       140000          1.306783972e-12 -96.4768331     4.636976958e-12 -94.7107404    
+ 8       160000          1.452985478e-12 -94.1849765     5.15575667e-12  -92.4188838    
+ 9       180000          1.224931287e-12 -106.901695     4.346531849e-12 -105.135602    
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+nref                                  -13.6698
+vminus                                     -15
+ncasc                                  9.86821
+nx                                      1.7151
+nhi                                    13.7267
+out                                 -0.0215409
+fb                                   -0.015168
+vplus                                       15
+nrefm                                 -14.3349
+d1n                                    9.18038
+g1                                 2.41015e-08
+s1                                   0.0624052
+d2n                                    9.18089
+g2                                   -0.015168
+s2                                   0.0580756
+src                                  -0.165744
+nte                                   -14.3753
+nmiri                                  13.8067
+nme1                                   14.5133
+nme2                                    14.513
+nve                                     14.386
+ny                                    -1.67134
+nvle                                  -14.3861
+nbb                                  -0.957812
+nbn                                   0.998813
+nen                                   0.431031
+nbp                                   -1.01361
+nep                                  -0.474207
+in                                 2.31723e-08
+rg                                -4.24861e-07
+rg10                                 -0.015168
+nd1                                     1.0008
+nd2                                   -1.01449
+vsn                                          0
+outa                                -0.0215409
+jack                                         0
+vs#branch                          9.26893e-12
+vmm#branch                           0.0398484
+vpp#branch                          -0.0388236
+
+ Reference value :  2.88744e-04 Reference value :  6.33264e-04 Reference value :  9.95844e-04 Reference value :  1.34196e-03 Reference value :  1.65034e-03 Reference value :  2.01100e-03
+No. of Data Rows : 105046
+L46A_CASO modo=3 livello=hi freq=20000 ampin=1.99185
+Fourier analysis for v(vsn):
+  No. Harmonics: 10, THD: 1.79764e-10 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -2.35783615e-13 0               0               0              
+ 1       20000           1.991848952     -2.13057729e-11 1               0              
+ 2       40000           8.036158239e-13 -77.2561067     4.034521911e-13 -77.2561067    
+ 3       60000           2.77675389e-12  -101.08395      1.394058464e-12 -101.08395     
+ 4       80000           8.25935588e-13  -87.139603      4.146577417e-13 -87.139603     
+ 5       100000          1.453303337e-12 76.16266506     7.296252742e-13 76.16266506    
+ 6       120000          5.716820412e-13 -106.014881     2.870107398e-13 -106.014881    
+ 7       140000          9.134779099e-13 -60.1094603     4.586080231e-13 -60.1094603    
+ 8       160000          6.839543973e-13 -81.6683055     3.433766385e-13 -81.6683055    
+ 9       180000          2.036079707e-13 -73.2758665     1.022205878e-13 -73.2758665    
+
+Fourier analysis for v(out):
+  No. Harmonics: 10, THD: 0.0037558 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -0.0215210358   0               0               0              
+ 1       20000           2.818180164     -1.76653596     1               0              
+ 2       40000           0.0001058345459 162.893626      3.755421577e-05 164.660162     
+ 3       60000           1.213388624e-06 -141.698607     4.305575063e-07 -139.932071    
+ 4       80000           8.936041039e-07 49.47560955     3.170855133e-07 51.24214551    
+ 5       100000          1.125987419e-07 -103.932052     3.995441574e-08 -102.165516    
+ 6       120000          6.198698878e-09 103.1866799     2.199539603e-09 104.9532158    
+ 7       140000          1.219524564e-10 160.1741618     4.327347768e-11 161.9406977    
+ 8       160000          4.764269603e-11 -31.5992779     1.690548271e-11 -29.8327419    
+ 9       180000          2.527429728e-11 -152.995278     8.968304301e-12 -151.228742    
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+nref                                  -13.6698
+vminus                                     -15
+ncasc                                  9.86821
+nx                                     1.68859
+nhi                                    13.7268
+out                                 -0.0478057
+fb                                  -0.0151665
+vplus                                       15
+nrefm                                 -14.3349
+d1n                                    9.18038
+g1                                 2.41015e-08
+s1                                    0.062406
+d2n                                    9.18089
+g2                                  -0.0151665
+s2                                   0.0580768
+src                                  -0.165743
+nte                                   -14.3753
+nmiri                                  13.8067
+nme1                                   14.5133
+nme2                                    14.513
+nve                                     14.386
+ny                                    -1.69785
+nvle                                  -14.3861
+nbb                                   -0.98432
+nbn                                   0.972309
+nen                                   0.404566
+nbp                                   -1.04011
+nep                                  -0.500657
+in                                 2.31723e-08
+rg                                 -4.2482e-07
+rg10                              -1.75113e-06
+nd1                                   0.974292
+nd2                                     -1.041
+vsn                                          0
+outa                                -0.0478057
+jack                                         0
+vs#branch                          9.26893e-12
+vmm#branch                           0.0398567
+vpp#branch                          -0.0388145
+
+ Reference value :  2.46463e-04 Reference value :  5.91883e-04 Reference value :  9.71083e-04 Reference value :  1.32512e-03 Reference value :  1.67672e-03 Reference value :  2.01948e-03
+No. of Data Rows : 105008
+L46A_CASO modo=10 livello=lo freq=20000 ampin=0.0897344
+Fourier analysis for v(vsn):
+  No. Harmonics: 10, THD: 2.08462e-10 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -1.57122579e-14 0               0               0              
+ 1       20000           0.08973435277   -1.27326072e-11 1               0              
+ 2       40000           3.063643978e-14 -98.5130432     3.414126121e-13 -98.5130432    
+ 3       60000           9.039061449e-14 80.17810179     1.007313383e-12 80.17810179    
+ 4       80000           1.976072558e-14 -79.2078257     2.202136079e-13 -79.2078257    
+ 5       100000          1.436657342e-13 -91.5357431     1.601011539e-12 -91.5357431    
+ 6       120000          3.371903145e-14 -93.3323107     3.757650265e-13 -93.3323107    
+ 7       140000          3.070917919e-14 -45.0613012     3.422232205e-13 -45.0613012    
+ 8       160000          2.072140746e-14 -119.541632     2.309194508e-13 -119.541632    
+ 9       180000          4.840949871e-14 -150.053388     5.394756547e-13 -150.053388    
+
+Fourier analysis for v(out):
+  No. Harmonics: 10, THD: 0.000482412 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -0.0478053275   0               0               0              
+ 1       20000           0.2811195996    -4.25999971     1               0              
+ 2       40000           1.356143875e-06 146.6161187     4.824081554e-06 150.8761184    
+ 3       60000           5.165397175e-09 -128.643323     1.837437582e-08 -124.383324    
+ 4       80000           1.641417287e-10 34.93209746     5.838857515e-10 39.19209718    
+ 5       100000          3.644190207e-12 -120.793851     1.296313104e-11 -116.533852    
+ 6       120000          2.717840877e-12 -92.4287823     9.667916719e-12 -88.1687826    
+ 7       140000          1.498065317e-12 -87.9304464     5.328925194e-12 -83.6704467    
+ 8       160000          2.837605362e-12 -89.2593966     1.009394352e-11 -84.9993968    
+ 9       180000          1.838196848e-12 -98.8031634     6.53884272e-12  -94.5431637    
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+nref                                  -13.6698
+vminus                                     -15
+ncasc                                  9.86821
+nx                                     1.68859
+nhi                                    13.7268
+out                                 -0.0478057
+fb                                  -0.0151665
+vplus                                       15
+nrefm                                 -14.3349
+d1n                                    9.18038
+g1                                 2.41015e-08
+s1                                    0.062406
+d2n                                    9.18089
+g2                                  -0.0151665
+s2                                   0.0580768
+src                                  -0.165743
+nte                                   -14.3753
+nmiri                                  13.8067
+nme1                                   14.5133
+nme2                                    14.513
+nve                                     14.386
+ny                                    -1.69785
+nvle                                  -14.3861
+nbb                                   -0.98432
+nbn                                   0.972309
+nen                                   0.404566
+nbp                                   -1.04011
+nep                                  -0.500657
+in                                 2.31723e-08
+rg                                 -4.2482e-07
+rg10                              -1.75113e-06
+nd1                                   0.974292
+nd2                                     -1.041
+vsn                                          0
+outa                                -0.0478057
+jack                                         0
+vs#branch                          9.26893e-12
+vmm#branch                           0.0398567
+vpp#branch                          -0.0388145
+
+ Reference value :  2.63647e-04 Reference value :  5.95987e-04 Reference value :  9.01967e-04 Reference value :  1.23973e-03 Reference value :  1.57767e-03 Reference value :  1.91135e-03
+No. of Data Rows : 105013
+L46A_CASO modo=10 livello=hi freq=20000 ampin=0.897344
+Fourier analysis for v(vsn):
+  No. Harmonics: 10, THD: 1.86384e-10 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -8.40542913e-14 0               0               0              
+ 1       20000           0.8973435277    -1.38472596e-11 1               0              
+ 2       40000           3.81958366e-13  -97.9199746     4.256545618e-13 -97.9199746    
+ 3       60000           1.014859173e-12 -174.581787     1.130959484e-12 -174.581787    
+ 4       80000           2.667078938e-13 -83.9472446     2.972193876e-13 -83.9472446    
+ 5       100000          1.095302731e-12 -29.5121092     1.220605818e-12 -29.5121092    
+ 6       120000          2.981524986e-13 -65.887465      3.322612683e-13 -65.887465     
+ 7       140000          2.855726188e-13 -121.860831     3.182422451e-13 -121.860831    
+ 8       160000          1.679794355e-13 -89.4074799     1.871963527e-13 -89.4074799    
+ 9       180000          3.898292066e-13 -56.6731897     4.344258297e-13 -56.6731897    
+
+Fourier analysis for v(out):
+  No. Harmonics: 10, THD: 0.00492902 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -0.04776221     0               0               0              
+ 1       20000           2.811192104     -4.26090853     1               0              
+ 2       40000           0.0001384312123 144.1180106     4.9242886e-05   148.3789191    
+ 3       60000           5.810194624e-06 -127.558169     2.066808105e-06 -123.297261    
+ 4       80000           1.738404121e-06 35.89944346     6.183868115e-07 40.16035198    
+ 5       100000          2.104773328e-07 -132.706618     7.487120234e-08 -128.44571     
+ 6       120000          1.235286243e-08 58.75817615     4.394172287e-09 63.01908468    
+ 7       140000          2.632726742e-10 -175.249896     9.365161274e-11 -170.988988    
+ 8       160000          1.045282432e-10 -52.9563787     3.718288875e-11 -48.6954702    
+ 9       180000          4.979814939e-11 -82.6504525     1.771424632e-11 -78.389544     
+
+Note: Simulation executed from .control section 
