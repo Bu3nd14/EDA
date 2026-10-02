@@ -16,7 +16,9 @@ import os
 
 from comune import A_PIENO, G_JACK, QUI, spl
 
-for cella in ("jfet", "ldr"):
+for cella in ("jfet", "ldr", "ldr_cima12"):
+    if not os.path.exists(os.path.join(QUI, "tabelle", "statico_%s.csv" % cella)):
+        continue
     rows = list(csv.DictReader(open(os.path.join(QUI, "tabelle", "statico_%s.csv" % cella))))
     combos = []
     for r in rows:
@@ -29,7 +31,7 @@ for cella in ("jfet", "ldr"):
         hm = max(float(m["h20"]), float(m["h1k"]), float(m["h20k"]))
         b = A_PIENO * G_JACK * hm
         zmin = min(float(r["zmin_ohm"]) for r in sel)
-        if cella == "jfet":
+        if cella.startswith("jfet"):
             fade = [float(r["thd1000_pct"]) for r in sel if float(r["liv1000_db"]) > -60]
             thd = "play THD 1k %.3g%% 20k %.3g%% | fade THD max %.3g%%" % (
                 float(p["thd1000_pct"]), float(p["thd20000_pct"]), max(fade))

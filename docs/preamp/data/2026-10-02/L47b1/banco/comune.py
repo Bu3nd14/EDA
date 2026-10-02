@@ -136,7 +136,10 @@ def cella_jfet(ms, mp, corr, vcs="DC 0", vcp="DC -15"):
 
 
 # Il comando delle LDR: il profilo v4 di ADR-040 (genera_tb_v2_casopeggiore.py), in funzione di d.
-ION, IRIP = 20e-3, 10e-9
+# ION 20 mA e' la cima del banco V2 (genera_tb_v2_casopeggiore.py); ADR-050 l'ha portata a 12 mA.
+# `--cima12` sulla riga di comando (sfumatura.py) la porta a 12 mA: NC-049.
+import sys as _sys
+ION, IRIP = (12e-3 if "--cima12" in _sys.argv else 20e-3), 10e-9
 SERIE_V4 = [(0, ION), (0.1, 0.2e-3), (0.45, 4.5e-6), (0.75, 0.19e-6), (0.8, IRIP), (1, IRIP)]
 
 

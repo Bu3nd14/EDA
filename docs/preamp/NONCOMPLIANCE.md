@@ -3536,7 +3536,7 @@ comandare il sink di `MUTE_CMD` che esiste già, e se serve un tetto di non-dann
 | Requisito | **PR-29** · **T8** (nessuna parte con fine vita annunciata) · ADR-038 e ADR-039 («Da riaprire se la VTL5C4 non si trova»), ADR-050 |
 | Severità | **bloccante** (decisione dell'utente il 2026-09-27, «non possiamo produrre se non cambiamo»; l'architetto proponeva maggiore): impedisce **G2** (il layout ha bisogno del pezzo vero) |
 | Aperta da | `reports/2026-09-27-L43a-architetto-avversariale.md`, rilievo **R6**. Trovata dall'**architetto avversariale**, accettata dall'utente in L43a |
-| Stato | aperta — **la parte è scelta** (L47a, 2026-10-02, ADR-058: NSL-32SR3); il sorgente e le misure sono di L47b |
+| Stato | aperta — **la parte è scelta** (L47a, 2026-10-02, ADR-058: NSL-32SR3) **e confermata dopo la prova contro il JFET** (L47b1, ADR-059); il sorgente e le misure sono di L47b2 |
 
 **Evidenza.** Il sorgente nomina la VTL5C4 dell'Excelitas, e il modello viene dal suo datasheet
 (`vendor/optocoupler/excelitas/VTL5C3_VTL5C4`). Excelitas ha chiuso la serie VTL (ultimo ordine
@@ -3567,6 +3567,16 @@ ADR-039.
     cella.
   - Il profilo sull'inviluppo nuovo, poi S, B, E3, E5.
 
+**Avanzamento, L47b1 (2026-10-02).** Report `reports/2026-10-02-L47b1-prova-mute.md`, **ADR-059**.
+- **Fatto.** La NSL-32SR3 è provata contro il JFET MMBFJ112 sullo stesso banco ridotto e
+  **confermata** dall'utente: il JFET sfora S a ogni tempo (24–39 dB anche a 6 s) e distorce del
+  20–60 % nella sfumatura, per un limite fisico coi 2,7 V RMS del progetto.
+- **Misurato sul banco ridotto** (cima del LED a 12 mA): S 12,7–16,9 dB a 3 s sulle curve A–E;
+  B a mute fermo 21–27 dB SPL a 1 kHz, **42–49 dB SPL a 20 kHz** prima del relè (i 5 pF di cella
+  ipotizzati); |Zin| ≥ 771 kΩ.
+- **Resta, per L47b2.** Il sorgente; la cima del LED (il declassamento); il profilo sull'inviluppo
+  A–E a 3 s; S, B, E3, E5 sul preamp intero.
+
 ### NC-044 — Il ronzio da anello di massa non ha requisiti, e nessuno ha deciso come la massa audio si lega alla terra
 
 | | |
@@ -3596,7 +3606,7 @@ la massa.
 | Requisito | **PR-21**, PR-24 · V2 (S) · ADR-039 (Td = 6 s), ADR-040, ADR-049, ADR-050 |
 | Severità | **minore** (proposta dell'architetto, accettata dall'utente il 2026-09-27: «sono disposto a cambiare e a ridurre il tempo di mute») |
 | Aperta da | `reports/2026-09-27-L43a-architetto-avversariale.md`, rilievo **R8** e semplificazioni 3 e 4. Trovata dall'**architetto avversariale**, accettata dall'utente in L43a |
-| Stato | aperta — dopo NC-043 (la cella nuova ha tempi suoi) |
+| Stato | aperta — dopo NC-043 (la cella nuova ha tempi suoi); **il tempo è deciso**: bersaglio 3 s per verso (L47b1, ADR-059) |
 
 **Evidenza.**
 - DAC a 12 bit, due convertitori esponenziali, compensazione in temperatura e calibrazione a due
@@ -3613,6 +3623,13 @@ ADR-050:
 - il pilota delle LDR semplificato (RC più generatore di corrente al posto di DAC, convertitori
   e calibrazione), con S e la calibrazione di E3 ed E5 rimisurati. Il micro resta per il trim e
   il permissivo (R4 respinto dall'utente).
+
+**Avanzamento, L47b1 (2026-10-02).** ADR-059. L'utente, dopo la tabella della prova: «proviamo
+target a 3s». **Bersaglio di 3 s per verso** (non un tetto del PRB): sul banco ridotto la
+NSL-32SR3 col profilo v4 compresso a 3 s e la cima a 12 mA dà S 12,7–16,9 dB sulle curve A–E;
+a 2 s 20–22 dB, al limite. **Il pilota resta quello delle LDR**: il JFET, che l'avrebbe sostituito
+con una rampa di tensione, è scartato. Restano per L47b2 il profilo ricalibrato sull'inviluppo
+della NSL-32SR3, e la semplificazione del pilota.
 
 ### NC-046 — La metrica dei gradini in dB SPL è solo quella delle Heresy: le due uscite a cuffia non hanno la loro
 
@@ -3743,6 +3760,11 @@ L42a lo registra come «trovato, non risolto» (`STATE.md`, diario di L42a).
 
 **Cosa serve per chiuderla.** S misurato con la cima a 12 mA, nel lotto che cambia il pilota delle
 LDR (NC-045) e sul pilota nuovo, prima di G1.
+
+**Avanzamento, L47b1 (2026-10-02).** S con la cima a 12 mA **misurato sul banco ridotto**
+(sorgente, cella NSL-32SR3, R_IN 1 MΩ; `data/2026-10-02/L47b1/banco/sfumatura.py --cima12`): 12,7–
+16,9 dB sulle curve A–E col profilo v4 compresso a 3 s. Resta aperta: la misura che la chiude è
+sul preamp intero (`tb_v2_casopeggiore.cir`) col pilota vero, in L47b2.
 
 ### NC-050 — La tenuta di `VRELAY` è scesa da 62,8 a 36,1 ms: P9 regge con 11 ms di margine
 

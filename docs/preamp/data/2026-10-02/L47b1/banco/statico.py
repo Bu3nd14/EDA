@@ -160,7 +160,9 @@ def tabella(cella, combo, casi):
 
 
 def esegui(cella):
-    cartella = os.path.join(QUI, "run", "statico_" + cella)
+    # --cima12: la cima del LED a 12 mA (ADR-050, NC-049); file separati da quelli a 20 mA
+    suff = "_cima12" if "--cima12" in sys.argv else ""
+    cartella = os.path.join(QUI, "run", "statico_" + cella + suff)
     os.makedirs(cartella, exist_ok=True)
     lavori = []
     if cella == "jfet":
@@ -194,7 +196,7 @@ def esegui(cella):
             continue
         righe += tabella(cella, nome, casi)
     os.makedirs(os.path.join(QUI, "tabelle"), exist_ok=True)
-    out = os.path.join(QUI, "tabelle", "statico_%s.csv" % cella)
+    out = os.path.join(QUI, "tabelle", "statico_%s%s.csv" % (cella, suff))
     campi = []
     for r in righe:
         for k in r:

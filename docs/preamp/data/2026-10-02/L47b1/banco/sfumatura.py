@@ -43,7 +43,18 @@ CORSE_TEMPO = [
     ("ldr_B_B_td3", "ldr", ("B", "B"), 3.0),
     ("ldr_D_D_td2", "ldr", ("D", "D"), 2.0),
     ("ldr_D_D_td3", "ldr", ("D", "D"), 3.0),
+    # dopo la scelta dell'utente («proviamo target a 3s»): il bersaglio su tutto l'inviluppo A-E
+    ("ldr_A_A_td3", "ldr", ("A", "A"), 3.0),
+    ("ldr_C_C_td3", "ldr", ("C", "C"), 3.0),
+    ("ldr_E_E_td3", "ldr", ("E", "E"), 3.0),
 ]
+# NC-049: lo stesso bersaglio di 3 s con la cima del LED a 12 mA (ADR-050), tutte le curve
+CORSE_CIMA12 = [("ldr_%s_%s_td3_cima12" % (c, c), "ldr", (c, c), 3.0) for c in "ABCDE"]
+if "--cima12" in sys.argv:
+    CORSE = CORSE_CIMA12
+elif "--tre" in sys.argv:
+    CORSE_TEMPO = CORSE_TEMPO[-3:]
+    sys.argv.append("--tempo")
 if "--tempo" in sys.argv:
     CORSE = CORSE_TEMPO
 
@@ -117,7 +128,9 @@ def main():
         print("%-24s S ins %5.1f dB  S rel %5.1f dB  mute %6.1f dB  (pieno %.4f V)" % (
             nome, r["S_ins_dB"], r["S_rel_dB"], r["liv_mute_dB"], r["a_pieno_V"]))
     if righe:
-        out = "sfumatura_tempo.csv" if "--tempo" in sys.argv else "sfumatura.csv"
+        out = ("sfumatura_cima12.csv" if "--cima12" in sys.argv else
+               "sfumatura_tre.csv" if "--tre" in sys.argv else
+               "sfumatura_tempo.csv" if "--tempo" in sys.argv else "sfumatura.csv")
         with open(os.path.join(QUI, "tabelle", out), "w", newline="") as f:
             w = csv.DictWriter(f, fieldnames=list(righe[0]))
             w.writeheader()
