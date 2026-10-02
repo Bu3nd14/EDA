@@ -1,0 +1,44 @@
+{
+  "part_name": "NSL-32SR3 (CdS photocell / LED optocoupler, axial)",
+  "vendor_name": "Luna Optoelectronics (Camarillo CA), successor of Silonex for the NSL-32 family and predecessor of Advanced Photonix (same address and phone as the current Advanced Photonix datasheet)",
+  "device_class": "optocoupler",
+  "product_page": "lunainc.com no longer lists the part; the current product page is Advanced Photonix's",
+  "date_obtained": "2026-10-02",
+  "lotto": "L47a (la cella del mute: il sostituto della VTL5C4, NC-043)",
+  "obtained_by": "AI agent (Claude Opus 5.5, bom-component-manager subagent, worktree L47a) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl -L from DigiKey's document host (mm.digikey.com): a DISTRIBUTOR-HOSTED MIRROR of the manufacturer's datasheet, byte-for-byte as served (HTTP 200).",
+  "license_notes": "Manufacturer-authored datasheet content, redistributed here unmodified for engineering traceability only. Copyright (c) 2016 Luna Optoelectronics.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "NSL-32SR3.pdf",
+      "role": "datasheet",
+      "url": "https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/1088/NSL-32SR3.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 182389,
+      "pages": 2,
+      "sha256": "fa521021a9574a4bf5a9fe52b6ea48c6b3ea84bd96cca0f2135c729373937eea",
+      "local_filename": "nsl-32sr3-luna-rev01-04-16.pdf",
+      "renamed": true,
+      "rename_note": "Renamed to a descriptive name. Content unmodified."
+    }
+  ],
+  "revision_note": "Footer 'REV 01-04-16', (c) 2016.",
+  "why_this_file": "It states the measuring conditions of the dark resistance (note 4: after 1 minute ON at 20 mA followed by 10 s OFF), absent from the Advanced Photonix Rev C. Its chart is linear (0-40 mA, 0-1200 ohm) and is NOT used for the model.",
+  "what_was_read": {
+    "page": "pagina 2: 'OPTO-ELECTRICAL PARAMETERS'",
+    "key_numbers_transcribed_verbatim": {
+      "Ron_at_If_20mA_max": "60 ohm",
+      "Ron_typ": "150 ohm, row printed 'IF = 50mA' (typo for 5 mA: Silonex and Advanced Photonix say 5 mA)",
+      "Roff_min": "25 Mohm, '10 sec after IF = V -0.5Vdc on cell'; note 4: measured after 1 minute ON @ IF = 20mA followed by 10 sec. OFF",
+      "rise_time_typ": "5 msec, time to 63% of final conductance IF = 5mA",
+      "decay_time_typ": "10 msec, time to 100Kohm after removal of If = 5mA",
+      "cell_temp_coefficient_typ": "0.7 %/K, If > 5mA",
+      "LED_IF_max": "25 mA",
+      "LED_VF_max_at_20mA": "2.5 V",
+      "cell_voltage_max": "60 V",
+      "cell_power": "50 mW, derate linearly to 0 at 75C"
+    }
+  }
+}

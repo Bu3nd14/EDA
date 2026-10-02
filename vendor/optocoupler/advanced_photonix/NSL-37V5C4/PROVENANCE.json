@@ -1,0 +1,44 @@
+{
+  "part_name": "NSL-37V5C4 (CdS photocell / LED optocoupler, VTL5C-style body)",
+  "vendor_name": "Advanced Photonix, Inc.",
+  "device_class": "optocoupler",
+  "product_page": "https://www.advancedphotonix.com/our-products/optocouplers-optoisolators/nsl-37v5c4",
+  "date_obtained": "2026-10-02",
+  "lotto": "L47a (la cella del mute: candidato SCARTATO, ADR-058)",
+  "obtained_by": "AI agent (Claude Opus 5.5, bom-component-manager subagent, worktree L47a) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl -L directly from Advanced Photonix's own document host. Byte-for-byte as served (HTTP 200).",
+  "license_notes": "Manufacturer datasheet, redistributed unmodified for engineering traceability only. Copyright remains Advanced Photonix, Inc.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "ds-nsl-37v5c4.pdf",
+      "role": "datasheet",
+      "url": "https://www.advancedphotonix.com/media/pages/our-products/optocouplers-optoisolators/nsl-37v5c4/638b6b3dac-1718287451/ds-nsl-37v5c4.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 928793,
+      "pages": 4,
+      "sha256": "818ff9e93f75fefe77014ec278d85c23d27cb942c621e2d62344c27c614b15ef",
+      "local_filename": "ds-nsl-37v5c4.pdf",
+      "renamed": false
+    }
+  ],
+  "revision_note": "Footer 'DS NSL-37V5C4 Rev. C'.",
+  "why_this_file": "Kept as the evidence for rejecting the NSL-37V5C4 in ADR-058: not stocked at DigiKey, no chart, and contradictory dark resistance between the manufacturer's web table (400 Mohm) and this PDF (400 kohm).",
+  "what_was_read": {
+    "page": "pagine 1-2",
+    "key_numbers_transcribed_verbatim": {
+      "header": "The NSL-37V5C4 is an optocoupler that has an OFF-resistance of 400kOhm.",
+      "Ron": "80 Ohm typ @ If=40mA; 150 Ohm typ @ If=10mA; 1.5 KOhm typ @ If=1mA",
+      "Roff_min": "400 KOhm, 10 sec after If=0mA",
+      "rise_time_typ": "8.0 ms",
+      "decay_time_max": "1.5 ms, time to reach 100KOhm after removal of If=1mA",
+      "slope": "20 typ, R@0.5mA / R@5mA",
+      "dynamic_range": "75 db typ, RDark / R@20mA",
+      "LED_IF_max": "40 mA",
+      "cell_voltage_max": "100 V",
+      "power": "175 mW, derate above 25C by 3.5mW/C"
+    },
+    "note": "Il PDF e' coerente con se stesso: 75 dB su ~100 ohm a 20 mA danno ~560 kohm al buio, compatibili con 400 kohm minimi. La tabella web del costruttore (famiglia, 2026-10-02) dice invece 400 Mohm."
+  }
+}

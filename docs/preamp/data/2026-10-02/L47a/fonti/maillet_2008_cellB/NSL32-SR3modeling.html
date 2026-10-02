@@ -1,0 +1,109 @@
+<HTML>
+<HEAD>
+<TITLE>\\\ Silonex NSL32-SR3 "STATIC" Spice Model Derivation ///</TITLE>
+</HEAD>
+
+<BODY BGCOLOR=#000000 TEXT=#EABEAB LINK=#FF0000 VLINK=#BBHH77 HR=#FF0000>
+</HEAD>
+
+<b>
+
+<HR>
+
+<H1 ALIGN=CENTER>\\\ Silonex NSL32-SR3 ///</H1 ALIGN=CENTER>
+<H1 ALIGN=CENTER>"STATIC" Spice Model Derivation</H1 ALIGN=CENTER>
+<H2 ALIGN=CENTER>JC Maillet (c) 2008</H2 ALIGN=CENTER>
+
+<H4 ALIGN=LEFT>Static Spice modeling means that time dependencies are not factored into the functional derivation, implying the 
+model is to be considered for accuracy at DC and up to low speeds only (<5Hz) though this is plenty enough for basic functional 
+and parametric simulations ... there are several potential sources of distortion known to exist with opto-couplers, 
+one is tell-taled by a very slight bend occuring in the mid-range of a cell's characteristics (see data below), but this usually affects 
+signal shaping only if the region containing the bend is traversed quickly and repeatably - a most unlikely scenario in most circuits ... 
+and the other is due to a "memory" effect following an unusually strong burst of light into the cell (causing it to get 
+stuck before relase) - again, very unlikely if resistance levels are kept well above a certain minima ... this is easy to 
+design around - especially with the high sensitivity of the SR3 cell ... note that neither form of distortion is included 
+in this model by nature of the polynomial interpolations ... again, similar to the Triode models I published 
+in '98, the data gets interpolated more accurately if the data is first linearised by a logarithmic conversion ... 
+</H4 ALIGN=LEFT>
+
+<H4 ALIGN=LEFT>
+The Silonex NSL32-SR3 
+opto-isolator/coupler is considered one of the fastest opto-cells on the market and makes it idea for a broad range of 
+fast and accurate 
+applications, including local and remote (fibre-optic) control and analogue processing functions and high performance 
+audio processing blocks (as seen in countless
+commercial applications) ... the spec sheet data says it 
+takes 2.5mS for the cell resistance to roughly triple in value when the LED is 
+suddenly shut off (free-fall mode) and only 1mS for an inverse thirding when the LED is suddenly turned on (free-float mode) - 
+this fully describes the timing of the cell aside from the said Memory issue ... I haven't found an ellegant way of 
+modeling this time dependency yet - I'm not a huge fan of embeded ideal diodes, somebody prove me wrong please ... but of 
+course a great deal of work can be accomplished with the STATIC model alone so I'm not super hung up on modeling the timing part ...
+</H4 ALIGN=LEFT>
+
+<TD><CENTER><IMG SRC="SR3 timing graph.jpg"  BORDER="0"></A></TD>
+
+<HR>
+<H1 ALIGN=CENTER>Basic Principle using VCCS and CCCS Controlled Current Sources</H1 ALIGN=CENTER>
+<H2 ALIGN=CENTER>-> using Spec-Sheet LED modeling at first</H2 ALIGN=CENTER>
+<HR>
+<TD><CENTER><IMG SRC="NSL32SR3  modeling.jpg"  BORDER="0"></A></TD>
+<HR>
+<H1 ALIGN=CENTER>Model Breakdown including Log Conversion of Data</H1 ALIGN=CENTER>
+<HR>
+<TD><CENTER><IMG SRC="NSL32SR3 Spice model.jpg"  BORDER="0"></A></TD>
+<HR>
+<H1 ALIGN=CENTER>NSL-SR3 Static Spice Model with Spec-Sheet LED modeling</H1 ALIGN=CENTER>
+<HR>
+<TD><CENTER><IMG SRC="NSL32SR3 Spice eqs.jpg"  BORDER="0"></A></TD>
+<HR>
+<H1 ALIGN=CENTER>Measured iLed-Rcell Data</H1 ALIGN=CENTER>
+<HR>
+<TD><CENTER><IMG SRC="NSL32SR3 cellB.jpg"  BORDER="0"></TD>
+<HR>
+<H1 ALIGN=CENTER>Cell Math with Lin/Log(Final) Data Conversion to ease interpolation</H1 ALIGN=CENTER>
+<HR>
+<TD><CENTER><IMG SRC="NSL32SR3 Cell math 2.jpg"  BORDER="0"></A></TD>
+<HR>
+<H1 ALIGN=CENTER>Matlab Interpolation of Log-converted Data</H1 ALIGN=CENTER>
+<HR>
+<TD><CENTER><IMG SRC="NSL32SR3 cell math.jpg"  BORDER="0"></A></TD>
+<HR>
+<H1 ALIGN=CENTER>Measured LED V-I Data - 3rd Order and 1st Order (Final) Math</H1 ALIGN=CENTER>
+<H2 ALIGN=CENTER>log converted LED Data well approximated by Line - so Data very exp-like as expected</H2 ALIGN=CENTER>
+
+<HR>
+<TD><CENTER><IMG SRC="NSL32SR3 LED data.jpg"  BORDER="0"></TD>
+<HR>
+<H1 ALIGN=CENTER>Model Output Data Voltage from 1A Cell (test) Current</H1 ALIGN=CENTER>
+<H2 ALIGN=CENTER>**LED and Cell Modeling from Measured Data (curve "B" in graph)**</H2 ALIGN=CENTER>
+<HR>
+<TD><CENTER><IMG SRC="NSL32SR3 subcircuit vs data.jpg"  BORDER="0"></A></TD>
+HR>
+<H1 ALIGN=CENTER>Design spinoffs: </H1 ALIGN=CENTER>
+<H1 ALIGN=CENTER>simple and accurate linear-db converter for resistance control of gain</H1 ALIGN=CENTER>
+<H1 ALIGN=CENTER>simple low-voltage (3v) optical multi-potentiometer circuitry with stretchable "S" profile</H1 ALIGN=CENTER>
+<H1 ALIGN=CENTER>wide range Filters and Gain blocks with sweep Gain and Offset controls</H1 ALIGN=CENTER>
+<H1 ALIGN=CENTER>low-noise mute and current-mirror control functions, symmetric bi-oscillator interfacing for stereo anti-phase effects</H1 ALIGN=CENTER>
+<H1 ALIGN=CENTER>and a couple more surprises ...</H1 ALIGN=CENTER>
+
+
+<HR>
+
+<H1 ALIGN=CENTER>\\\ ** UPDATE 05/2020 ** ////<H1 ALIGN=CENTER>
+
+see here for the latest updates to my NSL32-SR3 modelling efforts :
+
+<H2 ALIGN=CENTER><A HREF="https://viva-analog.com/nsl32-sr3-updated-modeling-jcm-c-2020/">nsl32-sr3-updated-modeling-jcm-c-2020</A></H2 ALIGN=CENTER>
+
+<HR>
+
+<H3 ALIGN=CENTER><A HREF="index.html">~:( HOME :)~</A></H3 ALIGN=CENTER>
+
+<H4 ALIGN=CENTER>
+viva Analog /// jc -> lynx.net
+</H4 ALIGN=CENTER>
+
+<CENTER>&nbsp;</CENTER>
+
+</body> 
+</html>

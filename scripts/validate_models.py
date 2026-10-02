@@ -1442,6 +1442,43 @@ wrdata {csv} {" ".join(f"i(V{k})" for k in range(len(pts)))}
     return cir, csv, len(pts), check
 
 
+# L47a (ADR-058): the VTL5C4 replacement. Same single-op shape. The options
+# are those of the real benches (tb_v2_casopeggiore.cir) and the cells get
+# 1 V, not 1 mV: with abstol=1e-15 this model's op depends on Newton's path
+# and can end in the "transient op" with a wrong state and no error
+# (docs/preamp/data/2026-10-02/L47a/nsl32sr3_modello/verifica_statica.py).
+def tb_nsl32sr3(model_file):
+    csv = os.path.join(SCRATCH_DIR, "opto_nsl32sr3.csv")
+    # Silonex chart nodes on B, Maillet's population ends on A and C, the
+    # 60 ohm maximum on C at 20 mA, the declared 25 Mohm dark
+    pts = [("B", 0.9738e-3, 300.0), ("B", 9.824e-3, 82.69), ("A", 10e-6, 16e3), ("C", 10e-6, 89e3),
+           ("C", 20e-3, 60.0), ("B", 1e-9, 25e6)]
+    inst = "\n".join(f"I{k} 0 a{k} DC {i:g}\nX{k} a{k} 0 c{k} 0 NSL32SR3_{c}\nV{k} c{k} 0 DC 1"
+                     for k, (c, i, _) in enumerate(pts))
+    cir = f"""* validate nsl32sr3_comportamentale.lib (points it was generated from)
+.include {model_file}
+.options reltol=1e-6 vntol=1e-6 abstol=1e-12
+{inst}
+I9 0 a9 DC 12m
+X9 a9 0 c9 d9 NSL32SR3_B
+V9 c9 0 DC 1
+R9 d9 0 1MEG
+.control
+op
+wrdata {csv} {" ".join(f"i(V{k})" for k in range(len(pts)))}
+.endc
+.end
+"""
+    def check(rows):
+        if len(rows) != 1:
+            return False, f"expected 1 op-point row, got {len(rows)}"
+        rs = [1.0 / abs(rows[0][f"y{k}"]) for k in range(len(pts))]
+        ok = all(close(r, ref, rel=0.01) for r, (_, _, ref) in zip(rs, pts))
+        msg = ", ".join(f"{c}@{i*1e3:g}mA={r:.4g}ohm ({ref:g})" for r, (c, i, ref) in zip(rs, pts))
+        return ok, msg if ok else msg + " - not as expected"
+    return cir, csv, len(pts), check
+
+
 # ---------------------------------------------------------------------
 # L44 (ADR-057): the flicker bound on the bipolar models, read BACK from
 # the noise rather than from the file text
@@ -1553,6 +1590,8 @@ def build_registry():
     reg["mosfet_n/dmn6040svt_sottosoglia.lib"] = lambda p: tb_dmn6040svt_sub(p)
     reg["optocoupler/vom1271.lib"] = lambda p: tb_vom1271(p)
     reg["optocoupler/vtl5c4_comportamentale.lib"] = lambda p: tb_vtl5c4(p)
+    # L47a - the VTL5C4 replacement (ADR-058).
+    reg["optocoupler/nsl32sr3_comportamentale.lib"] = lambda p: tb_nsl32sr3(p)
     # L46a - the faster output pair measured against the MJE15032/33.
     reg["bjt_npn/zxtn25040dz.lib"] = lambda p: tb_zxtn25040dz(p)
     reg["bjt_pnp/zxtp25040dz.lib"] = lambda p: tb_zxtp25040dz(p)
