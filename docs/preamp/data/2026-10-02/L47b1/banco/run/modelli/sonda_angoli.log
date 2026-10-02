@@ -1,0 +1,72 @@
+
+Note: No compatibility mode selected!
+
+
+Circuit: sonda_angoli - l47b1: idss, rds(on) e spegnimento di ogni angolo del mmbfj112
+
+Warning: Model issue on line 51 :
+  .model mmbfj112 njf vto=-1.6800 n=1 beta=5.002e-003 betatce=-0.46 rd=0.0 ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+
+Warning: Model issue on line 5 :
+  .model mmbfj112_tip njf vto=-1.6800 beta=5.00200e-03 n=1 betatce=-0.46 r ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+
+Warning: Model issue on line 10 :
+  .model mmbfj112_vlo njf vto=-1.0000 beta=8.40336e-03 n=1 betatce=-0.46 r ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+
+Warning: Model issue on line 15 :
+  .model mmbfj112_vhi njf vto=-5.0000 beta=1.68067e-03 n=1 betatce=-0.46 r ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 1
+idss_orig = 1.495152e-02
+ron_orig = 5.974205e+01
+ioff_orig = 6.933450e-12
+idss_tip = 1.495152e-02
+ron_tip = 5.974205e+01
+ioff_tip = 6.933450e-12
+idss_vlo = 8.899727e-03
+ron_vlo = 5.986343e+01
+ioff_vlo = 6.268646e-12
+idss_vhi = 4.449819e-02
+ron_vhi = 5.962407e+01
+ioff_vhi = 1.023088e-11
+ JFET models (Junction Field effect transistor)
+      model              mmbfj112
+
+        vto                 -1.68
+       beta              0.005002
+
+ JFET models (Junction Field effect transistor)
+      model          mmbfj112_tip
+
+        vto                 -1.68
+       beta              0.005002
+
+ JFET models (Junction Field effect transistor)
+      model          mmbfj112_vlo
+
+        vto                    -1
+       beta            0.00840336
+
+ JFET models (Junction Field effect transistor)
+      model          mmbfj112_vhi
+
+        vto                    -5
+       beta            0.00168067
+
+Note: Simulation executed from .control section 

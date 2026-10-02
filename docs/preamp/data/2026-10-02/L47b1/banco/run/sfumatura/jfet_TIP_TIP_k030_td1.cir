@@ -1,0 +1,34 @@
+sfumatura jfet_TIP_TIP_k030_td1
+* GENERATO da docs/preamp/data/2026-10-02/L47b1/banco/ (L47b1). Banco ridotto: vedi comune.py.
+.include /Users/roberto/EDA/.claude/worktrees/L47b1/docs/preamp/data/2026-10-02/L47b1/banco/inc/jfet_angoli.lib
+.include /Users/roberto/EDA/.claude/worktrees/L47b1/models/optocoupler/nsl32sr3_comportamentale.lib
+.options reltol=1e-6 vntol=1e-6 abstol=1e-12
+VSRC VSN 0 DC 0 AC 1 SIN(0 3.818 1k)
+RSRC VSN SRCX 1.5
+* R_IN del blocco A (gain_block.py, r_in=1M)
+RIN AIN 0 1MEG
+* ---- la cella a JFET: serie TIP, derivazione TIP, correttivo k030 ----
+JS AIN GS SRCX MMBFJ112_TIP
+JP AIN GP 0 MMBFJ112_TIP
+RCS GS CSF 220k
+RCP GP CPF 220k
+RFS CS CSF 100k
+CFS CSF 0 100n
+RFP CP CPF 100k
+CFP CPF 0 100n
+RS1 GS SRCX 1MEG
+RS2 GS AIN 1MEG
+RP1 GP AIN 1MEG
+RP2 GP 0 1MEG
+* i comandi dalla profondita' (comune.comandi, ordine serie_prima)
+BCS CS 0 V = -15 * min(max(V(DEP)/0.5, 0), 1)
+BCP CP 0 V = -15 * (1 - min(max((V(DEP) - 0.5)/0.5, 0), 1))
+BDEP DEP 0 V = time < 2.3 ? min(max((time - 0.3)/1, 0), 1) : min(max(1 - (time - 2.3)/1, 0), 1)
+.control
+option itl1=1000
+set numdgt=15
+* il pieno di partenza: lo stato in gioco (d = 0) e' l'op
+tran 10u 3.8 0 10u
+wrdata jfet_TIP_TIP_k030_td1.dat v(ain)
+.endc
+.end

@@ -1,0 +1,56 @@
+sonda_angoli - L47b1: IDSS, rDS(on) e spegnimento di ogni angolo del MMBFJ112
+.include /Users/roberto/EDA/.claude/worktrees/L47b1/models/jfet/mmbfj112.lib
+.include /Users/roberto/EDA/.claude/worktrees/L47b1/docs/preamp/data/2026-10-02/L47b1/banco/inc/jfet_angoli.lib
+.options reltol=1e-6 vntol=1e-6 abstol=1e-12
+VIORIG DIORIG 0 DC 15
+JIORIG DIORIG 0 0 MMBFJ112
+VRORIG DRORIG 0 DC 10m
+JRORIG DRORIG 0 0 MMBFJ112
+VOORIG DOORIG 0 DC 5
+VGORIG GOORIG 0 DC -1.7800
+JOORIG DOORIG GOORIG 0 MMBFJ112
+VITIP DITIP 0 DC 15
+JITIP DITIP 0 0 MMBFJ112_TIP
+VRTIP DRTIP 0 DC 10m
+JRTIP DRTIP 0 0 MMBFJ112_TIP
+VOTIP DOTIP 0 DC 5
+VGTIP GOTIP 0 DC -1.7800
+JOTIP DOTIP GOTIP 0 MMBFJ112_TIP
+VIVLO DIVLO 0 DC 15
+JIVLO DIVLO 0 0 MMBFJ112_VLO
+VRVLO DRVLO 0 DC 10m
+JRVLO DRVLO 0 0 MMBFJ112_VLO
+VOVLO DOVLO 0 DC 5
+VGVLO GOVLO 0 DC -1.1000
+JOVLO DOVLO GOVLO 0 MMBFJ112_VLO
+VIVHI DIVHI 0 DC 15
+JIVHI DIVHI 0 0 MMBFJ112_VHI
+VRVHI DRVHI 0 DC 10m
+JRVHI DRVHI 0 0 MMBFJ112_VHI
+VOVHI DOVHI 0 DC 5
+VGVHI GOVHI 0 DC -5.1000
+JOVHI DOVHI GOVHI 0 MMBFJ112_VHI
+.control
+op
+let idss_orig = -i(viorig)
+let ron_orig = 0.01 / (-i(vrorig))
+let ioff_orig = -i(voorig)
+print idss_orig ron_orig ioff_orig
+let idss_tip = -i(vitip)
+let ron_tip = 0.01 / (-i(vrtip))
+let ioff_tip = -i(votip)
+print idss_tip ron_tip ioff_tip
+let idss_vlo = -i(vivlo)
+let ron_vlo = 0.01 / (-i(vrvlo))
+let ioff_vlo = -i(vovlo)
+print idss_vlo ron_vlo ioff_vlo
+let idss_vhi = -i(vivhi)
+let ron_vhi = 0.01 / (-i(vrvhi))
+let ioff_vhi = -i(vovhi)
+print idss_vhi ron_vhi ioff_vhi
+showmod jiorig : vto beta
+showmod jitip : vto beta
+showmod jivlo : vto beta
+showmod jivhi : vto beta
+.endc
+.end

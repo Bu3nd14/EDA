@@ -1,0 +1,580 @@
+limite jfet VLO rser 10k
+* GENERATO da docs/preamp/data/2026-10-02/L47b1/banco/ (L47b1). Banco ridotto: vedi comune.py.
+.include /Users/roberto/EDA/.claude/worktrees/L47b1/docs/preamp/data/2026-10-02/L47b1/banco/inc/jfet_angoli.lib
+.include /Users/roberto/EDA/.claude/worktrees/L47b1/models/optocoupler/nsl32sr3_comportamentale.lib
+.options reltol=1e-6 vntol=1e-6 abstol=1e-12
+VSRC VSN 0 DC 0 AC 1 SIN(0 3.818 1k)
+RSRC VSN SRCX 1.5
+* R_IN del blocco A (gain_block.py, r_in=1M)
+RIN AIN 0 1MEG
+RSER SRCX AIN 10k
+JP AIN GP 0 MMBFJ112_VLO
+VC NC 0 DC 0
+* il correttivo ideale: meta' esatta di Vds sul gate, piu' il comando
+BG GP 0 V = V(AIN)/2 + V(NC)
+.control
+option itl1=1000
+set numdgt=10
+set fourgridsize=8192
+set nfreqs=10
+echo L47B1_CASO d=9.500000
+alter vc dc = -1.500000
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=9.550000
+alter vc dc = -1.450000
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=9.600000
+alter vc dc = -1.400000
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=9.650000
+alter vc dc = -1.350000
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=9.700000
+alter vc dc = -1.300000
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=9.750000
+alter vc dc = -1.250000
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=9.800000
+alter vc dc = -1.200000
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=9.850000
+alter vc dc = -1.150000
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=9.900000
+alter vc dc = -1.100000
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=9.950000
+alter vc dc = -1.050000
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=9.999100
+alter vc dc = -1.000900
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=9.999133
+alter vc dc = -1.000867
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=9.999178
+alter vc dc = -1.000822
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=9.999237
+alter vc dc = -1.000763
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=9.999316
+alter vc dc = -1.000684
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=9.999422
+alter vc dc = -1.000578
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=9.999562
+alter vc dc = -1.000438
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=9.999750
+alter vc dc = -1.000250
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.000000
+alter vc dc = -1.000000
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.000334
+alter vc dc = -0.999666
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.000778
+alter vc dc = -0.999222
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.001371
+alter vc dc = -0.998629
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.002162
+alter vc dc = -0.997838
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.003217
+alter vc dc = -0.996783
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.004623
+alter vc dc = -0.995377
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.006499
+alter vc dc = -0.993501
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.009000
+alter vc dc = -0.991000
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.012335
+alter vc dc = -0.987665
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.016783
+alter vc dc = -0.983217
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.022714
+alter vc dc = -0.977286
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.030623
+alter vc dc = -0.969377
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.041170
+alter vc dc = -0.958830
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.055234
+alter vc dc = -0.944766
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.073989
+alter vc dc = -0.926011
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.099000
+alter vc dc = -0.901000
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.132352
+alter vc dc = -0.867648
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.176828
+alter vc dc = -0.823172
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.236137
+alter vc dc = -0.763863
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.315228
+alter vc dc = -0.684772
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.420697
+alter vc dc = -0.579303
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.561341
+alter vc dc = -0.438659
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.748894
+alter vc dc = -0.251106
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+echo L47B1_CASO d=10.999000
+alter vc dc = -0.001000
+tran 0.5u 4m 2m 0.5u
+fourier 1000 v(vsn) v(ain)
+let vdsmax = vecmax(abs(v(ain)))
+print vdsmax
+destroy all
+* il secondo passaggio: la stessa riga di 20 kHz che leggi() si aspetta
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 25n 0.4m 0.3m 25n
+fourier 20000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+.endc
+.end
