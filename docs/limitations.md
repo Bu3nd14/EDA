@@ -932,3 +932,35 @@ riaggiunta.
   `docs/preamp/data/2026-10-01/L44/script/aggiungi_kf.py`;
 - dopo la modifica, le righe non di commento si confrontano con il file in `vendor/` **coi
   CR**: l'unica differenza ammessa è quella dichiarata nella provenienza.
+
+## 40. Un modello comportamentale a stato può avere un punto di lavoro che dipende dal percorso di Newton, e cercare «failed» nel log scarta anche gli op buoni
+
+Scoperto in L47a, verificando `models/optocoupler/nsl32sr3_comportamentale.lib`.
+
+I modelli delle fotoresistenze (`vtl5c4_comportamentale.lib`, `nsl32sr3_comportamentale.lib`)
+tengono log10(R) su un nodo di stato caricato da 1 F, con sorgenti B che contengono `min()` e
+un `?:`. In continua il condensatore è aperto e, nel ramo che limita il tasso, la corrente non
+dipende dallo stato: Newton non ha presa, e l'esito dipende dal percorso.
+
+- Con `abstol=1e-15` e 1 mV sulla cella, la NSL-32SR3 al buio **falliva a 7,30, 7,3979 e 7,45
+  decadi e convergeva a 7,35, 7,39 e 7,40**. La VTL5C4, con lo stesso banco e il buio a 8,6
+  decadi, converge: per caso, non per costruzione (portata a 7,3979 fallisce anche lei).
+- Quando l'op fallisce, ngspice passa al «transient op» (#33) e lo chiude «successfully» in uno
+  stato sbagliato: l'anodo del LED a 0,2 V, la corrente del LED nella capacità d'accoppiamento,
+  una resistenza della cella **negativa**. Nessun errore.
+- Con le opzioni dei banchi veri (`reltol=1e-6 vntol=1e-6 abstol=1e-12`) e 1 V sulla cella, che
+  è lineare, ogni op converge.
+- Una induttanza da 10¹² H fra stato e bersaglio (corto in continua) toglie il problema al buio ma
+  lo sposta alle correnti basse, e nel «transient op» lascia lo stato a 7,38 decadi contro 4,80:
+  provata e tolta.
+
+La seconda metà: quando il gmin stepping riesce, ngspice stampa prima «Warning: Dynamic gmin
+stepping failed» e poi «True gmin stepping completed». L'op è valido, ma un controllo che cerca
+«failed» nell'output lo scarta. Le Note vanno su **stderr**: chi legge solo stdout non vede né
+l'una né l'altra.
+
+**Regola operativa**:
+- un banco su questi modelli usa le tolleranze dei banchi veri, non più strette senza guardare il
+  log;
+- il controllo di un op legge stdout **e** stderr, e scarta la corsa se compare «Transient op» o
+  se manca il risultato, non se compare «failed».

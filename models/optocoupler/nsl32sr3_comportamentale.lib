@@ -1,0 +1,106 @@
+* nsl32sr3_comportamentale.lib - NSL-32SR3 (Advanced Photonix, gia' Silonex e Luna),
+* modello COMPORTAMENTALE da dati pubblicati. GENERATO da
+* docs/preamp/data/2026-10-02/L47a/nsl32sr3_modello/genera_modello.py: non si edita a mano.
+* L47a, NC-043, ADR-058. Il costruttore non pubblica un modello SPICE.
+*
+* DA DATI PUBBLICATI:
+*   - sopra 0,1 mA: il grafico tipico Silonex 104058 Rev 07, letto a pixel (5 punti);
+*   - da 0,1 mA a 2,5 uA: la FORMA di UNA cella misurata da JC Maillet (2008), raccordata;
+*   - la dispersione: 61 pezzi di Maillet (2014), solo a 2 mA (103-289 ohm) e a 10 uA
+*     (16-89 kohm); il massimo del costruttore di 60 ohm a 20 mA;
+*   - 25 Mohm minimi al buio a 10 s; salita 5 ms (63 % di G a 5 mA); discesa 10 ms a 100 kohm.
+* IPOTESI DICHIARATE (non pubblicate):
+*   - sotto 2,5 uA la pendenza dell'ultimo tratto fino a 25 Mohm, poi costante (il minimo);
+*   - accensione a primo ordine su log10(R), tau 1.526 ms costante;
+*   - spegnimento oltre 100 kohm a 0.238 decadi/s, il piu' lento compatibile con 25 Mohm a 10 s
+*     (pessimistico per il residuo); tasso funzione del solo log10(R);
+*   - fattori di dispersione lineari in log10(I) fra 10 uA e 2 mA, e fra 2 e 20 mA quelli alti;
+*   - C cella 5 pF e C ingresso-uscita 0,5 pF della VTL5C4; LED: diodo VTL5C4 piu' RS, 2,5 V a 20 mA (il massimo);
+*   - nessuna temperatura, memoria della luce, distorsione, rumore.
+* Ogni cifra ricavata da qui porta l'etichetta «modello comportamentale da dati pubblicati,
+* una sola cella misurata nella regione del mute, con estrapolazione dichiarata».
+*
+* USO:  X1 anodo catodo c1 c2 NSL32SR3_B
+*       A bassa ovunque, B tipica, C alta ovunque, D bassa accesa e alta al buio (la piu'
+*       ripida), E alta accesa e bassa al buio (la piu' piatta).
+*
+* STATO: il nodo interno xs vale log10(R) in volt. Al punto di lavoro vale il regime per la
+* corrente del LED a t = 0 (CXS aperto, BDX nullo per xs = xt). IC=7.3979 conta solo con uic.
+* CONVERGENZA: provato con le opzioni dei banchi (reltol=1e-6 vntol=1e-6 abstol=1e-12). Con
+* abstol=1e-15 l'op dipende dal percorso di Newton e puo' finire nel «transient op» in uno
+* stato sbagliato SENZA errore (limitations #33): guardare il log.
+
+.subckt NSL32SR3_A a k c1 c2
+DLED a nl DLED_NSL32SR3
+VSEN nl k DC 0
+* stato: log10(R) della cella, su 1 F
+BXT xt 0 V = pwl(log10(max(abs(i(VSEN))*1000, 1e-9)), -9.0000,7.3979, -3.8144,7.3979, -2.6021,5.2556, -2.4815,5.0425, -2.0915,4.3296, -2.0000,4.2041, -1.7423,3.8854, -1.4179,3.6094, -1.1073,3.0311, -0.9962,2.8576, -0.0115,2.1453, 0.3010,2.0128, 0.9923,1.6275, 1.2923,1.5082, 1.3010,1.5049, 1.5827,1.3981, 2.5000,1.0503)
+* accensione: primo ordine, tau costante; spegnimento: tasso funzione di log10(R).
+BDX 0 xs I = V(xt) >= V(xs) ? min((V(xt) - V(xs))/0.00152576, pow(10, pwl(V(xs), 0.0000,2.4652, 5.0000,2.4652, 5.0200,-0.6229, 9.0000,-0.6229))) : (V(xt) - V(xs))/0.00152576
+CXS xs 0 1 IC=7.3979
+RXS xs 0 1e12
+BCELL c1 c2 I = V(c1,c2) / pow(10, V(xs))
+CCELL c1 c2 5p
+CIO a c1 0.5p
+.model DLED_NSL32SR3 D(IS=2.8e-16 N=2 RS=42.53)
+.ends
+
+.subckt NSL32SR3_B a k c1 c2
+DLED a nl DLED_NSL32SR3
+VSEN nl k DC 0
+* stato: log10(R) della cella, su 1 F
+BXT xt 0 V = pwl(log10(max(abs(i(VSEN))*1000, 1e-9)), -9.0000,7.3979, -3.4761,7.3979, -2.6021,5.8534, -2.4815,5.6403, -2.0915,4.9273, -2.0000,4.8019, -1.7423,4.4487, -1.4179,4.1293, -1.1073,3.5095, -0.9962,3.3211, -0.0115,2.4771, 0.3010,2.3028, 0.9923,1.9174, 1.2923,1.7982, 1.3010,1.7949, 1.5827,1.6881, 2.5000,1.3403)
+* accensione: primo ordine, tau costante; spegnimento: tasso funzione di log10(R).
+BDX 0 xs I = V(xt) >= V(xs) ? min((V(xt) - V(xs))/0.00152576, pow(10, pwl(V(xs), 0.0000,2.4652, 5.0000,2.4652, 5.0200,-0.6229, 9.0000,-0.6229))) : (V(xt) - V(xs))/0.00152576
+CXS xs 0 1 IC=7.3979
+RXS xs 0 1e12
+BCELL c1 c2 I = V(c1,c2) / pow(10, V(xs))
+CCELL c1 c2 5p
+CIO a c1 0.5p
+.model DLED_NSL32SR3 D(IS=2.8e-16 N=2 RS=42.53)
+.ends
+
+.subckt NSL32SR3_C a k c1 c2
+DLED a nl DLED_NSL32SR3
+VSEN nl k DC 0
+* stato: log10(R) della cella, su 1 F
+BXT xt 0 V = pwl(log10(max(abs(i(VSEN))*1000, 1e-9)), -9.0000,7.3979, -3.3926,7.3979, -2.6021,6.0008, -2.4815,5.7878, -2.0915,5.0748, -2.0000,4.9494, -1.7423,4.5974, -1.4179,4.2795, -1.1073,3.6611, -0.9962,3.4732, -0.0115,2.6337, 0.3010,2.4609, 0.9923,1.9547, 1.2923,1.7830, 1.3010,1.7782, 1.5827,1.6714, 2.5000,1.3236)
+* accensione: primo ordine, tau costante; spegnimento: tasso funzione di log10(R).
+BDX 0 xs I = V(xt) >= V(xs) ? min((V(xt) - V(xs))/0.00152576, pow(10, pwl(V(xs), 0.0000,2.4652, 5.0000,2.4652, 5.0200,-0.6229, 9.0000,-0.6229))) : (V(xt) - V(xs))/0.00152576
+CXS xs 0 1 IC=7.3979
+RXS xs 0 1e12
+BCELL c1 c2 I = V(c1,c2) / pow(10, V(xs))
+CCELL c1 c2 5p
+CIO a c1 0.5p
+.model DLED_NSL32SR3 D(IS=2.8e-16 N=2 RS=42.53)
+.ends
+
+.subckt NSL32SR3_D a k c1 c2
+DLED a nl DLED_NSL32SR3
+VSEN nl k DC 0
+* stato: log10(R) della cella, su 1 F
+BXT xt 0 V = pwl(log10(max(abs(i(VSEN))*1000, 1e-9)), -9.0000,7.3979, -3.3926,7.3979, -2.6021,6.0008, -2.4815,5.7878, -2.0915,5.0748, -2.0000,4.9494, -1.7423,4.5472, -1.4179,4.1661, -1.1073,3.4873, -0.9962,3.2777, -0.0115,2.2465, 0.3010,2.0128, 0.9923,1.6275, 1.2923,1.5082, 1.3010,1.5049, 1.5827,1.3981, 2.5000,1.0503)
+* accensione: primo ordine, tau costante; spegnimento: tasso funzione di log10(R).
+BDX 0 xs I = V(xt) >= V(xs) ? min((V(xt) - V(xs))/0.00152576, pow(10, pwl(V(xs), 0.0000,2.4652, 5.0000,2.4652, 5.0200,-0.6229, 9.0000,-0.6229))) : (V(xt) - V(xs))/0.00152576
+CXS xs 0 1 IC=7.3979
+RXS xs 0 1e12
+BCELL c1 c2 I = V(c1,c2) / pow(10, V(xs))
+CCELL c1 c2 5p
+CIO a c1 0.5p
+.model DLED_NSL32SR3 D(IS=2.8e-16 N=2 RS=42.53)
+.ends
+
+.subckt NSL32SR3_E a k c1 c2
+DLED a nl DLED_NSL32SR3
+VSEN nl k DC 0
+* stato: log10(R) della cella, su 1 F
+BXT xt 0 V = pwl(log10(max(abs(i(VSEN))*1000, 1e-9)), -9.0000,7.3979, -3.8144,7.3979, -2.6021,5.2556, -2.4815,5.0425, -2.0915,4.3296, -2.0000,4.2041, -1.7423,3.9356, -1.4179,3.7227, -1.1073,3.2050, -0.9962,3.0531, -0.0115,2.5325, 0.3010,2.4609, 0.9923,1.9547, 1.2923,1.7830, 1.3010,1.7782, 1.5827,1.6714, 2.5000,1.3236)
+* accensione: primo ordine, tau costante; spegnimento: tasso funzione di log10(R).
+BDX 0 xs I = V(xt) >= V(xs) ? min((V(xt) - V(xs))/0.00152576, pow(10, pwl(V(xs), 0.0000,2.4652, 5.0000,2.4652, 5.0200,-0.6229, 9.0000,-0.6229))) : (V(xt) - V(xs))/0.00152576
+CXS xs 0 1 IC=7.3979
+RXS xs 0 1e12
+BCELL c1 c2 I = V(c1,c2) / pow(10, V(xs))
+CCELL c1 c2 5p
+CIO a c1 0.5p
+.model DLED_NSL32SR3 D(IS=2.8e-16 N=2 RS=42.53)
+.ends

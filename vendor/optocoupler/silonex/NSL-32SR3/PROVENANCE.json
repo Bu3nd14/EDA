@@ -1,0 +1,47 @@
+{
+  "part_name": "NSL-32SR3 (CdS photocell / LED optocoupler, axial)",
+  "vendor_name": "Silonex Inc. (Montreal), the original maker of the NSL-32 family; the line passed to Luna Optoelectronics and then to Advanced Photonix, which publishes it today (vendor/optocoupler/advanced_photonix/NSL-32SR3/, Rev C, which has no chart)",
+  "device_class": "optocoupler",
+  "product_page": "silonex.com no longer exists; the current product page is Advanced Photonix's (see vendor/optocoupler/advanced_photonix/NSL-32SR3/PROVENANCE.json)",
+  "date_obtained": "2026-10-02",
+  "lotto": "L47a (la cella del mute: il sostituto della VTL5C4, NC-043)",
+  "obtained_by": "AI agent (Claude Opus 5.5, bom-component-manager subagent, worktree L47a) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl -L from Farnell's document host (www.farnell.com/datasheets/1674205.pdf): a DISTRIBUTOR-HOSTED MIRROR of the manufacturer's datasheet. The page carries the Silonex name, address and document number '104058 Rev 07'. Byte-for-byte as served (HTTP 200, Last-Modified 2012-11-24).",
+  "license_notes": "Manufacturer-authored datasheet content, redistributed here unmodified for engineering traceability only. Copyright remains with the manufacturer.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "1674205.pdf",
+      "role": "datasheet",
+      "url": "https://www.farnell.com/datasheets/1674205.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 159970,
+      "pages": 1,
+      "sha256": "317247b12265d6abf1e22db78ebc9c92e08949741e8f5b4977cc18b228ee5ad1",
+      "local_filename": "nsl-32sr3-silonex-rev07.pdf",
+      "renamed": true,
+      "rename_note": "Renamed from the numeric Farnell asset id to a descriptive name. Content unmodified."
+    }
+  ],
+  "revision_note": "Document '104058 Rev 07', PDF created 2012-11-22.",
+  "why_this_file": "It is the only manufacturer document with the 'Photocell Resistance vs. LED Current' chart (log-log, 0.1-100 mA, 10-10000 ohm, five marked points). The Advanced Photonix Rev C has the table only, the Luna Rev 01-04-16 a linear chart that cannot be read below ~1 mA. Source of the static curve above 0.1 mA of models/optocoupler/nsl32sr3_comportamentale.lib (L47a).",
+  "what_was_read": {
+    "page": "pagina 1: 'Electrical Characteristics (TA=25C)' e il grafico 'Photocell Resistance vs. LED Current'",
+    "key_numbers_transcribed_verbatim": {
+      "Ron_at_If_20mA_max": "60 ohm",
+      "Ron_at_If_5mA_typ": "150 ohm",
+      "Roff_min": "25 Mohm, 10 sec. after IF = 0, 5Vdc on cell; note (3): measured after 1 minute ON @ IF = 20mA followed by 10 sec. OFF",
+      "rise_time_typ": "5 msec, time to 63% of final conductance @ IF = 5mA",
+      "decay_time_typ": "10 msec, time to 100K after removal of IF = 5mA",
+      "cell_temp_coefficient_typ": "0.7 %/C, IF > 5 mA",
+      "LED_IF_max": "25 mA",
+      "LED_VF_max_at_20mA": "2.5 V",
+      "cell_voltage_max": "60 V (Peak AC or DC)",
+      "cell_power": "50 mW, derate linearly to 0 at 75C",
+      "temperature": "-40 to +75C"
+    },
+    "chart_read_by_pixel": "300 dpi (pdftoppm), docs/preamp/data/2026-10-02/L47a/nsl32sr3_modello/digit.py: 109 px per decade of resistance, 260 px per decade of current; the five markers at 0.101 mA 2094 ohm, 0.974 mA 300 ohm, 9.82 mA 82.6 ohm, 19.6 mA 62.8 ohm, 38.3 mA 48.8 ohm",
+    "note": "La tabella (150 ohm tipici a 5 mA) e il grafico (~115 ohm a 5 mA, interpolato) non coincidono: incoerenza del costruttore. Il grafico e' 'typical' senza dispersione."
+  }
+}

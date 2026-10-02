@@ -1,0 +1,44 @@
+{
+  "part_name": "VTL5C4 reissue by Xvive (datasheet header 'Xvive5C4-R'), axial LED + photoresistor optocoupler",
+  "vendor_name": "Xvive (xvive.com)",
+  "device_class": "optocoupler",
+  "product_page": "https://xvive.com/audio/product/vtl5c4/",
+  "date_obtained": "2026-10-02",
+  "lotto": "L47a (la cella del mute: candidato SCARTATO, ADR-058)",
+  "obtained_by": "AI agent (Claude Opus 5.5, bom-component-manager subagent, worktree L47a) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl -L from the file linked by Xvive's own product page (host eadn-wc04-3257698.nxedge.io, Xvive's WordPress CDN). Byte-for-byte as served (HTTP 200).",
+  "license_notes": "Manufacturer-authored datasheet, redistributed unmodified for engineering traceability only. Copyright remains Xvive.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "Xvive-5C4-data-sheet-RoHS-compliant.pdf",
+      "role": "datasheet",
+      "url": "https://eadn-wc04-3257698.nxedge.io/audio/wp-content/uploads/sites/2/2021/11/Xvive-5C4-data-sheet-RoHS-compliant.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 162570,
+      "pages": 2,
+      "sha256": "b6cadcf202439ed2f193259bbb318e6b8e1d6d7dae9e061d811c47d63568ce03",
+      "local_filename": "xvive-5c4-r-datasheet.pdf",
+      "renamed": true,
+      "rename_note": "Renamed to a descriptive name. Content unmodified."
+    }
+  ],
+  "revision_note": "PDF metadata title 'M 1210 CLD-R', created 2019-07-09; page header 'Xvive5C4-R (OPTO-ISOLATOR SPECICATION)'.",
+  "why_this_file": "Kept as the evidence for rejecting the Xvive reissue in ADR-058. WARNING: the 'Xvive VTL5C3/VTL5C4' datasheets hosted by resellers (Aion FX, Synthrotek) are the 2001 Excelitas/Vactec catalogue page with an Xvive title and do NOT describe the Xvive part; they are not kept.",
+  "what_was_read": {
+    "page": "pagina 1, tabella",
+    "key_numbers_transcribed_verbatim": {
+      "Ron": "2 KOhm, IF = 0.5mA (measured after a dark history of 1 week)",
+      "Roff": "2.0 MOhm, 10sec after I=0.3Vdc on cell",
+      "rise_time_max": "6.0 msec, time to 63% of final conductance @ IF = 16 mA",
+      "decay_time_max": "1.5 sec, time to 100KOhm after removal of input @ IF = 16 mA",
+      "cell_temp_coefficient": "1.0 %/C, IF > 5 mA",
+      "LED_IF_max": "40 mA (Derate Linearly to 0 at 75C)",
+      "LED_VF_max": "2.5 V, IF = 16 mA",
+      "cell_voltage_max": "60 V (Peak AC or DC)",
+      "cell_power": "50 mW (Derate Linearly to 0 at 75C)"
+    },
+    "note": "Pagina 2: grafici 'Output Resistance vs. Forward Current', 'Rise/Fall Time vs. Load Resistance', 'LED Forward Current vs. Forward Voltage' (non letti a pixel: candidato scartato). La colonna Min/Typ di Ron e Roff non e' univoca nel testo estratto."
+  }
+}

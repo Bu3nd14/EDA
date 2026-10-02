@@ -1,0 +1,20 @@
+Fonte NON del costruttore: misure di un privato, conservate per tracciabilita' (L47a, ADR-058).
+Scaricati il 2026-10-02 con curl -L, byte per byte, HTTP 200. Autore JC Maillet, (c) 2008,
+«NSL32-SR3 STATIC Spice Model Derivation».
+
+Pagina: http://www.lynx.net/~jc/NSL32-SR3modeling.html
+  NSL32-SR3modeling.html  text/html   5426 byte  sha256 dbc696aa4ea2d6ba557cf62235607a0395f982457d92a646755501f73ac5b8e0
+Immagini da http://www.lynx.net/~jc/ :
+  "NSL32SR3 cellB.jpg" -> NSL32SR3_cellB.jpg     image/jpeg 138281 byte  sha256 ff14a38bfd2786f9e5a7d80c936da30d665fa0518545652c1c6f557f797d317e
+      tabella scritta a mano, I_LED -> R cella, UNA unita' («Cell B»). USATA (genera_modello.py, CELLB).
+  "SR3 timing graph.jpg"  -> SR3_timing_graph.jpg   image/jpeg 109826 byte  sha256 eec58cc28640191dd6f0fa0f97335f47980d4faa9a6d5bf78ff4bbc0d6317364
+      schizzo a mano dei tempi, attribuito dall'autore a uno «spec sheet» non trovato. NON usato.
+
+Trascrizione della Cell B (riletta dall'orchestratore sull'immagine, 2026-10-02):
+  2,05 mA 137 ohm | 0,29 mA 568 | 131 uA 1,15 k | 78,1 uA 2,22 k | 38,2 uA 9,25 k | 18,1 uA 19,30 k
+  8,1 uA 58,1 k | 4,7 uA «115?.8 k», cifre sovrascritte: ESCLUSO | 3,3 uA 300 k | 2,5 uA 490 k
+Temperatura, strumenti e metodo non dichiarati.
+
+Il modello SPICE che l'autore pubblica nel 2020 (polinomio in ln I, solo come immagine) NON si usa:
+valutato dal bom-component-manager in L47a, non riproduce la sua stessa tabella (~907 contro 137 ohm
+a 2,05 mA), forse per un errore di unita'; non riverificato dall'orchestratore.
