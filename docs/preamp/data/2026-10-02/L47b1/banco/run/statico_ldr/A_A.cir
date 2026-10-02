@@ -1,0 +1,1008 @@
+statico ldr A A
+* GENERATO da docs/preamp/data/2026-10-02/L47b1/banco/ (L47b1). Banco ridotto: vedi comune.py.
+.include /Users/roberto/EDA/.claude/worktrees/L47b1/docs/preamp/data/2026-10-02/L47b1/banco/inc/jfet_angoli.lib
+.include /Users/roberto/EDA/.claude/worktrees/L47b1/models/optocoupler/nsl32sr3_comportamentale.lib
+.options reltol=1e-6 vntol=1e-6 abstol=1e-12
+VSRC VSN 0 DC 0 AC 1 SIN(0 3.818 1k)
+RSRC VSN SRCX 1.5
+* R_IN del blocco A (gain_block.py, r_in=1M)
+RIN AIN 0 1MEG
+* ---- la cella a fotoresistenze NSL-32SR3: serie curva A, derivazione curva A ----
+XLS ALS 0 SRCX AIN NSL32SR3_A
+XLP ALP 0 AIN 0 NSL32SR3_A
+ILS 0 ALS DC 20m
+ILP 0 ALP DC 10n
+* 10 M dall'anodo a massa: un LED col solo generatore non ha percorso in continua (L29b)
+RALS ALS 0 10MEG
+RALP ALP 0 10MEG
+.control
+option itl1=1000
+set numdgt=10
+set fourgridsize=8192
+set nfreqs=10
+echo L47B1_CASO d=0.0000
+alter ils dc = 2.000000e-02
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.0250
+alter ils dc = 6.324555e-03
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.0500
+alter ils dc = 2.000000e-03
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.0750
+alter ils dc = 6.324555e-04
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.1000
+alter ils dc = 2.000000e-04
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.1250
+alter ils dc = 1.525207e-04
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.1500
+alter ils dc = 1.163128e-04
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.1750
+alter ils dc = 8.870054e-05
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.2000
+alter ils dc = 6.764333e-05
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.2250
+alter ils dc = 5.158504e-05
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.2500
+alter ils dc = 3.933893e-05
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.2750
+alter ils dc = 3.000000e-05
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.3000
+alter ils dc = 2.287810e-05
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.3250
+alter ils dc = 1.744692e-05
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.3500
+alter ils dc = 1.330508e-05
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.3750
+alter ils dc = 1.014650e-05
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.4000
+alter ils dc = 7.737756e-06
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.4250
+alter ils dc = 5.900839e-06
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.4500
+alter ils dc = 4.500000e-06
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.4750
+alter ils dc = 3.456800e-06
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.5000
+alter ils dc = 2.655437e-06
+alter ilp dc = 1.000000e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.5250
+alter ils dc = 2.039848e-06
+alter ilp dc = 2.065625e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.5500
+alter ils dc = 1.566966e-06
+alter ilp dc = 4.266807e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.5750
+alter ils dc = 1.203708e-06
+alter ilp dc = 8.813624e-08
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.6000
+alter ils dc = 9.246621e-07
+alter ilp dc = 1.820564e-07
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.6250
+alter ils dc = 7.103049e-07
+alter ilp dc = 3.760603e-07
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.6500
+alter ils dc = 5.456405e-07
+alter ilp dc = 7.767996e-07
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.6750
+alter ils dc = 4.191489e-07
+alter ilp dc = 1.604577e-06
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.7000
+alter ils dc = 3.219809e-07
+alter ilp dc = 3.314454e-06
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.7250
+alter ils dc = 2.473386e-07
+alter ilp dc = 6.846419e-06
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.7500
+alter ils dc = 1.900000e-07
+alter ilp dc = 1.414214e-05
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.7750
+alter ils dc = 4.358899e-08
+alter ilp dc = 2.921235e-05
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.8000
+alter ils dc = 1.000000e-08
+alter ilp dc = 6.034176e-05
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.8250
+alter ils dc = 1.000000e-08
+alter ilp dc = 1.246435e-04
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.8500
+alter ils dc = 1.000000e-08
+alter ilp dc = 2.574667e-04
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.8750
+alter ils dc = 1.000000e-08
+alter ilp dc = 5.318296e-04
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.9000
+alter ils dc = 1.000000e-08
+alter ilp dc = 1.098561e-03
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.9250
+alter ils dc = 1.000000e-08
+alter ilp dc = 2.269214e-03
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.9500
+alter ils dc = 1.000000e-08
+alter ilp dc = 4.687346e-03
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=0.9750
+alter ils dc = 1.000000e-08
+alter ilp dc = 9.682299e-03
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+echo L47B1_CASO d=1.0000
+alter ils dc = 1.000000e-08
+alter ilp dc = 2.000000e-02
+alter vsrc ac = 1
+alter rsrc = 1.5
+op
+print v(xls.xs) v(xlp.xs)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vsrc ac = 1
+.endc
+.end

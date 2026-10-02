@@ -1,0 +1,2122 @@
+statico jfet VLO VLO k048 serie_prima
+* GENERATO da docs/preamp/data/2026-10-02/L47b1/banco/ (L47b1). Banco ridotto: vedi comune.py.
+.include /Users/roberto/EDA/.claude/worktrees/L47b1/docs/preamp/data/2026-10-02/L47b1/banco/inc/jfet_angoli.lib
+.include /Users/roberto/EDA/.claude/worktrees/L47b1/models/optocoupler/nsl32sr3_comportamentale.lib
+.options reltol=1e-6 vntol=1e-6 abstol=1e-12
+VSRC VSN 0 DC 0 AC 1 SIN(0 3.818 1k)
+RSRC VSN SRCX 1.5
+* R_IN del blocco A (gain_block.py, r_in=1M)
+RIN AIN 0 1MEG
+* ---- la cella a JFET: serie VLO, derivazione VLO, correttivo k048 ----
+JS AIN GS SRCX MMBFJ112_VLO
+JP AIN GP 0 MMBFJ112_VLO
+RCS GS CSF 470k
+RCP GP CPF 470k
+RFS CS CSF 100k
+CFS CSF 0 100n
+RFP CP CPF 100k
+CFP CPF 0 100n
+VCS CS 0 DC 0
+VCP CP 0 DC -15
+RS1 GS SRCX 1MEG
+RS2 GS AIN 1MEG
+RP1 GP AIN 1MEG
+RP2 GP 0 1MEG
+.control
+option itl1=1000
+set numdgt=10
+set fourgridsize=8192
+set nfreqs=10
+echo L47B1_CASO d=0.0000
+alter vcs dc = -0.000000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.0250
+alter vcs dc = -0.750000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.0500
+alter vcs dc = -1.500000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.0750
+alter vcs dc = -2.250000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.1000
+alter vcs dc = -3.000000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.1250
+alter vcs dc = -3.750000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.1500
+alter vcs dc = -4.500000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.1750
+alter vcs dc = -5.250000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.2000
+alter vcs dc = -6.000000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.2250
+alter vcs dc = -6.750000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.2500
+alter vcs dc = -7.500000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.2750
+alter vcs dc = -8.250000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.3000
+alter vcs dc = -9.000000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.3250
+alter vcs dc = -9.750000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.3500
+alter vcs dc = -10.500000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.3750
+alter vcs dc = -11.250000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.4000
+alter vcs dc = -12.000000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.4250
+alter vcs dc = -12.750000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.4500
+alter vcs dc = -13.500000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.4750
+alter vcs dc = -14.250000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.5000
+alter vcs dc = -15.000000
+alter vcp dc = -15.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.5250
+alter vcs dc = -15.000000
+alter vcp dc = -14.250000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.5500
+alter vcs dc = -15.000000
+alter vcp dc = -13.500000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.5750
+alter vcs dc = -15.000000
+alter vcp dc = -12.750000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.6000
+alter vcs dc = -15.000000
+alter vcp dc = -12.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.6250
+alter vcs dc = -15.000000
+alter vcp dc = -11.250000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.6500
+alter vcs dc = -15.000000
+alter vcp dc = -10.500000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.6750
+alter vcs dc = -15.000000
+alter vcp dc = -9.750000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.7000
+alter vcs dc = -15.000000
+alter vcp dc = -9.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.7250
+alter vcs dc = -15.000000
+alter vcp dc = -8.250000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.7500
+alter vcs dc = -15.000000
+alter vcp dc = -7.500000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.7750
+alter vcs dc = -15.000000
+alter vcp dc = -6.750000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.8000
+alter vcs dc = -15.000000
+alter vcp dc = -6.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.8250
+alter vcs dc = -15.000000
+alter vcp dc = -5.250000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.8500
+alter vcs dc = -15.000000
+alter vcp dc = -4.500000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.8750
+alter vcs dc = -15.000000
+alter vcp dc = -3.750000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.9000
+alter vcs dc = -15.000000
+alter vcp dc = -3.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.9250
+alter vcs dc = -15.000000
+alter vcp dc = -2.250000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.9500
+alter vcs dc = -15.000000
+alter vcp dc = -1.500000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=0.9750
+alter vcs dc = -15.000000
+alter vcp dc = -0.750000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+echo L47B1_CASO d=1.0000
+alter vcs dc = -15.000000
+alter vcp dc = -0.000000
+alter vsrc ac = 1
+alter rsrc = 1.5
+alter vcs ac = 0
+alter vcp ac = 0
+alter @vsrc[sin] = [ 0 3.818 1000 ]
+tran 5e-07 0.004 0.002 5e-07
+fourier 1000 v(vsn) v(ain)
+destroy all
+alter @vsrc[sin] = [ 0 3.818 20000 ]
+tran 2.5e-08 0.0004 0.0003 2.5e-08
+fourier 20000 v(vsn) v(ain)
+destroy all
+ac lin 1 1k 1k 1
+let h1k = mag(v(ain))
+print h1k
+destroy all
+ac lin 1 20k 20k 1
+let h20k = mag(v(ain))
+print h20k
+destroy all
+ac lin 1 20 20 1
+print mag(v(ain))
+destroy all
+ac dec 20 20 20k
+let zmin = vecmin(mag(v(srcx) / (-i(vsrc))))
+print zmin
+destroy all
+alter vcs ac = 1
+ac lin 1 1k 1k 1
+let cvcs1k = mag(v(ain))
+print cvcs1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcs20k = mag(v(ain))
+print cvcs20k
+destroy all
+alter vcs ac = 0
+alter vcp ac = 1
+ac lin 1 1k 1k 1
+let cvcp1k = mag(v(ain))
+print cvcp1k
+destroy all
+ac lin 1 20k 20k 1
+let cvcp20k = mag(v(ain))
+print cvcp20k
+destroy all
+alter vcp ac = 0
+alter vsrc ac = 1
+.endc
+.end

@@ -1,0 +1,46 @@
+rumore ldr ('B', 'B')
+* GENERATO da docs/preamp/data/2026-10-02/L47b1/banco/ (L47b1). Banco ridotto: vedi comune.py.
+.include /Users/roberto/EDA/.claude/worktrees/L47b1/docs/preamp/data/2026-10-02/L47b1/banco/inc/jfet_angoli.lib
+.include /Users/roberto/EDA/.claude/worktrees/L47b1/models/optocoupler/nsl32sr3_comportamentale.lib
+.options reltol=1e-6 vntol=1e-6 abstol=1e-12
+VSRC VSN 0 DC 0 AC 1 SIN(0 3.818 1k)
+RSRC VSN SRCX 1.5
+* R_IN del blocco A (gain_block.py, r_in=1M)
+RIN AIN 0 1MEG
+* ---- la cella a fotoresistenze NSL-32SR3: serie curva B, derivazione curva B ----
+XLS ALS 0 SRCX AIN NSL32SR3_B
+XLP ALP 0 AIN 0 NSL32SR3_B
+ILS 0 ALS DC 20m
+ILP 0 ALP DC 10n
+* 10 M dall'anodo a massa: un LED col solo generatore non ha percorso in continua (L29b)
+RALS ALS 0 10MEG
+RALP ALP 0 10MEG
+.control
+option itl1=1000
+set numdgt=10
+noise v(ain) vsrc dec 50 20 20k
+setplot noise2
+let vn = sqrt(onoise_total^2)
+print vn
+setplot noise1
+destroy all
+alter vsrc ac = 0
+alter ils ac = 1
+ac dec 50 20 20k
+let h2 = mag(v(ain))^2
+let hrms_ils = sqrt(mean(h2))
+let hmax_ils = vecmax(mag(v(ain)))
+print hrms_ils hmax_ils
+destroy all
+alter ils ac = 0
+alter vsrc ac = 0
+alter ilp ac = 1
+ac dec 50 20 20k
+let h2 = mag(v(ain))^2
+let hrms_ilp = sqrt(mean(h2))
+let hmax_ilp = vecmax(mag(v(ain)))
+print hrms_ilp hmax_ilp
+destroy all
+alter ilp ac = 0
+.endc
+.end
