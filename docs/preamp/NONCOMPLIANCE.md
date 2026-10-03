@@ -3536,7 +3536,7 @@ comandare il sink di `MUTE_CMD` che esiste già, e se serve un tetto di non-dann
 | Requisito | **PR-29** · **T8** (nessuna parte con fine vita annunciata) · ADR-038 e ADR-039 («Da riaprire se la VTL5C4 non si trova»), ADR-050 |
 | Severità | **bloccante** (decisione dell'utente il 2026-09-27, «non possiamo produrre se non cambiamo»; l'architetto proponeva maggiore): impedisce **G2** (il layout ha bisogno del pezzo vero) |
 | Aperta da | `reports/2026-09-27-L43a-architetto-avversariale.md`, rilievo **R6**. Trovata dall'**architetto avversariale**, accettata dall'utente in L43a |
-| Stato | aperta — **la parte è scelta** (L47a, 2026-10-02, ADR-058: NSL-32SR3) **e confermata dopo la prova contro il JFET** (L47b1, ADR-059); il sorgente e le misure sono di L47b2 |
+| Stato | aperta — **la parte è scelta** (L47a, 2026-10-02, ADR-058: NSL-32SR3) **e confermata dopo la prova contro il JFET** (L47b1, ADR-059); **nel sorgente e nei banchi, cima del LED a 7 mA** (L47b2a, ADR-060); il profilo, il pilota e le misure sul preamp intero sono di L47b2b |
 
 **Evidenza.** Il sorgente nomina la VTL5C4 dell'Excelitas, e il modello viene dal suo datasheet
 (`vendor/optocoupler/excelitas/VTL5C3_VTL5C4`). Excelitas ha chiuso la serie VTL (ultimo ordine
@@ -3576,6 +3576,27 @@ ADR-039.
   ipotizzati); |Zin| ≥ 771 kΩ.
 - **Resta, per L47b2.** Il sorgente; la cima del LED (il declassamento); il profilo sull'inviluppo
   A–E a 3 s; S, B, E3, E5 sul preamp intero.
+
+**Avanzamento, L47b2a (2026-10-03).** Report `reports/2026-10-03-L47b2a-cella-nel-sorgente.md`,
+**ADR-060**. L47b2 diviso dall'utente all'inizio: L47b2a la cella nel sorgente, L47b2b il resto.
+- **Fatto.**
+  - **Il sorgente**: `Isolator:NSL-32`, valore `NSL-32SR3 LDR_S/P_<canale>`, impronta
+    `OptoDevice:Luna_NSL-32`; i LED collegati **per nome**. Il simbolo ha anodo e catodo sui
+    piedini opposti a quelli della VTL5C: cambiare la sola parte capovolgeva i quattro LED e il
+    controllo del cablaggio diceva OK (limitations #41). I controlli dei relè (2e) e del
+    cablaggio (2j) riconoscono la parte nuova, rifiutano la VTL5C e la polarità sbagliata, provati
+    su tre falsi.
+  - **Nessun banco canonico resta sulla VTL5C4** (`tb_e3_e5_ldr`, `tb_v2_casopeggiore`,
+    `tb_v2_mute_ldr` e i loro generatori).
+  - **La cima del LED**: 7 mA, ipotesi dichiarata (ADR-060, «Solo ipotesi a 7 mA»).
+  - **L'impronta**: le piazzole della cella (2,53 mm) coincidono col disegno (2,54 ± 0,13); quelle
+    del LED sono a **3,81 mm contro 3,30 ± 0,13**: i terminali vanno divaricati di ~0,5 mm, e il
+    costruttore avverte che divaricarli male danneggia il passante in vetro. Evidenza per L49.
+  - **E3 ed E5 preliminari** (cella in serie a 7 mA, modello comportamentale da dati pubblicati):
+    |Zin| ≥ 110,7 kΩ, E5 ≤ 5,53 µV.
+- **Resta, per L47b2b.** Il profilo a 3 s ricalibrato sull'inviluppo A–E con la cima di 7 mA, il
+  pilota e il firmware; S e B sul preamp intero (i banchi V2 hanno ancora il profilo v4 della
+  VTL5C4, e lo dicono).
 
 ### NC-044 — Il ronzio da anello di massa non ha requisiti, e nessuno ha deciso come la massa audio si lega alla terra
 
@@ -3765,6 +3786,11 @@ LDR (NC-045) e sul pilota nuovo, prima di G1.
 (sorgente, cella NSL-32SR3, R_IN 1 MΩ; `data/2026-10-02/L47b1/banco/sfumatura.py --cima12`): 12,7–
 16,9 dB sulle curve A–E col profilo v4 compresso a 3 s. Resta aperta: la misura che la chiude è
 sul preamp intero (`tb_v2_casopeggiore.cir`) col pilota vero, in L47b2.
+
+**Avanzamento, L47b2a (2026-10-03).** La cima cambia: **7 mA** sulla NSL-32SR3 (ADR-060, ipotesi
+dichiarata sul declassamento del LED). La cella accesa vale 99,9 Ω (curva B) invece di 76,4 Ω a
+12 mA. La misura che chiude questa NC è quindi S con la cima a **7 mA**, sul preamp intero, col
+profilo a 3 s ricalibrato: L47b2b.
 
 ### NC-050 — La tenuta di `VRELAY` è scesa da 62,8 a 36,1 ms: P9 regge con 11 ms di margine
 

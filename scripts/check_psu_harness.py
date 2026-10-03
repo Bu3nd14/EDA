@@ -50,10 +50,16 @@ HARNESS = {
     "LDR_CMD": {"1": "LDR_S_A", "2": "LDR_S_K", "3": "LDR_P_A", "4": "LDR_P_K"},
     "MUTE_TIMER": {"1": "MUTE_CMD", "2": "PERMIT_CMD", "3": "MUTE_SW"},
 }
-# The audio side's J3 by device pin (VTL5C: pin 2 LED anode, pin 1 cathode;
-# preamp_audio.py, the J3 block). U101/U301 series cells, U102/U302 shunt.
-LDR_AUDIO = {"1": ("U101", "2"), "2": ("U301", "1"),
-             "3": ("U102", "2"), "4": ("U302", "1")}
+# The audio side's J3 by LED FUNCTION (preamp_audio.py, the J3 block):
+# U101/U301 series cells, U102/U302 shunt; J3 pins 1/3 the strings' anodes,
+# 2/4 their cathodes. Until L47b2a this table held pin NUMBERS (the VTL5C's,
+# 2 = anode): swapping in the NSL-32, whose 1 is the anode, reversed all
+# four LEDs and this check still said OK (L47b2a/falsi/led_capovolti.net).
+# Now the function is resolved through the part, and a part not in LED_PINS
+# is a finding, not a guess. Pins read from KiCad 10's Isolator.kicad_sym.
+LED_PINS = {"NSL-32": {"A": "1", "K": "2"}}
+LDR_AUDIO = {"1": ("U101", "A"), "2": ("U301", "K"),
+             "3": ("U102", "A"), "4": ("U302", "K")}
 # Supply side: which net must be the OUT of which regulator part. VRELAY is
 # not in the list since L41b1: it comes through the standby switch (below).
 REG_OUT = {"VPLUS": "TPS7A4701", "VMINUS": "TPS7A3301"}
@@ -121,10 +127,19 @@ def check_audio(components, pin_net, findings):
         for pin, name in want.items():
             net = pins.get(pin)
             if value == "LDR_CMD":
-                dev = LDR_AUDIO[pin]
+                dref, fn = LDR_AUDIO[pin]
+                part = components.get(dref, {}).get("part")
+                if part not in LED_PINS:
+                    findings.append("audio: %s is %r, not a mute cell this "
+                                    "check knows the LED pins of (%s)"
+                                    % (dref, part, ", ".join(LED_PINS)))
+                    continue
+                dev = (dref, LED_PINS[part][fn])
                 if net is None or pin_net.get(dev) != net:
-                    findings.append("audio: %s pin %s does not reach %s pin %s"
-                                    % (ref, pin, dev[0], dev[1]))
+                    findings.append("audio: %s pin %s does not reach the LED "
+                                    "%s of %s (pin %s)"
+                                    % (ref, pin, "anode" if fn == "A"
+                                       else "cathode", dref, dev[1]))
             elif net != name:
                 findings.append("audio: %s pin %s on %r, expected %r"
                                 % (ref, pin, net, name))

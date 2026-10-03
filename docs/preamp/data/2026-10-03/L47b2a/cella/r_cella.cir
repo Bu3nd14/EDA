@@ -1,0 +1,49 @@
+r_cella.cir - L47b2a: R della NSL-32SR3 per curva e corrente del LED (op), per i valori di tb_e3_e5_ldr.cir
+* Prima riga = titolo (limitations #10). Opzioni dei banchi e 1 V sulla cella
+* (validate_models.py, tb_nsl32sr3: con abstol=1e-15 l'op del modello dipende
+* dal percorso di Newton, limitations #33/#40).
+* Correnti: 7 mA la cima di ADR-060; 12 e 20 mA per confronto (ADR-050, il
+* banco V2); 4,5 uA il punto "meta'" del deck; 10 nA il riposo del profilo.
+* Curve A-E (intestazione del modello). R = 1 V / |I(V)|.
+.include /Users/roberto/EDA/.claude/worktrees/L47b2a/models/optocoupler/nsl32sr3_comportamentale.lib
+.options reltol=1e-6 vntol=1e-6 abstol=1e-12
+.param one=1
+IA7  0 aA7 DC 7m
+XA7  aA7 0 cA7 0 NSL32SR3_A
+VA7  cA7 0 DC 1
+IB7  0 aB7 DC 7m
+XB7  aB7 0 cB7 0 NSL32SR3_B
+VB7  cB7 0 DC 1
+IC7  0 aC7 DC 7m
+XC7  aC7 0 cC7 0 NSL32SR3_C
+VC7  cC7 0 DC 1
+ID7  0 aD7 DC 7m
+XD7  aD7 0 cD7 0 NSL32SR3_D
+VD7  cD7 0 DC 1
+IE7  0 aE7 DC 7m
+XE7  aE7 0 cE7 0 NSL32SR3_E
+VE7  cE7 0 DC 1
+IB12 0 aB12 DC 12m
+XB12 aB12 0 cB12 0 NSL32SR3_B
+VB12 cB12 0 DC 1
+IB20 0 aB20 DC 20m
+XB20 aB20 0 cB20 0 NSL32SR3_B
+VB20 cB20 0 DC 1
+IC12 0 aC12 DC 12m
+XC12 aC12 0 cC12 0 NSL32SR3_C
+VC12 cC12 0 DC 1
+IBm  0 aBm DC 4.5u
+XBm  aBm 0 cBm 0 NSL32SR3_B
+VBm  cBm 0 DC 1
+IBd  0 aBd DC 10n
+XBd  aBd 0 cBd 0 NSL32SR3_B
+VBd  cBd 0 DC 1
+.control
+op
+echo "R_ohm curva/corrente"
+print 1/abs(i(va7)) 1/abs(i(vb7)) 1/abs(i(vc7)) 1/abs(i(vd7)) 1/abs(i(ve7))
+print 1/abs(i(vb12)) 1/abs(i(vc12)) 1/abs(i(vb20))
+print 1/abs(i(vbm)) 1/abs(i(vbd))
+print v(aB7) v(aC7) v(aB12)
+.endc
+.end

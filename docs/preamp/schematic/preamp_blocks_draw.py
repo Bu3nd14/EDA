@@ -104,12 +104,13 @@ def same(refs, what):
 ZIN = same(["R113", "R313"], "resistenza d'ingresso blocco A")
 
 # Il mute graduale a monte (ADR-038, L29b2): due LDR per canale. Il valore
-# porta la parte e il ruolo ("VTL5C4 LDR_S_L"); qui si confronta la parte, e
+# porta la parte e il ruolo ("NSL-32SR3 LDR_S_L", dalla VTL5C4 in L47b2a,
+# ADR-058); qui si confronta la parte, e
 # si asserisce che la serie stia fra il connettore d'ingresso e il nodo di
 # R_IN e la derivazione fra quel nodo e GND. Lo stesso lo asserisce, per
 # intento e con i sabotaggi, scripts/check_relay_safe_state.py (blocco 2e).
 _ldr = {r: VAL[r].split() for r in ("U101", "U102", "U301", "U302")}
-assert all(p[0] == "VTL5C4" for p in _ldr.values()), f"LDR diverse: {_ldr}"
+assert all(p[0] == "NSL-32SR3" for p in _ldr.values()), f"LDR diverse: {_ldr}"
 assert [_ldr[r][1] for r in ("U101", "U102", "U301", "U302")] == [
     "LDR_S_L", "LDR_P_L", "LDR_S_R", "LDR_P_R"], f"ruoli delle LDR: {_ldr}"
 _pins = {}

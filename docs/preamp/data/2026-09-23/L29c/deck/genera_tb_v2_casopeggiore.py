@@ -28,8 +28,8 @@ Uso:
                             contatti), dai JSON di data/2026-09-26/L41c/ponte/. Le correnti LED
                             sostituiscono BILS/BILP solo in questa matrice. Si scrive nei dati di
                             L41c (README li' accanto).
-  --curve B B               le curve della VTL5C4 per la cella in serie e quella in derivazione
-                            (A = resistenza piu' bassa ... D = piu' alta). Il deck versionato e'
+  --curve B B               le curve della NSL-32SR3 (L47b2a; prima la VTL5C4) per la serie e la derivazione
+                            (A bassa, B tipica, C alta, D la piu' ripida, E la piu' piatta). Il deck versionato e'
                             B B, come tb_v2_mute_ldr.cir; le altre si generano nei dati di L29c.
 
 Poi si corre come tb_v2_mute_ldr.cir (L29b2): sed @REPO@, dividi.py, una corsa per processo,
@@ -123,6 +123,8 @@ inc = [r for r in righe[:i0] if r.startswith(".include")]
 CANALE = righe[i0:i1 + 1]
 
 # ---------------------------------------------------------------- il profilo v4 (ADR-040)
+# L47b2a: ION resta 20 mA, la cima della VTL5C4 nel banco V2. ADR-060 la porta a 7 mA sulla
+# NSL-32SR3 col profilo a 3 s: lo fa L47b2b, insieme, non qui un pezzo alla volta.
 ION, IRIP = 20e-3, 10e-9
 lg = math.log10
 SERIE = [(0, ION), (0.1, 0.2e-3), (0.45, 4.5e-6), (0.75, 0.19e-6), (0.8, IRIP), (1, IRIP)]
@@ -273,26 +275,30 @@ AGGIUNTE = (
 )
 
 H = [
-    "tb_v2_casopeggiore.cir - V2 al jack, il caso peggiore col mute reale: LDR VTL5C4 v4 a monte e rele' al jack, guadagno, trim, dispersione, accensione (L29c, NC-028)",
+    "tb_v2_casopeggiore.cir - V2 al jack, il caso peggiore col mute reale: LDR NSL-32SR3 (L47b2a; profilo v4 della VTL5C4) a monte e rele' al jack, guadagno, trim, dispersione, accensione (L29c, NC-028)",
     "* Prima riga = titolo (docs/limitations.md #10).",
     "* GENERATO da docs/preamp/data/2026-09-23/L29c/deck/genera_tb_v2_casopeggiore.py: non si",
     "* edita a mano. L'intestazione del generatore dice cosa c'e' dentro, le ipotesi di",
     "* accensione e spegnimento, e come si corre. Matrice: %s. Curve: serie %s, derivazione %s." % (ARG.matrice, CS, CP),
     "*",
     "* IL MODELLO DELLE CELLE e' comportamentale dal datasheet, con estrapolazione dichiarata",
-    "* (models/optocoupler/vtl5c4_comportamentale.lib). Ogni dispositivo attivo e' il modello del",
+    "* (models/optocoupler/nsl32sr3_comportamentale.lib, ADR-058: da dati pubblicati, una sola cella",
+    "* misurata nella regione del mute; fino a L47b1 la VTL5C4). Ogni dispositivo attivo e' il modello del",
     "* costruttore in models/ (L39); nessuno porta la dispersione, che qui si inietta: VOS* e",
     "* `altermod lsk489a vto` (gruppo B, ADR-031). UN MODELLO ALTERATO PORTA ANCORA IL NOME",
     "* LSK489A (limitations #29): le corse alterate lo dicono nel nome (_gb*) e stampano showmod",
     "* e la corrente della sonda JPRB.",
     "*",
     "* IL PROFILO v4, Td %g s (ADR-039, ADR-040). Rele' al jack chiuso 0,5 s dopo d = 1." % TD,
+    "* L47b2a: PROFILO E CIMA SONO ANCORA QUELLI DELLA VTL5C4 (cima %g mA). Il profilo a 3 s" % (ION * 1e3),
+    "* ricalibrato sulla NSL-32SR3 (ADR-059) con la cima di 7 mA (ADR-060) e' di L47b2b: fino ad",
+    "* allora le cifre di S e B di questo deck non sono verdetti del mute nuovo.",
     "* ANALISI: scripts/v2_metodo.py analizza sul manifesto; le colonne gruppo e conta dicono",
     "* quali grandezze di ogni riga sono verdetto. Si corre DIVISO (dividi.py): le corse di",
     "* accensione alterano le sorgenti dei rail, e in sequenza l'alterazione resterebbe.",
     "* CONVENZIONE DI PERCORSO: `.include @REPO@/...` (tb_op.cir, L2-L3).",
     "",
-] + inc + [".include @REPO@/models/optocoupler/vtl5c4_comportamentale.lib", ""] + CANALE + [
+] + inc + [".include @REPO@/models/optocoupler/nsl32sr3_comportamentale.lib", ""] + CANALE + [
     "* ---- L29b2: le due LDR e il loro comando, fuori dal blocco CANALE (ADR-038) ----",
     "VTI NTI 0 DC 1000",
     "VTR NTR 0 DC 2000",
@@ -310,8 +316,8 @@ H = [
     "RALS ALS 0 10MEG",
     "RALP ALP 0 10MEG",
     "RSRC2 SRC SRCX 1.5",
-    "XLS ALS 0 SRCX SELA VTL5C4_%s" % CS,
-    "XLP ALP 0 INA 0 VTL5C4_%s" % CP,
+    "XLS ALS 0 SRCX SELA NSL32SR3_%s" % CS,
+    "XLP ALP 0 INA 0 NSL32SR3_%s" % CP,
     "",
 ] + AGGIUNTE
 
@@ -726,7 +732,7 @@ def accensione(var):
     return out
 
 
-# ======== 6: le curve della VTL5C4 (deck a parte per ogni coppia serie / derivazione)
+# ======== 6: le curve della cella (NSL-32SR3 da L47b2a; deck a parte per ogni coppia serie / derivazione)
 def matrice_curve():
     out = []
     var = "ldr_v4_td6_%s%s" % (CS, CP)

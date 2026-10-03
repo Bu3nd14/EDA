@@ -964,3 +964,40 @@ l'una né l'altra.
   log;
 - il controllo di un op legge stdout **e** stderr, e scarta la corsa se compare «Transient op» o
   se manca il risultato, non se compare «failed».
+
+## 41. Due simboli KiCad della stessa famiglia possono numerare l'anodo e il catodo al contrario: cambiare la parte sotto piedini cablati per numero capovolge i LED senza un errore
+
+Scoperto in L47b2a, portando la NSL-32SR3 al posto della VTL5C4.
+
+`Isolator:VTL5C` ha **1 = catodo, 2 = anodo**; `Isolator:NSL-32` ha **1 = anodo, 2 = catodo**
+(letti da `Isolator.kicad_sym` di KiCad 10; la cella sta su 3–4 in entrambi). Il sorgente
+collegava i LED per numero (`left[2]`, `left[1]`). Cambiata solo la `Part`, la netlist resta
+**identica nella connettività**: SKiDL genera con 0 errori, la ERC non ha niente da dire (i
+piedini sono tutti passivi), e `check_psu_harness.py`, che confrontava i piedini per numero,
+diceva OK. I quattro LED erano tutti rovesciati: nel prototipo il mute non si sarebbe mai
+inserito. Il falso è in `docs/preamp/data/2026-10-03/L47b2a/falsi/led_capovolti.net`.
+
+**Regola operativa**:
+- un piedino con un verso (LED, diodo, transistore) si collega **per nome** (`ls["A"]`,
+  `ls["K"]`), non per numero, quando il nome c'è nel simbolo;
+- un controllo che verifica un cablaggio per numero dipende dalla parte: deve risolvere la
+  funzione del piedino attraverso la parte, e rifiutare una parte che non conosce invece di
+  indovinare (`check_psu_harness.py`, `LED_PINS`, da L47b2a);
+- cambiare parte vuole il confronto dei due simboli **piedino per piedino**, nome e numero.
+
+## 42. La NSL-32SR3 a stato fermo in una `tran` può far collassare il passo con uscita 0, ma dipende dal banco
+
+Scoperto in L47b1, ricontrollato in L47b2a. Riguarda `nsl32sr3_comportamentale.lib` (e, per
+costruzione, ogni modello a stato col ramo `?:` dello stato a regime, #40).
+
+- Nel banco statico di L47b1 (`statico.py ldr`, il LED a corrente costante, la `tran` solo per
+  leggere la cella ferma): «Timestep too small … trouble with B-instance b.xlp.bdx» su tutte e 7
+  le combinazioni, **rc 0**. Il rimedio lì: op + ac, la cella ferma è lineare.
+- Nel banco V2 (`tb_v2_casopeggiore.cir`, la corrente del LED da una sorgente B col profilo),
+  la corsa `g0sempre_1k_iii`, col mute fermo a d = 1 per 19 s, corre fino in fondo: 1 900 008
+  righe, l'ultima a t = 19 s, la serie a 7,398 decadi e la derivazione accesa
+  (`docs/preamp/data/2026-10-03/L47b2a/v2_prova/`).
+
+Non si sa ancora quale differenza dei due banchi decida. **Regola operativa**: una `tran` con la
+NSL-32SR3 ferma si valida dal log (stdout **e** stderr: «Timestep too small», «aborted», #35) e
+dall'ultima riga dei dati, che deve arrivare al tempo finale chiesto; l'uscita 0 non dice niente.

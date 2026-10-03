@@ -1,4 +1,4 @@
-tb_v2_casopeggiore.cir - V2 al jack, il caso peggiore col mute reale: LDR VTL5C4 v4 a monte e rele' al jack, guadagno, trim, dispersione, accensione (L29c, NC-028)
+tb_v2_casopeggiore.cir - V2 al jack, il caso peggiore col mute reale: LDR NSL-32SR3 (L47b2a; profilo v4 della VTL5C4) a monte e rele' al jack, guadagno, trim, dispersione, accensione (L29c, NC-028)
 * Prima riga = titolo (docs/limitations.md #10).
 * GENERATO da docs/preamp/data/2026-09-23/L29c/deck/genera_tb_v2_casopeggiore.py: non si
 * edita a mano. L'intestazione del generatore dice cosa c'e' dentro, le ipotesi di
@@ -12,13 +12,17 @@ tb_v2_casopeggiore.cir - V2 al jack, il caso peggiore col mute reale: LDR VTL5C4
 * Nomi e righe sono quelli di L29d2 (suffisso _iii), variante di progetto.
 *
 * IL MODELLO DELLE CELLE e' comportamentale dal datasheet, con estrapolazione dichiarata
-* (models/optocoupler/vtl5c4_comportamentale.lib). Ogni dispositivo attivo e' il modello del
+* (models/optocoupler/nsl32sr3_comportamentale.lib, ADR-058: da dati pubblicati, una sola cella
+* misurata nella regione del mute; fino a L47b1 la VTL5C4). Ogni dispositivo attivo e' il modello del
 * costruttore in models/ (L39); nessuno porta la dispersione, che qui si inietta: VOS* e
 * `altermod lsk489a vto` (gruppo B, ADR-031). UN MODELLO ALTERATO PORTA ANCORA IL NOME
 * LSK489A (limitations #29): le corse alterate lo dicono nel nome (_gb*) e stampano showmod
 * e la corrente della sonda JPRB.
 *
 * IL PROFILO v4, Td 6 s (ADR-039, ADR-040). Rele' al jack chiuso 0,5 s dopo d = 1.
+* L47b2a: PROFILO E CIMA SONO ANCORA QUELLI DELLA VTL5C4 (cima 20 mA). Il profilo a 3 s
+* ricalibrato sulla NSL-32SR3 (ADR-059) con la cima di 7 mA (ADR-060) e' di L47b2b: fino ad
+* allora le cifre di S e B di questo deck non sono verdetti del mute nuovo.
 * ANALISI: scripts/v2_metodo.py analizza sul manifesto; le colonne gruppo e conta dicono
 * quali grandezze di ogni riga sono verdetto. Si corre DIVISO (dividi.py): le corse di
 * accensione alterano le sorgenti dei rail, e in sequenza l'alterazione resterebbe.
@@ -32,7 +36,7 @@ tb_v2_casopeggiore.cir - V2 al jack, il caso peggiore col mute reale: LDR VTL5C4
 .include @REPO@/models/diodes/1n4148.lib
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block.subckt
-.include @REPO@/models/optocoupler/vtl5c4_comportamentale.lib
+.include @REPO@/models/optocoupler/nsl32sr3_comportamentale.lib
 
 * >>> CANALE - identico nei tre deck tb_v2_mute_*.cir (v2_metodo.py canale)
 * TOLLERANZE (L29a, ripresa 2026-09-16): vedi il blocco esteso in
@@ -181,8 +185,8 @@ BILP 0 ALP I = V(NPWL) * 1e-08 * pow(2e+06, min(max((V(DEP) - 0.5)/0.5, 0), 1))
 RALS ALS 0 10MEG
 RALP ALP 0 10MEG
 RSRC2 SRC SRCX 1.5
-XLS ALS 0 SRCX SELA VTL5C4_B
-XLP ALP 0 INA 0 VTL5C4_B
+XLS ALS 0 SRCX SELA NSL32SR3_B
+XLP ALP 0 INA 0 NSL32SR3_B
 
 * ---- L29c: i contatti del guadagno, in parallelo a RRGB / RRG10B del blocco ----
 * interruttore nativo: 0,1 ohm chiuso (il massimo del G6K), 1 T aperto; soglia 0,5 V sulla
