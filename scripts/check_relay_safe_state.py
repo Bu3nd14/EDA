@@ -112,14 +112,16 @@ right one; the mute pin lit in mute and dark out of mute AND in the window
 D - it must read a contact, and never say "muted" with a jack connected.
 
 THE GRADUATED MUTE (ADR-038, L29b2). Not a relay, but the same kind of
-silent defect: two photoresistors per channel (Isolator:VTL5C, value
-"... LDR_S_<ch>" / "... LDR_P_<ch>"). Asserted, by intent:
+silent defect: two photoresistors per channel (Isolator:NSL-32 since
+L47b2a, value "... LDR_S_<ch>" / "... LDR_P_<ch>"). Asserted, by intent:
   - the SERIES cell sits between the channel's input connector (IN_<ch>) and
     the node that carries R_IN = 1M, block A's input - one point per channel
     that fades all three outputs;
   - the SHUNT cell sits from that same node to GND;
   - the LEDs are OUTSIDE the signal path (ADR-022): a net that touches a LED
     pin may touch only other LDR LED pins and the LDR_CMD harness;
+  - (L47b2a) the net between the two LEDs of a string joins a cathode to an
+    anode; the polarity at J3 is check_psu_harness.py's;
   - one pair per channel. No LDR at all is a finding, not a pass: the check
     must not go blind.
 A cell swapped end for end (series on the far side of R_IN, shunt on the
@@ -241,9 +243,13 @@ ROLES = {
     "SPIA": {"grounded": None, "bistable": True},
 }
 
-# Isolator:VTL5C (KiCad symbol, read in L29b2): 1 = LED cathode, 2 = LED
-# anode, 3 and 4 = the cell. The cell is symmetric; the LED is not.
-KNOWN_LDR = {("Isolator", "VTL5C"): {"led": ("1", "2"), "cell": ("3", "4")}}
+# Isolator:NSL-32 (KiCad symbol, read in L47b2a): 1 = LED anode, 2 = LED
+# cathode, 3 and 4 = the cell. The cell is symmetric; the LED is not. The
+# VTL5C (L29b2-L47b1) had them the other way round (1 = K, 2 = A) and is no
+# longer accepted: it is obsolete (NC-043, ADR-058), and a netlist that still
+# carries it is a stale one.
+KNOWN_LDR = {("Isolator", "NSL-32"): {"anode": "1", "cathode": "2",
+                                      "cell": ("3", "4")}}
 LDR_CHANNELS = ("L", "R")
 
 GROUND_NETS = ("GND",)
@@ -1082,7 +1088,7 @@ def check_ldr(components, pin_net, findings):
             if (c["lib"], c["part"]) in KNOWN_LDR}
     if not ldrs:
         findings.append(
-            "nessuna LDR del mute graduale (Isolator:VTL5C) nella netlist. "
+            "nessuna LDR del mute graduale (Isolator:NSL-32) nella netlist. "
             "ADR-038 ne vuole due per canale: se sono sparite, e' una modifica "
             "di topologia da dichiarare, non un controllo da saltare.")
         return []
@@ -1133,17 +1139,34 @@ def check_ldr(components, pin_net, findings):
         else:
             report.append(f"mute LDR {ch}: {s_ref} {conn[0]} -> {r_in[0]}, "
                           f"{p_ref} {r_in[0]} -> GND")
+    def led_fn(r, pin):
+        """'A', 'K' or None: what this pin of an LDR is on its LED."""
+        if r not in ldrs:
+            return None
+        q = KNOWN_LDR[(ldrs[r]["lib"], ldrs[r]["part"])]
+        return {q["anode"]: "A", q["cathode"]: "K"}.get(pin)
+
     for ref, c in sorted(ldrs.items()):
         pm = KNOWN_LDR[(c["lib"], c["part"])]
-        for p in pm["led"]:
+        for p in (pm["anode"], pm["cathode"]):
             n = pin_net.get((ref, p))
             if n is None:
                 findings.append(f"{ref}: il pin del LED {p} non e' collegato.")
                 continue
             bad = sorted(
                 f"{r}.{pin}" for r, pin in members[n]
-                if not ((r in ldrs and pin in pm["led"])
+                if not (led_fn(r, pin)
                         or components.get(r, {}).get("value") == "LDR_CMD"))
+            # L47b2a: two LEDs in series (ADR-039) meet cathode to anode. A
+            # net that joins LED pins only and has two anodes or two cathodes
+            # is a string with one LED reversed: it never lights.
+            fns = sorted(led_fn(r, pin) or "" for r, pin in members[n])
+            if not bad and all(fns) and len(fns) == 2 and fns != ["A", "K"]:
+                findings.append(
+                    f"{ref}: la rete {n} unisce {' e '.join(fns)} di due LED "
+                    f"({', '.join(sorted(f'{r}.{q}' for r, q in members[n]))}"
+                    f"): in serie un LED va dal catodo all'anodo del "
+                    f"successivo (ADR-039). Uno dei due e' rovesciato.")
             if bad:
                 findings.append(
                     f"{ref}: il LED (pin {p}) sta sulla rete {n}, che tocca "

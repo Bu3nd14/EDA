@@ -403,7 +403,7 @@ box(15.4, YL, 11.0, 1.9, ["convertitore esponenziale × 2 (U511, Q507–Q512)",
                           f"coda limitata da {res_txt(R_LIM)}"],
     size=8.5, head_size=9.5)
 arrow(20.9, YL, 22.6, YL)
-box(26.2, YL, 7.0, 1.7, ["specchio → J3", "LED delle VTL5C4 (scheda audio)"],
+box(26.2, YL, 7.0, 1.7, ["specchio → J3", "LED delle NSL-32SR3 (scheda audio)"],
     size=8.5, head_size=9.5)
 arrow(29.7, YL, 31.2, YL, color=NETC)
 txt((31.4, YL + 0.32), "LDR_S_A/K, LDR_P_A/K → J3", size=9.5, color=NETC, halign="left")

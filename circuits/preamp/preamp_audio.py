@@ -170,25 +170,30 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole):
     inconn[2] += gnd
 
     # ---- the graduated mute, UPSTREAM (ADR-038, L29b2) --------------------
-    # Two opto-coupled photoresistors (Excelitas VTL5C4) per channel at block
-    # A's input: one IN SERIES from the connector to block A, one TO GROUND on
-    # block A's input, next to R_IN = 1 MOhm (gain_block.py). Block A feeds
-    # all three outputs, so one point per channel fades them all; and there is
-    # no DC here (the input is referred to ground by R_IN), which is what ESP
-    # asks of a mute ("no DC along with the signal", ADR-038).
+    # Two opto-coupled photoresistors per channel at block A's input: one IN
+    # SERIES from the connector to block A, one TO GROUND on block A's input,
+    # next to R_IN = 1 MOhm (gain_block.py). Block A feeds all three outputs,
+    # so one point per channel fades them all; and there is no DC here (the
+    # input is referred to ground by R_IN), which is what ESP asks of a mute
+    # ("no DC along with the signal", ADR-038).
     # The LEDs are driven from ground, OUTSIDE the signal path (ADR-022): only
-    # the cells (pins 3-4) touch these nets; the LEDs go to the harness J3 in
-    # the caller. The part is NOT confirmed at a distributor (ADR-038, before
-    # G2). Every figure on it comes from
-    # models/optocoupler/vtl5c4_comportamentale.lib: "modello comportamentale
-    # dal datasheet, con estrapolazione dichiarata" (docs/preamp/reports/
-    # 2026-09-21-L29b-mute-ldr-misura.md, 2026-09-22-L29b2-*.md).
-    ls = Part("Isolator", "VTL5C", value=f"VTL5C4 LDR_S_{ch}",
-              footprint="OptoDevice:PerkinElmer_VTL5C", ref=f"U{base + 1}")
+    # the cells (pins 3-4, symmetric) touch these nets; the LEDs go to the
+    # harness J3 in the caller, wired by pin NAME (see there).
+    # The part is the Advanced Photonix NSL-32SR3 (ADR-058; the VTL5C4 is
+    # obsolete, NC-043), confirmed against a JFET and kept (ADR-059); its LED
+    # peak is 7 mA at every temperature, a declared hypothesis (ADR-060).
+    # Every figure on it comes from
+    # models/optocoupler/nsl32sr3_comportamentale.lib: "modello
+    # comportamentale da dati pubblicati, una sola cella misurata nella
+    # regione del mute" (docs/preamp/reports/2026-10-02-L47a-cella-mute.md).
+    # Footprint OptoDevice:Luna_NSL-32 checked against the drawings in L47b2a
+    # (docs/preamp/reports/2026-10-03-L47b2a-cella-nel-sorgente.md).
+    ls = Part("Isolator", "NSL-32", value=f"NSL-32SR3 LDR_S_{ch}",
+              footprint="OptoDevice:Luna_NSL-32", ref=f"U{base + 1}")
     ls[3] += in_src
     ls[4] += a["IN"]
-    lp = Part("Isolator", "VTL5C", value=f"VTL5C4 LDR_P_{ch}",
-              footprint="OptoDevice:PerkinElmer_VTL5C", ref=f"U{base + 2}")
+    lp = Part("Isolator", "NSL-32", value=f"NSL-32SR3 LDR_P_{ch}",
+              footprint="OptoDevice:Luna_NSL-32", ref=f"U{base + 2}")
     lp[3] += a["IN"]
     lp[4] += gnd
 
@@ -447,7 +452,11 @@ if __name__ == "__main__":
     # The drive is OFF THIS BOARD, like the mute timer: a current source per
     # string, cathode end to GND at the source (psu-engineer / L35).
     # THE CONTRACT the drive must honour - profile v4 with Td = 6 s, the
-    # user's choice of 2026-09-22 (ADR-039, ADR-040; Td from L29b):
+    # user's choice of 2026-09-22 (ADR-039, ADR-040; Td from L29b).
+    # STILL THE VTL5C4'S PROFILE: ADR-059 sets a 3 s target for the
+    # NSL-32SR3 and ADR-060 a 7 mA peak (not the 20 mA below); the profile
+    # recalibrated on the NSL-32SR3's A-E envelope is L47b2b's, and replaces
+    # this paragraph there.
     #   one depth d in [0, 1], reversible, 0 -> 1 in Td = 6 s on insertion
     #   and back from wherever it is on release (a half-way reversal
     #   retraces the same path, ADR-038 point 3);
@@ -471,11 +480,15 @@ if __name__ == "__main__":
                         "PinHeader_1x04_P2.54mm_Vertical", ref="J3")
     for fn, pin_a, pin_k, idx in (("S", 1, 2, 2), ("P", 3, 4, 3)):
         left, right = chans["L"][idx], chans["R"][idx]
-        # VTL5C symbol: pin 2 = LED anode (+), pin 1 = LED cathode (-).
-        j3[pin_a] += left[2]
-        left[1] += Net(f"LDR_{fn}_MID")
-        right[2] += left[1]
-        j3[pin_k] += right[1]
+        # The LEDs are wired BY NAME (L47b2a). Isolator:NSL-32 has pin 1 =
+        # anode, pin 2 = cathode: the opposite of Isolator:VTL5C (1 = K,
+        # 2 = A). Swapping the part under number-wired pins reversed all four
+        # LEDs and still generated, ERC'd and passed the harness check
+        # (docs/preamp/data/2026-10-03/L47b2a/falsi/led_capovolti.net).
+        j3[pin_a] += left["A"]
+        left["K"] += Net(f"LDR_{fn}_MID")
+        right["A"] += left["K"]
+        j3[pin_k] += right["K"]
 
     # Wire the mute contacts - ADR-044, geometry iii. mute_lists[i] holds, per
     # output pair, [cap_side_L, jack_L, cap_side_R, jack_R]; each jack node

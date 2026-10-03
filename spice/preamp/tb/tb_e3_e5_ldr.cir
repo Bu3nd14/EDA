@@ -1,4 +1,4 @@
-tb_e3_e5_ldr.cir - L29b2: E3 ed E5 col mute graduale a monte (due LDR VTL5C4 all'ingresso del blocco A, ADR-038)
+tb_e3_e5_ldr.cir - L29b2, L47b2a: E3 ed E5 col mute graduale a monte (due LDR NSL-32SR3 all'ingresso del blocco A, ADR-038, ADR-058)
 * Prima riga = titolo (docs/limitations.md #10).
 *
 * COSA SI PROVA (L29b2, ADR-038 "Da misurare": E3, E5 e l'accoppiamento
@@ -12,8 +12,9 @@ tb_e3_e5_ldr.cir - L29b2: E3 ed E5 col mute graduale a monte (due LDR VTL5C4 all
 *                                             |
 *                                        R_IN 1 M (dentro il blocco)
 *
-* IL MODELLO DELLE CELLE: models/optocoupler/vtl5c4_comportamentale.lib,
-* comportamentale dal datasheet, con estrapolazione dichiarata sopra ~10 kOhm.
+* IL MODELLO DELLE CELLE: models/optocoupler/nsl32sr3_comportamentale.lib (L47b2a,
+* ADR-058; fino a L47b1 la VTL5C4), "modello comportamentale da dati pubblicati,
+* una sola cella misurata nella regione del mute, con estrapolazione dichiarata".
 * Ogni cifra di questo deck porta quell'etichetta. Il modello NON HA RUMORE
 * (lo dichiara la sua intestazione): per E5 la cella in serie si sostituisce
 * con un resistore del suo valore di lavoro, che ha il rumore termico; il
@@ -23,18 +24,21 @@ tb_e3_e5_ldr.cir - L29b2: E3 ed E5 col mute graduale a monte (due LDR VTL5C4 all
 * E3 (REQUIREMENTS, "Nota su E3"): |Zin| minima 20 Hz - 20 kHz al connettore,
 * cioe' al nodo SRCX, in ogni posizione del trim; CSEL come in tb_trim.cir.
 * Tre stati delle celle, dal punto di lavoro reale del modello:
-*   gioco  d = 0: serie 20 mA (~88 ohm, curva B), derivazione 10 nA (400 M)
-*   mute   d = 1: serie 10 nA (400 M), derivazione 20 mA (~88 ohm)
-*   meta'  serie 4,5 uA (~2 M, il fondo del tratto lento del profilo v3) e
+*   gioco  d = 0: serie 7 mA (99,9 ohm, curva B; la cima di ADR-060), derivazione
+*          10 nA (25 M, il buio dichiarato del modello)
+*   mute   d = 1: serie 10 nA (25 M), derivazione 7 mA (99,9 ohm)
+*   meta'  serie 4,5 uA (248 k sulla NSL-32SR3; il punto del profilo v3, che
+*          il profilo a 3 s di L47b2b ridefinisce) e
 *          derivazione 10 nA: il carico piu' basso che la sorgente vede nel
 *          tratto in cui la serie e' gia' alta
 * Il minimo lungo la SEQUENZA (in transitorio) e' di post.py sui dati di V2.
 *
 * E5 (<= 9,90 uV, tb_trim.cir: E5 meno le quote da 1 uV di ADR-020 e ADR-022).
-* Stato di gioco. La serie come resistore: 88,3 ohm (curva B a 20 mA, dal punto
-* di lavoro: la corsa lo stampa e lo confronta) e 118 ohm (curva D, la piu'
-* resistiva delle quattro, dalla tabella del modello a 20 mA). La derivazione
-* resta il modello, a 400 M: il suo rumore termico vede il nodo chiuso dalla
+* Stato di gioco. La serie come resistore: 99,9 ohm (curva B alla cima di 7 mA,
+* ADR-060, dal punto di lavoro: la corsa lo stampa e lo confronta) e 115,5 ohm
+* (curve C ed E, le piu' resistive delle cinque a 7 mA; A e D 51,2 ohm;
+* docs/preamp/data/2026-10-03/L47b2a/cella/r_cella.cir). La derivazione
+* resta il modello, a 25 M: il suo rumore termico vede il nodo chiuso dalla
 * sorgente e dalla serie. Posizioni del trim 0 / 6 / 12, modi 0 / 3 / 10 dB,
 * attenuatore al massimo e a meta' corsa, sorgente 1,5 e 430 ohm. Riferimento
 * "senza LDR": la serie a 1 mohm.
@@ -65,7 +69,7 @@ tb_e3_e5_ldr.cir - L29b2: E3 ed E5 col mute graduale a monte (due LDR VTL5C4 all
 * L22: lo specchio d'ingresso e' un LS352 (ADR-018).
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block.subckt
-.include @REPO@/models/optocoupler/vtl5c4_comportamentale.lib
+.include @REPO@/models/optocoupler/nsl32sr3_comportamentale.lib
 
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15
@@ -79,12 +83,12 @@ CSEL  SRCX 0 1f
 * LED comandati da generatori di corrente, catodo a massa; 10 M dall'anodo a
 * massa: un LED col solo generatore non ha percorso in continua e l'op fallisce
 * in silenzio (trappola di L29b). Il 10 M e' del banco, non della scheda.
-ILS  0 ALS DC 20m
+ILS  0 ALS DC 7m
 RALS ALS 0 10MEG
 ILP  0 ALP DC 10n
 RALP ALP 0 10MEG
-XLS  ALS 0 SRCX AIN VTL5C4_B
-XLP  ALP 0 AIN 0 VTL5C4_B
+XLS  ALS 0 SRCX AIN NSL32SR3_B
+XLP  ALP 0 AIN 0 NSL32SR3_B
 * per E5: la serie come resistore (aperta a 1 T fuori da E5)
 RLDRS SRCX AIN 1e12
 
@@ -129,10 +133,10 @@ RBLEED JACK 0 220k
 RLOAD  JACK 0 100k
 
 .control
-* ============ il valore di lavoro della serie (curva B, 20 mA) ============
+* ============ il valore di lavoro della serie (curva B, 7 mA) =============
 op
 let rsb = 10^v(xls.xs)
-echo "punto di lavoro: serie curva B a 20 mA = $&rsb ohm (atteso 88,3 dalla tabella)"
+echo "punto di lavoro: serie curva B a 7 mA = $&rsb ohm (atteso 99,9: L47b2a/cella/r_cella.cir)"
 destroy all
 
 * ============================== E3 ==============================
@@ -141,13 +145,13 @@ alter rsrc = 1m
 foreach st 1 2 3
   if $st = 1
     set sn = "gioco"
-    alter ils dc = 20m
+    alter ils dc = 7m
     alter ilp dc = 10n
   end
   if $st = 2
     set sn = "mute"
     alter ils dc = 10n
-    alter ilp dc = 20m
+    alter ilp dc = 7m
   end
   if $st = 3
     set sn = "meta"
@@ -194,12 +198,12 @@ foreach st 1 2 3
   end
 end
 alter csel = 1f
-alter ils dc = 20m
+alter ils dc = 7m
 alter ilp dc = 10n
 
 * ============================== E5 ==============================
 * La serie diventa il resistore RLDRS; la cella in serie si spegne (10 nA ->
-* 400 M in parallelo, trascurabile). "nessuna": RLDRS a 1 mohm.
+* 25 M in parallelo, trascurabile). "nessuna": RLDRS a 1 mohm.
 echo "ldr,rs_ohm,pos,mode,att,rsrc,onoise_uv" > tb_e3_e5_ldr_e5.csv
 alter ils dc = 10n
 foreach lc 0 1 2
@@ -209,11 +213,11 @@ foreach lc 0 1 2
   end
   if $lc = 1
     set ln = "curvaB"
-    set rsl = "88.3"
+    set rsl = "99.9"
   end
   if $lc = 2
-    set ln = "curvaD"
-    set rsl = "118"
+    set ln = "curvaCE"
+    set rsl = "115.5"
   end
   alter rldrs = $rsl
   foreach pos 0 6 12
@@ -277,7 +281,7 @@ foreach lc 0 1 2
   end
 end
 alter rldrs = 1e12
-alter ils dc = 20m
+alter ils dc = 7m
 alter ratth = 1m
 alter rattl = 10k
 alter rsrc = 1.5

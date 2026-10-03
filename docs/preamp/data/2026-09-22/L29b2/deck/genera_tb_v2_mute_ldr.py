@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """L29b2: genera spice/preamp/tb/tb_v2_mute_ldr.cir, il deck VERSIONATO di V2 col mute
-graduale a monte con due LDR VTL5C4 (ADR-038). Il deck non si edita a mano: si rigenera.
+graduale a monte con due LDR NSL-32SR3 (ADR-038, ADR-058; fino a L47b1 VTL5C4). Il deck non si edita a mano: si rigenera.
 
 Uso:  /usr/bin/python3 genera_tb_v2_mute_ldr.py [PROFILO=v4] [TD=6] [USCITA=<repo>/spice/preamp/tb/tb_v2_mute_ldr.cir]
 
@@ -73,16 +73,18 @@ FREQ = ((20, "20", 10e-6, 7e-6), (1000, "1k", 10e-6, 7e-6), (20000, "20k", 0.5e-
 CARICHI = (("100k", "100k"), ("10k", "10k"))
 
 H = [
-    "tb_v2_mute_ldr.cir - V2 al jack col mute graduale a monte: due LDR VTL5C4 all'ingresso del blocco A, profilo %s Td %g s (ADR-038, L29b2, NC-028)" % (PROFILO, TD),
+    "tb_v2_mute_ldr.cir - V2 al jack col mute graduale a monte: due LDR NSL-32SR3 all'ingresso del blocco A, profilo %s Td %g s (ADR-038, L29b2, NC-028)" % (PROFILO, TD),
     "* Prima riga = titolo (docs/limitations.md #10).",
     "* GENERATO da docs/preamp/data/2026-09-22/L29b2/deck/genera_tb_v2_mute_ldr.py: non si",
     "* edita a mano. L'intestazione del generatore dice cosa c'e' dentro e come si corre.",
     "*",
-    "* IL MODELLO DELLE CELLE e' comportamentale dal datasheet, con estrapolazione dichiarata",
-    "* sopra ~10 kOhm (models/optocoupler/vtl5c4_comportamentale.lib, curva B per entrambe).",
+    "* IL MODELLO DELLE CELLE e' comportamentale da dati pubblicati, una sola cella misurata nella",
+    "* regione del mute (models/optocoupler/nsl32sr3_comportamentale.lib, ADR-058, curva B per",
+    "* entrambe; fino a L47b1 la VTL5C4). L47b2a: PROFILO E CIMA (%g mA) SONO ANCORA QUELLI DELLA" % (ION * 1e3),
+    "* VTL5C4; il profilo a 3 s con la cima di 7 mA (ADR-059, ADR-060) e' di L47b2b.",
     "* Ogni cifra di questo deck porta quell'etichetta. Il resto e' come nei deck di V2: da",
-    "* L39 (NC-017) ogni dispositivo attivo e' il modello del costruttore in models/, e solo",
-    "* l'LSK489A ha KF (1/f). [Riga cambiata in L39: fino a L29b2 diceva segnaposto.]",
+    "* L39 (NC-017) ogni dispositivo attivo e' il modello del costruttore in models/, e da L44",
+    "* tutti hanno KF (1/f; ADR-057). [Riga cambiata in L39: fino a L29b2 diceva segnaposto.]",
     "*",
     "* IL PROFILO %s. Serie, log-lineare a tratti in d: %s." % (
         PROFILO, "; ".join("%g A a d = %g" % (i, d) for d, i in SERIE)),
@@ -97,7 +99,7 @@ H = [
     "* tb_v2_mute_ldr_manifest.csv; nessun wrdata lo nomina, #25). t_grad = Td + 0,5 s.",
     "* CONVENZIONE DI PERCORSO: `.include @REPO@/...` (tb_op.cir, L2-L3).",
     "",
-] + inc + [".include @REPO@/models/optocoupler/vtl5c4_comportamentale.lib", ""] + CANALE + [
+] + inc + [".include @REPO@/models/optocoupler/nsl32sr3_comportamentale.lib", ""] + CANALE + [
     "* ---- L29b2: le due LDR e il loro comando, fuori dal blocco CANALE (ADR-038) ----",
     "VTI NTI 0 DC 1000",
     "VTR NTR 0 DC 2000",
@@ -112,8 +114,8 @@ H = [
     "RALS ALS 0 10MEG",
     "RALP ALP 0 10MEG",
     "RSRC2 SRC SRCX 1.5",
-    "XLS ALS 0 SRCX SELA VTL5C4_B",
-    "XLP ALP 0 INA 0 VTL5C4_B",
+    "XLS ALS 0 SRCX SELA NSL32SR3_B",
+    "XLP ALP 0 INA 0 NSL32SR3_B",
     "",
 ]
 

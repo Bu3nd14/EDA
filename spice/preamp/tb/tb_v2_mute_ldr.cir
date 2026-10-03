@@ -1,10 +1,12 @@
-tb_v2_mute_ldr.cir - V2 al jack col mute graduale a monte: due LDR VTL5C4 all'ingresso del blocco A, profilo v4 Td 6 s (ADR-038, L29b2, NC-028)
+tb_v2_mute_ldr.cir - V2 al jack col mute graduale a monte: due LDR NSL-32SR3 all'ingresso del blocco A, profilo v4 Td 6 s (ADR-038, L29b2, NC-028)
 * Prima riga = titolo (docs/limitations.md #10).
 * GENERATO da docs/preamp/data/2026-09-22/L29b2/deck/genera_tb_v2_mute_ldr.py: non si
 * edita a mano. L'intestazione del generatore dice cosa c'e' dentro e come si corre.
 *
-* IL MODELLO DELLE CELLE e' comportamentale dal datasheet, con estrapolazione dichiarata
-* sopra ~10 kOhm (models/optocoupler/vtl5c4_comportamentale.lib, curva B per entrambe).
+* IL MODELLO DELLE CELLE e' comportamentale da dati pubblicati, una sola cella misurata nella
+* regione del mute (models/optocoupler/nsl32sr3_comportamentale.lib, ADR-058, curva B per
+* entrambe; fino a L47b1 la VTL5C4). L47b2a: PROFILO E CIMA (20 mA) SONO ANCORA QUELLI DELLA
+* VTL5C4; il profilo a 3 s con la cima di 7 mA (ADR-059, ADR-060) e' di L47b2b.
 * Ogni cifra di questo deck porta quell'etichetta. Il resto e' come nei deck di V2: da
 * L39 (NC-017) ogni dispositivo attivo e' il modello del costruttore in models/, e da L44
 * tutti hanno KF (1/f; ADR-057). [Riga cambiata in L39: fino a L29b2 diceva segnaposto.]
@@ -29,7 +31,7 @@ tb_v2_mute_ldr.cir - V2 al jack col mute graduale a monte: due LDR VTL5C4 all'in
 .include @REPO@/models/diodes/1n4148.lib
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block.subckt
-.include @REPO@/models/optocoupler/vtl5c4_comportamentale.lib
+.include @REPO@/models/optocoupler/nsl32sr3_comportamentale.lib
 
 * >>> CANALE - identico nei tre deck tb_v2_mute_*.cir (v2_metodo.py canale)
 * TOLLERANZE (L29a, ripresa 2026-09-16): vedi il blocco esteso in
@@ -178,8 +180,8 @@ BILP 0 ALP I = 1e-08 * pow(2e+06, min(max((V(DEP) - 0.5)/0.5, 0), 1))
 RALS ALS 0 10MEG
 RALP ALP 0 10MEG
 RSRC2 SRC SRCX 1.5
-XLS ALS 0 SRCX SELA VTL5C4_B
-XLP ALP 0 INA 0 VTL5C4_B
+XLS ALS 0 SRCX SELA NSL32SR3_B
+XLP ALP 0 INA 0 NSL32SR3_B
 
 .control
 * limitations #30: il tempo a 16 cifre, prima di ogni wrdata

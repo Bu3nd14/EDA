@@ -111,6 +111,8 @@ NODE_COUNT = {"r": 2, "c": 2, "l": 2, "d": 2, "q": 3, "j": 3,
               # L29b2: the VTL5C4 behavioural model (models/optocoupler/) is the
               # first included subckt with a current sensor (V) and behavioural
               # sources (B), both two-terminal. Any other type still refuses.
+              # Since L47b2a the canonical decks use the NSL-32SR3 model, same
+              # element types.
               "v": 2, "b": 2}
 # L31: per-device noise vectors (see the docstring).
 NOISE = re.compile(r"\b[oi]noise_([A-Za-z0-9_]+)")
