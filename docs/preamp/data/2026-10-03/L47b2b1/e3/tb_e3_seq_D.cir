@@ -1,0 +1,499 @@
+tb_e3_sequenza.cir - L47b2b1: E3 negli istanti peggiori della sfumatura v5, curve A-E (GENERATO da genera_e3_sequenza.py)
+* Prima riga = titolo (docs/limitations.md #10).
+*
+* COSA SI PROVA (L29b2, ADR-038 "Da misurare": E3, E5 e l'accoppiamento
+* LED-cella). La catena di tb_trim.cir, trim candidato 2 (845 / 464 / 464, il
+* candidato di progetto, ADR-027), con davanti al blocco A le due celle di
+* circuits/preamp/preamp_audio.py:
+*
+*   VSRC --RSRC-- SRCX --[LDR serie, U101]-- AIN --[blocco A]-- ...
+*                                             |
+*                                        [LDR derivazione, U102] -- 0
+*                                             |
+*                                        R_IN 1 M (dentro il blocco)
+*
+* IL MODELLO DELLE CELLE: models/optocoupler/nsl32sr3_comportamentale.lib (L47b2a,
+* ADR-058; fino a L47b1 la VTL5C4), "modello comportamentale da dati pubblicati,
+* una sola cella misurata nella regione del mute, con estrapolazione dichiarata".
+* Ogni cifra di questo deck porta quell'etichetta. Il modello NON HA RUMORE
+* (lo dichiara la sua intestazione): per E5 la cella in serie si sostituisce
+* con un resistore del suo valore di lavoro, che ha il rumore termico; il
+* rumore in eccesso di una fotoresistenza reale (1/f, fotoconduttivo) non e'
+* modellato da nessuna parte ed e' da misurare sul prototipo.
+*
+* E3 (REQUIREMENTS, "Nota su E3"): |Zin| minima 20 Hz - 20 kHz al connettore,
+* cioe' al nodo SRCX, in ogni posizione del trim; CSEL come in tb_trim.cir.
+* Tre stati delle celle, dal punto di lavoro reale del modello:
+*   gioco  d = 0: serie 7 mA (99,9 ohm, curva B; la cima di ADR-060), derivazione
+*          10 nA (25 M, il buio dichiarato del modello)
+*   mute   d = 1: serie 10 nA (25 M), derivazione 7 mA (99,9 ohm)
+*   meta'  serie 4,5 uA (248 k sulla NSL-32SR3; il punto del profilo v3, che
+*          il profilo a 3 s di L47b2b ridefinisce) e
+*          derivazione 10 nA: il carico piu' basso che la sorgente vede nel
+*          tratto in cui la serie e' gia' alta
+* Il minimo lungo la SEQUENZA (in transitorio) e' di post.py sui dati di V2.
+*
+* E5 (<= 9,90 uV, tb_trim.cir: E5 meno le quote da 1 uV di ADR-020 e ADR-022).
+* Stato di gioco. La serie come resistore: 99,9 ohm (curva B alla cima di 7 mA,
+* ADR-060, dal punto di lavoro: la corsa lo stampa e lo confronta) e 115,5 ohm
+* (curve C ed E, le piu' resistive delle cinque a 7 mA; A e D 51,2 ohm;
+* docs/preamp/data/2026-10-03/L47b2a/cella/r_cella.cir). La derivazione
+* resta il modello, a 25 M: il suo rumore termico vede il nodo chiuso dalla
+* sorgente e dalla serie. Posizioni del trim 0 / 6 / 12, modi 0 / 3 / 10 dB,
+* attenuatore al massimo e a meta' corsa, sorgente 1,5 e 430 ohm. Riferimento
+* "senza LDR": la serie a 1 mohm.
+*
+* L'ACCOPPIAMENTO LED-CELLA, 0,5 pF (ADR-038 "Rumore", ADR-022). Il comando dei
+* LED e' fuori scheda e non e' progettato: il suo rumore non si conosce. Il
+* deck misura allora la TRASFERENZA |V(jack) / V(anodo)| con un generatore AC
+* da 1 V dietro 0,5 pF sul lato sorgente della serie e sul nodo AIN, e ne
+* ricava la densita' piatta massima all'anodo per restare dentro 1 uV al jack:
+* e' un requisito sul comando, non una misura del comando.
+*
+* NODI: i blocchi e le celle sono sottocircuiti (limitations #24); RG / RG10
+* terminati (#27). Il rumore: da L39 i modelli sono del costruttore, da L44
+* i bipolari portano KF al tetto dichiarato di ADR-057: un limite per eccesso.
+*
+* TABELLE (echo; nessun wrdata le nomina, #25):
+*   tb_e3_e5_ldr_e3.csv   stato,pos,csel,rs_ohm,rp_ohm,zmin_ohm,z20_ohm,z1k_ohm,z20k_ohm
+*   tb_e3_e5_ldr_e5.csv   ldr,rs_ohm,pos,mode,att,rsrc,onoise_uv
+*   tb_e3_e5_ldr_cio.csv  lato,mode,hmax,hint_v,ea_max_nv
+* Convenzione dei percorsi: tb_op.cir (L2).
+
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+* L22: lo specchio d'ingresso e' un LS352 (ADR-018).
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block.subckt
+.include @REPO@/models/optocoupler/nsl32sr3_comportamentale.lib
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+
+* --- la sorgente selezionata e cio' che il selettore aggiunge ---
+VSRC  VSN 0 DC 0 AC 1
+RSRC  VSN SRCX 1.5
+CSEL  SRCX 0 1f
+
+* --- il mute graduale a monte: le due celle e il loro comando (ADR-038) ---
+* LED comandati da generatori di corrente, catodo a massa; 10 M dall'anodo a
+* massa: un LED col solo generatore non ha percorso in continua e l'op fallisce
+* in silenzio (trappola di L29b). Il 10 M e' del banco, non della scheda.
+ILS  0 ALS DC 7m
+RALS ALS 0 10MEG
+ILP  0 ALP DC 10n
+RALP ALP 0 10MEG
+XLS  ALS 0 SRCX AIN NSL32SR3_D
+XLP  ALP 0 AIN 0 NSL32SR3_D
+* per E5: la serie come resistore (aperta a 1 T fuori da E5)
+RLDRS SRCX AIN 1e12
+
+* --- l'accoppiamento LED-cella, per la trasferenza (spento fuori da quella) ---
+VINJ NINJ 0 DC 0 AC 0
+CINJS NINJ SRCX 1e-30
+CINJP NINJ AIN 1e-30
+
+* --- blocco A, guadagno 1, ramo del rele' non montato ---
+XA AIN AOUT AFB ARG ARG10 VPLUS VMINUS GAINBLOCK
+RARG   ARG   0 1G
+RARG10 ARG10 0 1G
+
+* --- il trim, candidato 2 (ADR-027) ---
+RL1 AOUT TAP6 845
+RL2 TAP6 TAP12 464
+RL3 TAP12 0 464
+RT1R AOUT ATOP 0.1
+CT1R AOUT ATOP 15p
+RT1S T2C ATOP 1G
+CT1S T2C ATOP 15p
+RT2R TAP6 T2C 0.1
+CT2R TAP6 T2C 15p
+RT2S TAP12 T2C 1G
+CT2S TAP12 T2C 15p
+CWIRE ATOP 0 100p
+
+* --- l'attenuatore a scatti da 10 k ---
+RATTH ATOP BIN 1m
+RATTL BIN 0 10k
+
+* --- blocco B, 0 / +3 / +10 dB ---
+XB BIN BOUT BFB BRG BRG10 VPLUS VMINUS GAINBLOCK
+CSTB    BRG   0 15p
+RRGB    BRG   0 1G
+CSTB10  BRG10 0 15p
+RRG10B  BRG10 0 1G
+
+RISO   BOUT BOUTA 47
+COUT   BOUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+
+.control
+echo "curva,quando,t_s,rs_ohm,rp_ohm,stima_kohm,pos,csel,zmin_ohm,z20_ohm,z1k_ohm,z20k_ohm" > tb_e3_seq_D.csv
+alter rsrc = 1m
+alter ils dc = 6.53177e-05
+alter ilp dc = 6.21478e-06
+alter rt1r = 0.1
+alter rt1s = 1G
+alter rt2r = 0.1
+alter rt2s = 1G
+alter csel = 1f
+op
+let rsv = 10^v(xls.xs)
+let rpv = 10^v(xlp.xs)
+set rsvs = "$&rsv"
+set rpvs = "$&rpv"
+ac dec 50 20 20k
+let zmag = mag(v(srcx)/(-i(vsrc)))
+meas ac zmin min zmag from=20 to=20000
+meas ac z20 find zmag at=20
+meas ac z1k find zmag at=1000
+meas ac z20k find zmag at=20000
+echo "D,20Hz,6.6766,$rsvs,$rpvs,133.82,0,1f,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_seq_D.csv
+destroy all
+alter ils dc = 6.53177e-05
+alter ilp dc = 6.21478e-06
+alter rt1r = 0.1
+alter rt1s = 1G
+alter rt2r = 0.1
+alter rt2s = 1G
+alter csel = 22p
+op
+let rsv = 10^v(xls.xs)
+let rpv = 10^v(xlp.xs)
+set rsvs = "$&rsv"
+set rpvs = "$&rpv"
+ac dec 50 20 20k
+let zmag = mag(v(srcx)/(-i(vsrc)))
+meas ac zmin min zmag from=20 to=20000
+meas ac z20 find zmag at=20
+meas ac z1k find zmag at=1000
+meas ac z20k find zmag at=20000
+echo "D,20Hz,6.6766,$rsvs,$rpvs,133.82,0,22p,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_seq_D.csv
+destroy all
+alter ils dc = 6.53177e-05
+alter ilp dc = 6.21478e-06
+alter rt1r = 0.1
+alter rt1s = 1G
+alter rt2r = 0.1
+alter rt2s = 1G
+alter csel = 68p
+op
+let rsv = 10^v(xls.xs)
+let rpv = 10^v(xlp.xs)
+set rsvs = "$&rsv"
+set rpvs = "$&rpv"
+ac dec 50 20 20k
+let zmag = mag(v(srcx)/(-i(vsrc)))
+meas ac zmin min zmag from=20 to=20000
+meas ac z20 find zmag at=20
+meas ac z1k find zmag at=1000
+meas ac z20k find zmag at=20000
+echo "D,20Hz,6.6766,$rsvs,$rpvs,133.82,0,68p,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_seq_D.csv
+destroy all
+alter ils dc = 6.53177e-05
+alter ilp dc = 6.21478e-06
+alter rt1r = 1G
+alter rt1s = 0.1
+alter rt2r = 0.1
+alter rt2s = 1G
+alter csel = 1f
+op
+let rsv = 10^v(xls.xs)
+let rpv = 10^v(xlp.xs)
+set rsvs = "$&rsv"
+set rpvs = "$&rpv"
+ac dec 50 20 20k
+let zmag = mag(v(srcx)/(-i(vsrc)))
+meas ac zmin min zmag from=20 to=20000
+meas ac z20 find zmag at=20
+meas ac z1k find zmag at=1000
+meas ac z20k find zmag at=20000
+echo "D,20Hz,6.6766,$rsvs,$rpvs,133.82,6,1f,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_seq_D.csv
+destroy all
+alter ils dc = 6.53177e-05
+alter ilp dc = 6.21478e-06
+alter rt1r = 1G
+alter rt1s = 0.1
+alter rt2r = 0.1
+alter rt2s = 1G
+alter csel = 22p
+op
+let rsv = 10^v(xls.xs)
+let rpv = 10^v(xlp.xs)
+set rsvs = "$&rsv"
+set rpvs = "$&rpv"
+ac dec 50 20 20k
+let zmag = mag(v(srcx)/(-i(vsrc)))
+meas ac zmin min zmag from=20 to=20000
+meas ac z20 find zmag at=20
+meas ac z1k find zmag at=1000
+meas ac z20k find zmag at=20000
+echo "D,20Hz,6.6766,$rsvs,$rpvs,133.82,6,22p,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_seq_D.csv
+destroy all
+alter ils dc = 6.53177e-05
+alter ilp dc = 6.21478e-06
+alter rt1r = 1G
+alter rt1s = 0.1
+alter rt2r = 0.1
+alter rt2s = 1G
+alter csel = 68p
+op
+let rsv = 10^v(xls.xs)
+let rpv = 10^v(xlp.xs)
+set rsvs = "$&rsv"
+set rpvs = "$&rpv"
+ac dec 50 20 20k
+let zmag = mag(v(srcx)/(-i(vsrc)))
+meas ac zmin min zmag from=20 to=20000
+meas ac z20 find zmag at=20
+meas ac z1k find zmag at=1000
+meas ac z20k find zmag at=20000
+echo "D,20Hz,6.6766,$rsvs,$rpvs,133.82,6,68p,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_seq_D.csv
+destroy all
+alter ils dc = 6.53177e-05
+alter ilp dc = 6.21478e-06
+alter rt1r = 1G
+alter rt1s = 0.1
+alter rt2r = 1G
+alter rt2s = 0.1
+alter csel = 1f
+op
+let rsv = 10^v(xls.xs)
+let rpv = 10^v(xlp.xs)
+set rsvs = "$&rsv"
+set rpvs = "$&rpv"
+ac dec 50 20 20k
+let zmag = mag(v(srcx)/(-i(vsrc)))
+meas ac zmin min zmag from=20 to=20000
+meas ac z20 find zmag at=20
+meas ac z1k find zmag at=1000
+meas ac z20k find zmag at=20000
+echo "D,20Hz,6.6766,$rsvs,$rpvs,133.82,12,1f,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_seq_D.csv
+destroy all
+alter ils dc = 6.53177e-05
+alter ilp dc = 6.21478e-06
+alter rt1r = 1G
+alter rt1s = 0.1
+alter rt2r = 1G
+alter rt2s = 0.1
+alter csel = 22p
+op
+let rsv = 10^v(xls.xs)
+let rpv = 10^v(xlp.xs)
+set rsvs = "$&rsv"
+set rpvs = "$&rpv"
+ac dec 50 20 20k
+let zmag = mag(v(srcx)/(-i(vsrc)))
+meas ac zmin min zmag from=20 to=20000
+meas ac z20 find zmag at=20
+meas ac z1k find zmag at=1000
+meas ac z20k find zmag at=20000
+echo "D,20Hz,6.6766,$rsvs,$rpvs,133.82,12,22p,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_seq_D.csv
+destroy all
+alter ils dc = 6.53177e-05
+alter ilp dc = 6.21478e-06
+alter rt1r = 1G
+alter rt1s = 0.1
+alter rt2r = 1G
+alter rt2s = 0.1
+alter csel = 68p
+op
+let rsv = 10^v(xls.xs)
+let rpv = 10^v(xlp.xs)
+set rsvs = "$&rsv"
+set rpvs = "$&rpv"
+ac dec 50 20 20k
+let zmag = mag(v(srcx)/(-i(vsrc)))
+meas ac zmin min zmag from=20 to=20000
+meas ac z20 find zmag at=20
+meas ac z1k find zmag at=1000
+meas ac z20k find zmag at=20000
+echo "D,20Hz,6.6766,$rsvs,$rpvs,133.82,12,68p,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_seq_D.csv
+destroy all
+alter ils dc = 7.15258e-05
+alter ilp dc = 6.19221e-06
+alter rt1r = 0.1
+alter rt1s = 1G
+alter rt2r = 0.1
+alter rt2s = 1G
+alter csel = 1f
+op
+let rsv = 10^v(xls.xs)
+let rpv = 10^v(xlp.xs)
+set rsvs = "$&rsv"
+set rpvs = "$&rpv"
+ac dec 50 20 20k
+let zmag = mag(v(srcx)/(-i(vsrc)))
+meas ac zmin min zmag from=20 to=20000
+meas ac z20 find zmag at=20
+meas ac z1k find zmag at=1000
+meas ac z20k find zmag at=20000
+echo "D,20kHz,6.6888,$rsvs,$rpvs,87.46,0,1f,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_seq_D.csv
+destroy all
+alter ils dc = 7.15258e-05
+alter ilp dc = 6.19221e-06
+alter rt1r = 0.1
+alter rt1s = 1G
+alter rt2r = 0.1
+alter rt2s = 1G
+alter csel = 22p
+op
+let rsv = 10^v(xls.xs)
+let rpv = 10^v(xlp.xs)
+set rsvs = "$&rsv"
+set rpvs = "$&rpv"
+ac dec 50 20 20k
+let zmag = mag(v(srcx)/(-i(vsrc)))
+meas ac zmin min zmag from=20 to=20000
+meas ac z20 find zmag at=20
+meas ac z1k find zmag at=1000
+meas ac z20k find zmag at=20000
+echo "D,20kHz,6.6888,$rsvs,$rpvs,87.46,0,22p,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_seq_D.csv
+destroy all
+alter ils dc = 7.15258e-05
+alter ilp dc = 6.19221e-06
+alter rt1r = 0.1
+alter rt1s = 1G
+alter rt2r = 0.1
+alter rt2s = 1G
+alter csel = 68p
+op
+let rsv = 10^v(xls.xs)
+let rpv = 10^v(xlp.xs)
+set rsvs = "$&rsv"
+set rpvs = "$&rpv"
+ac dec 50 20 20k
+let zmag = mag(v(srcx)/(-i(vsrc)))
+meas ac zmin min zmag from=20 to=20000
+meas ac z20 find zmag at=20
+meas ac z1k find zmag at=1000
+meas ac z20k find zmag at=20000
+echo "D,20kHz,6.6888,$rsvs,$rpvs,87.46,0,68p,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_seq_D.csv
+destroy all
+alter ils dc = 7.15258e-05
+alter ilp dc = 6.19221e-06
+alter rt1r = 1G
+alter rt1s = 0.1
+alter rt2r = 0.1
+alter rt2s = 1G
+alter csel = 1f
+op
+let rsv = 10^v(xls.xs)
+let rpv = 10^v(xlp.xs)
+set rsvs = "$&rsv"
+set rpvs = "$&rpv"
+ac dec 50 20 20k
+let zmag = mag(v(srcx)/(-i(vsrc)))
+meas ac zmin min zmag from=20 to=20000
+meas ac z20 find zmag at=20
+meas ac z1k find zmag at=1000
+meas ac z20k find zmag at=20000
+echo "D,20kHz,6.6888,$rsvs,$rpvs,87.46,6,1f,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_seq_D.csv
+destroy all
+alter ils dc = 7.15258e-05
+alter ilp dc = 6.19221e-06
+alter rt1r = 1G
+alter rt1s = 0.1
+alter rt2r = 0.1
+alter rt2s = 1G
+alter csel = 22p
+op
+let rsv = 10^v(xls.xs)
+let rpv = 10^v(xlp.xs)
+set rsvs = "$&rsv"
+set rpvs = "$&rpv"
+ac dec 50 20 20k
+let zmag = mag(v(srcx)/(-i(vsrc)))
+meas ac zmin min zmag from=20 to=20000
+meas ac z20 find zmag at=20
+meas ac z1k find zmag at=1000
+meas ac z20k find zmag at=20000
+echo "D,20kHz,6.6888,$rsvs,$rpvs,87.46,6,22p,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_seq_D.csv
+destroy all
+alter ils dc = 7.15258e-05
+alter ilp dc = 6.19221e-06
+alter rt1r = 1G
+alter rt1s = 0.1
+alter rt2r = 0.1
+alter rt2s = 1G
+alter csel = 68p
+op
+let rsv = 10^v(xls.xs)
+let rpv = 10^v(xlp.xs)
+set rsvs = "$&rsv"
+set rpvs = "$&rpv"
+ac dec 50 20 20k
+let zmag = mag(v(srcx)/(-i(vsrc)))
+meas ac zmin min zmag from=20 to=20000
+meas ac z20 find zmag at=20
+meas ac z1k find zmag at=1000
+meas ac z20k find zmag at=20000
+echo "D,20kHz,6.6888,$rsvs,$rpvs,87.46,6,68p,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_seq_D.csv
+destroy all
+alter ils dc = 7.15258e-05
+alter ilp dc = 6.19221e-06
+alter rt1r = 1G
+alter rt1s = 0.1
+alter rt2r = 1G
+alter rt2s = 0.1
+alter csel = 1f
+op
+let rsv = 10^v(xls.xs)
+let rpv = 10^v(xlp.xs)
+set rsvs = "$&rsv"
+set rpvs = "$&rpv"
+ac dec 50 20 20k
+let zmag = mag(v(srcx)/(-i(vsrc)))
+meas ac zmin min zmag from=20 to=20000
+meas ac z20 find zmag at=20
+meas ac z1k find zmag at=1000
+meas ac z20k find zmag at=20000
+echo "D,20kHz,6.6888,$rsvs,$rpvs,87.46,12,1f,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_seq_D.csv
+destroy all
+alter ils dc = 7.15258e-05
+alter ilp dc = 6.19221e-06
+alter rt1r = 1G
+alter rt1s = 0.1
+alter rt2r = 1G
+alter rt2s = 0.1
+alter csel = 22p
+op
+let rsv = 10^v(xls.xs)
+let rpv = 10^v(xlp.xs)
+set rsvs = "$&rsv"
+set rpvs = "$&rpv"
+ac dec 50 20 20k
+let zmag = mag(v(srcx)/(-i(vsrc)))
+meas ac zmin min zmag from=20 to=20000
+meas ac z20 find zmag at=20
+meas ac z1k find zmag at=1000
+meas ac z20k find zmag at=20000
+echo "D,20kHz,6.6888,$rsvs,$rpvs,87.46,12,22p,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_seq_D.csv
+destroy all
+alter ils dc = 7.15258e-05
+alter ilp dc = 6.19221e-06
+alter rt1r = 1G
+alter rt1s = 0.1
+alter rt2r = 1G
+alter rt2s = 0.1
+alter csel = 68p
+op
+let rsv = 10^v(xls.xs)
+let rpv = 10^v(xlp.xs)
+set rsvs = "$&rsv"
+set rpvs = "$&rpv"
+ac dec 50 20 20k
+let zmag = mag(v(srcx)/(-i(vsrc)))
+meas ac zmin min zmag from=20 to=20000
+meas ac z20 find zmag at=20
+meas ac z1k find zmag at=1000
+meas ac z20k find zmag at=20000
+echo "D,20kHz,6.6888,$rsvs,$rpvs,87.46,12,68p,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_seq_D.csv
+destroy all
+.endc
+.end

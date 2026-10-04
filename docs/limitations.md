@@ -1001,3 +1001,63 @@ costruzione, ogni modello a stato col ramo `?:` dello stato a regime, #40).
 Non si sa ancora quale differenza dei due banchi decida. **Regola operativa**: una `tran` con la
 NSL-32SR3 ferma si valida dal log (stdout **e** stderr: «Timestep too small», «aborted», #35) e
 dall'ultima riga dei dati, che deve arrivare al tempo finale chiesto; l'uscita 0 non dice niente.
+
+**Rivisto in L47b2b1, nel banco V2 a 20 Hz** (`docs/preamp/data/2026-10-03/L47b2b1/v2/sonda_20hz/`).
+Con la serie in curva C o E, le corse a 20 Hz della matrice «curve» si fermano a t = 21,4 ms (anche
+il riferimento «mai», cella ferma in gioco), e con la curva E due corse di nuovo alla chiusura
+del relè al jack (t = 4,5 s). Il log dà la colpa al JFET d'ingresso («trouble with
+lsk489a-instance j.xa.jq110a»), non alla cella. `corri.sh` le registra rc = 1 dopo le sue tre prove.
+- `option trtol=1` le fa correre (gear, itl4, gmin, tmax 5–7 µs no; trtol 0,2 e 0,5 peggio);
+  sulla curva D, che passava, sposta le uscite di ≤ 0,14 µV;
+- per le due ferme al relè serve anche `option rshunt=1e12`; sulla curva D sposta ≤ 4,6 µV
+  (0,42 dB): dichiarato accanto alle cifre;
+- le opzioni stanno in **tutte** le corse a 20 Hz della curva che ne ha avuto bisogno (#38).
+
+## 44. Il banco V2 metteva l'offset del primo stadio prima di R_IN: 20 nA nella rete d'ingresso, e un click che il circuito non ha
+
+Scoperto in L47b2b1, nella matrice del deck versionato `tb_v2_casopeggiore.cir` col mute v5.
+
+Il gruppo 3 di V2 (la dispersione, ADR-031) inietta gli offset d'ingresso dei blocchi con
+generatori in serie: `VOSA INA INAX` fra il nodo delle celle del mute e l'ingresso del blocco A.
+Ma R_IN (R113, 1 MΩ) sta **dentro** il sottocircuito `GAINBLOCK`, fra il suo ingresso e massa.
+Con VOSA = 20 mV il banco fa quindi scorrere 20 nA nella rete delle due fotoresistenze. Nel
+circuito R_IN sta sul gate, e un offset del differenziale non manda corrente nell'ingresso.
+
+Finché la rete d'ingresso valeva poche centinaia di ohm non si vedeva. A metà sfumatura le due
+celle valgono ~100 kΩ insieme: la continua su INA si sposta di millivolt, e il gradino arriva al
+jack. Col v5 dava A **211 µV** all'inserimento e **152 µV** al rilascio (con la VTL5C4 e il v4 a
+6 s 28 µV, dentro). Col controfattuale (`v2/cf_offset/`: `IOSA INAX 0` uguale a VOSA / 1 MΩ, che
+fornisce a R113 quella corrente) **0,38 e 0,07 µV**, 0 righe fuori su 23. Il gradino d'offset
+all'uscita del blocco, lo scopo del gruppo 3, resta quello di prima.
+
+**Regola operativa**:
+- un generatore d'offset in serie a un ingresso non deve far passare corrente nella rete a monte
+  se nel circuito non ne passa: chi lo mette davanti a una resistenza che sta dentro un
+  sottocircuito ne guarda la corrente;
+- il generatore V2 la corregge da L47b2b1 (`iosa()` in `genera_tb_v2_casopeggiore.py`, scelta
+  dell'utente: «Sì, correggere il banco»);
+- **VOSB** ha lo stesso difetto davanti al blocco B (20 nA nell'attenuatore, ≤ ~2,5 kΩ: ≤ 50 µV in
+  continua). È lasciato com'è: va nel verso prudente e i suoi verdetti reggono già.
+
+## 43. Lo stesso requisito misurato in due modi: E3 «lungo la sequenza» guardava il solo ramo della cella, E3 statico l'ingresso intero
+
+Scoperto in L47b2b1, ricalibrando il profilo del mute sulla NSL-32SR3.
+
+E3 statico (`tb_e3_e5_ldr.cir`) è il minimo di |Zin| su 20 Hz–20 kHz **al connettore**, col
+selettore (fino a 68 pF) e il resto del nodo in parallelo. Il controllo «lungo la sequenza» di
+L29b (`docs/preamp/data/2026-09-21/L29b/ldr_catena/post.py`) confrontava con 100 kΩ **il solo ramo
+della cella**, R_s + (R_p ‖ 1 MΩ), resistivo. Col selettore a 68 pF (~117 kΩ a 20 kHz) il ramo
+deve valere ≥ ~224 kΩ perché il connettore resti ≥ 100 kΩ a 20 kHz: il secondo criterio è più
+largo del primo di oltre due volte, e nessun errore lo dice.
+
+Il caso che lo ha mostrato: il profilo v4 compresso a 3 s con la cima di 7 mA dà un ramo della
+cella ≥ 170 kΩ («passa» per `post.py`) ma |Zin| a 20 kHz di **88,7–94,0 kΩ** al rilascio, su tutte e
+cinque le curve (`docs/preamp/data/2026-10-03/L47b2b1/banco/`, `sfumatura.py v4`).
+
+**Regola operativa**:
+- un requisito si verifica lungo una sequenza **con la stessa grandezza** con cui si verifica a
+  regime: qui |Zin| al connettore, con trim e selettore, non una sua parte;
+- gli stati delle celle di una `tran` si portano nell'AC del deck statico come correnti statiche
+  equivalenti: lo stato del modello dipende solo dalla corrente del LED (`L47b2b1/e3/`);
+- durante la sfumatura E3 si giudica ora a 20 Hz (ADR-061, scelta dell'utente); il minimo a
+  20 kHz si misura e si dichiara.
