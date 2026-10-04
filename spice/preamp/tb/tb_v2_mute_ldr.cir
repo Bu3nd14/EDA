@@ -1,23 +1,22 @@
-tb_v2_mute_ldr.cir - V2 al jack col mute graduale a monte: due LDR NSL-32SR3 all'ingresso del blocco A, profilo v4 Td 6 s (ADR-038, L29b2, NC-028)
+tb_v2_mute_ldr.cir - V2 al jack col mute graduale a monte: due LDR NSL-32SR3 all'ingresso del blocco A, profilo v5 Td 3 s (ADR-038, L29b2, NC-028)
 * Prima riga = titolo (docs/limitations.md #10).
 * GENERATO da docs/preamp/data/2026-09-22/L29b2/deck/genera_tb_v2_mute_ldr.py: non si
 * edita a mano. L'intestazione del generatore dice cosa c'e' dentro e come si corre.
 *
 * IL MODELLO DELLE CELLE e' comportamentale da dati pubblicati, una sola cella misurata nella
 * regione del mute (models/optocoupler/nsl32sr3_comportamentale.lib, ADR-058, curva B per
-* entrambe; fino a L47b1 la VTL5C4). L47b2a: PROFILO E CIMA (20 mA) SONO ANCORA QUELLI DELLA
-* VTL5C4; il profilo a 3 s con la cima di 7 mA (ADR-059, ADR-060) e' di L47b2b.
+* entrambe; fino a L47b1 la VTL5C4). Cima del LED 7 mA (ADR-060); pilota ideale.
 * Ogni cifra di questo deck porta quell'etichetta. Il resto e' come nei deck di V2: da
 * L39 (NC-017) ogni dispositivo attivo e' il modello del costruttore in models/, e da L44
 * tutti hanno KF (1/f; ADR-057). [Riga cambiata in L39: fino a L29b2 diceva segnaposto.]
 *
-* IL PROFILO v4. Serie, log-lineare a tratti in d: 0.02 A a d = 0; 0.0002 A a d = 0.1; 4.5e-06 A a d = 0.45; 1.9e-07 A a d = 0.75; 1e-08 A a d = 0.8; 1e-08 A a d = 1.
-* Derivazione: 10 nA fino a d = 0,5, poi log-lineare fino a 20 mA a d = 1. d va da 0 a 1
-* in Td = 6 s dall'inserzione e torna indietro con la stessa velocita' da dove si trova.
+* IL PROFILO v5. Serie, log-lineare a tratti in d: 0.007 A a d = 0; 1e-08 A a d = 0.6; 1e-08 A a d = 1.
+* Derivazione, log-lineare a tratti in d: 1e-08 A a d = 0; 1e-08 A a d = 0.155; 0.007 A a d = 1. d va da 0 a 1
+* in Td = 3 s dall'inserzione e torna indietro con la stessa velocita' da dove si trova.
 * Rele' al jack chiuso a t_ins + Td + 0,5 s, aperto a t_rel.
 *
-* TEMPI: inserzione a 1 s, rele' a 7.5 s, rilascio a 8.5 s, fine a 17.5 s; inversione a
-* d = 0.75, cioe' a 5.5 s, fine a 13 s. Tono 2,7 V RMS, +10 dB, fase pi/2.
+* TEMPI: inserzione a 1 s, rele' a 4.5 s, rilascio a 5.5 s, fine a 11.5 s; inversione a
+* d = 0.75, cioe' a 3.25 s, fine a 8.5 s. Tono 2,7 V RMS, +10 dB, fase pi/2.
 *
 * ANALISI: scripts/v2_metodo.py analizza sul manifesto (tabella echo, nome
 * tb_v2_mute_ldr_manifest.csv; nessun wrdata lo nomina, #25). t_grad = Td + 0,5 s.
@@ -170,11 +169,11 @@ RLDM MAINJACK 0 100k
 * ---- L29b2: le due LDR e il loro comando, fuori dal blocco CANALE (ADR-038) ----
 VTI NTI 0 DC 1000
 VTR NTR 0 DC 2000
-VTD NTD 0 DC 6
+VTD NTD 0 DC 3
 BDIN DIN 0 V = min(max((time - V(NTI))/V(NTD), 0), 1)
 BDEP DEP 0 V = time < V(NTR) ? V(DIN) : max(min(max((V(NTR) - V(NTI))/V(NTD), 0), 1) - (time - V(NTR))/V(NTD), 0)
-BILS 0 ALS I = pow(10, pwl(V(DEP), 0,-1.6990, 0.1,-3.6990, 0.45,-5.3468, 0.75,-6.7212, 0.8,-8.0000, 1,-8.0000))
-BILP 0 ALP I = 1e-08 * pow(2e+06, min(max((V(DEP) - 0.5)/0.5, 0), 1))
+BILS 0 ALS I = pow(10, pwl(V(DEP), 0,-2.1549, 0.6,-8.0000, 1,-8.0000))
+BILP 0 ALP I = pow(10, pwl(V(DEP), 0,-8.0000, 0.155,-8.0000, 1,-2.1549))
 * 10 M dall'anodo a massa: un LED col solo generatore non ha percorso in continua e l'op
 * fallisce in silenzio (trappola di L29b). E' del banco, non della scheda.
 RALS ALS 0 10MEG
@@ -206,76 +205,76 @@ alter vti dc = 1000
 alter vtr dc = 2000
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 1e-05 17.5 0 1e-05
+tran 1e-05 11.5 0 1e-05
 wrdata mai_20_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "mai_20_100k,mai_20_100k.dat,rif,20,3.818,10,100k,1.0,8.5,17.5,1e-05,rif_mai,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "mai_20_100k,mai_20_100k.dat,rif,20,3.818,10,100k,1.0,5.5,11.5,1e-05,rif_mai,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20
 alter vti dc = -10
 alter vtr dc = 1000
 alter vtijk dc = -10
 alter vtrjk dc = 1000
-tran 1e-05 17.5 0 1e-05
+tran 1e-05 11.5 0 1e-05
 wrdata sempre_20_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "sempre_20_100k,sempre_20_100k.dat,rif,20,3.818,10,100k,1.0,8.5,17.5,1e-05,rif_sempre,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "sempre_20_100k,sempre_20_100k.dat,rif,20,3.818,10,100k,1.0,5.5,11.5,1e-05,rif_sempre,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20
 alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 7.5
-alter vtrjk dc = 8.5
-tran 1e-05 17.5 0 1e-05
+alter vtr dc = 5.5
+alter vtijk dc = 4.5
+alter vtrjk dc = 5.5
+tran 1e-05 11.5 0 1e-05
 wrdata ev_20_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 wrdata ev_20_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "ev_20_100k,ev_20_100k.dat,ldr_v4_td6,20,3.818,10,100k,1.0,8.5,17.5,1e-05,evento,sempre_20_100k,mai_20_100k,6.5" >> tb_v2_mute_ldr_manifest.csv
-alter vamp dc = 3.818
-alter vfrq dc = 20
-alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 1000
-alter vtrjk dc = 2000
-tran 1e-05 17.5 0 1e-05
-wrdata norele_20_100k$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata norele_20_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
-destroy all
-echo "norele_20_100k,norele_20_100k.dat,rif,20,3.818,10,100k,1.0,8.5,17.5,1e-05,rif_seq,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "rele_20_100k,ev_20_100k.dat,rele_contro_norele,20,3.818,10,100k,7.5,8.5,17.5,1e-05,evento,norele_20_100k,norele_20_100k,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "ev_20_100k,ev_20_100k.dat,ldr_v5_td3,20,3.818,10,100k,1.0,5.5,11.5,1e-05,evento,sempre_20_100k,mai_20_100k,3.5" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20
 alter vti dc = 1.0
 alter vtr dc = 5.5
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 1e-05 13.0 0 1e-05
-wrdata inv_20_100k$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata inv_20_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
+tran 1e-05 11.5 0 1e-05
+wrdata norele_20_100k$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata norele_20_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "inv_20_100k,inv_20_100k.dat,inversione_d75,20,3.818,10,100k,1.0,5.5,13.0,1e-05,evento,sempre_20_100k,mai_20_100k,4.5" >> tb_v2_mute_ldr_manifest.csv
+echo "norele_20_100k,norele_20_100k.dat,rif,20,3.818,10,100k,1.0,5.5,11.5,1e-05,rif_seq,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "rele_20_100k,ev_20_100k.dat,rele_contro_norele,20,3.818,10,100k,4.5,5.5,11.5,1e-05,evento,norele_20_100k,norele_20_100k,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20
 alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 7.5
-alter vtrjk dc = 8.5
-tran 7e-06 17.5 0 7e-06
+alter vtr dc = 3.25
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+tran 1e-05 8.5 0 1e-05
+wrdata inv_20_100k$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata inv_20_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
+destroy all
+echo "inv_20_100k,inv_20_100k.dat,inversione_d75,20,3.818,10,100k,1.0,3.25,8.5,1e-05,evento,sempre_20_100k,mai_20_100k,2.25" >> tb_v2_mute_ldr_manifest.csv
+alter vamp dc = 3.818
+alter vfrq dc = 20
+alter vti dc = 1.0
+alter vtr dc = 5.5
+alter vtijk dc = 4.5
+alter vtrjk dc = 5.5
+tran 7e-06 11.5 0 7e-06
 wrdata evp_20_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
 alter vamp dc = 3.818
 alter vfrq dc = 20
 alter vti dc = 1.0
-alter vtr dc = 5.5
+alter vtr dc = 3.25
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 7e-06 13.0 0 7e-06
+tran 7e-06 8.5 0 7e-06
 wrdata invp_20_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "pav_ev0_20_100k,evp_20_100k.dat,pavimento,20,3.818,10,100k,1.0,1000,17.5,7e-06,pav_num,ev_20_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "pav_ev1_20_100k,evp_20_100k.dat,pavimento,20,3.818,10,100k,7.5,1000,17.5,7e-06,pav_num,ev_20_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "pav_ev2_20_100k,evp_20_100k.dat,pavimento,20,3.818,10,100k,8.5,1000,17.5,7e-06,pav_num,ev_20_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "pav_inv_20_100k,invp_20_100k.dat,pavimento,20,3.818,10,100k,5.5,1000,13.0,7e-06,pav_num,inv_20_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_ev0_20_100k,evp_20_100k.dat,pavimento,20,3.818,10,100k,1.0,1000,11.5,7e-06,pav_num,ev_20_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_ev1_20_100k,evp_20_100k.dat,pavimento,20,3.818,10,100k,4.5,1000,11.5,7e-06,pav_num,ev_20_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_ev2_20_100k,evp_20_100k.dat,pavimento,20,3.818,10,100k,5.5,1000,11.5,7e-06,pav_num,ev_20_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_inv_20_100k,invp_20_100k.dat,pavimento,20,3.818,10,100k,3.25,1000,8.5,7e-06,pav_num,inv_20_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 * ---- 1000 Hz, 100k ----
 alter vamp dc = 3.818
 alter vfrq dc = 1000
@@ -283,76 +282,76 @@ alter vti dc = 1000
 alter vtr dc = 2000
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 1e-05 17.5 0 1e-05
+tran 1e-05 11.5 0 1e-05
 wrdata mai_1k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "mai_1k_100k,mai_1k_100k.dat,rif,1000,3.818,10,100k,1.0,8.5,17.5,1e-05,rif_mai,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "mai_1k_100k,mai_1k_100k.dat,rif,1000,3.818,10,100k,1.0,5.5,11.5,1e-05,rif_mai,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 1000
 alter vti dc = -10
 alter vtr dc = 1000
 alter vtijk dc = -10
 alter vtrjk dc = 1000
-tran 1e-05 17.5 0 1e-05
+tran 1e-05 11.5 0 1e-05
 wrdata sempre_1k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "sempre_1k_100k,sempre_1k_100k.dat,rif,1000,3.818,10,100k,1.0,8.5,17.5,1e-05,rif_sempre,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "sempre_1k_100k,sempre_1k_100k.dat,rif,1000,3.818,10,100k,1.0,5.5,11.5,1e-05,rif_sempre,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 1000
 alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 7.5
-alter vtrjk dc = 8.5
-tran 1e-05 17.5 0 1e-05
+alter vtr dc = 5.5
+alter vtijk dc = 4.5
+alter vtrjk dc = 5.5
+tran 1e-05 11.5 0 1e-05
 wrdata ev_1k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 wrdata ev_1k_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "ev_1k_100k,ev_1k_100k.dat,ldr_v4_td6,1000,3.818,10,100k,1.0,8.5,17.5,1e-05,evento,sempre_1k_100k,mai_1k_100k,6.5" >> tb_v2_mute_ldr_manifest.csv
-alter vamp dc = 3.818
-alter vfrq dc = 1000
-alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 1000
-alter vtrjk dc = 2000
-tran 1e-05 17.5 0 1e-05
-wrdata norele_1k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata norele_1k_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
-destroy all
-echo "norele_1k_100k,norele_1k_100k.dat,rif,1000,3.818,10,100k,1.0,8.5,17.5,1e-05,rif_seq,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "rele_1k_100k,ev_1k_100k.dat,rele_contro_norele,1000,3.818,10,100k,7.5,8.5,17.5,1e-05,evento,norele_1k_100k,norele_1k_100k,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "ev_1k_100k,ev_1k_100k.dat,ldr_v5_td3,1000,3.818,10,100k,1.0,5.5,11.5,1e-05,evento,sempre_1k_100k,mai_1k_100k,3.5" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 1000
 alter vti dc = 1.0
 alter vtr dc = 5.5
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 1e-05 13.0 0 1e-05
-wrdata inv_1k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata inv_1k_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
+tran 1e-05 11.5 0 1e-05
+wrdata norele_1k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata norele_1k_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "inv_1k_100k,inv_1k_100k.dat,inversione_d75,1000,3.818,10,100k,1.0,5.5,13.0,1e-05,evento,sempre_1k_100k,mai_1k_100k,4.5" >> tb_v2_mute_ldr_manifest.csv
+echo "norele_1k_100k,norele_1k_100k.dat,rif,1000,3.818,10,100k,1.0,5.5,11.5,1e-05,rif_seq,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "rele_1k_100k,ev_1k_100k.dat,rele_contro_norele,1000,3.818,10,100k,4.5,5.5,11.5,1e-05,evento,norele_1k_100k,norele_1k_100k,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 1000
 alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 7.5
-alter vtrjk dc = 8.5
-tran 7e-06 17.5 0 7e-06
+alter vtr dc = 3.25
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+tran 1e-05 8.5 0 1e-05
+wrdata inv_1k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata inv_1k_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
+destroy all
+echo "inv_1k_100k,inv_1k_100k.dat,inversione_d75,1000,3.818,10,100k,1.0,3.25,8.5,1e-05,evento,sempre_1k_100k,mai_1k_100k,2.25" >> tb_v2_mute_ldr_manifest.csv
+alter vamp dc = 3.818
+alter vfrq dc = 1000
+alter vti dc = 1.0
+alter vtr dc = 5.5
+alter vtijk dc = 4.5
+alter vtrjk dc = 5.5
+tran 7e-06 11.5 0 7e-06
 wrdata evp_1k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
 alter vamp dc = 3.818
 alter vfrq dc = 1000
 alter vti dc = 1.0
-alter vtr dc = 5.5
+alter vtr dc = 3.25
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 7e-06 13.0 0 7e-06
+tran 7e-06 8.5 0 7e-06
 wrdata invp_1k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "pav_ev0_1k_100k,evp_1k_100k.dat,pavimento,1000,3.818,10,100k,1.0,1000,17.5,7e-06,pav_num,ev_1k_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "pav_ev1_1k_100k,evp_1k_100k.dat,pavimento,1000,3.818,10,100k,7.5,1000,17.5,7e-06,pav_num,ev_1k_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "pav_ev2_1k_100k,evp_1k_100k.dat,pavimento,1000,3.818,10,100k,8.5,1000,17.5,7e-06,pav_num,ev_1k_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "pav_inv_1k_100k,invp_1k_100k.dat,pavimento,1000,3.818,10,100k,5.5,1000,13.0,7e-06,pav_num,inv_1k_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_ev0_1k_100k,evp_1k_100k.dat,pavimento,1000,3.818,10,100k,1.0,1000,11.5,7e-06,pav_num,ev_1k_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_ev1_1k_100k,evp_1k_100k.dat,pavimento,1000,3.818,10,100k,4.5,1000,11.5,7e-06,pav_num,ev_1k_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_ev2_1k_100k,evp_1k_100k.dat,pavimento,1000,3.818,10,100k,5.5,1000,11.5,7e-06,pav_num,ev_1k_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_inv_1k_100k,invp_1k_100k.dat,pavimento,1000,3.818,10,100k,3.25,1000,8.5,7e-06,pav_num,inv_1k_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 * ---- 20000 Hz, 100k ----
 alter vamp dc = 3.818
 alter vfrq dc = 20000
@@ -360,76 +359,76 @@ alter vti dc = 1000
 alter vtr dc = 2000
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 5e-07 17.5 0 5e-07
+tran 5e-07 11.5 0 5e-07
 wrdata mai_20k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "mai_20k_100k,mai_20k_100k.dat,rif,20000,3.818,10,100k,1.0,8.5,17.5,5e-07,rif_mai,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "mai_20k_100k,mai_20k_100k.dat,rif,20000,3.818,10,100k,1.0,5.5,11.5,5e-07,rif_mai,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20000
 alter vti dc = -10
 alter vtr dc = 1000
 alter vtijk dc = -10
 alter vtrjk dc = 1000
-tran 5e-07 17.5 0 5e-07
+tran 5e-07 11.5 0 5e-07
 wrdata sempre_20k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "sempre_20k_100k,sempre_20k_100k.dat,rif,20000,3.818,10,100k,1.0,8.5,17.5,5e-07,rif_sempre,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "sempre_20k_100k,sempre_20k_100k.dat,rif,20000,3.818,10,100k,1.0,5.5,11.5,5e-07,rif_sempre,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20000
 alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 7.5
-alter vtrjk dc = 8.5
-tran 5e-07 17.5 0 5e-07
+alter vtr dc = 5.5
+alter vtijk dc = 4.5
+alter vtrjk dc = 5.5
+tran 5e-07 11.5 0 5e-07
 wrdata ev_20k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 wrdata ev_20k_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "ev_20k_100k,ev_20k_100k.dat,ldr_v4_td6,20000,3.818,10,100k,1.0,8.5,17.5,5e-07,evento,sempre_20k_100k,mai_20k_100k,6.5" >> tb_v2_mute_ldr_manifest.csv
-alter vamp dc = 3.818
-alter vfrq dc = 20000
-alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 1000
-alter vtrjk dc = 2000
-tran 5e-07 17.5 0 5e-07
-wrdata norele_20k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata norele_20k_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
-destroy all
-echo "norele_20k_100k,norele_20k_100k.dat,rif,20000,3.818,10,100k,1.0,8.5,17.5,5e-07,rif_seq,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "rele_20k_100k,ev_20k_100k.dat,rele_contro_norele,20000,3.818,10,100k,7.5,8.5,17.5,5e-07,evento,norele_20k_100k,norele_20k_100k,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "ev_20k_100k,ev_20k_100k.dat,ldr_v5_td3,20000,3.818,10,100k,1.0,5.5,11.5,5e-07,evento,sempre_20k_100k,mai_20k_100k,3.5" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20000
 alter vti dc = 1.0
 alter vtr dc = 5.5
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 5e-07 13.0 0 5e-07
-wrdata inv_20k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata inv_20k_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
+tran 5e-07 11.5 0 5e-07
+wrdata norele_20k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata norele_20k_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "inv_20k_100k,inv_20k_100k.dat,inversione_d75,20000,3.818,10,100k,1.0,5.5,13.0,5e-07,evento,sempre_20k_100k,mai_20k_100k,4.5" >> tb_v2_mute_ldr_manifest.csv
+echo "norele_20k_100k,norele_20k_100k.dat,rif,20000,3.818,10,100k,1.0,5.5,11.5,5e-07,rif_seq,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "rele_20k_100k,ev_20k_100k.dat,rele_contro_norele,20000,3.818,10,100k,4.5,5.5,11.5,5e-07,evento,norele_20k_100k,norele_20k_100k,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20000
 alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 7.5
-alter vtrjk dc = 8.5
-tran 3.5e-07 17.5 0 3.5e-07
+alter vtr dc = 3.25
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+tran 5e-07 8.5 0 5e-07
+wrdata inv_20k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata inv_20k_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
+destroy all
+echo "inv_20k_100k,inv_20k_100k.dat,inversione_d75,20000,3.818,10,100k,1.0,3.25,8.5,5e-07,evento,sempre_20k_100k,mai_20k_100k,2.25" >> tb_v2_mute_ldr_manifest.csv
+alter vamp dc = 3.818
+alter vfrq dc = 20000
+alter vti dc = 1.0
+alter vtr dc = 5.5
+alter vtijk dc = 4.5
+alter vtrjk dc = 5.5
+tran 3.5e-07 11.5 0 3.5e-07
 wrdata evp_20k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
 alter vamp dc = 3.818
 alter vfrq dc = 20000
 alter vti dc = 1.0
-alter vtr dc = 5.5
+alter vtr dc = 3.25
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 3.5e-07 13.0 0 3.5e-07
+tran 3.5e-07 8.5 0 3.5e-07
 wrdata invp_20k_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "pav_ev0_20k_100k,evp_20k_100k.dat,pavimento,20000,3.818,10,100k,1.0,1000,17.5,3.5e-07,pav_num,ev_20k_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "pav_ev1_20k_100k,evp_20k_100k.dat,pavimento,20000,3.818,10,100k,7.5,1000,17.5,3.5e-07,pav_num,ev_20k_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "pav_ev2_20k_100k,evp_20k_100k.dat,pavimento,20000,3.818,10,100k,8.5,1000,17.5,3.5e-07,pav_num,ev_20k_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "pav_inv_20k_100k,invp_20k_100k.dat,pavimento,20000,3.818,10,100k,5.5,1000,13.0,3.5e-07,pav_num,inv_20k_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_ev0_20k_100k,evp_20k_100k.dat,pavimento,20000,3.818,10,100k,1.0,1000,11.5,3.5e-07,pav_num,ev_20k_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_ev1_20k_100k,evp_20k_100k.dat,pavimento,20000,3.818,10,100k,4.5,1000,11.5,3.5e-07,pav_num,ev_20k_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_ev2_20k_100k,evp_20k_100k.dat,pavimento,20000,3.818,10,100k,5.5,1000,11.5,3.5e-07,pav_num,ev_20k_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_inv_20k_100k,invp_20k_100k.dat,pavimento,20000,3.818,10,100k,3.25,1000,8.5,3.5e-07,pav_num,inv_20k_100k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 * ---- A senza segnale, 100k ----
 alter vamp dc = 0
 alter vfrq dc = 1000
@@ -437,41 +436,41 @@ alter vti dc = 1000
 alter vtr dc = 2000
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 1e-05 17.5 0 1e-05
+tran 1e-05 11.5 0 1e-05
 wrdata lzmai_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "lzmai_100k,lzmai_100k.dat,rif,1000,0,10,100k,1.0,8.5,17.5,1e-05,rif_mai,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "lzmai_100k,lzmai_100k.dat,rif,1000,0,10,100k,1.0,5.5,11.5,1e-05,rif_mai,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 0
 alter vfrq dc = 1000
 alter vti dc = -10
 alter vtr dc = 1000
 alter vtijk dc = -10
 alter vtrjk dc = 1000
-tran 1e-05 17.5 0 1e-05
+tran 1e-05 11.5 0 1e-05
 wrdata lzsempre_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "lzsempre_100k,lzsempre_100k.dat,rif,1000,0,10,100k,1.0,8.5,17.5,1e-05,rif_sempre,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-alter vamp dc = 0
-alter vfrq dc = 1000
-alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 7.5
-alter vtrjk dc = 8.5
-tran 1e-05 17.5 0 1e-05
-wrdata lzev_100k$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata lzev_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
-destroy all
-echo "lzev_100k,lzev_100k.dat,ldr_v4_td6,1000,0,10,100k,1.0,8.5,17.5,1e-05,evento,lzsempre_100k,lzmai_100k,6.5" >> tb_v2_mute_ldr_manifest.csv
+echo "lzsempre_100k,lzsempre_100k.dat,rif,1000,0,10,100k,1.0,5.5,11.5,1e-05,rif_sempre,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 0
 alter vfrq dc = 1000
 alter vti dc = 1.0
 alter vtr dc = 5.5
+alter vtijk dc = 4.5
+alter vtrjk dc = 5.5
+tran 1e-05 11.5 0 1e-05
+wrdata lzev_100k$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata lzev_100k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
+destroy all
+echo "lzev_100k,lzev_100k.dat,ldr_v5_td3,1000,0,10,100k,1.0,5.5,11.5,1e-05,evento,lzsempre_100k,lzmai_100k,3.5" >> tb_v2_mute_ldr_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter vti dc = 1.0
+alter vtr dc = 3.25
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 1e-05 13.0 0 1e-05
+tran 1e-05 8.5 0 1e-05
 wrdata lzinv_100k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "lzinv_100k,lzinv_100k.dat,inversione_d75,1000,0,10,100k,1.0,5.5,13.0,1e-05,evento,lzsempre_100k,lzmai_100k,4.5" >> tb_v2_mute_ldr_manifest.csv
+echo "lzinv_100k,lzinv_100k.dat,inversione_d75,1000,0,10,100k,1.0,3.25,8.5,1e-05,evento,lzsempre_100k,lzmai_100k,2.25" >> tb_v2_mute_ldr_manifest.csv
 * ======== carico 10k su tutte e tre le uscite ========
 alter rldm = 10k
 alter rld1 = 10k
@@ -483,76 +482,76 @@ alter vti dc = 1000
 alter vtr dc = 2000
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 1e-05 17.5 0 1e-05
+tran 1e-05 11.5 0 1e-05
 wrdata mai_20_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "mai_20_10k,mai_20_10k.dat,rif,20,3.818,10,10k,1.0,8.5,17.5,1e-05,rif_mai,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "mai_20_10k,mai_20_10k.dat,rif,20,3.818,10,10k,1.0,5.5,11.5,1e-05,rif_mai,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20
 alter vti dc = -10
 alter vtr dc = 1000
 alter vtijk dc = -10
 alter vtrjk dc = 1000
-tran 1e-05 17.5 0 1e-05
+tran 1e-05 11.5 0 1e-05
 wrdata sempre_20_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "sempre_20_10k,sempre_20_10k.dat,rif,20,3.818,10,10k,1.0,8.5,17.5,1e-05,rif_sempre,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "sempre_20_10k,sempre_20_10k.dat,rif,20,3.818,10,10k,1.0,5.5,11.5,1e-05,rif_sempre,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20
 alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 7.5
-alter vtrjk dc = 8.5
-tran 1e-05 17.5 0 1e-05
+alter vtr dc = 5.5
+alter vtijk dc = 4.5
+alter vtrjk dc = 5.5
+tran 1e-05 11.5 0 1e-05
 wrdata ev_20_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 wrdata ev_20_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "ev_20_10k,ev_20_10k.dat,ldr_v4_td6,20,3.818,10,10k,1.0,8.5,17.5,1e-05,evento,sempre_20_10k,mai_20_10k,6.5" >> tb_v2_mute_ldr_manifest.csv
-alter vamp dc = 3.818
-alter vfrq dc = 20
-alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 1000
-alter vtrjk dc = 2000
-tran 1e-05 17.5 0 1e-05
-wrdata norele_20_10k$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata norele_20_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
-destroy all
-echo "norele_20_10k,norele_20_10k.dat,rif,20,3.818,10,10k,1.0,8.5,17.5,1e-05,rif_seq,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "rele_20_10k,ev_20_10k.dat,rele_contro_norele,20,3.818,10,10k,7.5,8.5,17.5,1e-05,evento,norele_20_10k,norele_20_10k,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "ev_20_10k,ev_20_10k.dat,ldr_v5_td3,20,3.818,10,10k,1.0,5.5,11.5,1e-05,evento,sempre_20_10k,mai_20_10k,3.5" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20
 alter vti dc = 1.0
 alter vtr dc = 5.5
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 1e-05 13.0 0 1e-05
-wrdata inv_20_10k$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata inv_20_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
+tran 1e-05 11.5 0 1e-05
+wrdata norele_20_10k$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata norele_20_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "inv_20_10k,inv_20_10k.dat,inversione_d75,20,3.818,10,10k,1.0,5.5,13.0,1e-05,evento,sempre_20_10k,mai_20_10k,4.5" >> tb_v2_mute_ldr_manifest.csv
+echo "norele_20_10k,norele_20_10k.dat,rif,20,3.818,10,10k,1.0,5.5,11.5,1e-05,rif_seq,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "rele_20_10k,ev_20_10k.dat,rele_contro_norele,20,3.818,10,10k,4.5,5.5,11.5,1e-05,evento,norele_20_10k,norele_20_10k,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20
 alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 7.5
-alter vtrjk dc = 8.5
-tran 7e-06 17.5 0 7e-06
+alter vtr dc = 3.25
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+tran 1e-05 8.5 0 1e-05
+wrdata inv_20_10k$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata inv_20_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
+destroy all
+echo "inv_20_10k,inv_20_10k.dat,inversione_d75,20,3.818,10,10k,1.0,3.25,8.5,1e-05,evento,sempre_20_10k,mai_20_10k,2.25" >> tb_v2_mute_ldr_manifest.csv
+alter vamp dc = 3.818
+alter vfrq dc = 20
+alter vti dc = 1.0
+alter vtr dc = 5.5
+alter vtijk dc = 4.5
+alter vtrjk dc = 5.5
+tran 7e-06 11.5 0 7e-06
 wrdata evp_20_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
 alter vamp dc = 3.818
 alter vfrq dc = 20
 alter vti dc = 1.0
-alter vtr dc = 5.5
+alter vtr dc = 3.25
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 7e-06 13.0 0 7e-06
+tran 7e-06 8.5 0 7e-06
 wrdata invp_20_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "pav_ev0_20_10k,evp_20_10k.dat,pavimento,20,3.818,10,10k,1.0,1000,17.5,7e-06,pav_num,ev_20_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "pav_ev1_20_10k,evp_20_10k.dat,pavimento,20,3.818,10,10k,7.5,1000,17.5,7e-06,pav_num,ev_20_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "pav_ev2_20_10k,evp_20_10k.dat,pavimento,20,3.818,10,10k,8.5,1000,17.5,7e-06,pav_num,ev_20_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "pav_inv_20_10k,invp_20_10k.dat,pavimento,20,3.818,10,10k,5.5,1000,13.0,7e-06,pav_num,inv_20_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_ev0_20_10k,evp_20_10k.dat,pavimento,20,3.818,10,10k,1.0,1000,11.5,7e-06,pav_num,ev_20_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_ev1_20_10k,evp_20_10k.dat,pavimento,20,3.818,10,10k,4.5,1000,11.5,7e-06,pav_num,ev_20_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_ev2_20_10k,evp_20_10k.dat,pavimento,20,3.818,10,10k,5.5,1000,11.5,7e-06,pav_num,ev_20_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_inv_20_10k,invp_20_10k.dat,pavimento,20,3.818,10,10k,3.25,1000,8.5,7e-06,pav_num,inv_20_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 * ---- 1000 Hz, 10k ----
 alter vamp dc = 3.818
 alter vfrq dc = 1000
@@ -560,76 +559,76 @@ alter vti dc = 1000
 alter vtr dc = 2000
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 1e-05 17.5 0 1e-05
+tran 1e-05 11.5 0 1e-05
 wrdata mai_1k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "mai_1k_10k,mai_1k_10k.dat,rif,1000,3.818,10,10k,1.0,8.5,17.5,1e-05,rif_mai,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "mai_1k_10k,mai_1k_10k.dat,rif,1000,3.818,10,10k,1.0,5.5,11.5,1e-05,rif_mai,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 1000
 alter vti dc = -10
 alter vtr dc = 1000
 alter vtijk dc = -10
 alter vtrjk dc = 1000
-tran 1e-05 17.5 0 1e-05
+tran 1e-05 11.5 0 1e-05
 wrdata sempre_1k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "sempre_1k_10k,sempre_1k_10k.dat,rif,1000,3.818,10,10k,1.0,8.5,17.5,1e-05,rif_sempre,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "sempre_1k_10k,sempre_1k_10k.dat,rif,1000,3.818,10,10k,1.0,5.5,11.5,1e-05,rif_sempre,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 1000
 alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 7.5
-alter vtrjk dc = 8.5
-tran 1e-05 17.5 0 1e-05
+alter vtr dc = 5.5
+alter vtijk dc = 4.5
+alter vtrjk dc = 5.5
+tran 1e-05 11.5 0 1e-05
 wrdata ev_1k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 wrdata ev_1k_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "ev_1k_10k,ev_1k_10k.dat,ldr_v4_td6,1000,3.818,10,10k,1.0,8.5,17.5,1e-05,evento,sempre_1k_10k,mai_1k_10k,6.5" >> tb_v2_mute_ldr_manifest.csv
-alter vamp dc = 3.818
-alter vfrq dc = 1000
-alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 1000
-alter vtrjk dc = 2000
-tran 1e-05 17.5 0 1e-05
-wrdata norele_1k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata norele_1k_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
-destroy all
-echo "norele_1k_10k,norele_1k_10k.dat,rif,1000,3.818,10,10k,1.0,8.5,17.5,1e-05,rif_seq,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "rele_1k_10k,ev_1k_10k.dat,rele_contro_norele,1000,3.818,10,10k,7.5,8.5,17.5,1e-05,evento,norele_1k_10k,norele_1k_10k,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "ev_1k_10k,ev_1k_10k.dat,ldr_v5_td3,1000,3.818,10,10k,1.0,5.5,11.5,1e-05,evento,sempre_1k_10k,mai_1k_10k,3.5" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 1000
 alter vti dc = 1.0
 alter vtr dc = 5.5
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 1e-05 13.0 0 1e-05
-wrdata inv_1k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata inv_1k_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
+tran 1e-05 11.5 0 1e-05
+wrdata norele_1k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata norele_1k_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "inv_1k_10k,inv_1k_10k.dat,inversione_d75,1000,3.818,10,10k,1.0,5.5,13.0,1e-05,evento,sempre_1k_10k,mai_1k_10k,4.5" >> tb_v2_mute_ldr_manifest.csv
+echo "norele_1k_10k,norele_1k_10k.dat,rif,1000,3.818,10,10k,1.0,5.5,11.5,1e-05,rif_seq,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "rele_1k_10k,ev_1k_10k.dat,rele_contro_norele,1000,3.818,10,10k,4.5,5.5,11.5,1e-05,evento,norele_1k_10k,norele_1k_10k,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 1000
 alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 7.5
-alter vtrjk dc = 8.5
-tran 7e-06 17.5 0 7e-06
+alter vtr dc = 3.25
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+tran 1e-05 8.5 0 1e-05
+wrdata inv_1k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata inv_1k_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
+destroy all
+echo "inv_1k_10k,inv_1k_10k.dat,inversione_d75,1000,3.818,10,10k,1.0,3.25,8.5,1e-05,evento,sempre_1k_10k,mai_1k_10k,2.25" >> tb_v2_mute_ldr_manifest.csv
+alter vamp dc = 3.818
+alter vfrq dc = 1000
+alter vti dc = 1.0
+alter vtr dc = 5.5
+alter vtijk dc = 4.5
+alter vtrjk dc = 5.5
+tran 7e-06 11.5 0 7e-06
 wrdata evp_1k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
 alter vamp dc = 3.818
 alter vfrq dc = 1000
 alter vti dc = 1.0
-alter vtr dc = 5.5
+alter vtr dc = 3.25
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 7e-06 13.0 0 7e-06
+tran 7e-06 8.5 0 7e-06
 wrdata invp_1k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "pav_ev0_1k_10k,evp_1k_10k.dat,pavimento,1000,3.818,10,10k,1.0,1000,17.5,7e-06,pav_num,ev_1k_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "pav_ev1_1k_10k,evp_1k_10k.dat,pavimento,1000,3.818,10,10k,7.5,1000,17.5,7e-06,pav_num,ev_1k_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "pav_ev2_1k_10k,evp_1k_10k.dat,pavimento,1000,3.818,10,10k,8.5,1000,17.5,7e-06,pav_num,ev_1k_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "pav_inv_1k_10k,invp_1k_10k.dat,pavimento,1000,3.818,10,10k,5.5,1000,13.0,7e-06,pav_num,inv_1k_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_ev0_1k_10k,evp_1k_10k.dat,pavimento,1000,3.818,10,10k,1.0,1000,11.5,7e-06,pav_num,ev_1k_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_ev1_1k_10k,evp_1k_10k.dat,pavimento,1000,3.818,10,10k,4.5,1000,11.5,7e-06,pav_num,ev_1k_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_ev2_1k_10k,evp_1k_10k.dat,pavimento,1000,3.818,10,10k,5.5,1000,11.5,7e-06,pav_num,ev_1k_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_inv_1k_10k,invp_1k_10k.dat,pavimento,1000,3.818,10,10k,3.25,1000,8.5,7e-06,pav_num,inv_1k_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 * ---- 20000 Hz, 10k ----
 alter vamp dc = 3.818
 alter vfrq dc = 20000
@@ -637,76 +636,76 @@ alter vti dc = 1000
 alter vtr dc = 2000
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 5e-07 17.5 0 5e-07
+tran 5e-07 11.5 0 5e-07
 wrdata mai_20k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "mai_20k_10k,mai_20k_10k.dat,rif,20000,3.818,10,10k,1.0,8.5,17.5,5e-07,rif_mai,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "mai_20k_10k,mai_20k_10k.dat,rif,20000,3.818,10,10k,1.0,5.5,11.5,5e-07,rif_mai,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20000
 alter vti dc = -10
 alter vtr dc = 1000
 alter vtijk dc = -10
 alter vtrjk dc = 1000
-tran 5e-07 17.5 0 5e-07
+tran 5e-07 11.5 0 5e-07
 wrdata sempre_20k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "sempre_20k_10k,sempre_20k_10k.dat,rif,20000,3.818,10,10k,1.0,8.5,17.5,5e-07,rif_sempre,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "sempre_20k_10k,sempre_20k_10k.dat,rif,20000,3.818,10,10k,1.0,5.5,11.5,5e-07,rif_sempre,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20000
 alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 7.5
-alter vtrjk dc = 8.5
-tran 5e-07 17.5 0 5e-07
+alter vtr dc = 5.5
+alter vtijk dc = 4.5
+alter vtrjk dc = 5.5
+tran 5e-07 11.5 0 5e-07
 wrdata ev_20k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 wrdata ev_20k_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "ev_20k_10k,ev_20k_10k.dat,ldr_v4_td6,20000,3.818,10,10k,1.0,8.5,17.5,5e-07,evento,sempre_20k_10k,mai_20k_10k,6.5" >> tb_v2_mute_ldr_manifest.csv
-alter vamp dc = 3.818
-alter vfrq dc = 20000
-alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 1000
-alter vtrjk dc = 2000
-tran 5e-07 17.5 0 5e-07
-wrdata norele_20k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata norele_20k_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
-destroy all
-echo "norele_20k_10k,norele_20k_10k.dat,rif,20000,3.818,10,10k,1.0,8.5,17.5,5e-07,rif_seq,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "rele_20k_10k,ev_20k_10k.dat,rele_contro_norele,20000,3.818,10,10k,7.5,8.5,17.5,5e-07,evento,norele_20k_10k,norele_20k_10k,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "ev_20k_10k,ev_20k_10k.dat,ldr_v5_td3,20000,3.818,10,10k,1.0,5.5,11.5,5e-07,evento,sempre_20k_10k,mai_20k_10k,3.5" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20000
 alter vti dc = 1.0
 alter vtr dc = 5.5
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 5e-07 13.0 0 5e-07
-wrdata inv_20k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata inv_20k_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
+tran 5e-07 11.5 0 5e-07
+wrdata norele_20k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata norele_20k_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
 destroy all
-echo "inv_20k_10k,inv_20k_10k.dat,inversione_d75,20000,3.818,10,10k,1.0,5.5,13.0,5e-07,evento,sempre_20k_10k,mai_20k_10k,4.5" >> tb_v2_mute_ldr_manifest.csv
+echo "norele_20k_10k,norele_20k_10k.dat,rif,20000,3.818,10,10k,1.0,5.5,11.5,5e-07,rif_seq,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "rele_20k_10k,ev_20k_10k.dat,rele_contro_norele,20000,3.818,10,10k,4.5,5.5,11.5,5e-07,evento,norele_20k_10k,norele_20k_10k,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 3.818
 alter vfrq dc = 20000
 alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 7.5
-alter vtrjk dc = 8.5
-tran 3.5e-07 17.5 0 3.5e-07
+alter vtr dc = 3.25
+alter vtijk dc = 1000
+alter vtrjk dc = 2000
+tran 5e-07 8.5 0 5e-07
+wrdata inv_20k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata inv_20k_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
+destroy all
+echo "inv_20k_10k,inv_20k_10k.dat,inversione_d75,20000,3.818,10,10k,1.0,3.25,8.5,5e-07,evento,sempre_20k_10k,mai_20k_10k,2.25" >> tb_v2_mute_ldr_manifest.csv
+alter vamp dc = 3.818
+alter vfrq dc = 20000
+alter vti dc = 1.0
+alter vtr dc = 5.5
+alter vtijk dc = 4.5
+alter vtrjk dc = 5.5
+tran 3.5e-07 11.5 0 3.5e-07
 wrdata evp_20k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
 alter vamp dc = 3.818
 alter vfrq dc = 20000
 alter vti dc = 1.0
-alter vtr dc = 5.5
+alter vtr dc = 3.25
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 3.5e-07 13.0 0 3.5e-07
+tran 3.5e-07 8.5 0 3.5e-07
 wrdata invp_20k_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "pav_ev0_20k_10k,evp_20k_10k.dat,pavimento,20000,3.818,10,10k,1.0,1000,17.5,3.5e-07,pav_num,ev_20k_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "pav_ev1_20k_10k,evp_20k_10k.dat,pavimento,20000,3.818,10,10k,7.5,1000,17.5,3.5e-07,pav_num,ev_20k_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "pav_ev2_20k_10k,evp_20k_10k.dat,pavimento,20000,3.818,10,10k,8.5,1000,17.5,3.5e-07,pav_num,ev_20k_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-echo "pav_inv_20k_10k,invp_20k_10k.dat,pavimento,20000,3.818,10,10k,5.5,1000,13.0,3.5e-07,pav_num,inv_20k_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_ev0_20k_10k,evp_20k_10k.dat,pavimento,20000,3.818,10,10k,1.0,1000,11.5,3.5e-07,pav_num,ev_20k_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_ev1_20k_10k,evp_20k_10k.dat,pavimento,20000,3.818,10,10k,4.5,1000,11.5,3.5e-07,pav_num,ev_20k_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_ev2_20k_10k,evp_20k_10k.dat,pavimento,20000,3.818,10,10k,5.5,1000,11.5,3.5e-07,pav_num,ev_20k_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "pav_inv_20k_10k,invp_20k_10k.dat,pavimento,20000,3.818,10,10k,3.25,1000,8.5,3.5e-07,pav_num,inv_20k_10k,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 * ---- A senza segnale, 10k ----
 alter vamp dc = 0
 alter vfrq dc = 1000
@@ -714,41 +713,41 @@ alter vti dc = 1000
 alter vtr dc = 2000
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 1e-05 17.5 0 1e-05
+tran 1e-05 11.5 0 1e-05
 wrdata lzmai_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "lzmai_10k,lzmai_10k.dat,rif,1000,0,10,10k,1.0,8.5,17.5,1e-05,rif_mai,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
+echo "lzmai_10k,lzmai_10k.dat,rif,1000,0,10,10k,1.0,5.5,11.5,1e-05,rif_mai,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 0
 alter vfrq dc = 1000
 alter vti dc = -10
 alter vtr dc = 1000
 alter vtijk dc = -10
 alter vtrjk dc = 1000
-tran 1e-05 17.5 0 1e-05
+tran 1e-05 11.5 0 1e-05
 wrdata lzsempre_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "lzsempre_10k,lzsempre_10k.dat,rif,1000,0,10,10k,1.0,8.5,17.5,1e-05,rif_sempre,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
-alter vamp dc = 0
-alter vfrq dc = 1000
-alter vti dc = 1.0
-alter vtr dc = 8.5
-alter vtijk dc = 7.5
-alter vtrjk dc = 8.5
-tran 1e-05 17.5 0 1e-05
-wrdata lzev_10k$d v(mainjack) v(fixjack1) v(fixjack2)
-wrdata lzev_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
-destroy all
-echo "lzev_10k,lzev_10k.dat,ldr_v4_td6,1000,0,10,10k,1.0,8.5,17.5,1e-05,evento,lzsempre_10k,lzmai_10k,6.5" >> tb_v2_mute_ldr_manifest.csv
+echo "lzsempre_10k,lzsempre_10k.dat,rif,1000,0,10,10k,1.0,5.5,11.5,1e-05,rif_sempre,-,-,0.0" >> tb_v2_mute_ldr_manifest.csv
 alter vamp dc = 0
 alter vfrq dc = 1000
 alter vti dc = 1.0
 alter vtr dc = 5.5
+alter vtijk dc = 4.5
+alter vtrjk dc = 5.5
+tran 1e-05 11.5 0 1e-05
+wrdata lzev_10k$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata lzev_10k_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina)
+destroy all
+echo "lzev_10k,lzev_10k.dat,ldr_v5_td3,1000,0,10,10k,1.0,5.5,11.5,1e-05,evento,lzsempre_10k,lzmai_10k,3.5" >> tb_v2_mute_ldr_manifest.csv
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter vti dc = 1.0
+alter vtr dc = 3.25
 alter vtijk dc = 1000
 alter vtrjk dc = 2000
-tran 1e-05 13.0 0 1e-05
+tran 1e-05 8.5 0 1e-05
 wrdata lzinv_10k$d v(mainjack) v(fixjack1) v(fixjack2)
 destroy all
-echo "lzinv_10k,lzinv_10k.dat,inversione_d75,1000,0,10,10k,1.0,5.5,13.0,1e-05,evento,lzsempre_10k,lzmai_10k,4.5" >> tb_v2_mute_ldr_manifest.csv
+echo "lzinv_10k,lzinv_10k.dat,inversione_d75,1000,0,10,10k,1.0,3.25,8.5,1e-05,evento,lzsempre_10k,lzmai_10k,2.25" >> tb_v2_mute_ldr_manifest.csv
 .endc
 
 .end

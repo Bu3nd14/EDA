@@ -3,7 +3,7 @@
 **Documento vivo.** Riscritto quando i requisiti cambiano. Ogni modifica
 sostanziale deve avere una ADR corrispondente in `decisions/`.
 
-Ultimo aggiornamento: 2026-10-01 (L44: Nota su E5 — come si verifica, col flicker dei bipolari al tetto di **ADR-057**; riga E5 della nota su T4; L46b: Nota su E5 — quota del ripple, limiti per tono ricalcolati sul blocco di **ADR-056**, fonte ripuntata a CSV che esistono, lo spettro dei rail limitato per eccesso; L42c: **E9–E13** nuovi, **V4**, **F1**, **P6** e **P9 (a)** precisati, e il Product Requirements Book sopra questo documento — **ADR-053**; L41a: P3 con due trasformatori toroidali, P5 ~17 W e ≤ 20 W, P9 (a) con lo standby e l'interruttore posteriore, P9 (b) col rivelatore di rete e la ritenuta dopo un guasto — ADR-048; L30: P5 al numero vero del calore, ~15-18 W nel telaio — ADR-047; P9 nuovo, lo spegnimento morbido e il failsafe dell'alimentatore, e V2 precisato allo spegnimento — ADR-046; L29b2: V2, il taglio con musica si giudica sul salto di livello S ≤ 20 dB in 100 ms, C2 diventa diagnostica — ADR-040; L29a: C di V2 per differenza dal riferimento e soglia di C a 1 mV, A e B invariati — ADR-035; A di V2 solo senza segnale — ADR-036; L38: V2 con soglia e metodo di misura, Nota su F5, Aperti — ADR-032; L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
+Ultimo aggiornamento: 2026-10-03 (L47b2b1: Nota su E3 durante la sfumatura del mute — ai bassi, |Zin| a 20 Hz ≥ 100 kΩ in ogni istante; negli stati fermi invariata — **ADR-061**; L44: Nota su E5 — come si verifica, col flicker dei bipolari al tetto di **ADR-057**; riga E5 della nota su T4; L46b: Nota su E5 — quota del ripple, limiti per tono ricalcolati sul blocco di **ADR-056**, fonte ripuntata a CSV che esistono, lo spettro dei rail limitato per eccesso; L42c: **E9–E13** nuovi, **V4**, **F1**, **P6** e **P9 (a)** precisati, e il Product Requirements Book sopra questo documento — **ADR-053**; L41a: P3 con due trasformatori toroidali, P5 ~17 W e ≤ 20 W, P9 (a) con lo standby e l'interruttore posteriore, P9 (b) col rivelatore di rete e la ritenuta dopo un guasto — ADR-048; L30: P5 al numero vero del calore, ~15-18 W nel telaio — ADR-047; P9 nuovo, lo spegnimento morbido e il failsafe dell'alimentatore, e V2 precisato allo spegnimento — ADR-046; L29b2: V2, il taglio con musica si giudica sul salto di livello S ≤ 20 dB in 100 ms, C2 diventa diagnostica — ADR-040; L29a: C di V2 per differenza dal riferimento e soglia di C a 1 mV, A e B invariati — ADR-035; A di V2 solo senza segnale — ADR-036; L38: V2 con soglia e metodo di misura, Nota su F5, Aperti — ADR-032; L34: F3, F10 e F11 nuovi, Nota su F5, Nota su «jack», P8 nuovo e V2 — ADR-028, ADR-029, ADR-030; L16: F2, F8, F9 nuovo, Nota su E3, V1 e Architettura — ADR-027; L27: E2, F5, V1, V2 e Architettura — ADR-026; L17: T1, T3, T5, F3, V1, Nota su P7 e Architettura — ADR-023; L11: F6, F7, T1, requisito P7 e Nota su P7 — ADR-021, ADR-022; L18: Nota su E5 — quota del ripple, ADR-020; L15: Nota su E3) · Stato: **congelati** (Fase 0 chiusa)
 
 Le motivazioni non stanno qui: stanno nelle ADR referenziate e nel
 report `reports/2026-09-08-analisi-catena.md`.
@@ -250,6 +250,26 @@ le ADR non si riscrivono (`decisions/README.md`, regola 2), e dopo il
 registrare, c'è una conseguenza di E3. Quando il trim entrerà in
 `circuits/preamp/`, i suoi valori porteranno un commento che rimanda qui.
 Ragionamento completo: `reports/2026-09-13-L15-vincolo-e3.md`.
+
+**Nota su E3 — durante la sfumatura del mute** (2026-10-03, L47b2b1, **ADR-061**; questa sì
+cambia l'insieme dei progetti conformi, e per questo ha la sua ADR).
+
+- **Negli stati fermi** (in gioco, mute fermo) E3 resta com'è sopra: minimo di |Zin| su
+  20 Hz–20 kHz al connettore, ≥ 100 kΩ, in ogni posizione del trim e con 1 fF / 22 pF / 68 pF di
+  selettore.
+- **Durante la sfumatura**, dal comando di mute alla fine del rilascio, E3 si giudica **ai
+  bassi: |Zin| a 20 Hz ≥ 100 kΩ al connettore, in ogni istante**, stesse posizioni del trim e
+  stesse capacità del selettore. Il minimo a 20 kHz si misura e si dichiara, non decide.
+- **Perché.** La NSL-32SR3 (ADR-058) sopra 100 kΩ si spegne a ~0,24 decadi/s: al rilascio la
+  cella in serie non può riaccendersi prima che la derivazione sia salita, e in 3 s (ADR-059)
+  nessun profilo tiene ≥ 100 kΩ anche a 20 kHz, dove pesano i 68 pF del selettore. E3 nasce dal
+  condensatore d'uscita del phono a valvole, cioè dai bassi; a 20 kHz, per al più ~2 s con la
+  musica già attenuata, il phono vede ~88 kΩ. **Scelta dell'utente**: «3 s e 3 s, impedenza ai
+  bassi». PR-6 del PRB non cambia.
+- **Come si misura**: gli stati delle celle negli istanti peggiori della sfumatura (dalla `tran`)
+  portati nell'AC del deck E3 come correnti statiche equivalenti
+  (`data/2026-10-03/L47b2b1/e3/`). Il controllo di L29b (`ldr_catena/post.py`, il solo ramo
+  della cella contro 100 kΩ, resistivo) non è E3: non vede il selettore.
 
 ## Requisiti di topologia
 

@@ -1,0 +1,27 @@
+sfumatura L47b2b1 v5_E
+* GENERATO da docs/preamp/data/2026-10-03/L47b2b1/banco/sfumatura.py. Banco ridotto di L47b1.
+.include /Users/roberto/EDA/.claude/worktrees/L47b2b1/docs/preamp/data/2026-10-02/L47b1/banco/inc/jfet_angoli.lib
+.include /Users/roberto/EDA/.claude/worktrees/L47b2b1/models/optocoupler/nsl32sr3_comportamentale.lib
+.options reltol=1e-6 vntol=1e-6 abstol=1e-12
+VSRC VSN 0 DC 0 AC 1 SIN(0 3.818 1k)
+RSRC VSN SRCX 1.5
+* R_IN del blocco A (gain_block.py, r_in=1M)
+RIN AIN 0 1MEG
+* ---- la cella a fotoresistenze NSL-32SR3: serie curva E, derivazione curva E ----
+XLS ALS 0 SRCX AIN NSL32SR3_E
+XLP ALP 0 AIN 0 NSL32SR3_E
+* 10 M dall'anodo a massa: un LED col solo generatore non ha percorso in continua (L29b)
+RALS ALS 0 10MEG
+RALP ALP 0 10MEG
+* il profilo: log10(I) contro d, interpolato linearmente (come BILS del banco V2);
+* una tabella per verso, scelta dal tempo (il comando di rilascio a t = 4.3 s)
+BILS 0 ALS I = time < 4.3 ? pow(10, pwl(V(DEP), 0,-2.1549, 0.6,-8.0000, 1,-8.0000)) : pow(10, pwl(V(DEP), 0,-2.1549, 0.6,-8.0000, 1,-8.0000))
+BILP 0 ALP I = time < 4.3 ? pow(10, pwl(V(DEP), 0,-8.0000, 0.155,-8.0000, 1,-2.1549)) : pow(10, pwl(V(DEP), 0,-8.0000, 0.155,-8.0000, 1,-2.1549))
+BDEP DEP 0 V = time < 4.3 ? min(max((time - 0.3)/3, 0), 1) : min(max(1 - (time - 4.3)/3, 0), 1)
+.control
+option itl1=1000
+set numdgt=15
+tran 10u 7.8 0 10u
+wrdata v5_E.dat v(ain) v(xls.xs) v(xlp.xs)
+.endc
+.end

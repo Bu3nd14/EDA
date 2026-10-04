@@ -2,7 +2,7 @@
 """L29b2: genera spice/preamp/tb/tb_v2_mute_ldr.cir, il deck VERSIONATO di V2 col mute
 graduale a monte con due LDR NSL-32SR3 (ADR-038, ADR-058; fino a L47b1 VTL5C4). Il deck non si edita a mano: si rigenera.
 
-Uso:  /usr/bin/python3 genera_tb_v2_mute_ldr.py [PROFILO=v4] [TD=6] [USCITA=<repo>/spice/preamp/tb/tb_v2_mute_ldr.cir]
+Uso:  /usr/bin/python3 genera_tb_v2_mute_ldr.py [PROFILO=v5] [TD=3] [USCITA=<repo>/spice/preamp/tb/tb_v2_mute_ldr.cir]
 
 Poi, per correrlo (le corse sono lunghe: in parallelo, una per processo):
       sed "s|@REPO@|<repo>|g" tb_v2_mute_ldr.cir > DIR/ldr.cir
@@ -25,7 +25,9 @@ COSA C'E' DENTRO
   A senza segnale (lz*) una volta per carico: non dipende dalla frequenza.
 - TMAX: 10 us a 20 Hz e 1 kHz; 0,5 us a 20 kHz (tb_v2_mute_pavimento.cir, L29a).
 
-I PROFILI. v4 e' il default: proposta di L29b2, ADOTTATA dall'utente il 2026-09-22 col criterio
+I PROFILI. v5 e' il default da L47b2b1 (ADR-061): ricalibrato sulla NSL-32SR3 con la cima di
+7 mA e Td = 3 s; la serie log-lineare fino al riposo a d = 0,6, la derivazione log-lineare dal
+riposo a d = 0,155 alla cima. v4 fu proposta di L29b2, ADOTTATA dall'utente il 2026-09-22 col criterio
 del salto in dB (ADR-040). La serie da 4,5 uA scende al ginocchio del buio (0,19 uA) fino a
 d = 0,75 invece che a 10 nA gia' a d = 0,5: al rilascio il salto passa da 30 a 4 dB in 100 ms.
 v3 (la scelta dell'utente del 2026-09-21, report L29b) resta generabile per confronto.
@@ -36,8 +38,8 @@ import sys
 
 QUI = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(QUI, *[".."] * 6))
-PROFILO = sys.argv[1] if len(sys.argv) > 1 else "v4"
-TD = float(sys.argv[2]) if len(sys.argv) > 2 else 6.0
+PROFILO = sys.argv[1] if len(sys.argv) > 1 else "v5"     # L47b2b1: v5 di progetto (ADR-061)
+TD = float(sys.argv[2]) if len(sys.argv) > 2 else 3.0     # 3 s per verso (ADR-059)
 USCITA = (sys.argv[3] if len(sys.argv) > 3
           else os.path.join(REPO, "spice", "preamp", "tb", "tb_v2_mute_ldr.cir"))
 TB = os.path.join(REPO, "spice", "preamp", "tb", "tb_v2_mute_graduale.cir")
@@ -48,17 +50,25 @@ i1 = next(i for i, r in enumerate(righe) if r.startswith("* <<< CANALE"))
 inc = [r for r in righe[:i0] if r.startswith(".include")]
 CANALE = righe[i0:i1 + 1]
 
-ION, IRIP = 20e-3, 10e-9
+# La cima del LED della NSL-32SR3: 7 mA (ADR-060), per ogni profilo (v3 e v4, per confronto,
+# girano con la stessa cima: erano della VTL5C4 a 20 mA).
+ION, IRIP = 7e-3, 10e-9
 lg = math.log10
+DERIV = [(0, IRIP), (0.5, IRIP), (1, ION)]                  # v3, v4: dal riposo a d = 0,5
 if PROFILO == "v3":
     SERIE = [(0, ION), (0.1, 0.2e-3), (0.45, 4.5e-6), (0.5, IRIP), (1, IRIP)]
 elif PROFILO == "v4":
     SERIE = [(0, ION), (0.1, 0.2e-3), (0.45, 4.5e-6), (0.75, 0.19e-6), (0.8, IRIP), (1, IRIP)]
+elif PROFILO == "v5":
+    # L47b2b1 (ADR-061): ricalibrato sull'inviluppo A-E della NSL-32SR3, simmetrico
+    SERIE = [(0, ION), (0.6, IRIP), (1, IRIP)]
+    DERIV = [(0, IRIP), (0.155, IRIP), (1, ION)]
 else:
-    sys.exit("profilo sconosciuto: %s (v4 = di progetto, ADR-040; v3 = L29b, per confronto)" % PROFILO)
+    sys.exit("profilo sconosciuto: %s (v5 = di progetto, ADR-061; v4 e v3 per confronto)" % PROFILO)
 BILS = "BILS 0 ALS I = pow(10, pwl(V(DEP), %s))" % ", ".join(
     "%g,%.4f" % (d, lg(i)) for d, i in SERIE)
-BILP = "BILP 0 ALP I = %g * pow(%g, min(max((V(DEP) - 0.5)/0.5, 0), 1))" % (IRIP, ION / IRIP)
+BILP = "BILP 0 ALP I = pow(10, pwl(V(DEP), %s))" % ", ".join(
+    "%g,%.4f" % (d, lg(i)) for d, i in DERIV)
 
 TI, RIT = 1.0, 0.5
 T_RELE = TI + TD + RIT
@@ -80,15 +90,15 @@ H = [
     "*",
     "* IL MODELLO DELLE CELLE e' comportamentale da dati pubblicati, una sola cella misurata nella",
     "* regione del mute (models/optocoupler/nsl32sr3_comportamentale.lib, ADR-058, curva B per",
-    "* entrambe; fino a L47b1 la VTL5C4). L47b2a: PROFILO E CIMA (%g mA) SONO ANCORA QUELLI DELLA" % (ION * 1e3),
-    "* VTL5C4; il profilo a 3 s con la cima di 7 mA (ADR-059, ADR-060) e' di L47b2b.",
+    "* entrambe; fino a L47b1 la VTL5C4). Cima del LED %g mA (ADR-060); pilota ideale." % (ION * 1e3),
     "* Ogni cifra di questo deck porta quell'etichetta. Il resto e' come nei deck di V2: da",
     "* L39 (NC-017) ogni dispositivo attivo e' il modello del costruttore in models/, e da L44",
     "* tutti hanno KF (1/f; ADR-057). [Riga cambiata in L39: fino a L29b2 diceva segnaposto.]",
     "*",
     "* IL PROFILO %s. Serie, log-lineare a tratti in d: %s." % (
         PROFILO, "; ".join("%g A a d = %g" % (i, d) for d, i in SERIE)),
-    "* Derivazione: 10 nA fino a d = 0,5, poi log-lineare fino a 20 mA a d = 1. d va da 0 a 1",
+    "* Derivazione, log-lineare a tratti in d: %s. d va da 0 a 1" % "; ".join(
+        "%g A a d = %g" % (i, d) for d, i in DERIV),
     "* in Td = %g s dall'inserzione e torna indietro con la stessa velocita' da dove si trova." % TD,
     "* Rele' al jack chiuso a t_ins + Td + 0,5 s, aperto a t_rel.",
     "*",

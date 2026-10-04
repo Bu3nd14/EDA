@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """L29c: genera spice/preamp/tb/tb_v2_casopeggiore.cir, il deck VERSIONATO del caso peggiore di
-V2 col mute reale (NC-028): LDR v4 a monte (ADR-038/039/040) piu' il rele' al jack, sul circuito
+V2 col mute reale (NC-028): LDR a monte (ADR-038/039/040; da L47b2b1 la NSL-32SR3 col profilo v5
+a 3 s e la cima di 7 mA, ADR-058/059/060/061) piu' il rele' al jack, sul circuito
 di ADR-042. Il deck non si edita a mano: si rigenera.
 
 Uso:
@@ -122,18 +123,22 @@ i1 = next(i for i, r in enumerate(righe) if r.startswith("* <<< CANALE"))
 inc = [r for r in righe[:i0] if r.startswith(".include")]
 CANALE = righe[i0:i1 + 1]
 
-# ---------------------------------------------------------------- il profilo v4 (ADR-040)
-# L47b2a: ION resta 20 mA, la cima della VTL5C4 nel banco V2. ADR-060 la porta a 7 mA sulla
-# NSL-32SR3 col profilo a 3 s: lo fa L47b2b, insieme, non qui un pezzo alla volta.
-ION, IRIP = 20e-3, 10e-9
+# ---------------------------------------------------------------- il profilo v5 (ADR-061)
+# L47b2b1: ricalibrato sull'inviluppo A-E della NSL-32SR3 con la cima di 7 mA (ADR-060), 3 s per
+# verso (ADR-059), simmetrico. La serie scende log-lineare dalla cima al riposo entro d = 0,6; la
+# derivazione sale log-lineare dal riposo a d = 0,155 alla cima a d = 1. Trovato e verificato in
+# docs/preamp/data/2026-10-03/L47b2b1/banco/ (rapido.profilo_v5, sfumatura.py).
+ION, IRIP = 7e-3, 10e-9
 lg = math.log10
-SERIE = [(0, ION), (0.1, 0.2e-3), (0.45, 4.5e-6), (0.75, 0.19e-6), (0.8, IRIP), (1, IRIP)]
+SERIE = [(0, ION), (0.6, IRIP), (1, IRIP)]
+DERIV = [(0, IRIP), (0.155, IRIP), (1, ION)]
 BILS = "BILS 0 ALS I = V(NPWL) * pow(10, pwl(V(DEP), %s))" % ", ".join(
     "%g,%.4f" % (d, lg(i)) for d, i in SERIE)
-BILP = "BILP 0 ALP I = V(NPWL) * %g * pow(%g, min(max((V(DEP) - 0.5)/0.5, 0), 1))" % (IRIP, ION / IRIP)
+BILP = "BILP 0 ALP I = V(NPWL) * pow(10, pwl(V(DEP), %s))" % ", ".join(
+    "%g,%.4f" % (d, lg(i)) for d, i in DERIV)
 
 # ---------------------------------------------------------------- i tempi
-TI, TD, RIT = 1.0, 6.0, 0.5
+TI, TD, RIT = 1.0, 3.0, 0.5       # TD: 3 s per verso (ADR-059, ADR-061)
 T_RELE = TI + TD + RIT            # 7,5 s: il rele' al jack si chiude
 TG_LDR = TD + RIT                 # t_grad di una riga d'inserzione
 A = 3.818                         # 2,7 V RMS
@@ -275,7 +280,7 @@ AGGIUNTE = (
 )
 
 H = [
-    "tb_v2_casopeggiore.cir - V2 al jack, il caso peggiore col mute reale: LDR NSL-32SR3 (L47b2a; profilo v4 della VTL5C4) a monte e rele' al jack, guadagno, trim, dispersione, accensione (L29c, NC-028)",
+    "tb_v2_casopeggiore.cir - V2 al jack, il caso peggiore col mute reale: LDR NSL-32SR3 (profilo v5, 3 s, 7 mA: L47b2b1) a monte e rele' al jack, guadagno, trim, dispersione, accensione (L29c, NC-028)",
     "* Prima riga = titolo (docs/limitations.md #10).",
     "* GENERATO da docs/preamp/data/2026-09-23/L29c/deck/genera_tb_v2_casopeggiore.py: non si",
     "* edita a mano. L'intestazione del generatore dice cosa c'e' dentro, le ipotesi di",
@@ -289,16 +294,17 @@ H = [
     "* LSK489A (limitations #29): le corse alterate lo dicono nel nome (_gb*) e stampano showmod",
     "* e la corrente della sonda JPRB.",
     "*",
-    "* IL PROFILO v4, Td %g s (ADR-039, ADR-040). Rele' al jack chiuso 0,5 s dopo d = 1." % TD,
-    "* L47b2a: PROFILO E CIMA SONO ANCORA QUELLI DELLA VTL5C4 (cima %g mA). Il profilo a 3 s" % (ION * 1e3),
-    "* ricalibrato sulla NSL-32SR3 (ADR-059) con la cima di 7 mA (ADR-060) e' di L47b2b: fino ad",
-    "* allora le cifre di S e B di questo deck non sono verdetti del mute nuovo.",
+    "* IL PROFILO v5, Td %g s per verso, cima %g mA (ADR-059, ADR-060, ADR-061), con un pilota" % (TD, ION * 1e3),
+    "* IDEALE (generatori dal profilo). Rele' al jack chiuso 0,5 s dopo d = 1.",
     "* ANALISI: scripts/v2_metodo.py analizza sul manifesto; le colonne gruppo e conta dicono",
     "* quali grandezze di ogni riga sono verdetto. Si corre DIVISO (dividi.py): le corse di",
     "* accensione alterano le sorgenti dei rail, e in sequenza l'alterazione resterebbe.",
     "* CONVENZIONE DI PERCORSO: `.include @REPO@/...` (tb_op.cir, L2-L3).",
     "",
 ] + inc + [".include @REPO@/models/optocoupler/nsl32sr3_comportamentale.lib", ""] + CANALE + [
+    "* ---- L47b2b1: IOSA fornisce a R113 (dentro il blocco A) la corrente dovuta a VOSA, che",
+    "* nel circuito non passa nella rete d'ingresso: vedi iosa() nel generatore, limitations #44 ----",
+    "IOSA INAX 0 DC 0",
     "* ---- L29b2: le due LDR e il loro comando, fuori dal blocco CANALE (ADR-038) ----",
     "VTI NTI 0 DC 1000",
     "VTR NTR 0 DC 2000",
@@ -392,6 +398,17 @@ def cambio_trim(p1, p2, t):
     return out
 
 
+def iosa(vos):
+    """L47b2b1 (scelta dell'utente: correggere il banco): la corrente che VOSA fa scorrere in R113
+    (1 Mohm, dentro il blocco A, fra INAX e massa) la fornisce IOSA, non la rete delle celle. Nel
+    circuito R_IN sta sul gate e un offset del differenziale non manda corrente nell'ingresso; col
+    banco di prima 20 nA passavano nelle due fotoresistenze e a meta' sfumatura davano un click di
+    211 uV (A), 0,38 uV senza (data/2026-10-03/L47b2b1/v2/cf_offset/; limitations #44)."""
+    s = str(vos)
+    v = float(s[:-1]) * 1e-3 if s.endswith("m") else float(s)
+    return "%.6g" % (v / 1e6)
+
+
 def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=1000, trjk=2000,
           g1=10, g2=None, tg=1000, p1=0, p2=None, tp=1000, vos=(0, 0, 0, 0), att="max",
           rl="100k", trim_montato=True, cwire="100p", vto=None, rail=None, stati=True, geo=None,
@@ -402,7 +419,8 @@ def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=1000,
         "alter rldm = %s" % rl, "alter rld1 = %s" % rl, "alter rld2 = %s" % rl,
         "alter vti dc = %s" % ti, "alter vtr dc = %s" % tr,
         "alter vtijk dc = %s" % tijk, "alter vtrjk dc = %s" % trjk,
-        "alter vosa dc = %s" % vos[0], "alter vosb dc = %s" % vos[1],
+        "alter vosa dc = %s" % vos[0], "alter iosa dc = %s" % iosa(vos[0]),
+        "alter vosb dc = %s" % vos[1],
         "alter vosf1 dc = %s" % vos[2], "alter vosf2 dc = %s" % vos[3],
         "alter ratth = %s" % ATT[att][0], "alter rattb = %s" % ATT[att][1],
         "alter rl1 = %s" % ("845" if trim_montato else "1e12"),
