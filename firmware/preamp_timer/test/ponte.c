@@ -1,5 +1,6 @@
 /*
- * ponte.c - the core driven by the circuit (L41b2): reads what the micro's
+ * ponte.c - the core driven by the circuit (L41b2; L47c2a without the LDR
+ * strings, ADR-062): reads what the micro's
  * pins see in a SPICE run, runs timer_step on it, writes what the pins must
  * do. With genera_tb_psu.py it closes the loop by iteration: circuit ->
  * core -> circuit, until the core's outputs no longer change (a fixed point).
@@ -9,15 +10,14 @@
  *
  * <ingressi.txt>: ngspice wrdata with wr_singlescale and wr_vecnames, the
  * columns time, v(front_in), v(mute_sw_in), v(mute_g_in), v(adc_sup_p),
- * v(adc_sup_m), v(adc_sup_vr), v(adc_md), v(adc_i_s), v(adc_i_p).
+ * v(adc_sup_m), v(adc_sup_vr), v(adc_md) (L47c2a: ADC_I_S and ADC_I_P are
+ * gone with the strings).
  * Before t0 the micro is held (reset, or the preamble's state, see below)
  * and the outputs are constant; from t0 timer_step runs every 1 ms, plus once
  * with dt = 0 at each falling edge of MUTE_G_IN (the pin-change interrupt).
- * Pins: digital above 2.5 V (V5 / 2); the sense pins read V / 10 ohm; an
- * ideal ADC (its errors are test_legge's budget); t_c = 25 C, the deck's.
+ * Pins: digital above 2.5 V (V5 / 2); an ideal ADC.
  * --preambolo: the core first runs in the host world (mondo.c, a healthy
- * supply, a plant with L41b1's bench error at 25 C) up to MUTO or MUSICA and
- * 2 s more (its calibrations done), and holds that state until t0.
+ * supply) up to MUTO or MUSICA and 1 s more, and holds that state until t0.
  * --pilota: the core outputs that drove this SPICE run. Where the core's
  * MUTE_REQ now differs from the one that drove the circuit, MUTE_G_IN is not
  * a measurement of THIS core: it answers an old output (in the first pass a
@@ -37,10 +37,9 @@
 
 #include "mondo.h"
 
-#define NCOL 10
+#define NCOL 8
 static const char *NOMI[NCOL] = {"time", "v(front_in)", "v(mute_sw_in)", "v(mute_g_in)",
-                                 "v(adc_sup_p)", "v(adc_sup_m)", "v(adc_sup_vr)", "v(adc_md)",
-                                 "v(adc_i_s)", "v(adc_i_p)"};
+                                 "v(adc_sup_p)", "v(adc_sup_m)", "v(adc_sup_vr)", "v(adc_md)"};
 static double *col[NCOL];
 static int nrow;
 static mondo_t M;
@@ -110,9 +109,6 @@ static void pin(double t, timer_in_t *in)
     in->v_sup_m = (float)a(5, t);
     in->v_sup_vr = (float)a(6, t);
     in->v_md = (float)a(7, t);
-    in->i_s = (float)(a(8, t) / 10.0);
-    in->i_p = (float)(a(9, t) / 10.0);
-    in->t_c = 25.0f;
 }
 
 /* the driving outputs' MUTE_REQ, as steps */
@@ -172,14 +168,14 @@ static void correggi(double t, const timer_state_t *st, timer_in_t *in)
 static FILE *out;
 static timer_out_t ultima;
 static int prima = 1;
-static void scrivi(double t, const timer_state_t *st, timer_out_t o)
+static void scrivi(double t, timer_out_t o)
 {
     if (!prima && !memcmp(&o, &ultima, sizeof o))
         return;
     prima = 0;
     ultima = o;
-    fprintf(out, "%.6f,%d,%d,%d,%d,%d,%d,%d,%s,%.6f\n", t, o.mains_req, o.vrelay_en, o.mute_req,
-            o.permit_req, o.dac_on, o.code_s, o.code_p, timer_stato_nome(o.stato), st->d);
+    fprintf(out, "%.6f,%d,%d,%d,%d,%s\n", t, o.mains_req, o.vrelay_en, o.mute_req,
+            o.permit_req, timer_stato_nome(o.stato));
 }
 
 int main(int argc, char **argv)
@@ -200,37 +196,33 @@ int main(int argc, char **argv)
     if (!leggi(argv[1])) return 1;
     out = fopen(argv[2], "w");
     if (!out) return 1;
-    fprintf(out, "t,mains_req,vrelay_en,mute_req,permit_req,dac_on,code_s,code_p,stato,d\n");
+    fputs(MONDO_CSV_TESTA, out);
 
     timer_state_t st;
     timer_in_t in;
     memset(&ultima, 0, sizeof ultima);
     if (pre) {
         mondo_init(&M, NULL);
-        /* the circuit's own error at 25 C, from L41b2's DC bench with the
-         * 12 mA top (ldr/cal_cima12mA.json, S_25 = P_25) */
-        M.off_s = M.off_p = -1.613e-4f;
-        M.r_s = M.r_p = 0.6462f;
         M.in.mute_sw_in = !strcmp(pre, "muto");
         porta_a(&M, !strcmp(pre, "muto") ? ST_MUTO : ST_MUSICA);
-        mondo_corri(&M, 2000);
+        mondo_corri(&M, 1000);
         st = M.st;
         st.t_fase = UINT32_MAX / 2;     /* long in the state: no step pending */
         in = M.in;
-        scrivi(0.0, &st, M.out);
+        scrivi(0.0, M.out);
     } else {
         pin(t0, &in);
         timer_init(&st, &in);
         timer_out_t o = {0};
         o.power_down = 1;
-        scrivi(0.0, &st, o);
+        scrivi(0.0, o);
     }
     /* from t0: 1 ms ticks, and the interrupt at MUTE_G_IN's falling edges */
     double tfin = col[0][nrow - 1];
     double t = t0;
     int mg_prima = a(3, t0) > 2.5;
     pin(t0, &in);
-    scrivi(t0, &st, timer_step(&st, &in, 0));
+    scrivi(t0, timer_step(&st, &in, 0));
     const double TICK = 1e-3;
     int ks = 0;                          /* the edge search's first row */
     while (t + TICK <= tfin + 1e-12) {
@@ -264,13 +256,13 @@ int main(int argc, char **argv)
         if (tx > 0 && mg_prima && (!npil || pilota_mute(tx - 100e-6) == st.mute_req)) {
             pin(tx, &in);
             in.mute_g_in = 0;
-            scrivi(tx, &st, timer_step(&st, &in, 0));
+            scrivi(tx, timer_step(&st, &in, 0));
         }
         t += TICK;
         pin(t, &in);
         correggi(t, &st, &in);
         mg_prima = in.mute_g_in;
-        scrivi(t, &st, timer_step(&st, &in, (uint32_t)lround(TICK * 1e6)));
+        scrivi(t, timer_step(&st, &in, (uint32_t)lround(TICK * 1e6)));
     }
     fclose(out);
     printf("ponte: %d righe lette, core da %.3f a %.3f s, stato finale %s, sostituzioni di MUTE_G_IN %ld\n",

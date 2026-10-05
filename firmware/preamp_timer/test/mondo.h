@@ -1,6 +1,6 @@
 /*
- * mondo.h - the host tests' world: scripted pins, a plant for the LDR strings,
- * and a recorder of the core's outputs (L41b2).
+ * mondo.h - the host tests' world: scripted pins and a recorder of the
+ * core's outputs (L41b2; without the LDR strings' plant since L47c2a).
  */
 #ifndef MONDO_H
 #define MONDO_H
@@ -26,25 +26,19 @@ typedef struct {
     timer_out_t out;
     uint32_t t_us;                   /* now */
     uint32_t tick_us;                /* 1000: the adapter's period */
-    /* the plant: what the string really needs over the law (L41b1: ~0.2 mV,
-     * 0.43 ohm on the bench; the op-amp's offset adds up to +-4.5 mV) */
-    float off_s, r_s, off_p, r_p;
-    float t_true;                    /* the chip's real temperature; in.t_c is the sensor */
     /* the hardware's gate (psu.py): MUTE_G follows MUTE_REQ unless a
      * supervisor pulls it down (U505, U506); the pin reads it through 1 M */
     uint8_t sup_trip;
     uint8_t mute_g_manuale;          /* 1: the test drives in.mute_g_in itself */
-    /* ADC errors, volts at the sense pins (the budget test) */
-    float adc_off_v, adc_gain;
     /* the recorder: one row per tick */
     int n;
-    float t[MAX_TICK], d[MAX_TICK];
-    uint8_t mains[MAX_TICK], vrel[MAX_TICK], mute[MAX_TICK], perm[MAX_TICK],
-            dac[MAX_TICK], stato[MAX_TICK];
-    uint16_t cs[MAX_TICK], cp[MAX_TICK];
-    float is[MAX_TICK], ip[MAX_TICK];
+    float t[MAX_TICK];
+    uint8_t mains[MAX_TICK], vrel[MAX_TICK], mute[MAX_TICK], perm[MAX_TICK], stato[MAX_TICK];
     FILE *csv;                       /* optional: the bridge to SPICE */
 } mondo_t;
+
+/* The CSV's header: the bridge to SPICE (genera_tb_psu.py) reads it by name. */
+#define MONDO_CSV_TESTA "t,mains_req,vrelay_en,mute_req,permit_req,stato\n"
 
 /* A world with the supply healthy, the front on, the switch at music. */
 void mondo_init(mondo_t *m, const char *csv_path);
@@ -66,6 +60,5 @@ float porta_a(mondo_t *m, timer_stato_t s);
 float primo_fronte(const mondo_t *m, const uint8_t *sig, uint8_t v, float dopo);
 float primo_stato(const mondo_t *m, timer_stato_t s, float dopo);
 int idx_a(const mondo_t *m, float t);
-float corrente_vera(const mondo_t *m, uint16_t code, uint8_t on, float off, float r);
 
 #endif

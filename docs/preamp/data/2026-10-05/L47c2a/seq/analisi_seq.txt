@@ -1,0 +1,71 @@
+== accensione
+   F   ok    punto fisso al giro 3 (uguali: 5 righe, scarto massimo dei tempi 0.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: nessun rilascio
+   a   ok    VRELAY_EN 100.7 ms dopo i rail in regolazione
+   d   ok    MUTE_CMD eccitato 49.4 ms dopo VRELAY >= 9,6 V
+   e   ok    MUSICA a +0.2140 s
+   . stati: STANDBY -> ACCENSIONE -> RILASCIO -> MUSICA
+   . t_mains: 0.0210
+   . t_rail: 0.0533
+   . t_vren: 0.1540
+   . t_mute_on: 0.2041
+== rilascio
+   F   ok    punto fisso al giro 2 (uguali: 3 righe, scarto massimo dei tempi 0.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: nessun rilascio
+   r   ok    MUTE_CMD eccitato 21.10 ms dopo SW3
+   e   ok    MUSICA a +0.0310 s
+   . stati: MUTO -> RILASCIO -> MUSICA
+   . t_mute_on: 0.0211
+   . t_musica: 0.0310
+== spegnimento
+   F   ok    punto fisso al giro 2 (uguali: 4 righe, scarto massimo dei tempi 0.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: 39.80 ms
+   i   ok    MUTE_CMD rilasciato 21.20 ms dopo FRONT_IN a V5/2 (il pin a +7.10 ms dal frontale)
+   j   ok    K501 aperto 63.4 ms dopo il rilascio di PERMIT_CMD
+   k   ok    rail in regolazione fino al rilascio di MUTE_CMD
+   l   ok    stato finale del core: STANDBY
+   . stati: MUSICA -> SPEGNIMENTO -> STANDBY
+   . t_mute_off: 0.0283
+   . t_permit_off: 0.0681
+   . t_k501: 0.1315
+== buco20
+   F   ok    punto fisso al giro 2 (uguali: 4 righe, scarto massimo dei tempi 0.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: 20.30 ms
+   m   ok    MUTE_CMD rilasciato 14.40 ms dopo l'evento
+   n   ok    MUTE_REQ giu' -0.061 ms dopo la caduta di MUTE_G_IN
+   o   ok    classe 1; MUTE_CMD di nuovo eccitato 0.501 s dopo il ritorno della rete
+   . stati: MUSICA -> BUCO_RETE -> RILASCIO -> MUSICA
+   . t_mute_g_in: 0.0144
+   . t_mute_req: 0.0143
+   . classe: 1
+   . sup_p_min: 2.7673
+   . vplus_min: 14.9989
+== buco200
+   F   ok    punto fisso al giro 3 (uguali: 5 righe, scarto massimo dei tempi 0.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: 20.30 ms
+   m   ok    MUTE_CMD rilasciato 14.40 ms dopo l'evento
+   n   ok    MUTE_REQ giu' -0.061 ms dopo la caduta di MUTE_G_IN
+   o   ok    classe 2; MUTE_CMD di nuovo eccitato 0.174 s dopo il ritorno della rete
+   . stati: MUSICA -> BUCO_RETE -> ACCENSIONE -> RILASCIO -> MUSICA
+   . t_mute_g_in: 0.0144
+   . t_mute_req: 0.0143
+   . classe: 2
+   . sup_p_min: 1.8424
+   . vplus_min: 9.9857
+== guasto
+   F   ok    punto fisso al giro 2 (uguali: 4 righe, scarto massimo dei tempi 11.0 us), sostituzioni 0
+   C2  ok    MUTE_CMD eccitato senza PERMIT_CMD: mai
+   C3  ok    Delta ai rilasci: 20.30 ms
+   m   ok    MUTE_CMD rilasciato 10.70 ms dopo l'evento
+   n   ok    MUTE_REQ giu' -0.053 ms dopo la caduta di MUTE_G_IN
+   p   ok    K501 aperto 102.9 ms dopo MUTE_REQ, aperto fino alla fine
+   q   ok    stato finale GUASTO, MUTE_CMD mai rieccitato
+   . stati: MUSICA -> BUCO_RETE -> GUASTO
+   . t_mute_g_in: 0.0107
+   . t_mute_req: 0.0106
+VERDETTO: PASSA

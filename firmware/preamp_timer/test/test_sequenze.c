@@ -1,9 +1,11 @@
 /*
- * test_sequenze.c - one test per sequence of spec sec. 4 (L41b2).
+ * test_sequenze.c - one test per sequence of spec sec. 4 (L41b2; the mute
+ * with the relays alone since L47c2a, ADR-062), and the free pins (sec. 2).
  *
- *   test_sequenze [nome ...]        run the named tests (all if none)
- *   test_sequenze --csv <dir>       also write each test's outputs to <dir>/<nome>.csv
+ *   test_sequenze [--root <repo>] [nome ...]   run the named tests (all if none)
+ *   test_sequenze --csv <dir>                  also write each test's outputs to <dir>/<nome>.csv
  *
+ * --root: the repository, for pin_liberi (it reads circuits/preamp/psu.net).
  * Exit code: the number of failed checks. Each test is also run against the
  * fake builds (FALSO_n, run_host_tests.sh) and must fail there.
  */
@@ -14,8 +16,9 @@
 
 #include "mondo.h"
 
-static mondo_t M;                    /* 1.2 MB: static, not on the stack */
+static mondo_t M;                    /* ~0.4 MB: static, not on the stack */
 static const char *csv_dir;
+static const char *root;
 static const float TICK = 1e-3f;     /* the adapter's period */
 
 static const char *csv_per(const char *nome)
@@ -27,32 +30,6 @@ static const char *csv_per(const char *nome)
     return p;
 }
 
-/* The v4 table with the top of ADR-050, written again here from the ADRs
- * (not from the core): ADR-039 points, log-linear between them. */
-static double tab_log(const double (*p)[2], int n, double d)
-{
-    if (d <= p[0][0])
-        return p[0][1];
-    for (int k = 1; k < n; k++)
-        if (d <= p[k][0]) {
-            double u = (d - p[k - 1][0]) / (p[k][0] - p[k - 1][0]);
-            return exp(log(p[k - 1][1]) + u * (log(p[k][1]) - log(p[k - 1][1])));
-        }
-    return p[n - 1][1];
-}
-static double tab_serie(double d)
-{
-    static const double p[][2] = {{0, 12e-3}, {0.1, 0.2e-3}, {0.45, 4.5e-6}, {0.75, 0.19e-6},
-                                  {0.8, 10e-9}, {1, 10e-9}};
-    return tab_log(p, 6, d);
-}
-static double tab_deriv(double d)
-{
-    static const double p[][2] = {{0, 10e-9}, {0.5, 10e-9}, {1, 12e-3}};
-    return tab_log(p, 3, d);
-}
-static double db(double a, double b) { return 20.0 * log10(a / b); }
-
 #define VICINO(a, b, tol) (fabsf((a) - (b)) <= (tol) + 2e-5f)
 
 /* ---------------------------------------------------------------- 4.1 */
@@ -63,7 +40,7 @@ static void t_accensione(void)
     M.in.v_sup_p = 0.0f;
     M.in.v_sup_m = 2.3f;
     float t_rail = -1;
-    for (int k = 0; k < 9000; k++) {
+    for (int k = 0; k < 2000; k++) {
         mondo_corri(&M, 1);
         if (t_rail < 0 && M.out.mains_req)
             t_rail = M.t_us * 1e-6f + 0.300f;          /* the rails come 300 ms later */
@@ -72,50 +49,21 @@ static void t_accensione(void)
     }
     mondo_chiudi(&M);
     float t_mains = primo_fronte(&M, M.mains, 1, 0);
-    float t_dac = primo_fronte(&M, M.dac, 1, 0);
     float t_vr = primo_fronte(&M, M.vrel, 1, 0);
     float t_mu = primo_fronte(&M, M.mute, 1, 0);
     float t_pe = primo_fronte(&M, M.perm, 1, 0);
     float t_mus = primo_stato(&M, ST_MUSICA, 0);
     CHECK(VICINO(t_mains, 0.020f, TICK), "MAINS_REQ a %.4f s, voluto 0,020 (debounce 20 ms)", t_mains);
-    CHECK(t_dac >= t_rail + 0.100f - 1e-6f && t_dac <= t_rail + 0.100f + TICK,
-          "DAC acceso %.4f s dopo i rail, voluto 100 ms (4.1 passo 2)", t_dac - t_rail);
-    CHECK(VICINO(t_vr - t_dac, 0.600f, TICK), "VRELAY_EN %.4f s dopo il DAC: la calibrazione "
-          "della derivazione sono 2 x 200 ms, piu' 200 ms per la cima corretta", t_vr - t_dac);
-    /* the corrected top reached before VRELAY_EN (L41b2: on the circuit it
-     * was not); in this world the string is instantaneous, so the check is
-     * that the corrected code is held >= 200 ms before VRELAY_EN */
-    {
-        int kv = idx_a(&M, t_vr), k = kv;
-        while (k > 0 && M.cp[k - 1] == M.cp[kv]) k--;
-        CHECK(t_vr - M.t[k] >= 0.200f - 1e-5f, "la cima corretta tenuta solo %.4f s prima di VRELAY_EN",
-              t_vr - M.t[k]);
-    }
+    CHECK(t_vr >= t_rail + 0.100f - 1e-6f && t_vr <= t_rail + 0.100f + TICK,
+          "VRELAY_EN %.4f s dopo i rail, voluto 100 ms (4.1 passo 2; niente calibrazione, ADR-062)",
+          t_vr - t_rail);
     CHECK(t_mu - t_vr >= 0.050f - 1e-6f && t_mu - t_vr <= 0.050f + TICK,
           "MUTE_REQ %.4f s dopo VRELAY_EN, voluto >= 50 ms (ADR-027: 13 ms)", t_mu - t_vr);
     CHECK(t_pe == t_mu, "PERMIT_REQ (%.4f) e MUTE_REQ (%.4f) nello stesso istante (4.3)", t_pe, t_mu);
-    /* d moves only after the G6K's 10 ms */
-    int k0 = idx_a(&M, t_mu);
-    float t_d = -1;
-    for (int k = k0; k < M.n; k++)
-        if (M.d[k] < 1.0f) { t_d = M.t[k]; break; }
-    CHECK(t_d - t_mu >= 0.010f - 1e-6f, "d si muove %.4f s dopo MUTE_REQ, voluto >= 10 ms", t_d - t_mu);
-    CHECK(VICINO(t_mus - t_d, 6.0f, 2 * TICK), "rilascio in %.4f s, voluto 6 (ADR-039)", t_mus - t_d);
-    /* the calibration: during it the series stays dark (ADR-038 point 3) */
-    int buio = 1;
-    for (int k = idx_a(&M, t_dac); k < idx_a(&M, t_vr); k++)
-        if (M.is[k] > 20e-9f) buio = 0;
-    CHECK(buio, "la serie accesa durante la calibrazione della derivazione");
-    /* the shunt's top after the calibration, with the plant 4.5 mV and 0.43 ohm off */
-    float e_top = (float)db(M.ip[idx_a(&M, t_vr + 0.02f)], 12e-3);
-    CHECK(fabsf(e_top) <= 0.1f, "derivazione alla cima %+.3f dB dopo la calibrazione", e_top);
-    /* the series is calibrated 1 s into MUSICA: 12 mA at d = 0 afterwards */
-    float e_s = (float)db(M.is[idx_a(&M, t_mus + 1.5f)], 12e-3);
-    float e_s0 = (float)db(M.is[idx_a(&M, t_mus + 0.5f)], 12e-3);
-    CHECK(fabsf(e_s) <= 0.1f, "serie alla cima %+.3f dB dopo la calibrazione in MUSICA", e_s);
-    printf("  accensione: MAINS_REQ %.3f, DAC %.3f, VRELAY_EN %.3f, MUTE/PERMIT_REQ %.3f, MUSICA %.3f s;"
-           " cima della serie %+.2f dB prima, %+.3f dB dopo la calibrazione\n",
-           t_mains, t_dac, t_vr, t_mu, t_mus, e_s0, e_s);
+    CHECK(VICINO(t_mus - t_mu, 0.010f, TICK), "MUSICA %.4f s dopo MUTE_REQ, voluto 10 ms (il G6K)",
+          t_mus - t_mu);
+    printf("  accensione: MAINS_REQ %.3f, VRELAY_EN %.3f, MUTE/PERMIT_REQ %.3f, MUSICA %.3f s\n",
+           t_mains, t_vr, t_mu, t_mus);
 
     /* no rails within 2 s: GUASTO, the toroid off >= 50 ms later, nothing else moved */
     mondo_init(&M, NULL);
@@ -131,12 +79,12 @@ static void t_accensione(void)
           "senza rail VRELAY_EN o MUTE_REQ si sono alzati");
 }
 
-/* Power up to MUSICA and let the series calibrate; returns now. */
+/* Power up to MUSICA (or MUTO) and stay 1 s; returns now. */
 static float in_musica(const char *csv)
 {
     mondo_init(&M, csv);
     porta_a(&M, ST_MUSICA);
-    mondo_corri(&M, 2000);
+    mondo_corri(&M, 1000);
     return M.t_us * 1e-6f;
 }
 
@@ -145,7 +93,7 @@ static float in_muto(const char *csv)
     mondo_init(&M, csv);
     M.in.mute_sw_in = 1;
     porta_a(&M, ST_MUTO);
-    mondo_corri(&M, 2000);
+    mondo_corri(&M, 1000);
     return M.t_us * 1e-6f;
 }
 
@@ -154,31 +102,39 @@ static void t_inserzione(void)
 {
     float t0 = in_musica(csv_per("inserzione"));
     M.in.mute_sw_in = 1;
-    mondo_corri(&M, 8000);
+    mondo_corri(&M, 1000);
     mondo_chiudi(&M);
     float t_ins = primo_stato(&M, ST_INSERZIONE, t0);
-    float t_d1 = -1;
-    for (int k = idx_a(&M, t0); k < M.n; k++)
-        if (M.d[k] >= 1.0f) { t_d1 = M.t[k]; break; }
     float t_mu = primo_fronte(&M, M.mute, 0, t0);
     float t_pe = primo_fronte(&M, M.perm, 0, t0);
+    float t_muto = primo_stato(&M, ST_MUTO, t0);
     CHECK(VICINO(t_ins - t0, 0.020f, TICK), "INSERZIONE %.4f s dopo SW3, voluto 20 ms", t_ins - t0);
-    CHECK(VICINO(t_d1 - t_ins, 6.0f, 2 * TICK), "d da 0 a 1 in %.4f s, voluto 6 (ADR-039)", t_d1 - t_ins);
-    CHECK(t_mu - t_d1 >= 0.500f - 1e-6f && t_mu - t_d1 <= 0.500f + TICK,
-          "MUTE_REQ giu' %.4f s dopo d = 1, voluto 0,5 (J3)", t_mu - t_d1);
+    CHECK(t_mu == t_ins, "MUTE_REQ giu' %.4f s dopo l'INSERZIONE, voluto nello stesso istante: "
+          "i rele' subito dopo il tasto (ADR-062)", t_mu - t_ins);
     CHECK(t_pe - t_mu >= 0.020f - 1e-6f && t_pe - t_mu <= 0.020f + TICK,
           "PERMIT_REQ giu' %.4f s dopo MUTE_REQ, voluto 20 ms (ADR-045)", t_pe - t_mu);
-    CHECK(primo_stato(&M, ST_MUTO, t0) > 0, "non arriva in MUTO");
-    /* the currents against the table (after both calibrations) */
-    double peggiore = 0;
-    for (int k = idx_a(&M, t_ins); k < idx_a(&M, t_d1); k += 50) {
-        double ds = db(M.is[k], tab_serie(M.d[k])), dp = db(M.ip[k], tab_deriv(M.d[k]));
-        if (fabs(ds) > fabs(peggiore)) peggiore = ds;
-        if (fabs(dp) > fabs(peggiore)) peggiore = dp;
-    }
-    CHECK(fabs(peggiore) <= 0.2, "correnti contro la tabella v4 (cima 12 mA): %+.3f dB", peggiore);
-    printf("  inserzione: INSERZIONE +%.3f, d = 1 +%.3f, MUTE_REQ +%.3f, PERMIT_REQ +%.3f s; "
-           "correnti entro %+.3f dB dalla tabella\n", t_ins - t0, t_d1 - t0, t_mu - t0, t_pe - t0, peggiore);
+    CHECK(t_muto == t_pe, "MUTO a %.4f, PERMIT_REQ giu' a %.4f: voluti insieme", t_muto, t_pe);
+    printf("  inserzione: INSERZIONE e MUTE_REQ +%.3f, PERMIT_REQ +%.3f, MUTO +%.3f s\n",
+           t_ins - t0, t_pe - t0, t_muto - t0);
+
+    /* the switch back to music inside Delta: not reversible (ADR-062); the
+     * insertion completes, then a release from MUTO */
+    t0 = in_musica(NULL);
+    M.in.mute_sw_in = 1;
+    mondo_corri(&M, 25);                     /* MUTE_REQ low since +20 ms */
+    float t_back = M.t_us * 1e-6f;
+    M.in.mute_sw_in = 0;
+    mondo_corri(&M, 500);
+    t_mu = primo_fronte(&M, M.mute, 0, t0);
+    t_pe = primo_fronte(&M, M.perm, 0, t0);
+    float t_mu2 = primo_fronte(&M, M.mute, 1, t_mu);
+    CHECK(t_pe - t_mu >= 0.020f - 1e-6f, "tasto tornato a musica nel Delta: PERMIT_REQ giu' %.4f s "
+          "dopo MUTE_REQ, voluto 20 ms", t_pe - t_mu);
+    CHECK(t_mu2 > t_pe && VICINO(t_mu2 - t_back, 0.020f, TICK),
+          "tasto tornato a musica nel Delta: MUTE_REQ risale %.4f s dopo il tasto, voluto 20 ms e "
+          "dopo PERMIT_REQ giu'", t_mu2 - t_back);
+    printf("  inserzione con ritorno nel Delta: PERMIT_REQ giu' +%.3f, MUTE_REQ su +%.3f s dal ritorno\n",
+           t_pe - t_mu, t_mu2 - t_back);
 }
 
 /* ---------------------------------------------------------------- 4.3 */
@@ -186,66 +142,31 @@ static void t_rilascio(void)
 {
     float t0 = in_muto(csv_per("rilascio"));
     M.in.mute_sw_in = 0;
-    mondo_corri(&M, 7000);
+    mondo_corri(&M, 500);
     mondo_chiudi(&M);
     float t_mu = primo_fronte(&M, M.mute, 1, t0);
     float t_pe = primo_fronte(&M, M.perm, 1, t0);
-    float t_d = -1, t_0 = -1;
-    for (int k = idx_a(&M, t0); k < M.n; k++) {
-        if (t_d < 0 && M.d[k] < 1.0f) t_d = M.t[k];
-        if (t_0 < 0 && M.d[k] <= 0.0f) t_0 = M.t[k];
-    }
+    float t_mus = primo_stato(&M, ST_MUSICA, t0);
     CHECK(VICINO(t_mu - t0, 0.020f, TICK), "MUTE_REQ su %.4f s dopo SW3, voluto 20 ms", t_mu - t0);
     CHECK(t_pe == t_mu, "PERMIT_REQ e MUTE_REQ non insieme (%.4f, %.4f)", t_pe, t_mu);
-    CHECK(t_d - t_mu >= 0.010f - 1e-6f, "d si muove %.4f s dopo i rele', voluto >= 10 ms (ADR-039)", t_d - t_mu);
-    CHECK(VICINO(t_0 - t_d, 6.0f, 2 * TICK), "d da 1 a 0 in %.4f s, voluto 6", t_0 - t_d);
-    printf("  rilascio: MUTE/PERMIT_REQ +%.3f, d parte +%.3f, d = 0 +%.3f s\n", t_mu - t0, t_d - t0, t_0 - t0);
-}
+    CHECK(VICINO(t_mus - t_mu, 0.010f, TICK), "MUSICA %.4f s dopo i rele', voluto 10 ms (il G6K)",
+          t_mus - t_mu);
+    printf("  rilascio: MUTE/PERMIT_REQ +%.3f, MUSICA +%.3f s\n", t_mu - t0, t_mus - t0);
 
-/* ------------------------------------------------ 4.2 step 4, 4.3 step 3 */
-static void t_inversione(void)
-{
-    float t0 = in_musica(csv_per("inversione"));
-    M.in.mute_sw_in = 1;
-    mondo_corri(&M, 3000);                   /* d ~ 0.5 */
-    float t_r = M.t_us * 1e-6f;
-    M.in.mute_sw_in = 0;
-    mondo_corri(&M, 5000);
-    mondo_chiudi(&M);
-    float dmax = 0;
-    int kmax = 0;
-    for (int k = idx_a(&M, t0); k < M.n; k++)
-        if (M.d[k] > dmax) { dmax = M.d[k]; kmax = k; }
-    CHECK(VICINO(M.t[kmax], t_r + 0.020f, 1.5f * TICK), "d inverte a %.4f s, voluto %.4f (SW3 + 20 ms)",
-          M.t[kmax], t_r + 0.020f);
-    CHECK(kmax + 2 < M.n && M.d[kmax + 2] < M.d[kmax + 1] && M.d[kmax + 1] <= M.d[kmax],
-          "d non scende subito dopo l'inversione");
-    CHECK(primo_fronte(&M, M.mute, 0, t0) < 0 && primo_fronte(&M, M.perm, 0, t0) < 0,
-          "un rele' si e' mosso in un'inversione a meta'");
-    float t_mus = primo_stato(&M, ST_MUSICA, t_r);
-    CHECK(VICINO(t_mus - M.t[kmax], dmax * 6.0f, 3 * TICK), "ritorno a d = 0 in %.4f s, voluto %.4f "
-          "(stessa velocita')", t_mus - M.t[kmax], dmax * 6.0f);
-    printf("  inversione dell'inserzione: d max %.4f a +%.3f s, MUSICA +%.3f s, nessun rele' mosso\n",
-           dmax, M.t[kmax] - t0, t_mus - t0);
-
-    /* the release reversed half-way: back to 1, then the relays as in 4.2 */
+    /* the hardware refuses the release (MUTE_G stays low): after the G6K's
+     * 10 ms the core sees it and mutes (spec 4.5 step 1), never MUSICA */
     t0 = in_muto(NULL);
+    M.mute_g_manuale = 1;
+    M.in.mute_g_in = 0;
     M.in.mute_sw_in = 0;
-    mondo_corri(&M, 3000);
-    t_r = M.t_us * 1e-6f;
-    M.in.mute_sw_in = 1;
-    mondo_corri(&M, 5000);
-    float dmin = 1;
-    for (int k = idx_a(&M, t0); k < M.n; k++)
-        if (M.d[k] < dmin) dmin = M.d[k];
-    float t_d1 = -1;
-    for (int k = idx_a(&M, t_r); k < M.n; k++)
-        if (M.d[k] >= 1.0f) { t_d1 = M.t[k]; break; }
-    float t_mu = primo_fronte(&M, M.mute, 0, t_r);
-    CHECK(dmin > 0.4f && dmin < 0.6f, "il rilascio invertito scende a d = %.3f", dmin);
-    CHECK(t_d1 > 0 && t_mu - t_d1 >= 0.5f - 1e-6f, "dopo l'inversione del rilascio MUTE_REQ giu' "
-          "%.4f s dopo d = 1", t_mu - t_d1);
-    printf("  inversione del rilascio: d min %.3f, MUTE_REQ giu' %.3f s dopo d = 1\n", dmin, t_mu - t_d1);
+    mondo_corri(&M, 200);
+    t_mu = primo_fronte(&M, M.mute, 1, t0);
+    float t_b = primo_stato(&M, ST_BUCO_RETE, t0);
+    CHECK(primo_stato(&M, ST_MUSICA, t0) < 0, "rilascio rifiutato dall'hardware: il core e' andato in MUSICA");
+    CHECK(t_b > 0 && VICINO(t_b - t_mu, 0.010f, TICK), "rilascio rifiutato: BUCO_RETE %.4f s dopo "
+          "MUTE_REQ, voluto 10 ms", t_b - t_mu);
+    CHECK(M.out.mute_req == 0 && M.out.permit_req == 0, "rilascio rifiutato: MUTE_REQ %d, PERMIT_REQ %d",
+          M.out.mute_req, M.out.permit_req);
 }
 
 /* ---------------------------------------------------------------- 4.4 */
@@ -253,21 +174,21 @@ static void t_spegnimento(void)
 {
     float t0 = in_musica(csv_per("spegnimento"));
     M.in.front_in = 1;
-    mondo_corri(&M, 8000);
+    mondo_corri(&M, 500);
     mondo_chiudi(&M);
     float t_mu = primo_fronte(&M, M.mute, 0, t0);
     float t_pe = primo_fronte(&M, M.perm, 0, t0);
     float t_vr = primo_fronte(&M, M.vrel, 0, t0);
     float t_ma = primo_fronte(&M, M.mains, 0, t0);
-    float t_dac = primo_fronte(&M, M.dac, 0, t0);
     float t_sb = primo_stato(&M, ST_STANDBY, t0);
-    CHECK(t_pe - t_mu >= 0.020f - 1e-6f, "PERMIT_REQ %.4f s dopo MUTE_REQ", t_pe - t_mu);
+    CHECK(VICINO(t_mu - t0, 0.020f, TICK), "MUTE_REQ giu' %.4f s dopo il frontale, voluto 20 ms", t_mu - t0);
+    CHECK(t_pe - t_mu >= 0.020f - 1e-6f, "PERMIT_REQ %.4f s dopo MUTE_REQ, voluto 20 ms (ADR-045)",
+          t_pe - t_mu);
     CHECK(t_vr - t_pe >= 0.080f - 1e-6f && t_vr - t_pe <= 0.080f + TICK,
           "VRELAY_EN giu' %.4f s dopo PERMIT_REQ, voluto 80 ms: 50 dopo PERMIT_CMD (ADR-046) "
           "piu' il Delta dell'hardware", t_vr - t_pe);
     CHECK(t_ma == t_vr, "MAINS_REQ (%.4f) e VRELAY_EN (%.4f) non insieme (4.4 passo 3)", t_ma, t_vr);
-    CHECK(t_dac == t_ma && t_sb == t_ma, "DAC spento %.4f, STANDBY %.4f, rete %.4f", t_dac, t_sb, t_ma);
-    CHECK(t_ma - t0 > 6.5f && t_ma - t0 < 7.0f, "spegnimento in %.3f s, ADR-046: ~7 s", t_ma - t0);
+    CHECK(t_sb == t_ma, "STANDBY %.4f, rete %.4f", t_sb, t_ma);
     CHECK(M.stato[M.n - 1] == ST_STANDBY && M.out.power_down, "non finisce in STANDBY col power-down");
     printf("  spegnimento da MUSICA: MUTE_REQ +%.3f, PERMIT_REQ +%.3f, VRELAY_EN e MAINS_REQ +%.3f s\n",
            t_mu - t0, t_pe - t0, t_ma - t0);
@@ -320,7 +241,7 @@ static void t_debounce(void)
     /* the OR: SW3 at music, front off -> the mute is inserted anyway (4.4) */
     t0 = in_musica(NULL);
     M.in.front_in = 1;
-    mondo_corri(&M, 7000);
+    mondo_corri(&M, 500);
     CHECK(primo_fronte(&M, M.mute, 0, t0) > 0, "frontale spento con SW3 a musica: il mute non entra");
     printf("  debounce: rimbalzi di 5 ms ignorati, inserzione 20 ms dopo l'ultimo; filo rotto = mute\n");
 }
@@ -331,7 +252,6 @@ static void t_buco_classe1(void)
     /* the rails ride through: the detector at +5 ms (slower than MUTE_G, so
      * the reaction can only come from MUTE_G_IN), mains back at +40 ms */
     in_musica(csv_per("buco_rete"));
-    uint16_t top_p = timer_law_code(LDR_I_TOP, 25.0f, &M.st.cal_p);
     mondo_corri(&M, 0);
     M.sup_trip = 1;
     mondo_isr(&M);                         /* the pin-change interrupt */
@@ -339,14 +259,13 @@ static void t_buco_classe1(void)
     CHECK(M.out.mute_req == 0 && M.out.permit_req == 0,
           "all'interruzione MUTE_REQ %d, PERMIT_REQ %d: voluti giu' subito (4.5 passo 1)",
           M.out.mute_req, M.out.permit_req);
-    CHECK(M.out.code_p == top_p, "d = 1 non immediato: derivazione %d, voluto %d", M.out.code_p, top_p);
     mondo_corri(&M, 5);
     rete_assente(&M.in);
     mondo_corri(&M, 35);
     rete_sana(&M.in);
     M.sup_trip = 0;
     float t_back = M.t_us * 1e-6f;
-    mondo_corri(&M, 7000);
+    mondo_corri(&M, 1000);
     mondo_chiudi(&M);
     float t_rel = primo_fronte(&M, M.mute, 1, t_hole);
     CHECK(primo_stato(&M, ST_ACCENSIONE, t_hole) < 0, "classe 1 trattata come classe 2");
@@ -362,7 +281,7 @@ static void t_buco_classe1(void)
     mondo_corri(&M, 1);
     CHECK(M.out.mute_req == 0, "senza interruzione MUTE_REQ ancora su dopo 1 ms");
 
-    /* the detector alone (MUTE_G still up): mute from ADC_MD, MUTO path */
+    /* the detector alone (MUTE_G still up): mute from ADC_MD */
     in_musica(NULL);
     rete_assente(&M.in);
     mondo_corri(&M, 1);
@@ -397,13 +316,13 @@ static void t_buco_classe2(void)
     rete_sana(&M.in);                      /* rails good at +150 ms */
     M.sup_trip = 0;
     float t_ok = M.t_us * 1e-6f;
-    mondo_corri(&M, 8000);
+    mondo_corri(&M, 1000);
     mondo_chiudi(&M);
     float t_acc = primo_stato(&M, ST_ACCENSIONE, t0);
     float t_rel = primo_fronte(&M, M.mute, 1, t0 + 0.001f);
     CHECK(t_acc > 0, "classe 2: l'accensione non si rifa'");
-    CHECK(t_rel - t_ok >= 0.100f + 0.600f + 0.050f - 1e-6f,
-          "RILASCIO %.4f s dopo i rail, voluto >= 100 + 600 + 50 ms (4.1 dal passo 2)", t_rel - t_ok);
+    CHECK(t_rel - t_ok >= 0.100f + 0.050f - 1e-6f,
+          "RILASCIO %.4f s dopo i rail, voluto >= 100 + 50 ms (4.1 dal passo 2)", t_rel - t_ok);
     CHECK(primo_stato(&M, ST_GUASTO, t0) < 0, "classe 2 finita in GUASTO");
     printf("  buco di rete, classe 2: ACCENSIONE a +%.3f s, RILASCIO %.3f s dopo i rail\n",
            t_acc - t0, t_rel - t_ok);
@@ -448,55 +367,76 @@ static void t_guasto(void)
     CHECK(primo_stato(&M, ST_GUASTO, t0) > 0, "guasto in MUTO visto dall'ADC: non va in GUASTO");
 }
 
-/* ------------------------------------------- spec sec. 5: the calibration */
-static void t_calibrazione(void)
-{
-    /* (a) the top's read corrupted by +50 % at the power-up (a glitch, a
-     * string still moving): the read-back of the corrected top must refuse
-     * it and restore the previous calibration; MUTO retries it 1 s later */
-    mondo_init(&M, NULL);
-    M.in.mute_sw_in = 1;
-    float t_dac = -1;
-    for (int k = 0; k < 4000; k++) {
-        mondo_corri(&M, 1);
-        float t = M.t_us * 1e-6f;
-        if (t_dac < 0 && M.out.dac_on)
-            t_dac = t;
-        M.adc_gain = (t_dac > 0 && t >= t_dac + 0.150f && t <= t_dac + 0.210f) ? 0.5f : 0.0f;
-    }
-    float t_vr = primo_fronte(&M, M.vrel, 1, 0);
-    float t_muto = primo_stato(&M, ST_MUTO, 0);
-    CHECK(M.st.n_cal_reject >= 1, "la lettura falsata non e' stata rifiutata");
-    CHECK(t_muto > 0, "non arriva in MUTO");
-    /* the retry in MUTO: 1 s + 400 ms + 200 ms of read-back */
-    float e = (float)db(M.ip[idx_a(&M, t_muto + 1.9f)], 12e-3);
-    CHECK(M.st.cal_ok_p && fabsf(e) <= 0.1f, "dopo il ritentativo in MUTO la cima sta a %+.3f dB (cal_ok %d)",
-          e, M.st.cal_ok_p);
-    printf("  calibrazione: lettura falsata del 50%% rifiutata (%u rifiuti), VRELAY_EN a %.3f s, "
-           "ritentata in MUTO: cima %+.3f dB\n", M.st.n_cal_reject, t_vr, e);
+/* --------------------------------------------- spec sec. 2: the free pins */
+/* The ATtiny3216's SOIC-20 pinout, written again here from DS40002205A
+ * (sec. 4.1, "20-Pin SOIC", p. 14), not from the core: pin -> port, bit (0 = power). */
+static const struct { int pin; char port; int bit; } PINOUT[] = {
+    {1, 0, 0}, {2, 'A', 4}, {3, 'A', 5}, {4, 'A', 6}, {5, 'A', 7}, {6, 'B', 5}, {7, 'B', 4},
+    {8, 'B', 3}, {9, 'B', 2}, {10, 'B', 1}, {11, 'B', 0}, {12, 'C', 0}, {13, 'C', 1},
+    {14, 'C', 2}, {15, 'C', 3}, {16, 'A', 0}, {17, 'A', 1}, {18, 'A', 2}, {19, 'A', 3}, {20, 0, 0}};
 
-    /* (b) the shunt string open (J3 unplugged): no current, no calibration,
-     * and never a code above the uncalibrated top */
-    mondo_init(&M, NULL);
-    M.in.mute_sw_in = 1;
-    M.off_p = 0.5f;                     /* the plant needs 0.5 V more: ~0 A */
-    mondo_corri(&M, 4000);
-    uint16_t cmax = 0, lim = timer_law_code(LDR_I_TOP, 25.0f, NULL);
-    for (int k = 0; k < M.n; k++)
-        if (M.cp[k] > cmax) cmax = M.cp[k];
-    CHECK(!M.st.cal_ok_p && M.st.n_cal_reject >= 1, "stringa aperta: calibrazione accettata");
-    CHECK(cmax <= lim, "stringa aperta: codice della derivazione %u oltre la cima non calibrata %u", cmax, lim);
-    printf("  calibrazione: stringa aperta, %u rifiuti, codice massimo %u (cima non calibrata %u)\n",
-           M.st.n_cal_reject, cmax, lim);
+static void t_pin_liberi(void)
+{
+    /* the pins of U509 that psu.net puts on a net */
+    int usato[21] = {0};
+    char path[1024];
+    snprintf(path, sizeof path, "%s/circuits/preamp/psu.net", root ? root : ".");
+    FILE *f = fopen(path, "r");
+    CHECK(f != NULL, "non apro %s", path);
+    if (!f)
+        return;
+    char r[512];
+    int dopo_u509 = 0, nodi = 0;
+    while (fgets(r, sizeof r, f)) {
+        int p;
+        if (strstr(r, "(ref \"U509\")")) {
+            dopo_u509 = 1;
+            continue;
+        }
+        if (dopo_u509 && sscanf(r, " (pin \"%d\")", &p) == 1 && p >= 1 && p <= 20) {
+            usato[p] = 1;
+            nodi++;
+        }
+        dopo_u509 = 0;
+    }
+    fclose(f);
+    CHECK(nodi >= 10, "psu.net: solo %d nodi di U509, il formato non e' quello atteso", nodi);
+
+    /* every listed pin is free, matches the pinout, and every free pin is listed */
+    int listato[21] = {0};
+    for (unsigned k = 0; k < TIMER_N_PIN_LIBERI; k++) {
+        timer_pin_t q = TIMER_PIN_LIBERI[k];
+        CHECK(q.pin >= 1 && q.pin <= 20, "pin %u fuori dal contenitore", q.pin);
+        if (q.pin < 1 || q.pin > 20)
+            continue;
+        listato[q.pin] = 1;
+        CHECK(PINOUT[q.pin - 1].port == q.port && PINOUT[q.pin - 1].bit == q.bit,
+              "il pin %u e' P%c%d, la lista dice P%c%u", q.pin, PINOUT[q.pin - 1].port,
+              PINOUT[q.pin - 1].bit, q.port, q.bit);
+        CHECK(!usato[q.pin], "P%c%u (pin %u) e' nella lista dei liberi ma psu.net lo collega",
+              q.port, q.bit, q.pin);
+    }
+    int liberi = 0;
+    for (int p = 1; p <= 20; p++) {
+        if (!PINOUT[p - 1].port || usato[p])
+            continue;
+        liberi++;
+        CHECK(listato[p], "P%c%d (pin %d) e' libero in psu.net ma manca dalla lista",
+              PINOUT[p - 1].port, PINOUT[p - 1].bit, p);
+    }
+    /* the user's choice (L47c2a): the digital input buffer disabled */
+    CHECK(TIMER_PIN_LIBERI_ISC == 0x4u, "ISC dei pin liberi %u, voluto 0x4 INPUT_DISABLE "
+          "(DS40002205A sec. 16.5.11)", TIMER_PIN_LIBERI_ISC);
+    printf("  pin liberi: %u nella lista, %d liberi in psu.net, ISC 0x%x\n", TIMER_N_PIN_LIBERI, liberi,
+           TIMER_PIN_LIBERI_ISC);
 }
 
 /* ---------------------------------------------------------------- main */
 typedef struct { const char *nome; void (*f)(void); } test_t;
 static const test_t TESTS[] = {
     {"accensione", t_accensione}, {"inserzione", t_inserzione}, {"rilascio", t_rilascio},
-    {"inversione", t_inversione}, {"spegnimento", t_spegnimento}, {"debounce", t_debounce},
-    {"buco_classe1", t_buco_classe1}, {"buco_classe2", t_buco_classe2}, {"guasto", t_guasto},
-    {"calibrazione", t_calibrazione},
+    {"spegnimento", t_spegnimento}, {"debounce", t_debounce}, {"buco_classe1", t_buco_classe1},
+    {"buco_classe2", t_buco_classe2}, {"guasto", t_guasto}, {"pin_liberi", t_pin_liberi},
 };
 
 int main(int argc, char **argv)
@@ -506,6 +446,8 @@ int main(int argc, char **argv)
     for (int k = 1; k < argc; k++) {
         if (!strcmp(argv[k], "--csv") && k + 1 < argc)
             csv_dir = argv[++k];
+        else if (!strcmp(argv[k], "--root") && k + 1 < argc)
+            root = argv[++k];
         else if (nsel < 32)
             sel[nsel++] = argv[k];
     }

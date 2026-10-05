@@ -4,7 +4,7 @@
 chiudono qui; il *perché* di ognuna sta nel report di gate datato che
 l'ha aperta, in `reports/`, che non si riscrive mai.
 
-Ultimo aggiornamento: **2026-10-05** (L47c1, il mute coi soli relè, ADR-062: **NC-043 chiusa per superamento** — le celle escono dal progetto, nessuna parte fotoresistiva resta nel sorgente, provato dal 2e e dal 2j coi falsi; NC-049 e NC-053 superate da ADR-062 nel requisito, restano aperte fino alla matrice V2 di L47c2; NC-050 e NC-051 a L47c2; 18 voci aperte, 4 bloccanti; report `reports/2026-10-05-L47c1-mute-coi-soli-rele.md`; L47b2b1, il profilo v5 del mute a 3 s con la cima di 7 mA, ADR-061: **NC-045 chiusa** — il tempo a 3 s, il profilo ricalibrato e verificato sul preamp intero, il pilota tenuto per scelta dell'utente coi numeri della semplificazione; **NC-053 aperta** (maggiore, proposta): B a 20 Hz subito dopo il relè, 100–241 µV, il relè resta a 0,5 s per scelta dell'utente; NC-043 e NC-049 avanzate, aperte, il pilota vero è di L47b2b2; 19 voci aperte, 5 bloccanti; report `reports/2026-10-03-L47b2b1-profilo-v5.md`; L47a, la cella del mute: **NC-043 aggiornata**, resta aperta — la parte sostitutiva è la NSL-32SR3, scelta dall'utente, col modello da dati pubblicati e ipotesi dichiarate, ADR-058; il sorgente e le misure in L47b; 19 voci aperte, 5 bloccanti; report `reports/2026-10-02-L47a-cella-mute.md`; L44, il rumore 1/f fuori dalla coppia d'ingresso: **NC-004 chiusa** — il flicker dei bipolari a un tetto dichiarato dalle curve pubblicate, ADR-057, E5 peggiore 5,531 µV, 5,1 dB dentro 9,95; decisione dell'utente; 19 voci aperte, 5 bloccanti; report `reports/2026-10-01-L44-rumore-1f.md`; L46b, il PSRR del rail positivo: **NC-047 chiusa** — la cella RC 10 Ω + 1000 µF su specchio e VAS e R120 226 Ω, ADR-056, decisioni dell'utente; la quota di ADR-020 regge con 20 dB su un limite per eccesso dei rail; **NC-052 chiusa**, la nota su E5 ripuntata a CSV che esistono; NC-011 aggiornata, resta la misura sul prototipo; NC-041 aggiornata, la continua nominale del blocco a −6,6 mV; 20 voci aperte, 6 bloccanti; report `reports/2026-10-01-L46b-psrr-rail-positivo.md`; L46a, la compensazione del blocco: **NC-039 chiusa** — il VAS a ~10,7 mA e il Miller a 470 pF, ADR-054, e V4 a tetti assoluti a 0,2 V RMS, ADR-055; NC-047 aggiornata col PSRR+ del blocco nuovo, resta a L46b; NC-041 aggiornata, la continua del blocco a −26 mV; report `reports/2026-10-01-L46a-compensazione.md`; L43b, la revisione dell'utente: **aperte NC-047**, il PSRR del rail positivo, e **NC-048**, nessun placement e routing di prova, entrambe bloccanti per G1, trovate dall'utente; **NC-049** S del mute a 12 mA mai misurato (maggiore), **NC-050** la tenuta di `VRELAY` scesa (minore), **NC-051** il commento di `C_VRELAY` (minore), **NC-052** i CSV citati dalla nota su E5 che non esistono (minore), trovate dall'orchestratore e presentate dopo la lettura dell'utente; report `reports/2026-10-01-L43b-revisione-dossier.md`; L43a: **aperte NC-039…NC-046**, i rilievi dell'architetto avversariale accettati dall'utente, con la severità decisa da lui — NC-039, NC-040, NC-041 bloccanti per G1, NC-043 e NC-044 bloccanti per G2, NC-042 maggiore, NC-045 e NC-046 minori; report `reports/2026-09-27-L43a-esiti-architetto.md`; L42c: il requisito di NC-037 è ora P9 (a), ≤ 0,5 W alla presa, obiettivo del progetto — ADR-053; nessuna voce aperta o chiusa; L28: **NC-027 chiusa**, i pin SS dell'LSK489 definiti dalla nota applicativa del costruttore, flottanti — ADR-052; L41c: **NC-036 chiusa**, il banco di L30 col circuito vero dell'alimentatore, e il corto della linea a 12 V dei relè accettato sotto il tetto — ADR-051; L41b2: NC-038 chiusa, la cima delle LDR a 12 mA — ADR-050; NC-036 aggiornata, il firmware del temporizzatore provato sull'host e sul circuito; L41b1: NC-036 aggiornata, il temporizzatore esiste come hardware in `psu.py` senza firmware; NC-037 aggiornata, la causa tolta e la chiusura legata alla perdita a vuoto di T2; NC-038 aperta, il LED della VTL5C4 non regge 20 mA nel telaio caldo — ADR-049; L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
+Ultimo aggiornamento: **2026-10-05** (L47c2a, il firmware del mute coi soli relè e l'alimentatore col carico nuovo: **NC-051 chiusa** — il commento di `C_VRELAY` riscritto dalle cifre misurate, netlist uguale per connettività; **NC-050 aggiornata**, resta aperta fino al carico congelato — senza il pilota delle LDR la tenuta di `VRELAY` a rete −10 % torna a 61,1 ms, 4700 µF tenuti per scelta dell'utente; **NC-037 aggiornata** — dal secondario di T2 80,5 mW in standby, il criterio della perdita a vuoto di T2 a ≤ 0,42 W; NC-049 e NC-053 alla matrice V2 di L47c2b; 17 voci aperte, 4 bloccanti; report `reports/2026-10-05-L47c2a-firmware-alimentatore.md`; L47c1, il mute coi soli relè, ADR-062: **NC-043 chiusa per superamento** — le celle escono dal progetto, nessuna parte fotoresistiva resta nel sorgente, provato dal 2e e dal 2j coi falsi; NC-049 e NC-053 superate da ADR-062 nel requisito, restano aperte fino alla matrice V2 di L47c2; NC-050 e NC-051 a L47c2; 18 voci aperte, 4 bloccanti; report `reports/2026-10-05-L47c1-mute-coi-soli-rele.md`; L47b2b1, il profilo v5 del mute a 3 s con la cima di 7 mA, ADR-061: **NC-045 chiusa** — il tempo a 3 s, il profilo ricalibrato e verificato sul preamp intero, il pilota tenuto per scelta dell'utente coi numeri della semplificazione; **NC-053 aperta** (maggiore, proposta): B a 20 Hz subito dopo il relè, 100–241 µV, il relè resta a 0,5 s per scelta dell'utente; NC-043 e NC-049 avanzate, aperte, il pilota vero è di L47b2b2; 19 voci aperte, 5 bloccanti; report `reports/2026-10-03-L47b2b1-profilo-v5.md`; L47a, la cella del mute: **NC-043 aggiornata**, resta aperta — la parte sostitutiva è la NSL-32SR3, scelta dall'utente, col modello da dati pubblicati e ipotesi dichiarate, ADR-058; il sorgente e le misure in L47b; 19 voci aperte, 5 bloccanti; report `reports/2026-10-02-L47a-cella-mute.md`; L44, il rumore 1/f fuori dalla coppia d'ingresso: **NC-004 chiusa** — il flicker dei bipolari a un tetto dichiarato dalle curve pubblicate, ADR-057, E5 peggiore 5,531 µV, 5,1 dB dentro 9,95; decisione dell'utente; 19 voci aperte, 5 bloccanti; report `reports/2026-10-01-L44-rumore-1f.md`; L46b, il PSRR del rail positivo: **NC-047 chiusa** — la cella RC 10 Ω + 1000 µF su specchio e VAS e R120 226 Ω, ADR-056, decisioni dell'utente; la quota di ADR-020 regge con 20 dB su un limite per eccesso dei rail; **NC-052 chiusa**, la nota su E5 ripuntata a CSV che esistono; NC-011 aggiornata, resta la misura sul prototipo; NC-041 aggiornata, la continua nominale del blocco a −6,6 mV; 20 voci aperte, 6 bloccanti; report `reports/2026-10-01-L46b-psrr-rail-positivo.md`; L46a, la compensazione del blocco: **NC-039 chiusa** — il VAS a ~10,7 mA e il Miller a 470 pF, ADR-054, e V4 a tetti assoluti a 0,2 V RMS, ADR-055; NC-047 aggiornata col PSRR+ del blocco nuovo, resta a L46b; NC-041 aggiornata, la continua del blocco a −26 mV; report `reports/2026-10-01-L46a-compensazione.md`; L43b, la revisione dell'utente: **aperte NC-047**, il PSRR del rail positivo, e **NC-048**, nessun placement e routing di prova, entrambe bloccanti per G1, trovate dall'utente; **NC-049** S del mute a 12 mA mai misurato (maggiore), **NC-050** la tenuta di `VRELAY` scesa (minore), **NC-051** il commento di `C_VRELAY` (minore), **NC-052** i CSV citati dalla nota su E5 che non esistono (minore), trovate dall'orchestratore e presentate dopo la lettura dell'utente; report `reports/2026-10-01-L43b-revisione-dossier.md`; L43a: **aperte NC-039…NC-046**, i rilievi dell'architetto avversariale accettati dall'utente, con la severità decisa da lui — NC-039, NC-040, NC-041 bloccanti per G1, NC-043 e NC-044 bloccanti per G2, NC-042 maggiore, NC-045 e NC-046 minori; report `reports/2026-09-27-L43a-esiti-architetto.md`; L42c: il requisito di NC-037 è ora P9 (a), ≤ 0,5 W alla presa, obiettivo del progetto — ADR-053; nessuna voce aperta o chiusa; L28: **NC-027 chiusa**, i pin SS dell'LSK489 definiti dalla nota applicativa del costruttore, flottanti — ADR-052; L41c: **NC-036 chiusa**, il banco di L30 col circuito vero dell'alimentatore, e il corto della linea a 12 V dei relè accettato sotto il tetto — ADR-051; L41b2: NC-038 chiusa, la cima delle LDR a 12 mA — ADR-050; NC-036 aggiornata, il firmware del temporizzatore provato sull'host e sul circuito; L41b1: NC-036 aggiornata, il temporizzatore esiste come hardware in `psu.py` senza firmware; NC-037 aggiornata, la causa tolta e la chiusura legata alla perdita a vuoto di T2; NC-038 aperta, il LED della VTL5C4 non regge 20 mA nel telaio caldo — ADR-049; L41a: NC-036 aggiornata, l'alimentatore esiste in `circuits/preamp/psu.py` senza temporizzatore; NC-011 col rimedio scelto e la verifica aperta; NC-037 aperta, il consumo in standby — ADR-048; L30: NC-028 e NC-029 chiuse, NC-036 aperta, bloccante per G2 — ADR-046, ADR-047; L35: NC-032 chiusa, e in NC-028 il residuo di L36 chiuso nel sorgente da ADR-045; L36: il guadagno interbloccato dal mute nel sorgente, NC-028 aggiornata col residuo della manopola girata fuori mute; L29e: la parte del mute di NC-028 confermata sul sorgente; L29d2: parte del mute di NC-028 chiusa; creato in L3c; **G0 eseguito in
 L5d**; **revisione umana del dossier in L5e**; **L7** ha aperto NC-013;
 **L8** ha aperto NC-014…NC-017; **L8b** ha registrato **ADR-016**; **L24**
 ha eseguito T7 su tutti i dispositivi attivi e aperto NC-018 e NC-019;
@@ -3329,6 +3329,16 @@ col pezzo di T2 scelto, e la misura sul prototipo. Lotto **L41b**.
   sul prototipo.
 - Resta aperta, con la stessa severità. Lotto: il giro BOM di T2 (G2), la misura al prototipo.
 
+**L47c2a (2026-10-05, ADR-062): il pilota delle LDR non c'è più, lo standby scende.**
+- **Dal secondario di T2 escono 80,5 mW** (79,0 all'angolo minimo;
+  `data/2026-10-05/L47c2a/timer/analisi_timer.txt`), contro 92,5 (90,8) di L41b1 e L42b. Mancano
+  il DAC in shutdown, i quattro amplificatori e gli specchi delle stringhe.
+- I pin del micro rimasti liberi hanno il buffer d'ingresso digitale disattivato (scelta
+  dell'utente, `firmware/preamp_timer/spec/timer_spec.md` § 2): il banco non lo vede (i pin del
+  micro vi sono 1 GΩ), ma toglie il rischio di un pin aperto che deriva attraverso la soglia.
+- **Il criterio di chiusura**: la perdita a vuoto di T2 **≤ 0,42 W** (0,5 W − 80,5 mW). Resta
+  aperta, con la stessa severità.
+
 ### NC-038 — Il LED della VTL5C4 non regge 20 mA nel telaio caldo, e il contratto di J3 li chiede
 
 | | |
@@ -3814,7 +3824,7 @@ progetto. È un draft: non sostituisce il layout di G2, né i requisiti di massa
 | Requisito | **PR-21** (il mute sfuma, non taglia) · **V2** (S ≤ 20 dB in 100 ms) · **ADR-050** (la cima a 12 mA), ADR-040 |
 | Severità | **maggiore** (proposta dell'orchestratore, accettata dall'utente il 2026-10-01) |
 | Aperta da | `reports/2026-10-01-L43b-revisione-dossier.md`. Trovata dall'**orchestratore** in L42a (punto «per L43» di `STATE.md`), presentata all'utente dopo la sua lettura; né l'utente né l'architetto l'avevano trovata |
-| Stato | aperta — **il requisito è superato** da ADR-062 (L47c1: S tolto da V2, il mute taglia); si chiude con la matrice V2 senza celle di L47c2 |
+| Stato | aperta — **il requisito è superato** da ADR-062 (L47c1: S tolto da V2, il mute taglia); si chiude con la matrice V2 senza celle di L47c2b (L47c2 diviso dall'utente) |
 
 **Evidenza.** ADR-050 (L41b2) ha portato la cima delle LDR a 12 mA. Il profilo v4 al jack del
 dossier (S 7,16 / 5,45 dB, L42a) e la matrice di V2 sono corsi **prima**, con la cima precedente;
@@ -3843,7 +3853,7 @@ la catena di L41c), in L47b2b2.
 
 **Avanzamento, L47c1 (2026-10-05).** ADR-062: l'utente ha scelto il mute coi soli relè, e S esce da
 V2 (`REQUIREMENTS.md`). Il pilota delle LDR è tolto da `psu.py` e L47b2b2 non si fa. Resta da
-chiudere **con l'evidenza**: la matrice V2 rigenerata senza celle in L47c2, sulla quale S non si
+chiudere **con l'evidenza**: la matrice V2 rigenerata senza celle in L47c2b, sulla quale S non si
 calcola più.
 
 ### NC-050 — La tenuta di `VRELAY` è scesa da 62,8 a 36,1 ms: P9 regge con 11 ms di margine
@@ -3853,7 +3863,7 @@ calcola più.
 | Requisito | **PR-23** · **P9 (b)** (`VRELAY` ≥ 11,4 V per ≥ 25 ms dopo lo scatto) · ADR-045, ADR-048 |
 | Severità | **minore** (decisione dell'utente, 2026-10-01): requisito soddisfatto, margine da tenere d'occhio |
 | Aperta da | `reports/2026-10-01-L43b-revisione-dossier.md`. Trovata dall'**orchestratore** in L42b (punto «per L43»), presentata all'utente dopo la sua lettura |
-| Stato | aperta |
+| Stato | aperta — **aggiornata da L47c2a**: senza il pilota delle LDR la tenuta torna a **61,1 ms** a rete −10 %, 36 ms sopra P9; 4700 µF tenuti per scelta dell'utente; si chiude col carico congelato (G2) |
 
 **Evidenza.** `data/2026-09-27/L42b/`: `VRELAY_REG` ≥ 11,4 V per **36,1 / 102,1 / 168,5 ms** a rete
 −10 / nom / +10 %, contro 62,8 / 144,9 / 227,3 ms di L41a. La causa è il carico aggiunto da
@@ -3862,6 +3872,15 @@ L41b1/L41b2, provata col controfattuale (il carico di L41a ridà L41a).
 **Cosa serve per chiuderla.** Ogni lotto che aggiunge carico su `VRELAY` ricorre la tenuta a rete
 −10 %; la voce si chiude quando il carico è congelato (G2) con P9 (b) ancora soddisfatto.
 
+**L47c2a (2026-10-05).** ADR-062 ha tolto il pilota delle LDR da `psu.py` (L47c1). Ricorsi i banchi
+di L42b sul circuito di oggi (`data/2026-10-05/L47c2a/rete/analisi.csv`): `VRELAY_REG` ≥ 11,4 V per
+**61,1 / 142,2 / 223,6 ms** a rete −10 / nom / +10 %, quasi quelle di L41a. Le varianti più piccole
+sullo stesso banco (`varianti/`): 3300 µF 41,0 ms, 2200 µF **25,1 ms** (0,1 ms sopra P9). All'utente,
+per nome: **«Tenere 4700 µF»**, per i carichi che verranno prima del congelamento. Il controfattuale
+col carico di L41a dà 64,3 ms, 1,5 ms sopra L41a: il metodo d'integrazione non c'entra (15 µs);
+l'ipotesi, dichiarata, è la corrente di riposo dei regolatori nel banco (report di L47c2a). Resta
+aperta: il carico non è congelato.
+
 ### NC-051 — Il commento di `C_VRELAY` in `psu.py` cita le tenute superate di L41a
 
 | | |
@@ -3869,13 +3888,19 @@ L41b1/L41b2, provata col controfattuale (il carico di L41a ridà L41a).
 | Requisito | La regola di tracciabilità di `CLAUDE.md` (ogni valore non ovvio porta il commento che lo giustifica) · P9 (b) · ADR-048 |
 | Severità | **minore** (decisione dell'utente, 2026-10-01) |
 | Aperta da | `reports/2026-10-01-L43b-revisione-dossier.md`. Trovata dall'**orchestratore** in L42b (punto «per L43»), presentata all'utente dopo la sua lettura |
-| Stato | aperta |
+| Stato | **chiusa il 2026-10-05 da L47c2a** |
 
 **Evidenza.** `circuits/preamp/psu.py` righe 122–127: «4700 uF holds 51 / 134 / 216 ms», dalle
 varianti di L41a. Sul circuito di oggi le tenute sono 36,1 / 102,1 / 168,5 ms (NC-050).
 
 **Cosa serve per chiuderla.** Il commento riscritto con le cifre e i dati di oggi, nel prossimo lotto
 che tocca `psu.py`; netlist uguale salvo i campi volatili.
+
+**Chiusa da L47c2a (2026-10-05).** Il commento di `C_VRELAY` cita le tenute misurate sul circuito
+di oggi (61,1 / 142,2 / 223,6 ms, `data/2026-10-05/L47c2a/rete/analisi.csv`), le varianti più
+piccole, la scelta dell'utente di tenere 4700 µF e la nota «NOT CURRENT» non c'è più. La netlist
+rigenerata è **uguale per connettività** (118 componenti, 61 reti, `L47c1/script/netdiff.py`);
+cambiano la data, il percorso e i numeri di riga di SKiDL.
 
 ### NC-052 — La nota su E5 cita come fonte della tabella del PSRR dei CSV che non esistono
 
@@ -3908,7 +3933,7 @@ tabella di L18 dai suoi CSV. La sorgente rigenerata (condensatore ideale) è in
 | Requisito | **V2** (B ≤ 100 µV di picco, ~33 dB SPL; il metodo di ADR-032: B2 da t_ins + t_grad + 20 ms a t_rel) · PR-21 · ADR-038, ADR-061 |
 | Severità | **maggiore** (proposta dell'orchestratore: scostamento reale con rimedio noto; da confermare con l'utente) |
 | Aperta da | `reports/2026-10-03-L47b2b1-profilo-v5.md`. Trovata dall'**orchestratore** in L47b2b1, nella matrice V2 col profilo v5 e il pilota ideale |
-| Stato | aperta — l'utente, alla domanda coi numeri: **«0,5 s com'è»**; poi **superata da ADR-062** (L47c1): senza celle non resta musica prima del relè, e il relè apre subito; si chiude se B a mute inserito regge nella matrice V2 di L47c2 |
+| Stato | aperta — l'utente, alla domanda coi numeri: **«0,5 s com'è»**; poi **superata da ADR-062** (L47c1): senza celle non resta musica prima del relè, e il relè apre subito; si chiude se B a mute inserito regge nella matrice V2 di L47c2b |
 
 **Evidenza.** `data/2026-10-03/L47b2b1/v2/sorgente/verdetto.csv` e `v2/curve_{AA,CC,DD,EE}/verdetto.csv`:
 B2 con musica a 20 Hz sul jack principale **202,9 µV** (curva B, ~39 dB SPL), 225,7 (C), **241,2**
@@ -3928,7 +3953,7 @@ misurati. A 1 kHz e 20 kHz B2 regge (la coda dura poco).
 
 **Avanzamento, L47c1 (2026-10-05).** ADR-062 toglie la causa: le celle escono e il relè apre subito
 dopo il tasto. Il meccanismo di sopra (la musica che la cella lascia nei 0,5 s prima del relè) non
-c'è più. Resta da misurare **B a mute inserito** sulla matrice V2 senza celle, in L47c2.
+c'è più. Resta da misurare **B a mute inserito** sulla matrice V2 senza celle, in L47c2b.
 
 ## Voci chiuse
 
