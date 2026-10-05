@@ -1,0 +1,22 @@
+# L47c2a: i test sull'host contro i falsi di timer_core.c (FALSO_n)
+# ogni falso deve far FALLIRE il test indicato; gli altri possono passare
+falso 1 (VRELAY_EN -> MUTE_REQ 5 ms (ADR-027: 13 ms)): FALLISCE accensione come deve  [falliti: accensione buco_classe2 ]
+falso 4 (PERMIT_REQ insieme a MUTE_REQ, senza Delta): FALLISCE inserzione come deve  [falliti: inserzione spegnimento ]
+falso 5 (buco di rete: PERMIT_REQ resta su): FALLISCE buco_classe1 come deve  [falliti: rilascio buco_classe1 guasto ]
+falso 6 (MUTE_G_IN ignorato: solo ADC_MD): FALLISCE buco_classe1 come deve  [falliti: buco_classe1 guasto ]
+falso 7 (debounce di 2 ms invece di 20): FALLISCE debounce come deve  [falliti: accensione inserzione rilascio spegnimento debounce guasto ]
+falso 9 (spegnimento: rete staccata senza gli 80 ms): FALLISCE spegnimento come deve  [falliti: spegnimento ]
+falso 10 (buco di classe 2 trattato come classe 1): FALLISCE buco_classe2 come deve  [falliti: buco_classe2 ]
+falso 15 (nessuna ritenuta dopo il guasto): FALLISCE guasto come deve  [falliti: guasto ]
+falso 16 (SW3 letto al contrario: un filo rotto suona): FALLISCE debounce come deve  [falliti: accensione inserzione rilascio spegnimento debounce buco_classe1 buco_classe2 ]
+falso 18 (nessun limite di 2 s sui rail): FALLISCE accensione come deve  [falliti: accensione ]
+falso 22 (MUTE_REQ giu' 0,5 s dopo il tasto: la ritenuta della sfumatura rimasta): FALLISCE inserzione come deve  [falliti: inserzione spegnimento debounce ]
+falso 23 (rilascio: il rifiuto dell'hardware non guardato dopo i 10 ms): FALLISCE rilascio come deve  [falliti: rilascio ]
+falso 24 (rilascio: PERMIT_REQ 20 ms dopo MUTE_REQ): FALLISCE rilascio come deve  [falliti: accensione rilascio ]
+falso 25 (PB4 dimenticato fra i pin liberi): FALLISCE pin_liberi come deve  [falliti: pin_liberi ]
+falso 26 (PC2 (MUTE_G_IN) nella lista al posto di PC3): FALLISCE pin_liberi come deve  [falliti: pin_liberi ]
+falso 27 (pin liberi col buffer d'ingresso acceso (ISC 0x0)): FALLISCE pin_liberi come deve  [falliti: pin_liberi ]
+falso 28 (VRELAY_EN al primo campione buono dei rail, senza i 100 ms): FALLISCE accensione come deve  [falliti: accensione buco_classe2 ]
+falso 29 (spegnimento: MAINS_REQ 80 ms dopo VRELAY_EN): FALLISCE spegnimento come deve  [falliti: spegnimento ]
+falso 30 (spegnimento da MUSICA senza l'inserzione: niente Delta): FALLISCE spegnimento come deve  [falliti: spegnimento ]
+== falsi: 19 su 19 fanno fallire il loro test

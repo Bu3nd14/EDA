@@ -120,15 +120,17 @@ C_HOLD = "2200u"
 # the raw reaches ~23 V at +10 % mains.
 C_RAW = "4700u"
 # VRELAY's own reservoir behind D504: P9 (b) wants VRELAY >= 11.4 V (12 V
-# -5 %) for >= 25 ms after the trip. Simulated in L41a on T2 = 12 V AC (the
-# heat preference of ADR-048 point 7), mains -10 / nom / +10 %
-# (data/2026-09-26/L41a/varianti/): 2200 uF held only 14 ms at -10 % - the
-# "Da riaprire se" of ADR-048 - 4700 uF holds 51 / 134 / 216 ms. 25 V parts:
-# the raw is ~17 V at +10 % mains.
-# NOT CURRENT (NC-051): these are L41a's figures; L42b re-ran them on L41b1's
-# load and found 36.1 ms at -10 %. ADR-062 then took the LDR drive off this
-# board, which lowers the load again: L47c2 re-runs the hold-up (NC-050) and
-# rewrites this comment from what it measures.
+# -5 %) for >= 25 ms after the trip. Chosen in L41a on T2 = 12 V AC (the heat
+# preference of ADR-048 point 7): 2200 uF held only 14 ms at -10 % mains -
+# the "Da riaprire se" of ADR-048. On TODAY's circuit (L47c2a, without the
+# LDR drive of ADR-062; data/2026-10-05/L47c2a/rete/analisi.csv) 4700 uF
+# holds VRELAY_REG >= 11.4 V for 61.1 / 142.2 / 223.6 ms after the jack
+# relays release, at mains -10 / nom / +10 %: 36 ms over P9. The load sets
+# it (NC-050): 36.1 ms with the drive (L42b), 62.8 with L41a's load. Smaller
+# values on the same bench (data/2026-10-05/L47c2a/varianti/): 3300 uF
+# 41.0 ms, 2200 uF 25.1 ms at -10 %. Kept at 4700 uF by the user's choice
+# (L47c2a), for the loads still to come before the freeze. 25 V parts: the
+# raw is ~17 V at +10 % mains.
 C_VRELAY = "4700u"
 # Supervisor thresholds (ADR-046: |13.5 V|), from the LM4040 2.5 V:
 #   + rail: VPLUS * 10k / (44.2k + 10k) = 2.5 V at VPLUS = 13.55 V
@@ -600,19 +602,23 @@ if __name__ == "__main__":
     header("UPDI", "J515", [UPDI, V5, RET])
     # PA1 (17), PA3 (19), PA4 (2): the SPI to the LDR drive's DAC until
     # L47c1; open since ADR-062 removed it (ERC lists them). The firmware
-    # still writes to them until L47c2.
+    # (L47c2a, the user's choice) leaves every open pin an input with its
+    # digital input buffer disabled (ISC = INPUT_DISABLE, DS40002205A
+    # sec. 16.3.1): firmware/preamp_timer/spec/timer_spec.md sec. 2, checked
+    # against this netlist by the host test pin_liberi.
     mcu["11"] += MUTE_REQ              # PB0
     mcu["10"] += PERMIT_REQ            # PB1
     mcu["9"] += MAINS_REQ              # PB2
     mcu["8"] += VRELAY_EN              # PB3
     mcu["12"] += FRONT_IN              # PC0
     mcu["13"] += SW3_IN                # PC1
-    # PC3 (15) is spare, left open on purpose (ERC lists it).
+    # PC3 (15) is spare, left open on purpose (ERC lists it); input buffer
+    # disabled like the others (L47c2a).
     # The analog reads (ADC0: AIN2 PA2, AIN5-7 PA5-7, AIN8 PB5, AIN9 PB4):
     # which supervisor fired, so the firmware can tell a mains hole the rails
     # rode through from a fault with the mains present (ADR-048 point 5).
     # PB4 (7) and PA2 (18) read the two LED currents of the LDR drive until
-    # L47c1; open since ADR-062 removed it.
+    # L47c1; open since ADR-062 removed it, input buffer disabled (L47c2a).
     # MUTE_G_IN (PC2) reads back the hardware's verdict through 1 M, not 47k:
     # a firmware that turned PC2 into an output driven high would otherwise
     # lift MUTE_G around MUTE_REQ. Through 1 M against MUTE_G's ~52k to RET it

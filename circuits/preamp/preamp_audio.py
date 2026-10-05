@@ -495,7 +495,9 @@ if __name__ == "__main__":
     #     then PERMIT_CMD D later) and only then, >= 50 ms after, drops the
     #     mains relay. V2 applies: 12 of 12 bench runs <= 2.7 uV
     #     (data/2026-09-26/L30, still with the fade of ADR-039 in front; the
-    #     sequence without it, ADR-062, is re-measured in L47c2);
+    #     sequence without it, ADR-062: on the supply's circuit in L47c2a -
+    #     MUTE_CMD released 21 ms after the switch, K501 open 63 ms after
+    #     PERMIT_CMD, data/2026-10-05/L47c2a/seq - and at the jack in L47c2b);
     #   mains loss or a supply fault is the FAILSAFE: a supervisor releases
     #     MUTE_CMD within 1 ms of either audio rail falling below |13.5 V|;
     #     MUTE_CMD is active-for-music, so a dead supervisor
