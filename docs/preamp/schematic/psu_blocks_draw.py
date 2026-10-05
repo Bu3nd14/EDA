@@ -19,8 +19,8 @@ E' il fratello di preamp_blocks_draw.py, con le stesse regole:
     diagramma a blocchi omette i dispositivi di proposito;
   - ogni CIFRA stampata e' letta da circuits/preamp/psu.net, o calcolata da
     valori letti li' (le soglie del sorvegliante dai partitori e dal
-    riferimento, le costanti di tempo dagli RC, la corrente di riferimento
-    delle LDR da V5, VREF e R_REF). Nessuna cifra e' scritta nel testo;
+    riferimento, le costanti di tempo dagli RC). Nessuna cifra e' scritta
+    nel testo;
   - ogni CONNESSIONE che il disegno afferma (Q505 fra VRELAY_REG e VRELAY, i
     quattro comparatori sul gate del sink di MUTE_CMD, K501 sul solo toroidale,
     Δ su PERMIT_T e Δ₂ su VR_T) e' asserita sulle net, e l'esecuzione muore se
@@ -199,20 +199,14 @@ MCU = v("U509")
 for _n in ("MUTE_REQ", "PERMIT_REQ", "MAINS_REQ", "VRELAY_EN"):
     assert any(r == "U509" for (r, p), n in PIN.items() if n == _n), f"{_n} non esce da U509"
 
-# ---- il pilota delle LDR (ADR-039, ADR-049) ---------------------------------
-DAC = v("U510")
-assert PIN[("U510", "8")] == "DAC_S" and PIN[("U510", "6")] == "DAC_P", "U510"
-_rref = [r for r in COMP if COMP[r][1] == "R" and "V5" in ends(r)
-         and any(n.startswith("EXP_N_") for n in ends(r))]
-assert len(_rref) == 2 and v(_rref[0]) == v(_rref[1]), f"R_REF: {_rref}"
-R_REF = v(_rref[0])
-I_REF = (V_5 - V_REF) / num(R_REF)
-_rlim = [r for r in COMP if COMP[r][1] == "R" and "RLY_RET" in ends(r)
-         and any(n.startswith("EXP_FC_") for n in ends(r))]
-assert len(_rlim) == 2 and v(_rlim[0]) == v(_rlim[1]), f"R_LIM: {_rlim}"
-R_LIM = v(_rlim[0])
-assert {PIN[("J3", "1")], PIN[("J3", "2")], PIN[("J3", "3")], PIN[("J3", "4")]} == \
-    {"LDR_S_A", "LDR_S_K", "LDR_P_A", "LDR_P_K"}, "J3"
+# ---- niente pilota delle LDR (ADR-062, L47c1) ------------------------------
+# Da L41b1 a L47b2b1 qui stavano il DAC U510, i convertitori esponenziali (U511,
+# Q507-Q512) e J3. ADR-062 ha tolto il mute graduale: il disegno lo dice, e
+# muore se una di quelle parti o reti torna.
+for _r in ("U510", "U511", "J3"):
+    assert _r not in COMP, f"{_r} c'e' ancora: ADR-062 ha tolto il pilota delle LDR"
+for _n in ("LDR_S_A", "LDR_S_K", "LDR_P_A", "LDR_P_K", "DAC_S", "DAC_P"):
+    assert _n not in set(PIN.values()), f"la rete {_n} c'e' ancora (ADR-062)"
 
 
 def it(x, nd=1):
@@ -323,7 +317,7 @@ txt((31.8, YT - 0.34), "bobine della scheda audio; staccata in standby (NC-037)"
     size=8, color=DIM, halign="left")
 wire(23.4, YT + 0.0, 23.4, YT + 1.6)
 arrow(23.4, YT + 1.6, 25.0, YT + 1.6)
-box(29.0, YT + 1.6, 8.0, 1.1, [f"U504 {v('U504')} → V5 ({it(V_5, 1)} V): logica, micro, DAC"],
+box(29.0, YT + 1.6, 8.0, 1.1, [f"U504 {v('U504')} → V5 ({it(V_5, 1)} V): logica, micro"],
     size=8.5, head_size=8.5)
 # il ramo di T1, dietro K501
 arrow(6.2, YB, 7.4, YB)
@@ -390,25 +384,17 @@ txt((12.0, 9.3), "Δ: PERMIT_CMD rilasciato non prima di Δ dopo la caduta della
     "mute; Δ₂: VRELAY a J1 dopo PERMIT", size=8, color=DIM)
 
 # ---------------------------------------------------------------------------
-# Pannello 3 - il pilota delle LDR
+# Pannello 3 - il mute, senza pilota (ADR-062)
 # ---------------------------------------------------------------------------
-panel(0.4, 0.2, 45.6, 8.2, "3 — Il pilota delle LDR del mute (profilo v4, ADR-039, ADR-049)",
-      "una stringa in serie e una in derivazione; il firmware calcola il codice dalla "
-      "legge esponenziale e dalla temperatura")
+panel(0.4, 0.2, 45.6, 8.2, "3 — Il mute taglia: niente pilota delle LDR (ADR-062)",
+      "da L41b1 a L47b2b1 qui stavano il DAC, i due convertitori esponenziali e J3, "
+      "per la sfumatura delle fotoresistenze")
 YL = 4.2
-box(4.8, YL, 6.4, 1.7, [f"U510 {DAC}", "DAC doppio, SPI dal micro"], size=8.5, head_size=9.5)
-arrow(8.0, YL, 9.6, YL)
-box(15.4, YL, 11.0, 1.9, ["convertitore esponenziale × 2 (U511, Q507–Q512)",
-                          f"I_ref = (V5 − VREF) / {res_txt(R_REF)} = {it(I_REF * 1e6, 1)} µA",
-                          f"coda limitata da {res_txt(R_LIM)}"],
+box(23.0, YL, 30.0, 1.9, ["il mute è dei soli relè al jack della scheda audio",
+                          "MUTE_CMD e PERMIT_CMD su J4, dai due sink qui sopra; "
+                          "Δ e Δ₂ restano in hardware (pannello 2)",
+                          "la tenuta di VRELAY e lo standby col carico nuovo: L47c2"],
     size=8.5, head_size=9.5)
-arrow(20.9, YL, 22.6, YL)
-box(26.2, YL, 7.0, 1.7, ["specchio → J3", "LED delle NSL-32SR3 (scheda audio)"],
-    size=8.5, head_size=9.5)
-arrow(29.7, YL, 31.2, YL, color=NETC)
-txt((31.4, YL + 0.32), "LDR_S_A/K, LDR_P_A/K → J3", size=9.5, color=NETC, halign="left")
-txt((31.4, YL - 0.34), "la corrente letta dal micro sul sense (calibrazione)",
-    size=8, color=DIM, halign="left")
 txt((23.0, 1.2), f"{len(COMP)} componenti in {os.path.basename(NETLIST)} — il disegno ne "
     "mostra i blocchi, non i dispositivi", size=8, color=DIM)
 
@@ -420,7 +406,7 @@ print(f"  rail ..................... +{V_POS:g} / -{V_NEG:g} V (FB: {V_NEG_FB:.3
 print(f"  serbatoi / tenute ........ {v(C_RAW_P)} / {v(C_HOLD_P)} per rail, VRELAY {v(C_RAW_V)} / {v(C_HOLD_V)}")
 print(f"  sorvegliante ............. +{TRIP_P:.3f} / {TRIP_M:.3f} V, VRELAY_REG {TRIP_V:.3f} V, rete {TAU_MD * 1e3:.2f} ms")
 print(f"  temporizzatore ........... tau_T {TAU_T * 1e3:.2f} ms, tau_T2 {TAU_T2 * 1e3:.2f} ms")
-print(f"  LDR ...................... I_ref {I_REF * 1e6:.2f} uA, R_LIM {R_LIM}")
+print("  LDR ...................... nessun pilota (ADR-062)")
 if os.environ.get("PREVIEW_PNG"):
     d.save(os.environ["PREVIEW_PNG"], dpi=110)
     print("anteprima PNG ->", os.environ["PREVIEW_PNG"])

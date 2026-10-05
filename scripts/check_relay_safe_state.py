@@ -111,22 +111,20 @@ exactly the right one lit; the gain's, for each gain state, exactly the
 right one; the mute pin lit in mute and dark out of mute AND in the window
 D - it must read a contact, and never say "muted" with a jack connected.
 
-THE GRADUATED MUTE (ADR-038, L29b2). Not a relay, but the same kind of
-silent defect: two photoresistors per channel (Isolator:NSL-32 since
-L47b2a, value "... LDR_S_<ch>" / "... LDR_P_<ch>"). Asserted, by intent:
-  - the SERIES cell sits between the channel's input connector (IN_<ch>) and
-    the node that carries R_IN = 1M, block A's input - one point per channel
-    that fades all three outputs;
-  - the SHUNT cell sits from that same node to GND;
-  - the LEDs are OUTSIDE the signal path (ADR-022): a net that touches a LED
-    pin may touch only other LDR LED pins and the LDR_CMD harness;
-  - (L47b2a) the net between the two LEDs of a string joins a cathode to an
-    anode; the polarity at J3 is check_psu_harness.py's;
-  - one pair per channel. No LDR at all is a finding, not a pass: the check
-    must not go blind.
-A cell swapped end for end (series on the far side of R_IN, shunt on the
-connector) or a LED hung on a signal net still generates, still simulates,
-and fades nothing or leaks the drive into a 1 MOhm node.
+THE INPUT, WITH NO GRADUATED MUTE (ADR-062, L47c1). From L29b2 to L47b2b1
+two photoresistors per channel faded the music at block A's input, and this
+check asserted where they sat. ADR-062 (the user's choice of 2026-10-04)
+removed them: the mute cuts with the jack relays alone. Asserted, by intent:
+  - no opto-coupled part (KiCad library Isolator, or a value naming an LDR)
+    and no LDR_CMD harness anywhere on the board: a cell put back is the fade
+    ADR-062 removed, and a decision to take with the user, not a part to
+    slip in;
+  - per channel, pin 1 of the input connector IN_<ch> is ON the node that
+    carries R_IN = 1M to GND - block A's input - and pin 2 on GND: nothing in
+    series between the source and block A.
+A cell left in series would still generate and simulate, and would put its
+dark resistance (>= 25 MOhm) in front of R_IN: the music would never reach
+block A.
 
 Deliberately NOT reusing scripts/check_schematic.py's parser: that one
 reads a FLAT SPICE netlist, this one reads the KiCad s-expression netlist.
@@ -243,14 +241,11 @@ ROLES = {
     "SPIA": {"grounded": None, "bistable": True},
 }
 
-# Isolator:NSL-32 (KiCad symbol, read in L47b2a): 1 = LED anode, 2 = LED
-# cathode, 3 and 4 = the cell. The cell is symmetric; the LED is not. The
-# VTL5C (L29b2-L47b1) had them the other way round (1 = K, 2 = A) and is no
-# longer accepted: it is obsolete (NC-043, ADR-058), and a netlist that still
-# carries it is a stale one.
-KNOWN_LDR = {("Isolator", "NSL-32"): {"anode": "1", "cathode": "2",
-                                      "cell": ("3", "4")}}
-LDR_CHANNELS = ("L", "R")
+# ADR-062 (L47c1): the graduated mute is gone. A part from KiCad's Isolator
+# library (Isolator:NSL-32 from L47b2a to L47b2b1, Isolator:VTL5C before), or
+# one whose value names an LDR, is the fade put back; see check_input().
+OPTO_LIBS = ("Isolator",)
+INPUT_CHANNELS = ("L", "R")
 
 GROUND_NETS = ("GND",)
 SINK_NETS = ("GND", "RLY_RET")
@@ -1082,97 +1077,47 @@ def check_panel_leds(components, relays, by_role, pin_net, findings):
     return report
 
 
-def check_ldr(components, pin_net, findings):
-    """The graduated mute's cells, by intent (ADR-038, ADR-022)."""
-    ldrs = {ref: c for ref, c in components.items()
-            if (c["lib"], c["part"]) in KNOWN_LDR}
-    if not ldrs:
-        findings.append(
-            "nessuna LDR del mute graduale (Isolator:NSL-32) nella netlist. "
-            "ADR-038 ne vuole due per canale: se sono sparite, e' una modifica "
-            "di topologia da dichiarare, non un controllo da saltare.")
-        return []
+def check_input(components, pin_net, findings):
+    """Block A's input with no graduated mute, by intent (ADR-062)."""
+    report = []
+    for ref, c in sorted(components.items()):
+        if c["lib"] in OPTO_LIBS or "LDR" in c["value"].upper():
+            findings.append(
+                f"{ref} ({c['lib']}:{c['part']}, {c['value']!r}): una parte "
+                f"del mute graduale. ADR-062 l'ha tolto (il mute taglia coi "
+                f"soli rele' al jack, PR-21): rimetterla e' una decisione da "
+                f"prendere con l'utente e una ADR, non una parte da "
+                f"aggiungere.")
     members = defaultdict(set)
     for (ref, pin), net in pin_net.items():
         members[net].add((ref, pin))
-    report = []
-    by = {}
-    for ref, c in sorted(ldrs.items()):
-        m = re.search(r"LDR_([SP])_([LR])\b", c["value"].upper())
-        if not m:
+    for ch in INPUT_CHANNELS:
+        conns = [r for r, c in components.items() if c["value"] == f"IN_{ch}"]
+        if len(conns) != 1:
             findings.append(
-                f"{ref} ({c['value']!r}): una LDR deve dire nel valore se e' "
-                f"la serie (LDR_S_<canale>) o la derivazione (LDR_P_<canale>).")
+                f"canale {ch}: il connettore d'ingresso IN_{ch} c'e' "
+                f"{len(conns)} volte, ne serve uno. Senza, il controllo "
+                f"dell'ingresso non ha niente da guardare.")
             continue
-        if m.group(0) in by:
+        j = conns[0]
+        hot, cold = pin_net.get((j, "1")), pin_net.get((j, "2"))
+        r_in = sorted(
+            r for r, pin in members.get(hot, ())
+            if components.get(r, {}).get("part") == "R"
+            and components[r]["value"] == "1M"
+            and pin_net.get((r, "2" if pin == "1" else "1")) == "GND")
+        if cold != "GND":
             findings.append(
-                f"{ref}: {m.group(0)} c'e' due volte ({by[m.group(0)]}).")
-            continue
-        by[m.group(0)] = ref
-    for ch in LDR_CHANNELS:
-        s_ref, p_ref = by.get(f"LDR_S_{ch}"), by.get(f"LDR_P_{ch}")
-        if not s_ref or not p_ref:
+                f"{j} (IN_{ch}): il pin 2 deve stare su GND, sta su {cold}.")
+        if len(r_in) != 1:
             findings.append(
-                f"canale {ch}: manca la LDR "
-                f"{'in serie' if not s_ref else 'verso massa'} (ADR-038: una "
-                f"in serie e una verso massa per canale).")
-            continue
-        pm = KNOWN_LDR[(ldrs[s_ref]["lib"], ldrs[s_ref]["part"])]
-        s_nets = [pin_net.get((s_ref, p)) for p in pm["cell"]]
-        p_nets = [pin_net.get((p_ref, p)) for p in pm["cell"]]
-        conn = [n for n in s_nets if n and any(
-            components.get(r, {}).get("value") == f"IN_{ch}" and pin == "1"
-            for r, pin in members[n])]
-        r_in = [n for n in s_nets if n and any(
-            components.get(r, {}).get("part") == "R"
-            and components[r]["value"] == "1M" for r, _ in members[n])]
-        if len(conn) != 1 or len(r_in) != 1 or conn == r_in:
-            findings.append(
-                f"{s_ref} (serie, canale {ch}): la cella deve stare fra il "
-                f"connettore IN_{ch} e il nodo di R_IN = 1M (l'ingresso del "
-                f"blocco A); sta su {s_nets}. ADR-038: un punto per canale "
-                f"che silenzia tutte e tre le uscite.")
-        elif sorted(p_nets, key=str) != sorted([r_in[0], "GND"], key=str):
-            findings.append(
-                f"{p_ref} (derivazione, canale {ch}): la cella deve andare "
-                f"dal nodo di R_IN ({r_in[0]}) a GND; sta su {p_nets}.")
+                f"{j} (IN_{ch}): il pin 1 sta sulla rete {hot}, che non porta "
+                f"una e una sola R_IN = 1M verso GND (ne porta "
+                f"{len(r_in)}: {r_in}). ADR-062: il connettore va dritto "
+                f"all'ingresso del blocco A, senza niente in serie.")
         else:
-            report.append(f"mute LDR {ch}: {s_ref} {conn[0]} -> {r_in[0]}, "
-                          f"{p_ref} {r_in[0]} -> GND")
-    def led_fn(r, pin):
-        """'A', 'K' or None: what this pin of an LDR is on its LED."""
-        if r not in ldrs:
-            return None
-        q = KNOWN_LDR[(ldrs[r]["lib"], ldrs[r]["part"])]
-        return {q["anode"]: "A", q["cathode"]: "K"}.get(pin)
-
-    for ref, c in sorted(ldrs.items()):
-        pm = KNOWN_LDR[(c["lib"], c["part"])]
-        for p in (pm["anode"], pm["cathode"]):
-            n = pin_net.get((ref, p))
-            if n is None:
-                findings.append(f"{ref}: il pin del LED {p} non e' collegato.")
-                continue
-            bad = sorted(
-                f"{r}.{pin}" for r, pin in members[n]
-                if not (led_fn(r, pin)
-                        or components.get(r, {}).get("value") == "LDR_CMD"))
-            # L47b2a: two LEDs in series (ADR-039) meet cathode to anode. A
-            # net that joins LED pins only and has two anodes or two cathodes
-            # is a string with one LED reversed: it never lights.
-            fns = sorted(led_fn(r, pin) or "" for r, pin in members[n])
-            if not bad and all(fns) and len(fns) == 2 and fns != ["A", "K"]:
-                findings.append(
-                    f"{ref}: la rete {n} unisce {' e '.join(fns)} di due LED "
-                    f"({', '.join(sorted(f'{r}.{q}' for r, q in members[n]))}"
-                    f"): in serie un LED va dal catodo all'anodo del "
-                    f"successivo (ADR-039). Uno dei due e' rovesciato.")
-            if bad:
-                findings.append(
-                    f"{ref}: il LED (pin {p}) sta sulla rete {n}, che tocca "
-                    f"{', '.join(bad)}. ADR-022: il comando dei LED sta fuori "
-                    f"dal percorso del segnale, e un LED su una rete di "
-                    f"segnale porta il comando dentro un nodo a 1 MOhm.")
+            report.append(f"ingresso {ch}: {j} pin 1 su {hot} con R_IN "
+                          f"{r_in[0]} a GND, nessuna cella")
     return report
 
 
@@ -1225,7 +1170,7 @@ def check(components, pin_net):
     report += interlock(components, relays, by_role, pin_net, findings)
     report += gain_interlock(components, relays, by_role, pin_net, findings)
     report += check_panel_leds(components, relays, by_role, pin_net, findings)
-    report += check_ldr(components, pin_net, findings)
+    report += check_input(components, pin_net, findings)
     return findings, relays, report
 
 
@@ -1534,8 +1479,8 @@ def main(argv):
               "il permissivo ha un comando proprio, distinto da quello del "
               "mute, e guadagno e trim restano fermi nella finestra D "
               "(ADR-045); i LED a pannello dicono lo stato vero (F9, F11); "
-              "le LDR del mute graduale "
-              "stanno dove ADR-038 le vuole, col comando fuori dal segnale.")
+              "l'ingresso va dritto al blocco A, senza il mute graduale "
+              "che ADR-062 ha tolto.")
         return 0
 
     print(f"\nFALLITO: {len(findings)} problemi\n")

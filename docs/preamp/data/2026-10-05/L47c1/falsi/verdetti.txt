@@ -1,0 +1,13 @@
+CADE   rc=1  2e main (le quattro celle)  [atteso: una parte del mute graduale]
+CADE   rc=1  2e qualcosa in serie all'ingresso L  [atteso: il connettore va dritto all'ingresso del blocco A]
+CADE   rc=1  2e una cella fuori dalla libreria Isolator, col valore LDR  [atteso: una parte del mute graduale]
+CADE   rc=1  2e una cella Isolator col valore muto  [atteso: una parte del mute graduale]
+CADE   rc=1  2e il freddo dell'ingresso R non a massa  [atteso: il pin 2 deve stare su GND]
+CADE   rc=1  2j main (J3 sulle due schede)  [atteso: harness LDR_CMD (J3) is still there]
+CADE   rc=1  2j J3 solo sull'alimentatore  [atteso: psu: harness LDR_CMD (J3) is still there]
+CADE   rc=1  2j J3 solo sulla scheda audio  [atteso: audio: harness LDR_CMD (J3) is still there]
+CADE   rc=1  2j una rete del pilota rimasta sull'alimentatore  [atteso: net(s) LDR_S_A of the retired LDR_CMD]
+PASSA  rc=0  2e controllo: netlist nuova
+PASSA  rc=0  2j controllo: netlist nuove
+
+9 falsi su 9 cadono per il motivo giusto; controlli OK

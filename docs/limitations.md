@@ -1061,3 +1061,27 @@ cinque le curve (`docs/preamp/data/2026-10-03/L47b2b1/banco/`, `sfumatura.py v4`
   equivalenti: lo stato del modello dipende solo dalla corrente del LED (`L47b2b1/e3/`);
 - durante la sfumatura E3 si giudica ora a 20 Hz (ADR-061, scelta dell'utente); il minimo a
   20 kHz si misura e si dichiara.
+
+## 45. `meas ac … min from=… to=…` salta l'ultimo punto della scansione: E3 riportava un minimo più alto del vero
+
+Scoperto in L47c1, ricorrendo E3 senza le celle del mute.
+
+In una scansione `ac dec 50 20 20k` l'ultimo punto è esattamente 20 kHz. `meas ac zmin min zmag
+from=20 to=20000` **non lo considera**: si ferma al penultimo (19,1 kHz). |Zin| al connettore cala
+con la frequenza, per la capacità del selettore, e il minimo vero sta proprio sull'ultimo punto.
+Nella stessa tabella `zmin` usciva **più alto** di `z20k` (`find zmag at=20000`), cosa che un
+minimo non può essere, e nessun avviso lo segnalava.
+
+La sonda (`docs/preamp/data/2026-10-05/L47c1/e3_e5/sonda_zmin.cir`, CSEL 68 pF): 151 punti,
+ultima frequenza 20000, ultimo |Z| **114 721 Ω**, `vecmin()` 114 721, `meas min` **120 051 Ω (a
+19 100 Hz)**, `meas find at=20000` 114 721.
+
+Che cosa aveva toccato:
+- `tb_trim.cir`: E3 riportato 120,1 kΩ invece di **114,7 kΩ** (−4,4 %); dentro ≥ 100 kΩ;
+- `tb_e3_e5_ldr.cir` (L29b2–L47b2b1): con le celle E3 riportato **110,7 kΩ**, vero **105,8 kΩ**;
+  dentro anche lui, con meno margine di quanto dichiarato.
+
+**Regola operativa**: un minimo o un massimo su tutta la banda si prende con `vecmin()` /
+`vecmax()` sul vettore, se la scansione copre esattamente la banda; se no, si controlla l'ultimo
+punto con un `find … at=`. Corretti `tb_trim.cir` e `tb_e3_e5.cir` (L47c1). Nei deck canonici
+nessun altro `meas min/max` su una finestra (cercato con grep in L47c1).
