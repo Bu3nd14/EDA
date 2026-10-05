@@ -217,14 +217,17 @@ report "relays fail safe with de-energised coils" $rly_fail
 echo
 
 echo "-- 2j. the harness between the audio board and the supply board (L41a, ADR-048) --"
-# J1 POWER, J2 RLY_RET, J3 LDR_CMD and J4 MUTE_TIMER exist on BOTH boards
+# J1 POWER, J2 RLY_RET and J4 MUTE_TIMER exist on BOTH boards
 # (preamp_audio.py, psu.py); each netlist is fine on its own and a pin on the
 # wrong wire errors nowhere - J1 pins 1 and 3 swapped put -15 V on VPLUS.
 # Made to fail on 8 sabotaged copies, and it caught a real one while psu.py
 # was written (GND renamed by a net merge, limitations #23):
 # docs/preamp/data/2026-09-26/L41a/falsi/. L41b1: VRELAY through the standby
 # switch, the micro's requests, J3's PNP sources - 7 more sabotages and
-# main's netlist: docs/preamp/data/2026-09-26/L41b1/falsi/.
+# main's netlist: docs/preamp/data/2026-09-26/L41b1/falsi/. L47c1 (ADR-062):
+# J3 LDR_CMD is gone with the graduated mute, and must be on NEITHER board;
+# with 2e's "no cell at block A's input", 9 sabotages and main's netlists:
+# docs/preamp/data/2026-10-05/L47c1/falsi/ (falsi.py, verdetti.txt).
 hrn_fail=0
 a="$ROOT/circuits/preamp/preamp_audio.net"
 p="$ROOT/circuits/preamp/psu.net"

@@ -3,6 +3,10 @@
 **Approvato dall'utente il 2026-09-27** (L42c): «l'ho letto e posso firmarlo con le integrazioni
 attuali». Registrato da **ADR-053**. Da qui, cambiare una voce vuole una ADR.
 
+**Voci cambiate dopo la firma**, ognuna con la firma dell'utente e la sua ADR:
+- **PR-21**, il 2026-10-04 (**ADR-062**): da «Il mute sfuma, non taglia» (≤ 20 dB in 100 ms, dal
+  Technics) a «Il mute taglia». Scelta dell'utente: «Taglio coi soli relè».
+
 ## Che cos'è, e come sta con gli altri documenti
 
 È il **contratto fra l'utente e il team**: che cosa l'apparecchio deve fare, e perché, in al
@@ -123,10 +127,9 @@ togliere il mute, accendere o spegnere dal frontale: su ogni uscita al più 100 
 (~33 dB SPL a 1 m, il livello di una stanza silenziosa), in ogni condizione.
 *Dettagli: V2 (A e B) · ADR-032, ADR-035, ADR-036, ADR-044, ADR-045.*
 
-**PR-21 · Il mute sfuma, non taglia.** Con la musica, inserire o togliere il mute non fa
-saltare il livello più di 20 dB in 100 ms: come il pseudo-mute del Technics, che non ha mai
-dato fastidio.
-*Dettagli: V2 (S) · ADR-038, ADR-039, ADR-040, ADR-050.*
+**PR-21 · Il mute taglia: con la musica il silenzio arriva di colpo, e al rilascio la musica
+torna di colpo al livello di prima.** Firmata dall'utente il 2026-10-04 (L47c).
+*Dettagli: V2 (il clic del taglio, misurato e dichiarato) · ADR-044, ADR-062.*
 
 ## E. Fallire senza danni
 

@@ -5,13 +5,17 @@ Usage: check_psu_harness.py <preamp_audio.net> <psu.net>
 Exit 0 if every harness agrees, 1 otherwise (and 2 on a usage error).
 
 The audio board (circuits/preamp/preamp_audio.py) and the supply board
-(circuits/preamp/psu.py) meet on four harnesses, each a connector on BOTH
+(circuits/preamp/psu.py) meet on three harnesses, each a connector on BOTH
 boards, found by its VALUE (the ref may differ; the value is the contract):
 
     POWER       J1  1 VPLUS   2 GND   3 VMINUS   4 VRELAY
     RLY_RET     J2  1 RLY_RET
-    LDR_CMD     J3  1 series anode  2 series cathode  3 shunt anode  4 shunt cathode
     MUTE_TIMER  J4  1 MUTE_CMD  2 PERMIT_CMD  3 MUTE_SW
+
+J3 LDR_CMD, the drive of the graduated mute's LEDs (L29b2-L47b2b1), is gone
+since ADR-062 (L47c1): the mute cuts with the jack relays alone. It must be
+on NEITHER board - on one only it is a wire to nowhere, on both the fade put
+back without a decision.
 
 A pin that lands on the wrong wire at the other end does not error anywhere:
 each netlist is fine on its own, and the fault is between them. The classic
@@ -19,11 +23,7 @@ one is J1 pins 1 and 3 swapped, which puts -15 V on the + rail.
 
 What is checked:
   1. each harness exists ONCE on each board, with the same pin count;
-  2. audio side: the named pins sit on the named nets (VPLUS, GND, ...), and
-     J3's four pins reach the LEDs 2e expects (series L anode, series R
-     cathode, shunt L anode, shunt R cathode) - by device pin, not by net
-     name, because SKiDL does not name merged nets reproducibly
-     (limitations #23);
+  2. audio side: the named pins sit on the named nets (VPLUS, GND, ...);
   3. supply side: the same named nets on the same pins, and they are what
      their name says - VPLUS / VMINUS on the OUT pin of a TPS7A4701 /
      TPS7A3301, MUTE_CMD and PERMIT_CMD each on the DRAIN of its own
@@ -32,10 +32,9 @@ What is checked:
   4. (L41b1, ADR-049, NC-037) VRELAY is the DRAIN of a P-MOSFET - the
      standby switch - whose source is the OUT of a TPS7A4701; the timer's
      placeholder J509 TIMER_IO is gone, and the four requests (MUTE_REQ,
-     PERMIT_REQ, MAINS_REQ, VRELAY_EN) come from the microcontroller; J3's
-     two anodes are each the collector of a PNP (a current source), and its
-     two cathodes return to GND through a resistor (J3's contract: "cathode
-     end to GND at the source").
+     PERMIT_REQ, MAINS_REQ, VRELAY_EN) come from the microcontroller;
+  5. (L47c1, ADR-062) no LDR_CMD harness on either board, and none of the
+     nets that ran through it (LDR_S_A ... LDR_P_K).
 
 Parser: the same as scripts/check_relay_safe_state.py (2e), copied, not
 imported, so that the two checkers cannot break each other.
@@ -47,19 +46,10 @@ from pathlib import Path
 HARNESS = {
     "POWER": {"1": "VPLUS", "2": "GND", "3": "VMINUS", "4": "VRELAY"},
     "RLY_RET": {"1": "RLY_RET"},
-    "LDR_CMD": {"1": "LDR_S_A", "2": "LDR_S_K", "3": "LDR_P_A", "4": "LDR_P_K"},
     "MUTE_TIMER": {"1": "MUTE_CMD", "2": "PERMIT_CMD", "3": "MUTE_SW"},
 }
-# The audio side's J3 by LED FUNCTION (preamp_audio.py, the J3 block):
-# U101/U301 series cells, U102/U302 shunt; J3 pins 1/3 the strings' anodes,
-# 2/4 their cathodes. Until L47b2a this table held pin NUMBERS (the VTL5C's,
-# 2 = anode): swapping in the NSL-32, whose 1 is the anode, reversed all
-# four LEDs and this check still said OK (L47b2a/falsi/led_capovolti.net).
-# Now the function is resolved through the part, and a part not in LED_PINS
-# is a finding, not a guess. Pins read from KiCad 10's Isolator.kicad_sym.
-LED_PINS = {"NSL-32": {"A": "1", "K": "2"}}
-LDR_AUDIO = {"1": ("U101", "A"), "2": ("U301", "K"),
-             "3": ("U102", "A"), "4": ("U302", "K")}
+# ADR-062 (L47c1): retired harnesses, and the nets that ran through them.
+RETIRED = {"LDR_CMD": ("LDR_S_A", "LDR_S_K", "LDR_P_A", "LDR_P_K")}
 # Supply side: which net must be the OUT of which regulator part. VRELAY is
 # not in the list since L41b1: it comes through the standby switch (below).
 REG_OUT = {"VPLUS": "TPS7A4701", "VMINUS": "TPS7A3301"}
@@ -68,9 +58,7 @@ SINKS = ("MUTE_CMD", "PERMIT_CMD")
 MCU_PART_PREFIX = "ATtiny"
 REQUESTS = ("MUTE_REQ", "PERMIT_REQ", "MAINS_REQ", "VRELAY_EN")
 # The KiCad symbols' pin numbers (read from the symbol libraries in L41b1):
-# Transistor_FET 2N7002 / AO3401A: 1 G, 2 S, 3 D; Q_PNP_BEC (BC857): 3 C;
-# dual BC847BS / BC857BS: C1 = 6, C2 = 3.
-PNP_COLLECTORS = {"BC857": ("3",), "BC857BS": ("6", "3")}
+# Transistor_FET 2N7002 / AO3401A: 1 G, 2 S, 3 D.
 P_MOSFETS = ("AO3401A",)
 
 
@@ -126,21 +114,7 @@ def check_audio(components, pin_net, findings):
         ref, pins = got
         for pin, name in want.items():
             net = pins.get(pin)
-            if value == "LDR_CMD":
-                dref, fn = LDR_AUDIO[pin]
-                part = components.get(dref, {}).get("part")
-                if part not in LED_PINS:
-                    findings.append("audio: %s is %r, not a mute cell this "
-                                    "check knows the LED pins of (%s)"
-                                    % (dref, part, ", ".join(LED_PINS)))
-                    continue
-                dev = (dref, LED_PINS[part][fn])
-                if net is None or pin_net.get(dev) != net:
-                    findings.append("audio: %s pin %s does not reach the LED "
-                                    "%s of %s (pin %s)"
-                                    % (ref, pin, "anode" if fn == "A"
-                                       else "cathode", dref, dev[1]))
-            elif net != name:
+            if net != name:
                 findings.append("audio: %s pin %s on %r, expected %r"
                                 % (ref, pin, net, name))
 
@@ -193,7 +167,7 @@ def check_psu(components, pin_net, findings):
 
 
 def check_timer(components, pin_net, findings):
-    """L41b1: the standby switch, the micro's requests, the LDR drive."""
+    """L41b1: the standby switch, the micro's requests."""
     # VRELAY: drain of a P-MOSFET whose source is a TPS7A4701's OUT
     sw = [r for (r, p) in pins_of_net(pin_net, "VRELAY")
           if components.get(r, {}).get("part") in P_MOSFETS and p == "3"]
@@ -223,21 +197,21 @@ def check_timer(components, pin_net, findings):
             if not [p for (r, p) in pins_of_net(pin_net, net) if r == mcus[0]]:
                 findings.append("psu: %s is not driven by the micro %s"
                                 % (net, mcus[0]))
-    # J3: anodes on a PNP collector, cathodes to GND through a resistor
-    for net in ("LDR_S_A", "LDR_P_A"):
-        srcs = [r for (r, p) in pins_of_net(pin_net, net)
-                if p in PNP_COLLECTORS.get(components.get(r, {}).get("part"), ())]
-        if len(srcs) != 1:
-            findings.append("psu: %s must be the collector of exactly one PNP "
-                            "(the current source of its string), found %s"
-                            % (net, srcs or "none"))
-    for net in ("LDR_S_K", "LDR_P_K"):
-        to_gnd = [r for (r, p) in pins_of_net(pin_net, net)
-                  if components.get(r, {}).get("part") == "R"
-                  and "GND" in (pin_net.get((r, "1")), pin_net.get((r, "2")))]
-        if len(to_gnd) != 1:
-            findings.append("psu: %s must return to GND through one resistor "
-                            "(J3 contract), found %s" % (net, to_gnd or "none"))
+
+
+def check_retired(components, pin_net, board, findings):
+    """L47c1 (ADR-062): the LDR drive's harness and nets are gone."""
+    nets = set(pin_net.values())
+    for value, names in RETIRED.items():
+        refs = sorted(r for r, c in components.items() if c["value"] == value)
+        if refs:
+            findings.append("%s: harness %s (%s) is still there; ADR-062 "
+                            "removed the graduated mute and its drive"
+                            % (board, value, ", ".join(refs)))
+        left = sorted(n for n in names if n in nets)
+        if left:
+            findings.append("%s: net(s) %s of the retired %s are still there"
+                            % (board, ", ".join(left), value))
 
 
 def main(argv):
@@ -252,17 +226,19 @@ def main(argv):
         return 1
     check_audio(ca, pa, findings)
     check_psu(cp, pp, findings)
+    check_retired(ca, pa, "audio", findings)
+    check_retired(cp, pp, "psu", findings)
     print("audio : %s (%d components)" % (argv[1], len(ca)))
     print("psu   : %s (%d components)" % (argv[2], len(cp)))
     if findings:
         for f in findings:
             print("FAIL: " + f)
         return 1
-    print("OK: J1 POWER, J2 RLY_RET, J3 LDR_CMD and J4 MUTE_TIMER agree pin by "
-          "pin on both boards; the rails come from their regulators and the "
-          "two commands from two low-side sinks to RLY_RET (ADR-045, ADR-048); "
-          "VRELAY through the standby switch, the requests from the micro, "
-          "J3 from two PNP sources back to GND (ADR-049)")
+    print("OK: J1 POWER, J2 RLY_RET and J4 MUTE_TIMER agree pin by pin on "
+          "both boards; the rails come from their regulators and the two "
+          "commands from two low-side sinks to RLY_RET (ADR-045, ADR-048); "
+          "VRELAY through the standby switch, the requests from the micro "
+          "(ADR-049); no LDR_CMD harness on either board (ADR-062)")
     return 0
 
 

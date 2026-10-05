@@ -5,7 +5,7 @@ psu.py - the supply board: the second PCB of P4 (ADR-010, ADR-048; L41a, L41b1).
 
 Source of truth for the supply's topology (AGENTS.md rule 2), as
 preamp_audio.py is for the audio board. It realises P9 (ADR-046, as ADR-048
-reads it) and the contracts written on the audio board next to J1, J3 and J4.
+reads it) and the contracts written on the audio board next to J1 and J4.
 
     rear IEC module (fuse + DOUBLE-POLE switch: off = mains off everything)
       |
@@ -22,7 +22,6 @@ reads it) and the contracts written on the audio board next to J1, J3 and J4.
       MUTE_REQ --R513-- MUTE_G (<= PERMIT_G by D522)                         -> Q501 -> MUTE_CMD
       MUTE_REQ, PERMIT_REQ --diodes--> PERMIT_T (RC, D) -> U508 A vs VREF -> PERMIT_G -> Q502 -> PERMIT_CMD
       PERMIT_T, VRELAY_EN  --diodes--> VR_T (RC, D + D2) -> U508 B vs VREF -> VR_G -> Q506 -> Q505 (VRELAY on)
-      DAC U510 -> two exponential converters (U511, Q507-Q512) -> J3, the LDR strings
 
 WHAT L41a PUTS HERE (ADR-048)
 -----------------------------
@@ -54,8 +53,9 @@ WHAT L41b1 PUTS HERE (ADR-048 point 6, ADR-049) - in place of J509 TIMER_IO
    between VRELAY_REG (U503's output) and VRELAY (J1 pin 4). The switch too
    is held in hardware, D2 after PERMIT_G, so a micro that resets while the
    music plays cannot drop every coil at once (L30's "no D" case, ~90 dB SPL).
- - The LDR drive (profile v4, ADR-039): the dual DAC U510 and two exponential
-   converters, one per string, sourcing into the anodes of J3.
+ - (Until L47c1: the LDR drive of ADR-039 / ADR-049 - the dual DAC U510, two
+   exponential converters, J3. ADR-062 removed the graduated mute, and the
+   drive with it: the mute cuts with the audio board's jack relays alone.)
 
 WHAT IS DELIBERATELY NOT HERE
 -----------------------------
@@ -125,6 +125,10 @@ C_RAW = "4700u"
 # (data/2026-09-26/L41a/varianti/): 2200 uF held only 14 ms at -10 % - the
 # "Da riaprire se" of ADR-048 - 4700 uF holds 51 / 134 / 216 ms. 25 V parts:
 # the raw is ~17 V at +10 % mains.
+# NOT CURRENT (NC-051): these are L41a's figures; L42b re-ran them on L41b1's
+# load and found 36.1 ms at -10 %. ADR-062 then took the LDR drive off this
+# board, which lowers the load again: L47c2 re-runs the hold-up (NC-050) and
+# rewrites this comment from what it measures.
 C_VRELAY = "4700u"
 # Supervisor thresholds (ADR-046: |13.5 V|), from the LM4040 2.5 V:
 #   + rail: VPLUS * 10k / (44.2k + 10k) = 2.5 V at VPLUS = 13.55 V
@@ -165,27 +169,6 @@ R_T2, C_T2 = "1M", "100n"
 # through R513 + the 100k pull-down, || R514: 52k x 22n = 1.1 ms, which D
 # absorbs (the bench measures it, not this comment).
 C_MUTE_G = "22n"
-# The LDR drive, per string (ADR-039 profile v4; ADR-049). Q1's base at VREF,
-# its collector held at VREF by the op-amp: I_ref = (V5 - VREF) / R_REF =
-# 100 uA. Q2's current is I_ref exp((V_B2 - VREF) / Vt): the v4 table asks
-# V_B2 - VREF from -265 mV (10 nA at 60 C) to +152 mV (20 mA at 60 C).
-R_REF = "24.9k"
-# The DAC -> Q2 base network: DAC pin --R_A-- X --R_C-- VREF, DAC pin --R_PD--
-# RET. Code 0 -> X = 2.048 V, full scale -> 2.789 V: -452..+289 mV around
-# VREF, 0.181 mV = 0.06 dB per LSB. With the DAC in reset (shutdown, 500 k
-# typical to ground, DS20002249B sec. 4.1.3) X = 2.23 V: 1-12 nA across
-# 250 k-1 M and 15-60 C - never zero, always below the 190 nA dark knee.
-# R_PD makes that the board's number: without it the floor ran 0.0-90 nA.
-R_A, R_C, R_PD = "100k", "22.1k", "100k"
-C_X = "1u"                   # 18 k x 1 uF = 18 ms: smooths the DAC's steps
-# The mirror's emitter degeneration and the current sense, both 10 ohm: at
-# 20 mA two VTL5C4 LEDs at their 2.0 V max (datasheet, abs max block) leave
-# 0.25 V of margin on V5 = 4.90 V. The sense goes to GND, where J3's contract
-# puts the cathode end; the micro reads it (ADR-049: the top-end calibration).
-R_E_MIR, R_SENSE = "10", "10"
-# Q_f's collector resistor limits the tail to ~(1.88 - 0.2) / 56 = 30 mA: a
-# runaway command cannot drive the LEDs to their 40 mA absolute maximum.
-R_LIM = "56"
 
 
 def part(lib, name, value, ref, fp, **kw):
@@ -245,7 +228,6 @@ if __name__ == "__main__":
     VRELAY, RET = Net("VRELAY"), Net("RLY_RET")
     MUTE_CMD, PERMIT_CMD, MUTE_SW = (Net("MUTE_CMD"), Net("PERMIT_CMD"),
                                      Net("MUTE_SW"))
-    LDR = [Net(n) for n in ("LDR_S_A", "LDR_S_K", "LDR_P_A", "LDR_P_K")]
     # ---- nets of this board
     # VRELAY_REG is U503's output, always on while the rear switch is on:
     # the logic (U504), the mains relay K501 and the supervisor live on it.
@@ -616,10 +598,9 @@ if __name__ == "__main__":
     UPDI = Net("UPDI")
     mcu["16"] += UPDI                  # PA0: UPDI, one-wire programming
     header("UPDI", "J515", [UPDI, V5, RET])
-    DSDI, DSCK, DCS = Net("DAC_SDI"), Net("DAC_SCK"), Net("DAC_CS")
-    mcu["17"] += DSDI                  # PA1: SPI0 MOSI
-    mcu["19"] += DSCK                  # PA3: SPI0 SCK
-    mcu["2"] += DCS                    # PA4: DAC chip select
+    # PA1 (17), PA3 (19), PA4 (2): the SPI to the LDR drive's DAC until
+    # L47c1; open since ADR-062 removed it (ERC lists them). The firmware
+    # still writes to them until L47c2.
     mcu["11"] += MUTE_REQ              # PB0
     mcu["10"] += PERMIT_REQ            # PB1
     mcu["9"] += MAINS_REQ              # PB2
@@ -629,8 +610,9 @@ if __name__ == "__main__":
     # PC3 (15) is spare, left open on purpose (ERC lists it).
     # The analog reads (ADC0: AIN2 PA2, AIN5-7 PA5-7, AIN8 PB5, AIN9 PB4):
     # which supervisor fired, so the firmware can tell a mains hole the rails
-    # rode through from a fault with the mains present (ADR-048 point 5); and
-    # the two LED currents, for the top-end calibration (ADR-049).
+    # rode through from a fault with the mains present (ADR-048 point 5).
+    # PB4 (7) and PA2 (18) read the two LED currents of the LDR drive until
+    # L47c1; open since ADR-062 removed it.
     # MUTE_G_IN (PC2) reads back the hardware's verdict through 1 M, not 47k:
     # a firmware that turned PC2 into an output driven high would otherwise
     # lift MUTE_G around MUTE_REQ. Through 1 M against MUTE_G's ~52k to RET it
@@ -647,104 +629,9 @@ if __name__ == "__main__":
         res("47k", ref, src, n)
         mcu[pin] += n
 
-    # ================= the LDR drive (ADR-039 profile v4, ADR-048 point 6)
-    # The DAC: MCP4822, G = 2x on its 2.048 V reference (0-4.095 V). LDAC
-    # to RET: every write updates at once. VA = the series string, VB = the
-    # shunt string.
-    dac = part("Analog_DAC", "MCP4822", "MCP4822", "U510", FP_SOIC8)
-    dac["1"] += V5
-    dac["7"] += RET
-    dac["2"] += DCS
-    dac["3"] += DSCK
-    dac["4"] += DSDI
-    dac["5"] += RET
-    cap("100n", "C535", V5, RET)
-    DAC_S, DAC_P = Net("DAC_S"), Net("DAC_P")
-    dac["8"] += DAC_S
-    dac["6"] += DAC_P
-    opa = part("Amplifier_Operational", "MCP6004", "MCP6004", "U511",
-               FP_SOIC14)
-    opa["4"] += V5
-    opa["11"] += RET
-    cap("100n", "C536", V5, RET)
-    # One exponential converter per string. Per string:
-    #   Q1 (pair unit 1): base VREF, collector N held at VREF by the op-amp
-    #     (loop: op-amp out -> Q_f, a PNP follower, -> the common emitters E),
-    #     so Q1 carries I_ref = (V5 - VREF) / R_REF = 100 uA at any command;
-    #   Q2 (pair unit 2): base = the buffered command X, collector into a PNP
-    #     mirror whose output sources the string: anode on J3, cathode on J3,
-    #     back through R_SENSE to GND (the J3 contract: cathode end to GND).
-    # A matched pair in one package (BCM847BS, BC847BS footprint): Q1 and Q2
-    # see the same temperature, and the firmware scales the command with the
-    # micro's sensor for Vt (ADR-049). NOT modelled: Q2's self-heating at
-    # 20 mA (~44 mW) against Q1 - the top-end calibration takes it out on the
-    # prototype; SPICE's BJT has no thermal node.
-    strings = (("S", DAC_S, LDR[0], LDR[1], ("1", "2", "3"), ("5", "6", "7"),
-                ("Q507", "Q509", "Q511"), "R548", "7", "ADC_I_S"),
-               ("P", DAC_P, LDR[2], LDR[3], ("8", "9", "10"), ("12", "13", "14"),
-                ("Q508", "Q510", "Q512"), "R560", "18", "ADC_I_P"))
-    for fn, dacn, anode, cathode, loop_p, buf_p, (qp, qf, qm), r0, mpin, adcn \
-            in strings:
-        rn = int(r0[1:])
-
-        def r(k):
-            return "R%d" % (rn + k)
-
-        N, E, F, FC = (Net("EXP_N_" + fn), Net("EXP_E_" + fn),
-                       Net("EXP_F_" + fn), Net("EXP_FC_" + fn))
-        X, B2, MI, EM1, EM2 = (Net("EXP_X_" + fn), Net("EXP_B2_" + fn),
-                               Net("MIR_" + fn), Net("MIR_E1_" + fn),
-                               Net("MIR_E2_" + fn))
-        # the reference loop
-        res(R_REF, r(0), V5, N)
-        pair = part("Transistor_BJT", "BC847BS", "BCM847BS (matched pair)", qp,
-                    FP_SOT363)
-        pair["6"] += N          # C1
-        pair["2"] += VREF       # B1
-        pair["1"] += E          # E1
-        pair["4"] += E          # E2
-        pair["5"] += B2         # B2
-        pair["3"] += MI         # C2
-        o_out, o_neg, o_pos = loop_p
-        opa[o_out] += F
-        opa[o_neg] += N
-        opa[o_pos] += VREF
-        cap("10n", "C%d" % (537 if fn == "S" else 541), F, N)   # loop comp.
-        qfol = part("Transistor_BJT", "BC857", "BC857", qf, FP_SOT23)
-        qfol["1"] += F          # B
-        qfol["2"] += E          # E
-        qfol["3"] += FC         # C
-        res(R_LIM, r(1), FC, RET)
-        # the command: DAC -> X -> buffer -> Q2's base
-        res(R_PD, r(2), dacn, RET)
-        res(R_A, r(3), dacn, X)
-        res(R_C, r(4), VREF, X)
-        cap(C_X, "C%d" % (538 if fn == "S" else 542), X, RET)
-        b_pos, b_neg, b_out = buf_p
-        opa[b_pos] += X
-        opa[b_neg] += B2
-        opa[b_out] += B2
-        # the PNP mirror, emitters degenerated, sourcing into the anode
-        mir = part("Transistor_BJT", "BC857BS", "BCM857BS (matched pair)", qm,
-                   FP_SOT363)
-        res(R_E_MIR, r(5), V5, EM1)
-        res(R_E_MIR, r(6), V5, EM2)
-        mir["1"] += EM1         # E1: the input, diode-connected
-        mir["2"] += MI          # B1
-        mir["6"] += MI          # C1
-        mir["4"] += EM2         # E2: the output
-        mir["5"] += MI          # B2
-        mir["3"] += anode       # C2 -> J3 anode
-        # the sense, and the micro's read of it
-        res(R_SENSE, r(7), cathode, GND)
-        n = Net(adcn)
-        res("47k", r(8), cathode, n)
-        mcu[mpin] += n
-
     # ================= the harnesses to the audio board (check_psu_harness.py)
     header("POWER", "J1", [VP, GND, VM, VRELAY])
     header("RLY_RET", "J2", [RET])
-    header("LDR_CMD", "J3", LDR)
     header("MUTE_TIMER", "J4", [MUTE_CMD, PERMIT_CMD, MUTE_SW])
 
     # ERC, explained (L41a): "POWER-OUT connected to POWER-OUT" on VPLUS and
@@ -753,7 +640,10 @@ if __name__ == "__main__":
     # drive" on RAW_P / RAW_M / RAW_V / RLY_RET is a bridge output (passive
     # pins) feeding a power_in - L41b1 adds the ground pins of U508-U511 to
     # the RLY_RET list, same cause. Unconnected: the ANY-OUT pins (above) and
-    # the micro's spare PC3. L41b1: 21 warnings, the same 2 "errors".
+    # the micro's spare PC3. L41b1: 21 warnings, the same 2 "errors". L47c1
+    # (ADR-062): U510 / U511 are gone with their two "insufficient drive",
+    # and the micro's PA1, PA2, PA3, PA4 and PB4 are unconnected too: 24
+    # warnings.
     try:
         ERC()
     except Exception as e:  # noqa: BLE001

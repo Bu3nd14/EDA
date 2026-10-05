@@ -1,0 +1,38 @@
+sonda_zmin.cir - L47c1: quale fra meas min e meas find at=20000 e' il punto vero della curva di E3
+* Prima riga = titolo (docs/limitations.md #10).
+* Lo stesso ingresso di tb_e3_e5.cir (trim in posizione 0, CSEL 68 pF), stessa
+* analisi ac dec 50 20 20k. Stampa la lunghezza del vettore, l'ultima
+* frequenza, l'ultimo |Z|, il minimo calcolato con vecmin() su tutto il vettore,
+* e i due meas. Se vecmin() < zmin di meas, meas min non vede l'ultimo punto.
+
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block.subckt
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VSRC  VSN 0 DC 0 AC 1
+RSRC  VSN AIN 1m
+CSEL  AIN 0 68p
+XA AIN AOUT AFB ARG ARG10 VPLUS VMINUS GAINBLOCK
+RARG   ARG   0 1G
+RARG10 ARG10 0 1G
+RL1 AOUT 0 1765
+
+.control
+ac dec 50 20 20k
+let zmag = mag(v(ain)/(-i(vsrc)))
+let n = length(zmag)
+let fl = frequency[n-1]
+let zl = zmag[n-1]
+let zv = vecmin(zmag)
+meas ac zmin min zmag from=20 to=20000
+meas ac z20k find zmag at=20000
+echo "SONDA n=$&n f_ultima=$&fl z_ultima=$&zl vecmin=$&zv meas_min=$&zmin meas_find20k=$&z20k"
+.endc
+.end

@@ -730,14 +730,16 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 #     pair). ADR-020, rail spectrum bounded from the datasheets: 0.098 uV out,
 #     20 dB inside the 1 uV quota (data/2026-10-01/L46b/quota_adr020.csv).
 #   NOISE (tb_noise_breakdown.cir), 20 Hz-20 kHz: 1.28 / 1.34 / 1.57 uV at 0 dB,
-#     4.57 uV at +10 dB (2.5 kOhm); E5 worst 5.53 uV (tb_e3_e5_ldr.cir), 5.1 dB
-#     inside 9.95. L44 (ADR-057): every bipolar device has 1/f at the declared
+#     4.57 uV at +10 dB (2.5 kOhm); E5 worst 5.50 uV (tb_e3_e5.cir, L47c1,
+#     without the mute cells of ADR-062; 5.53 with them), 5.2 dB inside 9.95. L44 (ADR-057): every bipolar device has 1/f at the declared
 #     bound, so these are UPPER BOUNDS, no longer floors (L46b, without flicker
 #     outside the input pair: 1.18 / 1.24 / 1.49, 4.30, E5 5.08). With flicker
 #     the VAS dominates below 1 kHz, then the mirror output side and the
 #     cascodes (data/2026-10-01/L44/dispositivi.csv). The cell's 10 Ohm adds
 #     nothing visible: its noise is shunted by the 1000 uF.
-#   E3 (tb_e3_e5_ldr.cir): worst 110.7 kOhm (>= 100 kOhm).
+#   E3 (tb_e3_e5.cir, L47c1): worst 114.7 kOhm at 20 kHz with 68 pF of selector
+#     (>= 100 kOhm). With the cells it was 105.8, not the 110.7 reported until
+#     L47b2b1: `meas min` skipped the 20 kHz point (limitations #45).
 #   V3 (tb_v3_overload.cir): clips +13.14 / -13.84 V (+13.28 before the cell),
 #     DC at the jack +3.6 mV 13-14 ms after the overload. Recovery with gain
 #     AND DC fitted (regressione/script/v3_con_continua.py): 0.65 us; DC at OUT
@@ -748,8 +750,8 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 #     1.12 W (the BOM ratings follow, preamp_audio.py). Class A holds on every
 #     listening path.
 #   V2 - GAIN RELAYS (tb_switch_v2.cir): window peaks -2.2 %, nothing else.
-#     Mute (tb_v2_mute_ldr.cir): NOT re-run in L46a nor in L46b; L40's figures
-#     stand (S 7.16 / 5.32 dB, A <= 3.75 uV, B2 0.33 uV) - L47's to redo.
+#     Mute: the graduated mute is gone (ADR-062); the cut with the jack relays
+#     alone is L47c2's V2 matrix (tb_v2_casopeggiore.cir, regenerated there).
 #   SUPPLY FAULTS AT THE JACK (L41c's chain re-run in L46b on this block,
 #     data/2026-10-01/L46b/l41c/): U502 off 0.90 mV (objective 2 mV; 1.93 mV on
 #     L46a's block, 1.37 on L40's), U501 off 0.56 mV, mains loss <= 0.09 uV,

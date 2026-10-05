@@ -155,7 +155,10 @@ foreach cand 1 2
       ac dec 50 20 20k
       let zmag = mag(v(ain)/(-i(vsrc)))
       let attdb = db(v(atop)/v(aout))
-      meas ac zmin min zmag from=20 to=20000
+      * L47c1 (limitations #45): `meas ac ... min from=20 to=20000` skips the
+      * last point of the sweep, 20 kHz, where |Zin| is lowest; vecmin() reads
+      * the whole vector, which is exactly 20 Hz - 20 kHz.
+      let zmin = vecmin(zmag)
       meas ac z20 find zmag at=20
       meas ac z1k find zmag at=1000
       meas ac z20k find zmag at=20000
