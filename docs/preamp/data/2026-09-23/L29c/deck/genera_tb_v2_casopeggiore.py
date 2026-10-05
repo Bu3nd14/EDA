@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 """L29c: genera spice/preamp/tb/tb_v2_casopeggiore.cir, il deck VERSIONATO del caso peggiore di
-V2 col mute reale (NC-028): LDR a monte (ADR-038/039/040; da L47b2b1 la NSL-32SR3 col profilo v5
-a 3 s e la cima di 7 mA, ADR-058/059/060/061) piu' il rele' al jack, sul circuito
-di ADR-042. Il deck non si edita a mano: si rigenera.
+V2 col mute reale (NC-028). Da L47c2b1 il mute TAGLIA coi soli rele' al jack (ADR-062, PR-21):
+niente fotoresistenze, niente profilo, niente S. Il deck non si edita a mano: si rigenera.
+
+L47c2b1 (2026-10-05). Fino a L47b2b1 qui c'erano due LDR a monte del blocco A col loro profilo
+(ADR-038/039/040, poi la NSL-32SR3 di ADR-058..061); le ha tolte ADR-062. L'ultima versione che le
+genera e' quella del commit dffa7148. Con loro sono uscite le matrici che esistevano solo per la
+sfumatura: `l29c` (le inversioni a d = 0,25 / 0,5 / 0,75) e `curve` (le curve A-E della cella).
+La sorgente torna sulla RSRC del blocco CANALE, come nella cella di L40.
 
 Uso:
-  /usr/bin/python3 genera_tb_v2_casopeggiore.py [--matrice l29c|controfattuale]
-          [--curve SERIE DERIV] [--uscita PATH]
+  /usr/bin/python3 genera_tb_v2_casopeggiore.py [--matrice sorgente|...] [--uscita PATH]
 
-  --matrice l29c            (default) la matrice di L29c, scritta nel deck versionato
-  --matrice controfattuale  le 11 corse della cella di L40 (1 kHz, 100 k) con TUTTE le aggiunte
-                            di questo banco in posizione neutra: devono ridare la cella di L40
-  --matrice curve           il punto 6: gli eventi del mute (inversioni, rele' 1 e 2 s) con le curve
-                            date da --curve, a 1 kHz, 20 Hz e senza segnale, coi loro riferimenti
-  --matrice caldo           il cambio di guadagno A CALDO (criterio 3 di ADR-030), coi suoi
+  --matrice sorgente        (default) la matrice di L29d2 sul sorgente, scritta nel deck versionato
+  --matrice controfattuale  la cella di L40 (1 kHz, 100 k) con TUTTE le aggiunte di questo banco
+                            in posizione neutra: deve ridare la stessa cella di tb_v2_mute_taglio.cir
+  --matrice caldo          il cambio di guadagno A CALDO (criterio 3 di ADR-030), coi suoi
                             riferimenti, in un deck a parte: K1 e K5 hanno anche il contatto
                             comportamentale del blocco (fronte 4,55 us), che commuta al posto
                             dell'interruttore nativo. Con l'interruttore netto il cambio a caldo
@@ -25,23 +27,31 @@ Uso:
                             controfattuali, sul sorgente come 'sorgente', col gemello di K1/K5 come
                             'caldo'. Si scrive nei dati di L30 (README li' accanto).
   --matrice l41c --ponte D  L41c (NC-036): il banco di l30 con le forme d'onda del circuito vero
-                            dell'alimentatore (rail, correnti delle stringhe LED, istanti dei
-                            contatti), dai JSON di data/2026-09-26/L41c/ponte/. Le correnti LED
-                            sostituiscono BILS/BILP solo in questa matrice. Si scrive nei dati di
-                            L41c (README li' accanto).
-  --curve B B               le curve della NSL-32SR3 (L47b2a; prima la VTL5C4) per la serie e la derivazione
-                            (A bassa, B tipica, C alta, D la piu' ripida, E la piu' piatta). Il deck versionato e'
-                            B B, come tb_v2_mute_ldr.cir; le altre si generano nei dati di L29c.
+                            dell'alimentatore (rail, istanti dei contatti), dai JSON del ponte. Da
+                            L47c2b1 senza le correnti delle stringhe LED (non ci sono piu'). Si
+                            scrive nei dati del lotto che la corre (README li' accanto).
 
-Poi si corre come tb_v2_mute_ldr.cir (L29b2): sed @REPO@, dividi.py, una corsa per processo,
+I TEMPI DEL MUTE (L47c2b1, il firmware di L47c2a: data/2026-10-05/L47c2a/seq/analisi_seq.txt).
+Il tasto a t_ins; MUTE_CMD cade T_CMD = 21 ms dopo (20 ms di antirimbalzo piu' il passo del
+firmware; 21,10 ms misurati sul circuito al rilascio); il contatto in serie si apre T_RIL = 3 ms
+dopo il comando (il rilascio massimo del G6K, come in L30) e la derivazione lato condensatore
+chiude TT = 1 ms dopo ancora (geometria iii, geo_alter). Al rilascio lo stesso ritardo, con
+l'intervento massimo (<= 3 ms, REQUIREMENTS V2). PERMIT_CMD cade Delta dopo MUTE_CMD (ADR-045):
+il cambio di guadagno o di trim sotto mute sta a T_RELE + 0,5 s, ben oltre.
+
+Poi si corre come tb_v2_mute_taglio.cir: sed @REPO@, dividi.py, una corsa per processo,
 v2_metodo.py analizza. Il manifesto ha due colonne in piu', ignorate da analizza:
   gruppo  il punto del mandato di L29c (1 guadagno, 2 trim, 3 dispersione, 4 durata del mute,
-          5 accensione e spegnimento, 6 curve; 0 riferimenti e pavimenti)
-  conta   le grandezze che per quella riga sono VERDETTO (A_ins, A_rel, B2, S_ins, S_rel),
-          separate da ';'. Il resto che analizza scrive e' diagnostica: una riga di sequenza
-          (per esempio il cambio di guadagno) legge anche grandezze che non hanno senso li'.
+          5 accensione e spegnimento; 0 riferimenti e pavimenti)
+  conta   le grandezze che la riga porta al verdetto (A_ins, A_rel, B2; con la musica B2g, il
+          jack grezzo, ADR-063) o alla tabella del clic (C2_ins, C2_rel e, con la musica, B2: la
+          coda del filtro dopo il taglio; DICHIARATE, senza soglia, ADR-062 e ADR-063), separate
+          da ';'. Il resto che analizza scrive e' diagnostica.
 
-COSA C'E' DENTRO, oltre a tb_v2_mute_ldr.cir (L29b2). Il blocco CANALE e' byte per byte quello
+IL CONTATTO IN SERIE (L47c2b1, ADR-063): e' BSERx del blocco CANALE, col suo fronte di ~4,55 us,
+e non l'interruttore nativo SKSx, che resta aperto (geo_alter).
+
+COSA C'E' DENTRO, oltre a tb_v2_mute_taglio.cir. Il blocco CANALE e' byte per byte quello
 di tb_v2_mute_graduale.cir (v2_metodo.py canale): tutto si aggiunge FUORI.
 - I contatti del guadagno che commutano nel tempo: K1 (RGB) e K5 (RG10B), interruttori nativi
   (SW, come tb_switch_v2.cir) in parallelo a RRGB/RRG10B (1 G nel blocco, con i loro 15 pF),
@@ -57,13 +67,13 @@ di tb_v2_mute_graduale.cir (v2_metodo.py canale): tutto si aggiunge FUORI.
 - La dispersione: VOSA / VOSB / VOSF1 / VOSF2 del blocco (offset d'ingresso), e il gruppo B di
   ADR-031 con `altermod lsk489a vto` e la sonda JPRB su nodi propri (docs/limitations.md #29).
 - I rail: `alter @vpp[pwl]` / `alter @vmm[pwl]` sulle sorgenti DC del blocco (sonda di L29c:
-  l'op parte dal valore della PWL a t = 0, malgrado la nota «dc value used for op»). Il comando
-  dei LED segue il rail positivo (VPWL, fattore 0..1): all'accensione i LED non hanno corrente
-  prima dei rail, allo spegnimento la perdono con loro.
+  l'op parte dal valore della PWL a t = 0, malgrado la nota «dc value used for op»). Il terzo
+  elemento della terna `rail` (il comando dei LED, VPWL fino a L47b2b1) e' ignorato da corsa().
+- IOSA (L47b2b1, limitations #44): la corrente che VOSA fa scorrere in R113 dentro il blocco.
 - `set numdgt=15` prima di ogni wrdata (#30). Nessun corpo di `if` vuoto (#32).
 
 IPOTESI DI ACCENSIONE E SPEGNIMENTO (ADR-039 non le fissa; l'alimentatore e' di L30):
-- accensione: rele' del jack chiuso (NC diseccitato), comando dei LED a d = 1 da subito; rail
+- accensione: rele' del jack chiuso (NC diseccitato); rail
   da 0 a +-15 V in TR_RAIL; il temporizzatore rilascia 2,5 s dopo l'inizio della rampa;
 - spegnimento: da regime, rail a 0 in TR_RAIL; nessuna dissolvenza (caso peggiore: il comando
   non se ne accorge); il rele' del jack si chiude con un ritardo dall'inizio della discesa.
@@ -106,15 +116,19 @@ import os
 QUI = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(QUI, *[".."] * 6))
 ap = argparse.ArgumentParser()
-ap.add_argument("--matrice", default="sorgente", choices=("sorgente", "l29c", "controfattuale", "curve", "caldo", "sonda_l29d", "l29d2", "l30", "l41c"))
+RITIRATE = ("l29c", "curve")   # L47c2b1: esistevano solo per la sfumatura (ADR-062)
+ap.add_argument("--matrice", default="sorgente",
+                choices=("sorgente", "controfattuale", "caldo", "sonda_l29d", "l29d2", "l30", "l41c")
+                + RITIRATE)
 ap.add_argument("--ponte", default=None,
                 help="solo --matrice l41c: la cartella dei JSON di ponte/estrai_ponte.py (L41c)")
-ap.add_argument("--curve", nargs=2, default=("B", "B"), metavar=("SERIE", "DERIV"))
 ap.add_argument("--netlist", default=os.path.join(REPO, "circuits", "preamp", "preamp_audio.net"),
                 help="solo --matrice sorgente: la netlist da cui leggere il mute (L29e)")
 ap.add_argument("--uscita", default=os.path.join(REPO, "spice", "preamp", "tb", "tb_v2_casopeggiore.cir"))
 ARG = ap.parse_args()
-CS, CP = ARG.curve
+if ARG.matrice in RITIRATE:
+    raise SystemExit("--matrice %s esisteva solo per la sfumatura delle fotoresistenze, tolta da "
+                     "ADR-062 (L47c2b1): si genera dal commit dffa7148" % ARG.matrice)
 TB = os.path.join(REPO, "spice", "preamp", "tb", "tb_v2_mute_graduale.cir")
 
 righe = open(TB).read().splitlines()
@@ -123,30 +137,24 @@ i1 = next(i for i, r in enumerate(righe) if r.startswith("* <<< CANALE"))
 inc = [r for r in righe[:i0] if r.startswith(".include")]
 CANALE = righe[i0:i1 + 1]
 
-# ---------------------------------------------------------------- il profilo v5 (ADR-061)
-# L47b2b1: ricalibrato sull'inviluppo A-E della NSL-32SR3 con la cima di 7 mA (ADR-060), 3 s per
-# verso (ADR-059), simmetrico. La serie scende log-lineare dalla cima al riposo entro d = 0,6; la
-# derivazione sale log-lineare dal riposo a d = 0,155 alla cima a d = 1. Trovato e verificato in
-# docs/preamp/data/2026-10-03/L47b2b1/banco/ (rapido.profilo_v5, sfumatura.py).
-ION, IRIP = 7e-3, 10e-9
-lg = math.log10
-SERIE = [(0, ION), (0.6, IRIP), (1, IRIP)]
-DERIV = [(0, IRIP), (0.155, IRIP), (1, ION)]
-BILS = "BILS 0 ALS I = V(NPWL) * pow(10, pwl(V(DEP), %s))" % ", ".join(
-    "%g,%.4f" % (d, lg(i)) for d, i in SERIE)
-BILP = "BILP 0 ALP I = V(NPWL) * pow(10, pwl(V(DEP), %s))" % ", ".join(
-    "%g,%.4f" % (d, lg(i)) for d, i in DERIV)
-
-# ---------------------------------------------------------------- i tempi
-TI, TD, RIT = 1.0, 3.0, 0.5       # TD: 3 s per verso (ADR-059, ADR-061)
-T_RELE = TI + TD + RIT            # 7,5 s: il rele' al jack si chiude
-TG_LDR = TD + RIT                 # t_grad di una riga d'inserzione
+# ---------------------------------------------------------------- i tempi (L47c2b1, ADR-062)
+# Il mute taglia: nessuna dissolvenza, il contatto al jack si muove T_ATT dopo il tasto. t_ins e
+# t_rel del manifesto sono gli istanti del TASTO; i contatti stanno T_ATT dopo (intestazione).
+TI = 1.0                          # il tasto del mute
+T_CMD = 0.021                     # MUTE_CMD dopo il tasto: firmware di L47c2a (21,10 ms misurati)
+T_RIL = 3e-3                      # il rilascio / l'intervento massimo del G6K (en-g6k.pdf p. 3)
+T_ATT = T_CMD + T_RIL             # dal tasto al contatto in serie
+T_RELE = TI + T_ATT               # il contatto in serie si apre
+TG = T_ATT                        # t_grad di una riga d'inserzione: B2 parte da t_ins + TG + 20 ms
 A = 3.818                         # 2,7 V RMS
 FREQ = {"20": (20, 10e-6, 7e-6), "1k": (1000, 10e-6, 7e-6), "20k": (20000, 0.5e-6, 0.35e-6)}
-T_CAMBIO = T_RELE + 0.5           # il cambio di guadagno o di trim, a rele' chiuso
-TR_CAMBIO = T_CAMBIO + 2.0        # il rilascio: 2 s dopo il cambio, finestra piena di A
-TF_CAMBIO = TR_CAMBIO + TD + 3.0
-TF_LUNGO = T_RELE + 20.0 + TD + 3.0   # il mute di 20 s: i riferimenti durano quanto lui
+# il cambio di guadagno o di trim, a rele' aperto, ben oltre Delta. 2 s dopo il contatto: A
+# all'inserimento (la riga _i finisce al cambio) vuole una finestra >= 2 s (ADR-032), che la
+# prima stesura di L47c2b1 (0,5 s) non dava («finestra corta: non accetta», 29 righe)
+T_CAMBIO = T_RELE + 2.0
+TR_CAMBIO = T_CAMBIO + 2.0        # il tasto del rilascio: 2 s dopo il cambio, finestra piena di A
+TF_CAMBIO = TR_CAMBIO + 3.0       # A vuole >= 2 s dopo il contatto del rilascio
+TF_LUNGO = TI + 20.0 + 3.0        # il mute di 20 s: i riferimenti durano quanto lui
 
 # ---------------------------------------------------------------- i contatti che commutano
 MAKE = "-1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1"
@@ -223,14 +231,22 @@ def geo_alter(geo, tijk, trjk, rbc=RBC_BANCO):
     elif geo != "N":
         raise SystemExit("geometria sconosciuta: %s" % geo)
     serie = geo != "N"
+    # L47c2b1 (ADR-063, scelta dell'utente: «Tutta la matrice»): con la serie, il contatto in serie
+    # e' BSERx del blocco CANALE (conduttanza pow(10, -12 + 13*(1 - SSER)), SSER dai rimbalzi
+    # filtrati da 1 k + 4,55 nF: un fronte di ~4,55 us), e l'interruttore nativo SKSx resta APERTO
+    # (vksa = -10, vksb = 1000). L'interruttore ideale si fermava su 'Timestep too small' ogni volta
+    # che si chiudeva con volt di musica ai suoi capi (data/2026-10-05/L47c2b1/sonda/). Con N il
+    # nativo resta chiuso com'era (ks = 1000 / 2000) e BSERx chiuso.
+    if serie:
+        nat, ser = ("-10", "1000"), ("%.6f" % ks[0], "%.6f" % ks[1])
+    else:
+        nat, ser = ("%.6f" % ks[0], "%.6f" % ks[1]), ("1000", "2000")
     return [
         "alter vtijk dc = %.6f" % jk[0], "alter vtrjk dc = %.6f" % jk[1],
-        "alter vksa dc = %.6f" % ks[0], "alter vksb dc = %.6f" % ks[1],
+        "alter vksa dc = %s" % nat[0], "alter vksb dc = %s" % nat[1],
         "alter vkca dc = %.6f" % kc[0], "alter vkcb dc = %.6f" % kc[1],
-        # N: BSERx chiuso e ponte a 1 m come L29c; con la serie, l'interruttore nativo e' l'unico
-        # percorso (BSERx a 1e-12 S: stato SSER inserito da prima dell'inizio)
-        "alter vtiser dc = %s" % ("1000" if not serie else "-10"),
-        "alter vtrser dc = %s" % ("2000" if not serie else "1000"),
+        "alter vtiser dc = %s" % ser[0],
+        "alter vtrser dc = %s" % ser[1],
     ] + ["alter %s = %s" % (r, "1m" if not serie else "1e12") for r in ("rbym", "rby1", "rby2")] + [
         "alter rbcm = %s" % ("1e12" if not serie else rbc["m"]),
         "alter rbc1 = %s" % ("1e12" if not serie else rbc["1"]),
@@ -268,8 +284,6 @@ AGGIUNTE = (
     + ["CWIRE ATOP 0 100p", "RATTH ATOP W 1m",
        "* ---- L29c: la sonda del gruppo B (limitations #29), su nodi propri (#24) ----",
        "VPRBD PRBD 0 DC 15", "VPRBG PRBG 0 DC 0", "JPRB PRBD PRBG 0 LSK489A",
-       "* ---- L29c: l'alimentazione del comando dei LED, 0..1, segue il rail positivo ----",
-       "VPWL NPWL 0 DC 1",
        "* ---- L29c: il punto di partenza di Newton per l'op (limitations #33) ----",
        "* Con l'interruttore del trim fra OUTA e W il blocco A ha una seconda soluzione in continua,",
        "* agganciata al rail (+13 V): gmin e source stepping falliscono e il 'transient op' finisce",
@@ -280,50 +294,31 @@ AGGIUNTE = (
 )
 
 H = [
-    "tb_v2_casopeggiore.cir - V2 al jack, il caso peggiore col mute reale: LDR NSL-32SR3 (profilo v5, 3 s, 7 mA: L47b2b1) a monte e rele' al jack, guadagno, trim, dispersione, accensione (L29c, NC-028)",
+    "tb_v2_casopeggiore.cir - V2 al jack, il caso peggiore col mute che taglia coi soli rele' al jack (ADR-062): guadagno, trim, dispersione, durata del mute, accensione (L29c, NC-028, L47c2b1)",
     "* Prima riga = titolo (docs/limitations.md #10).",
     "* GENERATO da docs/preamp/data/2026-09-23/L29c/deck/genera_tb_v2_casopeggiore.py: non si",
     "* edita a mano. L'intestazione del generatore dice cosa c'e' dentro, le ipotesi di",
-    "* accensione e spegnimento, e come si corre. Matrice: %s. Curve: serie %s, derivazione %s." % (ARG.matrice, CS, CP),
+    "* accensione e spegnimento, e come si corre. Matrice: %s." % ARG.matrice,
     "*",
-    "* IL MODELLO DELLE CELLE e' comportamentale dal datasheet, con estrapolazione dichiarata",
-    "* (models/optocoupler/nsl32sr3_comportamentale.lib, ADR-058: da dati pubblicati, una sola cella",
-    "* misurata nella regione del mute; fino a L47b1 la VTL5C4). Ogni dispositivo attivo e' il modello del",
+    "* NIENTE FOTORESISTENZE (ADR-062, L47c2b1): la sorgente arriva al blocco A dalla sua RSRC,",
+    "* come nella cella di L40. Ogni dispositivo attivo e' il modello del",
     "* costruttore in models/ (L39); nessuno porta la dispersione, che qui si inietta: VOS* e",
     "* `altermod lsk489a vto` (gruppo B, ADR-031). UN MODELLO ALTERATO PORTA ANCORA IL NOME",
     "* LSK489A (limitations #29): le corse alterate lo dicono nel nome (_gb*) e stampano showmod",
     "* e la corrente della sonda JPRB.",
     "*",
-    "* IL PROFILO v5, Td %g s per verso, cima %g mA (ADR-059, ADR-060, ADR-061), con un pilota" % (TD, ION * 1e3),
-    "* IDEALE (generatori dal profilo). Rele' al jack chiuso 0,5 s dopo d = 1.",
+    "* IL MUTE TAGLIA: il contatto in serie al jack si apre %g ms dopo il tasto (MUTE_CMD 21 ms," % (T_ATT * 1e3),
+    "* firmware di L47c2a, piu' 3 ms del G6K), la derivazione 1 ms dopo; al rilascio lo stesso.",
+    "* t_ins e t_rel del manifesto sono gli istanti del tasto.",
     "* ANALISI: scripts/v2_metodo.py analizza sul manifesto; le colonne gruppo e conta dicono",
     "* quali grandezze di ogni riga sono verdetto. Si corre DIVISO (dividi.py): le corse di",
     "* accensione alterano le sorgenti dei rail, e in sequenza l'alterazione resterebbe.",
     "* CONVENZIONE DI PERCORSO: `.include @REPO@/...` (tb_op.cir, L2-L3).",
     "",
-] + inc + [".include @REPO@/models/optocoupler/nsl32sr3_comportamentale.lib", ""] + CANALE + [
+] + inc + [""] + CANALE + [
     "* ---- L47b2b1: IOSA fornisce a R113 (dentro il blocco A) la corrente dovuta a VOSA, che",
     "* nel circuito non passa nella rete d'ingresso: vedi iosa() nel generatore, limitations #44 ----",
     "IOSA INAX 0 DC 0",
-    "* ---- L29b2: le due LDR e il loro comando, fuori dal blocco CANALE (ADR-038) ----",
-    "VTI NTI 0 DC 1000",
-    "VTR NTR 0 DC 2000",
-    "VTD NTD 0 DC %g" % TD,
-    "BDIN DIN 0 V = min(max((time - V(NTI))/V(NTD), 0), 1)",
-    "BDEP DEP 0 V = time < V(NTR) ? V(DIN) : max(min(max((V(NTR) - V(NTI))/V(NTD), 0), 1)"
-    " - (time - V(NTR))/V(NTD), 0)",
-] + ([BILS, BILP] if ARG.matrice != "l41c" else [
-    "* L41c: le correnti delle due stringhe LED vengono dal circuito dell'alimentatore (il ponte),",
-    "* al posto del profilo v4 per VPWL: alter @vis[pwl] / @vip[pwl] in ogni corsa",
-    "VIS NIS 0 pwl(0 0 1000 0)", "VIP NIP 0 pwl(0 0 1000 0)",
-    "BILS 0 ALS I = V(NIS)", "BILP 0 ALP I = V(NIP)"]) + [
-    "* 10 M dall'anodo a massa: un LED col solo generatore non ha percorso in continua e l'op",
-    "* fallisce in silenzio (trappola di L29b). E' del banco, non della scheda.",
-    "RALS ALS 0 10MEG",
-    "RALP ALP 0 10MEG",
-    "RSRC2 SRC SRCX 1.5",
-    "XLS ALS 0 SRCX SELA NSL32SR3_%s" % CS,
-    "XLP ALP 0 INA 0 NSL32SR3_%s" % CP,
     "",
 ] + AGGIUNTE
 
@@ -345,10 +340,9 @@ C = [
     "set numdgt=15",
     "set d = .dat",
     "* L29c: corri.sh rifiuta ogni corsa col 'Transient op' nel log (limitations #33).",
-    "save v(mainjack) v(fixjack1) v(fixjack2) v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)",
+    "save v(mainjack) v(fixjack1) v(fixjack2) v(ina) v(vplus) v(vminus) v(main_a)",
     'echo "cella,file,variante,f_hz,amp,gm,rl,t_ins,t_rel,t_fine,tmax,tipo,rif_ins,rif_rel,t_grad,gruppo,conta" > %s' % MAN,
-    "* la sorgente passa dalla LDR in serie: RSRC del blocco a 1 T, il selettore chiuso",
-    "alter rsrc = 1e12",
+    "* la sorgente arriva dalla RSRC del blocco, col selettore chiuso (L47c2b1: niente LDR)",
     "alter vphs dc = 1.5707963267948966",
     "alter vmhjk dc = 1",
     "* il trim porta OUTA all'attenuatore: RATTT del blocco aperto",
@@ -409,16 +403,20 @@ def iosa(vos):
     return "%.6g" % (v / 1e6)
 
 
-def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=1000, trjk=2000,
+def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=None, trjk=None,
           g1=10, g2=None, tg=1000, p1=0, p2=None, tp=1000, vos=(0, 0, 0, 0), att="max",
           rl="100k", trim_montato=True, cwire="100p", vto=None, rail=None, stati=True, geo=None,
-          ck=None, cavo=None, led=None):
+          ck=None, cavo=None):
+    """ti / tr: il tasto del mute e del rilascio (L47c2b1, ADR-062). I contatti del jack si
+    muovono T_ATT dopo, salvo tijk / trjk dati (accensione, spegnimento, riferimenti 'sempre',
+    L30 e L41c, dove non c'e' un tasto). 1000 / 2000 = mai."""
+    tijk = ti + T_ATT if tijk is None else tijk
+    trjk = tr + T_ATT if trjk is None else trjk
     out = [
         "alter vamp dc = %s" % amp,
         "alter vfrq dc = %s" % f,
         "alter rldm = %s" % rl, "alter rld1 = %s" % rl, "alter rld2 = %s" % rl,
-        "alter vti dc = %s" % ti, "alter vtr dc = %s" % tr,
-        "alter vtijk dc = %s" % tijk, "alter vtrjk dc = %s" % trjk,
+        "alter vtijk dc = %.6f" % tijk, "alter vtrjk dc = %.6f" % trjk,
         "alter vosa dc = %s" % vos[0], "alter iosa dc = %s" % iosa(vos[0]),
         "alter vosb dc = %s" % vos[1],
         "alter vosf1 dc = %s" % vos[2], "alter vosf2 dc = %s" % vos[3],
@@ -455,16 +453,13 @@ def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=1000,
                 "op"]
         # niente destroy qui: dividi.py chiude una corsa al primo "destroy all"
     if rail is not None:
-        vp, vm, pw = rail
-        out += ["alter @vpp[pwl] = [ %s ]" % vp, "alter @vmm[pwl] = [ %s ]" % vm,
-                "alter @vpwl[pwl] = [ %s ]" % pw]
-    if led is not None:
-        # L41c: the strings' currents from the bridge
-        out += ["alter @vis[pwl] = [ %s ]" % led[0], "alter @vip[pwl] = [ %s ]" % led[1]]
+        # il terzo elemento (il comando dei LED, VPWL) non c'e' piu' da L47c2b1: ignorato
+        vp, vm = rail[:2]
+        out += ["alter @vpp[pwl] = [ %s ]" % vp, "alter @vmm[pwl] = [ %s ]" % vm]
     out += ["tran %g %s 0 %g" % (tmax, tf, tmax),
             "wrdata %s$d v(mainjack) v(fixjack1) v(fixjack2)" % nome]
     if stati:
-        out.append("wrdata %s_stati$d v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus) v(main_a)" % nome
+        out.append("wrdata %s_stati$d v(ina) v(vplus) v(vminus) v(main_a)" % nome
                    + (" v(mainc) v(fixc1) v(fixc2)" if geo is not None else ""))
     return out + ["destroy all"]
 
@@ -477,187 +472,33 @@ def riga(cella, file, var, f, amp, gm, rl, ti, tr, tf, tmax, tipo, rins="-", rre
 
 # ---------------------------------------------------------------- le matrici
 def controfattuale():
-    """La cella di L40 (1 kHz, 100 k), corse e righe come genera_tb_v2_mute_ldr.py, con le
+    """La cella di L40 (1 kHz, 100 k), corse e righe come genera_tb_v2_mute_taglio.py, con le
     aggiunte neutre: guadagno +10 statico dai contatti nuovi, trim smontato (RL1 aperto, T1R
-    chiuso), niente cablaggio, VOS 0, attenuatore al massimo."""
+    chiuso), niente cablaggio, VOS 0, attenuatore al massimo. Il mute e' il contatto del blocco
+    (geometria N), come nel deck del taglio: L47c2b1, senza fotoresistenze ne' inversioni."""
     n = dict(trim_montato=False, cwire="1e-18")
-    TR, TF = T_RELE + 1.0, T_RELE + 1.0 + TD + 3.0
-    TINV = TI + 0.75 * TD
-    TFI = TINV + 0.75 * TD + 3.0
-    s, var, fq = "_1k_100k", "ldr_v4_td6", 1000
+    TR, TF = TI + 1.0, TI + 1.0 + 3.0
+    s, var, fq = "_1k_100k", "taglio", 1000
     out = []
-    out += corsa("mai" + s, tf=TF, ti=1000, tr=2000, **n)
+    out += corsa("mai" + s, tf=TF, **n)
     out += [riga("mai" + s, "mai" + s, "rif", fq, A, 10, "100k", TI, TR, TF, 10e-6, "rif_mai")]
-    out += corsa("sempre" + s, tf=TF, ti=-10, tr=1000, tijk=-10, trjk=1000, **n)
+    out += corsa("sempre" + s, tf=TF, tijk=-10, trjk=1000, **n)
     out += [riga("sempre" + s, "sempre" + s, "rif", fq, A, 10, "100k", TI, TR, TF, 10e-6, "rif_sempre")]
-    out += corsa("ev" + s, tf=TF, ti=TI, tr=TR, tijk=T_RELE, trjk=TR, **n)
+    out += corsa("ev" + s, tf=TF, ti=TI, tr=TR, **n)
     out += [riga("ev" + s, "ev" + s, var, fq, A, 10, "100k", TI, TR, TF, 10e-6, "evento",
-                 "sempre" + s, "mai" + s, TG_LDR)]
-    out += corsa("norele" + s, tf=TF, ti=TI, tr=TR, **n)
-    out += [riga("norele" + s, "norele" + s, "rif", fq, A, 10, "100k", TI, TR, TF, 10e-6, "rif_seq")]
-    out += [riga("rele" + s, "ev" + s, "rele_contro_norele", fq, A, 10, "100k", T_RELE, TR, TF, 10e-6,
-                 "evento", "norele" + s, "norele" + s, 0.0)]
-    out += corsa("inv" + s, tf=TFI, ti=TI, tr=TINV, **n)
-    out += [riga("inv" + s, "inv" + s, "inversione_d75", fq, A, 10, "100k", TI, TINV, TFI, 10e-6,
-                 "evento", "sempre" + s, "mai" + s, 0.75 * TD)]
-    out += corsa("evp" + s, tmax=7e-6, tf=TF, ti=TI, tr=TR, tijk=T_RELE, trjk=TR, stati=False, **n)
-    out += corsa("invp" + s, tmax=7e-6, tf=TFI, ti=TI, tr=TINV, stati=False, **n)
-    for k, t in enumerate((TI, T_RELE, TR)):
+                 "sempre" + s, "mai" + s, TG)]
+    out += corsa("evp" + s, tmax=7e-6, tf=TF, ti=TI, tr=TR, stati=False, **n)
+    for k, t in enumerate((TI, TR)):
         out += [riga("pav_ev%d%s" % (k, s), "evp" + s, "pavimento", fq, A, 10, "100k", t, 1000, TF,
                      7e-6, "pav_num", "ev" + s)]
-    out += [riga("pav_inv%s" % s, "invp" + s, "pavimento", fq, A, 10, "100k", TINV, 1000, TFI, 7e-6,
-                 "pav_num", "inv" + s)]
     s = "_100k"
     out += corsa("lzmai" + s, amp=0, tf=TF, **n)
     out += [riga("lzmai" + s, "lzmai" + s, "rif", 1000, 0, 10, "100k", TI, TR, TF, 10e-6, "rif_mai")]
-    out += corsa("lzsempre" + s, amp=0, tf=TF, ti=-10, tr=1000, tijk=-10, trjk=1000, **n)
+    out += corsa("lzsempre" + s, amp=0, tf=TF, tijk=-10, trjk=1000, **n)
     out += [riga("lzsempre" + s, "lzsempre" + s, "rif", 1000, 0, 10, "100k", TI, TR, TF, 10e-6, "rif_sempre")]
-    out += corsa("lzev" + s, amp=0, tf=TF, ti=TI, tr=TR, tijk=T_RELE, trjk=TR, **n)
+    out += corsa("lzev" + s, amp=0, tf=TF, ti=TI, tr=TR, **n)
     out += [riga("lzev" + s, "lzev" + s, var, 1000, 0, 10, "100k", TI, TR, TF, 10e-6, "evento",
-                 "lzsempre" + s, "lzmai" + s, TG_LDR)]
-    out += corsa("lzinv" + s, amp=0, tf=TFI, ti=TI, tr=TINV, **n)
-    out += [riga("lzinv" + s, "lzinv" + s, "inversione_d75", 1000, 0, 10, "100k", TI, TINV, TFI, 10e-6,
-                 "evento", "lzsempre" + s, "lzmai" + s, 0.75 * TD)]
-    return out
-
-
-def matrice_l29c():
-    out = []
-    var = "ldr_v4_td6_%s%s" % (CS, CP)
-
-    def rif(nome, fk, amp, tf, g=10, p=0, tmax=None):
-        """mai / sempre in mute, allo stato statico (g, p)"""
-        f, tm, _ = FREQ[fk] if fk else (1000, 10e-6, 7e-6)
-        tm = tmax or tm
-        o = corsa("%smai_%s" % (nome, fk or "lz"), amp=amp, f=f, tmax=tm, tf=tf, g1=g, p1=p)
-        o += corsa("%ssempre_%s" % (nome, fk or "lz"), amp=amp, f=f, tmax=tm, tf=tf, ti=-10,
-                   tr=1000, tijk=-10, trjk=1000, g1=g, p1=p)
-        for k in ("mai", "sempre"):
-            c = "%s%s_%s" % (nome, k, fk or "lz")
-            o += [riga(c, c, "rif", f, amp, g, "100k", TI, T_RELE + 1.0, tf, tm, "rif_" + k, gruppo=0)]
-        return o
-
-    # ======== riferimenti: +10 dB lunghi quanto il mute di 20 s; 0 e +3 dB quanto un cambio
-    for fk, amp in (("1k", A), ("20", A), (None, 0)):
-        out += ["* ---- riferimenti %s ----" % (fk or "senza segnale")]
-        out += rif("g10", fk, amp, TF_LUNGO, g=10)
-        out += rif("g0", fk, amp, TF_CAMBIO, g=0)
-        out += rif("g3", fk, amp, TF_CAMBIO, g=3)
-    # il trim a -6 / -12 dB, +10 dB di guadagno: senza segnale e a 1 kHz
-    for fk, amp in (("1k", A), (None, 0)):
-        out += rif("t6", fk, amp, TF_CAMBIO, g=10, p=6)
-        out += rif("t12", fk, amp, TF_CAMBIO, g=10, p=12)
-    # ======== 20 kHz, 100 k: il solo riferimento mai in mute a +10 dB (S usa il livello pieno
-    # del rif_rel; A con musica e C2 sono diagnostica). ~4 ore a corsa: si lanciano per prime.
-    f20k, tm20k, _ = FREQ["20k"]
-    tf20k = TF_CAMBIO
-    out += ["* ---- 20 kHz ----"]
-    out += corsa("g10mai_20k", f=f20k, tmax=tm20k, tf=tf20k, g1=10)
-    out += [riga("g10mai_20k", "g10mai_20k", "rif", f20k, A, 10, "100k", TI, T_RELE + 1, tf20k, tm20k,
-                 "rif_mai")]
-
-    def rif_nome(pref, k, fk):
-        return "%s%s_%s" % (pref, k, fk or "lz")
-
-    # ======== 1: i passaggi di guadagno sotto mute, e a caldo
-    PASSI = [(0, 3), (3, 0), (3, 10), (10, 3), (0, 10), (10, 0)]
-    for fk, amp in (("1k", A), ("20", A), (None, 0), ("20k", A)):
-        if fk == "20k":
-            passi = [(0, 10)]
-        else:
-            passi = PASSI
-        f, tm, _ = FREQ[fk] if fk else (1000, 10e-6, 7e-6)
-        sfx = fk or "lz"
-        for g1, g2 in passi:
-            nome = "gm%dx%d_%s" % (g1, g2, sfx)
-            out += ["* ---- 1: %d -> %d dB sotto mute, %s ----" % (g1, g2, sfx)]
-            out += corsa(nome, amp=amp, f=f, tmax=tm, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO,
-                         tijk=T_RELE, trjk=TR_CAMBIO, g1=g1, g2=g2, tg=T_CAMBIO)
-            gm = "%da%d" % (g1, g2)
-            if fk == "20k":
-                ri, rr = "-", "g%dmai_20k" % g2
-                # la sola riga del cambio e del rilascio: S_rel contro il pieno a G2
-                out += [riga(nome + "_c", nome, var, f, amp, gm, "100k", T_CAMBIO, TR_CAMBIO,
-                             TF_CAMBIO, tm, "evento", ri, rr, 0.0, 1, "S_rel;B2")]
-                continue
-            # l'inserzione a G1 (fino al cambio): S_ins con musica, A_ins senza
-            out += [riga(nome + "_i", nome, var, f, amp, gm, "100k", TI, T_CAMBIO, TF_CAMBIO, tm,
-                         "evento", rif_nome("g%d" % g1, "sempre", fk), rif_nome("g%d" % g1, "mai", fk),
-                         TG_LDR, 1, "A_ins;B2" if amp == 0 else "S_ins;B2")]
-            # il cambio a rele' chiuso e il rilascio a G2
-            out += [riga(nome + "_c", nome, var, f, amp, gm, "100k", T_CAMBIO, TR_CAMBIO, TF_CAMBIO,
-                         tm, "evento", rif_nome("g%d" % g2, "sempre", fk),
-                         rif_nome("g%d" % g2, "mai", fk), 0.0, 1,
-                         "A_ins;A_rel;B2" if amp == 0 else "S_rel;B2")]
-            # il cambio A CALDO (criterio 3 di ADR-030) non sta qui: --matrice caldo. Con
-            # l'interruttore netto i passaggi che muovono K5 si fermano su 'Timestep too small'.
-        if fk is None:
-            # pavimento numerico di A sul passaggio piu' largo
-            nomep = "gm0x10p_lz"
-            out += corsa(nomep, amp=0, tmax=7e-6, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO, tijk=T_RELE,
-                         trjk=TR_CAMBIO, g1=0, g2=10, tg=T_CAMBIO, stati=False)
-            for k, t in enumerate((TI, T_CAMBIO, TR_CAMBIO)):
-                out += [riga("pav_gm0x10_%d" % k, nomep, "pavimento", 1000, 0, "0a10", "100k", t, 1000,
-                             TF_CAMBIO, 7e-6, "pav_num", "gm0x10_lz_i", "-", 0.0, 0, "")]
-
-    # ======== 4: la durata del mute, a +10 dB
-    MUTE = [("inv25", TI + 0.25 * TD, None), ("inv50", TI + 0.50 * TD, None),
-            ("inv75", TI + 0.75 * TD, None), ("h01", T_RELE + 0.1, T_RELE),
-            ("ev", T_RELE + 1.0, T_RELE), ("h2", T_RELE + 2.0, T_RELE), ("h20", T_RELE + 20.0, T_RELE)]
-    for fk, amp in (("1k", A), ("20", A), (None, 0), ("20k", A)):
-        f, tm, _ = FREQ[fk] if fk else (1000, 10e-6, 7e-6)
-        sfx = fk or "lz"
-        for m, tr, trele in MUTE:
-            if fk == "20k" and m != "h2":
-                continue
-            nome = "m%s_%s" % (m, sfx)
-            d_rel = min((tr - TI) / TD, 1.0)
-            tf = tr + d_rel * TD + 3.0
-            out += ["* ---- 4: mute %s, %s ----" % (m, sfx)]
-            out += corsa(nome, amp=amp, f=f, tmax=tm, tf=tf, ti=TI, tr=tr,
-                         tijk=trele if trele else 1000, trjk=tr if trele else 2000)
-            tg = TG_LDR if trele else d_rel * TD
-            ri = "-" if fk == "20k" else rif_nome("g10", "sempre", fk)
-            conta = "A_ins;A_rel;B2" if amp == 0 else "S_ins;S_rel;B2"
-            if fk == "20k":
-                conta = "S_ins;S_rel;B2"
-            out += [riga(nome, nome, var + "_" + m, f, amp, 10, "100k", TI, tr, tf, tm, "evento",
-                         ri, rif_nome("g10", "mai", fk), tg, 4, conta)]
-        if fk in ("1k", "20"):
-            # il rele' al jack contro la stessa sequenza senza rele' (L29b2)
-            nn = "mnorele_%s" % sfx
-            out += corsa(nn, f=f, tmax=tm, tf=T_RELE + 1.0 + TD + 3.0, ti=TI, tr=T_RELE + 1.0)
-            out += [riga(nn, nn, "rif", f, A, 10, "100k", TI, T_RELE + 1, T_RELE + 1 + TD + 3, tm,
-                         "rif_seq")]
-            out += [riga("rele_%s" % sfx, "mev_%s" % sfx, "rele_contro_norele", f, A, 10, "100k",
-                         T_RELE, T_RELE + 1.0, T_RELE + 1.0 + TD + 3.0, tm, "evento", nn, nn, 0.0, 4,
-                         "S_ins;S_rel")]
-    # pavimento numerico di A sul mute
-    out += corsa("mevp_lz", amp=0, tmax=7e-6, tf=T_RELE + 1 + TD + 3, ti=TI, tr=T_RELE + 1,
-                 tijk=T_RELE, trjk=T_RELE + 1, stati=False)
-    for k, t in enumerate((TI, T_RELE, T_RELE + 1)):
-        out += [riga("pav_mev_%d" % k, "mevp_lz", "pavimento", 1000, 0, 10, "100k", t, 1000,
-                     T_RELE + 1 + TD + 3, 7e-6, "pav_num", "mev_lz", "-", 0.0, 0, "")]
-
-    # ======== 2: il trim sotto mute, a +10 dB
-    TPASSI = [(0, 6), (6, 0), (6, 12), (12, 6), (0, 12), (12, 0)]
-    for fk, amp in (("1k", A), (None, 0)):
-        f, tm, _ = FREQ[fk] if fk else (1000, 10e-6, 7e-6)
-        sfx = fk or "lz"
-        for p1, p2 in TPASSI:
-            nome = "tm%dx%d_%s" % (p1, p2, sfx)
-            out += ["* ---- 2: trim %d -> %d dB sotto mute, %s ----" % (-p1, -p2, sfx)]
-            out += corsa(nome, amp=amp, f=f, tmax=tm, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO,
-                         tijk=T_RELE, trjk=TR_CAMBIO, g1=10, p1=p1, p2=p2, tp=T_CAMBIO)
-            ref = lambda p, k: rif_nome("g10" if p == 0 else "t%d" % p, k, fk)
-            out += [riga(nome + "_i", nome, var, f, amp, "t%da%d" % (p1, p2), "100k", TI, T_CAMBIO,
-                         TF_CAMBIO, tm, "evento", ref(p1, "sempre"), ref(p1, "mai"), TG_LDR, 2,
-                         "A_ins;B2" if amp == 0 else "S_ins;B2")]
-            out += [riga(nome + "_c", nome, var, f, amp, "t%da%d" % (p1, p2), "100k", T_CAMBIO,
-                         TR_CAMBIO, TF_CAMBIO, tm, "evento", ref(p2, "sempre"), ref(p2, "mai"), 0.0, 2,
-                         "A_ins;A_rel;B2" if amp == 0 else "S_rel;B2")]
-    out += dispersione(var)
-    out += accensione(var)
+                 "lzsempre" + s, "lzmai" + s, TG)]
     return out
 
 
@@ -673,107 +514,12 @@ DISP_VTO = ("a", "b_min", "b_max")
 DISP_ATT = ("max", "m20")
 
 
-def dispersione(var):
-    out = []
-    for sv, vos in DISP_VOS.items():
-        for vt in DISP_VTO:
-            for at in DISP_ATT:
-                sfx = "d%s%s%s" % (sv, vt.replace("b_", ""), at)
-                kw = dict(amp=0, vos=vos, att=at, vto=None if vt == "a" else vt)
-                out += ["* ---- 3: dispersione %s (VOS %s, %s, attenuatore %s) ----" % (sfx, sv, vt, at)]
-                for g, p in ((10, 0), (0, 0), (10, 12)):
-                    for k, extra in (("mai", {}), ("sempre", dict(ti=-10, tr=1000, tijk=-10, trjk=1000))):
-                        n = "r%s_g%dt%d_%s" % (k, g, p, sfx)
-                        out += corsa(n, tf=TF_CAMBIO, g1=g, p1=p, **dict(kw, **extra))
-                        out += [riga(n, n, "rif_" + sfx, 1000, 0, g, "100k", TI, T_RELE + 1, TF_CAMBIO,
-                                     10e-6, "rif_" + k, gruppo=3)]
-                ref = lambda g, p, k: "r%s_g%dt%d_%s" % (k, g, p, sfx)
-                for (g1, g2, p1, p2) in ((0, 10, 0, 0), (10, 0, 0, 0), (10, 10, 0, 12), (10, 10, 12, 0)):
-                    n = "x%d%d%d%d_%s" % (g1, g2, p1, p2, sfx)
-                    out += corsa(n, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO, tijk=T_RELE, trjk=TR_CAMBIO,
-                                 g1=g1, g2=g2, tg=T_CAMBIO if g1 != g2 else 1000,
-                                 p1=p1, p2=p2, tp=T_CAMBIO if p1 != p2 else 1000, **kw)
-                    gm = "g%da%d_t%da%d" % (g1, g2, p1, p2)
-                    out += [riga(n + "_i", n, var + "_" + sfx, 1000, 0, gm, "100k", TI, T_CAMBIO, TF_CAMBIO,
-                                 10e-6, "evento", ref(g1, p1, "sempre"), ref(g1, p1, "mai"), TG_LDR, 3,
-                                 "A_ins;B2")]
-                    out += [riga(n + "_c", n, var + "_" + sfx, 1000, 0, gm, "100k", T_CAMBIO, TR_CAMBIO,
-                                 TF_CAMBIO, 10e-6, "evento", ref(g2, p2, "sempre"), ref(g2, p2, "mai"), 0.0, 3,
-                                 "A_ins;A_rel;B2")]
-                # il mute semplice, rele' tenuto 1 s
-                n = "xm_%s" % sfx
-                out += corsa(n, tf=T_RELE + 1 + TD + 3, ti=TI, tr=T_RELE + 1, tijk=T_RELE, trjk=T_RELE + 1, **kw)
-                out += [riga(n, n, var + "_" + sfx, 1000, 0, 10, "100k", TI, T_RELE + 1, T_RELE + 1 + TD + 3,
-                             10e-6, "evento", ref(10, 0, "sempre"), ref(10, 0, "mai"), TG_LDR, 3,
-                             "A_ins;A_rel;B2")]
-    return out
-
-
 # ======== 5: accensione e spegnimento, senza segnale, +10 dB (ipotesi nell'intestazione)
 T0_ON, T_TIMER = 0.1, 2.5
 T_OFF = 1.0
 RAMPE = (0.01, 0.3)
 SFASI = {"s": (0.0, 0.0), "p": (0.05, 0.0), "m": (0.0, 0.05)}   # ritardo del rail + / -
 RIT_RELE = (0.0, 0.005, 0.02, 0.1)
-
-
-def accensione(var):
-    out = []
-    for tr in RAMPE:
-        for sk, (dp, dm) in SFASI.items():
-            # ---- accensione
-            n = "on_r%g%s" % (tr * 1e3, sk)
-            t_rel = T0_ON + T_TIMER
-            tf = t_rel + TD + 3.0
-            rail = ("0 0 %g 0 %g 15 1000 15" % (T0_ON + dp, T0_ON + dp + tr),
-                    "0 0 %g 0 %g -15 1000 -15" % (T0_ON + dm, T0_ON + dm + tr),
-                    "0 0 %g 0 %g 1 1000 1" % (T0_ON + dp, T0_ON + dp + tr))
-            out += ["* ---- 5: accensione, rampa %g ms, sfasamento %s ----" % (tr * 1e3, sk)]
-            out += corsa(n, amp=0, tf=tf, ti=-100, tr=t_rel, tijk=-10, trjk=t_rel, rail=rail)
-            out += [riga(n, n, "accensione", 1000, 0, 10, "100k", T0_ON, t_rel, tf, 10e-6, "evento",
-                         "g10sempre_lz", "g10mai_lz", 0.0, 5, "A_ins;A_rel")]
-            # ---- spegnimento
-            for rr in RIT_RELE:
-                n = "off_r%g%s_d%g" % (tr * 1e3, sk, rr * 1e3)
-                tf = T_OFF + 2.5
-                # la discesa si ferma a +-1 mV: a 0 V esatti, rampa da 10 ms e rele' senza
-                # ritardo, la tran si ferma su 'Timestep too small' in fondo alla rampa
-                # (sonde/op/prova_tran.py). 1 mV di rail residuo non cambia la fisica.
-                rail = ("0 15 %g 15 %g 1m 1000 1m" % (T_OFF + dp, T_OFF + dp + tr),
-                        "0 -15 %g -15 %g -1m 1000 -1m" % (T_OFF + dm, T_OFF + dm + tr),
-                        "0 1 %g 1 %g 0 1000 0" % (T_OFF + dp, T_OFF + dp + tr))
-                out += ["* ---- 5: spegnimento, rampa %g ms, sfasamento %s, rele' +%g ms ----"
-                        % (tr * 1e3, sk, rr * 1e3)]
-                out += corsa(n, amp=0, tf=tf, tijk=T_OFF + rr, trjk=1000, rail=rail)
-                out += [riga(n, n, "spegnimento", 1000, 0, 10, "100k", T_OFF, 1000, tf, 10e-6, "evento",
-                             "g10sempre_lz", "-", 0.0, 5, "A_ins")]
-    return out
-
-
-# ======== 6: le curve della cella (NSL-32SR3 da L47b2a; deck a parte per ogni coppia serie / derivazione)
-def matrice_curve():
-    out = []
-    var = "ldr_v4_td6_%s%s" % (CS, CP)
-    tfr = T_RELE + 2.0 + TD + 3.0
-    for fk, amp in (("1k", A), ("20", A), (None, 0)):
-        f, tm, _ = FREQ[fk] if fk else (1000, 10e-6, 7e-6)
-        sfx = fk or "lz"
-        for k, extra in (("mai", {}), ("sempre", dict(ti=-10, tr=1000, tijk=-10, trjk=1000))):
-            n = "c%s_%s" % (k, sfx)
-            out += corsa(n, amp=amp, f=f, tmax=tm, tf=tfr, **extra)
-            out += [riga(n, n, "rif", f, amp, 10, "100k", TI, T_RELE + 1, tfr, tm, "rif_" + k, gruppo=6)]
-        for m, tr, trele in (("inv25", TI + 0.25 * TD, None), ("inv75", TI + 0.75 * TD, None),
-                             ("ev", T_RELE + 1.0, T_RELE), ("h2", T_RELE + 2.0, T_RELE)):
-            n = "c%s_%s" % (m, sfx)
-            d_rel = min((tr - TI) / TD, 1.0)
-            tf = tr + d_rel * TD + 3.0
-            out += corsa(n, amp=amp, f=f, tmax=tm, tf=tf, ti=TI, tr=tr,
-                         tijk=trele if trele else 1000, trjk=tr if trele else 2000)
-            tg = TG_LDR if trele else d_rel * TD
-            out += [riga(n, n, var + "_" + m, f, amp, 10, "100k", TI, tr, tf, tm, "evento",
-                         "csempre_" + sfx, "cmai_" + sfx, tg, 6,
-                         "A_ins;A_rel;B2" if amp == 0 else "S_ins;S_rel;B2")]
-    return out
 
 
 def matrice_caldo():
@@ -813,7 +559,7 @@ def matrice_sonda(geometrie=GEOMETRIE, kx={}):
             n = "g%d%s_lz_%s" % (g, k, cl)
             out += ["* ---- riferimento %s ----" % n]
             out += corsa(n, amp=0, tf=tf_rif, g1=g, geo=GEO_DI[cl], **dict(extra, **kx))
-            out += [riga(n, n, "rif", 1000, 0, g, "100k", TI, T_RELE + 1.0, tf_rif, 10e-6, "rif_" + k,
+            out += [riga(n, n, "rif", 1000, 0, g, "100k", TI, TI + 1.0, tf_rif, 10e-6, "rif_" + k,
                          gruppo=0)]
     for geo in geometrie:
         var = "l29d_%s" % geo
@@ -821,25 +567,25 @@ def matrice_sonda(geometrie=GEOMETRIE, kx={}):
         # 1: il cambio 0 -> +10 a rele' chiuso, e il rilascio 2 s dopo
         n = "gm0x10_lz_%s" % geo
         out += ["* ---- %s ----" % n]
-        out += corsa(n, amp=0, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO, tijk=T_RELE, trjk=TR_CAMBIO,
+        out += corsa(n, amp=0, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO,
                      g1=0, g2=10, tg=T_CAMBIO, geo=geo, **kx)
         out += [riga(n + "_i", n, var, 1000, 0, "0a10", "100k", TI, T_CAMBIO, TF_CAMBIO, 10e-6, "evento",
-                     rif(0, "sempre"), rif(0, "mai"), TG_LDR, 1, "A_ins;B2")]
+                     rif(0, "sempre"), rif(0, "mai"), TG, 1, "A_ins;B2")]
         out += [riga(n + "_c", n, var, 1000, 0, "0a10", "100k", T_CAMBIO, TR_CAMBIO, TF_CAMBIO, 10e-6,
                      "evento", rif(10, "sempre"), rif(10, "mai"), 0.0, 1, "A_ins;A_rel;B2")]
         # 4: il mute semplice, rele' tenuto 1 s
         n = "mev_lz_%s" % geo
-        tf = T_RELE + 1.0 + TD + 3.0
+        tf = TI + 1.0 + 3.0
         out += ["* ---- %s ----" % n]
-        out += corsa(n, amp=0, tf=tf, ti=TI, tr=T_RELE + 1.0, tijk=T_RELE, trjk=T_RELE + 1.0, geo=geo, **kx)
-        out += [riga(n, n, var + "_ev", 1000, 0, 10, "100k", TI, T_RELE + 1.0, tf, 10e-6, "evento",
-                     rif(10, "sempre"), rif(10, "mai"), TG_LDR, 4, "A_ins;A_rel;B2")]
+        out += corsa(n, amp=0, tf=tf, ti=TI, tr=TI + 1.0, geo=geo, **kx)
+        out += [riga(n, n, var + "_ev", 1000, 0, 10, "100k", TI, TI + 1.0, tf, 10e-6, "evento",
+                     rif(10, "sempre"), rif(10, "mai"), TG, 4, "A_ins;A_rel;B2")]
         # 5: le due accensioni peggiori di L29c
         for tr, sk in ((0.3, "p"), (0.01, "m")):
             dp, dm = SFASI[sk]
             n = "on_r%g%s_%s" % (tr * 1e3, sk, geo)
             t_rel = T0_ON + T_TIMER
-            tf = t_rel + TD + 3.0
+            tf = t_rel + 3.0
             rail = ("0 0 %g 0 %g 15 1000 15" % (T0_ON + dp, T0_ON + dp + tr),
                     "0 0 %g 0 %g -15 1000 -15" % (T0_ON + dm, T0_ON + dm + tr),
                     "0 0 %g 0 %g 1 1000 1" % (T0_ON + dp, T0_ON + dp + tr))
@@ -852,12 +598,44 @@ def matrice_sonda(geometrie=GEOMETRIE, kx={}):
 
 # ======== L29d2: la matrice di L29c sulla geometria iii (decisioni nell'intestazione)
 VARIANTI = (("", {}), ("c100", dict(cavo="100p")), ("r10k", dict(rl="10k")), ("k5", dict(ck="5p")))
-MUTE_RELE = [("h01", T_RELE + 0.1), ("ev", T_RELE + 1.0), ("h2", T_RELE + 2.0), ("h20", T_RELE + 20.0)]
+MUTE_RELE = [("h01", TI + 0.1), ("ev", TI + 1.0), ("h2", TI + 2.0), ("h20", TI + 20.0)]   # il tasto del rilascio
+
+
+def clic(geo, sx, kw, var):
+    """L47c2b1: le corse che completano la tabella del clic del taglio (scelta dell'utente:
+    «Tabella intera», tre uscite x 20 Hz / 1 kHz / 20 kHz x inserimento / rilascio). Il gruppo 4
+    copre 20 Hz e 1 kHz a 100 k (mev_*); qui i 20 kHz a 100 k e i tre toni a 10 k, i due carichi
+    di V2. Ognuna col suo «mai» e «sempre» a +10 dB. A 20 kHz (passo 0,5 us) il tasto del
+    rilascio e' 0,5 s dopo e la corsa finisce 0,5 s dopo ancora: C2 guarda [t - 20 ms,
+    t + t_grad + 200 ms], e A con la musica e' diagnostica (ADR-036)."""
+    out = []
+    SEMPRE = dict(ti=-10, tr=1000, tijk=-10, trjk=1000)
+    for rl, sxc in (("100k", sx), ("10k", "_r10k" + sx)):
+        for fk in ("20", "1k", "20k"):
+            if rl == "100k" and fk != "20k":
+                continue
+            f, tm, _ = FREQ[fk]
+            tr = TI + (0.5 if fk == "20k" else 1.0)
+            tf = tr + (0.5 if fk == "20k" else 3.0)
+            k = dict(kw, rl=rl)
+            out += ["* ---- L47c2b1 clic: %s Hz, %s ----" % (f, rl)]
+            rifs = {}
+            for kk, extra in (("mai", {}), ("sempre", SEMPRE)):
+                c = "g10%s_%s%s" % (kk, fk, sxc)
+                rifs[kk] = c
+                out += corsa(c, f=f, tmax=tm, tf=tf, g1=10, **dict(k, **extra))
+                out += [riga(c, c, "rif", f, A, 10, rl, TI, tr, tf, tm, "rif_" + kk, gruppo=0)]
+            n = "mev_%s%s" % (fk, sxc)
+            out += corsa(n, f=f, tmax=tm, tf=tf, ti=TI, tr=tr, **k)
+            out += [riga(n, n, var + "_clic", f, A, 10, rl, TI, tr, tf, tm, "evento",
+                         rifs["sempre"], rifs["mai"], TG, 4, "C2_ins;C2_rel;B2;B2g")]
+    return out
 
 
 def blocco_l29d2(vs, vkw, geo="iii"):
-    """La matrice di L29c su una geometria e una variante. Le inversioni (mute senza rele') e i
-    20 kHz non ci sono: le prime non muovono il rele', i secondi si pianificano a parte."""
+    """La matrice di L29c su una geometria e una variante. Le inversioni non ci sono (L47c2b1:
+    non esistono piu', il mute taglia); i 20 kHz e i 10 k della tabella del clic sono in clic(),
+    solo nella variante di progetto."""
     out = []
     sx = ("_" + vs if vs else "") + "_" + geo
     rl = vkw.get("rl", "100k")
@@ -874,7 +652,7 @@ def blocco_l29d2(vs, vkw, geo="iii"):
         for k, extra in (("mai", {}), ("sempre", SEMPRE)):
             c = nome(pref, k, fk)
             o += corsa(c, amp=amp, f=f, tmax=tm, tf=tf, g1=g, p1=p, **dict(kw, **extra))
-            o += [riga(c, c, "rif", f, amp, g, rl, TI, T_RELE + 1.0, tf, tm, "rif_" + k, gruppo=0)]
+            o += [riga(c, c, "rif", f, amp, g, rl, TI, TI + 1.0, tf, tm, "rif_" + k, gruppo=0)]
         return o
 
     SEGNALI = (("1k", A), ("20", A), (None, 0))
@@ -895,16 +673,16 @@ def blocco_l29d2(vs, vkw, geo="iii"):
             n = "gm%dx%d_%s%s" % (g1, g2, sfx, sx)
             out += ["* ---- L29d2 1: %s ----" % n]
             out += corsa(n, amp=amp, f=f, tmax=tm, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO,
-                         tijk=T_RELE, trjk=TR_CAMBIO, g1=g1, g2=g2, tg=T_CAMBIO, **kw)
+                         g1=g1, g2=g2, tg=T_CAMBIO, **kw)
             gm = "%da%d" % (g1, g2)
             out += [riga(n + "_i", n, var, f, amp, gm, rl, TI, T_CAMBIO, TF_CAMBIO, tm, "evento",
-                         nome("g%d" % g1, "sempre", fk), nome("g%d" % g1, "mai", fk), TG_LDR, 1,
-                         "A_ins;B2" if amp == 0 else "S_ins;B2")]
+                         nome("g%d" % g1, "sempre", fk), nome("g%d" % g1, "mai", fk), TG, 1,
+                         "A_ins;B2" if amp == 0 else "C2_ins;B2;B2g")]
             out += [riga(n + "_c", n, var, f, amp, gm, rl, T_CAMBIO, TR_CAMBIO, TF_CAMBIO, tm, "evento",
                          nome("g%d" % g2, "sempre", fk), nome("g%d" % g2, "mai", fk), 0.0, 1,
-                         "A_ins;A_rel;B2" if amp == 0 else "S_rel;B2")]
+                         "A_ins;A_rel;B2" if amp == 0 else "C2_rel;B2;B2g")]
     n = "gm0x10p_lz" + sx
-    out += corsa(n, amp=0, tmax=7e-6, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO, tijk=T_RELE, trjk=TR_CAMBIO,
+    out += corsa(n, amp=0, tmax=7e-6, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO,
                  g1=0, g2=10, tg=T_CAMBIO, stati=False, **kw)
     for k, t in enumerate((TI, T_CAMBIO, TR_CAMBIO)):
         out += [riga("pav_gm0x10_%d%s" % (k, sx), n, "pavimento", 1000, 0, "0a10", rl, t, 1000,
@@ -919,14 +697,14 @@ def blocco_l29d2(vs, vkw, geo="iii"):
             n = "tm%dx%d_%s%s" % (p1, p2, sfx, sx)
             out += ["* ---- L29d2 2: %s ----" % n]
             out += corsa(n, amp=amp, f=f, tmax=tm, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO,
-                         tijk=T_RELE, trjk=TR_CAMBIO, g1=10, p1=p1, p2=p2, tp=T_CAMBIO, **kw)
+                         g1=10, p1=p1, p2=p2, tp=T_CAMBIO, **kw)
             gm = "t%da%d" % (p1, p2)
             out += [riga(n + "_i", n, var, f, amp, gm, rl, TI, T_CAMBIO, TF_CAMBIO, tm, "evento",
-                         ref(p1, "sempre"), ref(p1, "mai"), TG_LDR, 2,
-                         "A_ins;B2" if amp == 0 else "S_ins;B2")]
+                         ref(p1, "sempre"), ref(p1, "mai"), TG, 2,
+                         "A_ins;B2" if amp == 0 else "C2_ins;B2;B2g")]
             out += [riga(n + "_c", n, var, f, amp, gm, rl, T_CAMBIO, TR_CAMBIO, TF_CAMBIO, tm, "evento",
                          ref(p2, "sempre"), ref(p2, "mai"), 0.0, 2,
-                         "A_ins;A_rel;B2" if amp == 0 else "S_rel;B2")]
+                         "A_ins;A_rel;B2" if amp == 0 else "C2_rel;B2;B2g")]
 
     # ---- 3: la dispersione peggiore di L29c, VOS "p" e attenuatore al massimo, tre gruppi B
     for vt in DISP_VTO:
@@ -938,56 +716,58 @@ def blocco_l29d2(vs, vkw, geo="iii"):
             for k, extra in (("mai", {}), ("sempre", SEMPRE)):
                 n = dref(g, p, k)
                 out += corsa(n, tf=TF_CAMBIO, g1=g, p1=p, **dict(dkw, **extra))
-                out += [riga(n, n, "rif_" + dsx, 1000, 0, g, rl, TI, T_RELE + 1, TF_CAMBIO, 10e-6,
+                out += [riga(n, n, "rif_" + dsx, 1000, 0, g, rl, TI, TI + 1, TF_CAMBIO, 10e-6,
                              "rif_" + k, gruppo=3)]
         for (g1, g2, p1, p2) in ((0, 10, 0, 0), (10, 0, 0, 0), (10, 10, 0, 12), (10, 10, 12, 0)):
             n = "x%d%d%d%d_%s%s" % (g1, g2, p1, p2, dsx, sx)
-            out += corsa(n, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO, tijk=T_RELE, trjk=TR_CAMBIO,
+            out += corsa(n, tf=TF_CAMBIO, ti=TI, tr=TR_CAMBIO,
                          g1=g1, g2=g2, tg=T_CAMBIO if g1 != g2 else 1000,
                          p1=p1, p2=p2, tp=T_CAMBIO if p1 != p2 else 1000, **dkw)
             gm = "g%da%d_t%da%d" % (g1, g2, p1, p2)
             out += [riga(n + "_i", n, var + "_" + dsx, 1000, 0, gm, rl, TI, T_CAMBIO, TF_CAMBIO, 10e-6,
-                         "evento", dref(g1, p1, "sempre"), dref(g1, p1, "mai"), TG_LDR, 3, "A_ins;B2")]
+                         "evento", dref(g1, p1, "sempre"), dref(g1, p1, "mai"), TG, 3, "A_ins;B2")]
             out += [riga(n + "_c", n, var + "_" + dsx, 1000, 0, gm, rl, T_CAMBIO, TR_CAMBIO, TF_CAMBIO,
                          10e-6, "evento", dref(g2, p2, "sempre"), dref(g2, p2, "mai"), 0.0, 3,
                          "A_ins;A_rel;B2")]
         n = "xm_%s%s" % (dsx, sx)
-        out += corsa(n, tf=T_RELE + 1 + TD + 3, ti=TI, tr=T_RELE + 1, tijk=T_RELE, trjk=T_RELE + 1, **dkw)
-        out += [riga(n, n, var + "_" + dsx, 1000, 0, 10, rl, TI, T_RELE + 1, T_RELE + 1 + TD + 3, 10e-6,
-                     "evento", dref(10, 0, "sempre"), dref(10, 0, "mai"), TG_LDR, 3, "A_ins;A_rel;B2")]
+        # il mute semplice, tenuto 2 s (L47c2b1: A all'inserimento vuole >= 2 s di finestra)
+        out += corsa(n, tf=TI + 2 + 3, ti=TI, tr=TI + 2, **dkw)
+        out += [riga(n, n, var + "_" + dsx, 1000, 0, 10, rl, TI, TI + 2, TI + 2 + 3, 10e-6,
+                     "evento", dref(10, 0, "sempre"), dref(10, 0, "mai"), TG, 3, "A_ins;A_rel;B2")]
 
-    # ---- 4: il mute col rele' (tenuto 0,1 / 1 / 2 / 20 s): la musica, S e B2 col contatto aperto
+    # ---- 4: il mute col rele' (tasto del rilascio 0,1 / 1 / 2 / 20 s dopo): con la musica il
+    # clic del taglio (C2, dichiarato: ADR-062) e B2 col contatto aperto (NC-053). La corsa
+    # «senza rele'» di prima non c'e' piu': senza fotoresistenze non e' un mute (L47c2b1).
     for fk, amp in SEGNALI:
         f, tm, _ = FREQ[fk] if fk else (1000, 10e-6, 7e-6)
         sfx = fk or "lz"
         for m, tr in MUTE_RELE:
             n = "m%s_%s%s" % (m, sfx, sx)
-            tf = tr + TD + 3.0
+            tf = tr + 3.0
             out += ["* ---- L29d2 4: %s ----" % n]
-            out += corsa(n, amp=amp, f=f, tmax=tm, tf=tf, ti=TI, tr=tr, tijk=T_RELE, trjk=tr, **kw)
+            out += corsa(n, amp=amp, f=f, tmax=tm, tf=tf, ti=TI, tr=tr, **kw)
             out += [riga(n, n, var + "_" + m, f, amp, 10, rl, TI, tr, tf, tm, "evento",
-                         nome("g10", "sempre", fk), nome("g10", "mai", fk), TG_LDR, 4,
-                         "A_ins;A_rel;B2" if amp == 0 else "S_ins;S_rel;B2")]
-        if fk:
-            nn = "mnorele_%s%s" % (sfx, sx)
-            tf = T_RELE + 1.0 + TD + 3.0
-            out += corsa(nn, f=f, tmax=tm, tf=tf, ti=TI, tr=T_RELE + 1.0, **kw)
-            out += [riga(nn, nn, "rif", f, A, 10, rl, TI, T_RELE + 1, tf, tm, "rif_seq")]
-            out += [riga("rele_%s%s" % (sfx, sx), "mev_%s%s" % (sfx, sx), "rele_contro_norele", f, A, 10,
-                         rl, T_RELE, T_RELE + 1.0, tf, tm, "evento", nn, nn, 0.0, 4, "S_ins;S_rel")]
+                         nome("g10", "sempre", fk), nome("g10", "mai", fk), TG, 4,
+                         # L47c2b1: senza segnale, A all'inserimento conta dove la finestra
+                         # arriva a 2 s (h2, h20); h01 ed ev, la stessa inserzione, contano il
+                         # rilascio
+                         (("A_ins;A_rel;B2" if tr - TI >= 2.0 else "A_rel;B2") if amp == 0
+                          else "C2_ins;C2_rel;B2;B2g"))]
+    if not vs:
+        out += clic(geo, sx, kw, var)
     n = "mevp_lz" + sx
-    out += corsa(n, amp=0, tmax=7e-6, tf=T_RELE + 1 + TD + 3, ti=TI, tr=T_RELE + 1, tijk=T_RELE,
-                 trjk=T_RELE + 1, stati=False, **kw)
-    for k, t in enumerate((TI, T_RELE, T_RELE + 1)):
+    out += corsa(n, amp=0, tmax=7e-6, tf=TI + 1 + 3, ti=TI, tr=TI + 1,
+                 stati=False, **kw)
+    for k, t in enumerate((TI, T_RELE, TI + 1)):
         out += [riga("pav_mev_%d%s" % (k, sx), n, "pavimento", 1000, 0, 10, rl, t, 1000,
-                     T_RELE + 1 + TD + 3, 7e-6, "pav_num", "mev_lz" + sx, "-", 0.0, 0, "")]
+                     TI + 1 + 3, 7e-6, "pav_num", "mev_lz" + sx, "-", 0.0, 0, "")]
 
     # ---- 5: accensione (verdetto) e spegnimento (diagnostica per L30, ADR-043)
     for tr in RAMPE:
         for sk, (dp, dm) in SFASI.items():
             n = "on_r%g%s%s" % (tr * 1e3, sk, sx)
             t_rel = T0_ON + T_TIMER
-            tf = t_rel + TD + 3.0
+            tf = t_rel + 3.0
             rail = ("0 0 %g 0 %g 15 1000 15" % (T0_ON + dp, T0_ON + dp + tr),
                     "0 0 %g 0 %g -15 1000 -15" % (T0_ON + dm, T0_ON + dm + tr),
                     "0 0 %g 0 %g 1 1000 1" % (T0_ON + dp, T0_ON + dp + tr))
@@ -1080,7 +860,7 @@ def matrice_l29d2():
 # dopo ancora (TT). L'alimentatore e' comportamentale: rampe lineari dei rail.
 I_RAIL = 0.265        # A per rail: otto blocchi a riposo (ADR-042, tb_op: ~33 mA per rail)
 V_TRIP = 13.5         # V: la soglia del sorvegliante sui rail (ADR-046)
-T_RIL = 3e-3          # s: rilascio massimo dei relè del jack
+# T_RIL (3 ms, il rilascio massimo dei relè del jack) sta con i tempi del mute, in testa
 DELTA_MIN = 10e-3     # s: Δ garantito di ADR-045 (nominale 20 ms)
 C_TENUTA = (470e-6, 1000e-6, 2200e-6)
 TF_L30 = T_OFF + 2.5
@@ -1104,7 +884,7 @@ def matrice_l30():
                  "rif_sempre")]
 
     # ---- N: lo spegnimento morbido (ADR-046). Il mute e' completo da secondi (jack isolati, lato
-    # condensatore a massa, LDR a d = 1); poi il relè di rete stacca: i rail scendono come in L29c,
+    # condensatore a massa); poi il relè di rete stacca: i rail scendono come in L29c,
     # e K1 / K5 cadono a 0 dB quando cade VRELAY: all'inizio della discesa (gi) o a meta' di quella
     # del rail piu' lento (gm), mentre il blocco perde la regolazione. Non alla fine: a rail spenti
     # non ha senso fisico, e il JFET si ferma su 'Timestep too small' (prima prova di L30).
@@ -1166,7 +946,8 @@ def matrice_l30():
 # ======== L41c: il banco di L30 col circuito vero dell'alimentatore (NC-036)
 # Le forme d'onda disegnate a mano di L30 (rail, VPWL, istante del contatto, Δmin) sono sostituite
 # da quelle del circuito di psu.py col firmware, al punto fisso (data/2026-09-26/L41c/seq/), portate
-# qui da ponte/estrai_ponte.py: rail, correnti delle stringhe LED, e gli istanti dei contatti
+# qui da ponte/estrai_ponte.py: rail e istanti dei contatti (le correnti delle stringhe LED che
+# il ponte portava fino a L47c2a non servono piu': niente fotoresistenze, ADR-062)
 # all'angolo peggiore del G6K (jack il piu' tardi, guadagno il piu' presto; l'intestazione del
 # ponte dice come). Il resto e' L30: sorgente, geometria iii, gemello di K1/K5, senza segnale,
 # +10 dB, 100 k, 0 pF. Ogni caso ha il SUO riferimento: gli stessi punti fino a t_ins, poi fermi, e
@@ -1190,8 +971,7 @@ def matrice_l41c():
         n_ev, n_rif = "%s_l41c" % caso, "rif_%s_l41c" % caso
         tf, ti = j["t_fine"], j["t_ins"]
         for n, suf in ((n_rif, "_rif"), (n_ev, "")):
-            rail = (pwl_json(j["vpp" + suf], "%.6f"), pwl_json(j["vmm" + suf], "%.6f"), "0 1 1000 1")
-            led = (pwl_json(j["is" + suf], "%.6e"), pwl_json(j["ip" + suf], "%.6e"))
+            rail = (pwl_json(j["vpp" + suf], "%.6f"), pwl_json(j["vmm" + suf], "%.6f"))
             ev = {}
             if not suf:
                 if j["t_jack"] is not None:
@@ -1199,7 +979,7 @@ def matrice_l41c():
                 if j["t_gain"] is not None:
                     ev.update(g2=0, tg=j["t_gain"])
             out += ["* ---- L41c: %s (dal ponte: %s, giro %d) ----" % (n, caso, j["giro"])]
-            out += corsa(n, tf=tf, trjk=1000, rail=rail, led=led, **dict(kw, **ev))
+            out += corsa(n, tf=tf, trjk=1000, rail=rail, **dict(kw, **ev))
             if suf:
                 out += [riga(n, n, "rif", 1000, 0, 10, "100k", "%.9f" % ti, 1000, tf, 10e-6, "rif_mai")]
             else:
@@ -1212,20 +992,16 @@ if ARG.matrice in ("sorgente", "l30", "l41c"):
     RBC = dal_sorgente()
     print("dal sorgente (%s): bleed lato C %s" % (NET, RBC))
 if ARG.matrice in ("sonda_l29d", "l29d2", "sorgente", "l30", "l41c"):
-    C = [("save v(mainjack) v(fixjack1) v(fixjack2) v(xls.xs) v(xlp.xs) v(dep) v(ina) v(vplus) v(vminus)"
+    C = [("save v(mainjack) v(fixjack1) v(fixjack2) v(ina) v(vplus) v(vminus)"
           " v(main_a) v(mainc) v(fixc1) v(fixc2)") if r.startswith("save ") else r for r in C]
     C += {"sonda_l29d": matrice_sonda, "l29d2": matrice_l29d2, "sorgente": matrice_sorgente,
           "l30": matrice_l30, "l41c": matrice_l41c}[ARG.matrice]()
 elif ARG.matrice == "controfattuale":
     C += controfattuale()
-elif ARG.matrice == "caldo":
-    C += matrice_caldo()
-elif ARG.matrice == "curve":
-    C += matrice_curve()
 else:
-    C += matrice_l29c()
+    C += matrice_caldo()
 C += [".endc", "", ".end"]
 os.makedirs(os.path.dirname(os.path.abspath(ARG.uscita)), exist_ok=True)
 open(ARG.uscita, "w").write("\n".join(H + C) + "\n")
 n = sum(1 for r in C if r.startswith("tran "))
-print("scritto %s: matrice %s, curve %s %s, %d corse" % (ARG.uscita, ARG.matrice, CS, CP, n))
+print("scritto %s: matrice %s, %d corse" % (ARG.uscita, ARG.matrice, n))

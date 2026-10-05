@@ -1,0 +1,9 @@
+cella,file,variante,f_hz,amp,gm,rl,t_ins,t_rel,t_fine,tmax,tipo,rif_ins,rif_rel,t_grad
+mai_1k_100k,mai_1k_100k.dat,rif,1000,3.818,10,100k,1.0,2.0,5.0,1e-05,rif_mai,-,-,0.0
+sempre_1k_100k,sempre_1k_100k.dat,rif,1000,3.818,10,100k,1.0,2.0,5.0,1e-05,rif_sempre,-,-,0.0
+ev_1k_100k,ev_1k_100k.dat,taglio,1000,3.818,10,100k,1.0,2.0,5.0,1e-05,evento,sempre_1k_100k,mai_1k_100k,0.024
+pav_ev0_1k_100k,evp_1k_100k.dat,pavimento,1000,3.818,10,100k,1.0,1000,5.0,7e-06,pav_num,ev_1k_100k,-,0.0
+pav_ev1_1k_100k,evp_1k_100k.dat,pavimento,1000,3.818,10,100k,2.0,1000,5.0,7e-06,pav_num,ev_1k_100k,-,0.0
+lzmai_100k,lzmai_100k.dat,rif,1000,0,10,100k,1.0,2.0,5.0,1e-05,rif_mai,-,-,0.0
+lzsempre_100k,lzsempre_100k.dat,rif,1000,0,10,100k,1.0,2.0,5.0,1e-05,rif_sempre,-,-,0.0
+lzev_100k,lzev_100k.dat,taglio,1000,0,10,100k,1.0,2.0,5.0,1e-05,evento,lzsempre_100k,lzmai_100k,0.024

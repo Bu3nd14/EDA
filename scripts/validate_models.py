@@ -1443,7 +1443,8 @@ wrdata {csv} {" ".join(f"i(V{k})" for k in range(len(pts)))}
 
 
 # L47a (ADR-058): the VTL5C4 replacement. Same single-op shape. The options
-# are those of the real benches (tb_v2_casopeggiore.cir) and the cells get
+# are those the V2 benches used while they had the cells (tb_v2_casopeggiore.cir
+# until L47c2b1; ADR-062 took the cells out of every canonical deck) and the cells get
 # 1 V, not 1 mV: with abstol=1e-15 this model's op depends on Newton's path
 # and can end in the "transient op" with a wrong state and no error
 # (docs/preamp/data/2026-10-02/L47a/nsl32sr3_modello/verifica_statica.py).

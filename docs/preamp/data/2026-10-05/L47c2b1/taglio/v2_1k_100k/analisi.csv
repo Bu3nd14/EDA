@@ -1,0 +1,55 @@
+cella,variante,f_hz,amp,gm,rl,grandezza,uscita,picco_V,t_picco_s,finestra_s,esito,nota
+mai_1k_100k,rif,1000,3.818,10,100k,C_pav,MAINJACK,0.0005067,1.135510,,sotto,"pavimento di C a 1.000 s, cond 1"
+mai_1k_100k,rif,1000,3.818,10,100k,C_pav,MAINJACK,0.0005067,2.015510,,sotto,"pavimento di C a 2.000 s, cond 1"
+mai_1k_100k,rif,1000,3.818,10,100k,C_pav,FIXJACK1,1.857e-05,1.081156,,sotto,"pavimento di C a 1.000 s, cond 1"
+mai_1k_100k,rif,1000,3.818,10,100k,C_pav,FIXJACK1,1.855e-05,2.052156,,sotto,"pavimento di C a 2.000 s, cond 1"
+mai_1k_100k,rif,1000,3.818,10,100k,C_pav,FIXJACK2,1.857e-05,1.081156,,sotto,"pavimento di C a 1.000 s, cond 1"
+mai_1k_100k,rif,1000,3.818,10,100k,C_pav,FIXJACK2,1.855e-05,2.052156,,sotto,"pavimento di C a 2.000 s, cond 1"
+sempre_1k_100k,rif,1000,3.818,10,100k,B1,MAINJACK,0.02012,1.566885,,SOPRA,"riferimento sempre in mute, da 0,5 s"
+sempre_1k_100k,rif,1000,3.818,10,100k,B1,FIXJACK1,0.006579,4.305406,,SOPRA,"riferimento sempre in mute, da 0,5 s"
+sempre_1k_100k,rif,1000,3.818,10,100k,B1,FIXJACK2,0.006579,4.305406,,SOPRA,"riferimento sempre in mute, da 0,5 s"
+ev_1k_100k,taglio,1000,3.818,10,100k,A_ins,MAINJACK,12.7,1.000021,1.000,SOPRA,riferimento sempre_1k_100k
+ev_1k_100k,taglio,1000,3.818,10,100k,A_rel,MAINJACK,12.7,2.000021,2.000,SOPRA,riferimento mai_1k_100k
+ev_1k_100k,taglio,1000,3.818,10,100k,B2,MAINJACK,0.03337,1.050396,,SOPRA,mute da t_ins+t_grad+20 ms a t_rel
+ev_1k_100k,taglio,1000,3.818,10,100k,C1_ins,MAINJACK,6.796,1.024042,,SOPRA,"diagnostica, cond 1"
+ev_1k_100k,taglio,1000,3.818,10,100k,C1_rel,MAINJACK,8.933,2.025000,,SOPRA,"diagnostica, cond 1"
+ev_1k_100k,taglio,1000,3.818,10,100k,C2_ins,MAINJACK,6.796,1.024042,,SOPRA,"riferimento sempre_1k_100k, cond 1"
+ev_1k_100k,taglio,1000,3.818,10,100k,C2_rel,MAINJACK,8.933,2.025000,,SOPRA,"riferimento mai_1k_100k, cond 1"
+ev_1k_100k,taglio,1000,3.818,10,100k,A_ins,FIXJACK1,4.03,1.000021,1.000,SOPRA,riferimento sempre_1k_100k
+ev_1k_100k,taglio,1000,3.818,10,100k,A_rel,FIXJACK1,4.03,2.000021,2.000,SOPRA,riferimento mai_1k_100k
+ev_1k_100k,taglio,1000,3.818,10,100k,B2,FIXJACK1,0.01102,1.050406,,SOPRA,mute da t_ins+t_grad+20 ms a t_rel
+ev_1k_100k,taglio,1000,3.818,10,100k,C1_ins,FIXJACK1,2.152,1.024042,,SOPRA,"diagnostica, cond 1"
+ev_1k_100k,taglio,1000,3.818,10,100k,C1_rel,FIXJACK1,3.058,2.025000,,SOPRA,"diagnostica, cond 1"
+ev_1k_100k,taglio,1000,3.818,10,100k,C2_ins,FIXJACK1,2.152,1.024042,,SOPRA,"riferimento sempre_1k_100k, cond 1"
+ev_1k_100k,taglio,1000,3.818,10,100k,C2_rel,FIXJACK1,3.058,2.025000,,SOPRA,"riferimento mai_1k_100k, cond 1"
+ev_1k_100k,taglio,1000,3.818,10,100k,A_ins,FIXJACK2,4.03,1.000021,1.000,SOPRA,riferimento sempre_1k_100k
+ev_1k_100k,taglio,1000,3.818,10,100k,A_rel,FIXJACK2,4.03,2.000021,2.000,SOPRA,riferimento mai_1k_100k
+ev_1k_100k,taglio,1000,3.818,10,100k,B2,FIXJACK2,0.01102,1.050406,,SOPRA,mute da t_ins+t_grad+20 ms a t_rel
+ev_1k_100k,taglio,1000,3.818,10,100k,C1_ins,FIXJACK2,2.152,1.024042,,SOPRA,"diagnostica, cond 1"
+ev_1k_100k,taglio,1000,3.818,10,100k,C1_rel,FIXJACK2,3.058,2.025000,,SOPRA,"diagnostica, cond 1"
+ev_1k_100k,taglio,1000,3.818,10,100k,C2_ins,FIXJACK2,2.152,1.024042,,SOPRA,"riferimento sempre_1k_100k, cond 1"
+ev_1k_100k,taglio,1000,3.818,10,100k,C2_rel,FIXJACK2,3.058,2.025000,,SOPRA,"riferimento mai_1k_100k, cond 1"
+pav_ev0_1k_100k,pavimento,1000,3.818,10,100k,A_pav,MAINJACK,0.1968,2.024615,2.000,SOPRA,contro ev_1k_100k
+pav_ev0_1k_100k,pavimento,1000,3.818,10,100k,C2_pav,MAINJACK,0.08686,1.024458,,SOPRA,"pavimento di C2 contro ev_1k_100k, cond 1"
+pav_ev0_1k_100k,pavimento,1000,3.818,10,100k,A_pav,FIXJACK1,0.06829,2.024010,2.000,SOPRA,contro ev_1k_100k
+pav_ev0_1k_100k,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK1,0.02545,1.024458,,SOPRA,"pavimento di C2 contro ev_1k_100k, cond 1"
+pav_ev0_1k_100k,pavimento,1000,3.818,10,100k,A_pav,FIXJACK2,0.06829,2.024010,2.000,SOPRA,contro ev_1k_100k
+pav_ev0_1k_100k,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK2,0.02545,1.024458,,SOPRA,"pavimento di C2 contro ev_1k_100k, cond 1"
+pav_ev1_1k_100k,pavimento,1000,3.818,10,100k,A_pav,MAINJACK,0.1968,2.024615,2.000,SOPRA,contro ev_1k_100k
+pav_ev1_1k_100k,pavimento,1000,3.818,10,100k,C2_pav,MAINJACK,0.1959,2.024615,,SOPRA,"pavimento di C2 contro ev_1k_100k, cond 1"
+pav_ev1_1k_100k,pavimento,1000,3.818,10,100k,A_pav,FIXJACK1,0.06829,2.024010,2.000,SOPRA,contro ev_1k_100k
+pav_ev1_1k_100k,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK1,0.068,2.024010,,SOPRA,"pavimento di C2 contro ev_1k_100k, cond 1"
+pav_ev1_1k_100k,pavimento,1000,3.818,10,100k,A_pav,FIXJACK2,0.06829,2.024010,2.000,SOPRA,contro ev_1k_100k
+pav_ev1_1k_100k,pavimento,1000,3.818,10,100k,C2_pav,FIXJACK2,0.068,2.024010,,SOPRA,"pavimento di C2 contro ev_1k_100k, cond 1"
+lzsempre_100k,rif,1000,0,10,100k,B1,MAINJACK,6.913e-14,1.298656,,sotto,"riferimento sempre in mute, da 0,5 s"
+lzsempre_100k,rif,1000,0,10,100k,B1,FIXJACK1,2.051e-14,1.483906,,sotto,"riferimento sempre in mute, da 0,5 s"
+lzsempre_100k,rif,1000,0,10,100k,B1,FIXJACK2,2.201e-14,0.655094,,sotto,"riferimento sempre in mute, da 0,5 s"
+lzev_100k,taglio,1000,0,10,100k,A_ins,MAINJACK,2.146e-11,1.011083,1.000,"sotto, finestra corta: non accetta",riferimento lzsempre_100k
+lzev_100k,taglio,1000,0,10,100k,A_rel,MAINJACK,4.517e-11,2.613583,2.000,sotto,riferimento lzmai_100k
+lzev_100k,taglio,1000,0,10,100k,B2,MAINJACK,2.245e-13,1.046344,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+lzev_100k,taglio,1000,0,10,100k,A_ins,FIXJACK1,8.196e-12,1.017427,1.000,"sotto, finestra corta: non accetta",riferimento lzsempre_100k
+lzev_100k,taglio,1000,0,10,100k,A_rel,FIXJACK1,1.329e-11,3.314240,2.000,sotto,riferimento lzmai_100k
+lzev_100k,taglio,1000,0,10,100k,B2,FIXJACK1,6.51e-14,1.044125,,sotto,mute da t_ins+t_grad+20 ms a t_rel
+lzev_100k,taglio,1000,0,10,100k,A_ins,FIXJACK2,9.994e-12,1.000844,1.000,"sotto, finestra corta: non accetta",riferimento lzsempre_100k
+lzev_100k,taglio,1000,0,10,100k,A_rel,FIXJACK2,1.438e-11,2.220260,2.000,sotto,riferimento lzmai_100k
+lzev_100k,taglio,1000,0,10,100k,B2,FIXJACK2,7.292e-14,1.044729,,sotto,mute da t_ins+t_grad+20 ms a t_rel
