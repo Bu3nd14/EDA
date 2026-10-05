@@ -751,7 +751,10 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 #     listening path.
 #   V2 - GAIN RELAYS (tb_switch_v2.cir): window peaks -2.2 %, nothing else.
 #     Mute: the graduated mute is gone (ADR-062); the cut with the jack relays
-#     alone is L47c2's V2 matrix (tb_v2_casopeggiore.cir, regenerated there).
+#     alone is L47c2b1's V2 matrix (tb_v2_casopeggiore.cir, 145 runs): 0 of 247
+#     verdicts out, A without signal <= 7.3 uV (power-on), with music the raw
+#     jack under mute <= 55 uV (ADR-063); the click of the cut is declared
+#     (data/2026-10-05/L47c2b1/matrice/clic.csv).
 #   SUPPLY FAULTS AT THE JACK (L41c's chain re-run in L46b on this block,
 #     data/2026-10-01/L46b/l41c/): U502 off 0.90 mV (objective 2 mV; 1.93 mV on
 #     L46a's block, 1.37 on L40's), U501 off 0.56 mV, mains loss <= 0.09 uV,
