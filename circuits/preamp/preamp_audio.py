@@ -497,7 +497,8 @@ if __name__ == "__main__":
     #     (data/2026-09-26/L30, still with the fade of ADR-039 in front; the
     #     sequence without it, ADR-062: on the supply's circuit in L47c2a -
     #     MUTE_CMD released 21 ms after the switch, K501 open 63 ms after
-    #     PERMIT_CMD, data/2026-10-05/L47c2a/seq - and at the jack in L47c2b);
+    #     PERMIT_CMD, data/2026-10-05/L47c2a/seq - and at the jack in L47c2b2,
+    #     15 nV, data/2026-10-06/L47c2b2/tabella.csv);
     #   mains loss or a supply fault is the FAILSAFE: a supervisor releases
     #     MUTE_CMD within 1 ms of either audio rail falling below |13.5 V|;
     #     MUTE_CMD is active-for-music, so a dead supervisor
