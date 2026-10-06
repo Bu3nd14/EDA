@@ -176,6 +176,10 @@ echo "-- 2e. relay safe state on de-energised coils (NC-014) and the trim interl
 # and the panel LEDs proved on their headers J5 / J6 / J7. Made to fail on
 # main's netlist and on 14 sabotaged copies:
 # docs/preamp/data/2026-09-25/L35/falsi/.
+# L48a (ADR-064): the input selector - per input the coupling cap, R_SEL and
+# R_J, the relay's NO to block A's input, the NC free, and the knob SW4 that
+# feeds one coil per position. Made to fail on main's netlist and on 9
+# sabotaged copies: docs/preamp/data/2026-10-06/L48a/falsi/.
 #
 # The netlists are named rather than discovered: the checker FAILS when it
 # finds no relay, deliberately, so it cannot go blind. Adding a second

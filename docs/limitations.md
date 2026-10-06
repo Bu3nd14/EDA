@@ -1085,3 +1085,24 @@ Che cosa aveva toccato:
 `vecmax()` sul vettore, se la scansione copre esattamente la banda; se no, si controlla l'ultimo
 punto con un `find … at=`. Corretti `tb_trim.cir` e `tb_e3_e5.cir` (L47c1). Nei deck canonici
 nessun altro `meas min/max` su una finestra (cercato con grep in L47c1).
+
+## 46. Dentro `.control`, `if $x = parola` con una stringa non confronta: esegue tutti i rami
+
+Scoperto in L48a, nel primo deck di dimensionamento del selettore
+(`data/2026-10-06/L48a/dimensionamento/`). Con `foreach caso oggi 1u_470k ...` e
+`if $caso = oggi` ... `if $caso = 1u_470k` ..., ngspice ha eseguito **ogni** ramo a ogni
+giro: tutte le righe sono uscite col valore dell'ultimo ramo, e nessun errore (solo un
+`cv: no such variable` per un `set` con le virgolette). Con indici numerici
+(`foreach caso 0 1 2`, `if $caso = 0`), come in tutti i deck canonici, i rami si escludono.
+
+**Regola operativa**: nei `.control` i casi si scelgono con numeri. Un deck nuovo ridà prima un
+caso noto (il «oggi»), così un `if` che non esclude si vede subito.
+
+## 47. SKiDL rinomina in silenzio un riferimento esplicito duplicato
+
+Scoperto in L48a. La manopola del selettore, creata con `ref="SW3"`, collideva col deviatore del
+mute SW3 (`preamp_audio.py`): SKiDL l'ha chiamata **SW3_1**, la netlist si è generata con 0
+errori di ERC, e solo il rapporto del 2e ("interruttore SW3_1 su pin 3") l'ha mostrato.
+
+**Regola operativa**: dopo aver dato un riferimento esplicito nuovo, cercarlo nella netlist
+(`grep -o '(ref "SW[0-9_]*")'`): un `_1` in coda è una collisione.

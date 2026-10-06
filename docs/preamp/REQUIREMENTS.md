@@ -28,7 +28,7 @@ decidere con l'utente.
 
 | # | Requisito | ADR |
 |---|---|---|
-| F1 | **4 ingressi** sbilanciati RCA, commutati a **relè**. **Il cambio d'ingresso si fa a caldo, senza clic** (L42c): senza segnale lascia su ogni uscita al più 100 µV di picco (V2, A); con la musica il salto fra i due programmi è accettato. Ogni ingresso, anche non selezionato, è tenuto a 0 V e nessuno resta sospeso durante lo scambio | ADR-009, **ADR-053** |
+| F1 | **4 ingressi** sbilanciati RCA, commutati a **relè**. **Il cambio d'ingresso si fa a caldo, senza clic** (L42c): senza segnale lascia su ogni uscita al più 100 µV di picco (V2, A); con la musica il salto fra i due programmi è accettato. Ogni ingresso, anche non selezionato, è tenuto a 0 V e nessuno resta sospeso durante lo scambio | ADR-009, **ADR-053**, **ADR-064** |
 | F2 | **Trim di livello comune, sul solo ramo dell'uscita variabile**: fra il blocco A e l'attenuatore, 0 / −6 / −12 dB, **a relè bistabili**. **Le uscite fisse restano copia fedele della sorgente**: guadagno 1, il trim non le tocca. Uno solo per tutti gli ingressi: cambiando sorgente si ritocca il trim o il volume | ADR-011, **ADR-027** |
 | F3 | **3 uscite sbilanciate RCA**: principale (attenuata) + 2 a livello fisso, **ciascuna fissa col proprio buffer** | ADR-008, **ADR-023** |
 | F4 | **Attenuatore a scatti**, commutatore rotativo, 10 kΩ, resistenze 0,1% | ADR-009 |

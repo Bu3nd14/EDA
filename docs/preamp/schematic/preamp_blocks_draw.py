@@ -104,19 +104,34 @@ def same(refs, what):
 ZIN = same(["R113", "R313"], "resistenza d'ingresso blocco A")
 
 # Niente mute graduale (ADR-062, L47c1): da L29b2 a L47b2b1 due LDR per canale
-# stavano fra il connettore d'ingresso e il nodo di R_IN. Ora il connettore va
-# dritto all'ingresso del blocco A: si asserisce che il pin 1 di J101 / J301 stia
-# sul nodo di R_IN e che sulla scheda non ci sia nessuna parte della libreria
-# Isolator. Lo stesso, per intento e coi sabotaggi, il 2e.
+# stavano fra il connettore d'ingresso e il nodo di R_IN; sulla scheda non
+# dev'esserci nessuna parte della libreria Isolator.
+# Il selettore (ADR-064, L48a): quattro ingressi per canale, ciascuno col suo
+# condensatore in serie, R_SEL a massa dal lato del preamp e R_J dal lato del
+# jack, e il NO di un rele' per ingresso (K13..K16, polo 1 = L, polo 2 = R)
+# col COM sul nodo di R_IN. Lo stesso, per intento e coi sabotaggi, il 2e.
 _pins = {}
 for _chunk in re.split(r"\(net\s*\(code", _src.split("(nets", 1)[-1])[1:]:
     _nm = re.search(r'\(name "([^"]*)"\)', _chunk).group(1)
     for _m in re.finditer(r'\(ref "([^"]+)"\)\s*\(pin "([^"]+)"\)', _chunk):
         _pins[(_m.group(1), _m.group(2))] = _nm
-for _j, _rin in (("J101", "R113"), ("J301", "R313")):
-    assert _pins[(_j, "1")] == _pins[(_rin, "1")], (
-        f"{_j}: l'ingresso non va dritto al nodo di R_IN ({_pins[(_rin, '1')]}), "
-        f"sta su {_pins[(_j, '1')]}")
+C_IN = same([f"C{b + 71 + n}" for b in (100, 300) for n in range(4)],
+            "condensatore d'ingresso")
+R_SEL = same([f"R{b + 71 + n}" for b in (100, 300) for n in range(4)],
+             "R_SEL degli ingressi")
+R_J = same([f"R{b + 75 + n}" for b in (100, 300) for n in range(4)],
+           "R_J degli ingressi")
+for _b, _rin, _com, _no in ((100, "R113", "3", "4"), (300, "R313", "6", "5")):
+    for _n in range(4):
+        _j, _c = f"J{_b + 1 + _n}", f"C{_b + 71 + _n}"
+        _rs, _k = f"R{_b + 71 + _n}", f"K{13 + _n}"
+        assert _pins[(_j, "1")] == _pins[(_c, "1")] != _pins[(_rin, "1")], (
+            f"{_j}: il pin 1 non sta sul condensatore {_c}, o sta sul nodo di "
+            f"R_IN (l'ingresso in continua di NC-040)")
+        assert _pins[(_c, "2")] == _pins[(_rs, "1")] == _pins[(_k, _no)], (
+            f"{_c}: il lato del preamp non porta {_rs} e il NO di {_k}")
+        assert _pins[(_k, _com)] == _pins[(_rin, "1")], (
+            f"{_k}: il COM non sta sul nodo di R_IN ({_pins[(_rin, '1')]})")
 assert '(lib "Isolator")' not in _src, \
     "c'e' una parte della libreria Isolator: il mute graduale e' stato tolto (ADR-062)"
 
@@ -473,11 +488,15 @@ box(3.0, Y, 4.0, 2.7,
     ["4 × RCA", "sbilanciati", "F1"], head_size=10)
 arrow(5.0, Y, 6.3, Y)
 box(9.0, Y, 5.2, 2.7,
-    ["SELETTORE", "a relè", "ADR-009"], head_size=10)
+    ["SELETTORE", "a relè, K13–K16",
+     f"{pretty(C_IN, 'F').replace('u', 'µ')} + {pretty(R_SEL, OHM)}",
+     "per ingresso, ADR-064"],
+    head_size=10)
 # Da L16 (ADR-027) il trim non sta qui: e' uno solo, sul ramo dell'uscita
 # variabile, sulla riga YA piu' sotto. Da L29b2 a L47b2b1 fra il selettore e
 # il blocco A stava il mute graduale (due LDR); ADR-062 l'ha tolto: il
 # selettore va dritto al blocco A, e il mute taglia coi soli rele' al jack.
+# Da L48a (ADR-064) ogni ingresso ha il suo condensatore prima del rele'.
 arrow(11.6, Y, 19.8, Y)
 box(23.0, Y, 5.6, 3.4,
     ["BLOCCO A", "guadagno 1 (0 dB)", f"Zin {R_ZIN}",
@@ -630,9 +649,9 @@ txt((23.0, 2.70),
 
 # Le tre cornici tratteggiate: il titolo sta in ALTO e il testo piu' in
 # basso. Nella prima versione si sovrapponevano.
-dashed_frame(1.6, 0.5, 15.4, 2.4, "SCHEDA INGRESSI (a monte)")
-txt((8.5, 1.15), "selettore d'ingresso.  Non è in preamp_audio.py:\n"
-                 "il trim sì, da L16 (ADR-027)",
+dashed_frame(1.6, 0.5, 15.4, 2.4, "INGRESSI")
+txt((8.5, 1.15), "selettore d'ingresso: in preamp_audio.py e\n"
+                 "selector.py da L48a (ADR-064), manopola SW4",
     size=8, color=DIM)
 
 dashed_frame(16.2, 0.5, 30.0, 2.4, "SCHEDA AUDIO (P4)")
@@ -642,7 +661,7 @@ txt((23.1, 1.15), "blocchi A, B e 2 buffer ×2 canali, trim, contatti di mute,\n
     size=8, color=DIM)
 
 dashed_frame(30.8, 0.5, 44.4, 2.4, "PANNELLO E ALIMENTAZIONE")
-txt((37.6, 1.15), "attenuatore, SW2, SW3 e LED (J5 J6 J7) a pannello;\n"
+txt((37.6, 1.15), "attenuatore, SW1–SW4 e LED (J5 J6 J7) a pannello;\n"
                   "alimentatore e temporizzatore a parte, via J1 e J4",
     size=8, color=DIM)
 
