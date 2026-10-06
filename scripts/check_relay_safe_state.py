@@ -115,16 +115,30 @@ THE INPUT, WITH NO GRADUATED MUTE (ADR-062, L47c1). From L29b2 to L47b2b1
 two photoresistors per channel faded the music at block A's input, and this
 check asserted where they sat. ADR-062 (the user's choice of 2026-10-04)
 removed them: the mute cuts with the jack relays alone. Asserted, by intent:
-  - no opto-coupled part (KiCad library Isolator, or a value naming an LDR)
-    and no LDR_CMD harness anywhere on the board: a cell put back is the fade
-    ADR-062 removed, and a decision to take with the user, not a part to
-    slip in;
-  - per channel, pin 1 of the input connector IN_<ch> is ON the node that
-    carries R_IN = 1M to GND - block A's input - and pin 2 on GND: nothing in
-    series between the source and block A.
-A cell left in series would still generate and simulate, and would put its
-dark resistance (>= 25 MOhm) in front of R_IN: the music would never reach
-block A.
+no opto-coupled part (KiCad library Isolator, or a value naming an LDR) and
+no LDR_CMD harness anywhere on the board: a cell put back is the fade
+ADR-062 removed, and a decision to take with the user, not a part to slip
+in. A cell left in series would still generate and simulate, and would put
+its dark resistance (>= 25 MOhm) in front of R_IN: the music would never
+reach block A.
+
+THE SELECTOR (ADR-064, L48a). Four inputs per channel, each AC-coupled with
+its preamp side held at 0 V, and one monostable per input (role SEL, value
+SEL1..SEL4) whose pole 1 carries the left channel and pole 2 the right.
+Asserted, by intent, per channel and per input n:
+  - the connector IN<n>_<ch>: pin 2 on GND, pin 1 on a node with a resistor
+    to GND (R_J: an empty jack sits at 0 V, F1) that is NOT block A's input
+    (the DC coupling of NC-040 put back);
+  - from that node exactly one capacitor to a node SEL with exactly one
+    resistor to GND (R_SEL: the input's preamp side at 0 V, selected or not)
+    and the NO throw of SEL<n>'s pole of this channel;
+  - every SEL pole of the channel has its COM on ONE node, which carries
+    R_IN = 1M to GND - block A's input - and its NC throw free: with the
+    coils de-energised no input reaches block A;
+  - the knob (value INPUT, Switch:SW_Rotary_3x4), walked position by
+    position from VRELAY with the mute relays both released and energised,
+    feeds exactly the coil of SEL<position>, and every SEL coil returns on
+    RLY_RET with a 1N4148 across it, cathode on the fed end.
 
 Deliberately NOT reusing scripts/check_schematic.py's parser: that one
 reads a FLAT SPICE netlist, this one reads the KiCad s-expression netlist.
@@ -191,6 +205,11 @@ BISTABLE = {("Relay", "G6KU-2")}
 KNOWN_SWITCHES = {
     ("Switch", "SW_Rotary_4x3"): {"13": ("1", "2", "3"), "14": ("4", "5", "6"),
                                   "15": ("7", "8", "9"), "16": ("10", "11", "12")},
+    # L48a: commons 13-15, throws 1-4, 5-8, 9-12 (pin geometry of the KiCad
+    # symbol: 13 sits by 1-4, 14 by 5-8, 15 by 9-12).
+    ("Switch", "SW_Rotary_3x4"): {"13": ("1", "2", "3", "4"),
+                                  "14": ("5", "6", "7", "8"),
+                                  "15": ("9", "10", "11", "12")},
 }
 TWO_TERMINAL = {("Device", p) for p in ("R", "D", "D_Schottky", "LED",
                                         "D_TVS")}
@@ -239,7 +258,12 @@ ROLES = {
     "HOLD": {"grounded": None, "bistable": False},
     "TRIM": {"grounded": None, "bistable": True},
     "SPIA": {"grounded": None, "bistable": True},
+    # L48a, ADR-064: the input selector, SEL1..SEL4. Judged by
+    # check_input(): de-energised, its NO throw - the input - is open.
+    "SEL": {"grounded": None, "bistable": False},
 }
+N_INPUTS = 4
+SEL_KNOB_VALUE = "INPUT"
 
 # ADR-062 (L47c1): the graduated mute is gone. A part from KiCad's Isolator
 # library (Isolator:NSL-32 from L47b2a to L47b2b1, Isolator:VTL5C before), or
@@ -1077,8 +1101,8 @@ def check_panel_leds(components, relays, by_role, pin_net, findings):
     return report
 
 
-def check_input(components, pin_net, findings):
-    """Block A's input with no graduated mute, by intent (ADR-062)."""
+def check_input(components, relays, by_role, pin_net, findings):
+    """No graduated mute (ADR-062); the selector by intent (ADR-064)."""
     report = []
     for ref, c in sorted(components.items()):
         if c["lib"] in OPTO_LIBS or "LDR" in c["value"].upper():
@@ -1091,33 +1115,140 @@ def check_input(components, pin_net, findings):
     members = defaultdict(set)
     for (ref, pin), net in pin_net.items():
         members[net].add((ref, pin))
-    for ch in INPUT_CHANNELS:
-        conns = [r for r, c in components.items() if c["value"] == f"IN_{ch}"]
-        if len(conns) != 1:
+
+    def other(ref, pin):
+        return pin_net.get((ref, "2" if pin == "1" else "1"))
+
+    def to_gnd(net, part):
+        """Two-pin parts `part` with one pin on `net` and the other on GND."""
+        return sorted(r for r, pin in members.get(net, ())
+                      if components.get(r, {}).get("part") == part
+                      and other(r, pin) == "GND")
+
+    sels = {index_of(relays[r]["value"]): r for r in by_role["SEL"]}
+    want = {str(n) for n in range(1, N_INPUTS + 1)}
+    if set(sels) != want or len(by_role["SEL"]) != N_INPUTS:
+        findings.append(
+            f"selettore: attesi esattamente i rele' SEL1..SEL{N_INPUTS} "
+            f"(F1, ADR-064: un monostabile per ingresso), trovati "
+            f"{sorted((relays[r]['value'], r) for r in by_role['SEL'])}.")
+        return report
+    poles = G6K_2F_Y["poles"]
+    for ch, pole in zip(INPUT_CHANNELS, poles):
+        coms = {pin_net.get((sels[n], pole["COM"])) for n in sorted(want)}
+        if len(coms) != 1 or None in coms:
             findings.append(
-                f"canale {ch}: il connettore d'ingresso IN_{ch} c'e' "
-                f"{len(conns)} volte, ne serve uno. Senza, il controllo "
-                f"dell'ingresso non ha niente da guardare.")
+                f"canale {ch}: i COM del {pole['name']} dei rele' SEL stanno "
+                f"su {sorted(map(str, coms))}, non su un nodo solo: "
+                f"l'ingresso del blocco A e' uno.")
             continue
-        j = conns[0]
-        hot, cold = pin_net.get((j, "1")), pin_net.get((j, "2"))
-        r_in = sorted(
-            r for r, pin in members.get(hot, ())
-            if components.get(r, {}).get("part") == "R"
-            and components[r]["value"] == "1M"
-            and pin_net.get((r, "2" if pin == "1" else "1")) == "GND")
-        if cold != "GND":
-            findings.append(
-                f"{j} (IN_{ch}): il pin 2 deve stare su GND, sta su {cold}.")
+        ain = coms.pop()
+        r_in = [r for r in to_gnd(ain, "R") if components[r]["value"] == "1M"]
         if len(r_in) != 1:
             findings.append(
-                f"{j} (IN_{ch}): il pin 1 sta sulla rete {hot}, che non porta "
-                f"una e una sola R_IN = 1M verso GND (ne porta "
-                f"{len(r_in)}: {r_in}). ADR-062: il connettore va dritto "
-                f"all'ingresso del blocco A, senza niente in serie.")
-        else:
-            report.append(f"ingresso {ch}: {j} pin 1 su {hot} con R_IN "
-                          f"{r_in[0]} a GND, nessuna cella")
+                f"canale {ch}: il nodo dei COM dei rele' SEL ({ain}) non "
+                f"porta una e una sola R_IN = 1M verso GND (ne porta "
+                f"{len(r_in)}: {r_in}): non e' l'ingresso del blocco A.")
+            continue
+        for n in sorted(want):
+            k = sels[n]
+            nc = pin_net.get((k, pole["NC"]))
+            if nc is not None and len(members.get(nc, ())) > 1:
+                findings.append(
+                    f"{k} (SEL{n}), {pole['name']}: il NC sta su {nc}, che "
+                    f"porta altro. A riposo il contatto deve lasciare il "
+                    f"blocco A senza ingresso (ADR-064).")
+            name = f"IN{n}_{ch}"
+            conns = [r for r, c in components.items() if c["value"] == name]
+            if len(conns) != 1:
+                findings.append(
+                    f"canale {ch}: il connettore d'ingresso {name} c'e' "
+                    f"{len(conns)} volte, ne serve uno (F1: 4 ingressi).")
+                continue
+            j = conns[0]
+            hot, cold = pin_net.get((j, "1")), pin_net.get((j, "2"))
+            if cold != "GND":
+                findings.append(
+                    f"{j} ({name}): il pin 2 deve stare su GND, sta su {cold}.")
+            if hot == ain:
+                findings.append(
+                    f"{j} ({name}): il pin 1 sta sull'ingresso del blocco A "
+                    f"({ain}), in continua: e' NC-040. ADR-064 vuole un "
+                    f"condensatore per ingresso.")
+                continue
+            r_j = to_gnd(hot, "R")
+            if not r_j:
+                findings.append(
+                    f"{j} ({name}): nessuna resistenza a GND sul pin 1 "
+                    f"({hot}): a jack vuoto l'ingresso resta sospeso (F1, "
+                    f"PR-14: ogni ingresso sta a 0 V).")
+            caps = sorted((r, pin) for r, pin in members.get(hot, ())
+                          if components.get(r, {}).get("part") == "C")
+            if len(caps) != 1:
+                findings.append(
+                    f"{j} ({name}): sul pin 1 ({hot}) ci sono {len(caps)} "
+                    f"condensatori {[r for r, _ in caps]}, ne serve uno in "
+                    f"serie (ADR-064).")
+                continue
+            c_in = caps[0][0]
+            sel = other(*caps[0])
+            r_sel = to_gnd(sel, "R")
+            if len(r_sel) != 1:
+                findings.append(
+                    f"{c_in} ({name}): il lato del preamp ({sel}) porta "
+                    f"{len(r_sel)} resistenze a GND {r_sel}, ne serve una: "
+                    f"l'ingresso, scelto o no, sta a 0 V (ADR-064).")
+            if pin_net.get((k, pole["NO"])) != sel:
+                findings.append(
+                    f"{c_in} ({name}): il lato del preamp ({sel}) non va al "
+                    f"NO del {pole['name']} di {k} (SEL{n}): sta su "
+                    f"{pin_net.get((k, pole['NO']))}.")
+                continue
+            report.append(
+                f"ingresso {name}: {j} -> {c_in} {components[c_in]['value']}"
+                f" (R_J {','.join(r_j)}; R_SEL {','.join(r_sel)}) -> {k} NO, "
+                f"COM su {ain} con R_IN {r_in[0]}")
+
+    # The knob: position by position, exactly SEL<position> is fed, in mute
+    # and out of it.
+    knobs = [r for r, c in components.items()
+             if (c["lib"], c["part"]) in KNOWN_SWITCHES
+             and SEL_KNOB_VALUE in c["value"].upper()]
+    if len(knobs) != 1:
+        findings.append(
+            f"selettore: attesa una manopola col valore {SEL_KNOB_VALUE}, "
+            f"trovate {sorted(knobs)}.")
+        return report
+    sw = knobs[0]
+    npos = len(next(iter(KNOWN_SWITCHES[(components[sw]["lib"],
+                                         components[sw]["part"])].values())))
+    on_mute, on_permit = command_relays(relays, by_role, pin_net)
+    for n in sorted(want):
+        k = sels[n]
+        hi, lo = coil_nets(k, relays, pin_net)
+        if lo != "RLY_RET":
+            findings.append(f"{k} (SEL{n}): la bobina torna su {lo}, non su "
+                            f"RLY_RET.")
+        fw = [r for r, pin in members.get(hi, ())
+              if components.get(r, {}).get("part") == "D" and pin == "1"
+              and pin_net.get((r, "2")) == lo]
+        if not fw:
+            findings.append(f"{k} (SEL{n}): nessun diodo di ricircolo col "
+                            f"catodo su {hi} e l'anodo su {lo}.")
+    for state, energised in (("in mute", ()),
+                             ("fuori mute", tuple(on_mute + on_permit))):
+        for p in range(1, npos + 1):
+            seen = reach(components, pin_net, energised,
+                         positions={sw: p})
+            fed = sorted(n for n in want
+                         if coil_nets(sels[n], relays, pin_net)[0] in seen)
+            if fed != [str(p)]:
+                findings.append(
+                    f"{sw} in posizione {p}, {state}: alimenta le bobine "
+                    f"SEL{fed}, attesa solo SEL{p}.")
+    report.append(f"selettore: {sw}, {npos} posizioni, ciascuna alimenta solo "
+                  f"la sua bobina SEL, in mute e fuori; a riposo nessun "
+                  f"ingresso sul blocco A")
     return report
 
 
@@ -1170,7 +1301,7 @@ def check(components, pin_net):
     report += interlock(components, relays, by_role, pin_net, findings)
     report += gain_interlock(components, relays, by_role, pin_net, findings)
     report += check_panel_leds(components, relays, by_role, pin_net, findings)
-    report += check_input(components, pin_net, findings)
+    report += check_input(components, relays, by_role, pin_net, findings)
     return findings, relays, report
 
 
@@ -1479,8 +1610,9 @@ def main(argv):
               "il permissivo ha un comando proprio, distinto da quello del "
               "mute, e guadagno e trim restano fermi nella finestra D "
               "(ADR-045); i LED a pannello dicono lo stato vero (F9, F11); "
-              "l'ingresso va dritto al blocco A, senza il mute graduale "
-              "che ADR-062 ha tolto.")
+              "nessun mute graduale (ADR-062); ogni ingresso ha il suo "
+              "condensatore e il lato del preamp a 0 V, e la manopola del "
+              "selettore alimenta un solo rele' per posizione (ADR-064).")
         return 0
 
     print(f"\nFALLITO: {len(findings)} problemi\n")

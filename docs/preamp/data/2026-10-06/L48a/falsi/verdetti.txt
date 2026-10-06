@@ -1,0 +1,13 @@
+CADE   rc=1  main: un ingresso in continua, nessun selettore  [atteso: attesi esattamente i rele' SEL1..SEL4]
+CADE   rc=1  IN1_L in continua sull'ingresso del blocco A (NC-040 rimessa)  [atteso: in continua: e' NC-040]
+CADE   rc=1  R_SEL di IN1_L tolta (lato del preamp sospeso)  [atteso: porta 0 resistenze a GND]
+CADE   rc=1  R_J di IN2_R tolta (jack vuoto sospeso)  [atteso: a jack vuoto l'ingresso resta sospeso]
+CADE   rc=1  il NC di SEL1 sull'ingresso del blocco A L  [atteso: il NC sta su]
+CADE   rc=1  IN3_L sul NO del rele' sbagliato  [atteso: non va al NO del polo 1]
+CADE   rc=1  la manopola in posizione 2 alimenta SEL1  [atteso: SW4 in posizione 2, in mute: alimenta le bobine SEL['1'], attesa solo SEL2]
+CADE   rc=1  il diodo di ricircolo di SEL3 al contrario  [atteso: nessun diodo di ricircolo]
+CADE   rc=1  SEL2 bistabile  [atteso: il ruolo SEL vuole un rele' monostabile]
+CADE   rc=1  la bobina di SEL4 a GND invece che su RLY_RET  [atteso: la bobina torna su GND]
+PASSA  rc=0  controllo: netlist nuova
+
+10 falsi su 10 cadono per il motivo giusto; controlli OK

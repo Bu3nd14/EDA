@@ -1,64 +1,73 @@
-# Prompt per la sessione successiva — L48 (il selettore d'ingresso e la continua)
+# Prompt per la sessione successiva — L48b (la continua del blocco A attraverso trim e volume)
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L48**, e si ferma. Non iniziarne un secondo.
+LOTTI PICCOLI: questa sessione fa **L48b**, e si ferma. Non iniziarne un secondo.
 
 ## Perché questo lotto, e perché adesso
 
-Il mute è chiuso: L47 (a, b, c) ha tolto le fotoresistenze, il mute taglia coi soli relè
-(ADR-062), V2 regge (L47c2b1, ADR-063) e i guasti dell'alimentatore reggono (L47c2b2). L'ordine
-dei lotti di rimedio è quello scelto dall'utente il 2026-10-01: **L48** selettore d'ingresso →
-**L49** placement e routing di prova → **G1** → **L45** FMEA → **L50** massa e terra.
+L48 è stato diviso dall'utente all'inizio (2026-10-06, «Due parti»). La prima parte è fatta: il
+selettore d'ingresso coi condensatori per ingresso (ADR-064), **NC-040 chiusa**. Resta la seconda
+bloccante per G1 trovata dall'architetto avversariale (L43a):
 
-L48 chiude due non conformità **bloccanti per G1**, trovate dall'architetto avversariale (L43a):
+- **NC-041** — la continua del blocco A attraversa trim e volume: ogni scatto del volume (e del
+  trim) lascia un gradino al jack (PR-20, V2, F4), e il dossier dice il contrario. Oggi la
+  continua nominale del blocco è −6,6 mV (ADR-056); sul prototipo la dispersione la riallarga
+  (VGS1−VGS2 dell'LSK489 fino a 20 mV, β del VAS −36…+6 mV, R120/R119 ~7 mV per 1 %).
 
-- **NC-040** — l'ingresso è accoppiato in continua: il cambio d'ingresso porta sulle uscite la
-  differenza fra le continue delle sorgenti (PR-14, F1). Stima dell'architetto: ~10 mV da
-  un'uscita a valvole con un film da 1 µF, 100 volte i 100 µV del jack fisso.
-- **NC-041** — la continua del blocco A attraversa trim e volume: ogni scatto del volume lascia un
-  gradino al jack (PR-20, V2, F4), e il dossier dice il contrario. Oggi la continua nominale del
-  blocco è −6,6 mV (ADR-056), ma sul prototipo la dispersione la riallarga.
+L'ordine dei lotti scelto dall'utente il 2026-10-01 resta: **L48b** → **L49** placement e routing
+di prova → **G1** → **L45** FMEA → **L50** massa e terra.
 
-Il selettore d'ingresso **non è mai stato progettato** (PR-14: «il selettore è ancora da
-progettare»).
+## Il punto che L48a ha trovato, e che va misurato per primo
+
+NC-041 e il vecchio prompt indicavano come rimedio **un condensatore all'ingresso del blocco B con
+la sua resistenza di gate**. Un calcolo a mano di L48a (non ancora una simulazione) dice che **non
+toglie il gradino**: a uno scatto la continua del cursore salta di V_A·Δ(rapporto), il salto passa
+il condensatore come un gradino e poi decade con la sua costante di tempo, quindi il picco al jack
+resta V_A·Δ(rapporto)·G_B. Toglie la continua dal blocco B, non il gradino. Lo stesso vale per il
+trim. È scritto in NC-041 («Aggiornamento L48a»).
+
+Le strade che il calcolo indica:
+- **un condensatore prima del trim**, all'uscita del blocco A sul ramo variabile: il carico lì
+  scende a 1,51 kΩ (la scala del trim ∥ l'attenuatore da 10 kΩ, `trim.py`), quindi ≥ 47 µF per
+  ≤ 0,05 dB a 20 Hz (E9 ±0,2 dB su tutta la catena, col 4,7 µF d'uscita); un film di quella
+  taglia è grosso, un elettrolitico bipolare va contro lo spirito di ADR-007 (polipropilene);
+  alzare l'impedenza della scala del trim cambia ADR-027 ed E5;
+- **una continua del blocco A più piccola**: ADR-007 ha escluso il servo («Nessun servo»); un
+  trimmer al prototipo o la selezione delle parti non è un rimedio strutturale;
+- **il condensatore all'ingresso del blocco B**, per avere il controfattuale misurato.
 
 ## Il mandato
 
-### 1. All'inizio, con l'utente
+### 1. Prima la misura, poi l'utente
 
-Le domande si fanno **per nome**, mai per sigle; i livelli in **dB SPL** contro una stanza
-silenziosa, non in mV. Prima di tutto chiedere se L48 si **divide** (è grande: il selettore, il
-condensatore d'ingresso, quello del blocco B, il banco nuovo, e le misure rifatte).
+Un banco (sotto `data/<data>/L48b/`) con la catena di `tb_trim.cir` e il blocco A con la sua
+continua (−6,6 mV nominale e i due estremi della dispersione, per esempio ±30 mV): uno scatto del
+volume in cima alla corsa (da 0 a −2 dB, il caso dell'architetto: 3,2 mV / 63,5 dB SPL a 0 dB,
+10 mV / 73,5 dB SPL a +10 dB con −15,45 mV) e uno a metà corsa, a ogni guadagno, e un cambio del
+trim; il picco al jack principale, in µV **e in dB SPL** contro una stanza silenziosa (100 µV =
+33 dB SPL), per: oggi (il controfattuale), il condensatore al blocco B, il condensatore prima del
+trim (valori e tipo), e se serve altro. Poi le domande all'utente.
 
-Da portare coi numeri, misurati prima della domanda dove si può:
-
-- **Il cambio d'ingresso**: un condensatore per ingresso con la sua resistenza a massa (il rimedio
-  classico di NC-040), oppure commutare sotto mute. NC-040 dice «~13 s col profilo di oggi»: è
-  **superato**, col mute che taglia il silenzio arriva in ~24 ms dal tasto (L47c2a). Le due strade
-  non si escludono.
-- **La continua di trim e volume**: un condensatore all'ingresso del blocco B con la sua
-  resistenza di gate (il rimedio di NC-041). E5 e il V1 del blocco B si rimisurano.
-- I relè del selettore (tipo, bistabili o no, chi li comanda: il firmware del temporizzatore ha
-  6 pin liberi col buffer d'ingresso disattivato, `pin_liberi`).
+Le domande si fanno **per nome**, mai per sigle; i livelli in **dB SPL**. Chiedere anche se L48b
+si divide (la misura e la scelta / il sorgente e le misure rifatte).
 
 ### 2. Il lavoro (dopo le scelte)
 
 - Il sorgente in `circuits/preamp/` (mai a mano le netlist), con la ADR che lo decide.
-- E3 ed E5 rimisurati sull'ingresso nuovo (`tb_e3_e5.cir`, `tb_trim.cir`; attenzione a
-  limitations **#45**, `meas min` che salta i 20 kHz).
-- **F1 sul banco con due sorgenti a continue diverse** (NC-040).
+- E5 e il V1 del blocco B rimisurati (`tb_e3_e5.cir`, `tb_trim.cir`, `tb_loop.cir`; attenzione a
+  limitations **#45**); E9 a 20 Hz su tutta la catena se si aggiunge un polo.
 - **Il volume fra gli eventi del banco di V2**, con uno scatto in cima alla corsa a ogni guadagno
   (NC-041); il generatore è `data/2026-09-23/L29c/deck/genera_tb_v2_casopeggiore.py`, già senza
   celle e col contatto `BSERx` di ADR-063.
-- La regressione dei 21 deck (`data/2026-10-06/L47c2b2/script/regressione.sh`, il «prima» è
-  `L47c2b2/regressione/dopo`); il firmware sull'host se lo si tocca.
-- I controlli 2e / 2j se cambiano ingressi e cablaggio, coi loro falsi.
+- La regressione dei 21 deck: `data/2026-10-06/L48a/script/regressione.sh` (copiarla nel lotto),
+  il «prima» è `L48a/regressione/dopo`; `confronta.py` accanto.
+- I controlli 2e / 2f se cambia il sorgente, coi loro falsi.
 
 ### 3. Non conformità
 
-NC-040 e NC-041 si chiudono solo con la misura sul circuito nuovo. NC-050 resta aperta fino al
-carico congelato (G2). La frase falsa del dossier (NC-041) si corregge quando si rigenera il
-dossier, non qui.
+NC-041 si chiude solo con la misura sul circuito nuovo e col volume nel banco di V2. NC-050 resta
+aperta fino al carico congelato (G2). La frase falsa del dossier (NC-041: «il trim sta dopo il
+condensatore d'uscita del blocco A») si corregge quando si rigenera il dossier, non qui.
 
 ## Prima di tutto
 
@@ -67,12 +76,16 @@ dossier, non qui.
   - #33/#38/#40 il «transient op», #34 un `alter` che sopravvive a `destroy all`;
   - #35 la `tran` abortita che scrive zeri, #36 la PWL lunga;
   - #37 le Note nelle tabelle, #44 l'offset nel banco V2, #45 `meas min`.
-- `docs/preamp/STATE.md`: «In breve», **L47c2b2**, **L47c2b1**, L47c1, L46b, L43a, L43b.
-- `NONCOMPLIANCE.md`: **NC-040**, **NC-041**.
-- `PRB.md`: PR-11, PR-13, **PR-14**, PR-16, **PR-20**; `REQUIREMENTS.md`: F1, F3, F4, E3, E5, E12, V2.
-- `reports/2026-09-27-L43a-architetto-avversariale.md` (rilievi R2, R3),
-  `reports/2026-10-06-L47c2b2-guasti-regressione.md`.
-- `decisions/ADR-062*`, `063*`, `056*`, `053*`, `038*` (superata), `007*`.
+- In ngspice, dentro `.control`, un `if $x = parola` con una **stringa** non confronta: esegue
+  tutti i rami (L48a, il primo dimensionamento). Usare indici numerici, come i deck esistenti.
+- SKiDL rinomina in silenzio un riferimento esplicito duplicato (SW3 → SW3_1, L48a): controllare
+  i riferimenti nuovi contro la netlist.
+- `docs/preamp/STATE.md`: «In breve», **L48a**, L47c2b2, L46b, L46a, L43a.
+- `NONCOMPLIANCE.md`: **NC-041** (con l'aggiornamento di L48a), NC-050.
+- `PRB.md`: PR-16, **PR-20**; `REQUIREMENTS.md`: F4, E5, E9, V1, **V2**.
+- `reports/2026-09-27-L43a-architetto-avversariale.md` (rilievo R3),
+  `reports/2026-10-06-L48a-selettore.md`.
+- `decisions/ADR-064*`, `056*`, `054*`, `027*`, `007*`, `032*`, `063*`.
 
 ## I vincoli
 
@@ -96,11 +109,15 @@ dossier, non qui.
 ## NON fa parte di questo lotto
 
 - il placement e il routing di prova (L49); la FMEA (L45); la massa e la terra (L50);
+- il selettore d'ingresso (fatto, ADR-064), salvo che L48b lo tocchi per forza;
 - tornare a una sfumatura del mute, o mettere un tetto al clic del taglio: li riapre solo l'utente;
 - togliere `models/optocoupler/nsl32sr3_comportamentale.lib` da `models/`: se ne decide con
   l'utente solo se lo chiede;
 - l'adattatore `firmware/preamp_timer/src/main_attiny.c`;
+- PR-14 nel PRB dice ancora «il selettore è ancora da progettare» nei dettagli: cambiarlo vuole
+  una ADR, da allineare con l'utente solo se lo chiede;
 - rigenerare il dossier. Quando lo si rigenera:
+  - il selettore d'ingresso (ADR-064) non c'è: la scheda ingressi «a monte» non esiste più;
   - il §14 di `build_dossier.py` («solo l'LSK489A porta KF», «niente distorsione») è superato da L44
     e L46a;
   - il mute descritto è quello della VTL5C4, e il dossier cita `tb_e3_e5_ldr.cir` (ora
@@ -117,10 +134,10 @@ dossier, non qui.
 
 ## CHIUSURA
 
-1. `STATE.md` con L48 **fatto** (o le sue parti, se l'utente lo divide) e il prossimo lotto nella
+1. `STATE.md` con L48b **fatto** (o le sue parti, se l'utente lo divide) e il prossimo lotto nella
    tabella (L49).
 2. Riscrivi QUESTO file per il lotto successivo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L48` (o il nome della parte).
+4. `/bin/zsh scripts/chunk_close.sh L48b` (o il nome della parte).
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**

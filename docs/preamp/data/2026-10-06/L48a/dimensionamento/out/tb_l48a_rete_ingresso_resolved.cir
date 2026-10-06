@@ -1,0 +1,183 @@
+tb_l48a_rete_ingresso.cir - L48a: dimensionamento della rete d'ingresso per ingresso (C_in, R a massa lato preamp): E3, perdita a 20 Hz, E5
+* Prima riga = titolo (docs/limitations.md #10).
+*
+* COSA SI PROVA (L48a, NC-040; la scelta dell'utente del 2026-10-06,
+* "Condensatore per ingresso"). Davanti al blocco A, per ogni ingresso:
+*
+*   VSRC --RSRC-- JIN --CIN-- SEL --K (contatto del selettore)-- AIN --[blocco A]-- ...
+*                      (RLK)   |                                  |
+*                            RSEL a massa                     CSEL (selettore + cablaggio)
+*
+* RLK e' la perdita del condensatore: costante d'isolamento 10 000 s
+* (10 000 MOhm*uF, il minimo del poliestere citato in L43a; il polipropilene
+* fa di meglio), cioe' RLK = 1e4 / CIN. Qui conta poco; conta nel banco F1.
+*
+* Si spazzano CIN 1u / 2.2u / 4.7u e RSEL 470k / 1M; il caso "oggi" (CIN
+* cortocircuitato da RBYP, RSEL aperta) e' il riferimento, e deve ridare
+* tb_e3_e5 di L47c2b2 (E3 114,7 kOhm con 68 pF; E5 5,50 uV).
+*
+* E3: |Zin| al connettore JIN, minimo su 20 Hz - 20 kHz con vecmin (non
+*     `meas min`, limitations #45), CSEL 68 pF, trim a 0 dB (E3 non dipende dal
+*     trim, tb_e3_e5).
+* PERDITA: |v(ain)/v(vsn)| a 20 Hz meno quella a 1 kHz, in dB, con la
+*     sorgente da 1,5 ohm e da 430 ohm. E' la quota della rete d'ingresso nel
+*     bilancio di E9 (+-0,2 dB), che va su tutte e tre le uscite.
+* E5: rumore al jack principale, trim 0, +10 dB, attenuatore al massimo e a
+*     meta' corsa, sorgente 1,5 / 430 ohm (i quattro peggiori di tb_e3_e5).
+*
+* Tabelle (echo):
+*   rete_e3.csv     cin,rsel,zmin_ohm,z20_ohm,z20k_ohm
+*   rete_perdita.csv cin,rsel,rsrc,perdita20_db
+*   rete_e5.csv     cin,rsel,att,rsrc,onoise_uv
+
+.include /Users/roberto/EDA/.claude/worktrees/L48a-selettore/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L48a-selettore/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L48a-selettore/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L48a-selettore/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L48a-selettore/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L48a-selettore/models/diodes/1n4148.lib
+.include /Users/roberto/EDA/.claude/worktrees/L48a-selettore/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L48a-selettore/spice/preamp/gain_block.subckt
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+
+* --- la sorgente e la rete d'ingresso ---
+VSRC  VSN 0 DC 0 AC 1
+RSRC  VSN JIN 1.5
+CIN   JIN SEL 1u
+RLK   JIN SEL 1e10
+RBYP  JIN SEL 1e15
+RSEL  SEL 0 470k
+RK    SEL AIN 0.1
+CSEL  AIN 0 68p
+
+* --- blocco A ---
+XA AIN AOUT AFB ARG ARG10 VPLUS VMINUS GAINBLOCK
+RARG   ARG   0 1G
+RARG10 ARG10 0 1G
+
+* --- il trim a 0 dB (ADR-027) e l'attenuatore ---
+RL1 AOUT TAP6 845
+RL2 TAP6 TAP12 464
+RL3 TAP12 0 464
+RT1R AOUT ATOP 0.1
+CWIRE ATOP 0 100p
+RATTH ATOP BIN 1m
+RATTL BIN 0 10k
+
+* --- blocco B a +10 dB ---
+XB BIN BOUT BFB BRG BRG10 VPLUS VMINUS GAINBLOCK
+CSTB    BRG   0 15p
+RRGB    BRG   0 0.1
+CSTB10  BRG10 0 15p
+RRG10B  BRG10 0 0.1
+
+RISO   BOUT BOUTA 47
+COUT   BOUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+
+.control
+echo "cin,rsel,zmin_ohm,z20_ohm,z20k_ohm" > rete_e3.csv
+echo "cin,rsel,rsrc,perdita20_db" > rete_perdita.csv
+echo "cin,rsel,att,rsrc,onoise_uv" > rete_e5.csv
+foreach caso 0 1 2 3 4 5 6
+  if $caso = 0
+    set cv = c0
+    set rv = rinf
+    alter rbyp = 1m
+    alter rsel = 1e15
+  end
+  if $caso = 1
+    set cv = c1u
+    set rv = r470k
+    alter rbyp = 1e15
+    alter cin = 1u
+    alter rlk = 1e10
+    alter rsel = 470k
+  end
+  if $caso = 2
+    set cv = c2.2u
+    set rv = r470k
+    alter cin = 2.2u
+    alter rlk = 4.545e9
+    alter rsel = 470k
+  end
+  if $caso = 3
+    set cv = c4.7u
+    set rv = r470k
+    alter cin = 4.7u
+    alter rlk = 2.128e9
+    alter rsel = 470k
+  end
+  if $caso = 4
+    set cv = c1u
+    set rv = r1M
+    alter cin = 1u
+    alter rlk = 1e10
+    alter rsel = 1Meg
+  end
+  if $caso = 5
+    set cv = c2.2u
+    set rv = r1M
+    alter cin = 2.2u
+    alter rlk = 4.545e9
+    alter rsel = 1Meg
+  end
+  if $caso = 6
+    set cv = c4.7u
+    set rv = r1M
+    alter cin = 4.7u
+    alter rlk = 2.128e9
+    alter rsel = 1Meg
+  end
+  * ---- E3, sorgente ideale ----
+  alter rsrc = 1m
+  ac dec 50 20 20k
+  let zmag = mag(v(jin)/(-i(vsrc)))
+  let zmin = vecmin(zmag)
+  meas ac z20 find zmag at=20
+  meas ac z20k find zmag at=20000
+  echo "E3 caso=$caso"
+  print zmin
+  echo "$cv,$rv,$&zmin,$&z20,$&z20k" >> rete_e3.csv
+  destroy all
+  * ---- la perdita della rete a 20 Hz ----
+  foreach rs 1.5 430
+    alter rsrc = $rs
+    ac dec 50 20 20k
+    let g = mag(v(ain)/v(vsn))
+    meas ac g20 find g at=20
+    meas ac g1k find g at=1000
+    let pdb = 20*log10(g20/g1k)
+    echo "$cv,$rv,$rs,$&pdb" >> rete_perdita.csv
+    destroy all
+  end
+  * ---- E5 ----
+  foreach at 1 2
+    if $at = 1
+      set ga = "max"
+      alter ratth = 1m
+      alter rattl = 10k
+    end
+    if $at = 2
+      set ga = "mid"
+      alter ratth = 5k
+      alter rattl = 5k
+    end
+    foreach rs 1.5 430
+      alter rsrc = $rs
+      noise v(JACK) VSRC dec 50 20 20000 1
+      setplot noise2
+      let onu = onoise_total*1e6
+      echo "E5 caso=$caso att=$ga rsrc=$rs"
+      print onu
+      echo "$cv,$rv,$ga,$rs,$&onu" >> rete_e5.csv
+      destroy all
+    end
+  end
+end
+.endc
+
+.end

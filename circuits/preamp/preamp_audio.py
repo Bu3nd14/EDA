@@ -47,8 +47,8 @@ WHAT IS DELIBERATELY NOT HERE
    detector belong to psu-engineer.
  - The PANEL (ADR-028, F10, F11): only the continuous current of coils and
    LEDs goes there, never signal. The switches appear as their harness
-   headers (SW1 trim, SW2 gain, SW3 mute), the LEDs as the headers J5 (trim),
-   J6 (gain) and J7 (the red mute LED).
+   headers (SW1 trim, SW2 gain, SW3 mute, SW4 input since L48a), the LEDs
+   as the headers J5 (trim), J6 (gain) and J7 (the red mute LED).
  - A GRADUATED MUTE. From L29b2 to L47b2b1 two photoresistors per channel
    faded the music at block A's input, driven from the supply board through
    J3. ADR-062 (the user's choice of 2026-10-04, "Taglio coi soli relè")
@@ -78,6 +78,7 @@ from skidl import Part, Net, generate_netlist, POWER, ERC  # noqa: E402
 import spice_export as sx  # noqa: E402
 import trim  # noqa: E402
 import gain_interlock  # noqa: E402
+import selector  # noqa: E402
 from gain_block import (  # noqa: E402
     gain_block, FP_R, FP_ELCO, REPO,
 )
@@ -153,7 +154,8 @@ def C(val, a, b, base, fp=FP_FILM_P15):
     return c
 
 
-def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole):
+def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole,
+            k_sel):
     """One complete channel. ch is "L" or "R"; base offsets the refs."""
     global _n
     # ---------------- BLOCK A: input buffer, gain 1 always -----------------
@@ -163,16 +165,55 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole):
                    vp=vp, vm=vm, gnd=gnd)
 
     _n[0] = 60
-    inconn = Part("Connector_Generic", "Conn_01x02", value=f"IN_{ch}",
-                  footprint=FP_CONN2, ref=f"J{base + 1}")
-    # The connector goes straight to block A's input, as it did before L29b2.
+    # ---- the four inputs and the selector's contacts (F1, ADR-064) --------
     # From L29b2 to L47b2b1 a photoresistor in series (and one to ground)
-    # sat here and faded the music; ADR-062 (the user's choice of 2026-10-04)
-    # removed both: the mute cuts with the jack relays alone. Block A's input
-    # is referred to ground by its R_IN = 1 MOhm (gain_block.py), so E3 is
-    # that of block A alone.
-    inconn[1] += a["IN"]
-    inconn[2] += gnd
+    # sat at block A's input and faded the music; ADR-062 removed both (the
+    # mute cuts with the jack relays alone). Until L48a one connector went
+    # straight to block A's input, DC-coupled: a change of source put the
+    # difference of the sources' DC on every output (NC-040; 10 mV of source
+    # DC gave 10.1 mV on the fixed jack and 31.6 mV on the main one at +10 dB,
+    # docs/preamp/data/2026-10-06/L48a/dimensionamento/). ADR-064 (the user's
+    # "Condensatore per ingresso", 2026-10-06), per input:
+    #
+    #   IN<n> pin 1 --C_IN 1u--+-- K<12+n> NO (pole of this channel) -- COM = block A IN
+    #        |                 |
+    #     R_J 10M           R_SEL 470k
+    #        |                 |
+    #       GND               GND
+    #
+    # Every input's preamp side sits at 0 V through its own R_SEL, selected
+    # or not, so the relay always joins two nodes at 0 V; R_J holds an empty
+    # jack at 0 V (F1, PR-14: "ogni ingresso sta a 0 V"). Explicit refs, so
+    # that nothing after them renumbers (limitations #22).
+    # C_IN 1u polypropylene (ADR-007's dielectric): its leakage x R_SEL is
+    # what is left of the source's DC at the change. With the 10 000 s
+    # insulation floor of polyester, 1 V of source DC leaves 140 uV on the
+    # main jack at +10 dB, 100 mV leaves 19.8 uV, the same as two sources at
+    # 0 V (ADR-064). 1 uF: -0.003 dB at 20 Hz (E9), noise unchanged (E5).
+    # R_SEL 470k: E3 = 470k || R_IN 1M, 108.2 kOhm minimum with 68 pF of
+    # selector (>= 100 kOhm); 1M would give 112.5 kOhm and twice the leakage
+    # step (303 uV at 1 V), ADR-064.
+    for n in range(4):
+        jin = Part("Connector_Generic", "Conn_01x02", value=f"IN{n + 1}_{ch}",
+                   footprint=FP_CONN2, ref=f"J{base + 1 + n}")
+        jk_in, sel = Net(f"{ch}_IN{n + 1}"), Net(f"{ch}_SEL{n + 1}")
+        jin[1] += jk_in
+        jin[2] += gnd
+        cin = Part("Device", "C", value="1u", footprint=FP_FILM_P15,
+                   ref=f"C{base + 71 + n}")
+        cin[1] += jk_in
+        cin[2] += sel
+        rsel = Part("Device", "R", value="470k", footprint=FP_R,
+                    ref=f"R{base + 71 + n}")
+        rsel[1] += sel
+        rsel[2] += gnd
+        rj = Part("Device", "R", value="10M", footprint=FP_R,
+                  ref=f"R{base + 75 + n}")
+        rj[1] += jk_in
+        rj[2] += gnd
+        # One pole of input n's relay per channel: de-energised, open.
+        k_sel[n][K_COM1 if k_pole == 0 else K_COM2] += a["IN"]
+        k_sel[n][K_NO1 if k_pole == 0 else K_NO2] += sel
 
     # ---- attenuator harness (off-board rotary, F4/ADR-009) --------------
     # Since L16 (ADR-027) its top pin is NOT block A's output: it is the COM
@@ -359,6 +400,8 @@ if __name__ == "__main__":
     #     driven continuously by the trim knob = 168.8 / 72.8 / 36.8 mA;
     #   in the window D of ADR-045 (K6 still on, K2-K4 already off): fewer.
     #   Moving K6 to PERMIT_CMD (L35) changes no coil count.
+    #   Since L48a (ADR-064) ONE selector coil (K13-K16) is on in every
+    #   state, in and out of mute: NINE coils, 189.9 / 81.9 / 41.4 mA.
     # LEDs on top, ~2 mA each through R1, R2, R3: the trim's
     # and the gain's are lit ALWAYS (they read the state, in and out of
     # mute), the red mute LED only in mute (L35) - ~4 mA out of mute, ~6 mA
@@ -366,7 +409,8 @@ if __name__ == "__main__":
     # VRELAY = 12 V (ADR-048, L41a): every G6K / G6KU coil is the 12 VDC
     # version (an ordering suffix; the value strings keep their roles for
     # the 2e), the LED resistors 4.99 k. Worst case 72.8 + 6 = ~79 mA at
-    # 12 V, in mute at +10 dB (was ~175 mA at 5 V). The gain pick-up passes
+    # 12 V, in mute at +10 dB (was ~175 mA at 5 V); since L48a 81.9 + 6 =
+    # ~88 mA, the selector coil on top (ADR-064). The gain pick-up passes
     # through a Schottky (gain_interlock.py): 11.4 - ~0.3 V = ~92 % of 12 V
     # at -5 %, against ~78-81 % max must-operate warm (en-g6k.pdf p. 4).
     # VRELAY comes from a transformer of its own on the supply board
@@ -416,10 +460,17 @@ if __name__ == "__main__":
         VCC_RLY, K_TRIM, (K_COIL_A, K_COIL_B, K_COM1, K_NO1, K_NC1,
                           K_COM2, K_NO2, K_NC2))
 
+    # ADR-064 (L48a): the input selector. One monostable per input, its coil
+    # fed by the knob SW4 straight from VRELAY (F1, ADR-009); pole 1 carries
+    # the left channel, pole 2 the right, wired in channel().
+    K_SEL = selector.selector_relays(
+        VCC_RLY, K_TRIM["RET"], (K_COIL_A, K_COIL_B, K_COM1, K_NO1, K_NC1,
+                                 K_COM2, K_NO2, K_NC2))
+
     chans = {}
     for ch, base, pole in (("L", 100, 0), ("R", 300, 1)):
         chans[ch] = channel(ch, base, VP, VM, GND, K_GAIN, K_GAIN10,
-                            mute_lists, K_TRIM, pole)
+                            mute_lists, K_TRIM, pole, K_SEL)
 
     # Wire the mute contacts - ADR-044, geometry iii. mute_lists[i] holds, per
     # output pair, [cap_side_L, jack_L, cap_side_R, jack_R]; each jack node
