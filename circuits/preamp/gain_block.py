@@ -755,12 +755,13 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 #     verdicts out, A without signal <= 7.3 uV (power-on), with music the raw
 #     jack under mute <= 55 uV (ADR-063); the click of the cut is declared
 #     (data/2026-10-05/L47c2b1/matrice/clic.csv).
-#   SUPPLY FAULTS AT THE JACK (L41c's chain re-run in L46b on this block,
-#     data/2026-10-01/L46b/l41c/): U502 off 0.90 mV (objective 2 mV; 1.93 mV on
-#     L46a's block, 1.37 on L40's), U501 off 0.56 mV, mains loss <= 0.09 uV,
-#     soft switch-off 13 nV, 12 V relay-line short 29.7 mV (~83 dB SPL; 117 mV
-#     on L46a's block, 69.4 in ADR-051), counterfactual without Delta 29.7 mV
-#     (fails, as it must).
+#   SUPPLY FAULTS AT THE JACK (L41c's chain re-run in L47c2b2 on this block,
+#     with the supply and firmware of the cut, ADR-062, and the bench's series
+#     contact of ADR-063, data/2026-10-06/L47c2b2/): U502 off 0.89 mV
+#     (objective 2 mV; L46b 0.90, 1.93 mV on L46a's block, 1.37 on L40's),
+#     U501 off 0.55 mV, mains loss <= 0.09 uV, soft switch-off 15 nV, 12 V
+#     relay-line short 29.7 mV (~83 dB SPL; 117 mV on L46a's block, 69.4 in
+#     ADR-051), counterfactual without Delta 29.7 mV (fails, as it must).
 #
 #   THD: tb_v3_overload.cir prints a .four figure. Since L39 it is a MODEL
 #     figure of manufacturer models that miss parts of their own datasheet and
