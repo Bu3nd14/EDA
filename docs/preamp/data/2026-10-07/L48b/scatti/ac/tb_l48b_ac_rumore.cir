@@ -60,6 +60,8 @@ CTX  ATOP ATT 1p
 RBYT ATOP ATT 1m
 * il cablaggio verso l'attenuatore a pannello
 CWIRE ATT 0 100p
+* v4: il bilanciamento MN 50k allo scatto centrale (ADR-065), la pista dalla cima a massa
+RBAL ATT 0 1e12
 
 * --- l'attenuatore a scatti da 10 k, scala in serie, e il cursore ---
 RA ATT T1 1m
@@ -104,6 +106,7 @@ alter rbyt = 1m
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 1e+09
@@ -157,6 +160,7 @@ alter rbyt = 1m
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 1e+09
@@ -210,6 +214,7 @@ alter rbyt = 1m
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 0.1
@@ -263,6 +268,7 @@ alter rbyt = 1m
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 0.1
@@ -316,6 +322,7 @@ alter rbyt = 1m
 alter cb = 1u
 alter rbyb = 1e12
 alter rgate = 1Meg
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 1e+09
@@ -369,6 +376,7 @@ alter rbyt = 1m
 alter cb = 1u
 alter rbyb = 1e12
 alter rgate = 1Meg
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 1e+09
@@ -422,6 +430,7 @@ alter rbyt = 1m
 alter cb = 1u
 alter rbyb = 1e12
 alter rgate = 1Meg
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 0.1
@@ -475,6 +484,7 @@ alter rbyt = 1m
 alter cb = 1u
 alter rbyb = 1e12
 alter rgate = 1Meg
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 0.1
@@ -528,6 +538,7 @@ alter rbyt = 1m
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 1e+09
@@ -581,6 +592,7 @@ alter rbyt = 1m
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 1e+09
@@ -634,6 +646,7 @@ alter rbyt = 1m
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 0.1
@@ -687,6 +700,7 @@ alter rbyt = 1m
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 0.1
@@ -740,6 +754,7 @@ alter rbyt = 1m
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 1e+09
@@ -793,6 +808,7 @@ alter rbyt = 1m
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 1e+09
@@ -846,6 +862,7 @@ alter rbyt = 1m
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 0.1
@@ -899,6 +916,7 @@ alter rbyt = 1m
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 0.1
@@ -952,6 +970,7 @@ alter rbyt = 1m
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 1e+09
@@ -1005,6 +1024,7 @@ alter rbyt = 1m
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 1e+09
@@ -1058,6 +1078,7 @@ alter rbyt = 1m
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 0.1
@@ -1111,6 +1132,7 @@ alter rbyt = 1m
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 0.1
@@ -1164,6 +1186,7 @@ alter rbyt = 1e12
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 1e+09
@@ -1217,6 +1240,7 @@ alter rbyt = 1e12
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 1e+09
@@ -1270,6 +1294,7 @@ alter rbyt = 1e12
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 0.1
@@ -1323,6 +1348,7 @@ alter rbyt = 1e12
 alter cb = 1p
 alter rbyb = 1m
 alter rgate = 1e12
+alter rbal = 1e12
 alter vosa dc = 0
 alter iosa dc = 0
 alter rrgb = 0.1
@@ -1366,6 +1392,222 @@ noise v(jack) vsrc dec 50 20 20000 1
 setplot noise2
 let onu = onoise_total*1e6
 echo "3,ct10u,10,2,430,e5_uv,$&onu" >> /Users/roberto/EDA/.claude/worktrees/L48b/docs/preamp/data/2026-10-07/L48b/scatti/ac/ac_rumore.csv
+destroy all
+alter rsrc = 1.5
+* ---- ac finale g=0 att=1
+alter ca = 1p
+alter rbya = 1m
+alter ctx = 10u
+alter rbyt = 1e12
+alter cb = 1p
+alter rbyb = 1m
+alter rgate = 1Meg
+alter rbal = 50k
+alter vosa dc = 0
+alter iosa dc = 0
+alter rrgb = 1e+09
+alter rrg10b = 1e+09
+alter ra = 0.001
+alter rb = 2057
+alter rc = 7943
+alter @vt1r[pwl] = [ 0 1 1 1 ]
+alter @vt1s[pwl] = [ 0 0 1 0 ]
+alter @vt2r[pwl] = [ 0 1 1 1 ]
+alter @vt2s[pwl] = [ 0 0 1 0 ]
+alter @vw1[pwl] = [ 0 1 1 1 ]
+alter @vw2[pwl] = [ 0 0 1 0 ]
+alter rload = 100k
+alter rsrc = 1.5
+ac dec 50 10 20k
+let rdb = vdb(jack)
+meas ac r20 find rdb at=20
+meas ac r1k find rdb at=1000
+let e9 = r20 - r1k
+echo "4,finale,0,1,100k,e9_db,$&e9" >> /Users/roberto/EDA/.claude/worktrees/L48b/docs/preamp/data/2026-10-07/L48b/scatti/ac/ac_rumore.csv
+destroy all
+alter rload = 10k
+alter rsrc = 1.5
+ac dec 50 10 20k
+let rdb = vdb(jack)
+meas ac r20 find rdb at=20
+meas ac r1k find rdb at=1000
+let e9 = r20 - r1k
+echo "4,finale,0,1,10k,e9_db,$&e9" >> /Users/roberto/EDA/.claude/worktrees/L48b/docs/preamp/data/2026-10-07/L48b/scatti/ac/ac_rumore.csv
+destroy all
+alter rload = 100k
+alter rsrc = 1.5
+noise v(jack) vsrc dec 50 20 20000 1
+setplot noise2
+let onu = onoise_total*1e6
+echo "4,finale,0,1,1.5,e5_uv,$&onu" >> /Users/roberto/EDA/.claude/worktrees/L48b/docs/preamp/data/2026-10-07/L48b/scatti/ac/ac_rumore.csv
+destroy all
+alter rsrc = 430
+noise v(jack) vsrc dec 50 20 20000 1
+setplot noise2
+let onu = onoise_total*1e6
+echo "4,finale,0,1,430,e5_uv,$&onu" >> /Users/roberto/EDA/.claude/worktrees/L48b/docs/preamp/data/2026-10-07/L48b/scatti/ac/ac_rumore.csv
+destroy all
+alter rsrc = 1.5
+* ---- ac finale g=0 att=2
+alter ca = 1p
+alter rbya = 1m
+alter ctx = 10u
+alter rbyt = 1e12
+alter cb = 1p
+alter rbyb = 1m
+alter rgate = 1Meg
+alter rbal = 50k
+alter vosa dc = 0
+alter iosa dc = 0
+alter rrgb = 1e+09
+alter rrg10b = 1e+09
+alter ra = 5000
+alter rb = 0.001
+alter rc = 5000
+alter @vt1r[pwl] = [ 0 1 1 1 ]
+alter @vt1s[pwl] = [ 0 0 1 0 ]
+alter @vt2r[pwl] = [ 0 1 1 1 ]
+alter @vt2s[pwl] = [ 0 0 1 0 ]
+alter @vw1[pwl] = [ 0 1 1 1 ]
+alter @vw2[pwl] = [ 0 0 1 0 ]
+alter rload = 100k
+alter rsrc = 1.5
+ac dec 50 10 20k
+let rdb = vdb(jack)
+meas ac r20 find rdb at=20
+meas ac r1k find rdb at=1000
+let e9 = r20 - r1k
+echo "4,finale,0,2,100k,e9_db,$&e9" >> /Users/roberto/EDA/.claude/worktrees/L48b/docs/preamp/data/2026-10-07/L48b/scatti/ac/ac_rumore.csv
+destroy all
+alter rload = 10k
+alter rsrc = 1.5
+ac dec 50 10 20k
+let rdb = vdb(jack)
+meas ac r20 find rdb at=20
+meas ac r1k find rdb at=1000
+let e9 = r20 - r1k
+echo "4,finale,0,2,10k,e9_db,$&e9" >> /Users/roberto/EDA/.claude/worktrees/L48b/docs/preamp/data/2026-10-07/L48b/scatti/ac/ac_rumore.csv
+destroy all
+alter rload = 100k
+alter rsrc = 1.5
+noise v(jack) vsrc dec 50 20 20000 1
+setplot noise2
+let onu = onoise_total*1e6
+echo "4,finale,0,2,1.5,e5_uv,$&onu" >> /Users/roberto/EDA/.claude/worktrees/L48b/docs/preamp/data/2026-10-07/L48b/scatti/ac/ac_rumore.csv
+destroy all
+alter rsrc = 430
+noise v(jack) vsrc dec 50 20 20000 1
+setplot noise2
+let onu = onoise_total*1e6
+echo "4,finale,0,2,430,e5_uv,$&onu" >> /Users/roberto/EDA/.claude/worktrees/L48b/docs/preamp/data/2026-10-07/L48b/scatti/ac/ac_rumore.csv
+destroy all
+alter rsrc = 1.5
+* ---- ac finale g=10 att=1
+alter ca = 1p
+alter rbya = 1m
+alter ctx = 10u
+alter rbyt = 1e12
+alter cb = 1p
+alter rbyb = 1m
+alter rgate = 1Meg
+alter rbal = 50k
+alter vosa dc = 0
+alter iosa dc = 0
+alter rrgb = 0.1
+alter rrg10b = 0.1
+alter ra = 0.001
+alter rb = 2057
+alter rc = 7943
+alter @vt1r[pwl] = [ 0 1 1 1 ]
+alter @vt1s[pwl] = [ 0 0 1 0 ]
+alter @vt2r[pwl] = [ 0 1 1 1 ]
+alter @vt2s[pwl] = [ 0 0 1 0 ]
+alter @vw1[pwl] = [ 0 1 1 1 ]
+alter @vw2[pwl] = [ 0 0 1 0 ]
+alter rload = 100k
+alter rsrc = 1.5
+ac dec 50 10 20k
+let rdb = vdb(jack)
+meas ac r20 find rdb at=20
+meas ac r1k find rdb at=1000
+let e9 = r20 - r1k
+echo "4,finale,10,1,100k,e9_db,$&e9" >> /Users/roberto/EDA/.claude/worktrees/L48b/docs/preamp/data/2026-10-07/L48b/scatti/ac/ac_rumore.csv
+destroy all
+alter rload = 10k
+alter rsrc = 1.5
+ac dec 50 10 20k
+let rdb = vdb(jack)
+meas ac r20 find rdb at=20
+meas ac r1k find rdb at=1000
+let e9 = r20 - r1k
+echo "4,finale,10,1,10k,e9_db,$&e9" >> /Users/roberto/EDA/.claude/worktrees/L48b/docs/preamp/data/2026-10-07/L48b/scatti/ac/ac_rumore.csv
+destroy all
+alter rload = 100k
+alter rsrc = 1.5
+noise v(jack) vsrc dec 50 20 20000 1
+setplot noise2
+let onu = onoise_total*1e6
+echo "4,finale,10,1,1.5,e5_uv,$&onu" >> /Users/roberto/EDA/.claude/worktrees/L48b/docs/preamp/data/2026-10-07/L48b/scatti/ac/ac_rumore.csv
+destroy all
+alter rsrc = 430
+noise v(jack) vsrc dec 50 20 20000 1
+setplot noise2
+let onu = onoise_total*1e6
+echo "4,finale,10,1,430,e5_uv,$&onu" >> /Users/roberto/EDA/.claude/worktrees/L48b/docs/preamp/data/2026-10-07/L48b/scatti/ac/ac_rumore.csv
+destroy all
+alter rsrc = 1.5
+* ---- ac finale g=10 att=2
+alter ca = 1p
+alter rbya = 1m
+alter ctx = 10u
+alter rbyt = 1e12
+alter cb = 1p
+alter rbyb = 1m
+alter rgate = 1Meg
+alter rbal = 50k
+alter vosa dc = 0
+alter iosa dc = 0
+alter rrgb = 0.1
+alter rrg10b = 0.1
+alter ra = 5000
+alter rb = 0.001
+alter rc = 5000
+alter @vt1r[pwl] = [ 0 1 1 1 ]
+alter @vt1s[pwl] = [ 0 0 1 0 ]
+alter @vt2r[pwl] = [ 0 1 1 1 ]
+alter @vt2s[pwl] = [ 0 0 1 0 ]
+alter @vw1[pwl] = [ 0 1 1 1 ]
+alter @vw2[pwl] = [ 0 0 1 0 ]
+alter rload = 100k
+alter rsrc = 1.5
+ac dec 50 10 20k
+let rdb = vdb(jack)
+meas ac r20 find rdb at=20
+meas ac r1k find rdb at=1000
+let e9 = r20 - r1k
+echo "4,finale,10,2,100k,e9_db,$&e9" >> /Users/roberto/EDA/.claude/worktrees/L48b/docs/preamp/data/2026-10-07/L48b/scatti/ac/ac_rumore.csv
+destroy all
+alter rload = 10k
+alter rsrc = 1.5
+ac dec 50 10 20k
+let rdb = vdb(jack)
+meas ac r20 find rdb at=20
+meas ac r1k find rdb at=1000
+let e9 = r20 - r1k
+echo "4,finale,10,2,10k,e9_db,$&e9" >> /Users/roberto/EDA/.claude/worktrees/L48b/docs/preamp/data/2026-10-07/L48b/scatti/ac/ac_rumore.csv
+destroy all
+alter rload = 100k
+alter rsrc = 1.5
+noise v(jack) vsrc dec 50 20 20000 1
+setplot noise2
+let onu = onoise_total*1e6
+echo "4,finale,10,2,1.5,e5_uv,$&onu" >> /Users/roberto/EDA/.claude/worktrees/L48b/docs/preamp/data/2026-10-07/L48b/scatti/ac/ac_rumore.csv
+destroy all
+alter rsrc = 430
+noise v(jack) vsrc dec 50 20 20000 1
+setplot noise2
+let onu = onoise_total*1e6
+echo "4,finale,10,2,430,e5_uv,$&onu" >> /Users/roberto/EDA/.claude/worktrees/L48b/docs/preamp/data/2026-10-07/L48b/scatti/ac/ac_rumore.csv
 destroy all
 alter rsrc = 1.5
 quit

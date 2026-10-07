@@ -184,7 +184,7 @@ def contatto(n, a, b, cpar):
     return out
 
 
-CONTATTI = ("K1", "K5", "T1R", "T1S", "T2R", "T2S")
+CONTATTI = ("K1", "K5", "T1R", "T1S", "T2R", "T2S", "KVH", "KVL")
 
 
 def sonda_aggiunte(ck="5p", cavo=False):
@@ -281,7 +281,15 @@ AGGIUNTE = (
        "RL1 OUTA TAP6 845", "RL2 TAP6 TAP12 464", "RL3 TAP12 0 464"]
     + contatto("T1R", "OUTA", "ATOP", True) + contatto("T1S", "T2C", "ATOP", True)
     + contatto("T2R", "TAP6", "T2C", True) + contatto("T2S", "TAP12", "T2C", True)
-    + ["CWIRE ATOP 0 100p", "RATTH ATOP W 1m",
+    + ["* ---- L48b (ADR-065, NC-041): C_T 10u fra il trim e il volume, il bilanciamento MN allo",
+       "* scatto centrale (la pista da 50k dalla cima a massa, il cursore sulla cima) e il volume:",
+       "* KVH e KVL portano il partitore da 0 a -2 dB in cima alla corsa (con att = max: RATTH",
+       "* 1m, RATTB 10k; 2,057k in alto, 10k || 38,47k = 7,937k in basso). R_G 1M e' R113 del",
+       "* blocco. RBYCT 1m scavalca C_T nel controfattuale (corsa(ct=False)). ----",
+       "CT ATOP ATTC 10u", "RBYCT ATOP ATTC 1e12", "RBAL ATTC 0 50k",
+       "CWIRE ATTC 0 100p", "RATTH ATTC VH 1m", "RVOLH VH W 2.057k", "RVOLL W VL 38.47k"]
+    + contatto("KVH", "VH", "W", False) + contatto("KVL", "VL", "0", False)
+    + [
        "* ---- L29c: la sonda del gruppo B (limitations #29), su nodi propri (#24) ----",
        "VPRBD PRBD 0 DC 15", "VPRBG PRBG 0 DC 0", "JPRB PRBD PRBG 0 LSK489A",
        "* ---- L29c: il punto di partenza di Newton per l'op (limitations #33) ----",
@@ -392,6 +400,13 @@ def cambio_trim(p1, p2, t):
     return out
 
 
+def cambio_volume(tv):
+    """L48b: il volume da 0 a -2 dB in cima alla corsa a tv (1000 = fermo in cima). KVH chiuso
+    apre (2,057k in alto entra), KVL aperto chiude (38,47k in basso entra), allo stesso istante:
+    un potenziometro girato di colpo, coi rimbalzi del contatto (per eccesso)."""
+    return {"KVH": (1, tv), "KVL": (0, tv)}
+
+
 def iosa(vos):
     """L47b2b1 (scelta dell'utente: correggere il banco): la corrente che VOSA fa scorrere in R113
     (1 Mohm, dentro il blocco A, fra INAX e massa) la fornisce IOSA, non la rete delle celle. Nel
@@ -406,7 +421,7 @@ def iosa(vos):
 def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=None, trjk=None,
           g1=10, g2=None, tg=1000, p1=0, p2=None, tp=1000, vos=(0, 0, 0, 0), att="max",
           rl="100k", trim_montato=True, cwire="100p", vto=None, rail=None, stati=True, geo=None,
-          ck=None, cavo=None):
+          ck=None, cavo=None, tv=1000, ct=True):
     """ti / tr: il tasto del mute e del rilascio (L47c2b1, ADR-062). I contatti del jack si
     muovono T_ATT dopo, salvo tijk / trjk dati (accensione, spegnimento, riferimenti 'sempre',
     L30 e L41c, dove non c'e' un tasto). 1000 / 2000 = mai."""
@@ -423,10 +438,14 @@ def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=None,
         "alter ratth = %s" % ATT[att][0], "alter rattb = %s" % ATT[att][1],
         "alter rl1 = %s" % ("845" if trim_montato else "1e12"),
         "alter cwire = %s" % cwire,
+        # L48b: C_T e il bilanciamento nel circuito (ADR-065); scavalcati nel controfattuale
+        "alter rbyct = %s" % ("1e12" if ct else "1m"),
+        "alter rbal = %s" % ("50k" if ct else "1e12"),
     ]
     st = {}
     st.update(cambio_guadagno(g1, g2, tg))
     st.update(cambio_trim(p1, p2, tp))
+    st.update(cambio_volume(tv))
     if ARG.matrice in ("caldo", "l30", "l41c"):
         # il guadagno lo portano i gemelli comportamentali; gli interruttori nativi restano aperti
         for n in ("K1", "K5"):
@@ -476,7 +495,7 @@ def controfattuale():
     aggiunte neutre: guadagno +10 statico dai contatti nuovi, trim smontato (RL1 aperto, T1R
     chiuso), niente cablaggio, VOS 0, attenuatore al massimo. Il mute e' il contatto del blocco
     (geometria N), come nel deck del taglio: L47c2b1, senza fotoresistenze ne' inversioni."""
-    n = dict(trim_montato=False, cwire="1e-18")
+    n = dict(trim_montato=False, cwire="1e-18", ct=False)
     TR, TF = TI + 1.0, TI + 1.0 + 3.0
     s, var, fq = "_1k_100k", "taglio", 1000
     out = []
@@ -784,6 +803,36 @@ def blocco_l29d2(vs, vkw, geo="iii"):
                 out += corsa(n, amp=0, tf=tf, tijk=T_OFF + rr, trjk=1000, rail=rail, **kw)
                 out += [riga(n, n, "spegnimento_" + geo, 1000, 0, 10, rl, T_OFF, 1000, tf, 10e-6, "evento",
                              nome("g10", "sempre", None), "-", 0.0, 5, "A_ins")]
+
+    # ---- 6 (L48b, NC-041, ADR-065): il volume fra gli eventi di V2. Uno scatto in cima alla corsa
+    # (0 -> -2 dB, il caso dell'architetto, L43a R3) a ogni guadagno, FUORI dal mute (il volume
+    # non e' interbloccato), senza segnale, con la dispersione peggiore di VOS ("p": la continua
+    # del blocco A spostata di +20 mV). A_ins contro la stessa corsa col volume fermo. Il
+    # riferimento e' "mai in mute" (rif_mai), il verdetto A_ins: un gradino d'offset (ADR-032).
+    vkw = dict(kw, amp=0, vos=DISP_VOS["p"], att="max")
+    TV, TFV = TI, TI + 3.0
+    for g in (0, 3, 10):
+        r = "vrif_g%d%s" % (g, sx)
+        out += ["* ---- L48b 6: volume a %+d dB ----" % g]
+        out += corsa(r, tf=TFV, g1=g, **vkw)
+        out += [riga(r, r, "rif_vol", 1000, 0, g, rl, TV, TFV, TFV, 10e-6, "rif_mai", gruppo=6)]
+        n = "vol_g%d%s" % (g, sx)
+        out += corsa(n, tf=TFV, g1=g, tv=TV, **vkw)
+        out += [riga(n, n, var + "_vol", 1000, 0, g, rl, TV, TFV, TFV, 10e-6, "evento",
+                     r, "-", 0.0, 6, "A_ins")]
+    # Diagnostica (nessuna soglia: V2 vuole >= 2 s fra il cambio e il rilascio, gruppo 2): il trim
+    # cambiato sotto mute e il mute rilasciato 0,5 s dopo, con la dispersione peggiore. Con C_T il
+    # trim porta ancora la continua, e il suo gradino decade in C_T con tau ~0,1 s.
+    tr05 = T_CAMBIO + 0.5
+    for p1, p2 in ((0, 6), (0, 12)):
+        rr = "tdrif_t%d%s" % (p2, sx)
+        out += corsa(rr, tf=tr05 + 3.0, g1=10, p1=p2, **vkw)
+        out += [riga(rr, rr, "rif_tdiag", 1000, 0, 10, rl, TI, tr05, tr05 + 3.0, 10e-6, "rif_mai",
+                     gruppo=0)]
+        n = "td%dx%d_r05%s" % (p1, p2, sx)
+        out += corsa(n, tf=tr05 + 3.0, ti=TI, tr=tr05, g1=10, p1=p1, p2=p2, tp=T_CAMBIO, **vkw)
+        out += [riga(n, n, var + "_trim05", 1000, 0, "t%da%d" % (p1, p2), rl, TI, tr05, tr05 + 3.0,
+                     10e-6, "evento", "-", rr, 0.0, 0, "")]
     return out
 
 

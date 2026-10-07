@@ -1106,3 +1106,28 @@ errori di ERC, e solo il rapporto del 2e ("interruttore SW3_1 su pin 3") l'ha mo
 
 **Regola operativa**: dopo aver dato un riferimento esplicito nuovo, cercarlo nella netlist
 (`grep -o '(ref "SW[0-9_]*")'`): un `_1` in coda è una collisione.
+
+## 48. In un'analisi `ac` (e `noise`) un interruttore `SW` resta aperto anche col comando a 1, e anche dichiarato `ON`
+
+Scoperto in L48b (`docs/preamp/data/2026-10-07/L48b/scatti/ac/`, `debug.cir`). Il banco degli
+scatti comandava trim e cursore con interruttori `SW` (`RON=0.1`, `ROFF=1e12`) e una PWL ferma a
+1. In `tran` funzionavano, e l'`op` stampato a parte li vedeva chiusi. Nella `ac` sullo stesso
+circuito la cima dell'attenuatore stava invece a **−58 dB** e il jack a **−165 dB**. Il rumore era
+quello del solo blocco B, uguale con 1,5 e 430 Ω di sorgente e in ogni posizione del volume. Con
+`ON` sull'istanza non cambiava niente. rc 0, nessun avviso: E9 ed E5 erano numeri plausibili.
+
+**Regola operativa**: nei deck `ac` e `noise` i contatti fermi sono resistenze (0,1 Ω / 1 G, come
+`tb_trim.cir`), non interruttori. Un deck AC nuovo ridà prima una cifra canonica: qui E5 =
+5,496 µV.
+
+## 49. `gmin` inventa una corrente di gate: un nodo di gate senza ritorno in continua deriva di decine di pA che il JFET non ha
+
+Scoperto in L48b (`docs/preamp/data/2026-10-07/L48b/scatti/sonda/`). Col cursore del volume aperto
+per 1 ms, il gate del blocco B, che ha solo capacità, saliva a rampa di ~92 mV/s: ~9 pA su
+~100 pF, e 289 µV al jack a +10 dB. Il modello dell'LSK489 non ha corrente di gate di quell'ordine
+(`Isr` ignorato, Is 3 fA). È `gmin`: ngspice mette 1e-12 S su ogni giunzione, e col gate-drain a
+~14 V fanno ~14 pA. Con `gmin=1e-15` la stessa corsa dà 0,48 µV.
+
+**Regola operativa**: un banco che lascia un gate sospeso (un cursore che si apre, un contatto
+non cortocircuitante) corre con `gmin` ridotto. La corrente di gate vera si prende dal datasheet
+(LSK489: I_G −2 pA tipica, −25 pA massima a 25 °C) e si aggiunge a parte, dichiarata.

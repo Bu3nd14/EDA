@@ -77,6 +77,15 @@ def main():
             for g in (0, 10):
                 uv = ig * t / c * GB[g] * 1e6
                 out.append("%-28s %8.0f %8d %12.2f %8.1f" % (nome, t * 1e3, g, uv, spl(uv)))
+    # Con R_G 1M (ADR-065) il gate non deriva senza limite: si ferma a IG * R_G con
+    # tau = R_G * C_cursore ~ 104 us, gia' raggiunto in 1 ms. Il limite non dipende dal tempo.
+    out.append("\n== lo stesso, con R_G 1M sul gate (ADR-065): IG * R_G, raggiunto in ~5 tau = 0,5 ms ==")
+    out.append("%-28s %8s %12s %8s" % ("caso", "G_dB", "uV", "dBSPL"))
+    for nome, ig in (("tipica 25 C, 2 pA", 2e-12), ("massima 25 C, 25 pA", 25e-12),
+                     ("massima 55 C (stima), 200 pA", 200e-12)):
+        for g in (0, 10):
+            uv = ig * 1e6 * GB[g] * 1e6
+            out.append("%-28s %8d %12.2f %8.1f" % (nome, g, uv, spl(uv)))
     testo = "\n".join(out)
     print(testo)
     with open(os.path.join(QUI, "sintesi.txt"), "w") as f:

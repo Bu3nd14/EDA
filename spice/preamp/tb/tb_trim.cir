@@ -37,7 +37,9 @@ tb_trim.cir - L16: the common trim on the variable-output branch. Attenuation, E
 * Attenuator at MAX and at MID travel (2.5 k, the E5 reference of
 * tb_zout_psrr_noise.cir); source K11 1.5 ohm and phono 430 ohm; pos 99 = NO
 * TRIM (ladder cut, T1 reset), the reference. Block B's subckt carries R113
-* (1 MOhm to 0) the real block B has not: negligible across <= 2.6 k.
+* (1 MOhm to 0): since L48b (ADR-065) the real block B has it too, as R_G
+* (R265 / R465) on the wiper. Since L48b the trim's attenuation att1k is
+* read at ATOP, loaded through C_T by the volume and the balance (8.33 k).
 * Verdict: <= 9.90 uV (E5 minus the 1 uV quotas of ADR-020 and ADR-022).
 *
 * Both blocks are subcircuits: no node of this deck can collide with a node of
@@ -95,11 +97,18 @@ CT2R TAP6 T2C 15p
 RT2S TAP12 T2C 1G
 CT2S TAP12 T2C 15p
 
-* harness to the front-panel attenuator (ADR-024: block A judged at <= 1 nF)
-CWIRE ATOP 0 100p
+* L48b (ADR-065, NC-041): C_T 10u between the trim and the volume
+* (preamp_audio.py, C265 / C465), so block A's DC crosses neither the volume
+* nor block B's gate. ATOP is still the trim's output (T1's COM).
+CT    ATOP ATT 10u
+* harness to the front-panel volume (ADR-024: block A judged at <= 1 nF)
+CWIRE ATT 0 100p
+* the balance pot at its centre detent (ADR-065: an MN 50k divider in front
+* of the volume): its wiper sits on its top, its track loads the top with 50k.
+RBAL  ATT 0 50k
 
-* --- the 10 k stepped attenuator: top and bottom of the wiper ---
-RATTH ATOP BIN 1m
+* --- the 10 k volume (a potentiometer since ADR-065): top and bottom of the wiper ---
+RATTH ATT BIN 1m
 RATTL BIN 0 10k
 
 * --- block B, 0 / +3 / +10 dB ---

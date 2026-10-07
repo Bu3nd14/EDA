@@ -49,9 +49,12 @@ VARIANTI = {
     1: [("cb1u", {"cb": "1u", "rbyb": "1e12", "rgate": "1Meg"})],
     2: [("ca%s" % c, {"ca": c, "rbya": "1e12"}) for c in ("47u", "68u", "100u")],
     3: [("ct10u", {"ct": "10u", "rbyt": "1e12"})],
+    # v4: il circuito di ADR-065, la scelta dell'utente: C_T 10u fra trim e volume, R_G 1M
+    # sul gate del blocco B, il bilanciamento al centro
+    4: [("finale", {"ct": "10u", "rbyt": "1e12", "rgate": "1Meg", "rbal": "50k"})],
 }
 BASE = {"ca": "1p", "rbya": "1m", "ct": "1p", "rbyt": "1m", "cb": "1p", "rbyb": "1m",
-        "rgate": "1e12"}
+        "rgate": "1e12", "rbal": "1e12"}
 
 
 def scala(da, a):
@@ -139,6 +142,8 @@ CTX  ATOP ATT 1p
 RBYT ATOP ATT 1m
 * il cablaggio verso l'attenuatore a pannello
 CWIRE ATT 0 100p
+* v4: il bilanciamento MN 50k allo scatto centrale (ADR-065), la pista dalla cima a massa
+RBAL ATT 0 1e12
 
 * --- l'attenuatore a scatti da 10 k, scala in serie, e il cursore ---
 RA ATT T1 1m
@@ -189,7 +194,7 @@ def caso(var, nome, vals, va, va0, g, ev, modo, csv, onde=None):
     out += ["alter ca = %s" % v["ca"], "alter rbya = %s" % v["rbya"],
             "alter ctx = %s" % v["ct"], "alter rbyt = %s" % v["rbyt"],
             "alter cb = %s" % v["cb"], "alter rbyb = %s" % v["rbyb"],
-            "alter rgate = %s" % v["rgate"],
+            "alter rgate = %s" % v["rgate"], "alter rbal = %s" % v["rbal"],
             "alter vosa dc = %.6g" % vos, "alter iosa dc = %.6g" % i_os,
             "alter rrgb = %g" % GUAD[g][0], "alter rrg10b = %g" % GUAD[g][1]]
     # il trim e il volume: posizioni di partenza
@@ -263,7 +268,7 @@ def caso_ac(var, nome, vals, g, att, csv):
            "alter ca = %s" % v["ca"], "alter rbya = %s" % v["rbya"],
            "alter ctx = %s" % v["ct"], "alter rbyt = %s" % v["rbyt"],
            "alter cb = %s" % v["cb"], "alter rbyb = %s" % v["rbyb"],
-           "alter rgate = %s" % v["rgate"],
+           "alter rgate = %s" % v["rgate"], "alter rbal = %s" % v["rbal"],
            "alter vosa dc = 0", "alter iosa dc = 0",
            "alter rrgb = %g" % GUAD[g][0], "alter rrg10b = %g" % GUAD[g][1],
            "alter ra = %.6g" % ra, "alter rb = %.6g" % rb, "alter rc = %.6g" % rc,
