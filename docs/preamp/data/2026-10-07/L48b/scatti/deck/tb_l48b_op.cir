@@ -1,0 +1,101 @@
+tb_l48b_scatti - L48b variante op: il gradino al jack a uno scatto del volume o del trim
+* GENERATO da docs/preamp/data/2026-10-07/L48b/scatti/genera_scatti.py - non modificare a mano.
+* Prima riga = titolo (limitations #10).
+.include /Users/roberto/EDA/.claude/worktrees/L48b/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L48b/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L48b/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L48b/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L48b/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L48b/models/diodes/1n4148.lib
+.include /Users/roberto/EDA/.claude/worktrees/L48b/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L48b/spice/preamp/gain_block.subckt
+* il blocco B vero non ha R113 (r_in=None, preamp_audio.py): la copia senza, scritta da
+* genera_scatti.py dal file generato (col cursore aperto, m0, R113 deciderebbe il gate)
+.include /Users/roberto/EDA/.claude/worktrees/L48b/docs/preamp/data/2026-10-07/L48b/scatti/deck/gain_block_b_senza_r113.subckt
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+
+* --- la sorgente scelta e la rete d'ingresso di ADR-064 (tb_trim.cir) ---
+VSRC  VSN 0 DC 0
+RSRC  VSN JIN 1.5
+RJ    JIN 0 10Meg
+CIN   JIN SEL 1u
+RSEL  SEL 0 470k
+RKSEL SEL SELK 0.1
+* la continua del blocco A (limitations #44: IOSA da' a R113 la corrente di VOSA)
+VOSA  SELK AIN DC 0
+IOSA  AIN 0 DC 0
+
+XA AIN AOUT AFB ARG ARG10 VPLUS VMINUS GAINBLOCK
+RARG   ARG   0 1G
+RARG10 ARG10 0 1G
+
+* --- v2: il condensatore all'uscita del blocco A, prima del trim (RBYA = 1m: assente) ---
+CA   AOUT AOC 1p
+RBYA AOUT AOC 1m
+
+* --- la scala del trim, cand 2 di trim.py ---
+RL1 AOC TAP6 845
+RL2 TAP6 TAP12 464
+RL3 TAP12 0 464
+
+.model SWK SW(RON=0.1 ROFF=1e12 VT=0.5 VH=0.25)
+* --- i contatti del trim, che si muovono nel tempo; 15 pF ciascuno ---
+ST1R AOC ATOP NT1R 0 SWK
+CT1R AOC ATOP 15p
+ST1S T2C ATOP NT1S 0 SWK
+CT1S T2C ATOP 15p
+ST2R TAP6 T2C NT2R 0 SWK
+CT2R TAP6 T2C 15p
+ST2S TAP12 T2C NT2S 0 SWK
+CT2S TAP12 T2C 15p
+VT1R NT1R 0 PWL(0 1 1 1)
+VT1S NT1S 0 PWL(0 0 1 0)
+VT2R NT2R 0 PWL(0 1 1 1)
+VT2S NT2S 0 PWL(0 0 1 0)
+
+* --- v3: il condensatore fra il trim e l'attenuatore (RBYT = 1m: assente) ---
+CTX  ATOP ATT 1p
+RBYT ATOP ATT 1m
+* il cablaggio verso l'attenuatore a pannello
+CWIRE ATT 0 100p
+
+* --- l'attenuatore a scatti da 10 k, scala in serie, e il cursore ---
+RA ATT T1 1m
+RB T1 T2 2.057k
+RC T2 0 7.943k
+SW1 T1 WIP NW1 0 SWK
+SW2 T2 WIP NW2 0 SWK
+VW1 NW1 0 PWL(0 1 1 1)
+VW2 NW2 0 PWL(0 0 1 0)
+* il cavo del cursore dal pannello alla scheda: la stessa ipotesi del cablaggio della cima
+* (100 pF). Senza, col cursore aperto (m0) il gate del blocco B non ha nessuna capacita' verso
+* massa e il simulatore lo porta a 0 V in < 30 us: un artefatto del banco (sonda L48b).
+CWIP WIP 0 100p
+
+* --- v1: il condensatore all'ingresso del blocco B, con la sua resistenza di gate ---
+CB    WIP BIN 1p
+RBYB  WIP BIN 1m
+RGATE BIN 0 1e12
+
+* --- il blocco B, 0 / +3 / +10 dB ---
+XB BIN BOUT BFB BRG BRG10 VPLUS VMINUS GAINBLOCKB
+CSTB    BRG   0 15p
+RRGB    BRG   0 1G
+CSTB10  BRG10 0 15p
+RRG10B  BRG10 0 1G
+
+RISO   BOUT BOUTA 47
+COUT   BOUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+
+.control
+option itl1=1000 gmin=1e-15
+op
+print v(aout) v(atop) v(bin) v(bout) v(jack)
+quit
+.endc
+
+.end
