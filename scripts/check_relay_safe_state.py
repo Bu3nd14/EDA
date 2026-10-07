@@ -1252,6 +1252,92 @@ def check_input(components, relays, by_role, pin_net, findings):
     return report
 
 
+VOLUME_PREFIX = "VOL_"       # the volume harness' value, "VOL_L 10k" (ADR-065)
+VOLUME_CHANNELS = ("L", "R")  # pole 1 of the trim relays is L, pole 2 is R
+
+
+def check_volume(components, relays, by_role, pin_net, findings):
+    """The volume sees no DC (ADR-065, NC-041), by intent.
+
+    For each pole of TRIM1 (the trim's output, its COM): the volume harness'
+    top pin is reached from it through ONE capacitor and nothing else - no
+    resistor, no second path - so block A's DC never crosses the volume; and
+    the harness' wiper (block B's input) has a 1M to GND of its own, so a
+    wiper that lifts never leaves block B's gate floating.
+    """
+    report = []
+    trims = {index_of(relays[r]["value"]): r for r in by_role["TRIM"]}
+    if "1" not in trims:
+        return report
+    t1 = trims["1"]
+    members = defaultdict(set)
+    for (ref, pin), net in pin_net.items():
+        members[net].add((ref, pin))
+
+    def other(ref, pin):
+        return pin_net.get((ref, "2" if pin == "1" else "1"))
+
+    pm = KNOWN_RELAYS[(relays[t1]["lib"], relays[t1]["part"])]
+    for ch, pole in zip(VOLUME_CHANNELS, pm["poles"]):
+        name = f"{VOLUME_PREFIX}{ch}"
+        out = pin_net.get((t1, pole["COM"]))
+        # By intent before by name: a 3-pin harness whose pin 1 sits right on
+        # the trim's COM is the volume in DC, whatever its value says (the
+        # netlist before L48b called it ATT_L).
+        direct = sorted(r for r, p in members.get(out, ())
+                        if p == "1" and components[r]["part"] == "Conn_01x03")
+        if direct:
+            findings.append(
+                f"canale {ch}: il COM di {t1} {pole['name']} ({out}) sta "
+                f"direttamente sul pin 1 di {direct}: la continua del blocco "
+                f"A attraversa il volume, e' NC-041. ADR-065 vuole C_T in "
+                f"mezzo.")
+            continue
+        conns = [r for r, c in components.items()
+                 if c["value"].split()[:1] == [name]]
+        if len(conns) != 1:
+            findings.append(
+                f"canale {ch}: il connettore del volume {name} c'e' "
+                f"{len(conns)} volte, ne serve uno (F4, ADR-065).")
+            continue
+        j = conns[0]
+        top, wip, cold = (pin_net.get((j, p)) for p in ("1", "2", "3"))
+        out = pin_net.get((t1, pole["COM"]))
+        if cold != "GND":
+            findings.append(f"{j} ({name}): il pin 3 deve stare su GND, sta "
+                            f"su {cold}.")
+        if top is None or out is None or top == out:
+            findings.append(
+                f"{j} ({name}): il pin alto ({top}) e' il COM di {t1} "
+                f"{pole['name']} ({out}): la continua del blocco A attraversa "
+                f"il volume, e' NC-041. ADR-065 vuole C_T in mezzo.")
+            continue
+        here = sorted(members.get(top, ()))
+        caps = [(r, p) for r, p in here if components.get(r, {}).get("part") == "C"]
+        others = [(r, p) for r, p in here if (r, p) != (j, "1")
+                  and (r, p) not in caps]
+        if len(caps) != 1 or others or other(*caps[0]) != out:
+            findings.append(
+                f"{j} ({name}): il pin alto ({top}) deve portare solo un "
+                f"condensatore verso il COM di {t1} ({out}); porta "
+                f"condensatori {[r for r, _ in caps]} e altro {others} "
+                f"(ADR-065: nessuna strada in continua dal trim al volume).")
+            continue
+        r_g = sorted(r for r, p in members.get(wip, ())
+                     if components.get(r, {}).get("part") == "R"
+                     and other(r, p) == "GND" and components[r]["value"] == "1M")
+        if len(r_g) != 1:
+            findings.append(
+                f"{j} ({name}): il cursore ({wip}) deve avere una e una sola "
+                f"R_G = 1M verso GND, ne ha {r_g} (ADR-065: il gate del blocco "
+                f"B non resta sospeso se il cursore si stacca).")
+            continue
+        report.append(f"volume {name}: {t1} COM ({out}) -> {caps[0][0]} "
+                      f"{components[caps[0][0]]['value']} -> {j} pin 1; "
+                      f"cursore {wip} con R_G {r_g[0]} a GND")
+    return report
+
+
 def check(components, pin_net):
     findings = []
     relays = {ref: c for ref, c in components.items()
@@ -1302,6 +1388,7 @@ def check(components, pin_net):
     report += gain_interlock(components, relays, by_role, pin_net, findings)
     report += check_panel_leds(components, relays, by_role, pin_net, findings)
     report += check_input(components, relays, by_role, pin_net, findings)
+    report += check_volume(components, relays, by_role, pin_net, findings)
     return findings, relays, report
 
 
@@ -1612,7 +1699,9 @@ def main(argv):
               "(ADR-045); i LED a pannello dicono lo stato vero (F9, F11); "
               "nessun mute graduale (ADR-062); ogni ingresso ha il suo "
               "condensatore e il lato del preamp a 0 V, e la manopola del "
-              "selettore alimenta un solo rele' per posizione (ADR-064).")
+              "selettore alimenta un solo rele' per posizione (ADR-064); il "
+              "volume e' separato dal trim da un condensatore e il suo "
+              "cursore ha la sua R_G a massa (ADR-065).")
         return 0
 
     print(f"\nFALLITO: {len(findings)} problemi\n")

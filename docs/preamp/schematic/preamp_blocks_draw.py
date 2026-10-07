@@ -149,13 +149,14 @@ RBLEED_MAIN = same(["R263", "R463"], "bleeder uscita principale")
 RBLEEDC_FIX = same(["R167", "R168", "R367", "R368"], "bleeder lato C, fisse")
 RBLEEDC_MAIN = same(["R264", "R464"], "bleeder lato C, principale")
 
-# Attenuatore: e' fuori scheda, appare come connettore a 3 pin il cui VALORE
-# porta la resistenza del potenziometro a scatti (F4/ADR-009).
-# Il valore del connettore porta il canale ("ATT_L 10k"), quindi si confronta
+# Volume: e' fuori scheda, appare come connettore a 3 pin il cui VALORE porta
+# la resistenza del potenziometro (F4; a scatti fino a L48b, ADR-065: ALPS
+# RK27 log col bilanciamento MN a pannello).
+# Il valore del connettore porta il canale ("VOL_L 10k"), quindi si confronta
 # solo l'ultimo campo - che e' la resistenza, la sola cosa che il disegno cita.
 _att = {r: VAL[r].split()[-1] for r in ("J120", "J320")}
 assert len(set(_att.values())) == 1, f"attenuatore diverso fra canali: {_att}"
-ATT = _att["J120"]                           # "ATT_L 10k" -> "10k"
+ATT = _att["J120"]                           # "VOL_L 10k" -> "10k"
 
 # Rete di controreazione del blocco B: e' cio' che i rele' commutano (ADR-004).
 # Da L27 (ADR-026) R_f e' fissa e i rami di R_g sono DUE, in parallelo verso
@@ -319,11 +320,29 @@ TRIM12_DB = 20 * math.log10(_low12 / (ohms(TR1) + ohms(TR2) + _low12))
 assert abs(TRIM6_DB + 6.0) <= 0.1 and abs(TRIM12_DB + 12.0) <= 0.1, (
     f"il trim {TR1}/{TR2}/{TR3} col carico di {ATT} da' {TRIM6_DB:.3f} e "
     f"{TRIM12_DB:.3f} dB: fuori da -6 e -12 dB +/- 0,1 (ADR-027)")
-for _j in ("J120", "J320"):
-    _top = [n for n, refs in _NETS.items() if refs == {_j, "K7"}]
-    assert len(_top) == 1, (
-        f"il pin alto dell'attenuatore {_j} non sta sul solo COM di K7: "
-        f"{[(n, sorted(r)) for n, r in _NETS.items() if _j in r]}")
+# L48b (ADR-065, NC-041): fra il COM di K7 e il pin alto del volume c'e' C_T
+# (C265 / C465), e il cursore ha la sua R_G a massa (R265 / R465). Fino a L48b
+# il pin alto stava sul solo COM di K7 e la continua del blocco A attraversava
+# trim e volume. Fatto fallire in L48b sulla netlist con C_T (il controllo di
+# prima) e sui falsi di data/2026-10-07/L48b/falsi/.
+for _j, _ct, _rg, _rin in (("J120", "C265", "R265", "R208"),
+                           ("J320", "C465", "R465", "R408")):
+    _top = [n for n, refs in _NETS.items() if refs == {_j, _ct}]
+    _tro = [n for n, refs in _NETS.items() if refs == {_ct, "K7"}]
+    assert len(_top) == 1 and len(_tro) == 1, (
+        f"il pin alto del volume {_j} non sta sul solo {_ct}, o {_ct} non sta "
+        f"sul solo COM di K7 (ADR-065): "
+        f"{[(n, sorted(r)) for n, r in _NETS.items() if _j in r or _ct in r]}")
+    _w = [n for n, refs in _NETS.items() if refs == {_j, _rin, _rg}]
+    assert len(_w) == 1, (
+        f"il cursore di {_j} non porta solo l'ingresso del blocco B e {_rg} "
+        f"(ADR-065): {[(n, sorted(r)) for n, r in _NETS.items() if _j in r]}")
+    assert ("GND" in _NETS and _rg in _NETS["GND"]
+            and v(_rg) == "1M" and v(_ct) == "10u"), (
+        f"{_rg} non va a massa o i valori non sono 1M / 10u (ADR-065): "
+        f"{v(_rg)} {v(_ct)}")
+CT_VAL = same(["C265", "C465"], "C_T")
+RG_VAL = same(["R265", "R465"], "R_G")
 K_TRIM = [v(f"K{i}") for i in (6, 7, 8, 9, 10)]
 assert ("PERMIT" in K_TRIM[0] and all("TRIM" in k for k in K_TRIM[1:3])
         and all("SPIA" in k for k in K_TRIM[3:])), \
@@ -364,6 +383,8 @@ R_BMAIN = pretty(RBLEED_MAIN, OHM)
 R_BCFIX = pretty(RBLEEDC_FIX, OHM)
 R_BCMAIN = pretty(RBLEEDC_MAIN, OHM)
 R_ATT = pretty(ATT, OHM)
+C_T = pretty(CT_VAL, "F").replace("u", "µ")      # 10 µF, ADR-065
+R_GATE = pretty(RG_VAL, OHM)                    # 1 MΩ, ADR-065
 R_F, R_G3, R_G10 = pretty(RF, OHM), pretty(RG3, OHM), pretty(RG10, OHM)
 
 # =============================================================================
@@ -547,24 +568,30 @@ box(31.0, YA, 5.6, 1.5,
     [f"TRIM 0 / {_t6} / {_t12} dB", f"K7 K8 {TRIM_PN}, bistabili"],
     size=7.5, head_size=8.5)
 arrow(33.8, YA, 34.6, YA, color=NETC)
-txt((34.8, YA), "all'ATTENUATORE — pann. 2", size=8, color=NETC,
+txt((34.8, YA), "al VOLUME — pann. 2", size=8, color=NETC,
     halign="left")
 
 # ---------------------------------------------------------------------------
 # Pannello 2 - attenuatore, blocco B, uscita principale
 # ---------------------------------------------------------------------------
 panel(0.4, 8.0, 45.6, 17.6,
-      "2 — Attenuatore, blocco B, uscita principale",
+      "2 — Volume, blocco B, uscita principale",
       "è il solo ramo il cui livello si regola: le due uscite del pannello 1 "
       "hanno un volume proprio a bordo apparecchio.")
 
 YM = 14.0
 
-txt((1.0, YM), "dal BLOCCO A", size=9, color=NETC, halign="left")
-arrow(4.6, YM, 5.9, YM)
-box(9.2, YM, 6.2, 3.2,
-    ["ATTENUATORE", f"{R_ATT} a scatti", "commutatore rotativo",
-     "resistenze 0,1% — F4"], head_size=11)
+txt((1.0, YM), "dal TRIM", size=9, color=NETC, halign="left")
+# L48b (ADR-065, NC-041): C_T toglie la continua del blocco A dal volume, e
+# R_G da' al gate del blocco B il suo ritorno in continua.
+wire(3.3, YM, 3.6, YM)
+series(4.9, YM, C_T)
+arrow(6.2, YM, 6.4, YM)
+box(8.6, YM, 4.4, 3.2,
+    ["VOLUME", f"{R_ATT} log", "+ bilanciamento MN",
+     "a pannello — ADR-065"], head_size=11)
+wire(10.8, YM, 12.3, YM)
+shunt_to_gnd(12.3, YM, R_GATE, "R_G")
 arrow(12.3, YM, 13.6, YM)
 box(17.0, YM, 6.2, 3.4,
     ["BLOCCO B", "0 / +3 / +10 dB commutabili",
@@ -661,7 +688,7 @@ txt((23.1, 1.15), "blocchi A, B e 2 buffer ×2 canali, trim, contatti di mute,\n
     size=8, color=DIM)
 
 dashed_frame(30.8, 0.5, 44.4, 2.4, "PANNELLO E ALIMENTAZIONE")
-txt((37.6, 1.15), "attenuatore, SW1–SW4 e LED (J5 J6 J7) a pannello;\n"
+txt((37.6, 1.15), "volume e bilanciamento, SW1–SW4 e LED (J5 J6 J7) a pannello;\n"
                   "alimentatore e temporizzatore a parte, via J1 e J4",
     size=8, color=DIM)
 
@@ -675,7 +702,8 @@ print(f"  isolamento uscite ....... {RISO} ohm  x3 per canale")
 print(f"  accoppiamento d'uscita .. {COUT}     x3 per canale")
 print(f"  scarico fisse / main .... {RBLEED_FIX} / {RBLEED_MAIN}")
 print(f"  scarico lato C (ADR-044)  {RBLEEDC_FIX} / {RBLEEDC_MAIN}")
-print(f"  attenuatore ............. {ATT}")
+print(f"  volume .................. {ATT}")
+print(f"  C_T / R_G (ADR-065) ..... {CT_VAL} / {RG_VAL}")
 print(f"  guadagno +3 dB (K1) ..... 1 + {RF}/{RG3} = "
       f"{GAIN3_LIN:.4f}x = +{GAIN3_DB:.3f} dB")
 print(f"  guadagno +10 dB (K1+K5) . 1 + {RF}/({RG3}||{RG10}) = "
