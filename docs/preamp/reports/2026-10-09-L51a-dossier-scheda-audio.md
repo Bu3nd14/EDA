@@ -19,7 +19,7 @@ riga «Dettagli» di PR-14). Dati: `data/2026-10-09/L51a/` (README).
 - **La ricorsa**: i 21 deck veloci, il selettore e le due copie col bilanciamento, il 2026-10-09
   sul circuito di oggi (fermo da L48b): **252 file su 252 uguali** alla corsa di L48b (L48a per il
   selettore), 24 deck, nessun rc ≠ 0. Il deck V2 rigenerato dal sorgente è uguale byte per byte a
-  quello versionato. Le celle peggiori del mute rifatte: SEGNAPOSTO_MUTE.
+  quello versionato. Le celle peggiori del mute rifatte: 21 corse, tutte finite con rc 0 e sotto la guardia di L47b2b1; le 198 righe dell'analisi uguali a quelle di L48b per le stesse celle.
 - **Due difetti del generatore, trovati rigenerando e corretti** (codice del dossier, non del
   circuito):
   1. **la provenienza leggeva KF = 0 su MMBT5401, MMBT5551 e sui due MJE**, che da L44 portano il
@@ -39,7 +39,7 @@ riga «Dettagli» di PR-14). Dati: `data/2026-10-09/L51a/` (README).
   continua, il limite a **~0,67 V**; V2 del mute **250 verdetti su 250**, il clic al più **+5,19 dB**
   sopra il taglio ideale; il passo del volume ≤ **48 nV**; PSRR peggiore 78,5 dB a 10 kHz; E4
   60,08 Ω; P7 Tj ≤ 82,7 °C.
-- **Sabotaggi**: SEGNAPOSTO_SABOTAGGI.
+- **Sabotaggi**: **27 su 27** (`L51a/sabotaggi.txt`); il primo giro ne ha fatti passare uno, e ha trovato un buco: la corsa di L36 si leggeva con `src()` e non passava dalla guardia del giorno. Corretto, poi 27 su 27.
 
 ## Il contratto, prima di tutto
 
@@ -81,7 +81,7 @@ Il mute: la matrice di L48b (155 corse, 250 verdetti, 108 grandezze dichiarate) 
 regola di `verdetto.py` di L47c2b1 scritta di nuovo nel generatore, e coincide con `verdetto.csv`
 riga per riga. La seconda strada sono **21 corse** rifatte oggi sul deck versionato (`script/mute.sh`):
 le celle peggiori dei gruppi 1, 2, 3, 5, 6 e il clic a 1 kHz, coi loro riferimenti.
-SEGNAPOSTO_MUTE. **Non rifatte**: B2g e B1 del gruppo 4 a 20 kHz (`mev_20k_iii`,
+21 corse, tutte finite con rc 0 e sotto la guardia di L47b2b1; le 198 righe dell'analisi uguali a quelle di L48b per le stesse celle. **Non rifatte**: B2g e B1 del gruppo 4 a 20 kHz (`mev_20k_iii`,
 `g10sempre_20k_iii`), che in L48b hanno richiesto da sette a oltre quaranta ore di corsa; la
 pagina lo dice per nome, e restano a una sola strada.
 
@@ -112,6 +112,6 @@ L48a).
 
 ## Verifica
 
-- `build_dossier.py --standalone <fuori dal repo>`: SEGNAPOSTO_GENERATORE.
+- `build_dossier.py --standalone <fuori dal repo>`: esce 0, «tutti i controlli incrociati sono passati», nessun file scritto nel repo (la pagina ha la sola parte audio).
 - `run_tests.sh`: **13 passed / 0 failed**.
-- `script/sabotaggi.py`: SEGNAPOSTO_SABOTAGGI.
+- `script/sabotaggi.py`: **27 su 27** (`L51a/sabotaggi.txt`); il primo giro ne ha fatti passare uno, e ha trovato un buco: la corsa di L36 si leggeva con `src()` e non passava dalla guardia del giorno. Corretto, poi 27 su 27.

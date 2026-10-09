@@ -1520,7 +1520,7 @@ def measure_interlock():
     """Il guadagno interbloccato (ADR-041, L36) e i comandi a pannello (ADR-045, L35)."""
     out = {}
     # --- la corsa al rilascio del mute: corsa.csv ricontato contro sintesi.txt
-    d = src(L36, "corsa")
+    d = sa(L36, "corsa")       # L51a: dato della scheda audio, eccezione dichiarata
     rows = _csv(os.path.join(d, "corsa.csv"))
     cnt = {}
     for r in rows:
