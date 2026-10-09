@@ -117,13 +117,16 @@ a −2 dB in cima alla corsa; R_G è R113 del blocco. Il controfattuale li scava
   lasciato perché prudente). Con VOSB = 0 lo stesso scatto a +10 dB dà **9,2 nV** (`v2/sonda_vosb/`).
 - **Diagnostica: il trim cambiato in mute e il mute rilasciato 0,5 s dopo** (V2 vuole 2 s):
   3,6 / 5,3 µV al principale (0→−6 / 0→−12 dB).
-- **La matrice intera** (`v2/matrice/verdetto_parziale.csv`): **0 verdetti fuori su 246**. I
-  peggiori: senza segnale A ≤ **5,4 µV** (accensione; L47c2b1 7,3), il guadagno 0,04 µV, il trim
-  0,10 µV, la dispersione 0,41 µV; con la musica il jack grezzo ≤ **43,5 µV** (L47c2b1 55,0) e il
-  sempre in mute 0,93 µV; il volume 19,6 µV. Il clic del taglio resta dichiarato, come in L47c2b1.
-  Le corse: 152 su 155 passano la guardia; `off_r10m_d20_iii` abortisce (uno spegnimento brusco
-  di L29c, escluso dal verdetto da L29d2); le due corse di riferimento «sempre in mute» a 20 kHz,
-  che servono solo alla tabella del clic, CLIC20K_DA_COMPLETARE.
+- **La matrice intera** (`v2/matrice/verdetto.csv`): **0 verdetti fuori su 250**. I peggiori:
+  senza segnale A ≤ **5,4 µV** (accensione; L47c2b1 7,3), il guadagno 0,04 µV, il trim 0,10 µV,
+  la dispersione 0,41 µV; con la musica il jack grezzo ≤ **43,5 µV** (L47c2b1 55,0) e il sempre in
+  mute ≤ **16,9 µV** (20 kHz, come L47c2b1); il volume 19,6 µV. Le corse: 154 su 155 passano la
+  guardia; `off_r10m_d20_iii` abortisce (uno spegnimento brusco di L29c, escluso dal verdetto da
+  L29d2, come in L47c2b1). Le ultime sei righe, il clic a 20 kHz, sono state analizzate a parte
+  (`manifest_20k.csv`) e unite (`unisci_analisi.py`).
+- **Il clic del taglio** (`v2/matrice/clic.csv`, dichiarato, senza soglia): le stesse cifre di
+  L47c2b1. Al rilascio a 1 kHz +4,65 dB sul taglio ideale al principale e +5,19 dB alle fisse; a
+  20 kHz +0,35…+0,66 dB; a 20 Hz al rilascio 23,7 / 25,7 dB sotto il taglio ideale.
 - **Il controfattuale** (C_T scavalcato, il bilanciamento tolto): ridà la cella del taglio di
   L47c2b1, C2 e A con la musica entro lo **0,02 %**, A senza segnale e B al pavimento numerico.
 - Le corse a 20 kHz hanno richiesto quasi due giorni di orologio e ~2,5 ore di CPU: il Mac era in

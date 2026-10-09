@@ -96,7 +96,8 @@ I_G · t / C. Datasheet dell'LSK489: I_G −2 pA tipica, −25 pA massima a 25 �
 | `misure/tb_trim/`, `misure/tb_e3_e5/`, `confronta_l48a.py`, `confronto_l48a.txt` | i due deck canonici con C_T e il bilanciamento al centro: E5 5,496 µV, E3 108,2 kΩ invariati; il trim −6,076 / −11,997 dB (col carico di 8,33 kΩ) |
 | `e5_bilanciamento/` | E5 col bilanciamento girato di 3 dB (partitore MN 14,6k / 35,4k): **5,60 µV** |
 | `v1_bilanciamento/` | V1 del blocco B con 2,611 / 3,77 / 5,07 / 5,6 kΩ di sorgente (copia di `tb_loop.cir`): minimo **64,42°** a 5,6 kΩ |
-| `v2/matrice/` | `tb_v2_casopeggiore.cir` rigenerato (155 corse): il gruppo 6, lo scatto del volume a ogni guadagno, e la diagnostica del trim col mute rilasciato 0,5 s dopo |
+| `v2/matrice/` | `tb_v2_casopeggiore.cir` rigenerato (155 corse): il gruppo 6, lo scatto del volume a ogni guadagno, e la diagnostica del trim col mute rilasciato 0,5 s dopo. `verdetto.csv`: **0 fuori su 250**; `clic.csv`: il clic del taglio, dichiarato. `analisi.csv` è l'unione di `analisi_parziale.csv` (152 corse) e `analisi_20k.csv` (le righe del clic a 20 kHz, le ultime a finire); `manifest_finale.csv` è il manifesto senza `off_r10m_d20_iii` |
+| `v2/filtra_manifesto.py`, `unisci_analisi.py` | toglie da un manifesto le righe che usano corse escluse; unisce analisi con la stessa intestazione |
 | `v2/controfattuale/` | il controfattuale del generatore (C_T scavalcato, il bilanciamento tolto) |
 | `v2/sonda_vosb/` | il gruppo 6 a +10 dB con VOSB = 0: il gradino del volume nel banco V2 è il difetto noto di VOSB (limitations #44), 9,2 nV senza |
 | `script/regressione.sh`, `confronta.py`, `regressione/` | i 21 deck veloci contro L48a |
@@ -135,6 +136,9 @@ Dopo le scelte (`<C>` = `docs/preamp/data/2026-09-23/L29c`, `<P>` =
 /bin/zsh <C>/script/corri.sh <L>/v2/matrice <R>/spice/preamp/tb/tb_v2_casopeggiore.cir '.*' 7
 /usr/bin/python3 <R>/docs/preamp/data/2026-10-03/L47b2b1/script/guardia_v2.py <cartella>
 /usr/bin/python3 <C>/script/analizza_par.py <cartella>/manifest_sel.csv <cartella> <cartella>/analisi.csv 8
+/usr/bin/python3 <L>/v2/filtra_manifesto.py <L>/v2/matrice/manifest_sel.csv <L>/v2/matrice/manifest_finale.csv off_r10m_d20_iii
+/usr/bin/python3 <R>/docs/preamp/data/2026-10-05/L47c2b1/script/verdetto.py <L>/v2/matrice/manifest_finale.csv <L>/v2/matrice/analisi.csv <L>/v2/matrice/verdetto.csv
+/usr/bin/python3 <R>/docs/preamp/data/2026-10-05/L47c2b1/script/tabella_clic.py <L>/v2/matrice/manifest_finale.csv <L>/v2/matrice <L>/v2/matrice/analisi.csv <L>/v2/matrice/clic.csv
 /bin/zsh <L>/script/regressione.sh dopo
 /usr/bin/python3 <L>/script/confronta.py
 ```
