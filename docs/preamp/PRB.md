@@ -6,6 +6,9 @@ attuali». Registrato da **ADR-053**. Da qui, cambiare una voce vuole una ADR.
 **Voci cambiate dopo la firma**, ognuna con la firma dell'utente e la sua ADR:
 - **PR-21**, il 2026-10-04 (**ADR-062**): da «Il mute sfuma, non taglia» (≤ 20 dB in 100 ms, dal
   Technics) a «Il mute taglia». Scelta dell'utente: «Taglio coi soli relè».
+- **PR-10, PR-16, PR-19, PR-20**, il 2026-10-07 (**ADR-065**, L48b): il volume da attenuatore a
+  scatti a un buon potenziometro col bilanciamento; i canali entro 1 dB col volume; il volume fra
+  gli eventi che non si sentono. Firma dell'utente: «Firmo così».
 
 ## Che cos'è, e come sta con gli altri documenti
 
@@ -72,10 +75,10 @@ carichi reali: entro ±0,2 dB da 20 Hz a 20 kHz, riferito a 1 kHz. Nessuna banda
 massima imposta oltre questo.
 *Dettagli: E9 · ADR-014, ADR-053.*
 
-**PR-10 · I due canali uguali e separati.** Fra sinistro e destro al più 0,2 dB di differenza
-di livello, in ogni posizione di volume, trim e guadagno, da 20 Hz a 20 kHz; la diafonia fra i
-canali ≤ −70 dB nella stessa banda.
-*Dettagli: E10, E11 · ADR-053 · la sorgente non selezionata resta fuori.*
+**PR-10 · I due canali uguali e separati.** Fra sinistro e destro al più 0,2 dB in ogni posizione di
+trim e guadagno, e al più 1 dB col volume, col bilanciamento regolato all'ascolto (lo spostamento
+dell'immagine resta sotto ~2,5°); da 20 Hz a 20 kHz. La diafonia ≤ −70 dB.
+*Dettagli: E10, E11 · ADR-053, ADR-065 · la sorgente non selezionata resta fuori.*
 
 **PR-11 · Niente continua verso il finale.** A regime ogni uscita porta al jack al più 1 mV di
 continua, anche coi condensatori montati per prova d'ascolto (PR-12): le prove si fanno con i
@@ -103,9 +106,9 @@ vale per lei, a guadagno 0 dB ± 0,1 dB. Se la tolleranza si rivela costosa, si 
 l'utente e con una ADR.
 *Dettagli: E13, F3, T5 · ADR-023, ADR-053.*
 
-**PR-16 · Il volume è un attenuatore a scatti**, con un commutatore rotativo e resistenze di
-precisione.
-*Dettagli: F4 · ADR-009.*
+**PR-16 · Il volume è un buon potenziometro**, non a scatti, con un bilanciamento davanti che al
+centro non attenua. Nessuna continua passa da nessuno dei due.
+*Dettagli: F4 · ADR-009, ADR-065.*
 
 **PR-17 · Il trim (0, −6, −12 dB) agisce solo sull'uscita principale e si cambia solo in
 mute.** Tre LED dicono il suo stato vero, non la posizione del comando.
@@ -115,17 +118,17 @@ mute.** Tre LED dicono il suo stato vero, non la posizione del comando.
 riposo, per un guasto o all'accensione, è sempre 0 dB: mai più alto.
 *Dettagli: F5 e la sua nota, F11 · ADR-026, ADR-030, ADR-041.*
 
-**PR-19 · Tutto sul frontale, niente di più.** Selettore, volume, trim, guadagno e
-l'interruttore di mute, rotativi, col LED rosso di mute. Niente telecomando, niente
+**PR-19 · Tutto sul frontale, niente di più.** Selettore, volume, bilanciamento, trim, guadagno
+e l'interruttore di mute, rotativi, col LED rosso di mute. Niente telecomando, niente
 digitale, niente toni o filtri, niente bilanciato, niente phono integrato.
-*Dettagli: F7, F10, F11, «NON-obiettivi» · ADR-009, ADR-028.*
+*Dettagli: F7, F10, F11, «NON-obiettivi» · ADR-009, ADR-028, ADR-065.*
 
 ## D. Nessun rumore fastidioso sulle uscite
 
-**PR-20 · Nessuna commutazione si sente.** Cambiare ingresso, guadagno o trim, inserire o
-togliere il mute, accendere o spegnere dal frontale: su ogni uscita al più 100 µV di picco
-(~33 dB SPL a 1 m, il livello di una stanza silenziosa), in ogni condizione.
-*Dettagli: V2 (A e B) · ADR-032, ADR-035, ADR-036, ADR-044, ADR-045.*
+**PR-20 · Nessuna commutazione si sente.** Cambiare ingresso, guadagno o trim, girare il volume,
+inserire o togliere il mute, accendere o spegnere dal frontale: su ogni uscita al più 100 µV di
+picco (~33 dB SPL a 1 m, il livello di una stanza silenziosa), in ogni condizione.
+*Dettagli: V2 (A e B) · ADR-032, ADR-035, ADR-036, ADR-044, ADR-045, ADR-065.*
 
 **PR-21 · Il mute taglia: con la musica il silenzio arriva di colpo, e al rilascio la musica
 torna di colpo al livello di prima.** Firmata dall'utente il 2026-10-04 (L47c).

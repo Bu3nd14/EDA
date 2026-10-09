@@ -31,13 +31,13 @@ decidere con l'utente.
 | F1 | **4 ingressi** sbilanciati RCA, commutati a **relè**. **Il cambio d'ingresso si fa a caldo, senza clic** (L42c): senza segnale lascia su ogni uscita al più 100 µV di picco (V2, A); con la musica il salto fra i due programmi è accettato. Ogni ingresso, anche non selezionato, è tenuto a 0 V e nessuno resta sospeso durante lo scambio | ADR-009, **ADR-053**, **ADR-064** |
 | F2 | **Trim di livello comune, sul solo ramo dell'uscita variabile**: fra il blocco A e l'attenuatore, 0 / −6 / −12 dB, **a relè bistabili**. **Le uscite fisse restano copia fedele della sorgente**: guadagno 1, il trim non le tocca. Uno solo per tutti gli ingressi: cambiando sorgente si ritocca il trim o il volume | ADR-011, **ADR-027** |
 | F3 | **3 uscite sbilanciate RCA**: principale (attenuata) + 2 a livello fisso, **ciascuna fissa col proprio buffer** | ADR-008, **ADR-023** |
-| F4 | **Attenuatore a scatti**, commutatore rotativo, 10 kΩ, resistenze 0,1% | ADR-009 |
+| F4 | **Volume a potenziometro col bilanciamento** (da L48b; fino ad allora attenuatore a scatti): un ALPS RK27 10 kΩ log, preceduto da un bilanciamento doppio a curva MN da 50 kΩ con lo scatto al centro, che lì non attenua; tutti e due a pannello. **Nessuna continua li attraversa**: C_T 10 µF in polipropilene fra il trim e il volume, R_G 1 MΩ dal cursore a massa | ADR-009, **ADR-065** |
 | F5 | **Guadagno commutabile 0 / +3 / +10 dB**, relè sulla rete di controreazione. **A relè diseccitati il guadagno è 0 dB**: nessun guasto di bobina e nessuno stato di accensione può portare a un guadagno più alto. Due rami di R_g **in parallelo**: nessuno stato dei contatti supera il +10 dB | ADR-004, **ADR-019**, **ADR-026** |
 | F6 | **Relè di mute** su tutte le uscite: accensione, commutazione guadagno e regolazione del trim (F8). **Tenibile a tempo indefinito**: il mute inserito rientra nel requisito P7 | ADR-012, **ADR-021** |
 | F7 | **Nessun telecomando.** Operazionali e microcontrollore **ammessi solo fuori dal percorso del segnale**, alle condizioni di ADR-022: stato sicuro senza firmware, protezione dal corto non affidata solo al firmware, quota ausiliaria di rumore **1 µV RMS** | ADR-009, **ADR-022** |
 | F8 | **Il trim d'ingresso funziona solo a mute inserito**, con interlock **elettrico**: il comando del trim raggiunge i propri relè solo se il mute è attivo. Due comandi distinti, il mute abilita il trim. Fuori mute agire sul trim non cambia nulla; il valore impostato resta applicato all'uscita dal mute | ADR-011, **ADR-019**, **ADR-027** |
 | F9 | **Indicazione a LED del trim impostato**, letta dai **contatti** dei relè del trim e non dalla posizione del comando: fuori mute il comando può non corrispondere allo stato (F8), e il LED deve dire lo stato vero | **ADR-027** |
-| F10 | **Comandi sul frontale**: selettore d'ingresso e attenuatore rotativi (F1, F4), **trim rotativo a 3 posizioni** (F2), **guadagno rotativo a 3 posizioni** (F5), **interruttore di mute** (F6). Sul pannello passa solo la continua di bobine e LED, nessun segnale. Il mute è inserito se l'interruttore lo chiede **oppure** se il temporizzatore d'accensione non è scaduto | **ADR-028** |
+| F10 | **Comandi sul frontale**: selettore d'ingresso, volume e bilanciamento rotativi (F1, F4; il bilanciamento da ADR-065), **trim rotativo a 3 posizioni** (F2), **guadagno rotativo a 3 posizioni** (F5), **interruttore di mute** (F6). Sul pannello passa solo la continua di bobine e LED, nessun segnale. Il mute è inserito se l'interruttore lo chiede **oppure** se il temporizzatore d'accensione non è scaduto | **ADR-028** |
 | F11 | **LED a pannello, cablati a filo**: i tre del trim (F9) e **uno rosso di mute**, che indica il mute inserito. Sulla scheda audio restano gli header di cablaggio. Per i LED del guadagno vedi la nota su F5 | **ADR-028** |
 
 **Nota su F5 — il cambio di guadagno interbloccato dal mute** (2026-09-15, L34,
@@ -94,7 +94,7 @@ ADR-024, non si riscrivono.
 | E7 | Alimentazione | **±15 V** regolati — confermati contro ±18 V. Ripple e rumore dei rail: **≤ 1 µV RMS riportati in uscita** (nota su E5) | ADR-015, **ADR-020** |
 | E8 | Accoppiamento d'uscita | Capacitivo, **4,7 µF su tutte e tre le uscite** | ADR-007 |
 | E9 | Risposta in frequenza | **±0,2 dB da 20 Hz a 20 kHz**, riferita a 1 kHz, su ogni uscita, in ogni modo di guadagno, posizione del trim e del volume, coi carichi del contesto d'uso. Nessuna banda minima o massima oltre questo | **ADR-053** |
-| E10 | Equilibrio fra i canali | **≤ 0,2 dB** fra sinistro e destro, 20 Hz–20 kHz, in ogni posizione di volume, trim e guadagno. Si garantisce con la tolleranza delle parti (giro della distinta) | **ADR-053** |
+| E10 | Equilibrio fra i canali | **≤ 0,2 dB** fra sinistro e destro, 20 Hz–20 kHz, in ogni posizione di trim e guadagno, col volume al massimo: si garantisce con la tolleranza delle parti (giro della distinta). **Col volume ≤ 1 dB**, col bilanciamento regolato all'ascolto (ADR-065: ~2,5° di spostamento dell'immagine con la base a ±30°): l'RK27 dichiara ≤ 2 dB fra le sezioni da 0 a −60 dB, il bilanciamento lo corregge alla posizione d'ascolto; si verifica al prototipo sul potenziometro montato | **ADR-053**, **ADR-065** |
 | E11 | Diafonia fra i canali | **≤ −70 dB**, 20 Hz–20 kHz, su ogni uscita. Si verifica al layout (G2) e sul prototipo. La sorgente non selezionata è fuori dal requisito | **ADR-053** |
 | E12 | Continua al jack | **≤ 1 mV a regime** su ogni uscita, con qualunque condensatore della lista ammessa per le prove d'ascolto (P6). L'offset interno, prima del condensatore, resta senza soglia | ADR-007, **ADR-053** |
 | E13 | Guadagno delle uscite fisse | **0 dB ± 0,1 dB**; per il resto le fisse soddisfano ogni requisito della principale. Rilassabile con l'utente se costosa | ADR-023, **ADR-053** |
@@ -410,6 +410,12 @@ La posizione dell'attenuatore **non è un dettaglio**: la sua impedenza
 d'uscita varia da ~0 a 2,5 kΩ e ritorno, quindi **il margine di fase
 varia con la manopola del volume**.
 
+**Da L48b (ADR-065)** il volume è un potenziometro con un bilanciamento MN
+da 50 kΩ davanti: girato, il bilanciamento alza l'impedenza vista dal gate
+del blocco B fino a **~5,1 kΩ** con 3 dB di correzione e **~5,6 kΩ** a metà
+della sua sezione attiva. Misurato: **≥ 64,42°** a 5,6 kΩ, su ogni modo, carico
+e cavo (`data/2026-10-07/L48b/v1_bilanciamento/`; 65,16° a 2,611 kΩ).
+
 **SOGLIA DI ACCETTAZIONE: margine di fase ≥ 60°**, deciso dall'utente il
 2026-09-10 e registrato in **ADR-019**. Vale su **ogni** combinazione della
 matrice qui sopra — blocco A compreso, e **caso peggiore capacitivo
@@ -655,9 +661,9 @@ va automatizzato.
  K11 R2R    ───┤  selettore    BLOCCO A       ├─ BUFFER F2 ─47Ω─C 4,7µ─[mute]──► Stax SRM-T1
  (spare)    ───┤   a relè     guadagno 1 ─────┤  guadagno 1 (copia della sorgente)
  (spare)    ───┘              Zin ≥ 100k      │
-                                              └─ TRIM ── ATTENUATORE ── BLOCCO B ─47Ω─C 4,7µ─[mute]──► cj EV250
-                                                 0/-6/-12   10k, a scatti   0/+3/+10 dB
-                                                 comune,                    K1, K5 su R_g
+                                              └─ TRIM ─C_T 10µ─ BIL. + VOLUME ─┬─ BLOCCO B ─47Ω─C 4,7µ─[mute]──► cj EV250
+                                                 0/-6/-12          MN 50k, 10k log  R_G   0/+3/+10 dB
+                                                 comune,           (ADR-065)        1M    K1, K5 su R_g
                                                  bistabile, LED
 ```
 

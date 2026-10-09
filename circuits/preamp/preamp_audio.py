@@ -13,9 +13,10 @@ channels or the outputs to drift apart.
    IN_L ---------> [BLOCK A] -+-> [BUFFER F1] -> 47R -> 4.7u -> K2 -> FIXED OUT 1 (Singxer)
                    (buffer,   +-> [BUFFER F2] -> 47R -> 4.7u -> K3 -> FIXED OUT 2 (Stax)
                     gain 1)
-                                    +-> [TRIM 0/-6/-12 dB] -> attenuator (off board, 10k stepped)
-                                           (trim.py, K7/K8)          |
-                                                                     v
+                                    +-> [TRIM 0/-6/-12 dB] -> C_T 10u -> balance + volume (off board)
+                                           (trim.py, K7/K8)  (ADR-065)          |
+                                                                     1M to GND -+
+                                                                                v
                                                                 [BLOCK B] -> 47R -> 4.7u -> K4 -> MAIN OUT
                                                         (0 / +3 / +10 dB, relays K1 + K5 on R_g)
    and the same again for the right channel.
@@ -34,11 +35,13 @@ WHAT IS DELIBERATELY NOT HERE
 -----------------------------
  - The INPUT SELECTOR (F1 / ADR-009). It is upstream of IN_L/IN_R, and its
    relays do not interact with the gain blocks.
- - The stepped ATTENUATOR itself (F4). It is a rotary switch on the front
-   panel, not a PCB part; it appears here as a 3-pin harness connector per
-   channel. Its ELECTRICAL effect - a source impedance that swings 0 -> 2.5k
-   -> 0 with the knob, 2.611k at most behind the trim - is what the
-   simulations in spice/preamp/tb sweep.
+ - The VOLUME and the BALANCE (F4, ADR-065; a stepped attenuator until
+   L48b). They are panel parts - an ALPS RK27 10 kOhm log and an Alpha MN
+   50 kOhm balance pot wired as a divider in front of it - not PCB parts;
+   they appear here as a 3-pin harness connector per channel: the top (after
+   C_T), the wiper back to block B, ground. Their ELECTRICAL effect - a
+   source impedance that swings 0 -> 2.5k -> 0 with the knob, more with the
+   balance turned - is what the simulations in spice/preamp/tb sweep.
  - The MUTE TIMER (ADR-012) and the VRELAY supply. Only the mute contacts are
    here, because they are in the signal path and change Zout, plus the two
    COMMAND nets - MUTE_CMD for the jack relays, PERMIT_CMD for the permissive
@@ -215,12 +218,14 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole,
         k_sel[n][K_COM1 if k_pole == 0 else K_COM2] += a["IN"]
         k_sel[n][K_NO1 if k_pole == 0 else K_NO2] += sel
 
-    # ---- attenuator harness (off-board rotary, F4/ADR-009) --------------
-    # Since L16 (ADR-027) its top pin is NOT block A's output: it is the COM
-    # of the trim relay T1, which connects it to block A's output (0 dB) or to
-    # a tap of the trim ladder. See trim.trim_channel() below.
+    # ---- volume harness (off-board balance + volume, F4, ADR-065) --------
+    # Since L16 (ADR-027) its top pin is NOT block A's output; since L48b
+    # (ADR-065) it is not the trim's output either: it is the far side of
+    # C_T, below. On the panel the top feeds the balance pot (an MN divider,
+    # 0 dB at its centre detent) and the balance's wiper the volume pot's
+    # top; the volume's wiper comes back on pin 2.
     att_top, att_wiper = Net(f"{ch}_ATT_TOP"), Net(f"{ch}_ATT_W")
-    ac = Part("Connector_Generic", "Conn_01x03", value=f"ATT_{ch} 10k",
+    ac = Part("Connector_Generic", "Conn_01x03", value=f"VOL_{ch} 10k",
               footprint=FP_CONN3, ref=f"J{base + 20}")
     ac[1] += att_top
     ac[2] += att_wiper
@@ -315,16 +320,44 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole,
     # ---- the common trim, variable branch only (L16, ADR-027) ------------
     # Between block A's output and the attenuator harness. Ladder and signal
     # contacts per channel; the relays are shared and made by the caller.
-    trim.trim_channel(ch, a["OUT"], att_top, gnd, k_trim["T1"], k_trim["T2"],
+    trim_out = Net(f"{ch}_TRIM_OUT")
+    trim.trim_channel(ch, a["OUT"], trim_out, gnd, k_trim["T1"], k_trim["T2"],
                       k_pole)
 
+    # ---- C_T: the trim's output to the volume, DC-blocked (ADR-065) -------
+    # NC-041: until L48b block A's DC (-6.6 mV nominal, up to +-30 mV with the
+    # spread of the parts) crossed the trim ladder and the volume, and every
+    # step of the volume left a step on the jack: 4.3 mV (~66 dB SPL) at the
+    # top of the travel at +10 dB, 19.5 mV (~79 dB SPL) at the worst DC.
+    # With C_T no volume step reaches 0.5 uV (docs/preamp/data/2026-10-07/
+    # L48b/scatti/). A capacitor at block B's input would NOT have done it:
+    # the wiper's DC step crosses it as a step (measured, 4.29 mV).
+    # 10 uF polypropylene (ADR-007's dielectric) into the >= ~8 kOhm of balance
+    # + volume: -0.03 dB at 20 Hz on the whole chain (E9). The user's choice,
+    # "Fra trim e volume, film 10 uF", over 68 uF before the trim: the trim
+    # still carries the DC, but it moves only under mute (PR-17) and its step
+    # decays in C_T with tau ~0.1 s. Explicit ref (limitations #22).
+    ct = Part("Device", "C", value="10u",
+              footprint="Capacitor_THT:C_Rect_L31.5mm_W17.0mm_P27.50mm_MKS4",
+              ref=f"C{base + 165}")
+    ct[1] += trim_out
+    ct[2] += att_top
+
     # ---------------- BLOCK B: output stage, 0 / +3 / +10 dB ---------------
-    # r_in=None: the attenuator ladder is itself the gate's DC return (at most
-    # 10 kOhm to ground in every knob position), so a second resistor here
-    # would only add noise and load the wiper.
+    # r_in=None inside the block, so that block B's numbering does not move
+    # (limitations #22); its gate return is R_G below.
     b = gain_block(tag=f"B{ch}", base=base + 100, switchable=True, r_in=None,
                    vp=vp, vm=vm, gnd=gnd)
     b["IN"] += att_wiper
+    # R_G 1M, the gate's own DC return (ADR-065). Until L48b the volume was
+    # the only one; a contact that opens for an instant - between two steps
+    # of a non-shorting switch, or a worn pot's wiper lifting - left the gate
+    # floating on its leakage (LSK489 I_G -2 pA typ, -25 pA max at 25 C):
+    # ~29 dB SPL typical, up to ~51 at 25 C and ~69 hot over 1 ms at +10 dB.
+    # 1M loads the 10k volume by ~0.02 dB. Explicit ref (limitations #22).
+    rg = Part("Device", "R", value="1M", footprint=FP_R, ref=f"R{base + 165}")
+    rg[1] += att_wiper
+    rg[2] += gnd
 
     _n[0] = 60
     main_a, main_j = Net(f"{ch}_MAIN_A"), Net(f"{ch}_MAINJACK")

@@ -86,10 +86,15 @@ RT2R TAP6 T2C 0.1
 CT2R TAP6 T2C 15p
 RT2S TAP12 T2C 1G
 CT2S TAP12 T2C 15p
-CWIRE ATOP 0 100p
+* L48b (ADR-065, NC-041): C_T 10u fra il trim e il volume (C265 / C465).
+CT    ATOP ATT 10u
+CWIRE ATT 0 100p
+* il bilanciamento allo scatto centrale (ADR-065: un partitore MN 50k davanti al
+* volume): il cursore sta sulla cima, la pista carica la cima con 50k.
+RBAL  ATT 0 50k
 
-* --- l'attenuatore a scatti da 10 k ---
-RATTH ATOP BIN 1m
+* --- il volume da 10 k (un potenziometro da ADR-065) ---
+RATTH ATT BIN 1m
 RATTL BIN 0 10k
 
 * --- blocco B, 0 / +3 / +10 dB ---
