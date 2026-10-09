@@ -1,6 +1,6 @@
 # ADR-059 — Il JFET per il mute è provato e scartato sui numeri; la cella resta la NSL-32SR3, con un bersaglio di sfumatura di 3 s per verso
 
-Data: 2026-10-02 · Stato: accettata — conferma ADR-058; precisa ADR-039 e ADR-040 sul tempo della sfumatura (bersaglio, non tetto del PRB)
+Data: 2026-10-02 · Stato: superata da ADR-062 (niente sfumatura; la prova del JFET resta come esito)
 
 ## Contesto
 

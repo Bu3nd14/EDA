@@ -1,6 +1,6 @@
 # ADR-042 — Miller da 470 pF a 1 nF, e la corrente di riposo d'uscita a ~20 mA, coi modelli del costruttore
 
-Data: 2026-09-23 · Stato: accettata
+Data: 2026-09-23 · Stato: accettata — il Miller e R128 sono superati da ADR-054 (VAS a ~10,7 mA, C124 470 pF, R128 1,58 kΩ); la corrente d'uscita ~20 mA resta
 
 ## Contesto
 

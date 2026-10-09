@@ -316,6 +316,15 @@ def inline(s):
 
 
 def block_html(b):
+    # L51a: la voce di un elenco puo' andare a capo con una riga rientrata (le «Voci
+    # cambiate dopo la firma» in testa al PRB, da L47c1): la riga si unisce alla voce
+    j = []
+    for x in b:
+        if x.startswith("  ") and j and re.match(r"^(- |\s)", j[-1]):
+            j[-1] = j[-1] + " " + x.strip()
+        else:
+            j.append(x)
+    b = j
     first = b[0]
     if first.startswith("## "):
         out = [f"<h3>{inline(first[3:])}</h3>"]

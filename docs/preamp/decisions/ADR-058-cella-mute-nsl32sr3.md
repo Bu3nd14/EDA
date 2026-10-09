@@ -1,6 +1,6 @@
 # ADR-058 — La cella del mute è la NSL-32SR3 di Advanced Photonix, modellata da dati pubblicati e da ipotesi dichiarate; il sorgente e le misure passano a L47b
 
-Data: 2026-10-02 · Stato: accettata — supera in parte ADR-038 e ADR-039 sulla sola parte
+Data: 2026-10-02 · Stato: superata da ADR-062 (il mute taglia coi soli relè: la cella è tolta)
 
 ## Contesto
 

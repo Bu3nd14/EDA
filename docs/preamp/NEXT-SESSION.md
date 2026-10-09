@@ -1,81 +1,78 @@
-# Prompt per la sessione successiva — L51, il dossier rigenerato
+# Prompt per la sessione successiva — L51b, il dossier rigenerato: l'alimentatore e il firmware
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L51** (o la sua prima parte, se l'utente lo divide), e si
-ferma. Non iniziarne un secondo.
+LOTTI PICCOLI: questa sessione fa **L51b**, e si ferma. Non iniziarne un secondo.
 
 ## Perché questo lotto, e perché adesso
 
 L'utente, il 2026-10-09 dopo L49b: «rigeneriamo il dossier, mettilo nel prossimo lotto abbiamo
-cambiato molto, poi lo passiamo all'avversariale di nuovo, poi affrontiamo G1». L'ordine è quindi
-**L51** il dossier → **L52** l'architetto avversariale sul dossier nuovo → **G1** → L45 FMEA → L50
-massa e terra.
+cambiato molto, poi lo passiamo all'avversariale di nuovo, poi affrontiamo G1». All'inizio di L51
+l'ha diviso: **«Tre parti»** — **L51a** la scheda audio (**fatto**, 2026-10-09), **L51b**
+l'alimentatore e il firmware (questo), **L51c** le schede di prova e l'assieme di L49, «Cosa questo
+dossier non dice», la provenienza e le righe `Stato:` restanti. Poi **L52** l'architetto
+avversariale sul dossier nuovo, poi **G1**, poi L45 FMEA e L50 massa e terra.
 
-Il dossier (`docs/preamp/dossier/`, `build_dossier.py`, PDF A4 con `stampa_a4.py`) è di **L42**
-(2026-09-27). Lo legge **solo l'utente** e **non si taglia** sul percorso verso G1: si rigenera,
-non si aggiungono avvisi di obsolescenza. Nessuna non conformità bloccante per G1 è aperta
-(`NONCOMPLIANCE.md`: 12 aperte, 1 bloccante, NC-044, per G2).
+Il dossier lo legge **solo l'utente** e **non si taglia**: si rigenera, senza avvisi di
+obsolescenza.
 
-## La regola del generatore (non cambia)
+## Come L51a ha lasciato il generatore (leggere prima del codice)
 
-**Nessuna cifra del dossier è scritta a mano**: ogni numero si legge dai file versionati sotto
-`docs/preamp/data/` e passa per una seconda strada indipendente; se le due divergono oltre la
-tolleranza dichiarata il generatore **rifiuta e non scrive niente**. Nessun dato di un giorno in
-cui il circuito era diverso da quello descritto. Il controllo del punto 14 (`contratto.py`) tiene
-PRB, ADR e indice dei requisiti in biiezione.
+- `build_dossier.py` ha **`PARTI = ("audio",)`**: ogni sezione di `SECTIONS_TUTTE` dice a quale
+  parte appartiene, e la pagina ha solo quelle delle parti presenti. Finché le parti non sono tutte
+  e tre, il generatore **non scrive niente accanto a sé** (né `index.html`, né le figure, né il
+  summary: sono ancora quelli di L42) e scrive la pagina solo con `--standalone` **fuori dal
+  repo**. L51b aggiunge `"alimentatore"`; il primo `index.html` nuovo lo scrive L51c.
+- Le sezioni dell'alimentatore della pagina, e le righe dell'alimentatore della tabella dei
+  requisiti, sono **intatte e sotto `if psu:`**: si riscrivono da qui. Le misure
+  (`measure_psu_power`, `measure_supervisor`, `measure_timer`, `measure_fw`, `measure_ldr_drive`,
+  `measure_shutdown`, `measure_heat`) sono quelle di L42b, e **leggono il circuito di L41**:
+  `main()` le chiama solo con la parte presente.
+- I dati della scheda audio passano da **`sa()`**: niente da prima di `AUDIO_DA` (2026-10-07, il
+  circuito di L48b) se non le eccezioni nominate in `AUDIO_PERMESSI`, con la loro ragione stampata
+  nella pagina. Per l'alimentatore serve la stessa guardia, col suo giorno.
+- Il testo cita le sezioni con `sez()`, mai il numero a mano: le sezioni nuove spostano i numeri.
 
-## Cosa è cambiato da L42 (il mandato)
+## Il mandato
 
-- **Il mute coi soli relè** (ADR-062, ADR-063): niente celle, niente sfumatura; il dossier
-  descrive ancora la VTL5C4 e cita `tb_e3_e5_ldr.cir` (ora `tb_e3_e5.cir`) e `tb_v2_mute_ldr.cir`
-  (ora `tb_v2_mute_taglio.cir`); la tabella del mute legge la matrice di L29d2 con S — quella di
-  oggi è di **L48b** (L47c2b1 più il gruppo 6 del volume), senza S, col clic dichiarato.
-- **Il selettore d'ingresso** (ADR-064, L48a): la scheda ingressi «a monte» non esiste più; F1 sul
-  banco (`tb_f1_selettore.cir`).
-- **Il volume a potenziometro ALPS RK27 col bilanciamento MN, C_T e R_G** (ADR-065, L48b): il
-  dossier descrive l'attenuatore a scatti; la frase «il trim sta dopo il condensatore d'uscita del
-  blocco A» (falsa, NC-041) va riscritta da quello che c'è ora.
-- **Il §14 di `build_dossier.py`** («solo l'LSK489A porta KF», «niente distorsione») è superato da
-  L44 (il flicker dei bipolari, ADR-057) e L46a (la compensazione, ADR-054 / 055).
-- **L'alimentatore e il firmware**: il firmware descritto è quello di L41b2 (la legge delle LDR, 21
-  falsi, sette sequenze): oggi è quello di **L47c2a** (19 falsi, sei sequenze, senza LDR); il
-  pilota delle LDR non c'è più; la tenuta di `VRELAY` e lo standby di L47c2a / L48a; i guasti
-  citano L41c / L42b: le cifre di oggi sono di **L47c2b2**.
-- **Le schede di prova di L49** (nuove): la scheda audio (L49a) e l'alimentatore (L49b) con le
-  immagini (rame e render), la pianta dell'assieme nel Pesante 3U, e i vincoli numerati dei due
-  report (`data/2026-10-09/L49a/`, `data/2026-10-09/L49b/psu/`, `data/2026-10-09/L49b/assembly/`).
-- **Le righe `Stato:` delle ADR**: ADR-038, 039, 040, 049, 050, 058, 059, 060, 061 (superate o
-  precisate da ADR-062 e prima), ADR-032 e ADR-062 (precisate da ADR-063), **ADR-009** (superata
-  sul volume da ADR-065) e **ADR-053** (E10 precisato da ADR-065) non lo dicono, e ADR-059 e
-  ADR-060 nominano ADR più vecchie (il controllo del punto 14 le rifiuta): si allineano **con
-  l'utente**, toccando solo quella riga.
-- **PR-14** nel PRB dice ancora «il selettore è ancora da progettare»: cambiarlo vuole una ADR, solo
-  se l'utente lo chiede. Portarglielo per nome.
+- **L'alimentatore di oggi è quello di L47c2a** (`psu.py` non è cambiato dopo): il firmware senza
+  la legge delle LDR (19 falsi sull'host, 6 sequenze sul circuito), l'alimentatore senza il pilota
+  (tenuta di `VRELAY` 61,1 ms a rete −10 %, poi **48,3 ms** col carico del selettore, L48a/psu),
+  lo standby 80,5 mW da T2; i guasti e lo spegnimento al jack di **L47c2b2** (U502 spento
+  0,89 mV, spegnimento morbido 15 nV). Le prime strade sono le cartelle di quei lotti, le seconde
+  ricorse di oggi, come L42b fece con L41: decidere con l'utente se ricorrere tutto (in L42b una
+  ricorsa ha trovato la tenuta di `VRELAY` scesa da 62,8 a 36,1 ms).
+- **Via la sezione «Il pilota delle LDR»** (`sldr`, `measure_ldr_drive`, `fig_ldr_drive`): il pilota
+  non c'è più (ADR-062). La sezione dello schema dell'alimentatore cita ancora ADR-050 e la cima a
+  12 mA.
+- **Il calore** (`sheat`, uscito da L51a): la stima di L30 (`data/2026-09-26/L30/termica/stima_telaio.py`,
+  e la versione di L41a in `L41a/scelte/stima_telaio_l41a.py`) ha voci **superate**: i blocchi a
+  0,993 W (prima di ADR-054: `tb_op` di oggi dà 15 V × (36,70 + 37,72) mA = 1,116 W per blocco), le
+  LDR tolte, le bobine e il regolatore di `VRELAY` col selettore. Rifare la stima con le cifre di
+  oggi è una misura nuova: **portarla all'utente prima**, coi numeri.
+- Le righe dell'alimentatore nella tabella dei requisiti (P9 (a), P9 (b), ADR-045, NC-037), e le
+  due tessere del quadro sinottico (Δ, il guasto al jack).
+- I sabotaggi di L42b sono sui dati di L41: rifarli sui controlli nuovi (`L51a/script/sabotaggi.py`
+  è il modello).
 
 ## All'inizio, con l'utente
 
-Misurare prima (quante sezioni cambiano, quanti dati sono da ricorrere), poi chiedere per nome e
-senza sigle:
-
-- **dividere o no** (in L42: L42a scheda audio, L42b alimentatore; qui c'è in più L49);
-- le righe `Stato:` delle ADR, una per una;
-- PR-14.
+Misurare prima (quanti dati sono da ricorrere, quanto durano le catene), poi chiedere per nome e
+senza sigle: ricorrere o no, e il calore.
 
 ## Prima di tutto
 
-- `CLAUDE.md` e `docs/limitations.md` (**54 voci**; per il dossier in particolare #26, #37, e le
-  trappole del generatore).
-- `docs/preamp/STATE.md`: «In breve», «Dopo L49b», **L42a** e **L42b** (come si è rigenerato
-  l'ultima volta), L42d (il contratto nel dossier).
-- `docs/preamp/dossier/build_dossier.py` per intero, `contratto.py`, `stampa_a4.py`.
-- I report da L44 a L49b.
+- `CLAUDE.md` e `docs/limitations.md` (**54 voci**; per l'alimentatore #29, #33–#36, #38, #40).
+- `docs/preamp/STATE.md`: «In breve», **L51a**, **L42b** (come si è rigenerato l'alimentatore
+  l'altra volta), L47c2a, L47c2b2, L48a (la parte `psu/`).
+- `docs/preamp/dossier/build_dossier.py` per intero; `data/2026-10-09/L51a/README.md`.
+- I report di L47c2a, L47c2b2 e L48a.
 
 ## I vincoli
 
 - Nel worktree vengono rifiutati:
   - i comandi composti, e le pipe o i `;` attorno a comandi che eseguono script (anche
     `run_tests.sh` e `run_simulation.sh` vanno lanciati da soli, senza redirect seguiti da altro);
-  - `cd … && script`, le variabili di shell nei percorsi;
+  - `cd … && script`, **le variabili di shell nei percorsi**;
   - `awk` con programmi, i cicli con variabili, un heredoc insieme a un altro comando, un
     `python3 -c` dentro un altro comando, e un comando che **contiene la parola «git»** anche solo
     in un testo;
@@ -88,20 +85,18 @@ senza sigle:
 
 ## NON fa parte di questo lotto
 
-- L'architetto avversariale (**L52**) e il gate (**G1**): vengono dopo, nell'ordine dell'utente.
+- Le schede di prova e l'assieme di L49, «Cosa questo dossier non dice», le righe `Stato:` restanti
+  (ADR-009, 027, 032, 038, 039, 040, 049, 050, 061, 062): **L51c**.
+- L'architetto avversariale (**L52**) e il gate (**G1**).
 - Cambiare il circuito, i deck o il firmware: il dossier li descrive com'è oggi. Un difetto trovato
-  rigenerando si scrive e si porta all'utente, non si corregge da sé (vale anche per un rilievo
-  che l'architetto potrebbe trovare: non cercarlo per lui).
+  rigenerando si scrive e si porta all'utente, non si corregge da sé.
 - La FMEA (L45), la massa e la terra (L50), il layout vero (G2).
-- Tornare a una sfumatura del mute, o mettere un tetto al clic del taglio: li riapre solo l'utente.
-- Togliere `models/optocoupler/nsl32sr3_comportamentale.lib` da `models/`: solo se l'utente lo
-  chiede. L'adattatore `firmware/preamp_timer/src/main_attiny.c`.
 
 ## CHIUSURA
 
-1. `STATE.md` con L51 **fatto** (o le sue parti) nella tabella dei lotti, e il prossimo (**L52**).
+1. `STATE.md` con L51b **fatto** nella tabella dei lotti, e il prossimo (**L51c**).
 2. Riscrivi QUESTO file per il lotto successivo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L51` (o il nome della parte).
+4. `/bin/zsh scripts/chunk_close.sh L51b`.
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**

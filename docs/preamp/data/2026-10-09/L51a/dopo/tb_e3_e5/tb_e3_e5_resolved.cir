@@ -1,0 +1,216 @@
+tb_e3_e5.cir - L48a: E3 ed E5 sull'ingresso col condensatore e il selettore (ADR-064; L47c1 senza il mute graduale, ADR-062)
+* Prima riga = titolo (docs/limitations.md #10).
+*
+* L48a (ADR-064): davanti al blocco A c'e' ora la rete di ogni ingresso -
+* R_J 10M sul jack, C_IN 1u in serie, R_SEL 470k a massa dal lato del preamp,
+* il contatto del rele' del selettore - e E3 si legge al jack (JIN). Il
+* disegno sotto e le cifre di L47c1 valgono per l'ingresso di allora.
+*
+* COSA SI PROVA (L47c1, ADR-062). Da L29b2 a L47b2b1 questo deck si chiamava
+* tb_e3_e5_ldr.cir e metteva davanti al blocco A le due fotoresistenze del
+* mute graduale (NSL-32SR3 da L47b2a, VTL5C4 prima). ADR-062 (la scelta
+* dell'utente del 2026-10-04, "Taglio coi soli rele'") le ha tolte: il
+* connettore d'ingresso va dritto all'ingresso del blocco A, com'e' oggi in
+* circuits/preamp/preamp_audio.py. La catena e' quella di tb_trim.cir, trim
+* candidato 2 (845 / 464 / 464, il candidato di progetto, ADR-027):
+*
+*   VSRC --RSRC-- AIN --[blocco A]-- trim -- attenuatore -- [blocco B] -- 47 -- 4,7u -- JACK
+*                  |
+*             R_IN 1 M (dentro il blocco)
+*
+* E3 (REQUIREMENTS, "Nota su E3"): |Zin| minima 20 Hz - 20 kHz al connettore,
+* cioe' al nodo AIN, in ogni posizione del trim; CSEL (1 fF / 22 pF / 68 pF)
+* e' cio' che il selettore aggiunge, come in tb_trim.cir. Con le celle L47b2a
+* riportava 110,7 kOhm (stato di gioco): era il minimo fino a 19,1 kHz, perche'
+* `meas min` salta l'ultimo punto (limitations #45); il vero minimo, a 20 kHz,
+* era 105,8 kOhm. Senza celle ci si aspetta lo stesso ordine: a 20 kHz pesa
+* CSEL, non le celle.
+*
+* E5 (<= 9,90 uV, tb_trim.cir: E5 meno le quote da 1 uV di ADR-020 e ADR-022).
+* Posizioni del trim 0 / 6 / 12, modi 0 / 3 / 10 dB, attenuatore al massimo e
+* a meta' corsa, sorgente 1,5 e 430 ohm. Con le celle il peggiore era 5,53 uV
+* (L47b2a, la serie a 115,5 ohm); la riga "nessuna" di allora, la serie a
+* 1 mohm, e' cio' che questo deck deve ridare.
+*
+* L'ACCOPPIAMENTO LED-CELLA non c'e' piu': non ci sono LED. La quota da 1 uV
+* di ADR-022 resta nel bilancio di E5 come prima (tb_trim.cir).
+*
+* NODI: i blocchi sono sottocircuiti (limitations #24); RG / RG10 terminati
+* (#27). Il rumore: da L39 i modelli sono del costruttore, da L44 i bipolari
+* portano KF al tetto dichiarato di ADR-057: un limite per eccesso.
+*
+* TABELLE (echo; nessun wrdata le nomina, #25):
+*   tb_e3_e5_e3.csv   pos,csel,zmin_ohm,z20_ohm,z1k_ohm,z20k_ohm
+*   tb_e3_e5_e5.csv   pos,mode,att,rsrc,onoise_uv
+* Convenzione dei percorsi: tb_op.cir (L2).
+
+.include /Users/roberto/EDA/.claude/worktrees/L51a/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L51a/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L51a/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L51a/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L51a/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L51a/models/diodes/1n4148.lib
+* L22: lo specchio d'ingresso e' un LS352 (ADR-018).
+.include /Users/roberto/EDA/.claude/worktrees/L51a/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L51a/spice/preamp/gain_block.subckt
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+
+* --- la sorgente selezionata e cio' che il selettore aggiunge ---
+VSRC  VSN 0 DC 0 AC 1
+RSRC  VSN JIN 1.5
+* L48a, ADR-064: la rete d'ingresso di ogni ingresso (preamp_audio.py): R_J sul
+* jack, C_IN 1u in serie, R_SEL 470k dal lato del preamp, il contatto del
+* selettore (0,1 ohm) fino al nodo AIN del blocco A. E3 si legge al jack, JIN.
+RJ    JIN 0 10Meg
+CIN   JIN SEL 1u
+RSEL  SEL 0 470k
+RKSEL SEL AIN 0.1
+CSEL  AIN 0 1f
+
+* --- blocco A, guadagno 1, ramo del rele' non montato ---
+XA AIN AOUT AFB ARG ARG10 VPLUS VMINUS GAINBLOCK
+RARG   ARG   0 1G
+RARG10 ARG10 0 1G
+
+* --- il trim, candidato 2 (ADR-027) ---
+RL1 AOUT TAP6 845
+RL2 TAP6 TAP12 464
+RL3 TAP12 0 464
+RT1R AOUT ATOP 0.1
+CT1R AOUT ATOP 15p
+RT1S T2C ATOP 1G
+CT1S T2C ATOP 15p
+RT2R TAP6 T2C 0.1
+CT2R TAP6 T2C 15p
+RT2S TAP12 T2C 1G
+CT2S TAP12 T2C 15p
+* L48b (ADR-065, NC-041): C_T 10u fra il trim e il volume (C265 / C465).
+CT    ATOP ATT 10u
+CWIRE ATT 0 100p
+* il bilanciamento allo scatto centrale (ADR-065: un partitore MN 50k davanti al
+* volume): il cursore sta sulla cima, la pista carica la cima con 50k.
+RBAL  ATT 0 50k
+
+* --- il volume da 10 k (un potenziometro da ADR-065) ---
+RATTH ATT BIN 1m
+RATTL BIN 0 10k
+
+* --- blocco B, 0 / +3 / +10 dB ---
+XB BIN BOUT BFB BRG BRG10 VPLUS VMINUS GAINBLOCK
+CSTB    BRG   0 15p
+RRGB    BRG   0 1G
+CSTB10  BRG10 0 15p
+RRG10B  BRG10 0 1G
+
+RISO   BOUT BOUTA 47
+COUT   BOUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD  JACK 0 100k
+
+.control
+* ============================== E3 ==============================
+echo "pos,csel,zmin_ohm,z20_ohm,z1k_ohm,z20k_ohm" > tb_e3_e5_e3.csv
+alter rsrc = 1m
+foreach pos 0 6 12
+  if $pos = 0
+    alter rt1r = 0.1
+    alter rt1s = 1G
+    alter rt2r = 0.1
+    alter rt2s = 1G
+  end
+  if $pos = 6
+    alter rt1r = 1G
+    alter rt1s = 0.1
+    alter rt2r = 0.1
+    alter rt2s = 1G
+  end
+  if $pos = 12
+    alter rt1r = 1G
+    alter rt1s = 0.1
+    alter rt2r = 1G
+    alter rt2s = 0.1
+  end
+  foreach cs 1f 22p 68p
+    alter csel = $cs
+    ac dec 50 20 20k
+    let zmag = mag(v(jin)/(-i(vsrc)))
+    * limitations #45: `meas ac ... min from=20 to=20000` skips the last point
+    * (20 kHz, the lowest |Zin|); vecmin() reads the whole 20 Hz - 20 kHz vector.
+    let zmin = vecmin(zmag)
+    meas ac z20 find zmag at=20
+    meas ac z1k find zmag at=1000
+    meas ac z20k find zmag at=20000
+    echo "E3 pos=$pos csel=$cs"
+    print zmin
+    echo "$pos,$cs,$&zmin,$&z20,$&z1k,$&z20k" >> tb_e3_e5_e3.csv
+    destroy all
+  end
+end
+alter csel = 1f
+
+* ============================== E5 ==============================
+echo "pos,mode,att,rsrc,onoise_uv" > tb_e3_e5_e5.csv
+foreach pos 0 6 12
+  if $pos = 0
+    alter rt1r = 0.1
+    alter rt1s = 1G
+    alter rt2r = 0.1
+    alter rt2s = 1G
+  end
+  if $pos = 6
+    alter rt1r = 1G
+    alter rt1s = 0.1
+    alter rt2r = 0.1
+    alter rt2s = 1G
+  end
+  if $pos = 12
+    alter rt1r = 1G
+    alter rt1s = 0.1
+    alter rt2r = 1G
+    alter rt2s = 0.1
+  end
+  foreach mode 0 3 10
+    if $mode = 0
+      set gm = "0db"
+      alter rrgb = 1G
+      alter rrg10b = 1G
+    end
+    if $mode = 3
+      set gm = "3db"
+      alter rrgb = 0.1
+      alter rrg10b = 1G
+    end
+    if $mode = 10
+      set gm = "10db"
+      alter rrgb = 0.1
+      alter rrg10b = 0.1
+    end
+    foreach at 1 2
+      if $at = 1
+        set ga = "max"
+        alter ratth = 1m
+        alter rattl = 10k
+      end
+      if $at = 2
+        set ga = "mid"
+        alter ratth = 5k
+        alter rattl = 5k
+      end
+      foreach rs 1.5 430
+        alter rsrc = $rs
+        noise v(JACK) VSRC dec 50 20 20000 1
+        setplot noise2
+        let onu = onoise_total*1e6
+        echo "E5 pos=$pos mode=$gm att=$ga rsrc=$rs"
+        print onu
+        echo "$pos,$gm,$ga,$rs,$&onu" >> tb_e3_e5_e5.csv
+        destroy all
+      end
+    end
+  end
+end
+.endc
+
+.end

@@ -191,3 +191,13 @@ docs/preamp/data/2026-10-09/L49a/*.kicad_prl
 # L49b: le preferenze locali di KiCad della scheda dell'alimentatore (la scheda stessa, ~1 MB, è
 # versionata: Freerouting non è ripetibile, la corsa pulita si conserva, limitations #51)
 docs/preamp/data/2026-10-09/L49b/psu/*.kicad_prl
+# L51a: della ricorsa dei deck si tengono CSV, log e deck risolti, come in L42a (le .txt e .json
+# sono le forme d'onda grezze che run_simulation.sh ha gia' convertito in .csv); delle corse del
+# mute le forme d'onda (~14 GB) e i deck che dividi.py rigenera. Si rifanno con
+# data/2026-10-09/L51a/script/ricorsa.sh dopo e mute.sh
+docs/preamp/data/2026-10-09/L51a/dopo/**/*.txt
+docs/preamp/data/2026-10-09/L51a/dopo/**/*.json
+docs/preamp/data/2026-10-09/L51a/mute/corse/*.dat
+docs/preamp/data/2026-10-09/L51a/mute/corse/corsa_*.cir
+docs/preamp/data/2026-10-09/L51a/mute/corse/deck.cir
+docs/preamp/data/2026-10-09/L51a/mute/corse/_analisi_par*/

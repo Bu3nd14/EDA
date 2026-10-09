@@ -1,6 +1,6 @@
 # ADR-053 — Il Product Requirements Book è il contratto; sette requisiti nuovi
 
-Data: 2026-09-27 · Stato: accettata
+Data: 2026-09-27 · Stato: accettata — dopo la firma alcune voci sono cambiate, ognuna con la sua decisione: la distorsione ha tetti in numeri invece di «dello stesso ordine» (V4, ADR-055); il mute taglia invece di sfumare (PR-21, ADR-062); il volume è un potenziometro con il bilanciamento, e i due canali restano entro 1 dB (PR-10, PR-16, PR-19, PR-20, E10, ADR-065); il selettore d'ingresso è progettato (PR-14, ADR-066)
 
 ## Contesto
 
