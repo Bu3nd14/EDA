@@ -60,7 +60,7 @@ for n in nuovi:
 esiti = (DOPO / "esiti.tsv").read_text().split("\n")
 rc = [e for e in esiti if e and e.split("\t")[1] != "0"]
 righe.append("")
-righe.append(f"{n_uguali} file su {n_file} uguali a L47c2b2; deck con rc != 0: "
+righe.append(f"{n_uguali} file su {n_file} uguali a L48a; deck con rc != 0: "
              f"{rc or 'nessuno'}")
 (L / "regressione" / "confronto.txt").write_text("\n".join(righe) + "\n")
 print("\n".join(righe))

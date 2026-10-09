@@ -30,8 +30,10 @@ indici numerici, mai stringhe (#46). La tabella e' scritta con echo su un percor
 import argparse
 import os
 
-REPO = "/Users/roberto/EDA/.claude/worktrees/L48b"
 QUI = os.path.dirname(os.path.abspath(__file__))
+# la radice del repo, sei livelli sopra (docs/preamp/data/<data>/L48b/scatti): i deck di questa
+# cartella sono stati generati nel worktree di L48b e portano quel percorso negli .include
+REPO = os.path.abspath(os.path.join(QUI, *[".."] * 6))
 
 TE = 20e-3        # l'istante dello scatto
 TT = 1e-3         # il trasferimento del contatto (ipotesi, la stessa di trim e guadagno)
