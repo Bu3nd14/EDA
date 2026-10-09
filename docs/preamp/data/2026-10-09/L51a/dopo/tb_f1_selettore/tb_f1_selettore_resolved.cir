@@ -1,0 +1,196 @@
+tb_f1_selettore.cir - L48a: F1 sul banco, il cambio d'ingresso fra due sorgenti a continue diverse col selettore e i condensatori di ADR-064
+* Prima riga = titolo (docs/limitations.md #10).
+*
+* COSA SI PROVA (L48a, NC-040, F1, PR-14). Due ingressi come in
+* circuits/preamp/preamp_audio.py: per ciascuno
+*   VDC --RS-- J --(R_J 10M a massa)-- C_IN 1u (perdita RLK) -- SEL --(R_SEL 470k a massa)
+*   SEL --contatto NO del rele' del selettore-- AIN (blocco A, R_IN 1M dentro)
+* A e' selezionato a 0 V; al tempo 50 ms il suo contatto si apre e quello di
+* B, alla continua VB, si chiude dopo 1 ms ("trasf") oppure 1 ms prima
+* ("sovrap": due monostabili, uno che rilascia e uno che attira, l'ordine
+* non e' garantito dal datasheet - 3 ms massimi per entrambi, en-g6k.pdf p. 3).
+* Si misura il picco dello scostamento da prima del cambio, in su e in giu':
+*   JF  un jack fisso: buffer (ADR-023), 47, 4,7u, 470k + 470k, Stax 50k
+*   JM  il jack principale: trim 0 dB, attenuatore al massimo, blocco B a
+*       0 / +3 / +10 dB, 47, 4,7u, 220k + 220k, 100k (EV250)
+* Fuori mute: i contatti di mute sono chiusi e qui omessi (0,1 ohm).
+* Limite di F1 / PR-14: 100 uV di picco su ogni uscita (~33 dB SPL).
+*
+* RLK = 1e4 / C_IN = 10 GOhm: costante d'isolamento 10 000 s, il minimo del
+* poliestere citato in L43a (WIMA MKS 4); il polipropilene di ADR-007 fa
+* meglio, quindi e' un limite per eccesso. La perdita fa il residuo che
+* cresce con VB: VB / RLK sul R_SEL dell'ingresso non scelto.
+*
+* Il controfattuale (riga "oggi", +10 dB): l'ingresso di prima di L48a,
+* senza C_IN (RBY 1 mohm) ne' R_SEL. Deve dare sui jack ~VB e ~3,16 VB.
+*
+* Il contatto: switch ron 0,1 ohm, roff 1 GOhm, 15 pF in parallelo
+* (tb_trim.cir). CSEL 68 pF, il caso peggiore di E3.
+*
+* Tabella (echo): f1_selettore.csv
+*   modo,vb,trasf,jf_su_uv,jf_giu_uv,jm_su_uv,jm_giu_uv
+* Convenzione dei percorsi: tb_op.cir (L2).
+
+.include /Users/roberto/EDA/.claude/worktrees/L51a/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L51a/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L51a/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L51a/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L51a/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L51a/models/diodes/1n4148.lib
+.include /Users/roberto/EDA/.claude/worktrees/L51a/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L51a/spice/preamp/gain_block.subckt
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+
+.model swk sw vt=0.5 vh=0.1 ron=0.1 roff=1e9
+
+* --- ingresso A (selezionato all'inizio), 0 V ---
+VA   VAN 0 DC 0
+RSA  VAN JA 1.5
+RJA  JA 0 10Meg
+CINA JA SELA 1u
+RLKA JA SELA 1e10
+RBYA JA SELA 1e15
+RSLA SELA 0 470k
+SWA  SELA AIN CTLA 0 swk
+CKA  SELA AIN 15p
+
+* --- ingresso B, alla continua VB ---
+VB   VBN 0 DC 0.01
+RSB  VBN JB 1.5
+RJB  JB 0 10Meg
+CINB JB SELB 1u
+RLKB JB SELB 1e10
+RBYB JB SELB 1e15
+RSLB SELB 0 470k
+SWB  SELB AIN CTLB 0 swk
+CKB  SELB AIN 15p
+
+CSEL AIN 0 68p
+
+* --- i comandi: A si apre a 50 ms; B si chiude a 51 ms (trasf) o a 49 ms (sovrap) ---
+VCA  CTLA 0 PWL(0 1 50m 1 50.1m 0)
+VCB1 CB1 0 PWL(0 0 51m 0 51.1m 1)
+VCB2 CB2 0 PWL(0 0 49m 0 49.1m 1)
+RCB1 CB1 CTLB 1m
+RCB2 CB2 CTLB 1e12
+
+* --- blocco A ---
+XA AIN AOUT AFB ARG ARG10 VPLUS VMINUS GAINBLOCK
+RARG   ARG   0 1G
+RARG10 ARG10 0 1G
+
+* --- un'uscita fissa ---
+XF AOUT FOUT FFB FRG FRG10 VPLUS VMINUS GAINBLOCK
+RFRG   FRG   0 1G
+RFRG10 FRG10 0 1G
+RFISO  FOUT FOUTA 47
+CFOUT  FOUTA JF 4.7u
+RFBC   JF 0 470k
+RFBL   JF 0 470k
+RFLD   JF 0 50k
+
+* --- il ramo principale ---
+RL1 AOUT TAP6 845
+RL2 TAP6 TAP12 464
+RL3 TAP12 0 464
+RT1R AOUT ATOP 0.1
+CWIRE ATOP 0 100p
+RATTH ATOP BIN 1m
+RATTL BIN 0 10k
+XB BIN BOUT BFB BRG BRG10 VPLUS VMINUS GAINBLOCK
+CSTB    BRG   0 15p
+RRGB    BRG   0 0.1
+CSTB10  BRG10 0 15p
+RRG10B  BRG10 0 0.1
+RISO   BOUT BOUTA 47
+COUT   BOUTA JM 4.7u
+RBCM   JM 0 220k
+RBLM   JM 0 220k
+RLOAD  JM 0 100k
+
+.options method=gear
+.control
+echo "modo,vb,trasf,jf_su_uv,jf_giu_uv,jm_su_uv,jm_giu_uv" > f1_selettore.csv
+* modo 99 = il controfattuale (l'ingresso di oggi), a +10 dB
+foreach modo 99 0 3 10
+  if $modo = 0
+    alter rrgb = 1G
+    alter rrg10b = 1G
+  end
+  if $modo = 3
+    alter rrgb = 0.1
+    alter rrg10b = 1G
+  end
+  if $modo = 10
+    alter rrgb = 0.1
+    alter rrg10b = 0.1
+  end
+  if $modo = 99
+    alter rrgb = 0.1
+    alter rrg10b = 0.1
+    alter rbya = 1m
+    alter rbyb = 1m
+    alter rsla = 1e15
+    alter rslb = 1e15
+    alter rja = 1e15
+    alter rjb = 1e15
+  else
+    alter rbya = 1e15
+    alter rbyb = 1e15
+    alter rsla = 470k
+    alter rslb = 470k
+    alter rja = 10Meg
+    alter rjb = 10Meg
+  end
+  * caso: 1-4 trasferimento con VB 0 / 10 mV / 100 mV / 1 V; 5-6 sovrapposizione 100 mV / 1 V
+  foreach caso 1 2 3 4 5 6
+    alter rcb1 = 1m
+    alter rcb2 = 1e12
+    set tr = trasf
+    if $caso = 1
+      alter @vb[dc] = 0
+    end
+    if $caso = 2
+      alter @vb[dc] = 0.01
+    end
+    if $caso = 3
+      alter @vb[dc] = 0.1
+    end
+    if $caso = 4
+      alter @vb[dc] = 1
+    end
+    if $caso = 5
+      alter @vb[dc] = 0.1
+      alter rcb1 = 1e12
+      alter rcb2 = 1m
+      set tr = sovrap
+    end
+    if $caso = 6
+      alter @vb[dc] = 1
+      alter rcb1 = 1e12
+      alter rcb2 = 1m
+      set tr = sovrap
+    end
+    tran 20u 350m 0 50u
+    meas tran f0 find v(jf) at=48m
+    meas tran m0 find v(jm) at=48m
+    meas tran fmax max v(jf) from=48m to=350m
+    meas tran fmin min v(jf) from=48m to=350m
+    meas tran mmax max v(jm) from=48m to=350m
+    meas tran mmin min v(jm) from=48m to=350m
+    let fu = 1e6*(fmax - f0)
+    let fd = 1e6*(f0 - fmin)
+    let mu = 1e6*(mmax - m0)
+    let md = 1e6*(m0 - mmin)
+    let vbv = v(vbn)[0]
+    echo "F1 modo=$modo caso=$caso"
+    print fu fd mu md
+    echo "$modo,$&vbv,$tr,$&fu,$&fd,$&mu,$&md" >> f1_selettore.csv
+    destroy all
+  end
+end
+.endc
+
+.end

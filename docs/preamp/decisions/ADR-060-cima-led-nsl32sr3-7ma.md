@@ -1,6 +1,6 @@
 # ADR-060 — La cima del LED della NSL-32SR3 a 7 mA, a ogni temperatura: un'ipotesi dichiarata
 
-Data: 2026-10-03 · Stato: accettata — supera il punto 1 di ADR-050 (12 mA) per la NSL-32SR3; precisa ADR-058 («la cima della corrente del LED»)
+Data: 2026-10-03 · Stato: superata da ADR-062 (niente celle, niente LED da pilotare)
 
 ## Contesto
 

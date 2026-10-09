@@ -9,6 +9,8 @@ attuali». Registrato da **ADR-053**. Da qui, cambiare una voce vuole una ADR.
 - **PR-10, PR-16, PR-19, PR-20**, il 2026-10-07 (**ADR-065**, L48b): il volume da attenuatore a
   scatti a un buon potenziometro col bilanciamento; i canali entro 1 dB col volume; il volume fra
   gli eventi che non si sentono. Firma dell'utente: «Firmo così».
+- **PR-14**, il 2026-10-09 (**ADR-066**, L51a): la sola riga «Dettagli», da «il selettore è ancora
+  da progettare» al rimando ad ADR-064 col suo limite. Scelta dell'utente: «Rimando e limite».
 
 ## Che cos'è, e come sta con gli altri documenti
 
@@ -99,7 +101,7 @@ volume, per il finale; due uscite fisse, copia fedele della sorgente, per Singxe
 **PR-14 · L'ingresso si cambia quando si vuole, senza clic.** Senza musica, cambiare sorgente
 lascia sulle uscite al più 100 µV (~33 dB SPL, come PR-20); con la musica il salto fra i due
 programmi è accettato. Ogni ingresso, anche non selezionato, sta a 0 V.
-*Dettagli: F1, V2 · ADR-053 · il selettore è ancora da progettare.*
+*Dettagli: F1, V2 · ADR-053, ADR-064, ADR-066 · regge con sorgenti fino a ~0,65 V di continua.*
 
 **PR-15 · Le uscite fisse sono fedeli quanto la principale**: soddisfano ogni requisito che
 vale per lei, a guadagno 0 dB ± 0,1 dB. Se la tolleranza si rivela costosa, si rilassa con
