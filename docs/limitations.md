@@ -1131,3 +1131,18 @@ per 1 ms, il gate del blocco B, che ha solo capacità, saliva a rampa di ~92 mV/
 **Regola operativa**: un banco che lascia un gate sospeso (un cursore che si apre, un contatto
 non cortocircuitante) corre con `gmin` ridotto. La corrente di gate vera si prende dal datasheet
 (LSK489: I_G −2 pA tipica, −25 pA massima a 25 °C) e si aggiunge a parte, dichiarata.
+
+## 50. Lo stadio di fan-out di Freerouting stringe le tracce sotto l'ampiezza della classe, e l'impostazione di neckdown non lo ferma
+
+Scoperto in L49a (`docs/preamp/data/2026-10-09/L49a/`). Sulla scheda audio, classe di default a
+0,25 mm, Freerouting 2.4.1 ha consegnato 32 tracce da **0,1874 mm** (0,8–2 mm l'una) sui piedini
+dei SOIC-8, con «0 violations» nel suo log. Le scrive lo stadio di **fan-out** dei piedini SMD, che
+gira prima dello sbroglio: né `"router": {"automatic_neckdown": false}` in `freerouting.json` né
+`FREEROUTING__ROUTER__AUTOMATIC_NECKDOWN=false` le tolgono. Le toglie
+`"router": {"fanout": {"enabled": false}}`. La DRC di KiCad le vede (`track_width`).
+
+**Regola operativa**: il fan-out di Freerouting resta spento (`layout/preamp/audio/run.sh` rifiuta
+di partire altrimenti); senza fan-out i relè SMD vogliono ≥ 3 mm fra le impronte per uscire da
+soli. Il file delle impostazioni è globale (`~/Library/Application Support/freerouting/`), fuori
+dal repo: cambiarlo l'ha permesso l'utente in L49a, e la copia di prima è
+`freerouting.json.bak-L49a` accanto.

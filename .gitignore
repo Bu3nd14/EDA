@@ -30,6 +30,8 @@ smoke/*_out.txt
 *.dsn
 *.ses
 smoke/en/
+# Freerouting writes its log folder in the directory it is launched from (L49a)
+/en/
 
 # --- PCB fabrication outputs (gerbers/drill) ---
 fabrication/*
@@ -181,3 +183,8 @@ docs/preamp/data/2026-10-07/L48b/**/*.dat
 docs/preamp/data/2026-10-07/L48b/**/corsa_*.cir
 docs/preamp/data/2026-10-07/L48b/**/deck.cir
 docs/preamp/data/2026-10-07/L48b/**/_analisi_par*/
+# L49a: le schede intermedie (~3 MB l'una) e le preferenze locali di KiCad; si rigenerano con
+# /bin/zsh layout/preamp/audio/run.sh docs/preamp/data/2026-10-09/L49a 1.0 85 3.0
+docs/preamp/data/2026-10-09/L49a/audio_raw.*
+docs/preamp/data/2026-10-09/L49a/audio_placed.*
+docs/preamp/data/2026-10-09/L49a/*.kicad_prl
