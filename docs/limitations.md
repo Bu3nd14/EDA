@@ -1146,3 +1146,54 @@ di partire altrimenti); senza fan-out i relè SMD vogliono ≥ 3 mm fra le impro
 soli. Il file delle impostazioni è globale (`~/Library/Application Support/freerouting/`), fuori
 dal repo: cambiarlo l'ha permesso l'utente in L49a, e la copia di prima è
 `freerouting.json.bak-L49a` accanto.
+
+## 51. Freerouting non unisce due piedini della stessa rete con un piedino in mezzo a passo fine, e il suo log non è il verdetto
+
+Scoperto in L49b (`docs/preamp/data/2026-10-09/L49b/`, report, «Le iterazioni»). Sui regolatori
+VQFN-20 a passo 0,65 mm il sorgente unisce IN su 13 e 15 attorno a NR su 14, e OUT su 1 e 3
+attorno al 2 libero: Freerouting 2.4.1 non gira attorno al piedino di mezzo, e lascia aperti
+2–8 collegamenti, **in posti diversi a ogni corsa** con gli stessi parametri. Il restringimento
+automatico si accende davvero con `FREEROUTING__ROUTER__AUTOMATIC_NECKDOWN=true` (al contrario del
+fan-out di #50) e stringe fino alla piazzola (0,35 mm), ma non basta; senza, le piste da 1,0 mm non
+entrano neanche nei SOT-23 e nei SOIC.
+
+Il log di Freerouting non è il verdetto: la scheda consegnata chiude per la DRC di KiCad a 0 / 0
+con Freerouting che dice «16 unrouted and 54 violations» (i collegamenti che passano per tracce
+fisse, e i fori da 0,2 mm delle vie termiche).
+
+**Regola operativa**: le uscite dai piedini fini si disegnano prima del router e si bloccano
+(`layout/preamp/psu/escape.py`), con una via d'ancoraggio dove arrivano le piste larghe;
+l'esito si giudica solo con `run_drc.sh`; una corsa pulita si **conserva** (i file), perché la
+successiva può non esserlo.
+
+## 52. Le classi di rete e il foro minimo stanno nel `.kicad_pro`, non nel `.kicad_pcb`
+
+Scoperto in L49b. Una `.kicad_pcb` copiata senza il suo `.kicad_pro` torna alle impostazioni di
+KiCad (classe unica, foro minimo 0,3 mm) **senza errore**: la DRC della copia dava 27 «hole size
+out of range» che sulla scheda vera non c'erano. `board.Save()` di `pcbnew` scrive entrambi. Le
+regole su misura stanno in un terzo file, `<scheda>.kicad_dru`, accanto.
+
+**Regola operativa**: una scheda si copia sempre col suo `.kicad_pro` (e `.kicad_dru`, se c'è).
+
+## 53. In `pcbnew`, dopo `board.Remove()` la lista di `board.Tracks()` non si itera più
+
+Scoperto in L49b (`layout/preamp/psu/route.py`). Dopo un `board.Remove(t)`, rileggere
+`board.Tracks()` nello stesso giro dà `TypeError: 'SwigPyObject' object is not iterable`. Nella
+stessa sessione, `track.GetEffectiveNetClass()` torna un `SwigPyObject` senza metodi
+(`GetTrackWidth` non esiste).
+
+**Regola operativa**: prima si raccoglie tutto in liste Python, poi si toglie; le larghezze delle
+classi si leggono dalla fonte che le ha scritte (`make_board.py`, `classes.json`).
+
+## 54. Specctra porta un solo isolamento per classe, e le regole `.kicad_dru` non arrivano al router
+
+Scoperto in L49b. `ExportSpecctraDSN` scrive per ogni classe un solo `(clearance …)`, usato da
+Freerouting verso **tutte** le altre: 6,4 mm sulla classe di rete rendevano violazioni le piazzole
+delle morsettiere fra L e N (2,48 mm) prima di qualsiasi traccia; 2,4 mm lasciavano il router
+passare a 2,40 mm dalla bobina di K501. Le regole su misura di KiCad (`.kicad_dru`) le applica
+solo la DRC.
+
+**Regola operativa**: l'isolamento fra due classi diverse si aggiunge al DSN come
+`(class_class (classes A B) (rule (clearance …)))` dopo l'esportazione
+(`layout/preamp/psu/route.py`), e la stessa cifra sta in una regola `.kicad_dru` che la DRC
+giudica.

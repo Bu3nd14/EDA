@@ -26,7 +26,7 @@ Aperto in L41a (2026-09-26) con ADR-048. Ogni lotto che tocca la sezione rete lo
 | Modulo IEC con fusibile e interruttore bipolare | retro | taglia del fusibile contro lo spunto di T1 (50 VA) più T2; marchio, tensione e corrente nominali dell'interruttore | aperto (giro componenti) |
 | Terra di protezione | modulo IEC → telaio | punto di fissaggio dedicato, conduttore, sezione; continuità misurata sul prototipo | aperto |
 | J510 `AC_IN` | scheda d'alimentazione | morsetto a vite per la rete, distanze verso il resto della scheda | aperto (layout, G2) |
-| F501 | scheda d'alimentazione | valore dal datasheet di T2 (lento), portafusibile chiuso | aperto |
+| F501 | scheda d'alimentazione | valore dal datasheet di T2 (lento), portafusibile chiuso — **l'impronta del sorgente è il portafusibile aperto** (`Fuseholder_Cylinder-5x20mm_Schurter_0031_8201_Horizontal_Open`, L49b) | aperto |
 | T2 (piccolo toroidale, 12 V AC preferito) | telaio o scheda | isolamento primario/secondario (doppio o rinforzato), protezione termica o contro il corto; **perdita a vuoto ≤ 0,40 W a 230 V + 10 %** per lo standby (NC-037, L41b1) | aperto |
 | K501 G2RL-2A 12 VDC | scheda d'alimentazione | isolamento bobina/contatti adeguato alla rete (datasheet); contatti contro lo spunto di T1; bobina sensibile preferita (ADR-048, P5) | aperto |
 | T1 (toroidale 2×15 V 50 VA) | telaio | isolamento primario/secondario; fissaggio senza spira in corto attraverso il bullone centrale | aperto |
@@ -40,6 +40,20 @@ Aperto in L41a (2026-09-26) con ADR-048. Ogni lotto che tocca la sezione rete lo
   scrivono cifre di distanza a memoria.
 - Distanze in aria e superficiali fra la sezione rete e la bassa tensione, sulla scheda
   d'alimentazione: da ricavare dalla norma, e da verificare sul layout (G2).
+- **Le cifre di prova di L49b (2026-10-09), non la norma.** Lette da fonti secondarie (la norma è a
+  pagamento e non è stata letta; elenco in `data/2026-10-09/L49b/README.md`): a 230 V, grado di
+  inquinamento 2, gruppo IIIb, distanze superficiali **2,5 mm base / 5,0 mm rinforzato** (IEC
+  62368-1, tabella 17) e **3,2 mm base** da una tabella IEC 60664-1 a 250 V; in aria 1,5 / 3,0 mm
+  (2,5 kV, categoria II). La scheda di prova usa la più severa, **6,4 mm** fra rete e bassa
+  tensione, e ne misura **11,52 mm** sul rame (`data/2026-10-09/L49b/psu/measure.json`); fra L e N
+  2,41 mm, il passo delle morsettiere MKDS 5,08 (2,48 mm fra le piazzole: isolamento funzionale,
+  appena sotto 2,5; esistono a passo 7,5 mm). La disposizione della prova: la rete in colonna su
+  un bordo della scheda, una fascia vuota di 8 mm, la bobina di K501 verso la bassa tensione
+  (18 mm fra le sue piazzole di bobina e di contatto). **Restano da confermare sulla norma prima
+  di G2**, con il tipo di isolamento che serve fra rete e ciascun circuito.
+- **Il cablaggio di rete nel telaio** (assieme di L49b): la IEC al posteriore sinistro, il filo
+  all'alimentatore lungo il fianco sinistro (~170 mm) a 8 mm dal bordo della scheda audio. ADR-010
+  lo vuole lontano dall'audio: percorso, intreccio e fissaggio in G2 (con L50).
 
 ## Il consumo in standby
 
