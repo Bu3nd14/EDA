@@ -1,0 +1,473 @@
+{
+ "chassis_mm": [
+  415.0,
+  300.0,
+  115.0
+ ],
+ "gap_mm": 5.0,
+ "zgap_mm": 3.0,
+ "audio_board_mm": [
+  399.0,
+  162.8
+ ],
+ "supply_board_mm": [
+  218.6,
+  100.0
+ ],
+ "assumed_heights_mm": {
+  "control_axis": 65.0,
+  "rca_rows": [
+   52.0,
+   78.0
+  ],
+  "iec_axis": 80.0,
+  "standoff": 6.0
+ },
+ "variants": {
+  "A0_come_L49a": {
+   "title": "A0 — la stima di L49a: pannelli come fasce a tutta altezza",
+   "fits": false,
+   "failed": [
+    {
+     "what": "scheda alimentatore dentro il telaio",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 2.8
+    },
+    {
+     "what": "comandi (fascia) / T1 2×15 V 50 VA (in profondità)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 30.1
+    },
+    {
+     "what": "comandi (fascia) / T2 12 V (in profondità)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 2.8
+    },
+    {
+     "what": "comandi (fascia) / scheda alimentatore (in profondità)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 42.8
+    }
+   ],
+   "notes": [
+    "Davanti alla scheda audio restano 57.2 mm; T1 coricato ne vuole 87.3, l'alimentatore 100.0."
+   ],
+   "toroid_distances_mm": {
+    "T1 2×15 V 50 VA": {
+     "ingressi_RCA": 216.5,
+     "volume_bilanciamento": null
+    },
+    "T2 12 V": {
+     "ingressi_RCA": 202.8,
+     "volume_bilanciamento": null
+    }
+   },
+   "items": [
+    {
+     "label": "RCA (fascia)",
+     "shape": "rect",
+     "x": 5.0,
+     "y": 0,
+     "w": 405.0,
+     "d": 30.0,
+     "z0": 0,
+     "z1": 115.0,
+     "kind": "panel"
+    },
+    {
+     "label": "comandi (fascia)",
+     "shape": "rect",
+     "x": 5.0,
+     "y": 265.0,
+     "w": 405.0,
+     "d": 35.0,
+     "z0": 0,
+     "z1": 115.0,
+     "kind": "panel"
+    },
+    {
+     "label": "scheda audio",
+     "shape": "rect",
+     "x": 8.0,
+     "y": 35.0,
+     "w": 399.0,
+     "d": 162.8,
+     "z0": 0,
+     "z1": 33.6,
+     "kind": "board"
+    },
+    {
+     "label": "T1 2×15 V 50 VA",
+     "shape": "circle",
+     "x": 5.0,
+     "y": 202.8,
+     "w": 87.3,
+     "d": 87.3,
+     "z0": 0,
+     "z1": 45.7,
+     "kind": "toroid"
+    },
+    {
+     "label": "T2 12 V",
+     "shape": "circle",
+     "x": 97.3,
+     "y": 202.8,
+     "w": 60.0,
+     "d": 60.0,
+     "z0": 0,
+     "z1": 30.3,
+     "kind": "toroid"
+    },
+    {
+     "label": "scheda alimentatore",
+     "shape": "rect",
+     "x": 191.4,
+     "y": 202.8,
+     "w": 218.6,
+     "d": 100.0,
+     "z0": 0,
+     "z1": 43.1,
+     "kind": "board"
+    }
+   ]
+  },
+  "A_tutto_sul_fondo": {
+   "title": "A — tutto sul fondo, i pannelli sopra le schede",
+   "fits": true,
+   "failed": [],
+   "notes": [
+    "Davanti alla scheda audio restano 122.2 mm fino al frontale; i comandi stanno sopra, da 50 mm."
+   ],
+   "toroid_distances_mm": {
+    "T1 2×15 V 50 VA": {
+     "ingressi_RCA": 214.2,
+     "volume_bilanciamento": 249.9
+    },
+    "T2 12 V": {
+     "ingressi_RCA": 174.9,
+     "volume_bilanciamento": 177.7
+    }
+   },
+   "items": [
+    {
+     "label": "RCA (14, due file)",
+     "shape": "rect",
+     "x": 154.0,
+     "y": 0,
+     "w": 182.0,
+     "d": 30.0,
+     "z0": 39.0,
+     "z1": 91.0,
+     "kind": "panel"
+    },
+    {
+     "label": "IEC con fusibile e interruttore",
+     "shape": "rect",
+     "x": 5.0,
+     "y": 0,
+     "w": 65.0,
+     "d": 50.0,
+     "z0": 64.2,
+     "z1": 95.8,
+     "kind": "mains"
+    },
+    {
+     "label": "selettore",
+     "shape": "rect",
+     "x": 23.75,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "panel"
+    },
+    {
+     "label": "guadagno",
+     "shape": "rect",
+     "x": 91.25,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "panel"
+    },
+    {
+     "label": "trim",
+     "shape": "rect",
+     "x": 158.75,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "panel"
+    },
+    {
+     "label": "mute",
+     "shape": "rect",
+     "x": 226.25,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "panel"
+    },
+    {
+     "label": "volume",
+     "shape": "rect",
+     "x": 293.75,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "audio"
+    },
+    {
+     "label": "bilanciamento",
+     "shape": "rect",
+     "x": 361.25,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "audio"
+    },
+    {
+     "label": "scheda audio",
+     "shape": "rect",
+     "x": 8.0,
+     "y": 5.0,
+     "w": 399.0,
+     "d": 162.8,
+     "z0": 0,
+     "z1": 33.6,
+     "kind": "board"
+    },
+    {
+     "label": "T1 2×15 V 50 VA",
+     "shape": "circle",
+     "x": 5.0,
+     "y": 172.8,
+     "w": 87.3,
+     "d": 87.3,
+     "z0": 0,
+     "z1": 45.7,
+     "kind": "toroid"
+    },
+    {
+     "label": "T2 12 V",
+     "shape": "circle",
+     "x": 97.3,
+     "y": 172.8,
+     "w": 60.0,
+     "d": 60.0,
+     "z0": 0,
+     "z1": 30.3,
+     "kind": "toroid"
+    },
+    {
+     "label": "scheda alimentatore",
+     "shape": "rect",
+     "x": 162.3,
+     "y": 172.8,
+     "w": 218.6,
+     "d": 100.0,
+     "z0": 0,
+     "z1": 43.1,
+     "kind": "board"
+    },
+    {
+     "label": "sezione di rete dell'alimentatore",
+     "shape": "rect",
+     "x": 162.3,
+     "y": 172.8,
+     "w": 45.39,
+     "d": 100.0,
+     "z0": 0,
+     "z1": 43.1,
+     "kind": "zone"
+    }
+   ]
+  },
+  "B_alimentatore_sotto": {
+   "title": "B — alimentatore sotto la scheda audio, toroidali davanti",
+   "fits": false,
+   "failed": [
+    {
+     "what": "RCA (14, due file) / scheda audio (piano alto) (in profondità)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 30.0
+    },
+    {
+     "what": "IEC con fusibile e interruttore / scheda audio (piano alto) (in altezza)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 15.0
+    }
+   ],
+   "notes": [
+    "Due piani: alimentatore fino a 43.1 mm, scheda audio da 48.6 a 76.2 mm."
+   ],
+   "toroid_distances_mm": {
+    "T1 2×15 V 50 VA": {
+     "ingressi_RCA": 214.2,
+     "volume_bilanciamento": 249.9
+    },
+    "T2 12 V": {
+     "ingressi_RCA": 174.9,
+     "volume_bilanciamento": 177.7
+    }
+   },
+   "items": [
+    {
+     "label": "RCA (14, due file)",
+     "shape": "rect",
+     "x": 154.0,
+     "y": 0,
+     "w": 182.0,
+     "d": 30.0,
+     "z0": 39.0,
+     "z1": 91.0,
+     "kind": "panel"
+    },
+    {
+     "label": "IEC con fusibile e interruttore",
+     "shape": "rect",
+     "x": 5.0,
+     "y": 0,
+     "w": 65.0,
+     "d": 50.0,
+     "z0": 64.2,
+     "z1": 95.8,
+     "kind": "mains"
+    },
+    {
+     "label": "selettore",
+     "shape": "rect",
+     "x": 23.75,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "panel"
+    },
+    {
+     "label": "guadagno",
+     "shape": "rect",
+     "x": 91.25,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "panel"
+    },
+    {
+     "label": "trim",
+     "shape": "rect",
+     "x": 158.75,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "panel"
+    },
+    {
+     "label": "mute",
+     "shape": "rect",
+     "x": 226.25,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "panel"
+    },
+    {
+     "label": "volume",
+     "shape": "rect",
+     "x": 293.75,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "audio"
+    },
+    {
+     "label": "bilanciamento",
+     "shape": "rect",
+     "x": 361.25,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "audio"
+    },
+    {
+     "label": "scheda audio (piano alto)",
+     "shape": "rect",
+     "x": 8.0,
+     "y": 5.0,
+     "w": 399.0,
+     "d": 162.8,
+     "z0": 48.6,
+     "z1": 76.2,
+     "kind": "board"
+    },
+    {
+     "label": "scheda alimentatore (sotto)",
+     "shape": "rect",
+     "x": 191.4,
+     "y": 67.8,
+     "w": 218.6,
+     "d": 100.0,
+     "z0": 0,
+     "z1": 43.1,
+     "kind": "board"
+    },
+    {
+     "label": "T1 2×15 V 50 VA",
+     "shape": "circle",
+     "x": 5.0,
+     "y": 172.8,
+     "w": 87.3,
+     "d": 87.3,
+     "z0": 0,
+     "z1": 45.7,
+     "kind": "toroid"
+    },
+    {
+     "label": "T2 12 V",
+     "shape": "circle",
+     "x": 97.3,
+     "y": 172.8,
+     "w": 60.0,
+     "d": 60.0,
+     "z0": 0,
+     "z1": 30.3,
+     "kind": "toroid"
+    }
+   ]
+  }
+ }
+}
