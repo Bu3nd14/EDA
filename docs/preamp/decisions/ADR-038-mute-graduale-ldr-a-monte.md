@@ -1,6 +1,6 @@
 # ADR-038 — Il mute graduale si fa a monte, con fotoresistenze in serie e verso massa all'ingresso del blocco A; il relè al jack resta, e guadagno e trim si cambiano solo col jack a massa
 
-Data: 2026-09-16 · Stato: accettata — nel sorgente con ADR-039; la soglia di C tenuta qui è superata da ADR-040; il relè al jack diventa la geometria iii (ADR-044)
+Data: 2026-09-16 · Stato: superata da ADR-062: il mute non abbassa più la musica piano con le fotoresistenze, la taglia di colpo coi relè al jack; i relè al jack, decisi qui, restano
 
 ## Contesto
 

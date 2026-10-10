@@ -1,6 +1,6 @@
 # ADR-039 — Il mute graduale a LDR entra nel sorgente: due celle per canale, i LED in serie fra i canali su un cablaggio proprio, e il profilo v4 da 6 s come contratto del comando
 
-Data: 2026-09-22 · Stato: accettata
+Data: 2026-09-22 · Stato: superata da ADR-062: le fotoresistenze, il loro connettore fra le schede e la sfumatura di 6 s non ci sono più; il mute taglia coi relè
 
 ## Contesto
 

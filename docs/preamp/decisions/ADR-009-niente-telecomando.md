@@ -1,6 +1,6 @@
 # ADR-009 — Niente telecomando: attenuatore a scatti, nessun microcontrollore
 
-Data: 2026-09-08 · Stato: accettata — la clausola «nessun microcontrollore in tutto il progetto» è superata da ADR-022; attenuatore a scatti e niente telecomando restano
+Data: 2026-09-08 · Stato: accettata — la clausola «nessun microcontrollore in tutto il progetto» è superata da ADR-022; l'attenuatore a scatti è superato da ADR-065 (un potenziometro col bilanciamento); gli ingressi a relè sono realizzati da ADR-064; niente telecomando resta
 
 ## Contesto
 

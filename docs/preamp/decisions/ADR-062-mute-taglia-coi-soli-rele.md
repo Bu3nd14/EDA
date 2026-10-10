@@ -1,6 +1,6 @@
 # ADR-062 — Il mute taglia coi soli relè al jack: via le fotoresistenze, il loro pilota, il profilo e S
 
-Data: 2026-10-04 · Stato: accettata
+Data: 2026-10-04 · Stato: accettata — ADR-063 precisa solo come si misura: lo strascico a bassa frequenza che resta subito dopo il taglio fa parte del clic, e si dichiara con lui; a mute inserito si misura quello che arriva davvero all'uscita
 
 **Rapporti con le decisioni precedenti.**
 - **Supera ADR-038** sulla sfumatura a monte. I relè al jack restano, in geometria iii (ADR-044).

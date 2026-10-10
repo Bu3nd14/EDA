@@ -1,6 +1,6 @@
 # ADR-035 — C si misura per differenza dalla corsa di riferimento, e ha una soglia propria di 1 mV
 
-Data: 2026-09-16 · Stato: accettata — come verdetto del taglio superata da ADR-040 (salto di livello ≤ 20 dB in 100 ms); C2 resta come diagnostica
+Data: 2026-09-16 · Stato: accettata — non è più una soglia. Il mute oggi taglia di colpo, e per il taglio non c'è un limite da rispettare: si misura il clic e lo si dichiara (ADR-062). Di questa decisione resta il metodo: il clic si misura come differenza fra il circuito vero e un taglio ideale
 
 ## Contesto
 

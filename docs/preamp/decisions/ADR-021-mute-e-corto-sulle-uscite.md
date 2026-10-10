@@ -1,6 +1,6 @@
 # ADR-021 — Mute tenibile a tempo indefinito, e ogni uscita regge un corto
 
-Data: 2026-09-14 · Stato: accettata — precisata da ADR-023 (classe A su ogni percorso ascoltabile: la classe B resta nei soli stadi che servono un'uscita mutata, in corto o con un apparecchio a bassa Zin); a mute inserito gli stadi d'uscita non hanno più segnale (ADR-038)
+Data: 2026-09-14 · Stato: accettata — classe A su ogni percorso che si ascolta (ADR-023); col mute che taglia al jack (ADR-062), a mute inserito gli stadi d'uscita hanno ancora la musica e la scaricano a massa attraverso il relè: quel caso è misurato in P7, e regge
 
 ## Contesto
 

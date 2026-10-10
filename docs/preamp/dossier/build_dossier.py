@@ -104,6 +104,20 @@ giorno del circuito di oggi, se non per un'eccezione nominata in AUDIO_PERMESSI.
      rieseguito contro sintesi.txt; il 2e rieseguito sulla netlist di oggi
      riconosce selettore e volume.
 
+L51c: le schede di prova di L49 e la chiusura; PARTI e' completa e il generatore scrive
+accanto a se' (index.html, figure, schemi, immagini, summary). --standalone resta sempre
+fuori dal repo. «Cosa questo dossier non dice» riscritta sul progetto di oggi.
+ 18. (L51c) la distorsione, V4, sul blocco di oggi: il blocco corso uguale a
+     gain_block_flat.inc di oggi, i deck uguali a quelli di L46b a meno del blocco; la
+     THD stampata da ngspice nel log contro il CSV di leggi_four.py, caso per caso; le 24
+     righe contro la variante scelta di L46b (DIST_UGUALI alla cifra); i tetti letti dalla
+     tabella di V4 in REQUIREMENTS.md;
+ 19. (L51c) le schede di prova: la DRC rifatta oggi contro quella del 9 ottobre (stessa
+     scheda, stesso kicad-cli, stessi conteggi); measure.json, placement.json e
+     assembly.json incrociati (la stessa misura di scheda, nessuna sovrapposizione, la sola
+     variante A dell'assieme che ci sta); i vincoli letti dai report di L49 numerati 1..n;
+     le immagini PNG che esistono; sc() rifiuta i dati di prima del giorno di L49.
+
 E la provenienza dei modelli non e' scritta a mano: e' letta dagli `.include`
 di ogni deck e dai nomi di modello che il blocco istanzia.
 
@@ -184,9 +198,41 @@ AUDIO_PERMESSI = {
                                                      "non l’ha ricorso, e non tocca l’ingresso",
     os.path.join(L48A, "falsi"): "i falsi del 2e di L48a, sulla netlist del selettore",
 }
-# Le parti della pagina rigenerate fin qui: la scheda audio (L51a) e l'alimentatore (L51b);
-# L51c aggiunge «schede». Solo con tutte e tre il generatore scrive accanto a se'.
-PARTI = ("audio", "alimentatore")
+# L51c: la distorsione del blocco di oggi (l'utente, 2026-10-10: «Rifarla e mostrarla»). La
+# prima strada e' la corsa del 2026-10-10 col banco di L46b (genera.py, esegui.sh,
+# leggi_four.py copiati in L51c/distorsione/script/) sulla variante `oggi`, il
+# gain_block_flat.inc di oggi senza modifiche; la seconda, la variante scelta di L46b
+# (sv_r10_esr0_r120_226: il blocco di ADR-056 col condensatore ideale, come nel sorgente).
+L51C = os.path.join(DATAROOT, "2026-10-10", "L51c")
+L51CD = os.path.join(L51C, "distorsione")
+L46B = os.path.join(DATAROOT, "2026-10-01", "L46b")
+L46B_VAR = "sv_r10_esr0_r120_226"
+DIST_DECKS = ("thd_1k", "thd_10k", "thd_20k", "imd")
+# Uguali alla cifra stampata: queste. Il pavimento numerico (pavimento_*) e le armoniche
+# sotto ~-190 dB sono il fondo del metodo e cambiano col percorso di Newton: di quelle si
+# controlla solo che restino sotto il tetto di V4.
+DIST_UGUALI = ("vout_pk", "thd_pct", "h2_db", "h3_db", "imd_d2_db", "imd_d3_db")
+
+# L51c: le schede di prova di L49 (L49a la scheda audio, L49b l'alimentatore e l'assieme).
+# La DRC e' rifatta il 2026-10-10 sulle copie nei dati (l'utente: «Rifarlo oggi»), e deve
+# dare quello che dava il 9 ottobre. Nessun dato delle schede da prima di SCHEDE_DA, il
+# giorno di L49; non ci sono eccezioni.
+L49A = os.path.join(DATAROOT, "2026-10-09", "L49a")
+L49B = os.path.join(DATAROOT, "2026-10-09", "L49b")
+SCHEDE_DA = "2026-10-09"
+# le immagini della sezione (l'utente: «Essenziale»): copiate accanto a index.html con
+# questi nomi, come gli schemi; nella pagina autoconsistente, incorporate
+IMMAGINI = {
+    "scheda_audio_3d.png": (L49A, "placement_3d_top.png"),
+    "scheda_audio_rame.png": (L49A, "routing_both.png"),
+    "alimentatore_3d.png": (L49B, "psu", "placement_3d_top.png"),
+    "alimentatore_rame.png": (L49B, "psu", "routing_both.png"),
+    "assieme.png": (L49B, "assembly", "assembly_A_tutto_sul_fondo.png"),
+}
+
+# Le parti della pagina: la scheda audio (L51a), l'alimentatore (L51b), le schede di prova
+# (L51c). Con tutte e tre il generatore scrive accanto a se'.
+PARTI = ("audio", "alimentatore", "schede")
 PARTI_TUTTE = ("audio", "alimentatore", "schede")
 
 MODES = ("0db", "3db", "10db")
@@ -258,6 +304,19 @@ def ps(root, *parts):
         raise SystemExit(f"RIFIUTATO: {rel(p)} non e' del {PSU_DA} o dopo, il giorno della "
                          "ricorsa dell'alimentatore col carico di oggi (L51b). Come seconda "
                          "strada passa da vecchio(). Nessun file e' stato scritto.")
+    return p
+
+
+def sc(root, *parts):
+    """Ogni percorso di dati delle schede di prova passa di qui (L51c): src(), e niente da un
+    giorno prima di SCHEDE_DA, il giorno di L49. Non ci sono eccezioni."""
+    p = src(root, *parts)
+    m = _DATA_DAY.search(rel(p))
+    if not m or m.group(1) < SCHEDE_DA:
+        raise SystemExit(f"RIFIUTATO: {rel(p)} non e' del {SCHEDE_DA} o dopo, il giorno delle "
+                         "schede di prova (L49). Nessun file e' stato scritto.")
+    if not os.path.exists(p):
+        raise SystemExit(f"RIFIUTATO: manca {rel(p)}. Nessun file e' stato scritto.")
     return p
 
 
@@ -510,6 +569,17 @@ def it_sci(v, nd=3):
     e = math.floor(math.log10(abs(v)))
     m = f"{v / 10 ** e:.{nd - 1}f}".replace(".", ",").replace("-", "&minus;")
     return f'{m}&middot;10<sup>{str(e).replace("-", "&minus;")}</sup>'
+
+
+def pct(v, nd=3, tetto=False):
+    """Una percentuale piccola in notazione posizionale, nd cifre significative (L51c, V4)."""
+    if v != v or v == 0:
+        return "&mdash;" if v != v else "0"
+    dec = max(0, nd - 1 - math.floor(math.log10(abs(v))))
+    s = f"{v:.{dec}f}"
+    if tetto and "." in s:          # un tetto si scrive com'e' nel requisito: 0,001, non 0,00100
+        s = s.rstrip("0").rstrip(".")
+    return s.replace(".", ",")
 
 
 def lab_c(s):
@@ -1720,6 +1790,191 @@ def measure_volume(e3e5):
 
 
 # ------------------------------------------------------------ il calore ---
+def v4_soglie():
+    """I tetti di V4 (ADR-055), letti dalla tabella di REQUIREMENTS.md, non scritti qui."""
+    with open(os.path.join(REPO, "docs", "preamp", "REQUIREMENTS.md")) as f:
+        rows = [ln for ln in f if ln.startswith("| ") and "**≤ " in ln]
+
+    def tetto(pred, k):
+        r = [ln for ln in rows if pred(ln)]
+        m = re.search(r"\*\*≤ (−?[\d,]+) (?:%|dB)\*\*", r[0]) if len(r) == 1 else None
+        if not m:
+            refuse(f"REQUIREMENTS.md, tabella di V4: non trovo una sola riga col tetto {k}")
+            return float("nan")
+        return float(m.group(1).replace(",", ".").replace("−", "-"))
+    return {"thd20_lo": tetto(lambda ln: "non cresce verso gli acuti" in ln, "della THD a 20 kHz"),
+            "h5": tetto(lambda ln: "dalla 5ª in su" in ln, "delle armoniche dalla 5ª"),
+            "imd": tetto(lambda ln: "intermodulazione" in ln, "dell'intermodulazione"),
+            "thd20_hi": tetto(lambda ln: "prova di stress" in ln, "della prova di stress")}
+
+
+def measure_distortion():
+    """V4 sul blocco di oggi (L51c). Tre strade: la THD che ngspice stampa nel log, caso per
+    caso, contro il CSV di leggi_four.py; il CSV contro quello di L46b sulla variante scelta
+    (le colonne di DIST_UGUALI uguali alla cifra); il blocco corso uguale al
+    gain_block_flat.inc di oggi, e i deck uguali a quelli di L46b a meno del blocco incluso."""
+    inc = sa(L51CD, "inc", "oggi.inc")
+    with open(inc) as f:
+        head, body = f.read().split("\n", 1)
+    with open(os.path.join(REPO, "spice", "preamp", "gain_block_flat.inc")) as f:
+        if f.read() != body or not head.startswith("*"):
+            refuse(f"{rel(inc)}: non e' spice/preamp/gain_block_flat.inc di oggi con una riga di "
+                   "commento in testa: il blocco corso non e' quello del sorgente")
+    for d in DIST_DECKS:
+        stesso_deck(f"distorsione, {d}", sa(L51CD, "deck", "oggi", d + ".cir"),
+                    vecchio(L46B, "deck", L46B_VAR, d + ".cir"),
+                    swap=(("variante oggi", "variante " + L46B_VAR),
+                          ("data/2026-10-10/L51c/distorsione/inc/oggi.inc",
+                           f"data/2026-10-01/L46b/inc/{L46B_VAR}.inc")))
+    esiti = {}
+    with open(sa(L51CD, "run", "esiti.tsv")) as f:
+        for ln in f:
+            c = ln.rstrip("\n").split("\t")
+            if len(c) == 4 and c[0] == "oggi":
+                esiti[c[1]] = c[2]
+    rows = rows_of(sa(L51CD, "run", "oggi", "distorsione.csv"))
+    for d in DIST_DECKS:
+        if esiti.get(d) != "0":
+            refuse(f"distorsione, {d}: run_simulation.sh ha dato rc {esiti.get(d)} (esiti.tsv)")
+        log = sa(L51CD, "run", "oggi", d, d + ".log")
+        log_pulito(log)
+        if d == "imd":
+            continue
+        with open(log, errors="replace") as f:
+            text = f.read()
+        casi = re.findall(r"^L46A_CASO modo=(\S+) livello=(\S+)", text, re.M)
+        thd = re.findall(r"Fourier analysis for v\(out\):\s*\n\s*No\. Harmonics: \d+, THD: "
+                         r"([-+0-9.eE]+) %", text)
+        if len(casi) != 6 or len(thd) != len(casi):
+            refuse(f"distorsione, {d}: {len(casi)} casi e {len(thd)} THD di v(out) nel log, "
+                   "invece di 6 e 6")
+            continue
+        for (modo, liv), t in zip(casi, thd):
+            r = [x for x in rows if x["deck"] == d and x["modo"] == modo and x["livello"] == liv]
+            if len(r) != 1 or not math.isclose(float(r[0]["thd_pct"]), float(t), rel_tol=1e-3):
+                refuse(f"distorsione, {d} modo {modo} {liv}: la THD del log ({t} %) non e' quella "
+                       f"del CSV ({r[0]['thd_pct'] if len(r) == 1 else 'assente'})")
+    old = {(r["deck"], r["modo"], r["livello"]): r
+           for r in rows_of(vecchio(L46B, "run", L46B_VAR, "distorsione.csv"))}
+    new = {(r["deck"], r["modo"], r["livello"]): r for r in rows}
+    if set(old) != set(new) or len(new) != 24:
+        refuse(f"distorsione: {len(new)} casi oggi, {len(old)} in L46b, non gli stessi 24")
+    for k in sorted(set(old) & set(new)):
+        for c in DIST_UGUALI:
+            if new[k][c] != old[k][c]:
+                refuse(f"distorsione, {' '.join(k)}: {c} {new[k][c]} oggi, {old[k][c]} in L46b")
+
+    def mx(col, deck, liv):
+        v = [float(r[col]) for r in rows if r["livello"] == liv and r["deck"].startswith(deck)
+             and r[col] != ""]
+        return max(v) if v else float("nan")
+    out = {"dir": L51CD, "rows": rows, "soglie": v4_soglie(),
+           "thd_lo": {f: mx("thd_pct", f"thd_{f}", "lo") for f in ("1k", "10k", "20k")},
+           "h5_lo": mx("h5su_db", "thd", "lo"), "imd_lo": mx("imd_d2_db", "imd", "lo"),
+           "thd_hi_20k": mx("thd_pct", "thd_20k", "hi"), "imd_hi": mx("imd_d2_db", "imd", "hi"),
+           # floor: le armoniche dalla 5a oggi e in L46b, che non coincidono alla cifra
+           "h5_lo_l46b": max(float(r["h5su_db"]) for r in old.values()
+                             if r["livello"] == "lo" and r["deck"].startswith("thd"))}
+    s = out["soglie"]
+    out["ok"] = {"thd20_lo": out["thd_lo"]["20k"] <= s["thd20_lo"],
+                 "h5": out["h5_lo"] <= s["h5"] and out["h5_lo_l46b"] <= s["h5"],
+                 "imd": out["imd_lo"] <= s["imd"], "thd20_hi": out["thd_hi_20k"] <= s["thd20_hi"]}
+    # V1 sulla dispersione di I_DSS del blocco scelto (L46b): per «Cosa non dice»
+    idss = [r for r in rows_of(vecchio(L46B, "idss.csv")) if r["variante"] == L46B_VAR]
+    out["v1_idss"] = (min(float(idss[0][c]) for c in ("B_pubbl_min", "A_pubbl_min", "buf_pubbl_min"))
+                      if len(idss) == 1 else None)
+    if out["v1_idss"] is None:
+        refuse(f"L46b/idss.csv: la riga {L46B_VAR} non c'e'")
+    return out
+
+
+# I report delle schede di prova: i vincoli per il progetto stanno li', in un elenco numerato
+# col titolo in grassetto. Si leggono, non si riscrivono (sono testo, non numeri dei JSON).
+L49A_REPORT = os.path.join(REPO, "docs", "preamp", "reports", "2026-10-09-L49a-scheda-audio-prova.md")
+L49B_REPORT = os.path.join(REPO, "docs", "preamp", "reports", "2026-10-09-L49b-alimentatore-assieme.md")
+
+
+def vincoli_l49(path):
+    """[(numero, titolo in grassetto)] dalla sezione «I vincoli che tornano al progetto»."""
+    if not os.path.isfile(path):
+        refuse(f"manca il report {rel(path)}")
+        return []
+    with open(path, encoding="utf-8") as f:
+        text = f.read()
+    m = re.search(r"^## I vincoli che tornano al progetto\n(.*?)(?=^## )", text, re.M | re.S)
+    if not m:
+        refuse(f"{rel(path)}: non trovo la sezione «I vincoli che tornano al progetto»")
+        return []
+    items = re.findall(r"^(\d+)\. \*\*(.+?)\*\*", m.group(1), re.M)
+    if not items or [int(n) for n, _ in items] != list(range(1, len(items) + 1)):
+        refuse(f"{rel(path)}: i vincoli non sono numerati 1..n ({[n for n, _ in items]})")
+    return [(int(n), t) for n, t in items]
+
+
+def measure_boards():
+    """Le schede di prova di L49 (L51c): la DRC rifatta oggi contro quella del 9 ottobre, le
+    misure dai JSON di L49 incrociate fra loro, l'assieme, i vincoli dai report."""
+    def drc_n(j):
+        return tuple(len(j.get(k, [])) for k in ("violations", "unconnected_items", "schematic_parity"))
+    out = {"boards": {}}
+    for key, base, sub, pcb, drc in (("audio", L49A, (), "audio_routed", "drc_audio_routed.json"),
+                                     ("psu", L49B, ("psu",), "psu_routed", "drc_psu_routed.json")):
+        d = sc(base, *sub)
+        with open(sc(L51C, "drc", drc)) as f:
+            oggi = json.load(f)
+        with open(sc(base, *sub, drc)) as f:
+            prima = json.load(f)
+        for lab, j in (("oggi", oggi), ("9 ottobre", prima)):
+            if j.get("source") != pcb + ".kicad_pcb":
+                refuse(f"DRC {key} ({lab}): la scheda e' {j.get('source')}, non {pcb}.kicad_pcb")
+        if oggi.get("kicad_version") != prima.get("kicad_version"):
+            refuse(f"DRC {key}: kicad-cli {oggi.get('kicad_version')} oggi, "
+                   f"{prima.get('kicad_version')} il 9 ottobre: le due DRC non sono la stessa prova")
+        if drc_n(oggi) != drc_n(prima):
+            refuse(f"DRC {key}: oggi {drc_n(oggi)} (violazioni, aperte, parita'), il 9 ottobre "
+                   f"{drc_n(prima)}")
+        if not oggi.get("date", "").startswith(L51C.split(os.sep)[-2]):
+            refuse(f"DRC {key}: il rapporto di oggi e' del {oggi.get('date')}")
+        sc(base, *sub, pcb + ".kicad_pro")      # le classi stanno li' (limitations #52)
+        with open(sc(base, *sub, "measure.json")) as f:
+            meas = json.load(f)
+        with open(sc(base, *sub, "placement.json")) as f:
+            pl = json.load(f)
+        if pl.get("board_mm") != meas.get("board_mm") or pl.get("courtyard_overlaps"):
+            refuse(f"scheda {key}: placement.json e measure.json non danno la stessa scheda "
+                   f"({pl.get('board_mm')} / {meas.get('board_mm')}), o ci sono sovrapposizioni")
+        with open(sc(base, *sub, "freerouting.log"), errors="replace") as f:
+            fr = re.search(r"Freerouting (v[\d.]+)", f.read())
+        out["boards"][key] = {"dir": d, "pcb": os.path.join(d, pcb + ".kicad_pcb"),
+                              "drc": drc_n(oggi), "kicad": oggi.get("kicad_version"),
+                              "kicad_prima": prima.get("kicad_version"),
+                              "meas": meas, "pl": pl, "freerouting": fr.group(1) if fr else None}
+        if not fr:
+            refuse(f"scheda {key}: la versione di Freerouting non si legge dal log")
+    with open(sc(L49B, "assembly", "assembly.json")) as f:
+        asm = json.load(f)
+    if (asm.get("audio_board_mm") != out["boards"]["audio"]["meas"]["board_mm"]
+            or asm.get("supply_board_mm") != out["boards"]["psu"]["meas"]["board_mm"]):
+        refuse("assembly.json: le schede dell'assieme non sono quelle misurate")
+    fits = [k for k, v in asm["variants"].items() if v.get("fits")]
+    if fits != ["A_tutto_sul_fondo"]:
+        refuse(f"assembly.json: le varianti che ci stanno sono {fits}, non la sola A")
+    out["asm"] = asm
+    out["fit"] = asm["variants"].get("A_tutto_sul_fondo", {})
+    out["vincoli"] = {"audio": vincoli_l49(L49A_REPORT), "psu": vincoli_l49(L49B_REPORT)}
+    for name, parts in IMMAGINI.items():
+        p = sc(*parts)
+        with open(p, "rb") as f:
+            if f.read(8) != b"\x89PNG\r\n\x1a\n":
+                refuse(f"{rel(p)}: non e' un PNG")
+    out["pdf"] = {k: rel(os.path.join(b["dir"], "routing_both.pdf")) for k, b in out["boards"].items()}
+    out["pdf"]["asm"] = rel(os.path.join(L49B, "assembly", "assembly_A_tutto_sul_fondo.pdf"))
+    for p in out["pdf"].values():
+        if not os.path.isfile(os.path.join(REPO, p)):
+            refuse(f"manca {p}")
+    return out
+
+
 def measure_heat(op):
     """Il calore del telaio (P5, ADR-021, ADR-047), L51b: il modello del telaio e del vano di
     L30 / L41a, le potenze dal banco dell'alimentatore di oggi (tb_calore), la scheda audio da
@@ -1820,6 +2075,13 @@ def rows_of(path):
 
 
 def stessi_byte(label, a, b):
+    # L51c: come stesso_deck(), un file che un generatore non ha scritto perche' ha rifiutato
+    # e' un rifiuto, non un'eccezione (il sabotaggio del rele' del selettore di L51a,
+    # rieseguito con l'alimentatore nella pagina, cadeva in un FileNotFoundError)
+    for x in (a, b):
+        if not os.path.isfile(x):
+            refuse(f"{label}: {rel(x)} non c'e' (il generatore che lo scrive ha rifiutato?)")
+            return False
     with open(a, "rb") as fa, open(b, "rb") as fb:
         if fa.read() != fb.read():
             refuse(f"{label}: {rel(a)} e {rel(b)} non sono uguali byte per byte")
@@ -2016,6 +2278,9 @@ def measure_psu_power():
             "scarti": scarti, "car_oggi": co, "car_prima": cp}
 
 
+PSU_PROV = {}
+
+
 def prov_psu(deck, datadir, note=""):
     """La provenienza di un deck dell'alimentatore: i file inclusi (dagli
     `.include`) e i sottocircuiti comportamentali che il deck definisce. Non
@@ -2036,6 +2301,7 @@ def prov_psu(deck, datadir, note=""):
             subs.append(m.group(1))
     if not incs or not subs:
         refuse(f"provenienza {rel(deck)}: include {incs}, sottocircuiti {subs}")
+    PSU_PROV[rel(deck)] = (incs, subs)        # L51c: per la sezione della provenienza
     return (f'<p class="prov">Deck <code>{html_escape(rel(deck))}</code>'
             f' &middot; dati <code>{html_escape(rel(datadir))}/</code>{note}<br>'
             f'Inclusi: {", ".join(f"<code>{i}</code>" for i in incs)} (generici, dichiarati)'
@@ -2694,6 +2960,7 @@ SECTIONS_TUTTE = (
     ("s7", "Rumore in uscita", "audio"), ("s8", "Escursione e headroom", "audio"),
     ("s9", "Reiezione dell&rsquo;alimentazione", "audio"),
     ("s10", "Impedenza d&rsquo;uscita", "audio"),
+    ("sdist", "Distorsione: V4", "audio"),
     ("s11", "I relè di guadagno: V2", "audio"),
     ("smute", "Il mute: i relè al jack, V2", "audio"),
     ("sint", "Il guadagno interbloccato e i comandi", "audio"),
@@ -2705,6 +2972,7 @@ SECTIONS_TUTTE = (
     ("stim", "Il temporizzatore: Δ in hardware e lo standby", "alimentatore"),
     ("sfw", "Il firmware sul circuito", "alimentatore"),
     ("soff", "Spegnimento e failsafe al jack", "alimentatore"),
+    ("sbrd", "Le schede di prova e l&rsquo;assieme", "schede"),
     ("s13", "Requisiti a fronte del misurato", "audio"),
     ("s14", "Cosa questo dossier non dice", "schede"),
     ("s15", "Provenienza", "audio"),
@@ -2729,6 +2997,7 @@ def build_page(M, inline=False):
     resp, v1, z, psrr, hr, cf = M["resp"], M["v1"], M["z"], M["psrr"], M["hr"], M["cf"]
     trim, noise, v2, v3, p7, op = M["trim"], M["noise"], M["v2"], M["v3"], M["p7"], M["op"]
     e4, ee, sel, vol = M["e4"], M["e3e5"], M["sel"], M["vol"]
+    dist = M["dist"]
     e4_main = max(g["zrmax_max"] for g in e4["groups"] if g["out"] == "main")
     e4_fix = max(g["zrmax_max"] for g in e4["groups"] if g["out"] != "main")
     e4_disp = max(g["disp"] for g in e4["groups"])
@@ -2750,6 +3019,16 @@ def build_page(M, inline=False):
         return f"{it(v / 1e-9, nd)} nV".replace("-", "&minus;")
 
     def figure(svgfile, alt):
+        if svgfile in IMMAGINI:
+            # L51c: le immagini delle schede di prova, PNG
+            if inline:
+                import base64
+                with open(os.path.join(*IMMAGINI[svgfile]), "rb") as f:
+                    src_ = "data:image/png;base64," + base64.b64encode(f.read()).decode("ascii")
+            else:
+                src_ = svgfile
+            return (f'<div class="plate"><img src="{src_}" alt="{html_escape(alt)}" '
+                    'loading="lazy"></div>')
         if inline:
             if svgfile in M["figs"]:
                 body = M["figs"][svgfile]
@@ -2759,6 +3038,13 @@ def build_page(M, inline=False):
             return f'<div class="plate">{body.split("?>", 1)[-1]}</div>'
         return (f'<div class="plate"><img src="{svgfile}" '
                 f'alt="{html_escape(alt)}" loading="lazy"></div>')
+
+    def marca(s):
+        """L51c: un testo letto da un JSON o da un report, coi non-requisiti (T2, V5, ...)
+        marcati per il linker."""
+        for tok in M["ct"]["nonreq"]:
+            s = re.sub(rf"(?<![\w>-]){re.escape(tok)}(?![\w<])", des(tok), s)
+        return s
 
     def h2(anchor):
         lab = dict(SECTIONS)[anchor]
@@ -2786,7 +3072,9 @@ def build_page(M, inline=False):
       'L48b &middot; seconda strada: la corsa di L48b &middot; mute dalla matrice di L48b '
       '&middot; interblocco da L35 e L36'
       + (' &middot; alimentatore corso il 2026-10-09 (L51b) col carico di oggi; seconda strada: '
-         'il carico di prima, L47c2a e L47c2b2' if psu else '') + '</p>')
+         'il carico di prima, L47c2a e L47c2b2' if psu else '')
+      + (' &middot; distorsione corsa il 2026-10-10 (L51c); seconda strada: L46b &middot; schede di '
+         'prova di L49a e L49b, DRC rifatta il 2026-10-10' if "schede" in PARTI else '') + '</p>')
     A('<h1>Dossier di misura del preamplificatore di linea</h1>')
     A('<p class="lede">Classe A pura a componenti discreti, senza operazionali nel '
       'percorso del segnale. Quattro ingressi a relè con un condensatore ciascuno, guadagno '
@@ -2794,7 +3082,9 @@ def build_page(M, inline=False):
       'potenziometro col bilanciamento, mute coi soli relè al jack.'
       + (' Le due schede: la scheda audio, poi l&rsquo;alimentatore, coi rail lineari, il '
          'sorvegliante in hardware e il temporizzatore che ordina mute, guadagno e rete.'
-         if psu else '') + '</p>')
+         if psu else '')
+      + (' Le due schede sono state piazzate e sbrogliate per prova, e l&rsquo;assieme sta nel '
+         f'contenitore ({sez("sbrd")}).' if "schede" in PARTI else '') + '</p>')
 
     shape, level = adr014(resp)
     worst_shape = max(shape.values(), key=abs)
@@ -2816,6 +3106,8 @@ def build_page(M, inline=False):
         ("V2, mute", f"{mu['n'] - mu['n_fuori']} su {mu['n']}",
          "verdetti che reggono &middot; il clic del taglio dichiarato"),
         ("Scarto ADR-014", it_sci(worst_shape), "dB a 20 kHz rif. 1 kHz &middot; peggiore dei 3 modi"),
+        ("V4, THD a 20 kHz", f"{pct(dist['thd_lo']['20k'])} %",
+         f"0,2 V &middot; tetto {pct(dist['soglie']['thd20_lo'], tetto=True)} % &middot; cifra di modello"),
         ("PSRR, peggiore", f"{fx(weak_psrr)} dB", "a 10 kHz"),
         ("E4, Re(Z<sub>out</sub>) max", f"{fx(max(e4_main, e4_fix))} Ω",
          "al jack &middot; 20 Hz–20 kHz &middot; 3 uscite, costante col volume")]
@@ -2848,7 +3140,8 @@ def build_page(M, inline=False):
          if con_tetto or con_kf else
          '<strong>Nessun modello simulato ha rumore 1/f</strong>: ogni cifra di rumore è un '
          'pavimento termico e shot. ')
-      + 'Nessuna cifra di distorsione è misurata in questa pagina. La provenienza è scritta '
+      + f'Le cifre di distorsione ({sez("sdist")}) sono di modello, sul blocco da solo: dove la '
+      'misura sul prototipo diverge, vale la misura. La provenienza è scritta '
       'sotto ogni titolo di sezione, ed è letta dagli <code>.include</code> dei deck, non '
       'dichiarata.</div>')
 
@@ -3349,6 +3642,61 @@ def build_page(M, inline=False):
       f'{it(max(e4_main, e4_fix), 4)} Ω. Per questo il requisito dice «misurata escludendo la '
       'reattanza del condensatore d&rsquo;accoppiamento».</div>')
 
+    # --- la distorsione, V4 (L51c: l'utente, «Rifarla e mostrarla») ---
+    A(h2("sdist"))
+    A(prov_line("thd_20k.cir", os.path.join(dist["dir"], "run", "oggi"),
+                deckdir=os.path.join(dist["dir"], "deck", "oggi"),
+                note=' &middot; il banco di L46a e L46b, sul blocco di oggi'))
+    ds = dist["soglie"]
+    A('<p><strong>V4</strong> chiede che la distorsione non abbia niente di aspro, con tetti in '
+      'numeri (ADR-055). Il banco è quello con cui L46a e L46b hanno scelto la compensazione: il '
+      'blocco di guadagno da solo nei tre modi, sorgente 2,5 kΩ, carico 47 Ω + 4,7 µF + 10 kΩ, '
+      'a due livelli d&rsquo;uscita: 0,2 V RMS, il livello musicale scelto dall&rsquo;utente '
+      '(&minus;20 dB), e 2 V RMS, la prova di stress. È stato corso di nuovo il '
+      '2026-10-10 sul blocco che il sorgente genera oggi.</p>')
+    A('<div class="tablewrap"><table><tr><th>Clausola</th><th class="num">Tetto</th>'
+      '<th class="num">Il blocco di oggi, il peggiore sui tre modi</th><th>Esito</th></tr>')
+    for k, lab, val, tet in (
+            ("thd20_lo", "la distorsione non cresce verso gli acuti: THD a 20 kHz, 0,2 V",
+             f'{pct(dist["thd_lo"]["20k"])} %', f'{pct(ds["thd20_lo"], tetto=True)} %'),
+            ("h5", "le armoniche dalla 5ª in su, 0,2 V, 1 / 10 / 20 kHz",
+             f'{fx(dist["h5_lo"], 1)} dB', f'{fx(ds["h5"], 0)} dB'),
+            ("imd", "l&rsquo;intermodulazione, 19 + 20 kHz, il prodotto a 1 kHz, 0,2 V",
+             f'{fx(dist["imd_lo"], 1)} dB', f'{fx(ds["imd"], 0)} dB'),
+            ("thd20_hi", "prova di stress: THD a 20 kHz, 2 V",
+             f'{pct(dist["thd_hi_20k"])} %', f'{pct(ds["thd20_hi"], tetto=True)} %')):
+        A(f'<tr><td>{lab}</td><td class="num">≤ {tet}</td><td class="num">{val}</td>'
+          f'{verdict(dist["ok"][k])}</tr>')
+    A('</table></div>')
+    A('<div class="tablewrap"><table><tr><th>Modo</th><th class="num">THD 1 kHz</th>'
+      '<th class="num">THD 10 kHz</th><th class="num">THD 20 kHz</th>'
+      '<th class="num">intermodulazione</th><th class="num">THD 20 kHz a 2 V</th></tr>')
+    for modo in ("0", "3", "10"):
+        def cell(deck, liv, col):
+            r = [x for x in dist["rows"] if x["deck"] == deck and x["modo"] == modo
+                 and x["livello"] == liv]
+            return float(r[0][col]) if len(r) == 1 else float("nan")
+        A(f'<tr><td>{MLAB[modo + "db"]}</td>'
+          + "".join(f'<td class="num">{pct(cell(d, "lo", "thd_pct"))} %</td>'
+                    for d in ("thd_1k", "thd_10k", "thd_20k"))
+          + f'<td class="num">{fx(cell("imd", "lo", "imd_d2_db"), 1)} dB</td>'
+          f'<td class="num">{pct(cell("thd_20k", "hi", "thd_pct"))} %</td></tr>')
+    A('</table></div>')
+    A(f'<p class="meta">Tre controlli. La THD che ngspice stampa nel log, caso per caso, coincide '
+      'con la tabella di <code>leggi_four.py</code>. Il blocco corso è '
+      '<code>spice/preamp/gain_block_flat.inc</code> di oggi, rigenerato dal sorgente e uguale '
+      'byte per byte, e i deck sono quelli di L46b a meno del blocco incluso. Le 24 righe '
+      f'coincidono alla cifra con quelle della variante scelta in L46b (<code>{html_escape(rel(os.path.join(L46B, "run", L46B_VAR)))}/</code>) '
+      'su ampiezza, THD, seconda e terza armonica e i due prodotti '
+      'd&rsquo;intermodulazione; cambiano solo il pavimento numerico e le armoniche sotto '
+      f'~&minus;190 dB, il fondo del metodo (dalla 5ª in su, {fx(dist["h5_lo"], 1)} dB oggi, '
+      f'{fx(dist["h5_lo_l46b"], 1)} dB in L46b).</p>')
+    A('<div class="note"><strong>Cifre di modello, non misure.</strong> I dispositivi usano i '
+      f'modelli del costruttore ({sez("s15")}); dove la misura sul prototipo diverge, vale la '
+      'misura. Il banco è il blocco da solo: il selettore, il trim, il volume e i buffer delle '
+      'uscite fisse non ci sono, e il tetto complessivo di THD+N si fissa con l&rsquo;utente sulle '
+      'prime misure del prototipo.</div>')
+
     # --- 11 V2 ---
     A(h2("s11"))
     A(prov_line("tb_switch_v2.cir", v2["dir"]))
@@ -3520,8 +3868,8 @@ def build_page(M, inline=False):
     A('</table></div>')
     A('<p class="meta">Questi tre numeri hanno una sola strada: il deck non stampa '
       '<code>print</code>, quindi vengono dal CSV senza controllo incrociato. La cifra '
-      '<code>.four</code> del deck non è riportata: con questi modelli è priva di '
-      'significato.</p>')
+      '<code>.four</code> del deck non è riportata: è presa in saturazione, e la distorsione '
+      f'si giudica nella {sez("sdist")}.</p>')
     A('<h3>P7: ogni uscita regge un corto, il mute si tiene a tempo indefinito</h3>')
     A(prov_line("tb_mute_corto.cir", p7["dir"]))
     A(f'<p>Criterio di ADR-021: Tj = {it(TA, 3)} °C + P<sub>media</sub> · R<sub>θJA</sub> ≤ '
@@ -3951,6 +4299,86 @@ def build_page(M, inline=False):
               'era corsa sulla scheda audio del 26 settembre, e i nove casi qui sopra prendono i rail '
               'dall&rsquo;alimentatore vero.</p>')
 
+    if "schede" in PARTI:
+        # --- le schede di prova e l'assieme (L49a, L49b; L51c: «Essenziale», «Rifarlo oggi») ---
+        bd = M["brd"]
+        ba, bp, asm = bd["boards"]["audio"], bd["boards"]["psu"], bd["asm"]
+        ma, mp = ba["meas"], bp["meas"]
+        ch = asm["chassis_mm"]
+        A(h2("sbrd"))
+        A(f'<p class="prov">Schede <code>{html_escape(rel(ba["pcb"]))}</code> e '
+          f'<code>{html_escape(rel(bp["pcb"]))}</code>, piazzate e sbrogliate da L49a e L49b '
+          f'(Freerouting {html_escape(ba["freerouting"] or "?")}) &middot; DRC rifatta il 2026-10-10 '
+          f'con kicad-cli {html_escape(ba["kicad"] or "?")}, in <code>{html_escape(rel(os.path.join(L51C, "drc")))}/</code>, '
+          'uguale a quella del 9 ottobre &middot; i numeri dai <code>measure.json</code>, '
+          '<code>placement.json</code> e <code>assembly.json</code> dei due lotti</p>')
+        A('<p>Una prova di fattibilità, non il layout. Le due schede sono state piazzate e '
+          'sbrogliate dalle netlist di oggi per sapere se il progetto si può costruire, se ci sta '
+          f'nel contenitore (Modushop Pesante 3U, interni {it(ch[0], 4)} × {it(ch[1], 4)} × '
+          f'{it(ch[2], 4)} mm) e cosa chiede al pre-layout (G2). Il circuito non è cambiato per '
+          'farcele stare.</p>')
+        A('<div class="tablewrap"><table><tr><th>Scheda</th><th class="num">Misura</th>'
+          '<th class="num">Impronte sulla superficie</th><th class="num">Rame</th>'
+          '<th class="num">Vie</th><th class="num">DRC oggi: violazioni / aperte</th></tr>')
+        for lab, b in (("audio", ba), ("alimentatore", bp)):
+            m = b["meas"]
+            drc_s = "%d / %d" % b["drc"][:2]
+            A(f'<tr><td>{lab}</td><td class="num">{it(m["board_mm"][0], 4)} × {it(m["board_mm"][1], 4)} mm</td>'
+              f'<td class="num">{fx(m["fill"] * 100, 0)} %</td><td class="num">{it(m["tracks_m"], 3)} m</td>'
+              f'<td class="num">{m["vias"]}</td>'
+              + verdict(b["drc"][:2] == (0, 0), drc_s, drc_s) + '</tr>')
+        A('</table></div>')
+        outs = ma["main_output_nets_mm"]
+        longest = ma["longest_signal_nets_mm"][0]
+        nk = mp["necks"]
+        A('<h3>La scheda audio</h3>')
+        A(f'<p>I relè condivisi fra i canali stanno in una spina al centro: <strong>'
+          f'{ma["n_nets_crossing_spine"]} reti di segnale</strong> passano da un canale all&rsquo;altro. '
+          'Il prezzo è la lunghezza: ogni segnale va al centro e torna, le uscite principali sono '
+          f'lunghe {" e ".join(f"{it(v, 4)} mm" for v in sorted(outs.values()))}, la rete più lunga '
+          f'(<code>{html_escape(longest[0])}</code>) {it(longest[1], 4)} mm. Per G2 i connettori '
+          'delle uscite vanno vicino alla spina.</p>')
+        A(figure("scheda_audio_3d.png", "La scheda audio di prova, render dall'alto"))
+        A(figure("scheda_audio_rame.png", "La scheda audio di prova, i due strati di rame"))
+        A('<h3>L&rsquo;alimentatore</h3>')
+        A(f'<p>La rete sta in colonna su un bordo: sul rame la distanza minima fra rete e bassa '
+          f'tensione è <strong>{it(mp["mains_to_low_voltage_mm"], 4)} mm</strong>, fra fase e neutro '
+          f'{it(mp["mains_L_to_N_mm"], 3)} mm. I rail sono larghi; si stringono in '
+          f'{nk["count"]} tratti, larghi almeno {it(nk["min_width_mm"], 3)} mm e lunghi al più '
+          f'{it(nk["max_length_mm"], 3)} mm, attorno ai piedini fini dei regolatori e delle altre parti '
+          f'({", ".join(nk["parts"])}); {len(nk["not_on_a_pad"])} di questi non toccano un piedino '
+          'a nessuna delle due estremità. Freerouting non è '
+          'ripetibile: i file sono quelli della corsa consegnata, copiati.</p>')
+        A(figure("alimentatore_3d.png", "L'alimentatore di prova, render dall'alto"))
+        A(figure("alimentatore_rame.png", "L'alimentatore di prova, i due strati di rame"))
+        fit = bd["fit"]
+        A('<h3>L&rsquo;assieme nel contenitore</h3>')
+        tor = fit.get("toroid_distances_mm", {})
+        A(f'<p><strong>{html_escape(fit.get("title", ""))}</strong>: ci sta. '
+          + " ".join(marca(re.sub(r"(\d)\.(\d)", r"\1,\2", html_escape(n))) for n in fit.get("notes", []))
+          + ' I trasformatori stanno lontani dal segnale: '
+          # il nome del trasformatore (T1, T2) e' una parte, non il requisito T1: si marca
+          + "; ".join(f'{des(t.split()[0])} {html_escape(t.split(" ", 1)[1])} a '
+                      f'{it(d["ingressi_RCA"], 4)} mm dagli ingressi e '
+                      f'{it(d["volume_bilanciamento"], 4)} mm dal volume'
+                      for t, d in tor.items() if d.get("volume_bilanciamento") is not None)
+          + f'. Le altre {len(asm["variants"]) - 1} disposizioni provate non ci stanno.</p>')
+        A(figure("assieme.png", "L'assieme nel contenitore, pianta e sezione"))
+        A(f'<p class="meta">I disegni vettoriali, da ingrandire: <code>{html_escape(bd["pdf"]["audio"])}</code>, '
+          f'<code>{html_escape(bd["pdf"]["psu"])}</code>, <code>{html_escape(bd["pdf"]["asm"])}</code>.</p>')
+        A('<h3>Cosa chiedono al pre-layout</h3>')
+        A('<p>I vincoli che le due prove restituiscono al progetto, coi titoli dei report di L49a e '
+          'L49b (letti da lì, non riscritti); il dettaglio di ciascuno sta nel report. Nessuno '
+          'cambia il circuito.</p>')
+        A('<div class="tablewrap"><table><tr><th>Prova</th><th class="num">N.</th><th>Vincolo</th></tr>')
+        for lab, key, rep in (("scheda audio", "audio", L49A_REPORT), ("alimentatore e assieme", "psu", L49B_REPORT)):
+            for n, t in bd["vincoli"][key]:
+                t = marca(re.sub(r"`([^`]+)`", r"<code>\1</code>", html_escape(t)))
+                A(f'<tr><td>{lab}</td><td class="num">{n}</td><td>{t}</td></tr>')
+        A('</table></div>')
+        A(f'<p class="meta">Report: <code>{html_escape(rel(L49A_REPORT))}</code>, '
+          f'<code>{html_escape(rel(L49B_REPORT))}</code>.</p>')
+
     # --- 13 requisiti ---
     A(h2("s13"))
     A('<p>Solo i requisiti che queste misure toccano. Il resto non è qui perché non è '
@@ -4046,54 +4474,69 @@ def build_page(M, inline=False):
         A(f'<tr><td>NC-037</td><td>standby ≤ 0,5 W alla presa, un obiettivo del progetto (P9 (a), ADR-053)</td>'
           f'<td class="num">{fx(t_nom["standby_mw"], 1)} mW dal secondario di {des("T2")}</td>'
           '<td class="na">aperta: mancano le perdite a vuoto di <span class="des">T2</span> (giro BOM) e la misura</td></tr>')
-    A('<tr><td>V4</td><td>THD/THD+N</td><td class="na">assente</td>'
-      '<td class="na">non misurata in questa pagina</td></tr>')
+    A(f'<tr><td>V4</td><td>niente di aspro: THD a 20 kHz ≤ {pct(dist["soglie"]["thd20_lo"], tetto=True)} % a '
+      f'0,2 V, dalla 5ª in su ≤ {fx(dist["soglie"]["h5"], 0)} dB, intermodulazione ≤ '
+      f'{fx(dist["soglie"]["imd"], 0)} dB, a 2 V ≤ {pct(dist["soglie"]["thd20_hi"], tetto=True)} % (ADR-055)</td>'
+      f'<td class="num">{pct(dist["thd_lo"]["20k"])} % &middot; {fx(dist["h5_lo"], 1)} dB &middot; '
+      f'{fx(dist["imd_lo"], 1)} dB &middot; {pct(dist["thd_hi_20k"])} %, il blocco da solo</td>'
+      + (verdict(all(dist["ok"].values()), "conforme, cifre di modello; THD+N da fissare sul prototipo")
+         if all(dist["ok"].values()) else verdict(False)) + '</tr>')
     A('</table></div>')
 
     if "schede" in PARTI:
         # --- 14 limiti ---
         A(h2("s14"))
+        # L51c: riscritta sul progetto di oggi; ogni cifra e' letta dai dati
+        co = M["pw"]["car_oggi"]
+        ferro = sum(p[3] for p in M["heat"]["ipotesi"])
         A('<ul>')
-        A('<li><strong>Niente distorsione.</strong> Nessuna cifra di THD è stata misurata per '
-          'questo dossier.</li>')
-        if all_kf0:
-            A('<li><strong>Il rumore è un pavimento.</strong> Nessun modello simulato ha '
-              'rumore 1/f: le cifre di E5 sono termico e shot. NC-004 resta aperta.</li>')
-        else:
-            A(f'<li><strong>Il rumore è un pavimento fuori dalla coppia d&rsquo;ingresso.</strong> '
-              f'Solo {", ".join(kf_parts)} porta KF; specchio, VAS e buffer sono senza 1/f. '
-              'NC-004 resta aperta, ed è bloccante per G1.</li>')
+        A(f'<li><strong>La distorsione è di modello</strong> ({sez("sdist")}): il blocco di '
+          'guadagno da solo, coi modelli del costruttore, nessuna misura su un prototipo. Il tetto '
+          'complessivo di THD+N di V4 non è ancora fissato: si fissa sulle prime misure.</li>')
         if placeholders:
             A(f'<li><strong>{len(placeholders)} dispositivi attivi su '
               f'{len(vendors) + len(placeholders)} sono segnaposto</strong> ({", ".join(placeholders)}).</li>')
-        A('<li><strong>V1 agli spigoli di tolleranza</strong> non è misurato coi modelli del '
-          'costruttore: gli spigoli di L16 erano un deck d&rsquo;esplorazione sui segnaposto, e non '
-          'sono stati rifatti. Qui c&rsquo;è solo V1 ai valori nominali.</li>')
-        A(f'<li><strong>S del mute con la cima a 12 mA</strong> (ADR-050) non è misurato: la matrice '
-          f'di V2 è corsa coi LED a {it(mu["cima_deck"] * 1000, 3)} mA del deck versionato.</li>')
-        A('<li><strong>Le forme d&rsquo;onda dei transitori</strong> non sono versionate, tranne la '
-          'curva del livello del mute: di V2 del guadagno ci sono le finestre, della matrice del '
-          'mute le analisi, di V3 il CSV.</li>')
+        if con_tetto:
+            A(f'<li><strong>Il rumore 1/f è un limite per eccesso.</strong> {", ".join(con_tetto)} '
+              'portano un tetto dichiarato, il doppio del tipico letto sulle poche curve pubblicate '
+              'trovate (ADR-057), non il rumore di ciascuna parte. E5 non è un pavimento: è un '
+              'massimo.</li>')
+        A('<li><strong>V1 agli spigoli di tolleranza</strong> di resistenze e condensatori non è '
+          'misurato: qui c&rsquo;è V1 ai valori nominali. Sulla dispersione di I<sub>DSS</sub> dei '
+          f'JFET, sullo stesso blocco, L46b dà ≥ {fx(dist["v1_idss"], 2)}° '
+          f'(<code>{html_escape(rel(os.path.join(L46B, "idss.csv")))}</code>), fuori da questa '
+          'pagina.</li>')
+        A('<li><strong>Le forme d&rsquo;onda dei transitori</strong> non sono versionate: di V2 del '
+          'guadagno ci sono le finestre, della matrice del mute le analisi, di V3 il CSV.</li>')
         A('<li><strong>Il relè nella corsa dell&rsquo;interblocco</strong> è un modello dichiarato, '
           'non del costruttore: il datasheet non dà la dinamica della bobina.</li>')
-        A('<li><strong>Il calore</strong> è una stima calcolata con coefficienti da letteratura, '
-          'non una simulazione termica.</li>')
         A('<li><strong>L&rsquo;alimentatore è simulato con modelli dichiarati</strong>, nessuno del '
           'costruttore: regolatori e comparatori comportamentali (il modello TI del TPS7A4701 dà un '
-          'punto di lavoro sbagliato, quello del TLV1701 non commuta in ngspice), micro, DAC e op-amp '
-          'comportamentali, i trasformatori come Thevenin ipotetici da confermare sui pezzi. '
-          '<strong>Niente PSRR né rumore dei regolatori</strong>: la quota di ADR-020 non è verificata '
-          '(NC-011).</li>')
+          'punto di lavoro sbagliato, quello del TLV1701 non commuta in ngspice); al posto del '
+          'micro, le uscite del firmware vero eseguito sull&rsquo;host, iterate col circuito fino al '
+          f'punto fisso; i due trasformatori ({des("T1")}, {des("T2")}) come generatori ideali con '
+          'una resistenza e un&rsquo;induttanza in serie, da confermare sui pezzi. '
+          '<strong>Niente PSRR né rumore dei regolatori nei modelli</strong>: la quota di rumore '
+          'dell&rsquo;alimentazione regge su un limite per eccesso letto dai datasheet (L46b, '
+          'ADR-056), non su una simulazione (NC-011, aperta fino alla misura sul prototipo).</li>')
         A('<li><strong>Il carico della scheda audio sull&rsquo;alimentatore</strong> è un carico '
-          'dichiarato (265 mA per rail, le bobine come resistenze senza induttanza, i LED delle LDR '
-          'come diodi): la catena di L41c va dall&rsquo;alimentatore alla scheda audio, mai indietro.</li>')
-        A('<li><strong>Il commento di <code>C_VRELAY</code> in <code>psu.py</code></strong> cita la '
-          'tenuta di L41a, più lunga di quella del circuito di oggi (sezione della potenza).</li>')
-        A('<li><strong>L&rsquo;autoriscaldamento di Q2</strong> nel pilota delle LDR non è modellato: la '
-          'calibrazione è il rimedio, e la conferma è il prototipo. <code>src/main_attiny.c</code> non '
-          'è scritto, e il firmware è provato sull&rsquo;host e come core del banco, non sul micro.</li>')
+          f'dichiarato: {fx(float(co["i_piu_mA"]), 1)} / {fx(float(co["i_meno_mA"]), 1)} mA sui '
+          f'rail, dal punto di lavoro di oggi ({sez("spow")}), e le bobine dei relè come resistenze '
+          'senza induttanza. La catena dei guasti va dall&rsquo;alimentatore alla scheda audio, mai '
+          'indietro.</li>')
+        A(f'<li><strong>Il calore è una stima calcolata</strong> ({sez("sheat")}), con coefficienti '
+          'da letteratura, non una simulazione termica. L&rsquo;unica ipotesi fra le potenze è il '
+          f'ferro dei trasformatori, {fx(ferro, 2)} W nel caso peggiore.</li>')
+        A('<li><strong>Le schede di prova non sono il layout</strong> '
+          f'({sez("sbrd")}): la massa è una rete di tracce, in attesa del lavoro su massa e terra; '
+          'connettori, contenitore e frontale si decidono al pre-layout; le distanze di rete vengono '
+          'da fonti secondarie, perché la norma non è stata letta; Freerouting non ripete la stessa '
+          'scheda due volte.</li>')
+        A('<li><strong>Il firmware non gira su un micro.</strong> <code>src/main_attiny.c</code> non '
+          'è scritto: il firmware è provato sull&rsquo;host e come cuore del banco, e nessun falso è '
+          f'stato fatto fallire sul circuito dopo L41b2 ({sez("sfw")}).</li>')
         A('<li><strong>Nessuno qui giudica come suona.</strong> La simulazione copre '
-          'stabilità, risposta, PSRR e impedenze; non copre l&rsquo;ascolto.</li>')
+          'stabilità, risposta, rumore, PSRR e impedenze; non copre l&rsquo;ascolto.</li>')
         A('</ul>')
 
     # --- 15 provenienza ---
@@ -4113,6 +4556,23 @@ def build_page(M, inline=False):
           f'<td class="{"ok" if mm["vendor"] else "na"}">{"costruttore" if mm["vendor"] else "segnaposto"}</td>'
           f'<td class="num">{it(mm["kf"], 3)}</td></tr>')
     A('</table></div>')
+    if PSU_PROV:
+        # L51c: l'alimentatore, letto dai deck che le sue sezioni hanno dichiarato
+        subs = sorted({s for _, ss in PSU_PROV.values() for s in ss})
+        incs = sorted({i for ii, _ in PSU_PROV.values() for i in ii})
+        A(f'<p><strong>L&rsquo;alimentatore</strong>: i {len(PSU_PROV)} deck che le sue sezioni '
+          'nominano, generati da '
+          '<code>circuits/preamp/psu.net</code>. Nessun modello del costruttore: i sottocircuiti '
+          f'sono comportamentali e dichiarati ({", ".join(f"<code>{html_escape(s)}</code>" for s in subs)}), '
+          f'e i file inclusi sono generici ({", ".join(f"<code>{html_escape(i)}</code>" for i in incs)}).</p>')
+    if "schede" in PARTI:
+        bd = M["brd"]
+        A('<p><strong>Le schede di prova</strong>: le netlist di <code>circuits/preamp/</code>, '
+          'i sorgenti di <code>layout/preamp/audio/</code>, <code>layout/preamp/psu/</code> e '
+          '<code>layout/preamp/assembly/</code> (L49a, L49b), Freerouting '
+          f'{html_escape(bd["boards"]["audio"]["freerouting"] or "?")}; la DRC di oggi con kicad-cli '
+          f'{html_escape(bd["boards"]["audio"]["kicad"] or "?")}, la stessa versione del 9 ottobre '
+          f'({html_escape(bd["boards"]["audio"]["kicad_prima"] or "?")}).</p>')
     A('<p class="meta">Rigenerare questa pagina: '
       '<code>/usr/bin/python3 docs/preamp/dossier/build_dossier.py'
       + ('' if all(p in PARTI for p in PARTI_TUTTE) else ' --standalone &lt;file fuori dal repo&gt;')
@@ -4164,12 +4624,14 @@ def main():
     if "--standalone" in sys.argv:
         standalone = os.path.abspath(sys.argv[sys.argv.index("--standalone") + 1])
     completa = all(p in PARTI for p in PARTI_TUTTE)
-    # L51a: finche' le parti non ci sono tutte, niente accanto al generatore, e la
-    # pagina autoconsistente solo fuori dal repo (come stampa_a4.py): una pagina a meta'
-    # nel repo sarebbe una seconda verita' con le sezioni di prima.
-    if standalone and not completa and os.path.commonpath([standalone, REPO]) == REPO:
-        print(f"RIFIUTATO: {standalone} sta dentro il repository, e la pagina ha solo le parti "
-              f"{', '.join(PARTI)}. Scrivila altrove. Nessun file e' stato scritto.", file=sys.stderr)
+    # L51a: finche' le parti non ci sono tutte, niente accanto al generatore. L51c: la
+    # pagina autoconsistente resta solo fuori dal repo anche con la pagina completa (come
+    # stampa_a4.py): accanto a index.html sarebbe una seconda copia, una seconda verita'.
+    if standalone and os.path.commonpath([standalone, REPO]) == REPO:
+        print(f"RIFIUTATO: {standalone} sta dentro il repository"
+              + ("" if completa else f", e la pagina ha solo le parti {', '.join(PARTI)}")
+              + ". La pagina autoconsistente si scrive altrove. Nessun file e' stato scritto.",
+              file=sys.stderr)
         return 1
 
     M = {"ct": contratto(),
@@ -4184,6 +4646,9 @@ def main():
     M["e4"] = measure_e4(M["z"])
     M["hr"] = measure_headroom(M["trim"])
     M["l2"] = seconda_strada()
+    M["dist"] = measure_distortion()
+    if "schede" in PARTI:
+        M["brd"] = measure_boards()
     if "alimentatore" in PARTI:
         M["heat"] = measure_heat(M["op"])
         M.update({"pw": measure_psu_power(), "sv": measure_supervisor(), "tm": measure_timer(),
@@ -4192,7 +4657,8 @@ def main():
                   + [os.path.join(TB, "tb_v2_casopeggiore.cir"), os.path.join(TB, "tb_e3_e5.cir"),
                      os.path.join(TB, "tb_f1_selettore.cir"),
                      os.path.join(L48B, "e5_bilanciamento", "tb_e5_bilanciamento.cir"),
-                     os.path.join(L48B, "v1_bilanciamento", "tb_loop_bilanciamento.cir")])
+                     os.path.join(L48B, "v1_bilanciamento", "tb_loop_bilanciamento.cir")]
+                  + [os.path.join(L51CD, "deck", "oggi", d + ".cir") for d in DIST_DECKS])
     for deck in M["decks"]:
         provenance(deck)
     for name in SCHEMATICS:
@@ -4276,6 +4742,20 @@ def main():
             "guasti_al_jack_V": {r["caso"]: float(r["picco_V"]) for r in M["off"]["rows"]},
             "carico_del_banco": M["pw"]["car_oggi"]})
         summary["dati"] += [rel(L51B), rel(L51BP)]
+    d = M["dist"]
+    summary["dati"].append(rel(L51CD))
+    summary["v4_distorsione"] = {"thd_20kHz_0p2V_pct": d["thd_lo"]["20k"],
+                                 "armoniche_5_in_su_0p2V_dB": d["h5_lo"],
+                                 "imd_ccif_0p2V_dB": d["imd_lo"],
+                                 "thd_20kHz_2V_pct": d["thd_hi_20k"],
+                                 "tetti": d["soglie"], "conforme": all(d["ok"].values())}
+    if "schede" in PARTI:
+        b = M["brd"]
+        summary["dati"] += [rel(L49A), rel(L49B), rel(os.path.join(L51C, "drc"))]
+        summary["schede_di_prova"] = {
+            k: {"mm": v["meas"]["board_mm"], "drc_oggi_violazioni_aperte": list(v["drc"][:2]),
+                "kicad": v["kicad"]} for k, v in b["boards"].items()}
+        summary["schede_di_prova"]["assieme"] = b["fit"].get("title")
 
     if completa:
         for name, body in figs.items():
@@ -4285,6 +4765,9 @@ def main():
         for name in SCHEMATICS:
             shutil.copyfile(os.path.join(SCHEM, name), os.path.join(HERE, name))
             print(f"   copiato {name} da {rel(SCHEM)}/")
+        for name, parts in IMMAGINI.items():
+            shutil.copyfile(os.path.join(*parts), os.path.join(HERE, name))
+            print(f"   copiato {name} da {rel(os.path.join(*parts))}")
         with open(os.path.join(HERE, "index.html"), "w") as f:
             f.write(page)
         print(f"   scritto index.html ({len(page)} byte)")

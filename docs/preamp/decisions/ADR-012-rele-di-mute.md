@@ -1,6 +1,6 @@
 # ADR-012 — Relè di mute su tutte le uscite
 
-Data: 2026-09-08 · Stato: accettata — la durata «per qualche secondo» è superata da ADR-021 (mute tenibile a tempo indefinito); il relè resta come stato sicuro e non taglia mai la musica, precisata da ADR-038; lo stato sicuro è il jack a massa attraverso il bleed, con la geometria iii (ADR-044)
+Data: 2026-09-08 · Stato: accettata — il mute si può tenere inserito quanto si vuole (ADR-021). Ad apparecchio spento, o se il relè non è alimentato, il jack resta staccato dal preamplificatore e collegato a massa attraverso la resistenza di scarica: l'uscita è muta (ADR-044). Da quando il mute taglia (ADR-062), è questo stesso relè a togliere la musica quando si preme il mute
 
 ## Contesto
 

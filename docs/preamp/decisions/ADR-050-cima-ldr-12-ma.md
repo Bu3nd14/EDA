@@ -1,6 +1,6 @@
 # ADR-050 — La cima della tabella delle LDR a 12 mA, a ogni temperatura
 
-Data: 2026-09-26 · Stato: accettata
+Data: 2026-09-26 · Stato: superata da ADR-062: senza fotoresistenze non c'è più una corrente massima da fissare
 
 ## Contesto
 

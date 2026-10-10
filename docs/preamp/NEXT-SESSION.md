@@ -1,110 +1,103 @@
-# Prompt per la sessione successiva — L51c, il dossier rigenerato: le schede di prova e la chiusura
+# Prompt per la sessione successiva — L52, l'architetto avversariale di nuovo, sul dossier completo
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L51c**, e si ferma. Non iniziarne un secondo.
+LOTTI PICCOLI: questa sessione fa **L52**, e si ferma. Non iniziarne un secondo.
 
 ## Perché questo lotto, e perché adesso
 
 L'utente, il 2026-10-09 dopo L49b: «rigeneriamo il dossier, mettilo nel prossimo lotto abbiamo
-cambiato molto, poi lo passiamo all'avversariale di nuovo, poi affrontiamo G1». All'inizio di L51
-l'ha diviso in **«Tre parti»**:
-- **L51a**, la scheda audio: **fatto**, 2026-10-09;
-- **L51b**, l'alimentatore e il firmware: **fatto**, 2026-10-09/10;
-- **L51c**, questo: le schede di prova e l'assieme di L49, «Cosa questo dossier non dice», la
-  provenienza, le righe `Stato:` restanti, il primo `index.html` nuovo.
+cambiato molto, poi lo passiamo all'avversariale di nuovo, poi affrontiamo G1». Il dossier è
+rigenerato e completo (L51a, L51b, L51c): `docs/preamp/dossier/index.html`. Questo lotto è
+«l'avversariale di nuovo». Dopo viene **G1**, poi L45 FMEA e L50 massa e terra.
 
-Dopo: **L52** l'architetto avversariale sul dossier nuovo, poi **G1**, poi L45 FMEA e L50 massa e
-terra.
-
-Il dossier lo legge **solo l'utente** e **non si taglia**: si rigenera, senza avvisi di
-obsolescenza.
-
-## Come la seconda parte ha lasciato il generatore (leggere prima del codice)
-
-- **`PARTI = ("audio", "alimentatore")`.** Questo lotto aggiunge `"schede"`. Con tutte e tre le
-  parti il generatore **scrive accanto a sé** `index.html`, le figure, gli schemi copiati e il
-  summary: è il primo `index.html` da L42, e sostituisce quello.
-- **La sezione `s14`, «Cosa questo dossier non dice», non gira com'è.** Sta sotto
-  `if "schede" in PARTI:` e usa tre nomi che non esistono più: `all_kf0`, `kf_parts`,
-  `mu["cima_deck"]`. Parla ancora di S del mute con la cima a 12 mA (ADR-050), e ha punti
-  sull'alimentatore da rileggere contro le sezioni di oggi. Va riscritta, non riaccesa.
-- **Le guardie del giorno**:
-  - `sa()` per la scheda audio (`AUDIO_DA`, `AUDIO_PERMESSI` con la ragione stampata);
-  - `ps()` per l'alimentatore (`PSU_DA = "2026-10-09"`, senza eccezioni);
-  - per le schede di prova serve la stessa guardia, col giorno di L49.
-- Il testo cita le sezioni con `sez()`, mai il numero a mano.
-- **I sabotaggi**: L51a 27 su 27, L51b 30 su 30 (`data/2026-10-09/L51b/script/sabotaggi.py`).
-  Rieseguirli tutti a fine lotto, insieme a quelli nuovi.
+L'architetto ha visto il progetto una volta sola, in L43a (2026-09-27). Da allora sono nate le
+ADR **054–066**: compensazione, PSRR, rumore 1/f, la cella del mute e il suo abbandono, il mute
+coi soli relè, il selettore, il volume col bilanciamento. Sono cambiati l'alimentatore e il
+firmware, e ci sono le schede di prova di L49.
 
 ## Il mandato
 
-- **Le schede di prova di L49** (L49a la scheda audio, L49b l'alimentatore, i toroidali e
-  l'assieme nel Pesante 3U): le immagini, il DRC, i vincoli scritti, NC-048 chiusa. Le cartelle
-  sono quelle dei due lotti. Decidere con l'utente quanto mostrarne e se rieseguire il DRC oggi.
-- **«Cosa questo dossier non dice»**, riscritta sul progetto di oggi:
-  - la distorsione di L46a e L46b, da verificare sul blocco di oggi;
-  - i modelli comportamentali dell'alimentatore;
-  - il ferro dei trasformatori nella stima del calore (un'ipotesi, L51b);
-  - i falsi sul circuito (nessuno dopo L41b2);
-  - `main_attiny.c`, che non è scritto.
-- **La provenienza**.
-- **Le righe `Stato:` restanti**, una per una con l'utente: ADR-009, 027, 032, 038, 039, 040,
-  049, 050, 061, 062.
-- **La stampa A4**: `stampa_a4.py` sulla pagina completa.
+La sessione **non cerca difetti per conto suo**: è un controllo cieco, come L43a. Fa tre cose.
 
-## Trovato in L51b, per l'utente (non correggere da sé)
+### 1. Per primo: lanciare l'architetto avversariale
 
-In `circuits/preamp/psu.py`:
-- il commento di `C_VRELAY` cita 61,1 ms (L47c2a); col selettore e i rail di oggi la tenuta è
-  48,3 ms;
-- quello di `C_RAW` cita la valle del grezzo di L41a, 18,1 V; oggi è 17,9 V.
+All'avvio, prima di qualsiasi conversazione sul dossier:
+- `Agent` con `subagent_type: "adversarial-architect"`: **un agente nuovo, mai `fork`**. Un fork
+  eredita questa conversazione, e la revisione non sarebbe più cieca. In background.
+- **Il prompt contiene solo** la data, i tre obiettivi dell'utente e i percorsi del prodotto (il
+  dossier `docs/preamp/dossier/index.html`, `docs/preamp/PRB.md`, `REQUIREMENTS.md`,
+  `decisions/`, `circuits/preamp/`, `spice/preamp/`, `firmware/preamp_timer/`, `layout/preamp/`,
+  `models/`). Il suo mandato sta già nella definizione (`.claude/agents/adversarial-architect.md`),
+  compresa la cecità a `NONCOMPLIANCE.md`, `STATE.md` e `reports/` fino alla fase 2. I tre
+  obiettivi, con le parole dell'utente:
+  - un preamplificatore che suoni bene (secondo la letteratura e la tecnica);
+  - che non abbia bump fastidiosi sulle uscite ai cambi di configurazione;
+  - che fallisca senza danneggiare altri elementi della catena.
 
-Il dossier lo dice nella sezione della potenza. Chiedere all'utente se correggerli, e dove: è un
-cambio del sorgente, fuori dal dossier.
+  In più: se sono possibili semplificazioni, e se c'è over-engineering.
+- **Niente nel prompt** di ciò che i lotti hanno già trovato. In particolare niente dei rilievi
+  di L43a, dei 45 tratti ristretti di L51c, delle righe `Stato:`: entrano nella sintesi alla
+  fine, non nel prompt.
+- Quando torna, il suo messaggio finale è il report. Salvalo **verbatim** in
+  `docs/preamp/reports/<data>-L52-architetto-avversariale.md`.
 
-## All'inizio, con l'utente
+### 2. I rilievi, uno per uno con l'utente
 
-Misurare prima (quanto pesano le schede di L49 nella pagina, cosa resta vero di `s14`), poi
-chiedere per nome e senza sigle.
+Come in L43a:
+- ogni rilievo si porta all'utente **per nome, senza sigle** (al più tra parentesi), coi gradini
+  in dB SPL contro una stanza silenziosa;
+- la severità la decide l'utente;
+- un rilievo entra in `NONCOMPLIANCE.md` **solo se l'utente lo accetta**, con il requisito del
+  PRB, l'evidenza e la severità;
+- le ADR che l'architetto riaprirebbe e le semplificazioni che propone vanno all'utente una per
+  una: sceglie lui;
+- cambiare il PRB vuole una ADR (ADR-053).
+
+### 3. Alla fine
+
+- Un report degli esiti, `docs/preamp/reports/<data>-L52-esiti-architetto.md`, con la tabella
+  dei rilievi, le decisioni dell'utente e la taratura contro L43a: cosa ha trovato di nuovo e
+  cosa ha ripetuto, e se un rilievo era già noto (NC-0xx) o già deciso (ADR-0xx).
+- **Chiedere all'utente** (proposta di «Dopo L49b», non decisa) se vuole rifare anche la sua
+  lettura del dossier, come L43b, prima del gate. La risposta decide il lotto successivo: L53
+  la lettura dell'utente, oppure G1.
 
 ## Prima di tutto
 
-- `CLAUDE.md` e `docs/limitations.md` (**54 voci**).
-- `docs/preamp/STATE.md`: «In breve», **L51b**, **L51a**, L49a, L49b.
-- `docs/preamp/dossier/build_dossier.py` per intero.
-- `data/2026-10-09/L51b/README.md` e `data/2026-10-09/L51a/README.md`.
-- I report di L49a, L49b, L51a, L51b.
+- `CLAUDE.md`, `docs/limitations.md` (54 voci), `AGENTS.md` (il paragrafo sul revisore
+  avversariale), `.claude/agents/adversarial-architect.md`.
+- `docs/preamp/STATE.md`: «In breve» e la voce di **L51c**.
+- `docs/preamp/reports/2026-09-27-L43a-esiti-architetto.md`: com'è andata la prima volta.
+- Il dossier si legge in `docs/preamp/dossier/index.html`, oppure in A4 con
+  `/usr/bin/python3 docs/preamp/dossier/stampa_a4.py <file fuori dal repo>.pdf`.
 
 ## I vincoli
 
 - Nel worktree vengono rifiutati:
   - i comandi composti, e le pipe o i `;` attorno a comandi che eseguono script (anche
-    `run_tests.sh` e `run_simulation.sh` vanno lanciati da soli, senza redirect seguiti da altro);
-  - `cd … && script`, **le variabili di shell nei percorsi**;
+    `run_tests.sh` va lanciato da solo);
+  - `cd … && script`, le variabili di shell nei percorsi;
   - `awk` con programmi, i cicli con variabili, un heredoc insieme a un altro comando, un
-    `python3 -c` dentro un altro comando, e un comando che **contiene la parola «git»** anche solo
+    `python3 -c` dentro un altro comando, e un comando che contiene la parola «git» anche solo
     in un testo;
-  - un heredoc Python lungo da solo: gli script si scrivono su file con Write, i testi con Edit;
   - un titolo di PR con l'apostrofo: il corpo va su file, con `--body-file`.
-- Si usano comandi semplici, **percorsi assoluti**, script scritti su file. Il venv non è nel
-  worktree: `/Users/roberto/EDA/env/venv/bin/python3`.
-- `sed -i ''` di macOS non conosce `\b`; un nome locale nel generatore può coprire un modulo
-  (`sp` è `svgplot`) o una funzione (`num`): due errori di L51b.
-- `docs/preamp/data/` è versionato per regola: i file grossi vanno in `.gitignore` prima del commit.
-- `zsh` espande un `=` a inizio parola; un glob senza corrispondenze ferma il comando: `(N)` in coda.
+- Si usano comandi semplici, **percorsi assoluti**, script scritti su file con Write, ed Edit per i
+  testi.
+- Il PDF del dossier non si versiona; la pagina autoconsistente (`--standalone`) va sempre fuori
+  dal repo.
 
 ## NON fa parte di questo lotto
 
-- L'architetto avversariale (**L52**) e il gate (**G1**).
-- Cambiare il circuito, i deck o il firmware: il dossier li descrive com'è oggi. Un difetto trovato
-  rigenerando si scrive e si porta all'utente, non si corregge da sé.
-- La FMEA (L45), la massa e la terra (L50), il layout vero (G2).
+- Correggere quello che l'architetto trova: si registra, e i rimedi sono lotti successivi.
+- Qualsiasi modifica al circuito, al firmware, ai deck o al dossier.
+- Il gate (**G1**), la FMEA (L45), la massa e la terra (L50), il layout vero (G2).
 
 ## CHIUSURA
 
-1. `STATE.md` con L51c **fatto** nella tabella dei lotti, e il prossimo (**L52**).
+1. `STATE.md` con L52 **fatto** nella tabella dei lotti, e il prossimo (L53 o G1, secondo la
+   risposta dell'utente).
 2. Riscrivi QUESTO file per il lotto successivo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L51c`.
+4. `/bin/zsh scripts/chunk_close.sh L52`.
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**
