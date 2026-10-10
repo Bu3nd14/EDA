@@ -1,0 +1,10 @@
+# L51b-prima - the audio board's load on the supply bench BEFORE today: the second
+# path of L51b. Read by psu/genera_tb_psu.py, the same file as in L51b/psu/.
+# The rails: 265 mA each (L41a, eight blocks at ~33 mA, before ADR-054).
+# The rest of VRELAY: 42.4 mA (L47c2a, before the selector of L48a).
+# With these the decks and the results must be those of L47c2a and L47c2b2.
+i_piu_mA   265
+i_meno_mA  265
+resto_mA   42.4
+# The method of the two U503-off sequence cases: L47c2b2's, trap with gmin 1e-9.
+metodo_u503 trap

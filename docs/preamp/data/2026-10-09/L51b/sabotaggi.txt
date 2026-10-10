@@ -1,0 +1,32 @@
+CADE    prima_strada_vecchia: rc=1 | RIFIUTATO: docs/preamp/data/2026-10-06/L47c2b2/termica non e' del 2026-10-09 o dopo, il giorno della ricorsa dell'alimentatore col carico di oggi (L51
+CADE    carico_rail_non_tb_op: rc=1 | - carico.txt di L51b: i_piu_mA 293.72, 8 x i(vpp) di tb_op 293.6200
+CADE    carico_prima_non_l47c2a: rc=1 | - L51b-prima/carico.txt non e' il carico di L47c2a: {'i_piu_mA': '265', 'i_meno_mA': '265', 'resto_mA': '42.5', 'metodo_u503': 'trap'}
+CADE    metodo_u503: rc=1 | - L51b/carico.txt: resto 51.5 mA (atteso 51,5, L48a), metodo trap
+CADE    log_rete_errore: rc=1 | - docs/preamp/data/2026-10-09/L51b/rete/tb_psu_rete.log: il log ha 1 righe che invalidano la corsa, la prima: 'Error: sabotaggio'
+CADE    r512_nel_log: rc=1 | - docs/preamp/data/2026-10-09/L51b/rete/tb_psu_rete.log: nel caso regime_m10 R512 vale 2200000.0, atteso 220000 (#34)
+CADE    deck_rete_oggi: rc=1 | - deck rete oggi: ../../../../../../var/folders/ym/6mbt1h757kg3811rcy9555000000gn/T/l42b_g088a36j/tb_psu_rete.cir non e' docs/preamp/data/2026-10-09/L
+CADE    rete_prima_non_l47c2a: rc=1 | - rete prima contro L47c2a: docs/preamp/data/2026-10-09/L51b-prima/rete/analisi.csv e docs/preamp/data/2026-10-05/L47c2a/rete/analisi.csv non sono ugu
+CADE    verdetto_seq_oggi: rc=1 | - L51b analisi_seq.txt: verdetto FALLISCE, casi ['_verdetto', 'accensione', 'buco20', 'buco200', 'cf_nodelta', 'corto_u503', 'guasto', 'guasto_u501', 
+CADE    deck_seq_al_punto_fisso: rc=1 | - sequenza perdita al giro 3: ../../../../../../var/folders/ym/6mbt1h757kg3811rcy9555000000gn/T/l42b_0sgn7ng_/tb_psu_seq_perdita_g3.cir non e' docs/pr
+CADE    log_seq_errore: rc=1 | - docs/preamp/data/2026-10-09/L51b/seq/guasto_u503/tb_psu_seq_guasto_u503_g2.log: il log ha 1 righe che invalidano la corsa, la prima: 'Timestep too s
+CADE    seq_prima_criterio: rc=1 | - L47c2b2, guasto_u501: il testo dell'analisi non e' quello del lotto
+CADE    seq_prima_fatto: rc=1 | - L47c2a, accensione: il testo dell'analisi non e' quello del lotto
+CADE    core_prima: rc=1 | - L47c2a, rilascio: core_g2.csv: docs/preamp/data/2026-10-09/L51b-prima/seq/rilascio/core_g2.csv e docs/preamp/data/2026-10-05/L47c2a/seq/rilascio/cor
+CADE    ponte_prima: rc=1 | - ponte perdita contro L47c2b2: docs/preamp/data/2026-10-09/L51b-prima/ponte/perdita.json e docs/preamp/data/2026-10-06/L47c2b2/ponte/perdita.json non
+CADE    timer_prima_non_l47c2a: rc=1 | - il temporizzatore col carico di prima contro L47c2a: docs/preamp/data/2026-10-09/L51b-prima/timer/analisi_timer.txt e docs/preamp/data/2026-10-05/L4
+CADE    timer_oggi_non_rieseguito: rc=1 | - analizza_timer.py rieseguito sui log di docs/preamp/data/2026-10-09/L51b/timer non ridà analisi_timer.txt
+CADE    log_timer_errore: rc=1 | - docs/preamp/data/2026-10-09/L51b/timer/tb_psu_timer_nom.log: 'singular matrix'
+CADE    falsi_host: rc=1 | - falsi sull'host contro L47c2b2: docs/preamp/data/2026-10-09/L51b/falsi/esito.txt e docs/preamp/data/2026-10-06/L47c2b2/falsi/esito.txt non sono ugua
+CADE    tabella_oggi: rc=1 | - oggi: tabella.py rieseguito: ../../../../../../var/folders/ym/6mbt1h757kg3811rcy9555000000gn/T/l42b_1uhmp4cv/tabella.csv e docs/preamp/data/2026-10-
+CADE    corsa_fallita: rc=1 | - docs/preamp/data/2026-10-09/L51b/corse/tempi.txt: 18 corse, non tutte rc=0
+CADE    deck_v2_oggi: rc=1 | - oggi: il deck di V2 rigenerato oggi: ../../../../../../var/folders/ym/6mbt1h757kg3811rcy9555000000gn/T/l42b_ancplxs0/tb_v2_l41c.cir e docs/preamp/da
+CADE    scomposizione_db: rc=1 | - scomposizione.csv, guasto: gli scarti in dB non tornano coi picchi
+CADE    scomposizione_picco: rc=1 | - scomposizione.csv, guasto: picco_V_oggi 0.0008148, la tabella 0.0008149
+CADE    stima_non_rieseguita: rc=1 | - stima_telaio_l51b.py rieseguito non ridà stima_telaio_l51b.txt
+CADE    banco_audio: rc=1 | - calore, regime_m10: il banco carica la scheda audio con 9.9468 W, tb_op ne da' 8.9311
+CADE    bilancio: rc=1 | - calore, regime_nom: il bilancio dei secondari non torna, resto 0.5681 W
+CADE    deck_calore: rc=1 | - deck del calore: ../../../../../../var/folders/ym/6mbt1h757kg3811rcy9555000000gn/T/l42b_f5pb87ck/tb_calore.cir non e' docs/preamp/data/2026-10-09/L5
+CADE    ferro_non_dichiarato: rc=1 | - calore: le voci in ipotesi sono ['ferro di T1 (ipotesi)'], attese due (il ferro)
+CADE    pagina_a_meta_nel_repo: rc=1
+generatore sui file veri dopo i sabotaggi: rc=0
+30 sabotaggi su 30 cadono come devono
