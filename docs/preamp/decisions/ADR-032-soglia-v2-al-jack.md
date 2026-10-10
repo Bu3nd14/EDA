@@ -1,6 +1,6 @@
 # ADR-032 — V2 ha una soglia: al jack, 100 µV di picco in banda, nel caso peggiore, per il gradino, il residuo in mute e il taglio della musica
 
-Data: 2026-09-15 · Stato: accettata — C precisata da ADR-035 (differenza dal riferimento, soglia 1 mV); A con musica non è verdetto da ADR-036; il taglio si giudica con S, ≤ 20 dB in 100 ms (ADR-040)
+Data: 2026-09-15 · Stato: accettata — la soglia vale circa 33 dB SPL di picco a 1 m, sotto il rumore di una stanza silenziosa. Da allora: con la musica che suona un gradino non si giudica (ADR-036); a mute inserito con la musica conta quello che passa davvero al jack (ADR-063); il taglio della musica non ha più una soglia: il mute taglia, e il clic si misura e si dichiara (ADR-062)
 
 ## Contesto
 

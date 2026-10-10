@@ -1,6 +1,6 @@
 # ADR-061 — Il profilo v5 del mute a 3 s con la cima di 7 mA; E3 nella sfumatura si giudica ai bassi; il pilota esponenziale resta; l'impronta propria della NSL-32SR3
 
-Data: 2026-10-03 · Stato: accettata
+Data: 2026-10-03 · Stato: superata da ADR-062: senza sfumatura non ci sono più il profilo di 3 s, il suo pilota né l'impronta propria della fotoresistenza
 
 **Rapporti con le decisioni precedenti.** Supera ADR-040 sul solo profilo (v4 → v5; il criterio di S
 resta). Precisa ADR-039 (il profilo è simmetrico, 3 s per verso, come in ADR-059) ed E3 durante la

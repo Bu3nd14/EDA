@@ -1,6 +1,6 @@
 # ADR-027 — Il trim è uno solo, sul ramo dell'uscita variabile, a relè bistabili, con LED e interblocco dal mute
 
-Data: 2026-09-14 · Stato: accettata — LED dai relè spia confermati da ADR-033; K6 su un comando proprio, rilasciato dopo i relè del jack (ADR-045)
+Data: 2026-09-14 · Stato: accettata — i LED del trim leggono lo stato dei relè stessi (ADR-033); il relè del trim si muove solo dopo che i relè del jack hanno staccato l'uscita (ADR-045); dopo il trim ora c'è un condensatore, poi il volume e il bilanciamento (ADR-065)
 
 ## Contesto
 

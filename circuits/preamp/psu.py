@@ -115,22 +115,25 @@ FP_SOIC20W = "Package_SO:SOIC-20W_7.5x12.8mm_P1.27mm"
 # 13.5 V to 10.6 V (L30), checked on this circuit in L41a's simulation.
 C_HOLD = "2200u"
 # Raw reservoirs: 4700 uF, the value L41a's rectifier sweep assumed
-# (data/2026-09-26/L41a/scelte/raddrizzatore.csv): valley 18.1 V at -10 %
-# mains on 2x15 V 50 VA, 2.5 V above 15 V + dropout (ADR-048). 35 V parts:
-# the raw reaches ~23 V at +10 % mains.
+# (data/2026-09-26/L41a/scelte/raddrizzatore.csv; ADR-048). On TODAY's load
+# (L51b: the rails of tb_op, the selector's coils; data/2026-10-09/L51b/rete/
+# analisi.csv) the valley is 17.89 V at -10 % mains on 2x15 V 50 VA, 2.6 V
+# above 15 V + dropout (L41a's load: 18.05 V). 35 V parts: the raw reaches
+# ~23 V at +10 % mains.
 C_RAW = "4700u"
 # VRELAY's own reservoir behind D504: P9 (b) wants VRELAY >= 11.4 V (12 V
 # -5 %) for >= 25 ms after the trip. Chosen in L41a on T2 = 12 V AC (the heat
 # preference of ADR-048 point 7): 2200 uF held only 14 ms at -10 % mains -
-# the "Da riaprire se" of ADR-048. On TODAY's circuit (L47c2a, without the
-# LDR drive of ADR-062; data/2026-10-05/L47c2a/rete/analisi.csv) 4700 uF
-# holds VRELAY_REG >= 11.4 V for 61.1 / 142.2 / 223.6 ms after the jack
-# relays release, at mains -10 / nom / +10 %: 36 ms over P9. The load sets
-# it (NC-050): 36.1 ms with the drive (L42b), 62.8 with L41a's load. Smaller
-# values on the same bench (data/2026-10-05/L47c2a/varianti/): 3300 uF
-# 41.0 ms, 2200 uF 25.1 ms at -10 %. Kept at 4700 uF by the user's choice
-# (L47c2a), for the loads still to come before the freeze. 25 V parts: the
-# raw is ~17 V at +10 % mains.
+# the "Da riaprire se" of ADR-048. On TODAY's circuit and load (L51b: without
+# the LDR drive of ADR-062, with the selector's coils of ADR-064 and the rails
+# of tb_op; data/2026-10-09/L51b/rete/analisi.csv) 4700 uF holds VRELAY_REG
+# >= 11.4 V for 48.3 / 121.7 / 195.4 ms after the jack relays release, at
+# mains -10 / nom / +10 %: 23 ms over P9. The load sets it (NC-050): 61.1 ms
+# without the selector (L47c2a), 36.1 with the drive (L42b), 62.8 with
+# L41a's load. Smaller values on L47c2a's bench (data/2026-10-05/L47c2a/
+# varianti/): 3300 uF 41.0 ms, 2200 uF 25.1 ms at -10 %. Kept at 4700 uF by
+# the user's choice (L47c2a), for the loads still to come before the freeze.
+# 25 V parts: the raw is ~17 V at +10 % mains.
 C_VRELAY = "4700u"
 # Supervisor thresholds (ADR-046: |13.5 V|), from the LM4040 2.5 V:
 #   + rail: VPLUS * 10k / (44.2k + 10k) = 2.5 V at VPLUS = 13.55 V

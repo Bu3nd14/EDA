@@ -1,6 +1,6 @@
 # ADR-040 — V2: il taglio con musica si giudica sul salto di livello, ≤ 20 dB in 100 ms; C2 diventa diagnostica, e il profilo del mute a LDR è la v4
 
-Data: 2026-09-22 · Stato: accettata
+Data: 2026-09-22 · Stato: superata da ADR-062: senza sfumatura non c'è più da giudicare quanto in fretta scende la musica; il mute taglia di colpo, e il clic si misura e si dichiara
 
 ## Contesto
 
