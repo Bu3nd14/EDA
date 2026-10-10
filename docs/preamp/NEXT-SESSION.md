@@ -1,71 +1,79 @@
-# Prompt per la sessione successiva — L51b, il dossier rigenerato: l'alimentatore e il firmware
+# Prompt per la sessione successiva — L51c, il dossier rigenerato: le schede di prova e la chiusura
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L51b**, e si ferma. Non iniziarne un secondo.
+LOTTI PICCOLI: questa sessione fa **L51c**, e si ferma. Non iniziarne un secondo.
 
 ## Perché questo lotto, e perché adesso
 
 L'utente, il 2026-10-09 dopo L49b: «rigeneriamo il dossier, mettilo nel prossimo lotto abbiamo
 cambiato molto, poi lo passiamo all'avversariale di nuovo, poi affrontiamo G1». All'inizio di L51
-l'ha diviso: **«Tre parti»** — **L51a** la scheda audio (**fatto**, 2026-10-09), **L51b**
-l'alimentatore e il firmware (questo), **L51c** le schede di prova e l'assieme di L49, «Cosa questo
-dossier non dice», la provenienza e le righe `Stato:` restanti. Poi **L52** l'architetto
-avversariale sul dossier nuovo, poi **G1**, poi L45 FMEA e L50 massa e terra.
+l'ha diviso in **«Tre parti»**:
+- **L51a**, la scheda audio: **fatto**, 2026-10-09;
+- **L51b**, l'alimentatore e il firmware: **fatto**, 2026-10-09/10;
+- **L51c**, questo: le schede di prova e l'assieme di L49, «Cosa questo dossier non dice», la
+  provenienza, le righe `Stato:` restanti, il primo `index.html` nuovo.
+
+Dopo: **L52** l'architetto avversariale sul dossier nuovo, poi **G1**, poi L45 FMEA e L50 massa e
+terra.
 
 Il dossier lo legge **solo l'utente** e **non si taglia**: si rigenera, senza avvisi di
 obsolescenza.
 
-## Come L51a ha lasciato il generatore (leggere prima del codice)
+## Come la seconda parte ha lasciato il generatore (leggere prima del codice)
 
-- `build_dossier.py` ha **`PARTI = ("audio",)`**: ogni sezione di `SECTIONS_TUTTE` dice a quale
-  parte appartiene, e la pagina ha solo quelle delle parti presenti. Finché le parti non sono tutte
-  e tre, il generatore **non scrive niente accanto a sé** (né `index.html`, né le figure, né il
-  summary: sono ancora quelli di L42) e scrive la pagina solo con `--standalone` **fuori dal
-  repo**. L51b aggiunge `"alimentatore"`; il primo `index.html` nuovo lo scrive L51c.
-- Le sezioni dell'alimentatore della pagina, e le righe dell'alimentatore della tabella dei
-  requisiti, sono **intatte e sotto `if psu:`**: si riscrivono da qui. Le misure
-  (`measure_psu_power`, `measure_supervisor`, `measure_timer`, `measure_fw`, `measure_ldr_drive`,
-  `measure_shutdown`, `measure_heat`) sono quelle di L42b, e **leggono il circuito di L41**:
-  `main()` le chiama solo con la parte presente.
-- I dati della scheda audio passano da **`sa()`**: niente da prima di `AUDIO_DA` (2026-10-07, il
-  circuito di L48b) se non le eccezioni nominate in `AUDIO_PERMESSI`, con la loro ragione stampata
-  nella pagina. Per l'alimentatore serve la stessa guardia, col suo giorno.
-- Il testo cita le sezioni con `sez()`, mai il numero a mano: le sezioni nuove spostano i numeri.
+- **`PARTI = ("audio", "alimentatore")`.** Questo lotto aggiunge `"schede"`. Con tutte e tre le
+  parti il generatore **scrive accanto a sé** `index.html`, le figure, gli schemi copiati e il
+  summary: è il primo `index.html` da L42, e sostituisce quello.
+- **La sezione `s14`, «Cosa questo dossier non dice», non gira com'è.** Sta sotto
+  `if "schede" in PARTI:` e usa tre nomi che non esistono più: `all_kf0`, `kf_parts`,
+  `mu["cima_deck"]`. Parla ancora di S del mute con la cima a 12 mA (ADR-050), e ha punti
+  sull'alimentatore da rileggere contro le sezioni di oggi. Va riscritta, non riaccesa.
+- **Le guardie del giorno**:
+  - `sa()` per la scheda audio (`AUDIO_DA`, `AUDIO_PERMESSI` con la ragione stampata);
+  - `ps()` per l'alimentatore (`PSU_DA = "2026-10-09"`, senza eccezioni);
+  - per le schede di prova serve la stessa guardia, col giorno di L49.
+- Il testo cita le sezioni con `sez()`, mai il numero a mano.
+- **I sabotaggi**: L51a 27 su 27, L51b 30 su 30 (`data/2026-10-09/L51b/script/sabotaggi.py`).
+  Rieseguirli tutti a fine lotto, insieme a quelli nuovi.
 
 ## Il mandato
 
-- **L'alimentatore di oggi è quello di L47c2a** (`psu.py` non è cambiato dopo): il firmware senza
-  la legge delle LDR (19 falsi sull'host, 6 sequenze sul circuito), l'alimentatore senza il pilota
-  (tenuta di `VRELAY` 61,1 ms a rete −10 %, poi **48,3 ms** col carico del selettore, L48a/psu),
-  lo standby 80,5 mW da T2; i guasti e lo spegnimento al jack di **L47c2b2** (U502 spento
-  0,89 mV, spegnimento morbido 15 nV). Le prime strade sono le cartelle di quei lotti, le seconde
-  ricorse di oggi, come L42b fece con L41: decidere con l'utente se ricorrere tutto (in L42b una
-  ricorsa ha trovato la tenuta di `VRELAY` scesa da 62,8 a 36,1 ms).
-- **Via la sezione «Il pilota delle LDR»** (`sldr`, `measure_ldr_drive`, `fig_ldr_drive`): il pilota
-  non c'è più (ADR-062). La sezione dello schema dell'alimentatore cita ancora ADR-050 e la cima a
-  12 mA.
-- **Il calore** (`sheat`, uscito da L51a): la stima di L30 (`data/2026-09-26/L30/termica/stima_telaio.py`,
-  e la versione di L41a in `L41a/scelte/stima_telaio_l41a.py`) ha voci **superate**: i blocchi a
-  0,993 W (prima di ADR-054: `tb_op` di oggi dà 15 V × (36,70 + 37,72) mA = 1,116 W per blocco), le
-  LDR tolte, le bobine e il regolatore di `VRELAY` col selettore. Rifare la stima con le cifre di
-  oggi è una misura nuova: **portarla all'utente prima**, coi numeri.
-- Le righe dell'alimentatore nella tabella dei requisiti (P9 (a), P9 (b), ADR-045, NC-037), e le
-  due tessere del quadro sinottico (Δ, il guasto al jack).
-- I sabotaggi di L42b sono sui dati di L41: rifarli sui controlli nuovi (`L51a/script/sabotaggi.py`
-  è il modello).
+- **Le schede di prova di L49** (L49a la scheda audio, L49b l'alimentatore, i toroidali e
+  l'assieme nel Pesante 3U): le immagini, il DRC, i vincoli scritti, NC-048 chiusa. Le cartelle
+  sono quelle dei due lotti. Decidere con l'utente quanto mostrarne e se rieseguire il DRC oggi.
+- **«Cosa questo dossier non dice»**, riscritta sul progetto di oggi:
+  - la distorsione di L46a e L46b, da verificare sul blocco di oggi;
+  - i modelli comportamentali dell'alimentatore;
+  - il ferro dei trasformatori nella stima del calore (un'ipotesi, L51b);
+  - i falsi sul circuito (nessuno dopo L41b2);
+  - `main_attiny.c`, che non è scritto.
+- **La provenienza**.
+- **Le righe `Stato:` restanti**, una per una con l'utente: ADR-009, 027, 032, 038, 039, 040,
+  049, 050, 061, 062.
+- **La stampa A4**: `stampa_a4.py` sulla pagina completa.
+
+## Trovato in L51b, per l'utente (non correggere da sé)
+
+In `circuits/preamp/psu.py`:
+- il commento di `C_VRELAY` cita 61,1 ms (L47c2a); col selettore e i rail di oggi la tenuta è
+  48,3 ms;
+- quello di `C_RAW` cita la valle del grezzo di L41a, 18,1 V; oggi è 17,9 V.
+
+Il dossier lo dice nella sezione della potenza. Chiedere all'utente se correggerli, e dove: è un
+cambio del sorgente, fuori dal dossier.
 
 ## All'inizio, con l'utente
 
-Misurare prima (quanti dati sono da ricorrere, quanto durano le catene), poi chiedere per nome e
-senza sigle: ricorrere o no, e il calore.
+Misurare prima (quanto pesano le schede di L49 nella pagina, cosa resta vero di `s14`), poi
+chiedere per nome e senza sigle.
 
 ## Prima di tutto
 
-- `CLAUDE.md` e `docs/limitations.md` (**54 voci**; per l'alimentatore #29, #33–#36, #38, #40).
-- `docs/preamp/STATE.md`: «In breve», **L51a**, **L42b** (come si è rigenerato l'alimentatore
-  l'altra volta), L47c2a, L47c2b2, L48a (la parte `psu/`).
-- `docs/preamp/dossier/build_dossier.py` per intero; `data/2026-10-09/L51a/README.md`.
-- I report di L47c2a, L47c2b2 e L48a.
+- `CLAUDE.md` e `docs/limitations.md` (**54 voci**).
+- `docs/preamp/STATE.md`: «In breve», **L51b**, **L51a**, L49a, L49b.
+- `docs/preamp/dossier/build_dossier.py` per intero.
+- `data/2026-10-09/L51b/README.md` e `data/2026-10-09/L51a/README.md`.
+- I report di L49a, L49b, L51a, L51b.
 
 ## I vincoli
 
@@ -80,13 +88,13 @@ senza sigle: ricorrere o no, e il calore.
   - un titolo di PR con l'apostrofo: il corpo va su file, con `--body-file`.
 - Si usano comandi semplici, **percorsi assoluti**, script scritti su file. Il venv non è nel
   worktree: `/Users/roberto/EDA/env/venv/bin/python3`.
+- `sed -i ''` di macOS non conosce `\b`; un nome locale nel generatore può coprire un modulo
+  (`sp` è `svgplot`) o una funzione (`num`): due errori di L51b.
 - `docs/preamp/data/` è versionato per regola: i file grossi vanno in `.gitignore` prima del commit.
 - `zsh` espande un `=` a inizio parola; un glob senza corrispondenze ferma il comando: `(N)` in coda.
 
 ## NON fa parte di questo lotto
 
-- Le schede di prova e l'assieme di L49, «Cosa questo dossier non dice», le righe `Stato:` restanti
-  (ADR-009, 027, 032, 038, 039, 040, 049, 050, 061, 062): **L51c**.
 - L'architetto avversariale (**L52**) e il gate (**G1**).
 - Cambiare il circuito, i deck o il firmware: il dossier li descrive com'è oggi. Un difetto trovato
   rigenerando si scrive e si porta all'utente, non si corregge da sé.
@@ -94,9 +102,9 @@ senza sigle: ricorrere o no, e il calore.
 
 ## CHIUSURA
 
-1. `STATE.md` con L51b **fatto** nella tabella dei lotti, e il prossimo (**L51c**).
+1. `STATE.md` con L51c **fatto** nella tabella dei lotti, e il prossimo (**L52**).
 2. Riscrivi QUESTO file per il lotto successivo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L51b`.
+4. `/bin/zsh scripts/chunk_close.sh L51c`.
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**
