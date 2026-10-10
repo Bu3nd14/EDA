@@ -2075,6 +2075,13 @@ def rows_of(path):
 
 
 def stessi_byte(label, a, b):
+    # L51c: come stesso_deck(), un file che un generatore non ha scritto perche' ha rifiutato
+    # e' un rifiuto, non un'eccezione (il sabotaggio del rele' del selettore di L51a,
+    # rieseguito con l'alimentatore nella pagina, cadeva in un FileNotFoundError)
+    for x in (a, b):
+        if not os.path.isfile(x):
+            refuse(f"{label}: {rel(x)} non c'e' (il generatore che lo scrive ha rifiutato?)")
+            return False
     with open(a, "rb") as fa, open(b, "rb") as fb:
         if fa.read() != fb.read():
             refuse(f"{label}: {rel(a)} e {rel(b)} non sono uguali byte per byte")
@@ -4350,7 +4357,9 @@ def build_page(M, inline=False):
         A(f'<p><strong>{html_escape(fit.get("title", ""))}</strong>: ci sta. '
           + " ".join(marca(re.sub(r"(\d)\.(\d)", r"\1,\2", html_escape(n))) for n in fit.get("notes", []))
           + ' I trasformatori stanno lontani dal segnale: '
-          + "; ".join(f'{marca(html_escape(t))} a {it(d["ingressi_RCA"], 4)} mm dagli ingressi e '
+          # il nome del trasformatore (T1, T2) e' una parte, non il requisito T1: si marca
+          + "; ".join(f'{des(t.split()[0])} {html_escape(t.split(" ", 1)[1])} a '
+                      f'{it(d["ingressi_RCA"], 4)} mm dagli ingressi e '
                       f'{it(d["volume_bilanciamento"], 4)} mm dal volume'
                       for t, d in tor.items() if d.get("volume_bilanciamento") is not None)
           + f'. Le altre {len(asm["variants"]) - 1} disposizioni provate non ci stanno.</p>')
