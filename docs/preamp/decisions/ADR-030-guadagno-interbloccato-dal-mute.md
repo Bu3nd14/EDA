@@ -1,6 +1,6 @@
 # ADR-030 — Il cambio di guadagno interbloccato dal mute: monostabili con autoritenuta, solo se la misura lo giustifica
 
-Data: 2026-09-15 · Stato: accettata — criterio 3 al caso peggiore da ADR-032, LED precisati da ADR-033 — l'interblocco del guadagno non è più «solo se» (ADR-038), la forma è decisa da ADR-041 (interblocco da premere, strada B)
+Data: 2026-09-15 · Stato: accettata — il guadagno si cambia solo a mute inserito: fuori mute la manopola non muove niente, e non c'è un mute automatico al cambio (ADR-041). I LED del guadagno mostrano lo stato vero dei relè (ADR-033); il caso peggiore con cui si giudica il gradino viene da ADR-032
 
 ## Contesto
 

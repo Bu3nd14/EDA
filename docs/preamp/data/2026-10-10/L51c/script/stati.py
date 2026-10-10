@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""stati.py : le dieci righe `Stato:` di L51c, scelte dall'utente il 2026-10-10 una per una.
+"""stati.py : le quindici righe `Stato:` di L51c, scelte dall'utente il 2026-10-10 una per una
+(le dieci di NEXT-SESSION.md e cinque trovate rigenerando il dossier).
 
     /usr/bin/python3 docs/preamp/data/2026-10-10/L51c/script/stati.py
 
@@ -23,6 +24,28 @@ REPO = os.path.abspath(os.path.join(HERE, *[".."] * 6))
 DEC = os.path.join(REPO, "docs", "preamp", "decisions")
 
 STATI = {
+    # cinque trovate rigenerando il dossier, fuori dalla lista di NEXT-SESSION.md (accettate
+    # che rimandavano al mute graduale), portate all'utente con la mia frase: 012 e 035
+    # riscritte («non é italiano, rivedi un po´ la frase», «non si capisce bene, fai
+    # meglio»), 030 «specifica meglio»
+    "012": "accettata — il mute si può tenere inserito quanto si vuole (ADR-021). Ad apparecchio "
+           "spento, o se il relè non è alimentato, il jack resta staccato dal preamplificatore e "
+           "collegato a massa attraverso la resistenza di scarica: l'uscita è muta (ADR-044). Da "
+           "quando il mute taglia (ADR-062), è questo stesso relè a togliere la musica quando si "
+           "preme il mute",
+    "021": "accettata — classe A su ogni percorso che si ascolta (ADR-023); col mute che taglia al "
+           "jack (ADR-062), a mute inserito gli stadi d'uscita hanno ancora la musica e la scaricano "
+           "a massa attraverso il relè: quel caso è misurato in P7, e regge",
+    "030": "accettata — il guadagno si cambia solo a mute inserito: fuori mute la manopola non muove "
+           "niente, e non c'è un mute automatico al cambio (ADR-041). I LED del guadagno mostrano lo "
+           "stato vero dei relè (ADR-033); il caso peggiore con cui si giudica il gradino viene da "
+           "ADR-032",
+    "035": "accettata — non è più una soglia. Il mute oggi taglia di colpo, e per il taglio non c'è "
+           "un limite da rispettare: si misura il clic e lo si dichiara (ADR-062). Di questa "
+           "decisione resta il metodo: il clic si misura come differenza fra il circuito vero e un "
+           "taglio ideale",
+    "036": "accettata — resta che il gradino lasciato da una commutazione si giudica senza musica. "
+           "Il mute graduale non c'è più: il mute taglia di colpo coi relè al jack (ADR-062)",
     "009": "accettata — la clausola «nessun microcontrollore in tutto il progetto» è superata da "
            "ADR-022; l'attenuatore a scatti è superato da ADR-065 (un potenziometro col "
            "bilanciamento); gli ingressi a relè sono realizzati da ADR-064; niente telecomando resta",
