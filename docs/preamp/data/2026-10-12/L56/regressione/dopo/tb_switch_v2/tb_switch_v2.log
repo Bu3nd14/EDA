@@ -1,0 +1,105 @@
+warning, model type mismatch in line
+    q121a nmirc nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: tb_switch_v2.cir - v2: the feedback loop must never open during gain switching, three levels, two bouncing relays
+
+Warning: Model issue on line 122 :
+  .model lsk489a njf(beta=2.2m betatce=-.5 rd=11 rs=30 lambda=4.3m vto=-1. ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+unrecognized parameter (mj) - ignored
+
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Note: True gmin stepping completed
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+nref                                  -13.6718
+vminus                                     -15
+ncasc                                  9.86829
+nx                                     1.02247
+nhi                                    12.9476
+out                                -0.00287389
+fb                                 -0.00287388
+vplus                                       15
+vpf                                    14.8356
+nrefm                                 -14.3359
+d1n                                    9.18068
+g1                                 4.92626e-09
+s1                                   0.0685517
+d2n                                    9.18079
+g2                                 -0.00287388
+s2                                   0.0677322
+src                                   -0.15713
+nte                                   -14.3772
+nmirc                                  13.0841
+nmiri                                  13.6383
+nme1                                   14.3445
+nme2                                   14.3444
+nvb                                    13.5585
+nve                                     14.231
+ny                                   -0.998674
+nvle                                   -14.401
+nbb                                  -0.271076
+nbn                                    1.02047
+nen                                   0.452463
+nbp                                  -0.997787
+nep                                  -0.458211
+in                                 3.99646e-09
+rg                                 -0.00287388
+rg10                               -0.00287388
+srcn                                         0
+nrg                               -2.87388e-18
+ctrl                                         0
+nrg10                             -2.87388e-18
+ctrl10                                       0
+outa                               -0.00287389
+jack                                         0
+vctrl10#branch                               0
+vctrl#branch                                 0
+vsrc#branch                        9.29409e-12
+vmm#branch                           0.0389909
+vpp#branch                          -0.0379701
+
+ Reference value :  3.51988e-02
+No. of Data Rows : 35831
+extremes over the whole 70 ms, including every bounce burst:
+vmax = 1.566287e+00
+vmin = -1.58441e+00
+nxmax = 2.602462e+00
+nymin = -2.59094e+00
+s0max               =  4.96908e-01 at=  4.25029e-03
+s0min               =  -5.02656e-01 at=  1.75029e-03
+s3max               =  7.05684e-01 at=  1.42500e-02
+s3min               =  -7.13846e-01 at=  9.75002e-03
+s10max              =  1.56628e+00 at=  1.92504e-02
+s10min              =  -1.58440e+00 at=  2.47504e-02
+s10bmax             =  1.56629e+00 at=  5.92513e-02
+s10bmin             =  -1.58440e+00 at=  5.07513e-02
+t03max              =  7.05684e-01 at=  6.25002e-03
+t03min              =  -7.13847e-01 at=  5.75002e-03
+t310max             =  1.56629e+00 at=  1.62504e-02
+t310min             =  -1.58440e+00 at=  1.57504e-02
+t103max             =  1.56627e+00 at=  2.52516e-02
+t103min             =  -7.13845e-01 at=  2.67499e-02
+t30max              =  7.05686e-01 at=  3.52504e-02
+t30min              =  -5.02651e-01 at=  3.57509e-02
+t010max             =  1.56629e+00 at=  4.92513e-02
+t010min             =  -1.58441e+00 at=  4.57513e-02
+t100max             =  1.56628e+00 at=  6.02516e-02
+t100min             =  -1.32452e+00 at=  6.07006e-02
+Note: Simulation executed from .control section 

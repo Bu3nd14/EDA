@@ -1,0 +1,60 @@
+{
+  "part_name": "DZT5401 (high-voltage PNP transistor, SOT-223) - the 2N5401 / MMBT5401 die in a package that dissipates more",
+  "vendor_name": "Diodes Incorporated",
+  "device_class": "bjt_pnp",
+  "product_page": "https://www.diodes.com/part/view/DZT5401 (returns HTTP 403 to automated clients, as recorded for the MMBT parts in L24)",
+  "date_obtained": "2026-10-12",
+  "lotto": "L56",
+  "obtained_by": "AI agent (Claude Opus 5.5) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from Diodes Incorporated's own host (www.diodes.com). Byte-for-byte as served. A GitHub mirror of the collection file (peteut/spice-models) was READ ONLY to learn that the DZT models existed and what they contained; nothing from it was kept or used.",
+  "license_notes": "Manufacturer datasheet and manufacturer-published SPICE models, redistributed here unmodified for engineering traceability only. Copyright remains Diodes Incorporated. The collection carries the vendor's own AS-IS disclaimer.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "ADR-068 (L56): the VAS (Q122) moves from MMBT5401 in SOT-23 (403 C/W) to the same die in SOT-223 (125 C/W on the minimum recommended pad). With every junction at its own temperature (L56, caldo.py) the VAS reached 114-122 C at 57 C air; the short-circuit case of P7 after ADR-067 put its load at 140 C against 125 C.",
+  "files": [
+    {
+      "original_filename": "DZT5401.pdf",
+      "role": "datasheet",
+      "url": "https://www.diodes.com/assets/Datasheets/DZT5401.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 533803,
+      "sha256": "14d610a92d62421cc1f3a40b218b2cf3cae7bb21a655608ffb0289558654e4ad",
+      "local_filename": "DZT5401.pdf",
+      "renamed": false,
+      "revision": "Document number: DS31218 Rev. 4 - 2, (c) 2026 Diodes Incorporated, read from the footer"
+    },
+    {
+      "original_filename": "Transistors >100V.spice.txt",
+      "role": "spice_model_collection",
+      "url": "https://www.diodes.com/productcollection/spicemodels/8423/Transistors-100V.spice.txt",
+      "url_note": "The search-indexed form https://www.diodes.com/productcollection/spicemodels/8423/Transistors-%3E100V.spice.txt?eid=402 answered HTTP 500 on 2026-10-12; the same id without the eid parameter answered 200 text/plain with the name 'Transistors >100V.spice.txt'. Like /spice/download/<id>/, the route is keyed by the numeric id.",
+      "served_content_type": "text/plain; name=\"Transistors >100V.spice.txt\";charset=UTF-8",
+      "bytes": 43608,
+      "sha256": "29a331433039eecc5f40d2202d1675ada0c61df76aa492b6773e7c4107fbac71",
+      "local_filename": "Transistors-100V.spice.txt",
+      "renamed": true,
+      "rename_reason": "'>' and spaces in a file name; the content is untouched"
+    }
+  ],
+  "spice_model": {
+    "status": "FOUND, published by the manufacturer, and IDENTICAL to the MMBT5401 model already frozen at vendor/bjt_pnp/diodes_inc/MMBT5401/MMBT5401.spice.txt",
+    "model_name_in_collection": "DZT5401 (.MODEL DZT5401 PNP ...), DATE=08FEB2011 VERSION=2",
+    "identity_check": "docs/preamp/data/2026-10-12/L56/script/dzt_identico.py compares every parameter, name aside: 'DZT5401 copia 1 contro MMBT5401: IDENTICO (27 parametri)'. Consequence: the simulations keep using models/bjt_pnp/mmbt5401.lib, already validated (L24, ADR-017) and carrying the declared flicker bound of ADR-057; no deck include changes. The part value in circuits/preamp/gain_block.py says DZT5401 and its comment cites this file."
+  },
+  "thermal": {
+    "R_thJA_minimum_pad": "125 C/W, P_D 1 W, note 5: collector lead on the minimum recommended pad, 1 oz copper, single-sided 1.6 mm FR-4, still air",
+    "R_thJA_large_copper": "62.5 C/W, P_D 2 W, note 6: 50 x 50 mm of 1 oz copper",
+    "T_J_max": "+150 C (operating and storage -65 to +150 C)",
+    "which_one_the_design_uses": "125 C/W. The tab is the COLLECTOR, which for the VAS is NX, the high-impedance VAS output node: a large copper area there is a stray capacitance on the dominant-pole node. Minimum pad, and the 125 C/W that goes with it."
+  },
+  "lifecycle": {
+    "status": "No discontinuation marking: DS31218 Rev. 4-2 (c) 2026 contains no 'OBSOLETE', 'DISCONTINUED', 'NOT RECOMMENDED' or 'NRND' text (pdftotext + grep, L56). Same evidence class as the MMBT parts in L24, and the same honest limit: weaker than an explicit Active status string."
+  },
+  "limits_read": {
+    "BV_CEO": "-150 V at IC = -1 mA",
+    "BV_CBO": "-160 V",
+    "BV_EBO": "-6 V",
+    "IC": "-600 mA continuous"
+  },
+  "pinout": "Pin-out top view on page 1 of the datasheet is a drawing: E, C, B along the three leads and the tab on C. Pad-number mapping to the KiCad footprint Package_TO_SOT_SMD:SOT-223-3_TabPin2 is a layout (G2) item, as it is for every BJT in this design: the Device:Q_PNP symbol's pins are named C/B/E in the netlist, not numbered."
+}

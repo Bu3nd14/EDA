@@ -114,7 +114,7 @@ LIVELLI = (("lo", 0.282843), ("hi", 2.82843))
 def parti(spec):
     v, *opz = spec.split("--")
     for o in opz:
-        if o not in ("acc", "freddo"):
+        if o not in ("acc", "freddo", "sot223"):
             sys.exit("opzione sconosciuta: %s" % o)
     return v, set(opz)
 
@@ -146,7 +146,7 @@ def deck_op(titolo, inc, temps, disp, marca):
                     for n, (t, _, _) in sorted(disp.items()) if t in "QJ")
     s = titolo + "\n* generato da L56/script/caldo.py\n" + MODELLI
     s += ".include %s\n" % inc + BANCO.format(ta=temps[0]).replace("VS VSN 0 SIN(0 0.282843 20000)", "VS VSN 0 DC 0")
-    s += "\n.control\n"
+    s += "\n.control\noption itl1=1000\n"   # L56: come i deck di distorsione (L46a)
     for ta in temps:
         s += "set temp = %d\nop\necho \"%s ta=%d\"\nprint all\nprint %s\ndestroy all\n" % (ta, marca, ta, corr)
     return s + ".endc\n.end\n"
@@ -154,7 +154,11 @@ def deck_op(titolo, inc, temps, disp, marca):
 
 def leggi_op(log, marca):
     t = open(log, errors="replace").read()
-    for x in ("Error", "aborted", "too many args"):
+    # «source stepping failed»: ngspice stampa lo stesso una soluzione, non convergente (L56: il
+    # passo 2 di adr067 a 57 gradi col rame, VPF a 0,94 V e correnti quasi nulle, letto per buono
+    # finche' questo controllo non c'era). «gmin stepping failed» da solo e' normale: segue
+    # un altro metodo.
+    for x in ("Error", "aborted", "too many args", "source stepping failed"):
         if x in t:
             sys.exit("%s: %s" % (log, x))
     if marca not in t:
@@ -165,6 +169,11 @@ def leggi_op(log, marca):
     for m in re.finditer(r"^(\S+) = ([-+0-9.eE]+)", b, re.M):
         k = re.sub(r"^v\((.*)\)$", r"\1", m.group(1).lower())
         v[k] = float(m.group(2))
+    # seconda difesa: il punto di lavoro deve essere quello acceso (VPF ~0,15 V sotto V+, coda
+    # oltre 3 mA)
+    if not (v.get("vpf", 0) > 14.5 and v.get("@q106[ic]", 0) > 3e-3):
+        sys.exit("%s %s: punto di lavoro spento (vpf %s, coda %s)"
+                 % (log, marca, v.get("vpf"), v.get("@q106[ic]")))
     return v
 
 
@@ -194,6 +203,14 @@ def tj(ta, var, opz, p, disp):
             sys.exit("R_thJA sconosciuta per %s %s" % (n, mod))
         if "freddo" in opz and n in ("Q122", "Q125"):
             r /= 2
+        if "sot223" in opz and n in ("Q122", "Q125"):
+            # L56, dopo la scelta dell'utente (rimedio subito): DZT5401 / DZT5551, lo stesso die in
+            # SOT-223 (modello del costruttore identico, file collettivo Transistors >100V).
+            # 125 C/W sulla piazzola minima raccomandata: DZT5401 DS31218 Rev. 4-2, nota 5. Per il
+            # DZT5551 il datasheet (DS31219 Rev. 4-2) da' solo 62,5 C/W su 50x50 mm di rame: la
+            # stessa cifra del DZT5401 sulla piazzola minima e' un'IPOTESI dichiarata (stesso
+            # package). Niente rame grande: la linguetta e' il collettore, su NX / NY.
+            r = 125.0
         t[n] = ta + p[n] * r
     t["Q121A"] = t["Q121B"] = ta + (p["Q121A"] + p["Q121B"]) * 233
     t["JQ110A"] = t["JQ110B"] = ta + (p["JQ110A"] + p["JQ110B"]) * 250

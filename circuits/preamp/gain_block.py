@@ -102,6 +102,10 @@ for _tool in list(skidl.lib_search_paths):
 # capacitors and critical resistors with an iron, not a desoldering station.
 FP_R = "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal"
 FP_SOT23 = "Package_TO_SOT_SMD:SOT-23"   # MMBT5551/MMBT5401, ADR-017 (L39)
+# ADR-068 (L56): the VAS and its load, the two 0.15 W devices, in SOT-223 - the
+# same die (DZT5401 / DZT5551), tab = collector, on the MINIMUM pad (125 C/W):
+# the tab is NX / NY, and big copper there is capacitance on the VAS node.
+FP_SOT223 = "Package_TO_SOT_SMD:SOT-223-3_TabPin2"
 FP_TO220 = "Package_TO_SOT_THT:TO-220-3_Vertical"
 FP_SOIC8 = "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"
 FP_DO35 = "Diode_THT:D_DO-35_SOD27_P7.62mm_Horizontal"
@@ -498,15 +502,27 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # drive the MJE junction capacitance (CJE 3.06 nF, ADR-042); at 6.8 mA it
     # could not, and that - not the Miller value alone - is what made the
     # distortion rise towards the treble (NC-039). Q122 now dissipates 0.142 W
-    # (P7: 310 mW in SOT-23); the block draws +4.1 mA per rail.
+    # (P7: 310 mW in SOT-23 - the 25 C rating; at 60 C air and 403 C/W the
+    # Tj <= 125 C of P7 allows only 0.16 W, which is why ADR-068 moved it to
+    # SOT-223); the block draws +4.1 mA per rail.
     # ADR-056 (L46b): the emitter goes to VPF, the filtered rail, together with
     # the mirror. The VAS and the mirror on V+ are how V+ got into the output:
     # the VAS base follows the rail and C124 turns that into a current into the
     # output node, which is why PSRR+ tracked the Miller value (L46a).
     # ADR-067 (L56): the base is NVB, driven by the follower at the end of this
     # function, not NHI. Miller C124 stays from NX to NHI, around both.
+    # ADR-068 (L56): DZT5401 in SOT-223, not MMBT5401 in SOT-23. SAME DIE AND
+    # SAME MODEL: Diodes serves the DZT5401 card identical, parameter for
+    # parameter, to the MMBT5401 one (vendor/bjt_pnp/diodes_inc/DZT5401/,
+    # data/2026-10-12/L56/script/dzt_identico.py), so SPICE keeps MMBT5401.
+    # Why: with every junction at its own temperature (L56, caldo.py, iterated)
+    # this transistor ran at 114-122 C with 57 C air in SOT-23 (403 C/W); at
+    # 125 C/W it runs at 75 C. And the distortion does not move (0 of 48 out).
+    # R123 sees up to 0.123 W with a short at MAIN (+10 dB, 20 kHz, the
+    # follower drives the VAS harder than the saturated mirror could):
+    # rate it >= 0.13 W at 60 C (data/2026-10-12/L56/regressione/, p7.py).
     NVE = n("NVE")
-    Q("pnp", "MMBT5401", "MMBT5401", NX, NVB, NVE)
+    Q("pnp", "DZT5401", "MMBT5401", NX, NVB, NVE, fp=FP_SOT223)
     R("56", VPF, NVE)
 
     # Miller compensation - the dominant pole of the whole amplifier.
@@ -527,8 +543,14 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # VAS load: current sink off the same reference string as the tail.
     # 0.55 V / 10.7 mA -> 56 Ohm (E12), equal to the VAS degeneration above
     # (ADR-054; was 91 Ohm at 6 mA). Q125 dissipates 0.122 W.
+    # ADR-068 (L56): DZT5551 in SOT-223, same die and same model as MMBT5551
+    # (see the VAS above). With a short at an output (P7, ADR-021) this sink
+    # dissipates 0.191 W after ADR-067: 140 C at 60 C air in SOT-23 (417 C/W)
+    # against P7's 125 C; 84 C at 125 C/W. The 125 C/W is the DZT5401's
+    # minimum-pad figure: the DZT5551 datasheet gives only 62.5 C/W on 50x50 mm
+    # of copper - a declared assumption, same package.
     NVLE = n("NVLE")
-    Q("npn", "MMBT5551", "MMBT5551", NY, NREF, NVLE)
+    Q("npn", "DZT5551", "MMBT5551", NY, NREF, NVLE, fp=FP_SOT223)
     R("56", NVLE, VM)
 
     # ========================================================================
@@ -590,8 +612,9 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # ADR-021 rating constraint for the BOM: the two 22 ohm emitter resistors
     # below dissipate up to 0.28 W (block B, short at MAIN, +10 dB, 20 kHz
     # full scale; 0.24 W in L40, 0.280 W with the faster VAS of ADR-054,
-    # data/2026-10-01/L46a/regressione/, p7.py), so they must be rated
-    # >= 0.28 W at 60 C.
+    # data/2026-10-01/L46a/regressione/, p7.py; 0.298 W with the follower of
+    # ADR-067, data/2026-10-12/L56/regressione/), so they must be rated
+    # >= 0.30 W at 60 C.
     R("10", NX, NBN)
     R("10", NY, NBP)
     # Qmje15032/Qmje15033: onsemi's model names, left as served (ADR-017,

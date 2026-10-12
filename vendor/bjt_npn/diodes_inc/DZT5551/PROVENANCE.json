@@ -1,0 +1,48 @@
+{
+  "part_name": "DZT5551 (high-voltage NPN transistor, SOT-223) - the 2N5551 / MMBT5551 die in a package that dissipates more",
+  "vendor_name": "Diodes Incorporated",
+  "device_class": "bjt_npn",
+  "product_page": "https://www.diodes.com/part/view/DZT5551 (returns HTTP 403 to automated clients)",
+  "date_obtained": "2026-10-12",
+  "lotto": "L56",
+  "obtained_by": "AI agent (Claude Opus 5.5) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from Diodes Incorporated's own host (www.diodes.com). Byte-for-byte as served.",
+  "license_notes": "Manufacturer datasheet, redistributed here unmodified for engineering traceability only. Copyright remains Diodes Incorporated.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "ADR-068 (L56): the VAS load current sink (Q125) moves from MMBT5551 in SOT-23 (417 C/W) to the same die in SOT-223. After ADR-067, with a short at an output (P7, ADR-021), it dissipates 0.191 W: 140 C at 60 C air in SOT-23 against the 125 C limit, 84 C in SOT-223.",
+  "files": [
+    {
+      "original_filename": "DZT5551.pdf",
+      "role": "datasheet",
+      "url": "https://www.diodes.com/datasheet/download/DZT5551.pdf",
+      "url_note": "https://www.diodes.com/assets/Datasheets/DZT5551.pdf answered 404 on 2026-10-12; the /datasheet/download/ route served it.",
+      "served_content_type": "application/pdf",
+      "bytes": 478319,
+      "sha256": "79dc096d2599b31aa359ec23d6f0506ba6f4c39c775540cbf5fe61ca8d18cc87",
+      "local_filename": "DZT5551.pdf",
+      "renamed": false,
+      "revision": "Document number: DS31219 Rev. 4 - 2, June 2023, (c) 2023 Diodes Incorporated, read from the footer"
+    }
+  ],
+  "spice_model": {
+    "status": "FOUND in the manufacturer's collection file, frozen ONCE at vendor/bjt_pnp/diodes_inc/DZT5401/Transistors-100V.spice.txt (see its PROVENANCE.json), and IDENTICAL to vendor/bjt_npn/diodes_inc/MMBT5551/MMBT5551.spice.txt",
+    "copies_in_collection": "TWO: DATE=08FEB2011 VERSION=2 and DATE=27JUL2010 VERSION=2 (plus DZT5551Q, the automotive grade, also identical). Both compared, both identical: docs/preamp/data/2026-10-12/L56/script/dzt_identico.py prints 'IDENTICO (28 parametri)' twice. Checked because limitations #17 records a vendor shipping two different models of one part.",
+    "consequence": "The simulations keep using models/bjt_npn/mmbt5551.lib (L24, ADR-017, flicker bound of ADR-057); no deck include changes."
+  },
+  "thermal": {
+    "R_thJA_datasheet": "62.5 C/W, P_D 2 W, note 5: 50 x 50 mm of 1 oz copper, still air. R_thJL 45 C/W, R_thJC 27 C/W. The datasheet gives NO minimum-pad figure.",
+    "R_thJA_the_design_uses": "125 C/W - the DZT5401's minimum-recommended-pad figure (DS31218, note 5), SAME SOT-223 PACKAGE. A DECLARED ASSUMPTION, not a datasheet figure for this part. The tab is the collector, NY, a signal node: no large copper there.",
+    "T_J_max": "+150 C (-55 to +150 C)"
+  },
+  "lifecycle": {
+    "status": "No discontinuation marking in DS31219 Rev. 4-2 (June 2023) (pdftotext + grep, L56). Weaker than an explicit Active status string, as for the MMBT parts."
+  },
+  "limits_read": {
+    "BV_CEO": "160 V at IC = 1 mA (200 V typical)",
+    "BV_CBO": "180 V",
+    "BV_EBO": "6 V",
+    "IC": "600 mA continuous, 1 A peak"
+  },
+  "pinout": "Page 1, 'Pin-Out Top View' (a drawing, LOOKED AT in L56): E, C, B along the leads, tab C. Pad mapping to Package_TO_SOT_SMD:SOT-223-3_TabPin2 is a G2 item, as for every BJT here."
+}
