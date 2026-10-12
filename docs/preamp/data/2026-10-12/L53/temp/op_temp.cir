@@ -1,0 +1,36 @@
+op_temp - L53 (NC-058): il punto di lavoro del blocco a 27, 57, 80 °C
+* Il banco di thd_20k a 0 dB (L53/rs), senza segnale. Per temperatura: la corrente di riposo dei
+* due finali (MJE), del VAS (Q122), della coda (Q106), dei due JFET, il moltiplicatore di Vbe
+* (Q127, V(NX) - V(NY)) e la continua d'uscita. Una corsa per temperatura con `set temp`
+* (un valore alla volta: CLAUDE.md, `.temp` con una lista ricade a 27 °C).
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VS VSN 0 DC 0
+RSRC VSN IN 2500
+RRG RG 0 1G
+RRG10 RG10 0 1G
+RISO OUT OUTA 47
+COUT OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD JACK 0 10k
+
+.control
+foreach t 27 57 80
+  set temp = $t
+  op
+  echo "L53_OP temp=$t"
+  print @q132[ic] @q133[ic] @q122[ic] @q106[ic] @jq110a[id] @jq110b[id] @q117[ic] @q121b[ic]
+  print v(nx)-v(ny) v(out) v(nhi) v(nx) v(d1n) v(ncasc) v(src) v(g1)
+  destroy all
+end
+.endc
+.end

@@ -1197,3 +1197,30 @@ solo la DRC.
 `(class_class (classes A B) (rule (clearance …)))` dopo l'esportazione
 (`layout/preamp/psu/route.py`), e la stessa cifra sta in una regola `.kicad_dru` che la DRC
 giudica.
+
+## 55. SPICE non scalda i dispositivi: `.temp` mette ogni giunzione alla temperatura dell'aria, e una cifra di distorsione può dipendere dal calore che manca
+
+Scoperto in L53 (`docs/preamp/data/2026-10-12/L53/temp/`). Ogni cifra di V4 fino a L51c era a
+27 °C uniformi. Il blocco di guadagno ha il VAS e il suo carico a ~0,14 W in SOT-23 (+50–57 °C
+sopra l'aria coi R_thJA dei datasheet) e il generatore di coda a 64 mW (+27 °C, più caldo dei diodi
+che lo polarizzano). Con ogni giunzione alla sua temperatura la THD a 20 kHz esce da V4 di 8–24 dB
+già a 27 °C d'aria: lo specchio d'ingresso va in saturazione. `.temp 57` da solo non lo mostrava
+(4–10 volte, non 15–40), e a 27 °C uniformi tutto era dentro. rc 0, nessun avviso.
+
+**Regola operativa**: dove un margine dipende da una Vbe o da una corrente che il calore sposta,
+si corre anche con ogni giunzione a `temp=Tj` sull'istanza, Tj = Ta + P·R_thJA (P dal punto di
+lavoro, R_thJA dal datasheet in `vendor/`, dichiarato). Il parametro d'istanza `temp=` arriva a BJT
+e JFET: si verifica rileggendo `@<istanza>[temp]` (`L53/temp/verifica_temp_istanza.cir`). E la
+temperatura di ogni analisi si controlla nel log (`Doing analysis at TEMP = …`).
+
+## 56. `.model LS350 (PNP …`: «model type mismatch» a ogni istanza, e i parametri arrivano lo stesso
+
+Visto in L53, presente in ogni log col blocco di guadagno almeno da L51c: ngspice scrive
+`warning, model type mismatch in line` per Q121A e Q121B. Il modello del costruttore in
+`models/bjt_pnp/ls350.lib` apre con una parentesi prima del tipo, `.model LS350 (PNP IS=…`. I
+parametri sono applicati: la Vbe a 2,16 mA è 0,706 V, quella di IS = 3,8e-15 e non quella del
+modello di default (~0,97 V); e cambiare RC nella copia di prova cambia la distorsione
+(`L53/temp/inc/ls350_rc0.lib`). Non è un errore, ma è un avviso che si impara a ignorare.
+
+**Regola operativa**: l'avviso su LS350 è atteso e innocuo; un «model type mismatch» su
+**un'altra** parte va guardato. Il file del costruttore resta com'è (ADR-017).

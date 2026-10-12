@@ -1,0 +1,339 @@
+rca - L53: l'RCA inserito a caldo sull'ingresso selezionato (NC-059)
+* generato da L53/rca/genera.py
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block.subckt
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+.model swk sw vt=0.5 vh=0.1 ron=0.1 roff=1e9
+
+* la sorgente e il suo cavo
+VMAINS VMN 0 SIN(0 162.6 50)
+CY  VMN SG 1n
+RSG SG 0 1e12
+VCG CG 0 PULSE(0 1 60m 1u 1u 1 2)
+SWG SG 0 CG 0 swk
+VOFF SG SOI DC 0.01
+RS  SOI SO 1.5
+VCT CT 0 PULSE(0 1 50m 1u 1u 1 2)
+SWT SO JIN CT 0 swk
+* il selettore (ADR-064)
+RJ    JIN 0 10Meg
+CIN   JIN SEL 1u
+RSEL  SEL 0 470k
+RKSEL SEL AIN 0.1
+CSEL  AIN 0 68p
+XA AIN AOUT AFB ARG ARG10 VPLUS VMINUS GAINBLOCK
+RARG   ARG   0 1G
+RARG10 ARG10 0 1G
+* una fissa (ADR-023), col carico della Stax
+XF1 AOUT F1OUT F1FB F1RG F1RG10 VPLUS VMINUS GAINBLOCK
+RF1RG   F1RG   0 1G
+RF1RG10 F1RG10 0 1G
+RSEP1 F1OUT FIX1 47
+CFIX1 FIX1 FIXJACK1 4.7u
+RBL1  FIXJACK1 0 470k
+RLD1  FIXJACK1 0 50k
+* trim 0 dB, C_T, bilanciamento al centro, volume (come L53/catena)
+RT1R AOUT ATOP 0.1
+RL1 AOUT 0 1773
+CT    ATOP ATT 10u
+CWIRE ATT 0 100p
+RBAL  ATT 0 50k
+RATTH ATT BIN 1m
+RATTL BIN 0 10k
+XB BIN BOUT BFB BRG BRG10 VPLUS VMINUS GAINBLOCK
+CSTB    BRG   0 15p
+RRGB    BRG   0 1G
+CSTB10  BRG10 0 15p
+RRG10B  BRG10 0 1G
+RISO   BOUT BOUTA 47
+COUT   BOUTA MAIN 4.7u
+RBLEED MAIN 0 220k
+RLOAD  MAIN 0 100k
+.options reltol=1e-4 abstol=1e-12 vntol=1e-7
+
+.control
+option itl1=1000
+set numdgt=6
+echo "caso,vol,modo,main_pk_v,main_pk_prima_massa_v,fix_pk_v,ain_pk_v" > rca.csv
+alter cy = 1e-18
+alter voff = 0.01
+alter rattH = 1m
+alter rattL = 10k
+alter rrgb = 1G
+alter rrg10b = 1G
+tran 10u 0.4 0 10u
+let abs_main = abs(v(main))
+let abs_fix = abs(v(fixjack1))
+let abs_ain = abs(v(ain))
+meas tran mpk max abs_main from=50.0m to=0.4
+meas tran mpre max abs_main from=50.0m to=60m
+meas tran fpk max abs_fix from=50.0m to=0.4
+meas tran apk max abs_ain from=50.0m to=0.4
+echo "L53_RCA caso=terra_10mV vol=cima modo=0"
+echo "terra_10mV,cima,0,$&mpk,$&mpre,$&fpk,$&apk" >> rca.csv
+destroy all
+alter cy = 1e-18
+alter voff = 0.01
+alter rattH = 1m
+alter rattL = 10k
+alter rrgb = 0.1
+alter rrg10b = 0.1
+tran 10u 0.4 0 10u
+let abs_main = abs(v(main))
+let abs_fix = abs(v(fixjack1))
+let abs_ain = abs(v(ain))
+meas tran mpk max abs_main from=50.0m to=0.4
+meas tran mpre max abs_main from=50.0m to=60m
+meas tran fpk max abs_fix from=50.0m to=0.4
+meas tran apk max abs_ain from=50.0m to=0.4
+echo "L53_RCA caso=terra_10mV vol=cima modo=10"
+echo "terra_10mV,cima,10,$&mpk,$&mpre,$&fpk,$&apk" >> rca.csv
+destroy all
+alter cy = 1e-18
+alter voff = 0.01
+alter rattH = 9645
+alter rattL = 355
+alter rrgb = 1G
+alter rrg10b = 1G
+tran 10u 0.4 0 10u
+let abs_main = abs(v(main))
+let abs_fix = abs(v(fixjack1))
+let abs_ain = abs(v(ain))
+meas tran mpk max abs_main from=50.0m to=0.4
+meas tran mpre max abs_main from=50.0m to=60m
+meas tran fpk max abs_fix from=50.0m to=0.4
+meas tran apk max abs_ain from=50.0m to=0.4
+echo "L53_RCA caso=terra_10mV vol=k11 modo=0"
+echo "terra_10mV,k11,0,$&mpk,$&mpre,$&fpk,$&apk" >> rca.csv
+destroy all
+alter cy = 1e-18
+alter voff = 0.01
+alter rattH = 9645
+alter rattL = 355
+alter rrgb = 0.1
+alter rrg10b = 0.1
+tran 10u 0.4 0 10u
+let abs_main = abs(v(main))
+let abs_fix = abs(v(fixjack1))
+let abs_ain = abs(v(ain))
+meas tran mpk max abs_main from=50.0m to=0.4
+meas tran mpre max abs_main from=50.0m to=60m
+meas tran fpk max abs_fix from=50.0m to=0.4
+meas tran apk max abs_ain from=50.0m to=0.4
+echo "L53_RCA caso=terra_10mV vol=k11 modo=10"
+echo "terra_10mV,k11,10,$&mpk,$&mpre,$&fpk,$&apk" >> rca.csv
+destroy all
+alter cy = 1e-18
+alter voff = 0.65
+alter rattH = 1m
+alter rattL = 10k
+alter rrgb = 1G
+alter rrg10b = 1G
+tran 10u 0.4 0 10u
+let abs_main = abs(v(main))
+let abs_fix = abs(v(fixjack1))
+let abs_ain = abs(v(ain))
+meas tran mpk max abs_main from=50.0m to=0.4
+meas tran mpre max abs_main from=50.0m to=60m
+meas tran fpk max abs_fix from=50.0m to=0.4
+meas tran apk max abs_ain from=50.0m to=0.4
+echo "L53_RCA caso=terra_650mV vol=cima modo=0"
+echo "terra_650mV,cima,0,$&mpk,$&mpre,$&fpk,$&apk" >> rca.csv
+destroy all
+alter cy = 1e-18
+alter voff = 0.65
+alter rattH = 1m
+alter rattL = 10k
+alter rrgb = 0.1
+alter rrg10b = 0.1
+tran 10u 0.4 0 10u
+let abs_main = abs(v(main))
+let abs_fix = abs(v(fixjack1))
+let abs_ain = abs(v(ain))
+meas tran mpk max abs_main from=50.0m to=0.4
+meas tran mpre max abs_main from=50.0m to=60m
+meas tran fpk max abs_fix from=50.0m to=0.4
+meas tran apk max abs_ain from=50.0m to=0.4
+echo "L53_RCA caso=terra_650mV vol=cima modo=10"
+echo "terra_650mV,cima,10,$&mpk,$&mpre,$&fpk,$&apk" >> rca.csv
+destroy all
+alter cy = 1e-18
+alter voff = 0.65
+alter rattH = 9645
+alter rattL = 355
+alter rrgb = 1G
+alter rrg10b = 1G
+tran 10u 0.4 0 10u
+let abs_main = abs(v(main))
+let abs_fix = abs(v(fixjack1))
+let abs_ain = abs(v(ain))
+meas tran mpk max abs_main from=50.0m to=0.4
+meas tran mpre max abs_main from=50.0m to=60m
+meas tran fpk max abs_fix from=50.0m to=0.4
+meas tran apk max abs_ain from=50.0m to=0.4
+echo "L53_RCA caso=terra_650mV vol=k11 modo=0"
+echo "terra_650mV,k11,0,$&mpk,$&mpre,$&fpk,$&apk" >> rca.csv
+destroy all
+alter cy = 1e-18
+alter voff = 0.65
+alter rattH = 9645
+alter rattL = 355
+alter rrgb = 0.1
+alter rrg10b = 0.1
+tran 10u 0.4 0 10u
+let abs_main = abs(v(main))
+let abs_fix = abs(v(fixjack1))
+let abs_ain = abs(v(ain))
+meas tran mpk max abs_main from=50.0m to=0.4
+meas tran mpre max abs_main from=50.0m to=60m
+meas tran fpk max abs_fix from=50.0m to=0.4
+meas tran apk max abs_ain from=50.0m to=0.4
+echo "L53_RCA caso=terra_650mV vol=k11 modo=10"
+echo "terra_650mV,k11,10,$&mpk,$&mpre,$&fpk,$&apk" >> rca.csv
+destroy all
+alter cy = 1n
+alter voff = 0.01
+alter rattH = 1m
+alter rattL = 10k
+alter rrgb = 1G
+alter rrg10b = 1G
+tran 10u 0.4 0 10u
+let abs_main = abs(v(main))
+let abs_fix = abs(v(fixjack1))
+let abs_ain = abs(v(ain))
+meas tran mpk max abs_main from=50.0m to=0.4
+meas tran mpre max abs_main from=50.0m to=60m
+meas tran fpk max abs_fix from=50.0m to=0.4
+meas tran apk max abs_ain from=50.0m to=0.4
+echo "L53_RCA caso=classeII_1n vol=cima modo=0"
+echo "classeII_1n,cima,0,$&mpk,$&mpre,$&fpk,$&apk" >> rca.csv
+destroy all
+alter cy = 1n
+alter voff = 0.01
+alter rattH = 1m
+alter rattL = 10k
+alter rrgb = 0.1
+alter rrg10b = 0.1
+tran 10u 0.4 0 10u
+let abs_main = abs(v(main))
+let abs_fix = abs(v(fixjack1))
+let abs_ain = abs(v(ain))
+meas tran mpk max abs_main from=50.0m to=0.4
+meas tran mpre max abs_main from=50.0m to=60m
+meas tran fpk max abs_fix from=50.0m to=0.4
+meas tran apk max abs_ain from=50.0m to=0.4
+echo "L53_RCA caso=classeII_1n vol=cima modo=10"
+echo "classeII_1n,cima,10,$&mpk,$&mpre,$&fpk,$&apk" >> rca.csv
+destroy all
+alter cy = 1n
+alter voff = 0.01
+alter rattH = 9645
+alter rattL = 355
+alter rrgb = 1G
+alter rrg10b = 1G
+tran 10u 0.4 0 10u
+let abs_main = abs(v(main))
+let abs_fix = abs(v(fixjack1))
+let abs_ain = abs(v(ain))
+meas tran mpk max abs_main from=50.0m to=0.4
+meas tran mpre max abs_main from=50.0m to=60m
+meas tran fpk max abs_fix from=50.0m to=0.4
+meas tran apk max abs_ain from=50.0m to=0.4
+echo "L53_RCA caso=classeII_1n vol=k11 modo=0"
+echo "classeII_1n,k11,0,$&mpk,$&mpre,$&fpk,$&apk" >> rca.csv
+destroy all
+alter cy = 1n
+alter voff = 0.01
+alter rattH = 9645
+alter rattL = 355
+alter rrgb = 0.1
+alter rrg10b = 0.1
+tran 10u 0.4 0 10u
+let abs_main = abs(v(main))
+let abs_fix = abs(v(fixjack1))
+let abs_ain = abs(v(ain))
+meas tran mpk max abs_main from=50.0m to=0.4
+meas tran mpre max abs_main from=50.0m to=60m
+meas tran fpk max abs_fix from=50.0m to=0.4
+meas tran apk max abs_ain from=50.0m to=0.4
+echo "L53_RCA caso=classeII_1n vol=k11 modo=10"
+echo "classeII_1n,k11,10,$&mpk,$&mpre,$&fpk,$&apk" >> rca.csv
+destroy all
+alter cy = 3.46n
+alter voff = 0.01
+alter rattH = 1m
+alter rattL = 10k
+alter rrgb = 1G
+alter rrg10b = 1G
+tran 10u 0.4 0 10u
+let abs_main = abs(v(main))
+let abs_fix = abs(v(fixjack1))
+let abs_ain = abs(v(ain))
+meas tran mpk max abs_main from=50.0m to=0.4
+meas tran mpre max abs_main from=50.0m to=60m
+meas tran fpk max abs_fix from=50.0m to=0.4
+meas tran apk max abs_ain from=50.0m to=0.4
+echo "L53_RCA caso=classeII_3n46 vol=cima modo=0"
+echo "classeII_3n46,cima,0,$&mpk,$&mpre,$&fpk,$&apk" >> rca.csv
+destroy all
+alter cy = 3.46n
+alter voff = 0.01
+alter rattH = 1m
+alter rattL = 10k
+alter rrgb = 0.1
+alter rrg10b = 0.1
+tran 10u 0.4 0 10u
+let abs_main = abs(v(main))
+let abs_fix = abs(v(fixjack1))
+let abs_ain = abs(v(ain))
+meas tran mpk max abs_main from=50.0m to=0.4
+meas tran mpre max abs_main from=50.0m to=60m
+meas tran fpk max abs_fix from=50.0m to=0.4
+meas tran apk max abs_ain from=50.0m to=0.4
+echo "L53_RCA caso=classeII_3n46 vol=cima modo=10"
+echo "classeII_3n46,cima,10,$&mpk,$&mpre,$&fpk,$&apk" >> rca.csv
+destroy all
+alter cy = 3.46n
+alter voff = 0.01
+alter rattH = 9645
+alter rattL = 355
+alter rrgb = 1G
+alter rrg10b = 1G
+tran 10u 0.4 0 10u
+let abs_main = abs(v(main))
+let abs_fix = abs(v(fixjack1))
+let abs_ain = abs(v(ain))
+meas tran mpk max abs_main from=50.0m to=0.4
+meas tran mpre max abs_main from=50.0m to=60m
+meas tran fpk max abs_fix from=50.0m to=0.4
+meas tran apk max abs_ain from=50.0m to=0.4
+echo "L53_RCA caso=classeII_3n46 vol=k11 modo=0"
+echo "classeII_3n46,k11,0,$&mpk,$&mpre,$&fpk,$&apk" >> rca.csv
+destroy all
+alter cy = 3.46n
+alter voff = 0.01
+alter rattH = 9645
+alter rattL = 355
+alter rrgb = 0.1
+alter rrg10b = 0.1
+tran 10u 0.4 0 10u
+let abs_main = abs(v(main))
+let abs_fix = abs(v(fixjack1))
+let abs_ain = abs(v(ain))
+meas tran mpk max abs_main from=50.0m to=0.4
+meas tran mpre max abs_main from=50.0m to=60m
+meas tran fpk max abs_fix from=50.0m to=0.4
+meas tran apk max abs_ain from=50.0m to=0.4
+echo "L53_RCA caso=classeII_3n46 vol=k11 modo=10"
+echo "classeII_3n46,k11,10,$&mpk,$&mpre,$&fpk,$&apk" >> rca.csv
+destroy all
+.endc
+.end

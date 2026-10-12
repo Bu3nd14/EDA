@@ -1,0 +1,29 @@
+verifica_temp_istanza - L53: il parametro d'istanza temp=27 arriva ai JFET e ai BJT?
+* La sonda (sonda.py) tiene un gruppo a 27 gradi con `temp=27` sulla riga dell'istanza. Se ngspice
+* lo ignorasse in silenzio per un tipo di dispositivo, la prova su quel gruppo non varrebbe niente.
+* Qui il circuito a 57 gradi, JQ110A/B e Q106 col temp=27 (inc di tieni_jfet e tieni_coda), e la
+* temperatura d'istanza letta dal simulatore.
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/diodes/1n4148.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/docs/preamp/data/2026-10-12/L53/temp/inc/tieni_jfet.inc
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VS VSN 0 DC 0
+RSRC VSN IN 2500
+RRG RG 0 1G
+RRG10 RG10 0 1G
+RISO OUT OUTA 47
+COUT OUTA JACK 4.7u
+RLOAD JACK 0 10k
+.temp 57
+.control
+op
+echo "L53_VERIFICA JFET tenuti, circuito a 57"
+print @jq110a[temp] @jq110b[temp] @q106[temp] @jq110a[id] v(src)
+.endc
+.end

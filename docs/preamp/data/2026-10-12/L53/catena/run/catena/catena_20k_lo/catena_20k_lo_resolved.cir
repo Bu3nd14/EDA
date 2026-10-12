@@ -1,0 +1,196 @@
+catena_20k_lo - L53: V4 sulla catena, tre uscite, 20000 Hz (NC-055)
+* generato da L53/catena/script/genera.py, da tb_e3_e5.cir e tb_e4_uscite.cir
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/diodes/1n4148.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/spice/preamp/gain_block.subckt
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VS VSN 0 SIN(0 0.282843 20000)
+RSRC VSN JIN 1.5
+* il selettore (ADR-064), come tb_e3_e5.cir
+RJ    JIN 0 10Meg
+CIN   JIN SEL 1u
+RSEL  SEL 0 470k
+RKSEL SEL AIN 0.1
+CSEL  AIN 0 1f
+XA AIN AOUT AFB ARG ARG10 VPLUS VMINUS GAINBLOCK
+RARG   ARG   0 1G
+RARG10 ARG10 0 1G
+* le fisse (ADR-023), come tb_e4_uscite.cir, col carico di V4
+XF1 AOUT F1OUT F1FB F1RG F1RG10 VPLUS VMINUS GAINBLOCK
+RF1RG   F1RG   0 1G
+RF1RG10 F1RG10 0 1G
+RSEP1 F1OUT FIX1 47
+CFIX1 FIX1 FIXJACK1 4.7u
+RBL1  FIXJACK1 0 470k
+RLD1  FIXJACK1 0 10k
+XF2 AOUT F2OUT F2FB F2RG F2RG10 VPLUS VMINUS GAINBLOCK
+RF2RG   F2RG   0 1G
+RF2RG10 F2RG10 0 1G
+RSEP2 F2OUT FIX2 47
+CFIX2 FIX2 FIXJACK2 4.7u
+RBL2  FIXJACK2 0 470k
+RLD2  FIXJACK2 0 10k
+* il trim a 0 dB (ADR-027), C_T (ADR-065), il bilanciamento al centro, il volume
+RL1 AOUT TAP6 845
+RL2 TAP6 TAP12 464
+RL3 TAP12 0 464
+RT1R AOUT ATOP 0.1
+CT1R AOUT ATOP 15p
+RT1S T2C ATOP 1G
+CT1S T2C ATOP 15p
+RT2R TAP6 T2C 0.1
+CT2R TAP6 T2C 15p
+RT2S TAP12 T2C 1G
+CT2S TAP12 T2C 15p
+CT    ATOP ATT 10u
+CWIRE ATT 0 100p
+RBAL  ATT 0 50k
+RATTH ATT BIN 1m
+RATTL BIN 0 10k
+* R_G 1 MOhm sul cursore (ADR-065) e' gia' la R113 del subckt, come in tb_e3_e5.cir
+XB BIN BOUT BFB BRG BRG10 VPLUS VMINUS GAINBLOCK
+CSTB    BRG   0 15p
+RRGB    BRG   0 1G
+CSTB10  BRG10 0 15p
+RRG10B  BRG10 0 1G
+RISO   BOUT BOUTA 47
+COUT   BOUTA MAIN 4.7u
+RBLEED MAIN 0 220k
+RLOAD  MAIN 0 10k
+.options reltol=1e-6 abstol=1e-15 vntol=1e-9
+
+.control
+option itl1=1000
+set numdgt=10
+set fourgridsize=8192
+set nfreqs=10
+save vsn main fixjack1 fixjack2 bout f1out f2out
+alter rsrc = 1.5
+alter rrgb = 1G
+alter rrg10b = 1G
+alter rattH = 1m
+alter rattL = 10k
+alter @vs[sin] = [ 0 0.282843 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L53_CATENA modo=0 vol=cima livello=lo freq=20000 ampin=0.282843 rs=1.5 main_atteso=0.282843"
+fourier 20000 v(vsn) v(bout) v(f1out) v(f2out)
+destroy all
+alter rsrc = 1.5
+alter rrgb = 0.1
+alter rrg10b = 1G
+alter rattH = 1m
+alter rattL = 10k
+alter @vs[sin] = [ 0 0.199157 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L53_CATENA modo=3 vol=cima livello=lo freq=20000 ampin=0.199157 rs=1.5 main_atteso=0.282843"
+fourier 20000 v(vsn) v(bout) v(f1out) v(f2out)
+destroy all
+alter rsrc = 1.5
+alter rrgb = 0.1
+alter rrg10b = 0.1
+alter rattH = 1m
+alter rattL = 10k
+alter @vs[sin] = [ 0 0.0897259 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L53_CATENA modo=10 vol=cima livello=lo freq=20000 ampin=0.0897259 rs=1.5 main_atteso=0.282843"
+fourier 20000 v(vsn) v(bout) v(f1out) v(f2out)
+destroy all
+alter rsrc = 1.5
+alter rrgb = 1G
+alter rrg10b = 1G
+alter rattH = 5k
+alter rattL = 5k
+alter @vs[sin] = [ 0 0.565686 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L53_CATENA modo=0 vol=meta livello=lo freq=20000 ampin=0.565686 rs=1.5 main_atteso=0.282843"
+fourier 20000 v(vsn) v(bout) v(f1out) v(f2out)
+destroy all
+alter rsrc = 1.5
+alter rrgb = 0.1
+alter rrg10b = 1G
+alter rattH = 5k
+alter rattL = 5k
+alter @vs[sin] = [ 0 0.398314 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L53_CATENA modo=3 vol=meta livello=lo freq=20000 ampin=0.398314 rs=1.5 main_atteso=0.282843"
+fourier 20000 v(vsn) v(bout) v(f1out) v(f2out)
+destroy all
+alter rsrc = 1.5
+alter rrgb = 0.1
+alter rrg10b = 0.1
+alter rattH = 5k
+alter rattL = 5k
+alter @vs[sin] = [ 0 0.179452 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L53_CATENA modo=10 vol=meta livello=lo freq=20000 ampin=0.179452 rs=1.5 main_atteso=0.282843"
+fourier 20000 v(vsn) v(bout) v(f1out) v(f2out)
+destroy all
+alter rsrc = 2500
+alter rrgb = 1G
+alter rrg10b = 1G
+alter rattH = 1m
+alter rattL = 10k
+alter @vs[sin] = [ 0 0.282843 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L53_CATENA modo=0 vol=cima livello=lo freq=20000 ampin=0.282843 rs=2500 main_atteso=0.282843"
+fourier 20000 v(vsn) v(bout) v(f1out) v(f2out)
+destroy all
+alter rsrc = 2500
+alter rrgb = 0.1
+alter rrg10b = 1G
+alter rattH = 1m
+alter rattL = 10k
+alter @vs[sin] = [ 0 0.199157 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L53_CATENA modo=3 vol=cima livello=lo freq=20000 ampin=0.199157 rs=2500 main_atteso=0.282843"
+fourier 20000 v(vsn) v(bout) v(f1out) v(f2out)
+destroy all
+alter rsrc = 2500
+alter rrgb = 0.1
+alter rrg10b = 0.1
+alter rattH = 1m
+alter rattL = 10k
+alter @vs[sin] = [ 0 0.0897259 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L53_CATENA modo=10 vol=cima livello=lo freq=20000 ampin=0.0897259 rs=2500 main_atteso=0.282843"
+fourier 20000 v(vsn) v(bout) v(f1out) v(f2out)
+destroy all
+alter rsrc = 2500
+alter rrgb = 1G
+alter rrg10b = 1G
+alter rattH = 5k
+alter rattL = 5k
+alter @vs[sin] = [ 0 0.565686 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L53_CATENA modo=0 vol=meta livello=lo freq=20000 ampin=0.565686 rs=2500 main_atteso=0.282843"
+fourier 20000 v(vsn) v(bout) v(f1out) v(f2out)
+destroy all
+alter rsrc = 2500
+alter rrgb = 0.1
+alter rrg10b = 1G
+alter rattH = 5k
+alter rattL = 5k
+alter @vs[sin] = [ 0 0.398314 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L53_CATENA modo=3 vol=meta livello=lo freq=20000 ampin=0.398314 rs=2500 main_atteso=0.282843"
+fourier 20000 v(vsn) v(bout) v(f1out) v(f2out)
+destroy all
+alter rsrc = 2500
+alter rrgb = 0.1
+alter rrg10b = 0.1
+alter rattH = 5k
+alter rattL = 5k
+alter @vs[sin] = [ 0 0.179452 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L53_CATENA modo=10 vol=meta livello=lo freq=20000 ampin=0.179452 rs=2500 main_atteso=0.282843"
+fourier 20000 v(vsn) v(bout) v(f1out) v(f2out)
+destroy all
+.endc
+.end

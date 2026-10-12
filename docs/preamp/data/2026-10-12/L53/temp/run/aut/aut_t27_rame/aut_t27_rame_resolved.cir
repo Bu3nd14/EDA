@@ -1,0 +1,130 @@
+aut_t27_rame - L53: THD a 20 kHz, ogni giunzione alla sua temperatura (aria 27 gradi, rame)
+* generato da L53/temp/autoriscaldamento.py
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/diodes/1n4148.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/docs/preamp/data/2026-10-12/L53/temp/inc/aut_t27_rame.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VS VSN 0 SIN(0 0.282843 20000)
+RSRC VSN IN 2500
+CSTRAY RG 0 15p
+CSTRAY10 RG10 0 15p
+RRG RG 0 1G
+RRG10 RG10 0 1G
+RISO OUT OUTA 47
+COUT OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD JACK 0 10k
+.temp 27
+.options reltol=1e-6 abstol=1e-15 vntol=1e-9
+
+.control
+option itl1=1000
+set numdgt=10
+set fourgridsize=8192
+set nfreqs=10
+save out vsn
+alter rsrc = 2500
+alter rrg = 1G
+alter rrg10 = 1G
+alter @vs[sin] = [ 0 0.282843 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L46A_CASO modo=0 livello=lo freq=20000 ampin=0.282843 rs=2500"
+fourier 20000 v(vsn) v(out)
+destroy all
+alter rsrc = 2500
+alter rrg = 1G
+alter rrg10 = 1G
+alter @vs[sin] = [ 0 2.82843 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L46A_CASO modo=0 livello=hi freq=20000 ampin=2.82843 rs=2500"
+fourier 20000 v(vsn) v(out)
+destroy all
+alter rsrc = 5600
+alter rrg = 1G
+alter rrg10 = 1G
+alter @vs[sin] = [ 0 0.282843 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L46A_CASO modo=0 livello=lo freq=20000 ampin=0.282843 rs=5600"
+fourier 20000 v(vsn) v(out)
+destroy all
+alter rsrc = 5600
+alter rrg = 1G
+alter rrg10 = 1G
+alter @vs[sin] = [ 0 2.82843 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L46A_CASO modo=0 livello=hi freq=20000 ampin=2.82843 rs=5600"
+fourier 20000 v(vsn) v(out)
+destroy all
+alter rsrc = 2500
+alter rrg = 0.1
+alter rrg10 = 1G
+alter @vs[sin] = [ 0 0.199157 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L46A_CASO modo=3 livello=lo freq=20000 ampin=0.199157 rs=2500"
+fourier 20000 v(vsn) v(out)
+destroy all
+alter rsrc = 2500
+alter rrg = 0.1
+alter rrg10 = 1G
+alter @vs[sin] = [ 0 1.99157 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L46A_CASO modo=3 livello=hi freq=20000 ampin=1.99157 rs=2500"
+fourier 20000 v(vsn) v(out)
+destroy all
+alter rsrc = 5600
+alter rrg = 0.1
+alter rrg10 = 1G
+alter @vs[sin] = [ 0 0.199157 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L46A_CASO modo=3 livello=lo freq=20000 ampin=0.199157 rs=5600"
+fourier 20000 v(vsn) v(out)
+destroy all
+alter rsrc = 5600
+alter rrg = 0.1
+alter rrg10 = 1G
+alter @vs[sin] = [ 0 1.99157 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L46A_CASO modo=3 livello=hi freq=20000 ampin=1.99157 rs=5600"
+fourier 20000 v(vsn) v(out)
+destroy all
+alter rsrc = 2500
+alter rrg = 0.1
+alter rrg10 = 0.1
+alter @vs[sin] = [ 0 0.0897259 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L46A_CASO modo=10 livello=lo freq=20000 ampin=0.0897259 rs=2500"
+fourier 20000 v(vsn) v(out)
+destroy all
+alter rsrc = 2500
+alter rrg = 0.1
+alter rrg10 = 0.1
+alter @vs[sin] = [ 0 0.897259 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L46A_CASO modo=10 livello=hi freq=20000 ampin=0.897259 rs=2500"
+fourier 20000 v(vsn) v(out)
+destroy all
+alter rsrc = 5600
+alter rrg = 0.1
+alter rrg10 = 0.1
+alter @vs[sin] = [ 0 0.0897259 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L46A_CASO modo=10 livello=lo freq=20000 ampin=0.0897259 rs=5600"
+fourier 20000 v(vsn) v(out)
+destroy all
+alter rsrc = 5600
+alter rrg = 0.1
+alter rrg10 = 0.1
+alter @vs[sin] = [ 0 0.897259 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L46A_CASO modo=10 livello=hi freq=20000 ampin=0.897259 rs=5600"
+fourier 20000 v(vsn) v(out)
+destroy all
+.endc
+.end
