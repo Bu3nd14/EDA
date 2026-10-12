@@ -1,75 +1,72 @@
-# Prompt per la sessione successiva — L52, l'architetto avversariale di nuovo, sul dossier completo
+# Prompt per la sessione successiva — L53, le misure veloci prima di G1
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L52**, e si ferma. Non iniziarne un secondo.
+LOTTI PICCOLI: questa sessione fa **L53**, e si ferma. Non iniziarne un secondo, salvo che l'utente
+lo chieda esplicitamente nella sessione.
 
 ## Perché questo lotto, e perché adesso
 
-L'utente, il 2026-10-09 dopo L49b: «rigeneriamo il dossier, mettilo nel prossimo lotto abbiamo
-cambiato molto, poi lo passiamo all'avversariale di nuovo, poi affrontiamo G1». Il dossier è
-rigenerato e completo (L51a, L51b, L51c): `docs/preamp/dossier/index.html`. Questo lotto è
-«l'avversariale di nuovo». Dopo viene **G1**, poi L45 FMEA e L50 massa e terra.
+In L52 (2026-10-12) l'architetto avversariale ha rivisto il dossier completo, e l'utente ha deciso
+rilievo per rilievo (`reports/2026-10-12-L52-esiti-architetto.md`). Prima di **G1** vanno chiuse
+NC-042 (la FMEA), NC-054 (micro e standby), NC-055, NC-056, NC-058 e NC-059. L'utente: «I will read
+the dossier in parallel, please run remedies, FMEA, and all what is needed before G1 in the
+meantime». L'ordine l'ho scelto io: **le misure veloci prima**, perché possono cambiare i lotti
+grandi. Poi L45 FMEA → L54 micro e standby → L55 dispositivo d'uscita → G1.
 
-L'architetto ha visto il progetto una volta sola, in L43a (2026-09-27). Da allora sono nate le
-ADR **054–066**: compensazione, PSRR, rumore 1/f, la cella del mute e il suo abbandono, il mute
-coi soli relè, il selettore, il volume col bilanciamento. Sono cambiati l'alimentatore e il
-firmware, e ci sono le schede di prova di L49.
+**L'utente sta leggendo il dossier in parallelo.** Se porta dei rilievi durante la sessione, si
+registrano come in L43b (per nome, severità sua, in `NONCOMPLIANCE.md` solo se li accetta) e non si
+mescolano alle misure di questo lotto.
+
+**Le cifre dell'architetto di L52 sono calcoli, non simulazioni**: la sua sessione non poteva
+eseguire comandi. Questo lotto le misura per la prima volta; una stima che non regge si scrive così.
 
 ## Il mandato
 
-La sessione **non cerca difetti per conto suo**: è un controllo cieco, come L43a. Fa tre cose.
+### 1. NC-055 — la distorsione delle istanze a guadagno unitario
 
-### 1. Per primo: lanciare l'architetto avversariale
+- **La prova che falsifica l'ipotesi** (R5 di L52): il banco
+  `docs/preamp/data/2026-10-10/L51c/distorsione/deck/oggi/thd_20k.cir` (il blocco di oggi,
+  rigenerato dal sorgente in L51c) a **0 dB**, con l'impedenza di sorgente a **0 / 1,5 / 2,5 /
+  5,6 kΩ**, a 0,2 V e a 2 V. Se la THD segue |R_S − 1,5 kΩ| (R_F), il meccanismo d'ingresso a modo
+  comune è confermato; se no, si scrive che non lo è. Anche a 1 kHz e 10 kHz, e l'IMD.
+- **V4 sulla catena, su ogni uscita** («su ogni uscita» è il testo del requisito): la principale
+  (A → trim → C_T → bilanciamento → volume → B → jack) col volume in cima e col bilanciamento girato
+  (la sorgente peggiore di ADR-065, 5,6 kΩ), e le due fisse (A → buffer) col K11 a piena scala. Le
+  cifre contro i quattro tetti di V4 (ADR-055).
+- Se un tetto cade, **non si corregge**: si portano all'utente le strade di letteratura (cascode
+  pilotato; R_F adattata nelle istanze unitarie), coi numeri, e sceglie lui (un rimedio è un lotto).
 
-All'avvio, prima di qualsiasi conversazione sul dossier:
-- `Agent` con `subagent_type: "adversarial-architect"`: **un agente nuovo, mai `fork`**. Un fork
-  eredita questa conversazione, e la revisione non sarebbe più cieca. In background.
-- **Il prompt contiene solo** la data, i tre obiettivi dell'utente e i percorsi del prodotto (il
-  dossier `docs/preamp/dossier/index.html`, `docs/preamp/PRB.md`, `REQUIREMENTS.md`,
-  `decisions/`, `circuits/preamp/`, `spice/preamp/`, `firmware/preamp_timer/`, `layout/preamp/`,
-  `models/`). Il suo mandato sta già nella definizione (`.claude/agents/adversarial-architect.md`),
-  compresa la cecità a `NONCOMPLIANCE.md`, `STATE.md` e `reports/` fino alla fase 2. I tre
-  obiettivi, con le parole dell'utente:
-  - un preamplificatore che suoni bene (secondo la letteratura e la tecnica);
-  - che non abbia bump fastidiosi sulle uscite ai cambi di configurazione;
-  - che fallisca senza danneggiare altri elementi della catena.
+### 2. NC-058 — V1 e V4 a 57 °C
 
-  In più: se sono possibili semplificazioni, e se c'è over-engineering.
-- **Niente nel prompt** di ciò che i lotti hanno già trovato. In particolare niente dei rilievi
-  di L43a, dei 45 tratti ristretti di L51c, delle righe `Stato:`: entrano nella sintesi alla
-  fine, non nel prompt.
-- Quando torna, il suo messaggio finale è il report. Salvalo **verbatim** in
-  `docs/preamp/reports/<data>-L52-architetto-avversariale.md`.
+- La temperatura del telaio al peggio è **57,2 °C** a 3 cm (L51b). V1 sulla matrice di oggi e V4 sul
+  banco del blocco a 57 °C, con la trappola di `CLAUDE.md`: **`.temp` con una lista ricade a 27 °C**;
+  si usa un `.temp` singolo per corsa o `dc TEMP` in un blocco `.control`, e si verifica nel log che
+  la temperatura sia quella chiesta.
+- Le cifre contro le soglie (V1 ≥ 60°, i tetti di V4).
 
-### 2. I rilievi, uno per uno con l'utente
+### 3. NC-059 — l'RCA inserito a caldo
 
-Come in L43a:
-- ogni rilievo si porta all'utente **per nome, senza sigle** (al più tra parentesi), coi gradini
-  in dB SPL contro una stanza silenziosa;
-- la severità la decide l'utente;
-- un rilievo entra in `NONCOMPLIANCE.md` **solo se l'utente lo accetta**, con il requisito del
-  PRB, l'evidenza e la severità;
-- le ADR che l'architetto riaprirebbe e le semplificazioni che propone vanno all'utente una per
-  una: sceglie lui;
-- cambiare il PRB vuole una ADR (ADR-053).
+- Sul selettore di ADR-064 (`tb_f1_selettore.cir` come base): il polo caldo che tocca prima della
+  massa sull'ingresso selezionato, col volume in cima e al centro; il gradino al jack principale e
+  alle fisse **in dB SPL di picco a 1 m** (la catena di NC-028: finale ×21,1, Heresy 96 dB/1 W/1 m,
+  stanza a 25–35 dB(A)), e per le fisse la metrica delle cuffie, se esiste (NC-046).
+- Il modello del contatto (la carica del cavo, la massa che arriva dopo) si dichiara come ipotesi.
+- Poi all'utente: serve un rimedio, un avviso, o niente.
 
-### 3. Alla fine
+### 4. Alla fine
 
-- Un report degli esiti, `docs/preamp/reports/<data>-L52-esiti-architetto.md`, con la tabella
-  dei rilievi, le decisioni dell'utente e la taratura contro L43a: cosa ha trovato di nuovo e
-  cosa ha ripetuto, e se un rilievo era già noto (NC-0xx) o già deciso (ADR-0xx).
-- **Chiedere all'utente** (proposta di «Dopo L49b», non decisa) se vuole rifare anche la sua
-  lettura del dossier, come L43b, prima del gate. La risposta decide il lotto successivo: L53
-  la lettura dell'utente, oppure G1.
+- Un report `docs/preamp/reports/<data>-L53-misure-veloci.md`, dati in `docs/preamp/data/<data>/L53/`
+  con README.
+- Le voci chiuse o aggiornate in `NONCOMPLIANCE.md`, **solo con la decisione dell'utente**.
 
 ## Prima di tutto
 
-- `CLAUDE.md`, `docs/limitations.md` (54 voci), `AGENTS.md` (il paragrafo sul revisore
-  avversariale), `.claude/agents/adversarial-architect.md`.
-- `docs/preamp/STATE.md`: «In breve» e la voce di **L51c**.
-- `docs/preamp/reports/2026-09-27-L43a-esiti-architetto.md`: com'è andata la prima volta.
-- Il dossier si legge in `docs/preamp/dossier/index.html`, oppure in A4 con
-  `/usr/bin/python3 docs/preamp/dossier/stampa_a4.py <file fuori dal repo>.pdf`.
+- `CLAUDE.md`, `docs/limitations.md` (54 voci), `AGENTS.md`.
+- `docs/preamp/STATE.md`: «In breve» e la voce di **L52**.
+- `docs/preamp/reports/2026-10-12-L52-esiti-architetto.md` e il report verbatim di L52 (R5 e la
+  sezione sul blocco di guadagno).
+- `NONCOMPLIANCE.md`: NC-055, NC-058, NC-059.
+- ADR-014, ADR-055, ADR-064, ADR-065.
 
 ## I vincoli
 
@@ -83,21 +80,21 @@ Come in L43a:
   - un titolo di PR con l'apostrofo: il corpo va su file, con `--body-file`.
 - Si usano comandi semplici, **percorsi assoluti**, script scritti su file con Write, ed Edit per i
   testi.
-- Il PDF del dossier non si versiona; la pagina autoconsistente (`--standalone`) va sempre fuori
-  dal repo.
+- **I subagenti in una sessione isolata possono non poter eseguire comandi** (L52: Bash rifiutato
+  all'architetto). Se un lotto ha bisogno di un subagente che simula, verificarlo subito con un
+  comando banale, e se non può, fare le corse dalla sessione principale.
 
 ## NON fa parte di questo lotto
 
-- Correggere quello che l'architetto trova: si registra, e i rimedi sono lotti successivi.
-- Qualsiasi modifica al circuito, al firmware, ai deck o al dossier.
-- Il gate (**G1**), la FMEA (L45), la massa e la terra (L50), il layout vero (G2).
+- I rimedi: si misurano, si portano all'utente, si fanno in un lotto successivo.
+- La FMEA (L45), il micro e lo standby (L54), il dispositivo d'uscita (L55), E3 (NC-057), G1.
+- Qualsiasi modifica al circuito, al firmware o al dossier.
 
 ## CHIUSURA
 
-1. `STATE.md` con L52 **fatto** nella tabella dei lotti, e il prossimo (L53 o G1, secondo la
-   risposta dell'utente).
+1. `STATE.md` con L53 **fatto** nella tabella dei lotti, e il prossimo (L45).
 2. Riscrivi QUESTO file per il lotto successivo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L52`.
+4. `/bin/zsh scripts/chunk_close.sh L53`.
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**
