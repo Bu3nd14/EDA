@@ -1,0 +1,143 @@
+gate - L53: i gate del blocco A durante l'RCA a caldo in classe II (NC-059)
+* generato da L53/rca/genera.py
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/diodes/1n4148.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/spice/preamp/gain_block.subckt
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+.model swk sw vt=0.5 vh=0.1 ron=0.1 roff=1e9
+
+* la sorgente e il suo cavo
+VMAINS VMN 0 SIN(0 162.6 50)
+CY  VMN SG 1n
+RSG SG 0 1e12
+VCG CG 0 PULSE(0 1 60m 1u 1u 1 2)
+SWG SG 0 CG 0 swk
+VOFF SG SOI DC 0.01
+RS  SOI SO 1.5
+VCT CT 0 PULSE(0 1 50m 1u 1u 1 2)
+SWT SO JIN CT 0 swk
+* il selettore (ADR-064)
+RJ    JIN 0 10Meg
+CIN   JIN SEL 1u
+RSEL  SEL 0 470k
+RKSEL SEL AIN 0.1
+CSEL  AIN 0 68p
+XA AIN AOUT AFB ARG ARG10 VPLUS VMINUS GAINBLOCK
+RARG   ARG   0 1G
+RARG10 ARG10 0 1G
+* una fissa (ADR-023), col carico della Stax
+XF1 AOUT F1OUT F1FB F1RG F1RG10 VPLUS VMINUS GAINBLOCK
+RF1RG   F1RG   0 1G
+RF1RG10 F1RG10 0 1G
+RSEP1 F1OUT FIX1 47
+CFIX1 FIX1 FIXJACK1 4.7u
+RBL1  FIXJACK1 0 470k
+RLD1  FIXJACK1 0 50k
+* trim 0 dB, C_T, bilanciamento al centro, volume (come L53/catena)
+RT1R AOUT ATOP 0.1
+RL1 AOUT 0 1773
+CT    ATOP ATT 10u
+CWIRE ATT 0 100p
+RBAL  ATT 0 50k
+RATTH ATT BIN 1m
+RATTL BIN 0 10k
+XB BIN BOUT BFB BRG BRG10 VPLUS VMINUS GAINBLOCK
+CSTB    BRG   0 15p
+RRGB    BRG   0 1G
+CSTB10  BRG10 0 15p
+RRG10B  BRG10 0 1G
+RISO   BOUT BOUTA 47
+COUT   BOUTA MAIN 4.7u
+RBLEED MAIN 0 220k
+RLOAD  MAIN 0 100k
+.options reltol=1e-4 abstol=1e-12 vntol=1e-7
+
+.control
+option itl1=1000
+set numdgt=6
+echo "cy,modo,gg_max_v,gg_min_v,gs_max_v,gs_min_v,ig_max_ma,ig_min_ma" > gate.csv
+alter cy = 1n
+alter voff = 0.01
+alter rattH = 1m
+alter rattL = 10k
+alter rrgb = 1G
+alter rrg10b = 1G
+tran 10u 0.12 0 10u
+let gg = v(xa.g1) - v(xa.g2)
+let gs = v(xa.g1) - v(xa.s1)
+let ig = (v(ain) - v(xa.g1)) / 100 * 1000
+meas tran ggmax max gg from=50m to=0.12
+meas tran ggmin min gg from=50m to=0.12
+meas tran gsmax max gs from=50m to=0.12
+meas tran gsmin min gs from=50m to=0.12
+meas tran igmax max ig from=50m to=0.12
+meas tran igmin min ig from=50m to=0.12
+echo "L53_GATE cy=1n modo=0"
+echo "1n,0,$&ggmax,$&ggmin,$&gsmax,$&gsmin,$&igmax,$&igmin" >> gate.csv
+destroy all
+alter cy = 1n
+alter voff = 0.01
+alter rattH = 1m
+alter rattL = 10k
+alter rrgb = 0.1
+alter rrg10b = 0.1
+tran 10u 0.12 0 10u
+let gg = v(xa.g1) - v(xa.g2)
+let gs = v(xa.g1) - v(xa.s1)
+let ig = (v(ain) - v(xa.g1)) / 100 * 1000
+meas tran ggmax max gg from=50m to=0.12
+meas tran ggmin min gg from=50m to=0.12
+meas tran gsmax max gs from=50m to=0.12
+meas tran gsmin min gs from=50m to=0.12
+meas tran igmax max ig from=50m to=0.12
+meas tran igmin min ig from=50m to=0.12
+echo "L53_GATE cy=1n modo=10"
+echo "1n,10,$&ggmax,$&ggmin,$&gsmax,$&gsmin,$&igmax,$&igmin" >> gate.csv
+destroy all
+alter cy = 3.46n
+alter voff = 0.01
+alter rattH = 1m
+alter rattL = 10k
+alter rrgb = 1G
+alter rrg10b = 1G
+tran 10u 0.12 0 10u
+let gg = v(xa.g1) - v(xa.g2)
+let gs = v(xa.g1) - v(xa.s1)
+let ig = (v(ain) - v(xa.g1)) / 100 * 1000
+meas tran ggmax max gg from=50m to=0.12
+meas tran ggmin min gg from=50m to=0.12
+meas tran gsmax max gs from=50m to=0.12
+meas tran gsmin min gs from=50m to=0.12
+meas tran igmax max ig from=50m to=0.12
+meas tran igmin min ig from=50m to=0.12
+echo "L53_GATE cy=3.46n modo=0"
+echo "3.46n,0,$&ggmax,$&ggmin,$&gsmax,$&gsmin,$&igmax,$&igmin" >> gate.csv
+destroy all
+alter cy = 3.46n
+alter voff = 0.01
+alter rattH = 1m
+alter rattL = 10k
+alter rrgb = 0.1
+alter rrg10b = 0.1
+tran 10u 0.12 0 10u
+let gg = v(xa.g1) - v(xa.g2)
+let gs = v(xa.g1) - v(xa.s1)
+let ig = (v(ain) - v(xa.g1)) / 100 * 1000
+meas tran ggmax max gg from=50m to=0.12
+meas tran ggmin min gg from=50m to=0.12
+meas tran gsmax max gs from=50m to=0.12
+meas tran gsmin min gs from=50m to=0.12
+meas tran igmax max ig from=50m to=0.12
+meas tran igmin min ig from=50m to=0.12
+echo "L53_GATE cy=3.46n modo=10"
+echo "3.46n,10,$&ggmax,$&ggmin,$&gsmax,$&gsmin,$&igmax,$&igmin" >> gate.csv
+destroy all
+.endc
+.end

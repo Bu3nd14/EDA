@@ -1,0 +1,54 @@
+op_cliff - L53 (NC-058): il punto di lavoro di ogni nodo ai due lati del gradino della coda
+* coda.py: la THD a 20 kHz e' piatta sotto ~4,6 mA di coda (27 gradi) e ~4,2 mA (57 gradi), poi
+* cresce di un ordine di grandezza in pochi punti percentuali. Qui `op` e tutti i nodi in quattro
+* condizioni: 27 gradi R107 137 (buona), 27 gradi R107 123,3 (cattiva), 57 gradi R107 137
+* (cattiva), 57 gradi R107 150,7 (buona). Si cerca la giunzione che cambia stato.
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/diodes/1n4148.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L53/spice/preamp/gain_block_flat.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VS VSN 0 DC 0
+RSRC VSN IN 2500
+RRG RG 0 1G
+RRG10 RG10 0 1G
+RISO OUT OUTA 47
+COUT OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD JACK 0 10k
+
+.control
+set temp = 27
+alter r107 = 137
+op
+echo "L53_COND t=27 r107=137 buona"
+print all
+print @q106[ic] @q117[ic] @q118[ic] @q121a[ic] @q121b[ic] @q122[ic] @q125[ic] @q127[ic] @jq110a[id] @jq110b[id] @q132[ic] @q133[ic]
+destroy all
+alter r107 = 123.3
+op
+echo "L53_COND t=27 r107=123.3 cattiva"
+print all
+print @q106[ic] @q117[ic] @q118[ic] @q121a[ic] @q121b[ic] @q122[ic] @q125[ic] @q127[ic] @jq110a[id] @jq110b[id] @q132[ic] @q133[ic]
+destroy all
+set temp = 57
+alter r107 = 137
+op
+echo "L53_COND t=57 r107=137 cattiva"
+print all
+print @q106[ic] @q117[ic] @q118[ic] @q121a[ic] @q121b[ic] @q122[ic] @q125[ic] @q127[ic] @jq110a[id] @jq110b[id] @q132[ic] @q133[ic]
+destroy all
+alter r107 = 150.7
+op
+echo "L53_COND t=57 r107=150.7 buona"
+print all
+print @q106[ic] @q117[ic] @q118[ic] @q121a[ic] @q121b[ic] @q122[ic] @q125[ic] @q127[ic] @jq110a[id] @jq110b[id] @q132[ic] @q133[ic]
+destroy all
+.endc
+.end

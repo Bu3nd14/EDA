@@ -1,72 +1,57 @@
-# Prompt per la sessione successiva — L53, le misure veloci prima di G1
+# Prompt per la sessione successiva — L56, lo specchio d'ingresso del blocco di guadagno
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L53**, e si ferma. Non iniziarne un secondo, salvo che l'utente
+LOTTI PICCOLI: questa sessione fa **L56**, e si ferma. Non iniziarne un secondo, salvo che l'utente
 lo chieda esplicitamente nella sessione.
 
 ## Perché questo lotto, e perché adesso
 
-In L52 (2026-10-12) l'architetto avversariale ha rivisto il dossier completo, e l'utente ha deciso
-rilievo per rilievo (`reports/2026-10-12-L52-esiti-architetto.md`). Prima di **G1** vanno chiuse
-NC-042 (la FMEA), NC-054 (micro e standby), NC-055, NC-056, NC-058 e NC-059. L'utente: «I will read
-the dossier in parallel, please run remedies, FMEA, and all what is needed before G1 in the
-meantime». L'ordine l'ho scelto io: **le misure veloci prima**, perché possono cambiare i lotti
-grandi. Poi L45 FMEA → L54 micro e standby → L55 dispositivo d'uscita → G1.
+In L53 (2026-10-12) misurando la distorsione a caldo è venuto fuori **NC-060, bloccante per G1**:
+lo specchio dello stadio d'ingresso del blocco (Q121B, LS350) ha 0,79 V fra i morsetti e il modello
+del costruttore ha RC 231 Ω, che ne perde ~0,5 V a 2,16 mA. Lo specchio sta sull'orlo della
+saturazione: il gradino della corrente di coda è il 2–4 % sopra il punto di lavoro già a 27 °C
+uniformi. Col calore vero dei dispositivi (VAS e suo carico a ~0,14 W in SOT-23, +50–57 °C; la coda
+a 64 mW, +27 °C) la THD a 20 kHz esce da V4 in 48 casi su 48 e l'intermodulazione arriva a
+25–35 dB SPL a 57 °C. Con l'RC dell'LS350 a zero, 24 casi su 24 rientrano. Leggi
+`reports/2026-10-12-L53-misure-veloci.md` e `NONCOMPLIANCE.md` NC-060.
 
-**L'utente sta leggendo il dossier in parallelo.** Se porta dei rilievi durante la sessione, si
-registrano come in L43b (per nome, severità sua, in `NONCOMPLIANCE.md` solo se li accetta) e non si
-mescolano alle misure di questo lotto.
+Ogni cifra di distorsione del progetto dipende da questo: per questo L56 viene prima di L45, L57,
+L54, L55 (ordine proposto in L53, l'utente non l'ha fissato: se vuole un altro ordine, vale il suo).
 
-**Le cifre dell'architetto di L52 sono calcoli, non simulazioni**: la sua sessione non poteva
-eseguire comandi. Questo lotto le misura per la prima volta; una stima che non regge si scrive così.
+**L'utente sta leggendo il dossier in parallelo.** Se porta dei rilievi, si registrano come in
+L43b e non si mescolano alle misure di questo lotto.
 
 ## Il mandato
 
-### 1. NC-055 — la distorsione delle istanze a guadagno unitario
-
-- **La prova che falsifica l'ipotesi** (R5 di L52): il banco
-  `docs/preamp/data/2026-10-10/L51c/distorsione/deck/oggi/thd_20k.cir` (il blocco di oggi,
-  rigenerato dal sorgente in L51c) a **0 dB**, con l'impedenza di sorgente a **0 / 1,5 / 2,5 /
-  5,6 kΩ**, a 0,2 V e a 2 V. Se la THD segue |R_S − 1,5 kΩ| (R_F), il meccanismo d'ingresso a modo
-  comune è confermato; se no, si scrive che non lo è. Anche a 1 kHz e 10 kHz, e l'IMD.
-- **V4 sulla catena, su ogni uscita** («su ogni uscita» è il testo del requisito): la principale
-  (A → trim → C_T → bilanciamento → volume → B → jack) col volume in cima e col bilanciamento girato
-  (la sorgente peggiore di ADR-065, 5,6 kΩ), e le due fisse (A → buffer) col K11 a piena scala. Le
-  cifre contro i quattro tetti di V4 (ADR-055).
-- Se un tetto cade, **non si corregge**: si portano all'utente le strade di letteratura (cascode
-  pilotato; R_F adattata nelle istanze unitarie), coi numeri, e sceglie lui (un rimedio è un lotto).
-
-### 2. NC-058 — V1 e V4 a 57 °C
-
-- La temperatura del telaio al peggio è **57,2 °C** a 3 cm (L51b). V1 sulla matrice di oggi e V4 sul
-  banco del blocco a 57 °C, con la trappola di `CLAUDE.md`: **`.temp` con una lista ricade a 27 °C**;
-  si usa un `.temp` singolo per corsa o `dc TEMP` in un blocco `.control`, e si verifica nel log che
-  la temperatura sia quella chiesta.
-- Le cifre contro le soglie (V1 ≥ 60°, i tetti di V4).
-
-### 3. NC-059 — l'RCA inserito a caldo
-
-- Sul selettore di ADR-064 (`tb_f1_selettore.cir` come base): il polo caldo che tocca prima della
-  massa sull'ingresso selezionato, col volume in cima e al centro; il gradino al jack principale e
-  alle fisse **in dB SPL di picco a 1 m** (la catena di NC-028: finale ×21,1, Heresy 96 dB/1 W/1 m,
-  stanza a 25–35 dB(A)), e per le fisse la metrica delle cuffie, se esiste (NC-046).
-- Il modello del contatto (la carica del cavo, la massa che arriva dopo) si dichiara come ipotesi.
-- Poi all'utente: serve un rimedio, un avviso, o niente.
-
-### 4. Alla fine
-
-- Un report `docs/preamp/reports/<data>-L53-misure-veloci.md`, dati in `docs/preamp/data/<data>/L53/`
-  con README.
-- Le voci chiuse o aggiornate in `NONCOMPLIANCE.md`, **solo con la decisione dell'utente**.
+1. **Le strade, misurate prima di chiedere.** Sul banco del blocco con ogni giunzione alla sua
+   temperatura (`data/2026-10-12/L53/temp/autoriscaldamento.py`, da adattare al circuito
+   modificato: le Tj vanno ricalcolate dal punto di lavoro di ogni variante) a 27 e 57 °C d'aria, e
+   sul banco a 27 °C uniformi come controllo. Strade da considerare (non un elenco chiuso):
+   - più tensione per lo specchio: abbassare la base del VAS rispetto al collettore di Q121B
+     (resistenza d'emettitore del VAS più grande, un diodo o una resistenza in serie alla base del
+     VAS, la cella RC di ADR-056 che oggi alimenta specchio e VAS);
+   - meno caduta nello specchio: R119/R120 (oggi 220 / 226 Ω, R120 tarata per l'offset in ADR-056);
+   - uno specchio che non chieda tensione (Wilson, cascode, specchio con base comune);
+   - il VAS che scalda meno (la sua dissipazione; il rame nel layout è di G2, ma la R_thJA conta);
+   - il generatore di coda accoppiato termicamente ai suoi diodi.
+   Per ognuna: THD a 20 kHz e intermodulazione contro V4 (0,2 e 2 V, tre modi, sorgente 2,5 e
+   5,6 kΩ), il margine sul gradino della coda (R107 ±10 %), V1, PSRR+, rumore (E5), la continua
+   all'uscita, la dissipazione, il clip. Cosa cambia nel sorgente e nei controlli.
+2. **All'utente**, per nome e senza sigle, coi numeri in tabella; sceglie lui. **ADR** per la scelta.
+3. **Il sorgente** (`circuits/preamp/gain_block.py`, coi commenti che puntano all'ADR), la netlist
+   rigenerata, `run_tests.sh`; poi la regressione dei deck veloci (come in L46a/L46b), i guasti
+   dell'alimentatore se l'offset o la corrente cambiano (L46b ha insegnato che una modifica del
+   blocco li tocca), e **NC-055 rifatta** sulla catena (`data/2026-10-12/L53/catena/`).
+4. Report `docs/preamp/reports/<data>-L56-specchio.md`, dati in `docs/preamp/data/<data>/L56/`.
 
 ## Prima di tutto
 
-- `CLAUDE.md`, `docs/limitations.md` (54 voci), `AGENTS.md`.
-- `docs/preamp/STATE.md`: «In breve» e la voce di **L52**.
-- `docs/preamp/reports/2026-10-12-L52-esiti-architetto.md` e il report verbatim di L52 (R5 e la
-  sezione sul blocco di guadagno).
-- `NONCOMPLIANCE.md`: NC-055, NC-058, NC-059.
-- ADR-014, ADR-055, ADR-064, ADR-065.
+- `CLAUDE.md`, `docs/limitations.md` (**56** voci; la #55 è di L53: SPICE non scalda i
+  dispositivi; la #56 l'avviso dell'LS350), `AGENTS.md`.
+- `docs/preamp/STATE.md`: «In breve» e la voce di **L53**.
+- `reports/2026-10-12-L53-misure-veloci.md`, `data/2026-10-12/L53/README.md`.
+- ADR-054, ADR-055, ADR-056 (il blocco oggi), ADR-014, ADR-017, ADR-018 (l'LS350).
+- `circuits/preamp/gain_block.py`, sezioni dello stadio d'ingresso e del VAS.
 
 ## I vincoli
 
@@ -80,21 +65,20 @@ eseguire comandi. Questo lotto le misura per la prima volta; una stima che non r
   - un titolo di PR con l'apostrofo: il corpo va su file, con `--body-file`.
 - Si usano comandi semplici, **percorsi assoluti**, script scritti su file con Write, ed Edit per i
   testi.
-- **I subagenti in una sessione isolata possono non poter eseguire comandi** (L52: Bash rifiutato
-  all'architetto). Se un lotto ha bisogno di un subagente che simula, verificarlo subito con un
-  comando banale, e se non può, fare le corse dalla sessione principale.
+- I subagenti in una sessione isolata possono non poter eseguire comandi (L52): se servono
+  simulazioni, falle dalla sessione principale.
+- Le cifre di distorsione si danno sempre con la temperatura delle giunzioni dichiarata.
 
 ## NON fa parte di questo lotto
 
-- I rimedi: si misurano, si portano all'utente, si fanno in un lotto successivo.
-- La FMEA (L45), il micro e lo standby (L54), il dispositivo d'uscita (L55), E3 (NC-057), G1.
-- Qualsiasi modifica al circuito, al firmware o al dossier.
+- La FMEA (L45), l'ingresso protetto (L57), il micro e lo standby (L54), il dispositivo d'uscita
+  (L55), G1. Se una strada per lo specchio tocca il dispositivo d'uscita, si dice e si lascia a L55.
 
 ## CHIUSURA
 
-1. `STATE.md` con L53 **fatto** nella tabella dei lotti, e il prossimo (L45).
+1. `STATE.md` con L56 **fatto** nella tabella dei lotti, e il prossimo.
 2. Riscrivi QUESTO file per il lotto successivo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L53`.
+4. `/bin/zsh scripts/chunk_close.sh L56`.
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**
