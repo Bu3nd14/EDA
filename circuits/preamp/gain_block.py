@@ -224,6 +224,10 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # Filtered V+ for the input mirror AND the VAS (ADR-056, L46b): the RC cell
     # that makes it is at the END of this function (designator numbering).
     VPF = n("VPF")
+    # ADR-067 (L56): the mirror diode-side collector (helper base) and the VAS
+    # base (follower emitter). The two transistors that drive them are at the
+    # END of this function, after the RC cell, for the same reason.
+    NMIRC, NVB = n("NMIRC"), n("NVB")
 
     i = [base]
 
@@ -363,7 +367,10 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # above the FEEDBACK JFET drives the mirror DIODE. That assignment - not
     # the other one - is what makes the global feedback negative.
     Q("npn", "MMBT5551", "MMBT5551", NHI, NCASC, D1N)     # -> mirror output
-    Q("npn", "MMBT5551", "MMBT5551", NMIRI, NCASC, D2N)   # -> mirror diode
+    # -> mirror diode side. ADR-067: onto NMIRC, the diode-side collector, one
+    # Vbe below the mirror bases (the helper transistor at the end), so that
+    # both cascodes - and both mirror halves - sit at the same voltage.
+    Q("npn", "MMBT5551", "MMBT5551", NMIRC, NCASC, D2N)
 
     # Current-mirror load, matched monolithic PNP pair.
     #
@@ -419,6 +426,22 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # Vce this transistor has, so the junction sits far closer to the knee
     # than the terminal voltage suggests. It is not a model artefact - the
     # datasheet's own VCE(sat) <= 0.5 V at 1 mA implies exactly such an RC.
+    # ADR-067 (L56, NC-060): AND IT BIT BOTH HALVES. The diode-connected half,
+    # collector tied to base, had its INTERNAL base-collector junction forward
+    # by Ic*RC = ~0.5 V, always; the output half sat at +0.42 V with ~0.79 V
+    # across it, set by the VAS Vbe. The two knees cancelled each other at
+    # 27 C - CCIF IMD -125.6 dB - and the device heat broke the balance: the
+    # tail (Q106 hotter than its diodes) rises 4.51 -> 4.84 mA, and THD at
+    # 20 kHz left V4 in 48 cases of 48, IMD up to -61 dB at 57 C air. Lifting
+    # only the output half (a follower before the VAS) removed the cliff but
+    # left -105 dB of second order from the diode half, still RC (zero RC:
+    # -134.5 dB) and not Early (VAF 1000: unchanged). The cure lifts BOTH:
+    # a follower drives the VAS (NHI one Vbe lower) and a helper drives the
+    # bases (the diode-side collector NMIRC one Vbe below them). Both halves
+    # now sit at -0.18...+0.05 V internally, hot and cold; both cascodes at
+    # the same voltage. Measured with every junction at its own temperature
+    # (data/2026-10-12/L56/, caldo.py): 0 of 48 outside V4, worst margin
+    # 2.7 dB, IMD -131.7 dB at 57 C air, tail cliff beyond +24 %.
     # ADR-056 (L46b): the mirror emitters sit on VPF, the filtered rail, and
     # MUST sit on the SAME node as the VAS emitter below. Filtering only one of
     # the two is worse than filtering neither: the rail difference lands across
@@ -426,6 +449,11 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # -12 dB, VAS alone 47 dB, both 71.8 dB, neither 29.5 dB
     # (docs/preamp/data/2026-10-01/L46b/psrr.csv).
     #
+    # ADR-067 (L56): R120 BACK TO 220, the symmetric value. The paragraph below
+    # is why it was 226 - and its cause is gone: the VAS base current now flows
+    # into the follower's emitter, not into NHI. With 226 and the follower the
+    # block sits at +17.0 mV; with 220 at -3.0 mV (-6.6 mV with ADR-056's 226
+    # and no follower). Kept for the record:
     # 226 OHM ON THE OUTPUT SIDE, NOT 220 (ADR-056, L46b): the VAS base current
     # (~83 uA at 10.7 mA, beta ~129 on the vendor model) flows INTO NHI, so with
     # a symmetric mirror the cascoded JFET on that side carries ~75 uA more and
@@ -442,16 +470,18 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # (-36...+6 mV for hFE 60-250). A 0.1 % pair removes this term if wanted.
     NME1, NME2 = n("NME1"), n("NME2")
     R("220", VPF, NME1)
-    R("226", VPF, NME2)
+    R("220", VPF, NME2)                 # ADR-067: 226 -> 220, see above
     i[0] += 1
     qm = Part("preamp", "LS352", value="LS352", footprint=FP_SOIC8,
               ref=f"Q{i[0]}")
-    qm["1"] += NMIRI      # C1 -> mirror diode side (collector to its base)
+    # C1 -> mirror diode side. ADR-067: NOT tied to its base any more; it goes
+    # to NMIRC, the helper's base, one Vbe below the bases (section 8).
+    qm["1"] += NMIRC
     qm["2"] += NMIRI      # B1 -> common base node
     qm["3"] += NME1       # E1 -> its own degeneration, R119 220 Ohm
-    qm["8"] += NHI        # C2 -> mirror output, into the VAS
+    qm["8"] += NHI        # C2 -> mirror output, into the follower (ADR-067)
     qm["7"] += NMIRI      # B2 -> common base node
-    qm["6"] += NME2       # E2 -> its own degeneration, R120 226 Ohm
+    qm["6"] += NME2       # E2 -> its own degeneration, R120 220 Ohm
     sx.spice_dev(qm, "Q", ["1", "2", "3"], "LS350", suffix="A")
     sx.spice_dev(qm, "Q", ["8", "7", "6"], "LS350", suffix="B")
 
@@ -473,8 +503,10 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # the mirror. The VAS and the mirror on V+ are how V+ got into the output:
     # the VAS base follows the rail and C124 turns that into a current into the
     # output node, which is why PSRR+ tracked the Miller value (L46a).
+    # ADR-067 (L56): the base is NVB, driven by the follower at the end of this
+    # function, not NHI. Miller C124 stays from NX to NHI, around both.
     NVE = n("NVE")
-    Q("pnp", "MMBT5401", "MMBT5401", NX, NHI, NVE)
+    Q("pnp", "MMBT5401", "MMBT5401", NX, NVB, NVE)
     R("56", VPF, NVE)
 
     # Miller compensation - the dominant pole of the whole amplifier.
@@ -636,6 +668,34 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # The 1000 uF electrolytic: >= 25 V, + terminal on VPF.
     R("10", VP, VPF)
     C("1000u", VPF, GND, fp="Capacitor_THT:CP_Radial_D10.0mm_P5.00mm")
+
+    # ========================================================================
+    # 8. FOLLOWER BEFORE THE VAS AND HELPER ON THE MIRROR (ADR-067, L56, NC-060)
+    # ========================================================================
+    # Appended LAST, after the RC cell, for the reason R_G10 and the cell are
+    # (limitations.md #22): every designator that existed before L56 keeps its
+    # number. On this file's block they are Q146 / R147 (follower) and Q148 /
+    # R149 (helper); on the audio board they follow each instance's base.
+    # Why both, and why not one: read the mirror comment (ADR-067 there).
+    #
+    # Follower: PNP, base on NHI (the mirror output), emitter on NVB (the VAS
+    # base), 1.2 kOhm from VPF: ~1.2 V across it, ~1.1 mA. The VAS base current
+    # (~83 uA) now lands here, not in NHI - which is why R120 went back to 220.
+    # NHI drops one Vbe: the mirror output half gets ~1.4 V instead of 0.79.
+    # 1.2k vs 2.2k measured the same (data/2026-10-12/L56/sintesi_caldo.csv).
+    # Helper: PNP, base on NMIRC (the diode-side collector and the cascode
+    # Q118), emitter on NMIRI (the mirror bases), 10 kOhm from VPF: ~1.1 V,
+    # ~0.13 mA (4.7k and 22k measured the same). NMIRC sits one Vbe below the
+    # bases, so the diode half is no longer forward-biased by Ic*RC inside.
+    # COLLECTORS TO THE NEGATIVE RAIL, NOT TO GROUND: the follower's current
+    # carries the VAS base current, i.e. signal, and must not return through
+    # signal ground. Measured both ways: distortion identical, PSRR- at 100 Hz
+    # / 1 kHz 95.4 / 95.0 dB (99.7 / 104.9 to ground; 76.2 / 86.3 before L56).
+    # Dissipation ~33 mW (follower, ~28.6 V) and ~4 mW (helper): SOT-23 is fine.
+    Q("pnp", "MMBT5401", "MMBT5401", VM, NHI, NVB)
+    R("1.2k", VPF, NVB)
+    Q("pnp", "MMBT5401", "MMBT5401", VM, NMIRC, NMIRI)
+    R("10k", VPF, NMIRI)
 
     return dict(IN=IN, OUT=OUT, FB=FB, RG=RG, RG10=RG10, VP=VP, VM=VM,
                 GND=GND)
