@@ -1,0 +1,83 @@
+ref,modo,caso,come,criterio,verdetto,vp,vm,t_fuori,t_mute,t_jack,t_10_6,A_main_V,A_main_dB,A_fisse_V,grezzo_main_V,grezzo_fisse_V,sopra_main_ms,sopra_fisse_ms,sopra_alla_fine,nota
+J513,pin 1 aperto (meta' A del secondario),f_j513a_aperto_mus,simulato,P10,entro,15.00 / 15.00,-15.05 / -15.05,,,mai,,3.9e-11,-94.7,1.44e-11,3.8e-11,1.48e-11,0.0,0.0,no,una meta' del secondario staccata: i due rail a mezz'onda
+J513,pin 3 aperto (meta' B del secondario),f_j513b_aperto_mus,simulato,P10,entro,15.00 / 15.00,-15.05 / -15.05,,,mai,,3.9e-11,-94.7,1.44e-11,3.8e-11,1.48e-11,0.0,0.0,no,l'altra meta'
+J513,pin 2 aperto (presa centrale),f_j513ct_aperto_mus,simulato,P10,entro,15.00 / 15.00,-15.05 / -15.05,,,mai,,3.9e-11,-94.7,1.44e-11,3.8e-11,1.48e-11,0.0,0.0,no,la presa centrale staccata: GND non tocca piu' il trasformatore
+J513,"pin 2 aperto (presa centrale), 6 s",f_j513ct_aperto_mus6,simulato,P10,entro,15.00 / 15.00,-15.05 / -14.38,,,mai,,6.21e-09,-50.7,2.05e-09,5.24e-07,7.04e-07,0.0,0.0,no,"lo stesso, fino a TE + 6 s: la deriva del punto di mezzo fino al sorvegliante"
+D501,diodo A->+ in corto,f_d501a_corto_mus,simulato,P9 (b),"FUORI: jack dopo 10,6 V",0.00 / 15.00,-15.05 / -0.61,10.10,10.10,13.10,11.00,0.000896,52.5,0.000289,0.00118,0.000382,0.0,0.0,no,
+D501,diodo B->+ in corto,f_d501b_corto_mus,simulato,P9 (b),"FUORI: jack dopo 10,6 V",0.00 / 15.00,-15.05 / -0.59,1.30,1.30,4.30,1.90,0.000885,52.4,0.000287,0.00121,0.000391,0.0,0.0,no,
+D501,diodo -->A in corto,f_d501c_corto_mus,simulato,P9 (b),"FUORI: jack dopo 10,6 V",0.66 / 15.00,-15.05 / 0.00,1.30,1.30,4.30,1.90,0.000138,36.2,4.42e-05,0.00017,5.47e-05,0.0,0.0,no,
+D501,diodo -->B in corto,f_d501d_corto_mus,simulato,P9 (b),"FUORI: jack dopo 10,6 V",0.69 / 15.00,-15.05 / 0.00,10.10,10.20,13.20,11.00,0.000125,35.4,3.99e-05,0.000159,5.1e-05,0.0,0.0,no,
+D501,diodo A->+ aperto,f_d501a_aperto_mus,simulato,P10,entro,15.00 / 15.00,-15.05 / -15.05,,,mai,,3.9e-11,-94.7,1.44e-11,3.8e-11,1.48e-11,0.0,0.0,no,
+D501,diodo B->+ aperto,f_d501b_aperto_mus,simulato,P10,entro,15.00 / 15.00,-15.05 / -15.05,,,mai,,3.9e-11,-94.7,1.44e-11,3.8e-11,1.48e-11,0.0,0.0,no,
+D501,diodo -->A aperto,f_d501c_aperto_mus,simulato,P10,entro,15.00 / 15.00,-15.05 / -15.05,,,mai,,3.9e-11,-94.7,1.44e-11,3.8e-11,1.48e-11,0.0,0.0,no,
+D501,diodo -->B aperto,f_d501d_aperto_mus,simulato,P10,entro,15.00 / 15.00,-15.05 / -15.05,,,mai,,3.9e-11,-94.7,1.44e-11,3.8e-11,1.48e-11,0.0,0.0,no,
+C501,corto,f_c501_corto_mus,"simulato, letto fino all'aborto (picco grezzo al posto del filtrato)",P9 (b),"FUORI: jack dopo 10,6 V",0.00 / 15.00,-15.05 / -0.60,0.20,0.20,3.20,0.40,0.00898,72.5,0.00287,0.00889,0.00666,0.0,0.0,no,il grezzo + a massa
+C502,corto,f_c502_corto_mus,simulato,P9 (b),"FUORI: jack dopo 10,6 V",0.68 / 15.00,-15.05 / 0.00,0.20,0.20,3.20,0.40,0.000235,40.9,7.46e-05,0.000243,7.76e-05,0.0,0.0,no,il grezzo - a massa
+C501,aperto,f_c501_aperto_mus,simulato,P10,entro,14.19 / 15.00,-15.05 / -15.05,,,mai,,5.13e-05,27.6,1.62e-05,7.93e-05,2.57e-05,0.0,0.0,no,restano i 10 uF di C509
+C502,aperto,f_c502_aperto_mus,simulato,P10,entro,15.00 / 15.00,-15.05 / -14.21,,,mai,,2.11e-05,19.9,6.73e-06,2.33e-05,7.81e-06,0.0,0.0,no,restano i 10 uF di C510
+U501,IN-OUT in corto,f_u501_cortoio_mus,simulato,P10,entro,15.00 / 20.33,-15.05 / -15.05,,,mai,,0.00035,44.3,0.000112,0.000402,0.000133,0.0,0.0,no,il rail + al grezzo
+U501,"pin 4 (6,4 V) aperto",f_u501_vset86_mus,simulato,P9 (b),entro,0.83 / 15.00,-15.05 / -0.63,9.20,8.80,11.80,30.30,0.000136,36.1,4.47e-05,0.000169,5.61e-05,0.0,0.0,no,"il rail a 8,6 V"
+U501,"pin 9 (0,8 V) aperto",f_u501_vset142_mus,simulato,P10,entro,14.20 / 15.00,-15.05 / -15.05,,,mai,,4.87e-05,27.2,1.58e-05,7.94e-05,2.57e-05,0.0,0.0,no,"14,2 V"
+U501,"pin 6 (3,2 V) a massa",f_u501_vset182_mus,simulato,P10,entro,15.00 / 18.20,-15.05 / -15.05,,,mai,,0.000116,34.8,3.81e-05,0.00029,9.51e-05,0.0,0.0,no,"18,2 V chiesti, il grezzo meno la caduta"
+U501,"pin 8 (1,6 V) a massa",f_u501_vset166_mus,simulato,P10,entro,15.00 / 16.60,-15.05 / -15.05,,,mai,,0.000106,33.9,3.41e-05,0.00016,5.17e-05,0.0,0.0,no,"16,6 V"
+U501,"pin 10 (0,4 V) a massa",f_u501_vset154_mus,simulato,P10,entro,15.00 / 15.40,-15.05 / -15.05,,,mai,,3.95e-05,25.4,1.26e-05,4.38e-05,1.4e-05,0.0,0.0,no,"15,4 V"
+U501,"pin 11 (0,2 V) a massa",f_u501_vset152_mus,simulato,P10,entro,15.00 / 15.20,-15.05 / -15.05,,,mai,,2.1e-05,19.9,6.71e-06,2.23e-05,7.11e-06,0.0,0.0,no,"15,2 V"
+U501,"pin 12 (0,1 V) a massa",f_u501_vset151_mus,simulato,P10,entro,15.00 / 15.10,-15.05 / -15.05,,,mai,,1.1e-05,14.3,3.45e-06,1.14e-05,3.6e-06,0.0,0.0,no,"15,1 V"
+U501,SENSE (pin 3) aperto,f_u501_sense_mus,simulato,P10,entro,15.00 / 20.10,-15.05 / -15.05,,,mai,,0.000116,34.7,3.8e-05,0.000338,0.000115,0.0,0.0,no,IPOTESI: senza retroazione l'uscita va al grezzo
+U502,IN-OUT in corto,f_u502_cortoio_mus,simulato,P10,entro,15.00 / 15.00,-20.30 / -15.05,,,mai,,9.81e-05,33.3,3.12e-05,0.000105,3.35e-05,0.0,0.0,no,il rail - al grezzo
+R501,aperto,f_r501_aperto_mus,simulato,P10,entro,15.00 / 15.00,-20.07 / -15.05,,,mai,,4.16e-05,25.8,1.32e-05,8.17e-05,2.97e-05,0.0,0.0,no,FB a massa da R502: il rail - al grezzo
+R502,aperto,f_r502_aperto_mus,simulato,P9 (b),entro,0.70 / 15.00,-15.05 / -1.18,9.30,9.10,12.10,29.80,1.41e-05,16.4,4.46e-06,1.14e-05,3.71e-06,0.0,0.0,no,"FB sull'uscita: il rail a VREF, -1,18 V"
+C505,"aperto, poi la perdita di rete",f_c505_aperto_perd,simulato,P9 (b),entro,0.10 / 15.00,-15.05 / -0.41,82.90,14.40,17.40,127.90,9.78e-09,-46.7,6.4e-10,7.19e-08,3.27e-09,0.0,0.0,no,la tenuta del + persa: restano i 10 uF di C511
+C506,"aperto, poi la perdita di rete",f_c506_aperto_perd,simulato,P9 (b),entro,0.47 / 15.00,-15.05 / -0.08,80.00,14.40,17.40,123.80,9.78e-09,-46.7,1.02e-10,7.19e-08,5.01e-10,0.0,0.0,no,la tenuta del -
+D510,"aperto, poi la perdita di rete",f_d510_aperto_perd,simulato,P9 (b),entro,0.47 / 15.00,-15.05 / -0.41,89.20,14.40,17.40,153.40,9.78e-09,-46.7,1.09e-10,7.19e-08,5.35e-10,0.0,0.0,no,OUT sopra IN senza il diodo?
+D511,"aperto, poi la perdita di rete",f_d511_aperto_perd,simulato,P9 (b),entro,0.47 / 15.00,-15.05 / -0.41,89.20,14.40,17.40,153.40,9.78e-09,-46.7,1.09e-10,7.19e-08,5.35e-10,0.0,0.0,no,"IN sopra OUT senza il diodo? (Abs Max -0,3 V)"
+C139,corto (rail + a massa),f_vplus_massa_mus,"simulato, letto fino all'aborto (picco grezzo al posto del filtrato)",P9 (c),caso accettato,0.00 / 15.00,-15.05 / -0.60,0.10,0.10,3.10,0.10,13.8,136.2,13.5,13.8,13.5,0.3,0.2,no,U501 nel limite di corrente
+C140,corto (rail - a massa),f_vminus_massa_mus,simulato,P9 (c),caso accettato,0.68 / 15.00,-15.05 / 0.00,0.10,0.10,3.10,0.10,0.0706,90.4,0.187,0.0778,0.273,0.0,0.0,no,U502 nel limite di corrente
+J1,pin 1 (VPLUS) aperto,f_j1vp_aperto_mus,simulato,P9 (b),"FUORI: nessun mute, il jack non si apre, picco oltre il tetto",0.00 / 15.00,-15.05 / -15.05,3.40,,mai,11.00,13.3,135.9,13,13.9,14.3,740.9,980.8,si,"la scheda audio perde il +, il sorvegliante no"
+J1,pin 3 (VMINUS) aperto,f_j1vm_aperto_mus,simulato,P9 (b),"FUORI: nessun mute, il jack non si apre",15.00 / 15.00,-15.05 / -0.00,6.80,,mai,21.70,0.00419,65.9,0.0106,0.00837,0.0418,0.0,0.0,no,la scheda audio perde il -
+Q501,"corto D-S, poi lo spegnimento",f_q501_corto_spegn,simulato,P9 (b),"entro, sopra l'obiettivo di 2 mV",0.52 / 15.00,-15.05 / -0.46,219.20,28.40,212.90,283.40,0.00644,69.6,2.31e-05,0.00627,2.2e-05,0.0,0.0,no,
+Q501,"corto D-S, poi la perdita di rete",f_q501_corto_perd,simulato,P9 (b),"FUORI: jack dopo 10,6 V",0.47 / 15.00,-15.05 / -0.41,89.20,14.40,681.50,153.40,0.268,102.0,0.275,0.624,0.668,0.0,0.0,no,
+Q501,"corto D-S, poi U502 spento",f_q501_corto_gu502,simulato,P9 (b),"FUORI: jack dopo 10,6 V",0.70 / 15.00,-15.05 / 0.00,9.30,9.10,193.90,29.80,0.00638,69.5,0.000408,0.00622,0.000455,0.0,0.0,no,
+Q501,"corto D-S, poi U501 spento",f_q501_corto_gu501,simulato,P9 (b),"FUORI: jack dopo 10,6 V, picco oltre il tetto",0.00 / 15.00,-15.05 / -0.63,9.20,8.80,192.90,30.30,2.78,122.3,2.8,3.69,3.75,65.8,154.1,no,
+K2-K4,"NO saldato, poi lo spegnimento",nosald_spegnimento_l,"simulato (ponte di spegnimento_l, jack chiuso)",P9 (b),FUORI: il jack non si apre,0.52 / 15.00,-15.05 / -0.46,219.20,28.40,mai,283.40,0.268,102.0,0.276,0.625,0.668,0.0,0.0,no,
+K2-K4,"NO saldato, poi la perdita di rete",nosald_perdita,"simulato (ponte di perdita, jack chiuso)",P9 (b),FUORI: il jack non si apre,0.47 / 15.00,-15.05 / -0.41,89.20,14.40,mai,153.40,0.268,102.0,0.275,0.624,0.668,0.0,0.0,no,
+K2-K4,"NO saldato, poi U502 spento",nosald_guasto,"simulato (ponte di guasto, jack chiuso)",P9 (b),FUORI: il jack non si apre,0.70 / 15.00,-15.05 / 0.00,9.30,9.10,mai,29.80,0.0253,81.5,0.0278,0.0591,0.0852,0.0,0.0,no,
+K2-K4,"NO saldato, poi U501 spento",nosald_guasto_u501,"simulato (ponte di guasto_u501, jack chiuso)",P9 (b),"FUORI: il jack non si apre, picco oltre il tetto",0.00 / 15.00,-15.05 / -0.63,9.20,8.80,mai,30.30,3.42,124.1,3.61,7.23,9.01,327.5,548.8,no,
+-,senza guasto: lo spegnimento,spegnimento_l,riferimento (L56),P9 (b),entro,0.52 / 15.00,-15.05 / -0.46,219.20,28.40,31.30,283.40,2.52e-09,-58.5,1.13e-10,1.63e-08,5.31e-10,0.0,0.0,no,
+-,senza guasto: la perdita di rete,perdita,riferimento (L56),P9 (b),entro,0.47 / 15.00,-15.05 / -0.41,89.20,14.40,17.40,153.40,9.78e-09,-46.7,1.09e-10,7.19e-08,5.35e-10,0.0,0.0,no,
+-,senza guasto: U502 spento (L41c),guasto,riferimento (L56),P9 (b),entro,0.70 / 15.00,-15.05 / 0.00,9.30,9.10,12.10,29.80,1.4e-05,16.4,4.44e-06,1.14e-05,3.71e-06,0.0,0.0,no,
+-,senza guasto: U501 spento (L41c),guasto_u501,riferimento (L56),P9 (b),entro,0.00 / 15.00,-15.05 / -0.63,9.20,8.80,11.80,30.30,0.000136,36.1,4.47e-05,0.000169,5.61e-05,0.0,0.0,no,
+U501,"spento (uscita aperta, EN)",guasto_u501,uguale a,,come guasto_u501,,,,,,,,,,,,,,,il caso di L41c / L56
+U502,"spento (uscita aperta, EN)",guasto,uguale a,,come guasto,,,,,,,,,,,,,,,il caso di L41c / L56
+U501,uscita a massa (interno),f_vplus_massa_mus,uguale a,,come f_vplus_massa_mus,,,,,,,,,,,,,,,lo stesso nodo
+U502,uscita a massa (interno),f_vminus_massa_mus,uguale a,,come f_vminus_massa_mus,,,,,,,,,,,,,,,lo stesso nodo
+U501,IN a massa (interno),f_c501_corto_mus,uguale a,,come f_c501_corto_mus,,,,,,,,,,,,,,,lo stesso nodo
+U502,IN a massa (interno),f_c502_corto_mus,uguale a,,come f_c502_corto_mus,,,,,,,,,,,,,,,lo stesso nodo
+U501,"pin 5 (6,4 V) aperto",f_u501_vset86_mus,uguale a,,come f_u501_vset86_mus,,,,,,,,,,,,,,,lo stesso peso del pin 4
+C509,corto,f_c501_corto_mus,uguale a,,come f_c501_corto_mus,,,,,,,,,,,,,,,in parallelo a C501
+C510,corto,f_c502_corto_mus,uguale a,,come f_c502_corto_mus,,,,,,,,,,,,,,,in parallelo a C502
+C505,corto,f_vplus_massa_mus,uguale a,,come f_vplus_massa_mus,,,,,,,,,,,,,,,sul rail +
+C511,corto,f_vplus_massa_mus,uguale a,,come f_vplus_massa_mus,,,,,,,,,,,,,,,sul rail +
+C141,corto,f_vplus_massa_mus,uguale a,,come f_vplus_massa_mus,,,,,,,,,,,,,,,sul rail + (100 uF del blocco)
+C506,corto,f_vminus_massa_mus,uguale a,,come f_vminus_massa_mus,,,,,,,,,,,,,,,sul rail -
+C512,corto,f_vminus_massa_mus,uguale a,,come f_vminus_massa_mus,,,,,,,,,,,,,,,sul rail -
+C142,corto,f_vminus_massa_mus,uguale a,,come f_vminus_massa_mus,,,,,,,,,,,,,,,sul rail - (100 uF del blocco)
+D510,corto,f_u501_cortoio_mus,uguale a,,come f_u501_cortoio_mus,,,,,,,,,,,,,,,OUT-IN di U501 in corto
+D511,corto,f_u502_cortoio_mus,uguale a,,come f_u502_cortoio_mus,,,,,,,,,,,,,,,OUT-IN di U502 in corto
+R501,corto,f_r502_aperto_mus,uguale a,,come f_r502_aperto_mus,,,,,,,,,,,,,,,"FB sull'uscita: -1,18 V"
+C513,corto,f_r502_aperto_mus,uguale a,,come f_r502_aperto_mus,,,,,,,,,,,,,,,"FB sull'uscita: -1,18 V"
+R502,corto,f_r501_aperto_mus,uguale a,,come f_r501_aperto_mus,,,,,,,,,,,,,,,FB a massa: il rail - al grezzo
+C507,corto,,= guasto_u501,,calcolo,,,,,,,,,,,,,,,"NR a massa: il riferimento di U501 a 0 V, il rail + scende come con U501 spento (IPOTESI: l'uscita segue il riferimento filtrato su NR/SS, SBVS204G 6.3.3)"
+C507,aperto,,datasheet,,calcolo,,,,,,,,,,,,,,,"stabilita' non garantita: SBVS204G Tabella 4-1, NR >= 10 nF ""to assure stability""; il banco comportamentale non puo' mostrare un'oscillazione"
+C508,corto,,= guasto,,calcolo,,,,,,,,,,,,,,,"NR/SS a massa: il riferimento di U502 a 0 V, il rail - come con U502 spento (IPOTESI, come C507)"
+C508,aperto,,datasheet,,calcolo,,,,,,,,,,,,,,,nessun effetto in continua: SBVS169D caratterizza con CNR/SS = 0 nF; piu' rumore e niente avvio morbido
+C509,aperto,,calcolo,,calcolo,,,,,,,,,,,,,,,nessuno: C501 (4700 uF) resta sull'ingresso di U501
+C510,aperto,,calcolo,,calcolo,,,,,,,,,,,,,,,nessuno: C502 resta sull'ingresso di U502
+C511,aperto,,datasheet,,calcolo,,,,,,,,,,,,,,,"stabilita' non garantita: SBVS204G Tabella 4-1, OUT >= 10 uF ceramico; resta C505 (elettrolitico)"
+C512,aperto,,datasheet,,calcolo,,,,,,,,,,,,,,,"stabilita' non garantita: SBVS169D, OUT >= 10 uF ceramico; resta C506"
+C513,aperto,,calcolo,,calcolo,,,,,,,,,,,,,,,"nessun effetto in continua: e' il condensatore di anticipo (rumore, risposta ai transitori)"
+C505,aperto (durante la musica),,= f_c505_aperto_perd,,calcolo,,,,,,,,,,,,,,,"al guasto niente (restano i 10 uF di C511): e' latente, lo mostra la perdita di rete (f_c505_aperto_perd) o un guasto di U501, che sarebbe un secondo guasto"
+C506,aperto (durante la musica),,= f_c506_aperto_perd,,calcolo,,,,,,,,,,,,,,,idem per il rail -
+C139-C142,aperto,,L45a,,calcolo,,,,,,,,,,,,,,,un blocco perde il suo disaccoppiamento locale: niente in continua; L45a l'ha simulato (C139_ap ... C142_ap)
+J1,pin 2 (GND) aperto,,non simulato,,calcolo,,,,,,,,,,,,,,,la massa della scheda audio non torna piu' alla presa centrale: i rail della scheda audio si riferiscono a una massa che galleggia; il banco a due passi non lo rappresenta (la scheda audio e' un carico verso 0 V). Da riprendere in L45d col cablaggio di G2
+"U501, U502",EN aperto,,= guasto_u501 / guasto,,calcolo,,,,,,,,,,,,,,,"EN e' legato a IN; aperto, lo stato del pin non e' definito dal datasheet: il caso peggiore noto e' il regolatore spento"
