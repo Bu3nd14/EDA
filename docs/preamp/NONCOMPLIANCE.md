@@ -3591,6 +3591,13 @@ limita a ~114 dB SPL a 1 m, sopra il tetto di 112,2; con la geometria iii un gua
 inserito non arriva al rilascio. **L'utente ha spostato la scadenza prima di G1**, severità
 invariata.
 
+**Avanzamento, L45 (2026-10-13).** All'apertura del lotto l'utente ha allargato l'analisi
+(«ritengo necessario fare la FMEA anche dell'alimentatore e della parte controlli») e l'ha
+divisa in quattro parti («Quattro parti»): **L45a** i guasti del blocco di guadagno, **L45b** i
+controlli (relè, ritegno, piloti, commutatori, LED, condensatori d'uscita, comandi dal micro),
+**L45c** l'alimentatore componente per componente, **L45d** la decisione sul rivelatore e sul
+tetto delle fisse. La voce si chiude con L45d.
+
 ### NC-043 — La VTL5C4 dell'Excelitas è fuori produzione, e il progetto la usa ancora
 
 | | |
