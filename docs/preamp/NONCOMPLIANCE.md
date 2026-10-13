@@ -3560,7 +3560,7 @@ dati `data/2026-10-07/L48b/`, **ADR-065**.
 | Requisito | **PR-22, PR-23, PR-24** · P7, P9 · ADR-027 («Da riaprire se» sulla bobina di K6), ADR-033, ADR-051 |
 | Severità | **maggiore**, da chiudere **prima di G1** (decisione dell'utente in L52, 2026-10-12, «Move the analysis before G1»; prima: prima di G2, L43a) |
 | Aperta da | `reports/2026-09-27-L43a-architetto-avversariale.md`, rilievo **R5**. Trovata dall'**architetto avversariale**, accettata dall'utente in L43a |
-| Stato | aperta — la FMEA è **L45**, prima di G1 (L52): L45a e L45b fatte, restano L45c (l'alimentatore) e L45d (la decisione) |
+| Stato | aperta — la FMEA è **L45**, prima di G1 (L52): L45a, L45b e L45c1 fatte, restano L45c2 (la linea dei relè e il comando) e L45d (la decisione) |
 
 **Evidenza.** Nel repo «guasto singolo», «FMEA» e «analisi dei guasti» portano solo ad ADR-051 e
 alle clausole di ADR-027 e ADR-033; `psu.py` non ha rivelatori di continua sulle uscite dei
@@ -3628,6 +3628,18 @@ numero vero a L45c. Senza danno ma contro il contratto: la bobina di K6 aperta (
 ADR-027) e il LED rosso acceso con la musica, K1/K5 saldati (il guadagno a riposo sopra 0 dB).
 **Il blocco a vuoto contro P10: 257 modi su 544 fuori** (fino a 2 s al principale, 3,1 s sulle
 fisse); il rivelatore ideale li porta a 0,2–10,1 ms. Restano L45c e L45d.
+
+**Avanzamento, L45c1 (2026-10-13).** L'utente ha diviso L45c in due («Due parti»): **L45c1** i rail
+audio e il mute che non si inserisce, **L45c2** la linea dei relè e del comando
+(`reports/2026-10-13-L45c1-fmea-rail.md`). 78 modi, 44 simulati sull'alimentatore col firmware e
+sulla scheda audio. **Fuori da PR-23 / P9 (b)**: il **filo del rail + fra le due schede che si apre**,
+13,3 V al jack principale e nessun mute (il sorvegliante legge il rail sull'alimentatore); **il mute
+che non si inserisce** (NO saldato, Q501 in corto), sotto il tetto allo spegnimento e alla perdita di
+rete (0,27 V), sopra se poi si spegne U501 (3,4 / 2,8 V); i corti dal lato grezzo fuori dal criterio
+di L41c ma ≤ 9,0 mV al jack. **Non visti da niente, senza effetto al jack**: le sovratensioni fino a
+±20,3 V e le ondulazioni (la presa centrale aperta lascia il rail − in caduta a vita). Il corto di un
+rail resta il caso accettato di P9 (c). Nessuna voce nuova: se aprirne per il filo del rail o le
+sovratensioni lo decide l'utente in L45d. Restano L45c2 e L45d.
 
 ### NC-043 — La VTL5C4 dell'Excelitas è fuori produzione, e il progetto la usa ancora
 
