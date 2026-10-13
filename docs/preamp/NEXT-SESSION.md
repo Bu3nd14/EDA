@@ -1,63 +1,66 @@
-# Prompt per la sessione successiva — L45, la FMEA della scheda audio
+# Prompt per la sessione successiva — L45b, i guasti dei controlli della scheda audio
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L45**, e si ferma. Non iniziarne un secondo, salvo che l'utente
+LOTTI PICCOLI: questa sessione fa **L45b**, e si ferma. Non iniziarne un secondo, salvo che l'utente
 lo chieda esplicitamente nella sessione.
 
 ## Perché questo lotto, e perché adesso
 
-**NC-042** (maggiore, **prima di G1** per decisione dell'utente in L52): nessuna analisi dei guasti
-singoli della scheda audio, e il tetto di non-danno (PR-23, 112,2 dB SPL a 1 m) vale finora solo per
-l'alimentatore. L'architetto di L52 (R1) l'ha messa prima del congelamento perché il rimedio
-naturale — un rivelatore di continua sulle uscite dei blocchi che comandi il sink di `MUTE_CMD`, che
-esiste già — **cambia la topologia**. Le sue stime sono a calcolo: un blocco al rail durante
-l'ascolto porta ~13,8 V al jack, che il finale limita a ~114 dB SPL, sopra il tetto.
+**NC-042** (maggiore, **prima di G1**): l'analisi dei guasti singoli. All'apertura di L45
+(2026-10-13) l'utente l'ha allargata all'alimentatore e ai controlli e divisa in **quattro parti**:
+L45a il blocco di guadagno (**fatto**), **L45b i controlli** (questo), L45c l'alimentatore componente
+per componente, L45d la decisione.
 
-L56 (2026-10-12/13) ha chiuso NC-060: **nessuna voce è più bloccante per G1**, ma NC-042, NC-054,
-NC-055, NC-059 (maggiori) e NC-056 (minore) vanno chiuse prima, per decisione dell'utente. Il blocco
-di guadagno è quello di **ADR-067** (inseguitore davanti al VAS, transistor di aiuto sullo specchio,
-collettori al rail negativo) e **ADR-068** (VAS e suo carico in SOT-223): la FMEA si fa su questo.
-L45 viene prima di L57 (l'ingresso protetto per l'RCA a caldo, NC-059) e L54 (il micro e lo
-standby, NC-054) perché il rivelatore e il mute che può portare servono anche lì (ordine proposto
-in L53, l'utente non l'ha fissato: se vuole un altro ordine, vale il suo).
+Cosa ha trovato la prima parte (`reports/2026-10-13-L45a-fmea-blocco.md`), da tenere davanti:
+- un guasto su due del blocco porta il jack oltre il tetto di non-danno (~14,9 V, 136,9 dB SPL col
+  PRB, ~114 col finale), e il sorvegliante non interviene;
+- **un rivelatore di continua che apra il mute non abbassa il picco**: il gradino arriva al jack
+  insieme al guasto, e col mute a 0,1–10 ms dal guasto il picco resta 14,8–14,9 V; accorcia solo
+  l'impulso;
+- a mute inserito un guasto non arriva al rilascio (7,3 mV): la geometria iii regge;
+- il banco del canale con guasto esiste: `data/2026-10-13/L45a/script/genera_canale.py`.
 
 **L'utente sta leggendo il dossier in parallelo.** Se porta dei rilievi, si registrano come in
 L43b e non si mescolano alle misure di questo lotto.
 
 ## Il mandato
 
-1. **L'elenco dei guasti singoli** della scheda audio, uno per uno, dal sorgente
-   (`circuits/preamp/preamp_audio.py`, `gain_block.py`): almeno i dispositivi d'uscita in corto o
-   aperti (MJE15032 / 15033), il VAS e il suo carico (ora DZT5401 / DZT5551), l'inseguitore e
-   l'aiuto nuovi di ADR-067, la coda, i JFET; le bobine e i contatti dei relè (guadagno, mute,
-   permissivo K6, trim, selettore; saldati, aperti, rimbalzo); i condensatori d'uscita (4,7 µF) e
-   C_T (10 µF) in corto o aperti; la cella RC di ADR-056; il firmware (le LDR non ci sono più,
-   ADR-062: dirlo). Per ognuno: l'effetto **al jack principale e alle fisse**, in dB SPL a 1 m
-   contro il tetto di non-danno (112,2 dB SPL, PR-23) e contro un tetto per le fisse ancora da
-   fissare (la Stax SRM-T1 da 60 dB, NC-046).
-2. **I casi che superano il tetto, simulati** (non a calcolo): il banco della scheda audio di oggi
-   (gli 8 blocchi), coi guasti introdotti nel deck. Dove serve, il calore (limitations #55: SPICE
-   non scalda i dispositivi; `data/2026-10-12/L56/script/caldo.py` per il blocco).
-3. **All'utente**, per nome e senza sigle, coi numeri in tabella: se un rivelatore di continua sulle
-   uscite dei blocchi debba comandare il sink di `MUTE_CMD`, e se serve un tetto di non-danno sulle
-   fisse; sceglie lui, con **ADR**. Se la scelta cambia il circuito, il sorgente, la netlist, il
-   disegno del blocco (`docs/preamp/schematic/`, `run_tests.sh` 2d), `run_tests.sh`, la regressione
-   dei deck veloci (`data/2026-10-12/L56/script/regressione.sh`, prima/dopo) e i guasti
-   dell'alimentatore (`data/2026-10-12/L56-alimentatore/`, il carico in `carico.txt`).
-4. Report `docs/preamp/reports/<data>-L45-fmea.md`, dati in `docs/preamp/data/<data>/L45/`.
+1. **L'elenco dei guasti singoli dei controlli** della scheda audio, dal sorgente
+   (`circuits/preamp/preamp_audio.py`, `gain_interlock.py`, `selector.py`, `trim.py`) e
+   dall'alimentatore per i comandi (`psu.py`):
+   - **i relè**: il selettore (K13–K16, G6K-2F-Y), il guadagno e il suo ritegno (K1, K5, K11, K12),
+     il trim e il permesso (K7–K10 G6KU bistabili, K6), il mute (K2, K3, K4, la geometria iii).
+     Per ognuno: bobina aperta o in corto, contatto saldato, contatto aperto, rimbalzo, un polo sì e
+     l'altro no;
+   - **i piloti delle bobine** e i commutatori del frontale (SW1, SW2, SW4), e il pilota di
+     `MUTE_CMD` (Q501) e di `PERMIT_CMD` (Q502) con le loro ritenute;
+   - **i LED** che per PR-17 e PR-18 devono dire lo stato vero, non la posizione del comando;
+   - **i condensatori d'uscita** (4,7 µF) e **C_T** (10 µF) in corto o aperti, i bleed aperti;
+   - **il firmware** (le LDR non ci sono più, ADR-062: dirlo), un'uscita del micro bloccata alta o
+     bassa (PR-24).
+   Per ognuno l'effetto **al jack principale e alle fisse**, in dB SPL a 1 m contro il tetto di
+   non-danno (112,2 dB SPL, PR-23), e contro PR-17, PR-18, PR-22, PR-24 dove toccano.
+2. **I casi che superano il tetto, simulati** sul banco di L45a (o sul suo generatore allargato ai
+   contatti: i contatti come interruttori, come i deck di V2), coi controlli che devono fallire.
+3. **Nessuna decisione**: i rimedi li sceglie l'utente in **L45d**, con i numeri di L45a, L45b e
+   L45c davanti. Se un caso chiede una scelta subito (un rimedio che non dipende dagli altri), si
+   chiede all'utente per nome e senza sigle.
+4. Report `docs/preamp/reports/<data>-L45b-fmea-controlli.md`, dati in `docs/preamp/data/<data>/L45b/`.
 
-Il lotto è grande: se all'inizio sembra più di una sessione, proporre all'utente di dividerlo (come
-L51 in L51a/b/c) e lasciar decidere lui.
+Il lotto è grande: se all'inizio sembra più di una sessione, proporre all'utente di dividerlo e
+lasciar decidere lui.
 
 ## Prima di tutto
 
-- `CLAUDE.md`, `docs/limitations.md` (**57** voci; la #57 è di L56: un `op` non convergente stampa
-  numeri), `AGENTS.md`.
-- `docs/preamp/STATE.md`: «In breve» e la voce di **L56**.
-- `NONCOMPLIANCE.md`: NC-042, NC-046, NC-059; `reports/2026-10-12-L52-architetto-avversariale.md` (R1).
-- ADR-021 (P7), ADR-022, ADR-027 (il «Da riaprire se» sulla bobina di K6), ADR-033, ADR-044,
-  ADR-045, ADR-051, ADR-062, ADR-067, ADR-068.
-- `reports/2026-10-12-L56-specchio.md` (il blocco di oggi, i guasti dell'alimentatore col suo carico).
+- `CLAUDE.md`, `docs/limitations.md` (**58** voci; la #58 è di L45a: `esegui.sh` in background parte
+  tutto insieme, si usa `corri.sh` di L45a), `AGENTS.md`.
+- `docs/preamp/STATE.md`: «In breve» e la voce di **L45a**.
+- `NONCOMPLIANCE.md`: NC-042, NC-046, NC-054.
+- `reports/2026-10-13-L45a-fmea-blocco.md` e il README di `data/2026-10-13/L45a/`.
+- ADR-022, ADR-026, ADR-027 (il «Da riaprire se» sulla bobina di K6), ADR-030, ADR-033, ADR-041,
+  ADR-043, ADR-044, ADR-045, ADR-049, ADR-051, ADR-062, ADR-064, ADR-065.
+- I guasti già esaminati: L11 (mute e corto), L29c (il caso peggiore di V2), L41c / L47c2b2 / L56
+  (i guasti dell'alimentatore al jack, il corto della linea dei relè di ADR-051).
 
 ## I vincoli
 
@@ -71,22 +74,26 @@ L51 in L51a/b/c) e lasciar decidere lui.
   - un titolo di PR con l'apostrofo: il corpo va su file, con `--body-file`.
 - Si usano comandi semplici, **percorsi assoluti**, script scritti su file con Write, ed Edit per i
   testi.
+- Le liste lunghe di deck con `xargs -P 8` (`data/2026-10-13/L45a/script/corri.sh`), **non** con
+  `esegui.sh` in background (#58); i processi si contano con `ps -eo args`, non con `pgrep -c`.
+- Un `pkill -f` con un percorso uccide anche le analisi che hanno quel percorso fra gli argomenti
+  (in L45a ha fermato due analisi): il modello va ristretto a `ngspice -b <percorso>`.
+- Le forme d'onda delle corse vanno nel `.gitignore` (L45a ne ha fatte 31 GB).
 - I subagenti in una sessione isolata possono non poter eseguire comandi (L52): se servono
   simulazioni, falle dalla sessione principale.
-- Un `op` va letto rifiutando «source stepping failed» e controllando un nodo noto (limitations #57).
-- Le cifre di distorsione si danno sempre con la temperatura delle giunzioni dichiarata.
+- Un `op` va letto rifiutando «source stepping failed» e controllando un nodo noto (#57).
 
 ## NON fa parte di questo lotto
 
-- L'ingresso protetto (L57), il micro e lo standby (L54), il dispositivo d'uscita (L55), i due casi
-  della catena di NC-055, G1. Se un rimedio della FMEA tocca uno di questi, si dice e si lascia al
-  suo lotto.
+- L'alimentatore componente per componente (L45c), la decisione sui rimedi (L45d), l'ingresso
+  protetto (L57), il micro e lo standby (L54), il dispositivo d'uscita (L55), G1. Se un guasto tocca
+  uno di questi, si dice e si lascia al suo lotto.
 
 ## CHIUSURA
 
-1. `STATE.md` con L45 **fatto** nella tabella dei lotti, e il prossimo.
+1. `STATE.md` con L45b **fatto** nella tabella dei lotti, e il prossimo.
 2. Riscrivi QUESTO file per il lotto successivo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L45`.
+4. `/bin/zsh scripts/chunk_close.sh L45b`.
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**

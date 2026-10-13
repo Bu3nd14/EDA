@@ -1243,3 +1243,18 @@ deve avere un valore noto (un rail interno, una corrente di riposo) invece di fi
 di `Error`. Nei banchi lunghi dell'alimentatore lo stesso caso si vede come «Timestep too small» in
 una sorgente comportamentale: L56 (`L56-alimentatore/psu/corri_seq.sh`) ritenta un passo, una volta,
 con l'altro metodo d'integrazione e lo scrive in `ripiego_g<N>.txt`.
+
+## 58. `esegui.sh` lanciato in background fa partire tutta la lista insieme: il limite di 8 corse non conta niente
+
+Visto in L45a (`docs/preamp/data/2026-10-13/L45a/`). Gli `esegui.sh` dei lotti da L40 a L56
+limitano il parallelismo con `while (( $(jobs -r | wc -l) >= 8 )); do sleep 1; done`. Lanciato
+dallo strumento Bash **in background**, `jobs -r` dentro `$( )` non vede i processi della shell
+madre e conta zero: tutte le corse della lista partono insieme. In L45a 442 ngspice su 10 core,
+nessun errore e nessun avviso; le prime corse di prova, lanciate in primo piano, erano tornate
+normali. Il risultato di ogni corsa resta giusto (ognuna ha la sua cartella), ma il tempo e la
+memoria esplodono, e una lista da qualche migliaio di deck esaurisce la macchina.
+
+**Regola operativa**: per una lista lunga si usa `xargs -P 8` (`L45a/script/corri.sh` e
+`uno.sh`), che limita i figli da sé; e dopo il lancio si contano i processi
+(`ps -eo args`, poi `grep -c "[n]gspice -b"`) invece di fidarsi del limite scritto nello script.
+**Non** con `pgrep -c`: su macOS `-c` non conta, e l'uscita elenca PID di sistema che non c'entrano.

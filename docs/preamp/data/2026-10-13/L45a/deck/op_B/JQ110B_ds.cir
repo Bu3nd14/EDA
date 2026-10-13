@@ -1,0 +1,149 @@
+L45a op B g0 JQ110B_ds - punto di lavoro col guasto inserito
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block.subckt
+.include @REPO@/docs/preamp/data/2026-10-13/L45a/inc/JQ110B_ds.subckt
+* interruttori: SWFC corto del guasto (chiuso con CTL=1), SWFO aperto del guasto (chiuso con
+* CTL=0); SWKO / SWKC i due contatti del deviatore del mute (0,1 ohm, ADR-044): MUTE=0 rilasciato
+.model SWFC SW(VT=0.5 VH=0.1 RON=0.01 ROFF=1e12)
+.model SWFO SW(VT=-0.5 VH=0.1 RON=0.01 ROFF=1e12)
+.model SWKO SW(VT=-0.5 VH=0.1 RON=0.1 ROFF=1e12)
+.model SWKC SW(VT=0.5 VH=0.1 RON=0.1 ROFF=1e12)
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VCTL CTL 0 DC 1
+VMUTE MUTE 0 DC 0
+VIN SRC 0 DC 0
+RSRC SRC JIN 1.5
+CIN JIN SEL 1u
+RJ JIN 0 10MEG
+RSEL SEL 0 470k
+RSELK SEL INA 0.1
+XA INA OUTA FBA RGA RG10A VPLUS VMINUS GAINBLOCK
+RRGA RGA 0 1G
+CRGA RGA 0 15p
+RRG10A RG10A 0 1G
+CRG10A RG10A 0 15p
+XF1 OUTA OUTF1 FBF1 RGF1 RG10F1 VPLUS VMINUS GAINBLOCK
+RRGF1 RGF1 0 1G
+CRGF1 RGF1 0 15p
+RRG10F1 RG10F1 0 1G
+CRG10F1 RG10F1 0 15p
+XF2 OUTA OUTF2 FBF2 RGF2 RG10F2 VPLUS VMINUS GAINBLOCK
+RRGF2 RGF2 0 1G
+CRGF2 RGF2 0 15p
+RRG10F2 RG10F2 0 1G
+CRG10F2 RG10F2 0 15p
+* scala del trim (845 + 464 + 464, sempre montata), trim a 0 dB, C_T, volume al massimo
+RTR1 OUTA TAP6 845
+RTR2 TAP6 TAP12 464
+RTR3 TAP12 0 464
+CT OUTA ATT 10u
+RVT ATT W 1m
+RVB W 0 10k
+XB W OUTB FBB RGB RG10B VPLUS VMINUS CTL GAINBLOCKG
+RRGB RGB 0 1G
+CRGB RGB 0 15p
+RRG10B RG10B 0 1G
+CRG10B RG10B 0 15p
+RSMAIN OUTB MAIN_A 47
+CMAIN MAIN_A MAINC 4.7u
+RBCMAIN MAINC 0 220k
+SNOMAIN MAINC MAINJACK 0 MUTE SWKO
+SNCMAIN MAINC 0 MUTE 0 SWKC
+RBLMAIN MAINJACK 0 220k
+RLDMAIN MAINJACK 0 100k
+RSFIX1 OUTF1 FIX1_A 47
+CFIX1 FIX1_A FIX1C 4.7u
+RBCFIX1 FIX1C 0 470k
+SNOFIX1 FIX1C FIX1JACK 0 MUTE SWKO
+SNCFIX1 FIX1C 0 MUTE 0 SWKC
+RBLFIX1 FIX1JACK 0 470k
+RLDFIX1 FIX1JACK 0 10k
+RSFIX2 OUTF2 FIX2_A 47
+CFIX2 FIX2_A FIX2C 4.7u
+RBCFIX2 FIX2C 0 470k
+SNOFIX2 FIX2C FIX2JACK 0 MUTE SWKO
+SNCFIX2 FIX2C 0 MUTE 0 SWKC
+RBLFIX2 FIX2JACK 0 470k
+RLDFIX2 FIX2JACK 0 50k
+.control
+set noaskquit
+op
+print v(outa)
+print v(outf1)
+print v(outf2)
+print v(outb)
+print v(mainc)
+print v(mainjack)
+print v(fix1jack)
+print v(fix2jack)
+print i(vpp)
+print i(vmm)
+print @j.xb.jq110a[id]
+print @j.xb.jq110b[id]
+print @q.xb.q106[p]
+print @q.xb.q106[ic]
+print @q.xb.q117[p]
+print @q.xb.q117[ic]
+print @q.xb.q118[p]
+print @q.xb.q118[ic]
+print @q.xb.q121a[p]
+print @q.xb.q121a[ic]
+print @q.xb.q121b[p]
+print @q.xb.q121b[ic]
+print @q.xb.q122[p]
+print @q.xb.q122[ic]
+print @q.xb.q125[p]
+print @q.xb.q125[ic]
+print @q.xb.q127[p]
+print @q.xb.q127[ic]
+print @q.xb.q132[p]
+print @q.xb.q132[ic]
+print @q.xb.q133[p]
+print @q.xb.q133[ic]
+print @q.xb.q146[p]
+print @q.xb.q146[ic]
+print @q.xb.q148[p]
+print @q.xb.q148[ic]
+print @r.xb.r101[p]
+print @r.xb.r107[p]
+print @r.xb.r108[p]
+print @r.xb.r109[p]
+print @r.xb.r111[p]
+print @r.xb.r112[p]
+print @r.xb.r113[p]
+print @r.xb.r114[p]
+print @r.xb.r115[p]
+print @r.xb.r119[p]
+print @r.xb.r120[p]
+print @r.xb.r123[p]
+print @r.xb.r126[p]
+print @r.xb.r128[p]
+print @r.xb.r129[p]
+print @r.xb.r130[p]
+print @r.xb.r131[p]
+print @r.xb.r134[p]
+print @r.xb.r135[p]
+print @r.xb.r136[p]
+print @r.xb.r138[p]
+print @r.xb.r143[p]
+print @r.xb.r144[p]
+print @r.xb.r147[p]
+print @r.xb.r149[p]
+print v(xb.d1n)
+print v(xb.s1)
+print v(xb.d2n)
+print v(xb.s2)
+print v(xb.vpf)
+print v(xb.nx)
+print v(xb.ny)
+print v(xb.nref)
+quit
+.endc
+.end

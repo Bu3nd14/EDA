@@ -3598,6 +3598,17 @@ controlli (relè, ritegno, piloti, commutatori, LED, condensatori d'uscita, coma
 **L45c** l'alimentatore componente per componente, **L45d** la decisione sul rivelatore e sul
 tetto delle fisse. La voce si chiude con L45d.
 
+**Avanzamento, L45a (2026-10-13).** I guasti del blocco di guadagno, simulati
+(`reports/2026-10-13-L45a-fmea-blocco.md`): 112 modi, ciascuno nelle quattro posizioni del canale e
+nel blocco B a +10 dB, con il guasto durante l'ascolto. **Oltre il tetto 51 nel blocco A, 50 e 51 nei
+buffer delle fisse, 53 nel blocco B**; il blocco al rail porta ~14,9 V al jack (la stima di R1, 13,8 V,
+è confermata), il blocco A fino a 24,6 V filtrati su tutti e tre i jack. Il sorvegliante non
+interviene (0,90 A al peggio). **Un rivelatore di continua che apra il mute non abbassa il picco**:
+col mute a 0,1–10 ms dal guasto il jack principale vede sempre 14,8–14,9 V; accorcia l'impulso da
+~250 ms ai millisecondi del relè. A mute inserito il guasto non arriva al rilascio (7,3 mV). 26 modi
+trascinano un secondo guasto per calore. Restano L45b (i controlli), L45c (l'alimentatore) e L45d
+(la decisione, con questi numeri davanti).
+
 ### NC-043 — La VTL5C4 dell'Excelitas è fuori produzione, e il progetto la usa ancora
 
 | | |
