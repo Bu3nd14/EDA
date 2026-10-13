@@ -3609,6 +3609,14 @@ col mute a 0,1–10 ms dal guasto il jack principale vede sempre 14,8–14,9 V; 
 trascinano un secondo guasto per calore. Restano L45b (i controlli), L45c (l'alimentatore) e L45d
 (la decisione, con questi numeri davanti).
 
+**Avanzamento, dopo L45a (2026-10-13).** Il criterio, che mancava: l'utente ha firmato **PR-30**
+(**ADR-069**, requisito **P10**). Per un guasto singolo della scheda audio durante l'ascolto vale
+**al più 100 ms sopra 0,87 V su ogni uscita**, al jack senza filtro e a vuoto, con a valle un
+apparecchio accoppiato in continua senza protezione; il tetto di picco di PR-23 resta per la rete e
+l'alimentatore. È anche il **tetto delle fisse** che la voce chiedeva (con NC-046 resta da fare la
+metrica in dB SPL all'orecchio). A calcolo oggi 0,56–3,1 s: la voce si chiude quando L45d ha scelto
+il rimedio e P10 è misurato su ogni guasto. Il calore dei guasti singoli è ora **NC-062**.
+
 ### NC-043 — La VTL5C4 dell'Excelitas è fuori produzione, e il progetto la usa ancora
 
 | | |
