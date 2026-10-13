@@ -1,5 +1,7 @@
 # Prompt per la sessione successiva — L45b, i guasti dei controlli della scheda audio
 
+Nome della sessione: **hi-fi preamp L45b** (la convenzione è in `CLAUDE.md`).
+
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
 LOTTI PICCOLI: questa sessione fa **L45b**, e si ferma. Non iniziarne un secondo, salvo che l'utente
 lo chieda esplicitamente nella sessione.
@@ -102,7 +104,8 @@ lasciar decidere lui.
 ## CHIUSURA
 
 1. `STATE.md` con L45b **fatto** nella tabella dei lotti, e il prossimo.
-2. Riscrivi QUESTO file per il lotto successivo.
+2. Riscrivi QUESTO file per il lotto successivo, con la riga «Nome della sessione: hi-fi preamp
+   <lotto nuovo>» subito sotto il titolo.
 3. Commit, push, PR.
 4. `/bin/zsh scripts/chunk_close.sh L45b`.
 5. Rimuovi il worktree coi comandi che lo script stampa.

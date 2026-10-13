@@ -72,6 +72,13 @@ dichiararlo. Non ha flag di bypass, come `export_fab.sh`.
 PR resta comunque — non è cerimonia, è la traccia: URL stabile, un commit
 per lotto su `main`, e un corpo che il gate potrà citare.
 
+**Il nome della sessione** (deciso dall'utente il 2026-10-13): ogni sessione che lavora a un
+lotto del preamp si chiama **«hi-fi preamp <lotto>»**, per esempio «hi-fi preamp L45b». Più parti
+nella stessa sessione si scrivono tutte («hi-fi preamp L45a, L45b»); il lavoro fuori lotto prende
+il nome del lotto appena chiuso, col prefisso «dopo» («hi-fi preamp dopo L45a»). La sessione non
+si rinomina da sé: il nome sta nella **prima riga del corpo** di `NEXT-SESSION.md`, così chi la apre
+lo trova pronto, e chi riscrive quel file a fine lotto lo aggiorna col lotto nuovo.
+
 **Tracciabilità**: ogni valore non ovvio in `circuits/preamp/*.py` porta
 un commento che punta alla ADR che l'ha prodotto. È il collegamento
 dall'artefatto al ragionamento, e costa un commento.
