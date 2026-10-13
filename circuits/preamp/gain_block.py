@@ -750,6 +750,42 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 # ============================================================================
 
 # ============================================================================
+# SIMULATED RESULTS - L56, 2026-10-12: ADR-067 (follower + helper, R120 220)
+# AND ADR-068 (VAS and its load in SOT-223). Same manufacturer models.
+# docs/preamp/data/2026-10-12/L56/ (regressione/prima = main 96bacb07, the
+# block of the L46b section below; regressione/dopo = this one). Where this
+# section gives a figure it supersedes the L46b one; the rest still stands.
+#
+#   WITH EVERY JUNCTION AT ITS OWN TEMPERATURE (L56/script/caldo.py, Tj =
+#   Ta + P*R_thJA iterated to convergence; limitations #55): 0 of 60 cases
+#   outside V4 (uniform 27 C, and 27 / 57 C air, copper and minimum pad),
+#   THD 20 kHz <= 0.00072 % at 0.2 V and <= 0.0073 % at 2 V (5.6 kOhm source
+#   the worst), CCIF IMD <= -131.8 dB, tail-current cliff beyond +24 %.
+#   The block before L56: 48 of 48 outside, IMD down to -61 dB (NC-060).
+#   Mirror halves, internal base-collector (+ = forward): -0.04 / -0.18 V at
+#   27 C (were +0.51 / +0.42). VAS and load 45.5 C at 27 C air, 75 C at 57 C.
+#   OPERATING POINT: tail 4.505 mA, VAS 10.71 mA, output pair 20.50 / 20.61
+#     mA, mirror halves 2.227 mA, rails 37.97 / 38.99 mA per block (+1.27
+#     each), output DC offset -2.9 mV (-9.0 mV at OUT at +10 dB after V3).
+#   V1 (verdict cells): B 0 / +3 / +10 dB 65.16 / 73.29 / 105.11 deg, A 68.38,
+#     trim 73.36, buffer 65.31; I_DSS group B >= 65.36. Non-verdict cells
+#     (probe on the node, 4.7 nF harness) lose 1.2-1.7 deg.
+#   PSRR, +10 dB, 50 Hz / 1 / 10 / 20 kHz (ideal 1000 uF): from V+ 85.3 /
+#     85.0 / 85.5 / 84.3 dB; from V- 95.6 / 95.0 / 85.5 / 78.9 dB.
+#   NOISE: E5 worst 5.10 uV (was 5.50). E3 108.2 kOhm, E4 60.02 / 53.10 ohm,
+#     block node 0.041 / 0.81 ohm at 1 / 20 kHz.
+#   DISTORTION, 27 C uniform, L46b bench: THD 20 kHz 0.00045 % (0.2 V), 0.0045 %
+#     (2 V); CCIF IMD -138.5 / -138.3 / -132.1 dB at 0 / +3 / +10 dB.
+#   V3: clips +13.34 / -13.85 V, recovery 0.65 us; DC at the jack 13-14 ms
+#     after the overload +19.3 mV (was +3.6; declared, the user's decision:
+#     no requirement bounds it, and the power amplifier is already clipping).
+#   P7 (short at MAIN): MJE 0.393 W, Q125 0.191 W (84 C at 60 C air in
+#     SOT-223, 140 C it would be in SOT-23: NC-061), R123 0.123 W, 22 ohm 0.298 W.
+#   SUPPLY FAULTS AT THE JACK (L56-alimentatore/, L51b's chain on this load):
+#     U502 off 14 uV, U501 off 0.136 mV, 12 V relay-line short 6.4 mV.
+# ============================================================================
+
+# ============================================================================
 # SIMULATED RESULTS - L46b, 2026-10-01, MANUFACTURER MODELS, VAS ~10.7 mA,
 # C124 470p (ADR-054), RC CELL 10 Ohm + 1000 uF AND R120 226 Ohm (ADR-056)
 # Every number below came out of a deck in spice/preamp/tb/, not out of a

@@ -224,3 +224,21 @@ docs/preamp/data/2026-10-12/L56/**/*.dat
 docs/preamp/data/2026-10-12/L56/**/corsa_*.cir
 docs/preamp/data/2026-10-12/L56/**/_analisi_par*/
 docs/preamp/data/2026-10-12/L56/**/__pycache__/
+# L56: la catena dell'alimentatore col carico di L56 (cartella sorella L56-alimentatore, gli
+# script di L51b): le stesse forme d'onda e i deck rigenerati che L51b esclude; e la sonda di U503
+docs/preamp/data/2026-10-12/L56-alimentatore/rete/*.txt
+docs/preamp/data/2026-10-12/L56-alimentatore/guasti/*.txt
+docs/preamp/data/2026-10-12/L56-alimentatore/carico_l41a/*/*.txt
+docs/preamp/data/2026-10-12/L56-alimentatore/seq/**/*_out.txt
+docs/preamp/data/2026-10-12/L56-alimentatore/corse/*.dat
+docs/preamp/data/2026-10-12/L56-alimentatore/corse/corsa_*.cir
+docs/preamp/data/2026-10-12/L56-alimentatore/corse/deck.cir
+docs/preamp/data/2026-10-12/L56-alimentatore/corse/_analisi_par*/
+docs/preamp/data/2026-10-12/L56-alimentatore/sonda_u503/*/*_out.txt
+docs/preamp/data/2026-10-12/L56-alimentatore/**/__pycache__/
+# L56: nella regressione, i transitori di tb_mute_corto e le forme d'onda di tb_switch_v2 (~60 MB);
+# i lettori (p7.py, classe_a.py) usano solo tb_mute_corto_regime.csv; si rigenerano con regressione.sh
+docs/preamp/data/2026-10-12/L56/regressione/*/tb_mute_corto/tb_mute_corto_trans_*
+docs/preamp/data/2026-10-12/L56/regressione/*/tb_switch_v2/tb_switch_v2_wrdata.txt
+docs/preamp/data/2026-10-12/L56/regressione/*/tb_switch_v2/tb_switch_v2.csv
+docs/preamp/data/2026-10-12/L56/regressione/*/tb_switch_v2/tb_switch_v2.json

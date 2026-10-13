@@ -1224,3 +1224,22 @@ modello di default (~0,97 V); e cambiare RC nella copia di prova cambia la disto
 
 **Regola operativa**: l'avviso su LS350 è atteso e innocuo; un «model type mismatch» su
 **un'altra** parte va guardato. Il file del costruttore resta com'è (ADR-017).
+
+## 57. Un `op` che non converge stampa lo stesso una soluzione: gmin e source stepping falliti, e i numeri sembrano numeri
+
+Visto in L56 (`docs/preamp/data/2026-10-12/L56/`, `caldo.py`). Quando l'`op` fallisce in tutti i
+metodi — «Warning: Dynamic gmin stepping failed», «True gmin stepping failed», «source stepping
+failed» — ngspice **non** esce con un errore: `print all` stampa i nodi del tentativo fallito. Qui
+VPF a 0,94 V invece di 14,85 e le correnti quasi nulle, cioè il blocco «spento»; il lettore cercava
+solo `Error` e `aborted`, ha preso le potenze per buone e il passo seguente ha messo ogni giunzione
+quasi alla temperatura dell'aria. Niente avvisava: il deck successivo girava pulito. Corso lo stesso
+deck una seconda volta (con `option itl1=1000`) converge.
+
+«gmin stepping failed» **da solo** è normale (ngspice passa al metodo seguente e converge); è la
+riga del source stepping che dice che non c'è soluzione.
+
+**Regola operativa**: chi legge un `op` rifiuta «source stepping failed», e controlla un nodo che
+deve avere un valore noto (un rail interno, una corrente di riposo) invece di fidarsi dell'assenza
+di `Error`. Nei banchi lunghi dell'alimentatore lo stesso caso si vede come «Timestep too small» in
+una sorgente comportamentale: L56 (`L56-alimentatore/psu/corri_seq.sh`) ritenta un passo, una volta,
+con l'altro metodo d'integrazione e lo scrive in `ripiego_g<N>.txt`.
