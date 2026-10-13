@@ -102,6 +102,10 @@ for _tool in list(skidl.lib_search_paths):
 # capacitors and critical resistors with an iron, not a desoldering station.
 FP_R = "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal"
 FP_SOT23 = "Package_TO_SOT_SMD:SOT-23"   # MMBT5551/MMBT5401, ADR-017 (L39)
+# ADR-068 (L56): the VAS and its load, the two 0.15 W devices, in SOT-223 - the
+# same die (DZT5401 / DZT5551), tab = collector, on the MINIMUM pad (125 C/W):
+# the tab is NX / NY, and big copper there is capacitance on the VAS node.
+FP_SOT223 = "Package_TO_SOT_SMD:SOT-223-3_TabPin2"
 FP_TO220 = "Package_TO_SOT_THT:TO-220-3_Vertical"
 FP_SOIC8 = "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"
 FP_DO35 = "Diode_THT:D_DO-35_SOD27_P7.62mm_Horizontal"
@@ -224,6 +228,10 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # Filtered V+ for the input mirror AND the VAS (ADR-056, L46b): the RC cell
     # that makes it is at the END of this function (designator numbering).
     VPF = n("VPF")
+    # ADR-067 (L56): the mirror diode-side collector (helper base) and the VAS
+    # base (follower emitter). The two transistors that drive them are at the
+    # END of this function, after the RC cell, for the same reason.
+    NMIRC, NVB = n("NMIRC"), n("NVB")
 
     i = [base]
 
@@ -363,7 +371,10 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # above the FEEDBACK JFET drives the mirror DIODE. That assignment - not
     # the other one - is what makes the global feedback negative.
     Q("npn", "MMBT5551", "MMBT5551", NHI, NCASC, D1N)     # -> mirror output
-    Q("npn", "MMBT5551", "MMBT5551", NMIRI, NCASC, D2N)   # -> mirror diode
+    # -> mirror diode side. ADR-067: onto NMIRC, the diode-side collector, one
+    # Vbe below the mirror bases (the helper transistor at the end), so that
+    # both cascodes - and both mirror halves - sit at the same voltage.
+    Q("npn", "MMBT5551", "MMBT5551", NMIRC, NCASC, D2N)
 
     # Current-mirror load, matched monolithic PNP pair.
     #
@@ -419,6 +430,22 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # Vce this transistor has, so the junction sits far closer to the knee
     # than the terminal voltage suggests. It is not a model artefact - the
     # datasheet's own VCE(sat) <= 0.5 V at 1 mA implies exactly such an RC.
+    # ADR-067 (L56, NC-060): AND IT BIT BOTH HALVES. The diode-connected half,
+    # collector tied to base, had its INTERNAL base-collector junction forward
+    # by Ic*RC = ~0.5 V, always; the output half sat at +0.42 V with ~0.79 V
+    # across it, set by the VAS Vbe. The two knees cancelled each other at
+    # 27 C - CCIF IMD -125.6 dB - and the device heat broke the balance: the
+    # tail (Q106 hotter than its diodes) rises 4.51 -> 4.84 mA, and THD at
+    # 20 kHz left V4 in 48 cases of 48, IMD up to -61 dB at 57 C air. Lifting
+    # only the output half (a follower before the VAS) removed the cliff but
+    # left -105 dB of second order from the diode half, still RC (zero RC:
+    # -134.5 dB) and not Early (VAF 1000: unchanged). The cure lifts BOTH:
+    # a follower drives the VAS (NHI one Vbe lower) and a helper drives the
+    # bases (the diode-side collector NMIRC one Vbe below them). Both halves
+    # now sit at -0.18...+0.05 V internally, hot and cold; both cascodes at
+    # the same voltage. Measured with every junction at its own temperature
+    # (data/2026-10-12/L56/, caldo.py): 0 of 48 outside V4, worst margin
+    # 2.7 dB, IMD -131.7 dB at 57 C air, tail cliff beyond +24 %.
     # ADR-056 (L46b): the mirror emitters sit on VPF, the filtered rail, and
     # MUST sit on the SAME node as the VAS emitter below. Filtering only one of
     # the two is worse than filtering neither: the rail difference lands across
@@ -426,6 +453,11 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # -12 dB, VAS alone 47 dB, both 71.8 dB, neither 29.5 dB
     # (docs/preamp/data/2026-10-01/L46b/psrr.csv).
     #
+    # ADR-067 (L56): R120 BACK TO 220, the symmetric value. The paragraph below
+    # is why it was 226 - and its cause is gone: the VAS base current now flows
+    # into the follower's emitter, not into NHI. With 226 and the follower the
+    # block sits at +17.0 mV; with 220 at -3.0 mV (-6.6 mV with ADR-056's 226
+    # and no follower). Kept for the record:
     # 226 OHM ON THE OUTPUT SIDE, NOT 220 (ADR-056, L46b): the VAS base current
     # (~83 uA at 10.7 mA, beta ~129 on the vendor model) flows INTO NHI, so with
     # a symmetric mirror the cascoded JFET on that side carries ~75 uA more and
@@ -442,16 +474,18 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # (-36...+6 mV for hFE 60-250). A 0.1 % pair removes this term if wanted.
     NME1, NME2 = n("NME1"), n("NME2")
     R("220", VPF, NME1)
-    R("226", VPF, NME2)
+    R("220", VPF, NME2)                 # ADR-067: 226 -> 220, see above
     i[0] += 1
     qm = Part("preamp", "LS352", value="LS352", footprint=FP_SOIC8,
               ref=f"Q{i[0]}")
-    qm["1"] += NMIRI      # C1 -> mirror diode side (collector to its base)
+    # C1 -> mirror diode side. ADR-067: NOT tied to its base any more; it goes
+    # to NMIRC, the helper's base, one Vbe below the bases (section 8).
+    qm["1"] += NMIRC
     qm["2"] += NMIRI      # B1 -> common base node
     qm["3"] += NME1       # E1 -> its own degeneration, R119 220 Ohm
-    qm["8"] += NHI        # C2 -> mirror output, into the VAS
+    qm["8"] += NHI        # C2 -> mirror output, into the follower (ADR-067)
     qm["7"] += NMIRI      # B2 -> common base node
-    qm["6"] += NME2       # E2 -> its own degeneration, R120 226 Ohm
+    qm["6"] += NME2       # E2 -> its own degeneration, R120 220 Ohm
     sx.spice_dev(qm, "Q", ["1", "2", "3"], "LS350", suffix="A")
     sx.spice_dev(qm, "Q", ["8", "7", "6"], "LS350", suffix="B")
 
@@ -468,13 +502,27 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # drive the MJE junction capacitance (CJE 3.06 nF, ADR-042); at 6.8 mA it
     # could not, and that - not the Miller value alone - is what made the
     # distortion rise towards the treble (NC-039). Q122 now dissipates 0.142 W
-    # (P7: 310 mW in SOT-23); the block draws +4.1 mA per rail.
+    # (P7: 310 mW in SOT-23 - the 25 C rating; at 60 C air and 403 C/W the
+    # Tj <= 125 C of P7 allows only 0.16 W, which is why ADR-068 moved it to
+    # SOT-223); the block draws +4.1 mA per rail.
     # ADR-056 (L46b): the emitter goes to VPF, the filtered rail, together with
     # the mirror. The VAS and the mirror on V+ are how V+ got into the output:
     # the VAS base follows the rail and C124 turns that into a current into the
     # output node, which is why PSRR+ tracked the Miller value (L46a).
+    # ADR-067 (L56): the base is NVB, driven by the follower at the end of this
+    # function, not NHI. Miller C124 stays from NX to NHI, around both.
+    # ADR-068 (L56): DZT5401 in SOT-223, not MMBT5401 in SOT-23. SAME DIE AND
+    # SAME MODEL: Diodes serves the DZT5401 card identical, parameter for
+    # parameter, to the MMBT5401 one (vendor/bjt_pnp/diodes_inc/DZT5401/,
+    # data/2026-10-12/L56/script/dzt_identico.py), so SPICE keeps MMBT5401.
+    # Why: with every junction at its own temperature (L56, caldo.py, iterated)
+    # this transistor ran at 114-122 C with 57 C air in SOT-23 (403 C/W); at
+    # 125 C/W it runs at 75 C. And the distortion does not move (0 of 48 out).
+    # R123 sees up to 0.123 W with a short at MAIN (+10 dB, 20 kHz, the
+    # follower drives the VAS harder than the saturated mirror could):
+    # rate it >= 0.13 W at 60 C (data/2026-10-12/L56/regressione/, p7.py).
     NVE = n("NVE")
-    Q("pnp", "MMBT5401", "MMBT5401", NX, NHI, NVE)
+    Q("pnp", "DZT5401", "MMBT5401", NX, NVB, NVE, fp=FP_SOT223)
     R("56", VPF, NVE)
 
     # Miller compensation - the dominant pole of the whole amplifier.
@@ -495,8 +543,14 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # VAS load: current sink off the same reference string as the tail.
     # 0.55 V / 10.7 mA -> 56 Ohm (E12), equal to the VAS degeneration above
     # (ADR-054; was 91 Ohm at 6 mA). Q125 dissipates 0.122 W.
+    # ADR-068 (L56): DZT5551 in SOT-223, same die and same model as MMBT5551
+    # (see the VAS above). With a short at an output (P7, ADR-021) this sink
+    # dissipates 0.191 W after ADR-067: 140 C at 60 C air in SOT-23 (417 C/W)
+    # against P7's 125 C; 84 C at 125 C/W. The 125 C/W is the DZT5401's
+    # minimum-pad figure: the DZT5551 datasheet gives only 62.5 C/W on 50x50 mm
+    # of copper - a declared assumption, same package.
     NVLE = n("NVLE")
-    Q("npn", "MMBT5551", "MMBT5551", NY, NREF, NVLE)
+    Q("npn", "DZT5551", "MMBT5551", NY, NREF, NVLE, fp=FP_SOT223)
     R("56", NVLE, VM)
 
     # ========================================================================
@@ -558,8 +612,9 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # ADR-021 rating constraint for the BOM: the two 22 ohm emitter resistors
     # below dissipate up to 0.28 W (block B, short at MAIN, +10 dB, 20 kHz
     # full scale; 0.24 W in L40, 0.280 W with the faster VAS of ADR-054,
-    # data/2026-10-01/L46a/regressione/, p7.py), so they must be rated
-    # >= 0.28 W at 60 C.
+    # data/2026-10-01/L46a/regressione/, p7.py; 0.298 W with the follower of
+    # ADR-067, data/2026-10-12/L56/regressione/), so they must be rated
+    # >= 0.30 W at 60 C.
     R("10", NX, NBN)
     R("10", NY, NBP)
     # Qmje15032/Qmje15033: onsemi's model names, left as served (ADR-017,
@@ -637,6 +692,34 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     R("10", VP, VPF)
     C("1000u", VPF, GND, fp="Capacitor_THT:CP_Radial_D10.0mm_P5.00mm")
 
+    # ========================================================================
+    # 8. FOLLOWER BEFORE THE VAS AND HELPER ON THE MIRROR (ADR-067, L56, NC-060)
+    # ========================================================================
+    # Appended LAST, after the RC cell, for the reason R_G10 and the cell are
+    # (limitations.md #22): every designator that existed before L56 keeps its
+    # number. On this file's block they are Q146 / R147 (follower) and Q148 /
+    # R149 (helper); on the audio board they follow each instance's base.
+    # Why both, and why not one: read the mirror comment (ADR-067 there).
+    #
+    # Follower: PNP, base on NHI (the mirror output), emitter on NVB (the VAS
+    # base), 1.2 kOhm from VPF: ~1.2 V across it, ~1.1 mA. The VAS base current
+    # (~83 uA) now lands here, not in NHI - which is why R120 went back to 220.
+    # NHI drops one Vbe: the mirror output half gets ~1.4 V instead of 0.79.
+    # 1.2k vs 2.2k measured the same (data/2026-10-12/L56/sintesi_caldo.csv).
+    # Helper: PNP, base on NMIRC (the diode-side collector and the cascode
+    # Q118), emitter on NMIRI (the mirror bases), 10 kOhm from VPF: ~1.1 V,
+    # ~0.13 mA (4.7k and 22k measured the same). NMIRC sits one Vbe below the
+    # bases, so the diode half is no longer forward-biased by Ic*RC inside.
+    # COLLECTORS TO THE NEGATIVE RAIL, NOT TO GROUND: the follower's current
+    # carries the VAS base current, i.e. signal, and must not return through
+    # signal ground. Measured both ways: distortion identical, PSRR- at 100 Hz
+    # / 1 kHz 95.4 / 95.0 dB (99.7 / 104.9 to ground; 76.2 / 86.3 before L56).
+    # Dissipation ~33 mW (follower, ~28.6 V) and ~4 mW (helper): SOT-23 is fine.
+    Q("pnp", "MMBT5401", "MMBT5401", VM, NHI, NVB)
+    R("1.2k", VPF, NVB)
+    Q("pnp", "MMBT5401", "MMBT5401", VM, NMIRC, NMIRI)
+    R("10k", VPF, NMIRI)
+
     return dict(IN=IN, OUT=OUT, FB=FB, RG=RG, RG10=RG10, VP=VP, VM=VM,
                 GND=GND)
 
@@ -664,6 +747,42 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 #   (c) accept it: +10 dB exists for a FUTURE low-output chain (ADR-004), not
 #       for the K11, and V3 already names this combination as
 #       "raggiungibile per errore".
+# ============================================================================
+
+# ============================================================================
+# SIMULATED RESULTS - L56, 2026-10-12: ADR-067 (follower + helper, R120 220)
+# AND ADR-068 (VAS and its load in SOT-223). Same manufacturer models.
+# docs/preamp/data/2026-10-12/L56/ (regressione/prima = main 96bacb07, the
+# block of the L46b section below; regressione/dopo = this one). Where this
+# section gives a figure it supersedes the L46b one; the rest still stands.
+#
+#   WITH EVERY JUNCTION AT ITS OWN TEMPERATURE (L56/script/caldo.py, Tj =
+#   Ta + P*R_thJA iterated to convergence; limitations #55): 0 of 60 cases
+#   outside V4 (uniform 27 C, and 27 / 57 C air, copper and minimum pad),
+#   THD 20 kHz <= 0.00072 % at 0.2 V and <= 0.0073 % at 2 V (5.6 kOhm source
+#   the worst), CCIF IMD <= -131.8 dB, tail-current cliff beyond +24 %.
+#   The block before L56: 48 of 48 outside, IMD down to -61 dB (NC-060).
+#   Mirror halves, internal base-collector (+ = forward): -0.04 / -0.18 V at
+#   27 C (were +0.51 / +0.42). VAS and load 45.5 C at 27 C air, 75 C at 57 C.
+#   OPERATING POINT: tail 4.505 mA, VAS 10.71 mA, output pair 20.50 / 20.61
+#     mA, mirror halves 2.227 mA, rails 37.97 / 38.99 mA per block (+1.27
+#     each), output DC offset -2.9 mV (-9.0 mV at OUT at +10 dB after V3).
+#   V1 (verdict cells): B 0 / +3 / +10 dB 65.16 / 73.29 / 105.11 deg, A 68.38,
+#     trim 73.36, buffer 65.31; I_DSS group B >= 65.36. Non-verdict cells
+#     (probe on the node, 4.7 nF harness) lose 1.2-1.7 deg.
+#   PSRR, +10 dB, 50 Hz / 1 / 10 / 20 kHz (ideal 1000 uF): from V+ 85.3 /
+#     85.0 / 85.5 / 84.3 dB; from V- 95.6 / 95.0 / 85.5 / 78.9 dB.
+#   NOISE: E5 worst 5.10 uV (was 5.50). E3 108.2 kOhm, E4 60.02 / 53.10 ohm,
+#     block node 0.041 / 0.81 ohm at 1 / 20 kHz.
+#   DISTORTION, 27 C uniform, L46b bench: THD 20 kHz 0.00045 % (0.2 V), 0.0045 %
+#     (2 V); CCIF IMD -138.5 / -138.3 / -132.1 dB at 0 / +3 / +10 dB.
+#   V3: clips +13.34 / -13.85 V, recovery 0.65 us; DC at the jack 13-14 ms
+#     after the overload +19.3 mV (was +3.6; declared, the user's decision:
+#     no requirement bounds it, and the power amplifier is already clipping).
+#   P7 (short at MAIN): MJE 0.393 W, Q125 0.191 W (84 C at 60 C air in
+#     SOT-223, 140 C it would be in SOT-23: NC-061), R123 0.123 W, 22 ohm 0.298 W.
+#   SUPPLY FAULTS AT THE JACK (L56-alimentatore/, L51b's chain on this load):
+#     U502 off 14 uV, U501 off 0.136 mV, 12 V relay-line short 6.4 mV.
 # ============================================================================
 
 # ============================================================================

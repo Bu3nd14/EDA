@@ -1,0 +1,155 @@
+warning, model type mismatch in line
+    q121a nmirc nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: tb_v3_overload.cir - l46b esplorazione, variante ef_aiuto_r226 (blocco da inc/ef_aiuto_r226.inc)
+
+Warning: Model issue on line 122 :
+  .model lsk489a njf(beta=2.2m betatce=-.5 rd=11 rs=30 lambda=4.3m vto=-1. ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+unrecognized parameter (mj) - ignored
+
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Note: True gmin stepping completed
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+nref                                  -13.6718
+vminus                                     -15
+ncasc                                  9.86829
+nx                                      1.0793
+nhi                                    12.9465
+out                                  0.0535875
+fb                                   0.0170008
+vplus                                       15
+vpf                                    14.8355
+nrefm                                 -14.3359
+d1n                                    9.18101
+g1                                 4.92992e-09
+s1                                    0.075647
+d2n                                    9.18045
+g2                                   0.0170008
+s2                                   0.0804949
+src                                  -0.147202
+nte                                   -14.3772
+nmirc                                  13.0764
+nmiri                                  13.6318
+nme1                                   14.3383
+nme2                                   14.3374
+nvb                                    13.5584
+nve                                    14.2309
+ny                                   -0.941856
+nvle                                   -14.401
+nbb                                  -0.214257
+nbn                                     1.0773
+nen                                   0.509213
+nbp                                  -0.940972
+nep                                  -0.401501
+in                                 3.99942e-09
+rg                                   4.762e-07
+rg10                               1.96292e-06
+nbig                                         0
+ngate                                      0.5
+srcn                                         0
+outa                                 0.0535875
+jack                                         0
+bsrc#branch                        9.30097e-12
+vgate#branch                                 0
+vbig#branch                                  0
+vmm#branch                           0.0377125
+vpp#branch                          -0.0379839
+
+ Reference value :  1.50212e-02Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Note: True gmin stepping completed
+
+No. of Data Rows : 20485
+PART 2 - Fourier at 1 kHz. A MODEL FIGURE (L39): not a measurement, not V4 evidence.
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+nref                                  -13.6718
+vminus                                     -15
+ncasc                                  9.86829
+nx                                      1.0793
+nhi                                    12.9465
+out                                  0.0535875
+fb                                   0.0170008
+vplus                                       15
+vpf                                    14.8355
+nrefm                                 -14.3359
+d1n                                    9.18101
+g1                                 4.92992e-09
+s1                                    0.075647
+d2n                                    9.18045
+g2                                   0.0170008
+s2                                   0.0804949
+src                                  -0.147202
+nte                                   -14.3772
+nmirc                                  13.0764
+nmiri                                  13.6318
+nme1                                   14.3383
+nme2                                   14.3374
+nvb                                    13.5584
+nve                                    14.2309
+ny                                   -0.941856
+nvle                                   -14.401
+nbb                                  -0.214257
+nbn                                     1.0773
+nen                                   0.509213
+nbp                                  -0.940972
+nep                                  -0.401501
+in                                 3.99942e-09
+rg                                   4.762e-07
+rg10                               1.96292e-06
+nbig                                         0
+ngate                                      0.5
+srcn                                         0
+outa                                 0.0535875
+jack                                         0
+bsrc#branch                        9.30097e-12
+vgate#branch                                 0
+vbig#branch                                  0
+vmm#branch                           0.0377125
+vpp#branch                          -0.0379839
+
+ Reference value :  1.26663e-02
+No. of Data Rows : 10001
+Fourier analysis for v(out):
+  No. Harmonics: 10, THD: 9.69259e-05 %, Gridsize: 200, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency   Magnitude   Phase       Norm. Mag   Norm. Phase
+-------- ---------   ---------   -----       ---------   -----------
+ 0       0           0.0535876   0           0           0          
+ 1       1000        1.57534     -0.31473    1           0          
+ 2       2000        1.5267e-06  -179.93     9.69128e-07 -179.62    
+ 3       3000        2.51084e-08 62.3486     1.59384e-08 62.6633    
+ 4       4000        4.98548e-10 153.978     3.1647e-10  154.293    
+ 5       5000        3.68559e-11 -65.015     2.33956e-11 -64.7      
+ 6       6000        2.29209e-11 7.2479      1.45499e-11 7.56263    
+ 7       7000        1.89107e-11 9.83242     1.20042e-11 10.1471    
+ 8       8000        1.62959e-11 9.04069     1.03444e-11 9.35541    
+ 9       9000        1.50425e-11 4.83333     9.54872e-12 5.14806    
+
+Note: Simulation executed from .control section 

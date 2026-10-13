@@ -107,14 +107,19 @@ DEVICES = {
     "Q106":  {"C": "SRC",    "B": "NREF",  "E": "NTE"},
     "R107":  {"1": "NTE",    "2": "VMINUS"},
     "Q117":  {"C": "NHI",    "B": "NCASC", "E": "D1N"},
-    "Q118":  {"C": "NMIRI",  "B": "NCASC", "E": "D2N"},
+    "Q118":  {"C": "NMIRC",  "B": "NCASC", "E": "D2N"},     # ADR-067
     # ---- panel 2: current mirror + VAS --------------------------------------
     "R119":  {"1": "VPF",    "2": "NME1"},
     "R120":  {"1": "VPF",    "2": "NME2"},
-    "Q121A":  {"C": "NMIRI",  "B": "NMIRI", "E": "NME1"},
+    "Q121A":  {"C": "NMIRC",  "B": "NMIRI", "E": "NME1"},   # ADR-067
     "Q121B":  {"C": "NHI",    "B": "NMIRI", "E": "NME2"},
     "R123":  {"1": "VPF",    "2": "NVE"},
-    "Q122":  {"C": "NX",     "B": "NHI",   "E": "NVE"},
+    "Q122":  {"C": "NX",     "B": "NVB",   "E": "NVE"},     # ADR-067
+    # ADR-067 (L56): the follower before the VAS and the helper on the mirror
+    "Q146":  {"C": "VMINUS", "B": "NHI",   "E": "NVB"},
+    "R147":  {"1": "VPF",    "2": "NVB"},
+    "Q148":  {"C": "VMINUS", "B": "NMIRC", "E": "NMIRI"},
+    "R149":  {"1": "VPF",    "2": "NMIRI"},
     "C124":  {"1": "NX",     "2": "NHI"},
     "Q125":  {"C": "NY",     "B": "NREF",  "E": "NVLE"},
     "R126":  {"1": "NVLE",   "2": "VMINUS"},
@@ -367,12 +372,14 @@ flag("Q118.B", "NCASC", direction="left", length=1.5)
 node("P1.nhi", "NHI", (5.0, 12.9))
 wire("Q117.C", "P1.nhi")
 flag("P1.nhi", "NHI", direction="up", length=0.9)
-node("P1.nmiri", "NMIRI", (13.0, 12.9))
-wire("Q118.C", "P1.nmiri")
-flag("P1.nmiri", "NMIRI", direction="up", length=0.9)
+# ADR-067: the feedback-side cascode lands on NMIRC, the mirror's diode-side
+# collector, which the helper Q148 holds one Vbe below the mirror bases.
+node("P1.nmirc", "NMIRC", (13.0, 12.9))
+wire("Q118.C", "P1.nmirc")
+flag("P1.nmirc", "NMIRC", direction="up", length=0.9)
 
-txt((5.45, 12.25), "2,20 mA", size=8, color=RED, halign="left")
-txt((13.45, 12.25), "2,17 mA", size=8, color=RED, halign="left")
+txt((5.45, 12.25), "2,24 mA", size=8, color=RED, halign="left")
+txt((13.45, 12.25), "2,23 mA", size=8, color=RED, halign="left")
 txt((9.0, -4.1),
     "il cascode tiene i drain fermi a 9,21 V: niente moltiplicazione di "
     "Miller,", size=8, color=DIM)
@@ -397,7 +404,7 @@ rail(22.0, 41.0, -3.4, "V-", BLUE)
 # --- other across the gap: that is what makes it READ as a mirror. -----------
 res("R119", (26.0, 13.6), (26.0, 10.6), value="220",
     lbl=((25.52, 12.35), "right"))
-res("R120", (31.0, 13.6), (31.0, 10.6), value="226",
+res("R120", (31.0, 13.6), (31.0, 10.6), value="220",
     lbl=((31.48, 12.35), "left"))
 d.add(elm.Dot().at(NODE_XY["R119.1"]))
 d.add(elm.Dot().at(NODE_XY["R120.1"]))
@@ -412,26 +419,46 @@ txt((25.52, 10.8), "Q121A", size=8.5, halign="right")
 txt((25.52, 10.34), "LS352 1/2", size=8, color=DIM, halign="right")
 txt((31.48, 10.8), "Q121B", size=8.5, halign="left")
 txt((31.48, 10.34), "LS352 2/2", size=8, color=DIM, halign="left")
-txt((28.5, 12.75), "2,13 mA specchiati", size=8, color=RED)
+txt((28.5, 14.2), "2,23 mA specchiati", size=8, color=RED)
 
-# diode connection, drawn as a visible loop back onto the base bus
-node("P2.diode", "NMIRI", (28.5, NODE_XY["Q121A.B"][1]))
-wire("Q121A.C", "P2.diode", via=[(26.0, 8.35), (28.5, 8.35)],
-     dots=[NODE_XY["P2.diode"], (26.0, 8.35)])
-txt((28.5, 7.9), "connessione a diodo", size=7.5, color=DIM)
+# ADR-067 (L56): NO diode connection any more. The helper Q148 drives the base
+# bus from the diode-side collector NMIRC, one Vbe below it, so that Q121A is
+# no longer forward-biased inside by Ic*RC (NC-060). R149 biases it from VPF.
+node("P2.bus", "NMIRI", (28.5, NODE_XY["Q121A.B"][1]))
+res("R149", (28.5, 13.6), (28.5, 10.9), value="10k",
+    lbl=((28.02, 12.35), "right"))
+d.add(elm.Dot().at(NODE_XY["R149.1"]))
+TOUCHED.add("R149.1")
+wire("R149.2", "P2.bus", dots=[NODE_XY["P2.bus"]])
+pnp("Q148", "emitter", (28.5, 9.1))
+wire("P2.bus", "Q148.E")
+flag("Q148.C", "V-", direction="down", length=0.6, color=BLUE)
+txt((28.95, 8.75), "Q148", size=8, halign="left")
+txt((28.95, 8.35), "aiuto", size=7.5, color=DIM, halign="left")
 
-node("P2.nmiri_in", "NMIRI", (26.0, 6.5))
-wire("Q121A.C", "P2.nmiri_in")
-flag("P2.nmiri_in", "NMIRI", direction="down", length=0.8)
+node("P2.nmirc_h", "NMIRC", (26.0, NODE_XY["Q148.B"][1]))
+node("P2.nmirc_in", "NMIRC", (26.0, 6.5))
+wire("Q121A.C", "P2.nmirc_in", dots=[NODE_XY["P2.nmirc_h"]])
+wire("P2.nmirc_h", "Q148.B", first="h")
+flag("P2.nmirc_in", "NMIRC", direction="down", length=0.8)
 txt((26.0, 5.05), "dal cascode Q118", size=7.5, color=NETCOL)
 
-node("P2.nhi_vas", "NHI", (31.0, 8.3))
 node("P2.nhi_c126", "NHI", (31.0, 7.4))
 node("P2.nhi_in", "NHI", (31.0, 6.5))
-wire("Q121B.C", "P2.nhi_in",
-     dots=[NODE_XY["P2.nhi_vas"], NODE_XY["P2.nhi_c126"]])
+wire("Q121B.C", "P2.nhi_in", dots=[NODE_XY["P2.nhi_c126"]])
 flag("P2.nhi_in", "NHI", direction="down", length=0.8)
 txt((31.0, 5.05), "dal cascode Q117", size=7.5, color=NETCOL)
+
+# --- follower before the VAS (ADR-067): base on NHI, emitter drives NVB ------
+pnp("Q146", "emitter", (34.0, NODE_XY["Q121B.C"][1] + 0.697))
+wire("Q121B.C", "Q146.B", first="h", dots=[NODE_XY["Q121B.C"]])
+res("R147", (34.0, 13.6), (34.0, 10.9), value="1,2k",
+    lbl=((34.48, 12.35), "left"))
+d.add(elm.Dot().at(NODE_XY["R147.1"]))
+TOUCHED.add("R147.1")
+wire("R147.2", "Q146.E")
+flag("Q146.C", "V-", direction="down", length=0.6, color=BLUE)
+txt((32.1, 9.62), "Q146 inseguitore", size=7.5, halign="center")
 
 # --- VAS --------------------------------------------------------------------
 res("R123", (36.5, 13.6), (36.5, 10.6), value="56",
@@ -440,7 +467,8 @@ d.add(elm.Dot().at(NODE_XY["R123.1"]))
 TOUCHED.add("R123.1")
 pnp("Q122", "emitter", (36.5, 9.0))
 wire("R123.2", "Q122.E")
-wire("P2.nhi_vas", "Q122.B", first="h")
+wire("Q146.E", "Q122.B", via=[(35.1, NODE_XY["Q146.E"][1])],
+     dots=[NODE_XY["Q146.E"]])
 txt((37.65, 9.2), "Q122   2N5401", size=8.5, halign="left")
 txt((37.65, 8.74), "VAS,  10,7 mA", size=8, color=RED, halign="left")
 
@@ -472,9 +500,11 @@ d.add(elm.Dot().at(NODE_XY["R126.2"]))
 TOUCHED.add("R126.2")
 
 txt((31.5, -4.7),
-    "specchio e VAS su VPF, filtrato da R144 + C145 (ADR-056):", size=8, color=DIM)
+    "specchio e VAS su VPF, filtrato da R144 + C145 (ADR-056); inseguitore",
+    size=8, color=DIM)
 txt((31.5, -5.2),
-    "PSRR+ a 10 kHz da 29,5 a 71,8 dB (+10 dB, L46b)", size=8, color=DIM)
+    "Q146 e aiuto Q148: le due meta' dello specchio fuori dal ginocchio (ADR-067)",
+    size=8, color=DIM)
 
 # =============================================================================
 # PANEL 3 - Class A complementary follower + feedback
