@@ -209,7 +209,9 @@ RIGHE = [
      "linea cedono, il sorvegliante di `VRELAY` muta", None, ADR051, "ADR-051", "L45c, L54"),
     (G_MUTE, "K2–K4", "NO saldato", "quell'uscita non si stacca più: al guasto niente, ma lo spegnimento, "
      "la perdita di rete e il guasto dell'alimentatore la trovano **collegata**. Il LED rosso non lo "
-     "vede (limite dichiarato, ADR-028). Le corse L_spegnimento e L_accensione", "L_spegnimento", None,
+     "vede (limite dichiarato, ADR-028). Qui i rail simmetrici in 110 ms; con le rampe asimmetriche "
+     "1,6–10,5 V e 14–348 ms (`analisi_latenti.csv`): il caso vero è del banco dell'alimentatore",
+     "L_spegnimento", None,
      "**PR-23** (latente), PR-21", "L45d"),
     (G_MUTE, "K2–K4", "NC saldato", "quell'uscita resta staccata, lato del condensatore a massa", None,
      ZERO, "—", "—"),

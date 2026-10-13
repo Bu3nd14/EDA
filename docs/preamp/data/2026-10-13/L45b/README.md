@@ -19,6 +19,12 @@ guasti; il guasto è in **un** controllo, con lo stesso interruttore di L45a (`C
 | `lunghe` | i casi che sulle fisse durano più della corsa, fino a 6 s (`genera_controlli.py lunghe`) |
 | `vuoto_tr_*` | **ogni** deck di L45a con le tre righe `RLD*` tolte (`genera_controlli.py vuoto FAMIGLIA`), stesse impostazioni (accorciate, gear, il rivelatore ideale `taglio*`) |
 | `verifica_carico` | un deck di L45a copiato **così com'è** (`tr_B/Q132_ce`): ridà i numeri di L45a |
+| `vuoto_gear_taglio` | due corse del rivelatore ideale (`Q146_ae`, taglio 0,1 e 3 ms) che a vuoto si fermavano al taglio con «timestep too small» (#33), rifatte col metodo gear |
+
+I risultati: `fmea_controlli.md/.csv` (i controlli), `p10_blocco.md/.csv` (i guasti del blocco a
+vuoto contro P10), e gli `analisi_*.csv` da cui vengono (`analisi_vuoto_<posizione>.csv`,
+`_rifatte`, `_taglio`, `_taglio_gear`; `analisi_ctl*`, `_rs`, `_latenti`, `_lunghe`, `_verifica`).
+`script/conti_p10.py` stampa i numeri del report da `p10_blocco.csv`.
 
 ## Gli script (`script/`)
 

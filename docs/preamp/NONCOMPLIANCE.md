@@ -3560,7 +3560,7 @@ dati `data/2026-10-07/L48b/`, **ADR-065**.
 | Requisito | **PR-22, PR-23, PR-24** · P7, P9 · ADR-027 («Da riaprire se» sulla bobina di K6), ADR-033, ADR-051 |
 | Severità | **maggiore**, da chiudere **prima di G1** (decisione dell'utente in L52, 2026-10-12, «Move the analysis before G1»; prima: prima di G2, L43a) |
 | Aperta da | `reports/2026-09-27-L43a-architetto-avversariale.md`, rilievo **R5**. Trovata dall'**architetto avversariale**, accettata dall'utente in L43a |
-| Stato | aperta — la FMEA è a piano come **L45**, ora **prima di G1** (L52) |
+| Stato | aperta — la FMEA è **L45**, prima di G1 (L52): L45a e L45b fatte, restano L45c (l'alimentatore) e L45d (la decisione) |
 
 **Evidenza.** Nel repo «guasto singolo», «FMEA» e «analisi dei guasti» portano solo ad ADR-051 e
 alle clausole di ADR-027 e ADR-033; `psu.py` non ha rivelatori di continua sulle uscite dei
@@ -3616,6 +3616,18 @@ apparecchio accoppiato in continua senza protezione; il tetto di picco di PR-23 
 l'alimentatore. È anche il **tetto delle fisse** che la voce chiedeva (con NC-046 resta da fare la
 metrica in dB SPL all'orecchio). A calcolo oggi 0,56–3,1 s: la voce si chiude quando L45d ha scelto
 il rimedio e P10 è misurato su ogni guasto. Il calore dei guasti singoli è ora **NC-062**.
+
+**Avanzamento, L45b (2026-10-13).** I controlli, e il blocco contro P10
+(`reports/2026-10-13-L45b-fmea-controlli.md`). **78 modi dei controlli**: nessun guasto ordinario si
+avvicina al tetto (≤ 9,5 mV al jack; il guadagno o il trim che cambiano durante l'ascolto fino a
+29,7 mV con la dispersione). Lo supera solo **l'isolamento fra bobina e contatti che cede**: sul relè di
+mute 12 V in continua sul jack, permanenti anche a mute inserito (nessun rivelatore sul mute lo
+toglie), sul selettore il blocco A al rail su tutti e tre i jack. **Il mute che non si inserisce più**
+(NO saldato, Q501 in corto) è latente: allo spegnimento 1,6–10,5 V per 14–348 ms secondo i rail, il
+numero vero a L45c. Senza danno ma contro il contratto: la bobina di K6 aperta (il «Da riaprire se» di
+ADR-027) e il LED rosso acceso con la musica, K1/K5 saldati (il guadagno a riposo sopra 0 dB).
+**Il blocco a vuoto contro P10: 257 modi su 544 fuori** (fino a 2 s al principale, 3,1 s sulle
+fisse); il rivelatore ideale li porta a 0,2–10,1 ms. Restano L45c e L45d.
 
 ### NC-043 — La VTL5C4 dell'Excelitas è fuori produzione, e il progetto la usa ancora
 
