@@ -18,7 +18,14 @@ Cosa ha trovato la prima parte (`reports/2026-10-13-L45a-fmea-blocco.md`), da te
   insieme al guasto, e col mute a 0,1–10 ms dal guasto il picco resta 14,8–14,9 V; accorcia solo
   l'impulso;
 - a mute inserito un guasto non arriva al rilascio (7,3 mV): la geometria iii regge;
-- il banco del canale con guasto esiste: `data/2026-10-13/L45a/script/genera_canale.py`.
+- il banco del canale con guasto esiste: `data/2026-10-13/L45a/script/genera_canale.py`;
+- dopo L45a l'utente ha aperto **NC-062** (bloccante per G1): quattro guasti del moltiplicatore di
+  Vbe non si sentono al jack ma portano i finali a ~182 °C e le 22 Ω fino a 7,5 W. Il rimedio lo
+  sceglie l'utente, con L45d o in un lotto proprio: non è di questo lotto;
+- sempre dopo L45a l'utente ha scelto la strada del **criterio di durata** per i guasti della scheda
+  audio (il tetto di 0,87 V resta per l'alimentatore) e lo sta definendo in conversazione, **per una
+  catena generica** («potrei in futuro cambiare il finale»): se c'è già una ADR, L45b misura contro
+  quella; se non c'è, misura la durata del colpo accanto al picco.
 
 **L'utente sta leggendo il dossier in parallelo.** Se porta dei rilievi, si registrano come in
 L43b e non si mescolano alle misure di questo lotto.
