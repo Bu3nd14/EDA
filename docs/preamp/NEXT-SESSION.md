@@ -22,10 +22,13 @@ Cosa ha trovato la prima parte (`reports/2026-10-13-L45a-fmea-blocco.md`), da te
 - dopo L45a l'utente ha aperto **NC-062** (bloccante per G1): quattro guasti del moltiplicatore di
   Vbe non si sentono al jack ma portano i finali a ~182 °C e le 22 Ω fino a 7,5 W. Il rimedio lo
   sceglie l'utente, con L45d o in un lotto proprio: non è di questo lotto;
-- sempre dopo L45a l'utente ha scelto la strada del **criterio di durata** per i guasti della scheda
-  audio (il tetto di 0,87 V resta per l'alimentatore) e lo sta definendo in conversazione, **per una
-  catena generica** («potrei in futuro cambiare il finale»): se c'è già una ADR, L45b misura contro
-  quella; se non c'è, misura la durata del colpo accanto al picco.
+- sempre dopo L45a l'utente ha firmato **PR-30** (**ADR-069**, requisito **P10**): un guasto singolo
+  della scheda audio porta su ogni uscita **al più 100 ms sopra 0,87 V**, misurati sul jack **senza
+  filtro** e **a vuoto**, con a valle un apparecchio accoppiato in continua e senza protezione. Il
+  picco filtrato si dichiara accanto, senza soglia. **L45b misura contro P10**. A calcolo oggi non è
+  rispettato (0,56–3,1 s): lo dirà la misura, e il rimedio lo sceglie L45d. L'analisi di L45a non
+  misura ancora la durata: va aggiunta (`analizza_tr.py`), e le corse di L45a che superano il tetto
+  vanno rilette con l'uscita a vuoto.
 
 **L'utente sta leggendo il dossier in parallelo.** Se porta dei rilievi, si registrano come in
 L43b e non si mescolano alle misure di questo lotto.
