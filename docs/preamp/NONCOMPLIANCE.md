@@ -4315,6 +4315,36 @@ R107, dei diodi e delle Vbe) e una verifica sul prototipo (la temperatura vera d
 col corto **84 °C**, VAS e carico 75 °C con 57 °C d'aria; distorsione invariata. Le potenze nominali
 nel sorgente: R123 ≥ 0,13 W, le 22 Ω ≥ 0,30 W a 60 °C.
 
+### NC-062 — Un guasto singolo del moltiplicatore di Vbe scalda i finali oltre i limiti, in silenzio
+
+| | |
+|---|---|
+| Requisito | **PR-22** (niente si scalda oltre i propri limiti) · **P7** (Tj ≤ 125 °C a 60 °C d'aria, ADR-021) · NC-042 |
+| Severità | **bloccante per G1** (decisione dell'utente, 2026-10-13: «apri la non conformità del moltiplicatore di Vbe come bloccante») |
+| Aperta da | `reports/2026-10-13-L45a-fmea-blocco.md`, «Il calore». Trovata dall'**orchestratore** in L45a |
+| Stato | aperta |
+
+**Evidenza.** `data/2026-10-13/L45a/analisi_B.csv` (lo stesso in ogni posizione del canale), 27 °C
+d'aria, Tj = Ta + P · R_thJA (MJE in TO-220 senza dissipatore, 62,5 °C/W):
+
+| Guasto | Ogni finale | Ogni 22 Ω d'emettitore (≥ 0,30 W) | Corrente del blocco |
+|---|---|---|---|
+| Transistor del moltiplicatore aperto | 2,48 W, **182 °C** | **3,28 W** | ~0,40 A (38 mA a riposo) |
+| Transistor del moltiplicatore in corto base-emettitore | 2,45 W, **181 °C** | **1,72 W** | ~0,29 A |
+| Resistenza bassa del moltiplicatore (R129) in corto | 2,45 W, **181 °C** | **1,72 W** | ~0,29 A |
+| Resistenza alta del moltiplicatore (R128) aperta | 1,23 W, 104 °C | **7,54 W** | ~0,59 A |
+
+Con 60 °C d'aria, come vuole P7, i finali arrivano a 215 °C. **Al jack non arriva niente** (meno di
+0,5 mV) e la scheda resta sotto 1 A, quindi il sorvegliante non interviene: il blocco lavora
+apparentemente bene finché le 22 Ω o un finale si rompono, e lo stato che segue è un altro guasto
+della FMEA, quasi sempre l'uscita al rail.
+
+**Cosa serve per chiuderla.** Un rimedio, scelto dall'utente con ADR, per cui un guasto singolo del
+moltiplicatore lasci ogni parte nei suoi limiti, o porti il blocco in uno stato sicuro e
+riconoscibile; verificato sul banco di L45a (`genera_canale.py`) con i quattro modi qui sopra, e
+con la regressione dei deck veloci se cambia il blocco. Il momento lo decide l'utente: con L45d o in
+un lotto proprio, comunque prima di G1.
+
 ### NC-059 — Nessun banco esercita l'inserimento a caldo di un cavo RCA sull'ingresso selezionato
 
 | | |
