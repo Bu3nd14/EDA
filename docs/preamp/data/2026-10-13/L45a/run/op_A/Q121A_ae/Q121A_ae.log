@@ -1,0 +1,104 @@
+warning, model type mismatch in line
+    q121a nmirc nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+warning, model type mismatch in line
+    q121a nmirc nmiri fltx ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: l45a op a g0 q121a_ae - punto di lavoro col guasto inserito
+
+Warning: Model issue on line 122 :
+  .model lsk489a njf(beta=2.2m betatce=-.5 rd=11 rs=30 lambda=4.3m vto=-1. ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+unrecognized parameter (mj) - ignored
+
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Warning: source stepping failed
+Note: Transient op started
+Note: Transient op finished successfully
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 1
+v(outa) = 6.808413e+00
+v(outf1) = 3.969565e+00
+v(outf2) = 3.969380e+00
+v(outb) = 3.971139e+00
+v(mainc) = 3.970323e+00
+v(mainjack) = 3.970317e+00
+v(fix1jack) = 3.955141e+00
+v(fix2jack) = 3.970478e+00
+i(vpp) = -2.55286e+00
+i(vmm) = 1.522664e-01
+@j.xa.jq110a[id] = 3.175437e-09
+@j.xa.jq110b[id] = 3.134472e-03
+@q.xa.q106[p] = 7.514479e-02
+@q.xa.q106[ic] = 4.040404e-03
+@q.xa.q117[p] = 3.771470e-07
+@q.xa.q117[ic] = 2.183298e-07
+@q.xa.q118[p] = 2.208684e-03
+@q.xa.q118[ic] = 7.413386e-05
+@q.xa.q121a[p] = 9.150797e-09
+@q.xa.q121a[ic] = -6.46146e-09
+@q.xa.q121b[p] = 8.866489e-03
+@q.xa.q121b[ic] = 4.215442e-05
+@q.xa.q122[p] = 3.302602e-03
+@q.xa.q122[ic] = -9.78627e-03
+@q.xa.q125[p] = 1.943495e-01
+@q.xa.q125[ic] = 9.473732e-03
+@q.xa.q127[p] = 1.728861e-02
+@q.xa.q127[ic] = 8.631963e-03
+@q.xa.q132[p] = 2.173500e-01
+@q.xa.q132[ic] = 2.875607e-02
+@q.xa.q133[p] = 2.478410e-01
+@q.xa.q133[ic] = -1.14974e-02
+@q.xa.q146[p] = 1.226904e-01
+@q.xa.q146[ic] = -5.48331e-03
+@q.xa.q148[p] = 2.035026e-01
+@q.xa.q148[ic] = -9.76246e-03
+@r.xa.r101[p] = 2.772012e-02
+@r.xa.r107[p] = 2.276201e-03
+@r.xa.r108[p] = 1.357811e-15
+@r.xa.r109[p] = 8.207136e-05
+@r.xa.r111[p] = 2.680258e-17
+@r.xa.r112[p] = 1.632487e-03
+@r.xa.r113[p] = 7.165681e-17
+@r.xa.r114[p] = 1.667256e-02
+@r.xa.r115[p] = 3.456044e-03
+@r.xa.r119[p] = 2.912490e-20
+@r.xa.r120[p] = 1.982423e-02
+@r.xa.r123[p] = 1.108832e-02
+@r.xa.r126[p] = 5.114618e-03
+@r.xa.r128[p] = 1.023669e-03
+@r.xa.r129[p] = 5.246515e-04
+@r.xa.r130[p] = 1.218049e-06
+@r.xa.r131[p] = 1.358055e-08
+@r.xa.r134[p] = 1.863636e-02
+@r.xa.r135[p] = 2.926859e-03
+@r.xa.r136[p] = 1.229998e-03
+@r.xa.r138[p] = 1.570565e-13
+@r.xa.r143[p] = 3.452387e-14
+@r.xa.r144[p] = 3.771940e+00
+@r.xa.r147[p] = 1.845458e-03
+@r.xa.r149[p] = 9.108658e-04
+v(xa.d1n) = 5.431086e+00
+v(xa.s1) = 4.150557e+00
+v(xa.d2n) = 5.157430e+00
+v(xa.s2) = 4.554598e+00
+v(xa.vpf) = 8.858388e+00
+v(xa.nx) = 8.039487e+00
+v(xa.ny) = 6.043389e+00
+v(xa.nref) = -1.37395e+01
+ngspice-47 done
