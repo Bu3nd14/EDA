@@ -1,0 +1,117 @@
+# L45b — la tabella dei guasti dei controlli
+
+Generata da `script/tabella_controlli.py`. Al jack il gradino **grezzo** (senza filtro), in dB SPL di picco a 1 m con la formula del PRB (0,87 V = 112,2 dB, il tetto di non-danno); sulle fisse il peggiore delle due, e la Stax all'orecchio con la catena di NC-046. **P10**: il tempo sopra 0,87 V al jack senza filtro, a vuoto (e coi carichi di oggi accanto); «≥» quando il jack è ancora sopra alla fine della corsa. In grassetto i requisiti che il modo rompe.
+
+
+## Selettore d'ingresso (K13–K16, SW4, D16–D19)
+
+| # | Parte | Modo | Effetto | Principale | Fisse | P10 a vuoto | P10 coi carichi | Fonte | Requisiti | A chi |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | K13–K16 | bobina aperta (l'ingresso scelto) | il contatto si apre: l'ingresso tace, il blocco A resta sul suo R_IN 1 MΩ | 7,1 µV (10 dB SPL) | 7,1 µV; Stax 18 dB SPL | 0 ms | 0 ms | simulato (`S_ap`) | F1 | — |
+| 2 | K13–K16 | bobina in corto | SW4 mette `VRELAY` in corto su `RLY_RET`: la linea dei relè crolla, il sorvegliante di `VRELAY` muta; è la classe di ADR-051 (corto della linea a 12 V) | ≤ 29,7 mV (~83 dB SPL), ADR-051 | — | 0 ms | — | calcolo | P9 (b), ADR-051 | L45c |
+| 3 | K13–K16 | contatto NO saldato (un ingresso non scelto) | due sorgenti in parallelo attraverso i loro C_IN; i due lati del preamp sono a 0 V (R_SEL), quindi nessuna continua: è il caso «due relè chiusi insieme» di ADR-064, 3,5 µV a 100 mV di continua della sorgente | ≤ 20 µV (ADR-064) | ≤ 20 µV | 0 ms | — | calcolo | F1, PR-14 | — |
+| 4 | K13–K16 | contatto aperto, o un polo sì e l'altro no | un canale tace | 7,1 µV (10 dB SPL) | 7,1 µV; Stax 18 dB SPL | 0 ms | 0 ms | simulato (`S_ap`) | F1 | — |
+| 5 | K13–K16 | rimbalzo | l'apertura per un istante del contatto: come il cambio d'ingresso di ADR-064 (il trasferimento di 1 ms misurato in L48a) | ≤ 19,8 µV (L48a) | ≤ 6,3 µV | 0 ms | — | calcolo | F1 | — |
+| 6 | K13–K16 | isolamento fra bobina e contatti che cede (la bobina scelta è a 12 V) | 12 V all'ingresso del blocco A: il blocco A va al rail, e con lui le due fisse (in continua) e il principale (attraverso C_T e il blocco B) | 13,6 V (136 dB SPL) | 13,9 V; Stax 144 dB SPL | princ. 579 ms; Singxer 3082 ms; Stax 3082 ms (6 s) | princ. 510 ms; Singxer 127 ms; Stax 542 ms | simulato (`I_K13`) | **P10**, PR-30 | L45d |
+| 7 | K13–K16 | lo stesso, con 1 kΩ di percorso (a metà bobina) | come sopra | 13,3 V (136 dB SPL) | 14,2 V; Stax 144 dB SPL | princ. 147 ms; Singxer 2530 ms; Stax 2530 ms (6 s) | princ. 258 ms; Singxer 104 ms; Stax 446 ms | simulato (`I_K13_1k`) | **P10**, PR-30 | L45d |
+| 8 | D16–D19 | ricircolo in corto | la bobina scelta in corto: come la bobina in corto | ≤ 29,7 mV (~83 dB SPL), ADR-051 | — | 0 ms | — | calcolo | ADR-051 | L45c |
+| 9 | D16–D19 | ricircolo aperto | il colpo induttivo della bobina sul contatto di SW4 a ogni cambio: usura del commutatore, nessun effetto al jack | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | — | — |
+| 10 | SW4 | contatto saldato, o fermo fra due posizioni | un ingresso fisso, o nessuno, o due insieme (come il NO saldato) | ≤ 20 µV | ≤ 20 µV | 0 ms | — | calcolo | F1 | — |
+
+## Guadagno (K1, K5, ausiliari K11, K12, SW2, D10–D15)
+
+| # | Parte | Modo | Effetto | Principale | Fisse | P10 a vuoto | P10 coi carichi | Fonte | Requisiti | A chi |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 11 | K1 (o K11), K5 (o K12) | bobina aperta durante l'ascolto, o l'ausiliario che cade (la tenuta si perde) | il guadagno scende durante l'ascolto: +3 → 0, +10 → +3 o 0. Coi LED letti dall'ausiliario, se cade solo K1 il LED dice +3 col segnale a 0 (ADR-033) | 6,32 mV (69 dB SPL) | < 1 µV | 0 ms | 0 ms | simulato (`G_10a0`) | PR-18 (cambia fuori mute, ma solo verso il basso) | — |
+| 12 | K1, K5, K11, K12 | bobina in corto | il comando o la tenuta mette `VRELAY` in corto appena la bobina è alimentata; il guadagno torna a 0 dB | ≤ 29,7 mV (~83 dB SPL), ADR-051 | — | 0 ms | — | calcolo | ADR-051 | L45c |
+| 13 | K1 (un polo) | contatto NO saldato | a riposo quel canale resta a +3 dB (+10 per K5): il guadagno «a riposo» non è 0 dB, e i LED (dagli ausiliari) dicono 0. Al guasto nessun gradino: il contatto si salda quando è già chiuso | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | **PR-18** («mai più alto»), ADR-033 | L45d |
+| 14 | K1 (un polo) | contatto aperto | quel canale perde il ramo: scende di 3 (o 10) dB durante l'ascolto, sbilanciato sull'altro | 1,26 mV (55 dB SPL) | < 1 µV | 0 ms | 0 ms | simulato (`G_3a0`) | PR-18 | — |
+| 15 | K1, K5 | rimbalzo (urto meccanico a contatto chiuso) | il guadagno scende per un istante | 5,04 mV (68 dB SPL) | < 1 µV | 0 ms | 0 ms | simulato (`G_10a3`) | — | — |
+| 16 | K1, K5 | isolamento fra bobina e contatti | non fisico: quando la bobina è a 12 V il contatto è chiuso a massa (il ramo del blocco B va a massa), e quando il contatto è aperto la bobina è a 0 V. Il cedimento mette solo `VRELAY` a massa attraverso il contatto: ADR-051. La corsa con 12 V sul ramo (I_K1, ~0,9 s) è un limite che il circuito non raggiunge | ≤ 29,7 mV (~83 dB SPL), ADR-051 | — | 0 ms | — | calcolo | ADR-051 | L45c |
+| 17 | K11 (polo di tenuta) | contatto NO saldato | fuori mute `VHOLD` riporta su K1 anche se la manopola è a 0: al rilascio del mute il guadagno sale a +3, insieme al collegamento dei jack. I LED dicono +3 (vero) | 1,37 mV (56 dB SPL) | < 1 µV | 0 ms | 0 ms | simulato (`G_0a3`) | **PR-18** (più alto della manopola) | L45d |
+| 18 | K11, K12 (polo dei LED) | contatto saldato o aperto | un LED sbagliato o spento; il segnale non cambia | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-18 (LED), ADR-033 | — |
+| 19 | D10, D11 (Schottky del comando) | corto | fuori mute, a +3 o +10, `G3_HI` ritorna su `VTRIM`: il **trim** si comanda fuori mute, e il LED rosso del mute si **accende con la musica** | 2,36 mV (61 dB SPL) | < 1 µV | 0 ms | 0 ms | simulato (`T_0a12`) | **PR-17**, PR-19 (LED di mute) | L45d |
+| 20 | D10, D11 | aperto | il guadagno non sale più: resta a 0 dB | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | F5 | — |
+| 21 | D12, D13 (diodi della tenuta) | corto | in mute, passando da +10 a +3, `H3` tiene K5 attraverso `VHOLD`: resta +10 con la manopola a +3. Solo in mute; i LED dicono +10 (vero) | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-18 (più alto della manopola, in mute) | L45d |
+| 22 | D12, D13 | aperto | la tenuta (c) si perde: fuori mute K1 resta solo dal ponte, quindi girare la manopola fuori mute abbassa il guadagno durante l'ascolto | 6,32 mV (69 dB SPL) | < 1 µV | 0 ms | 0 ms | simulato (`G_10a0`) | PR-18 (cambia fuori mute, verso il basso) | — |
+| 23 | D14, D15 (ricircolo) | corto | `G3_HI` in corto: comandarlo mette `VRELAY` in corto; il guadagno non sale | ≤ 29,7 mV (~83 dB SPL), ADR-051 | — | 0 ms | — | calcolo | ADR-051 | L45c |
+| 24 | D14, D15 | aperto | il colpo induttivo sul contatto di SW2 e su quello di K11: usura, niente al jack | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | — | — |
+| 25 | SW2 | un polo saldato (il comando a) | in mute K1 sale qualunque sia la manopola; i LED dicono il vero | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-18 (in mute) | — |
+| 26 | SW2 | un polo aperto | il guadagno non sale (o non resta fuori mute: come D12 aperto) | 1,26 mV (55 dB SPL) | < 1 µV | 0 ms | 0 ms | simulato (`G_3a0`) | PR-18 | — |
+
+## Permesso e trim (K6, K7–K10, SW1, D1–D3)
+
+| # | Parte | Modo | Effetto | Principale | Fisse | P10 a vuoto | P10 coi carichi | Fonte | Requisiti | A chi |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 27 | K6 | bobina aperta (o Q502 aperto) | K6 non si eccita mai: `VTRIM` sempre viva, `VHOLD` morta. Trim **e** guadagno seguono la manopola **fuori mute**, a jack collegati; il LED rosso del mute resta **acceso con la musica**. È il «Da riaprire se» di ADR-027, in silenzio | 7,01 mV (70 dB SPL) | < 1 µV | 0 ms | 0 ms | simulato (`G_0a10`) | **PR-17, PR-18**, PR-19 (LED di mute); ADR-027 «Da riaprire se» | L45d |
+| 28 | K6 | bobina in corto | `PERMIT_CMD` mette `VRELAY` in corto attraverso Q502 al rilascio del mute: la linea dei relè crolla, il sorvegliante muta | ≤ 29,7 mV (~83 dB SPL), ADR-051 | — | 0 ms | — | calcolo | ADR-051 | L45c, L54 |
+| 29 | K6 | un contatto NC saldato | l'altro NC apre: l'interblocco regge (i due NC in serie, ADR-027). Latente: col secondo, il caso della bobina aperta | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | — | — |
+| 30 | K6 | NO (polo 1) saldato | `VHOLD` sempre viva e `VTRIM` morta: trim e guadagno fermi anche in mute; il LED rosso non si accende mai (sbaglia verso il lato sicuro) | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-17, PR-18 (non si cambiano più) | — |
+| 31 | K6 | contatto aperto | `VTRIM` morta: il trim fermo, il guadagno non sale; LED rosso spento | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-17 | — |
+| 32 | D3 (ricircolo di VTRIM) | corto | in mute `VTRIM` va a massa: `VRELAY` in corto attraverso i NC di K6 a ogni inserzione, a jack già staccati | < 1 µV (jack staccati) | — | 0 ms | — | calcolo | ADR-051 | L45c |
+| 33 | K7, K8 (bistabili del trim) | bobina aperta | il trim resta dov'è; lo spia (K9, K10) si muove e il LED dice uno stato che il segnale non ha (ADR-033) | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-17 (LED), ADR-033 | — |
+| 34 | K7, K8, D1, D2 | bobina o TVS in corto | SW1 mette `VTRIM` in corto: solo in mute, a jack staccati | < 1 µV (jack staccati) | — | 0 ms | — | calcolo | ADR-051 | L45c |
+| 35 | K7, K8 | contatto saldato (un polo) | quel canale resta al suo trim: sbilanciamento fino a 12 dB fra i canali | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-17 | — |
+| 36 | K7 | comune aperto | C_T appeso: il canale tace sul principale | < 1 µV | < 1 µV | 0 ms | 0 ms | simulato (`T_com_ap`) | — | — |
+| 37 | K7, K8 | il bistabile che commuta da solo (urto, campo) durante l'ascolto | il trim cambia fuori mute | 2,36 mV (61 dB SPL) | < 1 µV | 0 ms | 0 ms | simulato (`T_0a12`) | PR-17 | — |
+| 38 | K7, K8 | isolamento fra bobina e contatti | la bobina è a 12 V solo in mute (`VTRIM`): durante l'ascolto il cedimento non porta niente. In mute spinge l'uscita del blocco A verso 12 V, a lati dei condensatori a massa; al rilascio `VTRIM` muore non dopo il collegamento dei jack, e l'uscita del blocco A torna a 0 con i condensatori carichi. La corsa I_K7 (12 V durante l'ascolto) è il limite superiore | 5,89 V (129 dB SPL) | 5,89 V; Stax 136 dB SPL | princ. 119 ms; Singxer 1875 ms; Stax 1875 ms (6 s) | princ. 95 ms; Singxer 77 ms; Stax 329 ms | simulato (`I_K7`) | P10 (limite superiore) | L45d |
+| 39 | K9, K10 (spia) | qualunque | solo i LED (ADR-033) | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-17 (LED) | — |
+| 40 | SW1 | contatto saldato o aperto | il trim non si comanda; solo in mute | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-17 | — |
+
+## Mute (K2–K4) e i suoi comandi (Q501, Q502)
+
+| # | Parte | Modo | Effetto | Principale | Fisse | P10 a vuoto | P10 coi carichi | Fonte | Requisiti | A chi |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 41 | K2–K4 | bobina aperta durante l'ascolto (o il polo che si apre) | quell'uscita si stacca: il deviatore apre il NO e chiude l'NC, come all'inserzione del mute | < 1 µV | < 1 µV | 0 ms | 0 ms | simulato (`K4_cade`) | PR-21 | — |
+| 42 | K2–K4 | bobina in corto | `MUTE_CMD` mette `VRELAY` in corto attraverso Q501: Q501 o la linea cedono, il sorvegliante di `VRELAY` muta | ≤ 29,7 mV (~83 dB SPL), ADR-051 | — | 0 ms | — | calcolo | ADR-051 | L45c, L54 |
+| 43 | K2–K4 | NO saldato | quell'uscita non si stacca più: al guasto niente, ma lo spegnimento, la perdita di rete e il guasto dell'alimentatore la trovano **collegata**. Il LED rosso non lo vede (limite dichiarato, ADR-028). Qui i rail simmetrici in 110 ms; con le rampe asimmetriche 1,6–10,5 V e 14–348 ms (`analisi_latenti.csv`): il caso vero è del banco dell'alimentatore | 7,51 V (131 dB SPL) | 7,52 V; Stax 139 dB SPL | princ. 56 ms; Singxer 58 ms; Stax 58 ms | — | simulato (`L_spegnimento`) | **PR-23** (latente), PR-21 | L45d |
+| 44 | K2–K4 | NC saldato | quell'uscita resta staccata, lato del condensatore a massa | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | — | — |
+| 45 | K2–K4 | NO aperto | quell'uscita tace | < 1 µV | < 1 µV | 0 ms | 0 ms | simulato (`K4_no_ap`) | — | — |
+| 46 | K2–K4 | rimbalzo del NO (0,5 ms) | un'apertura per un istante | < 1 µV | < 1 µV | 0 ms | 0 ms | simulato (`K4_rimbalzo`) | — | — |
+| 47 | K2–K4 | isolamento fra bobina e NO (il jack) | la bobina è a 12 V sempre (pin 1 su `VRELAY`): **12 V in continua sul jack**, anche a mute inserito (il NO è il jack stesso). Lo toglie solo lo spegnimento di `VRELAY` | 12 V (135 dB SPL) | < 1 µV | princ. ≥ 2000 ms | princ. ≥ 2000 ms | simulato (`I_K4_jack`) | **P10**, PR-30, PR-23 | L45d |
+| 48 | K2–K4 | lo stesso, 1 kΩ | come sopra | 11,9 V (135 dB SPL) | 1,55 µV; Stax 5 dB SPL | princ. ≥ 2000 ms | princ. ≥ 2000 ms | simulato (`I_K4_jack_1k`) | **P10** | L45d |
+| 49 | K2–K4 | isolamento fra bobina e comune (lato condensatore) | 12 V al jack durante l'ascolto; a mute inserito il comune va a massa sull'NC e il jack si stacca | 12 V (135 dB SPL) | < 1 µV | princ. ≥ 2000 ms | princ. ≥ 2000 ms | simulato (`I_K4_com`) | **P10**, PR-30 | L45d |
+| 50 | K3 (la Stax) | isolamento fra bobina e NO | 12 V in continua sul jack della Stax | < 1 µV | 12 V; Stax 143 dB SPL | Stax ≥ 2000 ms | Stax ≥ 2000 ms | simulato (`I_K3_jack`) | **P10**, PR-30, NC-046 | L45d |
+| 51 | Q501 (sink di `MUTE_CMD`) | corto D-S | i jack restano collegati **sempre**: il mute non si inserisce più, né dal frontale né dal sorvegliante (che agisce sul gate di Q501). Al guasto niente; latente come il NO saldato, su tutte e sei le uscite | 7,51 V (131 dB SPL) | 7,52 V; Stax 139 dB SPL | princ. 56 ms; Singxer 58 ms; Stax 58 ms | — | simulato (`L_spegnimento`) | **PR-23**, **PR-24** (latente) | L45d, L54 |
+| 52 | Q501 | aperto | sempre in mute | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | — | — |
+| 53 | Q502 (sink di `PERMIT_CMD`) | corto D-S | K6 sempre eccitato: trim e guadagno fermi, il LED rosso mai acceso; all'accensione i bistabili non vengono pilotati (il trim resta l'ultimo, non la manopola, ADR-027) | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-17 (accensione) | L54 |
+| 54 | Q502 | aperto | come la bobina di K6 aperta | 7,01 mV (70 dB SPL) | < 1 µV | 0 ms | 0 ms | simulato (`G_0a10`) | PR-17, PR-18 | L45d |
+| 55 | D522 (MUTE_G ≤ PERMIT_G) | corto | `MUTE_G` legato a `PERMIT_G`: all'inserzione K6 cade insieme ai jack, Δ si perde, il residuo di L36 torna (il guadagno può muoversi a jack collegati, solo se la manopola è stata girata fuori mute) | ≤ 29,7 mV (ADR-045 / ADR-051) | — | 0 ms | — | calcolo | PR-20 | L54 |
+| 56 | R513, R514, R516, R524–R526, C527 | aperto o corto | il riposo dei comandi: un pull-down aperto da solo non cambia niente (c'è l'altro, o la resistenza di gate); un corto di C527 o R514 tiene il mute. Il dettaglio è del temporizzatore | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-24 | L54 |
+
+## LED (R1–R3, J5–J7)
+
+| # | Parte | Modo | Effetto | Principale | Fisse | P10 a vuoto | P10 coi carichi | Fonte | Requisiti | A chi |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 57 | R1, R2, LED | aperto | i LED del trim o del guadagno spenti: lo stato non si legge | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-17, PR-18 (LED) | — |
+| 58 | R3, LED rosso | aperto | il LED di mute spento in mute: sbaglia verso il lato sicuro | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-19 | — |
+| 59 | LED rosso | acceso con la musica | per K6 o Q502 aperti, o D10/D11 in corto (righe sopra): l'unico modo in cui un LED **dice «muto» con un jack collegato** | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-19, ADR-028 punto 5 | L45d |
+
+## Condensatori, bleed e resistenze del percorso
+
+| # | Parte | Modo | Effetto | Principale | Fisse | P10 a vuoto | P10 coi carichi | Fonte | Requisiti | A chi |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 60 | C_OUT 4,7 µF (principale) | corto | il jack prende la continua del blocco B attraverso 47 Ω; poi l'uscita è **accoppiata in continua**: un guasto successivo del blocco non decade più (P10 infinito, guasto doppio) | 3,34 mV (64 dB SPL) | < 1 µV | 0 ms | 0 ms | simulato (`Cout_main_cc`) | — (latente per P10) | L45d |
+| 61 | C_OUT 4,7 µF (fisse) | corto | lo stesso, dal buffer | < 1 µV | 6,67 mV; Stax 77 dB SPL | 0 ms | 0 ms | simulato (`Cout_fix2_cc`) | — (latente) | L45d |
+| 62 | C_OUT | aperto | l'uscita tace | < 1 µV | < 1 µV | 0 ms | 0 ms | simulato (`Cout_main_ap`) | — | — |
+| 63 | C_T 10 µF | corto | la continua del blocco A attraverso trim e volume torna (NC-041): i passi del volume tornano a farsi sentire (fino a 19,5 mV, L48b) | 9,46 mV (73 dB SPL) | < 1 µV | 0 ms | 0 ms | simulato (`CT_cc_g10`) | PR-20 (degrada) | — |
+| 64 | C_T | aperto | il principale tace | < 1 µV | < 1 µV | 0 ms | 0 ms | simulato (`CT_ap`) | — | — |
+| 65 | C_IN 1 µF | corto | la continua della sorgente arriva al blocco A e alle fisse in continua; con una sorgente sana (≤ 0,65 V, ADR-064) sotto il tetto; con la sorgente a 0 V | 3,19 µV (4 dB SPL) | 3,19 µV; Stax 11 dB SPL | 0 ms | 0 ms | simulato (`CIN_cc`) | F1 | — |
+| 66 | R_SEL 470 kΩ | aperto | il lato del preamp di un ingresso non scelto deriva sulla perdita del condensatore: al cambio un gradino fino alla continua della sorgente (ADR-064) | ≤ la continua della sorgente | lo stesso | 0 ms per una sorgente sana | — | calcolo | F1 | — |
+| 67 | R_J 10 MΩ | aperto | il jack d'ingresso vuoto non è più a 0 V: conta solo inserendo una sorgente | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-14 | — |
+| 68 | bleed del jack (RBL) | aperto | a mute il jack non ha più ritorno: lo stato sicuro di ADR-044 si perde, latente | < 1 µV | < 1 µV | 0 ms | 0 ms | simulato (`RBLmain_ap`) | ADR-044 | — |
+| 69 | bleed del lato condensatore (RBC) | aperto | conta solo nel ms del trasferimento | < 1 µV | < 1 µV | 0 ms | 0 ms | simulato (`RBCmain_ap`) | — | — |
+| 70 | 47 Ω d'uscita | corto | il cavo sullo stadio, dentro l'anello: col gradino d'ingresso e fino a 10 nF di cavo nessuna oscillazione (squillo.py); la protezione dal corto (P7) perde la sua resistenza | < 1 µV | < 1 µV | 0 ms | — | simulato (`RSmain_cc_1n`) | E4, P7 | L45d (P7) |
+| 71 | 47 Ω d'uscita | aperto | l'uscita tace | < 1 µV | < 1 µV | 0 ms | — | simulato (`RSmain_ap`) | — | — |
+| 72 | scala del trim (845 / 464 / 464 Ω) | corto o aperto | un livello sbagliato o il silenzio a −6/−12 dB; il carico peggiore sul blocco A (R1 in corto) è 928 Ω, 4,1 mA di picco su ~20 mA di classe A | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-17 | — |
+
+## Firmware e micro (U509)
+
+| # | Parte | Modo | Effetto | Principale | Fisse | P10 a vuoto | P10 coi carichi | Fonte | Requisiti | A chi |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 73 | LDR | — | non ci sono più (ADR-062): il caso di NC-042 «il firmware accende tutte e due le stringhe» non esiste | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | — | — |
+| 74 | U509 | firmware bloccato | il watchdog (≤ 250 ms, timer_spec §4.8) lo resetta; in reset le uscite sono in alta impedenza e i pull-down le portano a riposo: il mute si inserisce, con Δ in hardware (PERMIT_T) | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-24 | L54 |
+| 75 | U509 | `MUTE_REQ` bloccata alta (il pin, non il firmware) | la musica resta: il commutatore del mute e lo spegnimento morbido non la tolgono; il sorvegliante e il rivelatore di rete sì (agiscono sul gate). PR-24 dice «resta muto» | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | **PR-24** | L54 |
+| 76 | U509 | `MUTE_REQ` bassa, o un'uscita in alta impedenza | mute | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-24 | — |
+| 77 | U509 | `PERMIT_REQ` bloccata alta | K6 resta eccitato anche in mute: trim e guadagno non si cambiano | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-17, PR-18 | L54 |
+| 78 | U509 | `MAINS_REQ` bloccata alta | lo standby non spegne il trasformatore grande | 0 (nessun gradino) | 0 | 0 ms | — | calcolo | PR-25 | L54 |
