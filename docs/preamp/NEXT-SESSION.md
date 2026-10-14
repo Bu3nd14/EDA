@@ -56,7 +56,12 @@ Cosa ha trovato L45c1, da tenere davanti (`reports/2026-10-13-L45c1-fmea-rail.md
    in `applica_guasto()` col suo `assert`), e si rifà la catena.
 3. **Nessuna decisione**: i rimedi li sceglie l'utente in **L45d**. Se un caso chiede una scelta
    subito, la si chiede all'utente per nome e senza sigle.
-4. Report `docs/preamp/reports/<data>-L45c2-fmea-comando.md`, dati in `docs/preamp/data/<data>/L45c2/`.
+4. **La tabella nella forma di ADR-070** (decisa dall'utente il 2026-10-14): per ogni modo, oltre
+   all'effetto e al verdetto, la gravità 1–5, il tasso in FIT con la fonte (SN 29500 o IEC 61709 a
+   60 °C d'aria, i modi da FMD-2016) e la classe di probabilità 1–4, la rilevabilità 1–3, la
+   priorità dalla matrice, i rimedi candidati. Le tabelle di L45a–L45c1 **non** si toccano: le
+   riporta L45d.
+5. Report `docs/preamp/reports/<data>-L45c2-fmea-comando.md`, dati in `docs/preamp/data/<data>/L45c2/`.
 
 ## Prima di tutto
 

@@ -3641,6 +3641,13 @@ di L41c ma ≤ 9,0 mV al jack. **Non visti da niente, senza effetto al jack**: l
 rail resta il caso accettato di P9 (c). Nessuna voce nuova: se aprirne per il filo del rail o le
 sovratensioni lo decide l'utente in L45d. Restano L45c2 e L45d.
 
+**Avanzamento, dopo L45c1 (2026-10-14).** La forma della FMEA (**ADR-070**, «tassi normati,
+retrofit in L45d»): ogni modo ha, oltre all'effetto misurato e al verdetto, la gravità (1–5,
+ancorata alle soglie firmate), la probabilità (1–4, dal tasso in FIT di SN 29500 o IEC 61709,
+modi da FMD-2016), la rilevabilità (1–3: il circuito, chi ascolta, latente), una priorità da
+matrice e i rimedi candidati. Vale da L45c2; **L45d riporta per primo le tabelle di L45a, L45b e
+L45c1 a questa forma**, poi sceglie i rimedi. La voce si chiude ancora con L45d.
+
 ### NC-043 — La VTL5C4 dell'Excelitas è fuori produzione, e il progetto la usa ancora
 
 | | |
