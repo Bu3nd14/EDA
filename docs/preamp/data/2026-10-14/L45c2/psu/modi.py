@@ -283,12 +283,15 @@ CALCOLO = [
     ("R524", "corto", "PERMIT_G = V5 sempre: U508 A in corto sull'uscita (corrente di corto); il "
      "permesso non si rilascia mai: guadagno e trim non si cambiano in mute (funzione)", "calcolo"),
     ("R516", "aperto", "nessuno (il pull-down per U508 morto)", "calcolo"),
-    ("R516", "corto", "PERMIT_G a 0", "= f_r524_aperto_mus"),
+    # PERMIT_G pulled to 0 hard (not by R516's 100k): it wins over D522's feed from MUTE_G, as
+    # C528 shorted does - not R524 open, where only the pull-up goes
+    ("R516", "corto", "PERMIT_G a 0: il permesso cade, D522 tira giu' MUTE_G", "= f_c528_corto_mus"),
     ("R537", "aperto", "VR_G a 0: Q505 si spegne", "= f_q506_aperto_mus"),
     ("R538", "corto", "VR_G a 0", "= f_q506_aperto_mus"),
     ("R537", "corto", "VR_G = V5 sempre: VRELAY in standby", "= f_q505_corto_spegn"),
     ("R538", "aperto", "nessuno", "calcolo"),
-    ("U508", "canale A bloccato basso", "PERMIT_G a 0", "= f_r524_aperto_mus"),
+    ("U508", "canale A bloccato basso", "PERMIT_G a 0: il permesso cade, D522 tira giu' MUTE_G",
+     "= f_c528_corto_mus"),
     ("U508", "canale A cieco", "il permesso non si rilascia mai (funzione)", "= R524 corto"),
     ("U508", "canale B bloccato basso", "VR_G a 0", "= f_q506_aperto_mus"),
     ("U508", "canale B cieco / alimentazione aperta", "VRELAY in standby", "= f_q505_corto_spegn"),
