@@ -14,9 +14,16 @@ ha riportato le prime tre tabelle alla forma di ADR-070 e le ha messe tutte e qu
 L45d era stato diviso dall'utente all'inizio («Due parti»). **L45d2** è la seconda metà, e NC-042 si
 chiude con lei.
 
-## Il punto di partenza: la sintesi
+## Il punto di partenza: il PDF delle scelte
 
-`docs/preamp/data/2026-10-14/L45d1/fmea_sintesi.md` (e `.csv`; il report è
+**`docs/preamp/data/2026-10-14/L45d1/scelte_L45d2.pdf`** è il passo intermedio, versionato dopo L45d1
+su richiesta dell'utente («teniamolo come step intermedio, così possiamo referenziarlo nelle
+modifiche che applicheremo»). Le 156 righe ad alta e media priorità diventano **10 scelte
+numerate** (118 righe); altre 38 non chiedono una scelta adesso. **Ogni ADR, commit e report di
+questo lotto cita la scelta per numero** («scelta 5 di `scelte_L45d2.pdf`»), e il PDF non si
+riscrive: se la numerazione deve cambiare, se ne fa uno nuovo accanto e lo si dice.
+
+Il dettaglio sta nella sintesi: `docs/preamp/data/2026-10-14/L45d1/fmea_sintesi.md` (e `.csv`; il report è
 `reports/2026-10-14-L45d1-riporto-fmea.md`). **469 modi: 96 a priorità alta, 60 media, 313 bassa.**
 Le righe sono raggruppate per rimedio candidato. In testa:
 - **un rivelatore di continua sulle uscite dei blocchi** che apra il mute: 52 righe alte e 6 medie
@@ -59,7 +66,9 @@ senza sigle.
 - `CLAUDE.md`, `docs/limitations.md` (**58** voci), `AGENTS.md`.
 - `docs/preamp/STATE.md`: «In breve» e le voci di **L45d1**, L45c2, L45c1, L45b, L45a.
 - `NONCOMPLIANCE.md`: NC-042, NC-046, NC-062.
-- Il report di L45d1 e la sintesi; i quattro report di L45 per il dettaglio di una riga.
+- `scelte_L45d2.pdf`, il report di L45d1 e la sintesi; i quattro report di L45 per il dettaglio di
+  una riga.
+- `STATE.md`, la riga di **L58** nella tabella dei lotti.
 - ADR-045, ADR-046, ADR-051, ADR-062, ADR-069, **ADR-070**.
 
 ## I vincoli
@@ -85,6 +94,10 @@ senza sigle.
 - L'ingresso protetto (L57), il riesame del micro e dello standby (L54: `MUTE_REQ` bloccata alta,
   Q502 in corto all'accensione, D522), il dispositivo d'uscita (L55), il moltiplicatore di Vbe
   (NC-062), G1. Se una scelta tocca uno di questi, si dice e si lascia al suo lotto.
+- **La diagnosi, L58** (lotto nuovo, richiesta dell'utente dopo L45d1): i test point e l'autodiagnosi
+  dei guasti latenti. Quando un rimedio è una diagnosi (l'autotest dei sorveglianti, il firmware che
+  legge `MUTE_CMD` o il jack, il controllo di Δ a ogni mute), l'utente può sceglierlo qui e
+  **mandarne la realizzazione a L58**; lo si scrive nella ADR.
 
 ## CHIUSURA
 
