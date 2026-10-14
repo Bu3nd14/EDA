@@ -63,7 +63,7 @@ def main(banco):
         # la corsa di ogni modo: quella della variante, o (se c'e') quella rifatta fino a 0,6 s
         # (_corta, come i tr_corta_* di L45a) o col metodo gear (_gear, come L45b), nell'ordine
         corse = {}
-        for suff in ("", "_corta", "_gear", "_corta_gear"):
+        for suff in ("", "_corta", "_gear", "_corta_gear", "_gear_rshunt", "_rshunt"):
             g = os.path.join(banco, "analisi_%s%s.csv" % (var, suff))
             if os.path.exists(g):
                 for r in csv.DictReader(open(g)):

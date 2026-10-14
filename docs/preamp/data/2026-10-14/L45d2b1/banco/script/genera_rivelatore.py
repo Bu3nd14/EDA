@@ -259,7 +259,7 @@ def main(argv):
     elif cmd == "guasti":
         args = argv[2:]
         pos = args.pop(0)
-        gain, ccout, tfine, gear, solo = 0, False, None, False, []
+        gain, ccout, tfine, gear, rshunt, solo = 0, False, None, False, False, []
         while args:
             a = args.pop(0)
             if a == "--gain":
@@ -269,13 +269,17 @@ def main(argv):
             elif a == "--tfine":
                 # come i tr_corta_* di L45a: i casi che non finiscono in 30 min, fino a 0,6 s
                 tfine = float(args.pop(0))
+            elif a == "--rshunt":
+                # Q146 in corto: anche gear si ferma all'istante dello scatto (0,376 s, «Timestep
+                # too small» sul JFET del blocco A); rshunt = 1e10 (100 pS su ogni nodo) la fa finire
+                rshunt = True
             elif a == "--gear":
                 # come vuoto_tr_gear_* di L45b: i casi che trap ferma con «Timestep too small»
                 gear = True
             else:
                 solo.append(a)
         var = "riv_%s" % pos + ("_g%d" % gain if gain else "") + ("_cc" if ccout else "") \
-            + ("_corta" if tfine else "") + ("_gear" if gear else "")
+            + ("_corta" if tfine else "") + ("_gear" if gear else "") + ("_rshunt" if rshunt else "")
         lista = []
         tutti = ["rif"] + [m for m, nm, _, _, _ in gc.modi()
                            if m not in gc.RAIL_A_MASSA and not (nm in gc.SOLO and pos not in gc.SOLO[nm])]
@@ -283,7 +287,10 @@ def main(argv):
             if m not in tutti:
                 sys.exit("RIFIUTATO: %s non e' un modo di %s" % (m, pos))
             p = os.path.join(BANCO, "deck", var, m + ".cir")
-            scrivi(p, deck_guasto(pos, gain, m, ccout, tfine, gear))
+            testo = deck_guasto(pos, gain, m, ccout, tfine, gear)
+            if rshunt:
+                testo = sostituisci(testo, "option itl1=1000\n", "option itl1=1000\noption rshunt=1e10\n")
+            scrivi(p, testo)
             lista.append(p)
         scrivi(os.path.join(BANCO, "deck", "lista_%s.txt" % var), "\n".join(lista) + "\n")
         print("%s: %d deck" % (var, len(lista)))

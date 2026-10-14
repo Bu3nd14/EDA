@@ -29,6 +29,8 @@ i 5 V e i massimi del blocco sono di L45d2b2; i guasti rifatti nella forma di AD
 | `banco/inc/cmpoc.lib` | il comparatore a collettore aperto, **comportamentale e dichiarato** |
 | `banco/script/genera_rivelatore.py` | i deck: `prova`, `musica`, `rail`, `accensione`, `guasti POS [--gain G] [--ccout] [--tfine T] [--gear] [MODO...]` |
 | `banco/script/genera_tutto.sh` | tutti i deck e la lista unica, le corse lente (R120 in corto, Q133 e R135 nel blocco A) fino a 0,6 s come in L45a |
+| `banco/script/genera_corte2.sh`, `genera_r120.sh`, `genera_gear.sh`, `genera_rshunt.sh` | le corse che non finiscono, rifatte: Q133 / R135 fino a 0,6 s nelle altre posizioni; R120 in corto fino a 0,45 s (~2 ms simulati al minuto); R131, Q146, JQ110A, R138 col metodo gear; Q146 in corto con `rshunt = 1e10` (si fermava all'istante dello scatto) |
+| `banco/guasti.csv`, `guasti.md` | la sintesi: **0 guasti fuori da P10** in sette posizioni (erano 45–53 per posizione), il peggiore 90,0 ms |
 | `banco/script/verifica_prova.py`, `banco/prova.csv` | lo strumento contro il calcolo a mano: 12 casi |
 | `banco/script/analizza_guasti.sh`, `sintesi_guasti.py` | P10 di L45b (invariato) su ogni guasto, e la sintesi `banco/guasti.csv`, `guasti.md` |
 | `banco/script/medie.py` | le medie a finestre delle uscite in una corsa (l'accensione, il clip) |
@@ -58,7 +60,14 @@ i 5 V e i massimi del blocco sono di L45d2b2; i guasti rifatti nella forma di AD
 /Users/roberto/EDA/env/venv/bin/python3 circuits/preamp/preamp_audio.py
 /Users/roberto/EDA/env/venv/bin/python3 circuits/preamp/psu.py
 /bin/zsh <A>/banco/script/genera_tutto.sh                                 # 807 deck, una lista
-/bin/zsh <A>/banco/script/corri.sh <A>/banco/deck/lista_tutto.txt          # ~1,5 h, 8 alla volta
+/bin/zsh <A>/banco/script/corri.sh <A>/banco/deck/lista_tutto.txt          # ~1,5 h, 8 alla volta;
+        # le corse lente oltre ~10 min si fermano (pkill -f con la coda del percorso del deck) e si
+        # rifanno coi quattro genera_*.sh qui sotto e corri.sh sulle loro liste
+/bin/zsh <A>/banco/script/genera_corte2.sh
+/bin/zsh <A>/banco/script/genera_r120.sh
+/bin/zsh <A>/banco/script/genera_gear.sh
+/bin/zsh <A>/banco/script/genera_rshunt.sh
+/usr/bin/python3 -I <A>/banco/script/genera_rivelatore.py guasti F1 --ccout --rshunt Q146_ce
 /usr/bin/python3 -I <A>/banco/script/verifica_prova.py <A>/banco/run/prova <A>/banco/prova.csv
 /usr/bin/python3 -I <A>/banco/script/riassunto_piccole.py <A>/banco
 /bin/zsh <A>/banco/script/analizza_guasti.sh                              # ~1 h

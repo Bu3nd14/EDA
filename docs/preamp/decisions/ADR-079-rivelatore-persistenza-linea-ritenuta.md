@@ -62,8 +62,12 @@ I valori stanno in `circuits/preamp/dc_detector.py`, ognuno con la sua ragione. 
     20 Hz fino al clip, quadra, impulsi al 90 %, un periodo isolato, 1 kHz e 5 kHz al clip 2,3 dB
     oltre E6.
   - Il margine minimo è degli impulsi a 20 Hz: TMAX a 5,3 V contro lo scatto a ~7,2 V.
-- **Il taglio arriva in tempo.** A calcolo, nel caso peggiore, ≤ 86,2 ms dal guasto per ogni
-  continua da 0,81 V in su. Sul banco dei guasti del blocco: vedi il report, «I guasti del blocco».
+- **Il taglio arriva in tempo.**
+  - A calcolo, nel caso peggiore, ≤ 86,2 ms dal guasto per ogni continua da 0,81 V in su.
+  - Sul banco dei guasti del blocco, 762 corse in sette posizioni (A, F1, F2, B, B a +10 dB, e i
+    due condensatori d'uscita in corto della scelta 9), **nessun guasto fuori da P10**.
+  - Senza rivelatore ne uscivano 45–53 per posizione. Il peggiore ora è 90,0 ms, lo scatto tipico a
+    73 ms (`data/2026-10-14/L45d2b1/banco/guasti.md`).
 - **La scelta 8 e il suo simmetrico.**
   - Il filo del + aperto fra le schede: scatta a 221–223 ms, il jack resta sopra 0,87 V ≤ 73 ms.
   - Il filo del − aperto: scatta a 451–460 ms, il jack ≤ 60 ms.
