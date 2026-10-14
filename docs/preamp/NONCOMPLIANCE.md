@@ -3560,7 +3560,7 @@ dati `data/2026-10-07/L48b/`, **ADR-065**.
 | Requisito | **PR-22, PR-23, PR-24** · P7, P9 · ADR-027 («Da riaprire se» sulla bobina di K6), ADR-033, ADR-051 |
 | Severità | **maggiore**, da chiudere **prima di G1** (decisione dell'utente in L52, 2026-10-12, «Move the analysis before G1»; prima: prima di G2, L43a) |
 | Aperta da | `reports/2026-09-27-L43a-architetto-avversariale.md`, rilievo **R5**. Trovata dall'**architetto avversariale**, accettata dall'utente in L43a |
-| Stato | aperta — la FMEA è **L45**, prima di G1 (L52): L45a, L45b, L45c1, L45c2 e L45d1 (il riporto alla forma di ADR-070) fatte; resta L45d2 (la decisione sui rimedi) |
+| Stato | aperta — la FMEA è **L45**, prima di G1 (L52): L45a, L45b, L45c1, L45c2 e L45d1 (il riporto alla forma di ADR-070) fatte; L45d2a (le decisioni sui rimedi, ADR-071…078) fatta; resta L45d2b (la loro costruzione) |
 
 **Evidenza.** Nel repo «guasto singolo», «FMEA» e «analisi dei guasti» portano solo ad ADR-051 e
 alle clausole di ADR-027 e ADR-033; `psu.py` non ha rivelatori di continua sulle uscite dei
@@ -3670,6 +3670,26 @@ in cui la matrice potrebbe non dire ciò che l'utente vuole vanno a L45d2. Il pr
 relè di mute in media per la sola rarità. Il secondo: 28 guasti del blocco dentro P10 in media per la
 sola latenza. Nessuna voce aperta o chiusa. Resta **L45d2**, le scelte sui rimedi; la voce si chiude
 con lei.
+
+**Avanzamento, L45d2a (2026-10-14).** L45d2 diviso dall'utente all'inizio («Prima decidere, poi
+costruire»): **L45d2a** prende le decisioni, **L45d2b** le realizza. Le decisioni sono otto ADR,
+**ADR-071…078** (`reports/2026-10-14-L45d2a-scelte-rimedi.md`), e il circuito non cambia.
+- **Il rivelatore di continua sulle uscite dei blocchi, in hardware** (ADR-072): apre il mute,
+  toglie la linea dei relè alla scheda audio e spegne i rail audio. È il rimedio a P10 per il
+  blocco, e copre anche l'isolamento bobina-contatti, il filo del rail aperto, il condensatore
+  d'uscita in corto e il secondo guasto per calore. La domanda di questa voce sul rivelatore ha
+  quindi la sua risposta.
+- D510 / D511 rivisti e U502 protetto (ADR-074); il limite di corrente del comando e il limitatore
+  sui 5 V (ADR-075).
+- **Accettati**: la riserva del firmware a 2,2 ms col sorvegliante cieco (ADR-073, P9 (d)) e il
+  ritardo Δ perso (ADR-077, come ADR-051).
+- **Alla diagnosi (L58)**: il mute che non si inserisce (ADR-076), il degrado silenzioso di 28
+  guasti del blocco (ADR-071) e lo standby acceso per guasto (ADR-078).
+- I relè di mute passano ad alta priorità (ADR-071).
+
+Destinazioni delle 156 righe alte e medie (`data/2026-10-14/L45d2a/decisioni.csv`): **L45d2b 88**,
+L58 38, accettate 24, NC-062 4, G2 2. Dopo ADR-071, **100 alte e 56 medie**. **La voce si chiude
+con L45d2b**, quando i rimedi sono costruiti e P10 è misurato sui guasti rifatti.
 
 ### NC-043 — La VTL5C4 dell'Excelitas è fuori produzione, e il progetto la usa ancora
 

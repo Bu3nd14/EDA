@@ -1,0 +1,174 @@
+scelta,lotto,ref,funzione,modo,G,P,R,priorita,priorita_adr071,decisione,adr,dove,picco_V,picco_dB,sopra_ms
+1,L45a,C145,condensatore della cella RC (1000 uF),corto,5,3,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,14.9,136.9,2000
+1,L45a,Q132,finale NPN (MJE15032),corto C-E,5,3,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,3.58,124.5,439.2
+1,L45a,Q133,finale PNP (MJE15033),corto C-E,5,3,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,2.89,122.7,2000
+1,L45a,JQ110A,"JFET d'ingresso, lato segnale",corto D-S,5,3,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,10.5,133.9,2000
+1,L45a,Q122,VAS (DZT5401),corto B-E,5,3,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,15.1,137.0,2000
+1,L45a,Q125,carico del VAS (DZT5551),corto C-E,5,3,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,8.08,131.6,1996.8
+1,L45a,Q106,generatore di coda,corto C-E,5,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,10.8,134.1,2000
+1,L45a,Q121A,"specchio, lato a diodo",corto B-E,5,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,24.5,141.2,1816.9
+12,L45a,Q127,moltiplicatore di Vbe,corto B-E,5,2,3,alta,alta,nel lotto del moltiplicatore di Vbe,,NC-062,0.0218,80.2,0
+1,L45a,Q146,inseguitore davanti al VAS,corto C-E,5,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,15,137.0,2000
+1,L45a,Q148,transistor di aiuto dello specchio,corto C-E,5,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,2.77,122.3,1998.6
+3,L45c1,C502,"il secondario, il ponte e i serbatoi",corto,5,2,1,alta,alta,rivedere D510 / D511 e proteggere U502 dall'uscita sopra l'ingresso; il fusibile di rete resta a G2,ADR-074,L45d2b,0.000235,40.9,0
+3,L45c1,U502,i regolatori dei rail,IN a massa (interno),5,2,1,alta,alta,rivedere D510 / D511 e proteggere U502 dall'uscita sopra l'ingresso; il fusibile di rete resta a G2,ADR-074,L45d2b,,,
+4,L45c2,U504,la logica (V5),IN-OUT in corto,5,2,2,alta,alta,un limitatore sulla linea a 5 V della logica,ADR-075,L45d2b,,,
+1,L45a,Q118,"cascode, lato retroazione",aperto,5,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,12.2,135.2,2000
+1,L45a,Q121A,"specchio, lato a diodo",aperto,5,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,24.6,141.3,1733.9
+12,L45a,Q127,moltiplicatore di Vbe,aperto,5,2,3,alta,alta,nel lotto del moltiplicatore di Vbe,,NC-062,0.0367,84.7,0
+4,L45c2,K501,il rele' di rete,bobina in corto,5,2,1,alta,alta,limitare la corrente sul comando,ADR-075,L45d2b,,,
+11,L45c2,F501,la linea dei rele' (VRELAY_REG),in corto (o sovradimensionato),5,2,3,alta,alta,niente da scegliere: si verifica al pre-layout,,G2,,,
+1,L45a,JQ110B,"JFET d'ingresso, lato retroazione",aperto,5,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,10.8,134.1,294.8
+1,L45a,R112,"degenerazione, lato retroazione",aperto,5,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,10.8,134.1,294.8
+1,L45a,R119,"emettitore dello specchio, lato a diodo",aperto,5,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,24.6,141.3,1733.9
+12,L45a,R128,moltiplicatore di Vbe (alto),aperto,5,2,3,alta,alta,nel lotto del moltiplicatore di Vbe,,NC-062,0.093,92.8,0
+1,L45a,D102,diodo del riferimento (alto),aperto,5,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,24.1,141.1,1937
+1,L45a,D103,diodo del riferimento (basso),aperto,5,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,24.1,141.1,1937
+3,L45c1,D501,"il secondario, il ponte e i serbatoi",diodo -->A in corto,5,2,1,alta,alta,rivedere D510 / D511 e proteggere U502 dall'uscita sopra l'ingresso; il fusibile di rete resta a G2,ADR-074,L45d2b,0.000138,36.2,0
+3,L45c1,D501,"il secondario, il ponte e i serbatoi",diodo -->B in corto,5,2,1,alta,alta,rivedere D510 / D511 e proteggere U502 dall'uscita sopra l'ingresso; il fusibile di rete resta a G2,ADR-074,L45d2b,0.000125,35.4,0
+3,L45c1,C510,"il secondario, il ponte e i serbatoi",corto,5,1,1,alta,alta,rivedere D510 / D511 e proteggere U502 dall'uscita sopra l'ingresso; il fusibile di rete resta a G2,ADR-074,L45d2b,,,
+1,L45a,R101,resistenza del riferimento,corto,5,1,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,1.86,118.8,833
+1,L45a,R107,emettitore della coda,corto,5,1,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,10.4,133.8,2000
+10,L45a,R126,emettitore del carico del VAS (56),corto,5,1,3,alta,alta,il rivelatore spegne i rail audio: il calore dura quanto il suo ritardo,ADR-072,L45d2b,12.5,135.4,53.8
+12,L45a,R129,moltiplicatore di Vbe (basso),corto,5,1,3,alta,alta,nel lotto del moltiplicatore di Vbe,,NC-062,0.0218,80.2,0
+1,L45a,R147,resistenza dell'inseguitore,corto,5,1,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,14.9,136.9,2000
+1,L45a,R149,resistenza dell'aiuto,corto,5,1,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio; col calore: i rail spenti tolgono anche il secondo guasto (scelta 10)",ADR-072,L45d2b,6.52,129.7,864.4
+4,L45c2,D506,il comando del jack (MUTE_CMD),corto,5,1,1,alta,alta,limitare la corrente sul comando,ADR-075,L45d2b,4.03e-09,-54.4,0
+4,L45c2,D505,il rele' di rete,corto,5,1,1,alta,alta,limitare la corrente sul comando,ADR-075,L45d2b,0.00642,69.6,0
+4,L45c2,D508,il permesso (PERMIT_CMD),corto,5,1,1,alta,alta,limitare la corrente sul comando,ADR-075,L45d2b,,,
+4,L45c2,R503,il riferimento,corto,5,1,1,alta,alta,limitare la corrente sul comando,ADR-075,L45d2b,,,
+4,L45c2,R510,il rivelatore di rete,corto,5,1,1,alta,alta,limitare la corrente sul comando,ADR-075,L45d2b,,,
+4,L45c2,R512,il rivelatore di rete,corto,5,1,1,alta,alta,limitare la corrente sul comando,ADR-075,L45d2b,,,
+1,L45a,C116,condensatore del riferimento dei cascode,corto,4,3,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,4.21,125.9,390
+1,L45a,JQ110B,"JFET d'ingresso, lato retroazione",corto D-S,4,3,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,15,137.0,2000
+1,L45a,Q122,VAS (DZT5401),corto C-E,4,3,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,19.2,139.1,2000
+1,L45a,Q122,VAS (DZT5401),aperto,4,3,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,15.1,137.0,2000
+1,L45a,Q125,carico del VAS (DZT5551),aperto,4,3,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,0.94,112.9,1998.7
+1,L45a,Q106,generatore di coda,corto B-E,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,12.7,135.5,122.8
+1,L45a,Q117,"cascode, lato segnale",corto B-E,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,12.7,135.5,2000
+1,L45a,Q118,"cascode, lato retroazione",corto B-E,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,6.58,129.8,2000
+1,L45a,Q121A,"specchio, lato a diodo",corto C-E,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,6.53,129.7,1006
+1,L45a,Q121B,"specchio, lato d'uscita",corto B-E,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,6.66,129.9,1006.2
+1,L45a,Q121B,"specchio, lato d'uscita",corto C-E,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,14.9,136.9,2000
+1,L45a,Q146,inseguitore davanti al VAS,corto B-E,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,1.4,116.3,196.8
+3,L45c1,C501,"il secondario, il ponte e i serbatoi",corto,4,2,1,alta,alta,rivedere D510 / D511 e proteggere U502 dall'uscita sopra l'ingresso; il fusibile di rete resta a G2,ADR-074,L45d2b,0.00898,72.5,0
+3,L45c1,U501,i regolatori dei rail,IN a massa (interno),4,2,1,alta,alta,rivedere D510 / D511 e proteggere U502 dall'uscita sopra l'ingresso; il fusibile di rete resta a G2,ADR-074,L45d2b,,,
+1,L45a,Q106,generatore di coda,aperto,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,12.6,135.5,1999.9
+1,L45a,Q117,"cascode, lato segnale",aperto,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,12.9,135.6,2000
+1,L45a,Q121B,"specchio, lato d'uscita",aperto,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,6.57,129.8,1006.2
+1,L45a,Q146,inseguitore davanti al VAS,aperto,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,15.3,137.2,2000
+1,L45a,Q148,transistor di aiuto dello specchio,aperto,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,6.62,129.9,2000
+5,L45c1,K2-K4,il mute che non si inserisce,"NO saldato, poi lo spegnimento",4,2,3,alta,alta,rivelato dal firmware (legge il comando del mute e stacca la linea dei rele' alla scheda audio),ADR-076,L58,0.276,102.3,0
+5,L45c1,K2-K4,il mute che non si inserisce,"NO saldato, poi la perdita di rete",4,2,3,alta,alta,rivelato dal firmware (legge il comando del mute e stacca la linea dei rele' alla scheda audio),ADR-076,L58,0.275,102.2,0
+5,L45c1,K2-K4,il mute che non si inserisce,"NO saldato, poi U502 spento",4,2,3,alta,alta,rivelato dal firmware (legge il comando del mute e stacca la linea dei rele' alla scheda audio),ADR-076,L58,0.0278,82.3,0
+5,L45c1,K2-K4,il mute che non si inserisce,"NO saldato, poi U501 spento",4,2,3,alta,alta,rivelato dal firmware (legge il comando del mute e stacca la linea dei rele' alla scheda audio),ADR-076,L58,3.61,124.6,548.8
+1,L45a,C124,condensatore di Miller,corto,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,14.1,136.4,2000
+1,L45a,JQ110A,"JFET d'ingresso, lato segnale",aperto,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,14.9,136.9,2000
+2,L45c2,U505,il sorvegliante dei rail,"canale A cieco (uscita aperta), poi U501 spento",4,2,3,alta,alta,"accettata la riserva del firmware (muta in 2,2 ms invece di 1 ms)",ADR-073,accettata,0.000171,38.1,0
+2,L45c2,U505,il sorvegliante dei rail,"canale B cieco (uscita aperta), poi U502 spento",4,2,3,alta,alta,"accettata la riserva del firmware (muta in 2,2 ms invece di 1 ms)",ADR-073,accettata,1.83e-05,18.7,0
+1,L45a,R107,emettitore della coda,aperto,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,12.6,135.5,1999.9
+1,L45a,R108,"stopper di gate, lato segnale",aperto,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,0.111,94.3,1898.1
+1,L45a,R109,"stopper di gate, lato retroazione",aperto,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,27,142.1,1999.3
+1,L45a,R111,"degenerazione, lato segnale",aperto,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,14.9,136.9,2000
+1,L45a,R114,riferimento dei cascode (alto),aperto,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,0.00786,71.4,558.8
+1,L45a,R120,"emettitore dello specchio, lato d'uscita",aperto,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,6.57,129.8,1006.2
+1,L45a,R123,emettitore del VAS (56),aperto,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,15.4,137.2,2000
+1,L45a,R126,emettitore del carico del VAS (56),aperto,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,0.94,112.9,1998.7
+1,L45a,R136,resistenza di retroazione,aperto,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,11.2,134.4,1473.5
+1,L45a,R144,resistenza della cella RC (10),aperto,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,6.05,129.1,1749.4
+6,L45b,K13–K16,il selettore d'ingresso,isolamento fra bobina e contatti che cede (la bobina scelta è a 12 V),4,2,2,alta,alta,il rivelatore toglie la linea dei rele' alla scheda audio: la bobina non porta piu' 12 V sul segnale,ADR-072,L45d2b,13.9,136.3,3082
+6,L45b,K13–K16,il selettore d'ingresso,"lo stesso, con 1 kΩ di percorso (a metà bobina)",4,2,2,alta,alta,il rivelatore toglie la linea dei rele' alla scheda audio: la bobina non porta piu' 12 V sul segnale,ADR-072,L45d2b,14.2,136.5,2530
+5,L45c1,Q501,il mute che non si inserisce,"corto D-S, poi la perdita di rete",4,2,3,alta,alta,rivelato dal firmware (legge il comando del mute e stacca la linea dei rele' alla scheda audio),ADR-076,L58,0.275,102.2,0
+5,L45c1,Q501,il mute che non si inserisce,"corto D-S, poi U502 spento",4,2,3,alta,alta,rivelato dal firmware (legge il comando del mute e stacca la linea dei rele' alla scheda audio),ADR-076,L58,0.00638,69.5,0
+5,L45c1,Q501,il mute che non si inserisce,"corto D-S, poi U501 spento",4,2,3,alta,alta,rivelato dal firmware (legge il comando del mute e stacca la linea dei rele' alla scheda audio),ADR-076,L58,2.8,122.4,154.1
+1,L45a,JQ110A,"JFET d'ingresso, lato segnale",corto G-S,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,3.97,125.4,1998.6
+1,L45a,JQ110B,"JFET d'ingresso, lato retroazione",corto G-S,4,2,2,alta,alta,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,1.32,115.9,181.8
+3,L45c1,D501,"il secondario, il ponte e i serbatoi",diodo A->+ in corto,4,2,1,alta,alta,rivedere D510 / D511 e proteggere U502 dall'uscita sopra l'ingresso; il fusibile di rete resta a G2,ADR-074,L45d2b,0.000896,52.5,0
+3,L45c1,D501,"il secondario, il ponte e i serbatoi",diodo B->+ in corto,4,2,1,alta,alta,rivedere D510 / D511 e proteggere U502 dall'uscita sopra l'ingresso; il fusibile di rete resta a G2,ADR-074,L45d2b,0.000885,52.4,0
+6,L45b,"K7, K8",il permesso e il trim,isolamento fra bobina e contatti,4,2,2,alta,alta,il rivelatore toglie la linea dei rele' alla scheda audio: la bobina non porta piu' 12 V sul segnale,ADR-072,L45d2b,5.89,128.9,1875
+2,L45c2,U505,il sorvegliante dei rail,alimentazione (pin 8) aperta,4,1,3,alta,alta,"accettata la riserva del firmware (muta in 2,2 ms invece di 1 ms)",ADR-073,accettata,,,
+2,L45c2,C516,il sorvegliante dei rail,corto,4,1,3,alta,alta,"accettata la riserva del firmware (muta in 2,2 ms invece di 1 ms)",ADR-073,accettata,,,
+2,L45c2,R507,il sorvegliante dei rail,aperto,4,1,3,alta,alta,"accettata la riserva del firmware (muta in 2,2 ms invece di 1 ms)",ADR-073,accettata,,,
+2,L45c2,R508,il sorvegliante dei rail,aperto,4,1,3,alta,alta,"accettata la riserva del firmware (muta in 2,2 ms invece di 1 ms)",ADR-073,accettata,,,
+2,L45c2,R505,il riferimento,aperto,4,1,3,alta,alta,"accettata la riserva del firmware (muta in 2,2 ms invece di 1 ms)",ADR-073,accettata,,,
+5,L45c2,Q501,il comando del jack (MUTE_CMD),"corto G-D, poi la perdita di rete",4,1,3,alta,alta,rivelato dal firmware (legge il comando del mute e stacca la linea dei rele' alla scheda audio),ADR-076,L58,0.275,102.2,0
+2,L45c2,R506,il sorvegliante dei rail,corto,4,1,3,alta,alta,"accettata la riserva del firmware (muta in 2,2 ms invece di 1 ms)",ADR-073,accettata,,,
+2,L45c2,R509,il sorvegliante dei rail,corto,4,1,3,alta,alta,"accettata la riserva del firmware (muta in 2,2 ms invece di 1 ms)",ADR-073,accettata,,,
+2,L45c2,R504,il riferimento,corto,4,1,3,alta,alta,"accettata la riserva del firmware (muta in 2,2 ms invece di 1 ms)",ADR-073,accettata,,,
+6,L45b,K2–K4,il mute e i suoi comandi,isolamento fra bobina e comune (lato condensatore),4,1,2,media,alta,il rivelatore toglie la linea dei rele' alla scheda audio: la bobina non porta piu' 12 V sul segnale,ADR-072,L45d2b,12,135.0,2000
+6,L45b,K2–K4,il mute e i suoi comandi,isolamento fra bobina e NO (il jack),4,1,2,media,alta,il rivelatore toglie la linea dei rele' alla scheda audio: la bobina non porta piu' 12 V sul segnale,ADR-072,L45d2b,12,135.0,2000
+6,L45b,K2–K4,il mute e i suoi comandi,"lo stesso, 1 kΩ",4,1,2,media,alta,il rivelatore toglie la linea dei rele' alla scheda audio: la bobina non porta piu' 12 V sul segnale,ADR-072,L45d2b,11.9,135.0,2000
+3,L45c1,C509,"il secondario, il ponte e i serbatoi",corto,4,1,1,media,media,rivedere D510 / D511 e proteggere U502 dall'uscita sopra l'ingresso; il fusibile di rete resta a G2,ADR-074,L45d2b,,,
+8,L45c1,J1,il cablaggio dei rail fra le due schede,pin 1 (VPLUS) aperto,4,1,2,media,media,"coperto dal rivelatore di continua, da verificare",ADR-072,L45d2b,13.3,135.9,980.8
+8,L45c1,J1,il cablaggio dei rail fra le due schede,pin 3 (VMINUS) aperto,4,1,2,media,media,"coperto dal rivelatore di continua, da verificare",ADR-072,L45d2b,0.0106,74.0,0
+11,L45c1,J1,il cablaggio dei rail fra le due schede,pin 2 (GND) aperto,4,1,2,media,media,niente da scegliere: si verifica al pre-layout,,G2,,,
+6,L45b,K3 (la Stax),il mute e i suoi comandi,isolamento fra bobina e NO,4,1,2,media,alta,il rivelatore toglie la linea dei rele' alla scheda audio: la bobina non porta piu' 12 V sul segnale,ADR-072,L45d2b,12,135.0,2000
+1,L45a,R114,riferimento dei cascode (alto),corto,4,1,2,media,media,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,14.9,136.9,2000
+1,L45a,R115,riferimento dei cascode (basso),corto,4,1,2,media,media,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,4.21,125.9,390
+1,L45a,R119,"emettitore dello specchio, lato a diodo",corto,4,1,2,media,media,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,5.08,127.6,861.8
+1,L45a,R120,"emettitore dello specchio, lato d'uscita",corto,4,1,2,media,media,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,1.9,119.0,300
+1,L45a,R138,ramo di guadagno +3 dB,corto,4,1,2,media,media,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,12,135.0,1441.5
+1,L45a,R143,ramo di guadagno +10 dB,corto,4,1,2,media,media,"il rivelatore di continua apre il mute, toglie la linea dei rele' alla scheda audio e spegne i rail audio",ADR-072,L45d2b,12,135.0,1441.5
+13,L45a,C104,condensatore del riferimento (100 uF),corto,3,3,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.869,112.2,0
+13,L45c1,C141,il disaccoppiamento dei blocchi,corto,3,3,1,media,media,"invariato: nessuno: P9 (c), il corto di un rail, accettato",,accettata,,,
+13,L45c1,C142,il disaccoppiamento dei blocchi,corto,3,3,1,media,media,"invariato: nessuno: P9 (c), il corto di un rail, accettato",,accettata,,,
+13,L45a,Q132,finale NPN (MJE15032),corto B-E,3,3,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.0214,80.1,0
+13,L45a,Q133,finale PNP (MJE15033),corto B-E,3,3,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.0163,77.7,0
+13,L45a,Q132,finale NPN (MJE15032),aperto,3,3,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.00256,61.6,0
+13,L45a,Q133,finale PNP (MJE15033),aperto,3,3,2,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.297,102.9,0
+7,L45c2,U504,la logica (V5),spento (V5 persa),3,3,1,media,media,accettato come il corto della linea a 12 V (ADR-051),ADR-077,accettata,0.00644,69.6,0
+13,L45a,Q125,carico del VAS (DZT5551),corto B-E,3,3,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.979,113.3,0.1
+13,L45b,"K1 (o K11), K5 (o K12)",il guadagno e la sua tenuta,"bobina aperta durante l'ascolto, o l'ausiliario che cade (la tenuta si perde)",3,3,2,media,media,invariato: nessuno nel circuito: si vede e si ripara,,accettata,0.00632,69.5,0
+13,L45a,Q117,"cascode, lato segnale",corto C-E,3,2,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.0513,87.7,0
+13,L45a,Q118,"cascode, lato retroazione",corto C-E,3,2,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.0515,87.7,0
+13,L45a,Q127,moltiplicatore di Vbe,corto C-E,3,2,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.00232,60.8,0
+13,L45a,Q148,transistor di aiuto dello specchio,corto B-E,3,2,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.152,97.1,0
+13,L45a,C105,condensatore del riferimento (100 nF),corto,3,2,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.869,112.2,0
+13,L45a,C137,condensatore di retroazione,corto,3,2,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.00664,69.9,0
+7,L45c2,C523,la linea dei rele' (VRELAY_REG),"aperto, poi U503 spento",3,2,3,media,media,accettato come il corto della linea a 12 V (ADR-051),ADR-077,accettata,0.00644,69.6,0
+13,L45a,R115,riferimento dei cascode (basso),aperto,3,2,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.017,78.1,0
+13,L45a,R130,stopper di base del finale NPN,aperto,3,2,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.0106,73.9,0
+13,L45a,R131,stopper di base del finale PNP,aperto,3,2,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.0132,75.9,0
+13,L45a,R134,emettitore del finale NPN (22),aperto,3,2,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.00256,61.6,0
+13,L45a,R147,resistenza dell'inseguitore,aperto,3,2,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.0104,73.8,0
+13,L45b,R_SEL 470 kΩ,"il percorso del segnale (condensatori, bleed, resistenze)",aperto,3,2,3,media,media,"invariato: nessuno: il guasto non ha effetto, o il circuito lo mette gia' in sicurezza",,accettata,,,0
+5,L45c1,Q501,il mute che non si inserisce,"corto D-S, poi lo spegnimento",3,2,3,media,media,rivelato dal firmware (legge il comando del mute e stacca la linea dei rele' alla scheda audio),ADR-076,L58,0.00644,69.6,0
+9,L45b,"C_OUT 4,7 µF (fisse)","il percorso del segnale (condensatori, bleed, resistenze)",corto,3,2,3,media,media,"coperto dal rivelatore di continua, da verificare",ADR-072,L45d2b,0.00667,69.9,0
+13,L45a,D102,diodo del riferimento (alto),corto,3,2,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.00347,64.2,0
+13,L45a,D103,diodo del riferimento (basso),corto,3,2,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.00347,64.2,0
+9,L45b,"C_OUT 4,7 µF (principale)","il percorso del segnale (condensatori, bleed, resistenze)",corto,3,1,3,media,media,"coperto dal rivelatore di continua, da verificare",ADR-072,L45d2b,0.00334,63.9,0
+13,L45a,R143,ramo di guadagno +10 dB,aperto,3,1,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.00555,68.3,0
+7,L45c2,R524,il ritardo Delta in hardware,"aperto, poi il mute dal tasto",3,1,3,media,media,accettato come il corto della linea a 12 V (ADR-051),ADR-077,accettata,0.00643,69.6,0
+7,L45c2,C528,il ritardo Delta in hardware,"aperto, poi U503 spento",3,1,3,media,media,accettato come il corto della linea a 12 V (ADR-051),ADR-077,accettata,0.00642,69.6,0
+7,L45c2,C528,il ritardo Delta in hardware,"aperto, poi la perdita di rete",3,1,3,media,media,accettato come il corto della linea a 12 V (ADR-051),ADR-077,accettata,,,
+7,L45c2,C528,il ritardo Delta in hardware,aperto (durante la musica),3,1,3,media,media,accettato come il corto della linea a 12 V (ADR-051),ADR-077,accettata,,,
+13,L45a,R111,"degenerazione, lato segnale",corto,3,1,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.76,111.1,0
+13,L45a,R112,"degenerazione, lato retroazione",corto,3,1,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.76,111.1,0
+13,L45a,R123,emettitore del VAS (56),corto,3,1,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.00795,71.5,0
+13,L45a,R128,moltiplicatore di Vbe (alto),corto,3,1,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.00648,69.7,0
+13,L45a,R134,emettitore del finale NPN (22),corto,3,1,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.0024,61.1,0
+13,L45a,R135,emettitore del finale PNP (22),corto,3,1,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.00364,64.7,0
+13,L45a,R136,resistenza di retroazione,corto,3,1,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.00664,69.9,0
+13,L45a,R144,resistenza della cella RC (10),corto,3,1,3,media,media,accettato per il colpo (dentro i 100 ms); il degrado silenzioso va alla diagnosi,ADR-071,L58,0.00351,64.3,0
+7,L45c2,D520,il ritardo Delta in hardware,"corto, poi il mute dal tasto",3,1,3,media,media,accettato come il corto della linea a 12 V (ADR-051),ADR-077,accettata,0.00645,69.6,0
+7,L45c2,D520,il ritardo Delta in hardware,"corto, poi lo spegnimento",3,1,3,media,media,accettato come il corto della linea a 12 V (ADR-051),ADR-077,accettata,0.00645,69.6,0
+7,L45c2,D522,il permesso (PERMIT_CMD),"corto, poi la perdita di rete",3,1,3,media,media,accettato come il corto della linea a 12 V (ADR-051),ADR-077,accettata,0.00644,69.6,0
+7,L45c2,D522,il permesso (PERMIT_CMD),"corto, poi il mute dal tasto",3,1,3,media,media,accettato come il corto della linea a 12 V (ADR-051),ADR-077,accettata,0.00644,69.6,0
+5,L45c2,Q501,il comando del jack (MUTE_CMD),"corto G-D, poi lo spegnimento",3,1,3,media,media,rivelato dal firmware (legge il comando del mute e stacca la linea dei rele' alla scheda audio),ADR-076,L58,0.00644,69.6,0
+bassa,L45c1,U501,i regolatori dei rail,IN-OUT in corto,2,3,3,bassa,bassa,prima leggere le tensioni massime delle parti del blocco e la dissipazione dei finali col rail alto; il sorvegliante della sovratensione solo se qualcosa esce dai limiti,ADR-078,L45d2b,0.00035,44.3,0
+bassa,L45c1,U501,i regolatori dei rail,"pin 6 (3,2 V) a massa",2,2,3,bassa,bassa,prima leggere le tensioni massime delle parti del blocco e la dissipazione dei finali col rail alto; il sorvegliante della sovratensione solo se qualcosa esce dai limiti,ADR-078,L45d2b,0.000116,34.7,0
+bassa,L45c1,U501,i regolatori dei rail,"pin 8 (1,6 V) a massa",2,2,3,bassa,bassa,prima leggere le tensioni massime delle parti del blocco e la dissipazione dei finali col rail alto; il sorvegliante della sovratensione solo se qualcosa esce dai limiti,ADR-078,L45d2b,0.000106,34.0,0
+bassa,L45c1,U501,i regolatori dei rail,SENSE (pin 3) aperto,2,2,3,bassa,bassa,prima leggere le tensioni massime delle parti del blocco e la dissipazione dei finali col rail alto; il sorvegliante della sovratensione solo se qualcosa esce dai limiti,ADR-078,L45d2b,0.000116,34.7,0
+bassa,L45c1,D510,la tenuta e la protezione dei regolatori,corto,2,2,3,bassa,bassa,prima leggere le tensioni massime delle parti del blocco e la dissipazione dei finali col rail alto; il sorvegliante della sovratensione solo se qualcosa esce dai limiti,ADR-078,L45d2b,,,
+bassa,L45c1,U502,i regolatori dei rail,IN-OUT in corto,1,3,3,bassa,bassa,prima leggere le tensioni massime delle parti del blocco e la dissipazione dei finali col rail alto; il sorvegliante della sovratensione solo se qualcosa esce dai limiti,ADR-078,L45d2b,9.81e-05,33.3,0
+bassa,L45c1,D511,la tenuta e la protezione dei regolatori,corto,1,2,3,bassa,bassa,prima leggere le tensioni massime delle parti del blocco e la dissipazione dei finali col rail alto; il sorvegliante della sovratensione solo se qualcosa esce dai limiti,ADR-078,L45d2b,,,
+bassa,L45c1,R501,i regolatori dei rail,aperto,1,1,3,bassa,bassa,prima leggere le tensioni massime delle parti del blocco e la dissipazione dei finali col rail alto; il sorvegliante della sovratensione solo se qualcosa esce dai limiti,ADR-078,L45d2b,4.16e-05,25.8,0
+bassa,L45c1,R502,i regolatori dei rail,corto,1,1,3,bassa,bassa,prima leggere le tensioni massime delle parti del blocco e la dissipazione dei finali col rail alto; il sorvegliante della sovratensione solo se qualcosa esce dai limiti,ADR-078,L45d2b,,,
+bassa,L45c2,U508,il ritardo Delta in hardware,canale B cieco / alimentazione aperta,2,2,3,bassa,bassa,il firmware legge la linea dei rele' e il trasformatore grande in standby,ADR-078,L58,,,
+bassa,L45c2,Q505,l'interruttore dello standby (VRELAY),"corto D-S, poi lo spegnimento",2,2,3,bassa,bassa,il firmware legge la linea dei rele' e il trasformatore grande in standby,ADR-078,L58,2.52e-09,-58.5,0
+bassa,L45c2,Q506,l'interruttore dello standby (VRELAY),corto D-S,2,2,3,bassa,bassa,il firmware legge la linea dei rele' e il trasformatore grande in standby,ADR-078,L58,,,
+bassa,L45c2,Q503,il rele' di rete,corto D-S,2,2,2,bassa,bassa,il firmware legge la linea dei rele' e il trasformatore grande in standby,ADR-078,L58,,,
+bassa,L45c2,K501,il rele' di rete,i due poli saldati,2,1,2,bassa,bassa,il firmware legge la linea dei rele' e il trasformatore grande in standby,ADR-078,L58,,,
+bassa,L45c2,R540,l'interruttore dello standby (VRELAY),aperto,2,1,3,bassa,bassa,il firmware legge la linea dei rele' e il trasformatore grande in standby,ADR-078,L58,,,
+bassa,L45c2,R536,il ritardo Delta in hardware,aperto,2,1,3,bassa,bassa,il firmware legge la linea dei rele' e il trasformatore grande in standby,ADR-078,L58,,,
+bassa,L45c2,R537,il ritardo Delta in hardware,corto,2,1,3,bassa,bassa,il firmware legge la linea dei rele' e il trasformatore grande in standby,ADR-078,L58,,,
