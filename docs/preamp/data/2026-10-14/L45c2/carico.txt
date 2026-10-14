@@ -1,0 +1,14 @@
+# L56 (copied from L51b/carico.txt) - the audio board's load on the supply bench with the gain
+# block of ADR-067 (follower before the VAS, helper on the mirror: +1.27 mA per rail per block).
+# Read by psu/genera_tb_psu.py.
+# The rails: 8 x |i(vpp)| and 8 x |i(vmm)| of tb_op on the block of ADR-067
+# (data/2026-10-12/L56/regressione/dopo/tb_op/tb_op.log: -3.797e-02, 3.8991e-02 A).
+# L51b had 293.62 / 301.7864 (8 x 36.7025 / 37.7233 mA).
+# The rest of VRELAY: unchanged from L51b (L47c2a's 42.4 mA plus the selector's coil, 9.1 mA).
+i_piu_mA   303.76
+i_meno_mA  311.928
+resto_mA   51.5
+# The method of the two U503-off sequence cases: gear, as in L51b. On this load
+# guasto_u503_min needs the other method on some passes: psu/corri_seq.sh retries a pass once
+# with the other method on "Timestep too small" alone, and says so in ripiego_g<N>.txt.
+metodo_u503 gear
