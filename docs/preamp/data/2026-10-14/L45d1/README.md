@@ -16,6 +16,7 @@ L45a, L45b e L45c1.
 | `fmea_rail_adr070.csv/.md` | L45c1, i rail audio: 82 righe, 78 classificate, 4 riferimenti |
 | `fmea_sintesi.csv/.md` | le quattro tabelle in una (L45c2 letta così com'è): il conteggio, i rimedi candidati, le righe ad alta e media priorità |
 | `tassi/fonti.md` | i tipi nuovi e le loro fonti |
+| **`scelte_L45d2.pdf`** | **il passo intermedio verso L45d2** (dopo L45d1, chiesto dall'utente: «mi serve un pdf leggibile», poi «teniamolo come step intermedio, così possiamo referenziarlo»): le 156 righe ad alta e media priorità ridotte a **10 scelte numerate** (118 righe), più 38 righe senza una scelta adesso, le due domande sulla matrice, e le righe di ogni scelta. Le modifiche di L45d2 lo citano per numero: «scelta 5 di `scelte_L45d2.pdf`» |
 
 ## Gli script (`script/`, solo stdlib, `/usr/bin/python3`)
 
@@ -28,6 +29,7 @@ L45a, L45b e L45c1.
 | `classi_l45a.py`, `riporto_l45a.py` | L45a: i picchi e il calore di `L45a/fmea_blocco.csv`, il verdetto P10 di `L45b/p10_blocco.csv`; rifiuta se i conti di L45b (544 / 257 / 58) o di L45a (112 modi, 26 col calore) non tornano |
 | `classi_l45b.py`, `riporto_l45b.py` | L45b: i numeri riletti dal testo di `L45b/fmea_controlli.csv`; `--prova` controlla il lettore su 14 celle note |
 | `sintesi.py` | la sintesi |
+| `pdf_scelte.py`, `stampa_pdf.sh` | il PDF delle scelte: le righe della sintesi raggruppate per scelta (ognuna in una sola, o rifiuta), poi Chrome headless in A4 |
 
 ## Rifare
 
@@ -39,4 +41,9 @@ L45a, L45b e L45c1.
 /usr/bin/python3 <D>/script/riporto_l45a.py <R>/2026-10-13 <D>
 /usr/bin/python3 <D>/script/riporto_l45b.py <R>/2026-10-13/L45b <D>
 /usr/bin/python3 <D>/script/sintesi.py <D> <R>/2026-10-14/L45c2
+/usr/bin/python3 <D>/script/pdf_scelte.py <D>/fmea_sintesi.csv <scratch>/scelte_L45d2.html
+/bin/zsh <D>/script/stampa_pdf.sh <scratch>/scelte_L45d2.html <D>/scelte_L45d2.pdf
 ```
+
+Il PDF non è byte per byte ripetibile (Chrome ci scrive la data): si confronta il testo
+(`pdftotext`), non i byte.
