@@ -1,0 +1,325 @@
+warning, model type mismatch in line
+    q121a nmirc nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+warning, model type mismatch in line
+    q121a nmirc nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: l45a tr b g0 r138_ap musica=0 mute=0 - guasto a 0.3 s
+
+Warning: Model issue on line 122 :
+  .model lsk489a njf(beta=2.2m betatce=-.5 rd=11 rs=30 lambda=4.3m vto=-1. ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+unrecognized parameter (mj) - ignored
+
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Warning: source stepping failed
+Note: Transient op started
+Note: Transient op finished successfully
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+vplus                                       15
+vminus                                     -15
+ctl                                          0
+xdet.det_vdp                           14.1904
+xdet.det_vthp                         0.487852
+xdet.det_vthm                         0.339488
+xdet.det_ref                          0.505538
+xdet.det_s_f1l                        0.301113
+xdet.det_t_f1l_p                      0.315427
+xdet.det_t_f1l_m                      0.636795
+xdet.det_s_f2l                        0.301113
+xdet.det_t_f2l_p                      0.315427
+xdet.det_t_f2l_m                      0.636795
+xdet.det_s_bl                         0.360448
+xdet.det_t_bl_p                       0.315427
+xdet.det_t_bl_m                       0.546494
+xdet.det_s_f1r                        0.499064
+xdet.det_t_f1r_p                      0.341962
+xdet.det_t_f1r_m                      0.315428
+xdet.det_s_f2r                        0.499064
+xdet.det_t_f2r_p                      0.341962
+xdet.det_t_f2r_m                      0.315428
+xdet.det_s_br                         0.499064
+xdet.det_t_br_p                       0.341962
+xdet.det_t_br_m                       0.315428
+xdet.det_por                          0.642023
+vrelay                                      12
+xdet.det_tmax                         0.507149
+dc_flt                               0.0700623
+xdet.det_b                            0.653132
+outf1                                 -1.12962
+outf2                                 -1.12962
+outb                                 -0.731006
+xdet.det_trip                          6.34742
+xdet.xu951a.u                                1
+xdet.xu951a.uf                               1
+xdet.xu951b.u                                0
+xdet.xu951b.uf                               0
+xdet.xu951c.u                                1
+xdet.xu951c.uf                               1
+xdet.xu951d.u                                0
+xdet.xu951d.uf                               0
+xdet.xu952a.u                                1
+xdet.xu952a.uf                               1
+xdet.xu952b.u                                1
+xdet.xu952b.uf                        0.947167
+xdet.xu952c.u                      1.35092e-05
+xdet.xu952c.uf                       0.0023864
+xdet.xu952d.u                                1
+xdet.xu952d.uf                               1
+xdet.xu953a.u                      1.35092e-05
+xdet.xu953a.uf                       0.0023864
+xdet.xu953b.u                                1
+xdet.xu953b.uf                               1
+xdet.xu953c.u                      1.35092e-05
+xdet.xu953c.uf                       0.0023864
+xdet.xu953d.u                                1
+xdet.xu953d.uf                               1
+xdet.xu954a.u                          0.16645
+xdet.xu954a.uf                        0.016872
+xdet.xu954b.u                                0
+xdet.xu954b.uf                               0
+v5                                           5
+req                                          5
+lat                                    4.31269
+mdl                                   0.291652
+mute                                         0
+src                                          0
+jin                                2.21545e-09
+sel                               -1.11813e-05
+ina                               -1.11811e-05
+xa.nref                               -14.3513
+xa.ncasc                              0.479524
+xa.nx                                  -0.3124
+xa.nhi                              -0.0863504
+outa                                 -0.632788
+fba                                  -0.633739
+xa.vpf                                 1.09028
+xa.nrefm                              -14.6757
+xa.d1n                               -0.133493
+xa.g1                             -1.10369e-05
+xa.s1                                -0.156799
+xa.d2n                               -0.125668
+xa.g2                                -0.633746
+xa.s2                                -0.159025
+xa.src                               -0.167423
+xa.nte                                -14.9737
+xa.nmirc                            -0.0674205
+xa.nmiri                              0.468724
+xa.nme1                                1.07686
+xa.nme2                                1.07685
+xa.nvb                                0.503314
+xa.nve                                 1.07633
+xa.ny                                 -1.04361
+xa.nvle                                -14.984
+xa.nbb                               -0.760061
+xa.nbn                               -0.312017
+xa.nen                               -0.633388
+xa.nbp                                -1.04362
+xa.nep                               -0.640184
+rga                                  -0.634517
+rg10a                                -0.633924
+xf1.nref                              -14.3716
+xf1.ncasc                             0.509253
+xf1.nx                               -0.826096
+xf1.nhi                             -0.0765697
+fbf1                                  -1.13302
+xf1.vpf                                1.09238
+xf1.nrefm                             -14.6858
+xf1.d1n                              -0.105159
+xf1.g1                               -0.632792
+xf1.s1                               -0.141633
+xf1.d2n                             -0.0724632
+xf1.g2                                -1.13304
+xf1.s2                               -0.147142
+xf1.src                              -0.150582
+xf1.nte                               -14.9829
+xf1.nmirc                           -0.0173495
+xf1.nmiri                             0.516763
+xf1.nme1                                 1.089
+xf1.nme2                               1.08899
+xf1.nvb                               0.512744
+xf1.nve                                1.08084
+xf1.ny                                -1.38237
+xf1.nvle                              -14.9906
+xf1.nbb                                -1.1665
+xf1.nbn                              -0.825827
+xf1.nen                               -1.13013
+xf1.nbp                               -1.38286
+xf1.nep                               -1.12873
+rgf1                                  -1.13576
+rg10f1                                -1.13366
+xf2.nref                              -14.3716
+xf2.ncasc                             0.509253
+xf2.nx                               -0.826096
+xf2.nhi                             -0.0765697
+fbf2                                  -1.13302
+xf2.vpf                                1.09238
+xf2.nrefm                             -14.6858
+xf2.d1n                              -0.105159
+xf2.g1                               -0.632792
+xf2.s1                               -0.141633
+xf2.d2n                             -0.0724632
+xf2.g2                                -1.13304
+xf2.s2                               -0.147142
+xf2.src                              -0.150582
+xf2.nte                               -14.9829
+xf2.nmirc                           -0.0173495
+xf2.nmiri                             0.516763
+xf2.nme1                                 1.089
+xf2.nme2                               1.08899
+xf2.nvb                               0.512744
+xf2.nve                                1.08084
+xf2.ny                                -1.38237
+xf2.nvle                              -14.9906
+xf2.nbb                                -1.1665
+xf2.nbn                              -0.825827
+xf2.nen                               -1.13013
+xf2.nbp                               -1.38286
+xf2.nep                               -1.12873
+rgf2                                  -1.13576
+rg10f2                                -1.13366
+tap6                                 -0.331206
+tap12                                -0.165603
+att                                 -0.0586631
+w                                   -0.0586631
+xb.nref                               -14.3319
+xb.ncasc                              0.455109
+xb.nx                                 -0.17223
+xb.nhi                               -0.118383
+fbb                                  -0.732323
+xb.vpf                                 1.08773
+xb.nrefm                               -14.666
+xb.d1n                               -0.167282
+xb.g1                               -0.0586718
+xb.s1                                -0.201538
+xb.d2n                               -0.156729
+xb.g2                                -0.732334
+xb.s2                                -0.205682
+xb.src                                -0.21696
+xb.nte                                -14.9631
+xb.nmirc                            -0.0879786
+xb.nmiri                              0.448929
+xb.nme1                                1.06762
+xb.nme2                                1.06761
+xb.nvb                                0.472591
+xb.nve                                 1.06176
+xb.ny                                  -1.2623
+xb.nvle                               -14.9756
+xb.nbb                               -0.839788
+xb.nbn                               -0.172493
+xb.nen                               -0.671662
+xb.nbp                                -1.26221
+xb.nep                               -0.790063
+xb.fltx                              -0.732323
+rgb                                  -0.733645
+rg10b                                -0.732643
+main_a                               -0.730694
+mainc                                -0.730694
+mainjack                             -0.730694
+fix1_a                                -1.12955
+fix1c                                -0.360719
+fix1jack                             -0.360718
+fix2_a                                -1.12955
+fix2c                                -0.360719
+fix2jack                             -0.360718
+bmute#branch                                 0
+breq#branch                        -0.00347138
+b.xdet.xu954b.bu#branch                      0
+b.xdet.xu954a.bu#branch           -0.000149578
+b.xdet.xu953d.bu#branch           -2.74937e-12
+b.xdet.xu953c.bu#branch            2.37289e-06
+b.xdet.xu953b.bu#branch           -2.74937e-12
+b.xdet.xu953a.bu#branch            2.37289e-06
+b.xdet.xu952d.bu#branch           -2.74937e-12
+b.xdet.xu952c.bu#branch            2.37289e-06
+b.xdet.xu952b.bu#branch            -5.2833e-05
+b.xdet.xu952a.bu#branch           -2.74825e-12
+b.xdet.xu951d.bu#branch                      0
+b.xdet.xu951c.bu#branch           -2.74825e-12
+b.xdet.xu951b.bu#branch                      0
+b.xdet.xu951a.bu#branch           -2.74825e-12
+vin#branch                         1.47697e-09
+vv5#branch                        -0.000492994
+vrl#branch                         1.47115e-08
+vctl#branch                                  0
+vmm#branch                           0.0155531
+vpp#branch                            -5.59714
+
+ Reference value :  0.00000e+00 Reference value :  2.62076e-02 Reference value :  7.91576e-02 Reference value :  1.31429e-01 Reference value :  1.85779e-01 Reference value :  2.39279e-01 Reference value :  2.92279e-01 Reference value :  3.44956e-01 Reference value :  3.99156e-01 Reference value :  4.53056e-01 Reference value :  5.07356e-01 Reference value :  5.62056e-01 Reference value :  6.15506e-01 Reference value :  6.68556e-01 Reference value :  7.22756e-01 Reference value :  7.76456e-01 Reference value :  8.30306e-01 Reference value :  8.84456e-01 Reference value :  9.37156e-01 Reference value :  9.91106e-01 Reference value :  1.04511e+00 Reference value :  1.09911e+00 Reference value :  1.15236e+00 Reference value :  1.20571e+00 Reference value :  1.25991e+00 Reference value :  1.31336e+00 Reference value :  1.36686e+00 Reference value :  1.42036e+00 Reference value :  1.47446e+00 Reference value :  1.52821e+00 Reference value :  1.58211e+00 Reference value :  1.63516e+00 Reference value :  1.68851e+00 Reference value :  1.74201e+00 Reference value :  1.79496e+00 Reference value :  1.84711e+00 Reference value :  1.89901e+00 Reference value :  1.95376e+00 Reference value :  2.00726e+00 Reference value :  2.06036e+00 Reference value :  2.11356e+00 Reference value :  2.16656e+00 Reference value :  2.21871e+00 Reference value :  2.27286e+00
+No. of Data Rows : 46232
+p_q106              =  6.40963e-02 from=  2.29000e+00 to=  2.30000e+00
+p_q117              =  8.43723e-03 from=  2.29000e+00 to=  2.30000e+00
+p_q118              =  8.71039e-03 from=  2.29000e+00 to=  2.30000e+00
+p_q121a             =  2.81041e-03 from=  2.29000e+00 to=  2.30000e+00
+p_q121b             =  3.11470e-03 from=  2.29000e+00 to=  2.30000e+00
+p_q122              =  1.41562e-01 from=  2.29000e+00 to=  2.30000e+00
+p_q125              =  1.42151e-01 from=  2.29000e+00 to=  2.30000e+00
+p_q127              =  1.96599e-02 from=  2.29000e+00 to=  2.30000e+00
+p_q132              =  2.97871e-01 from=  2.29000e+00 to=  2.30000e+00
+p_q133              =  3.00161e-01 from=  2.29000e+00 to=  2.30000e+00
+p_q146              =  3.25189e-02 from=  2.29000e+00 to=  2.30000e+00
+p_q148              =  3.69461e-03 from=  2.29000e+00 to=  2.30000e+00
+p_r101              =  2.74478e-02 from=  2.29000e+00 to=  2.30000e+00
+p_r107              =  2.83103e-03 from=  2.29000e+00 to=  2.30000e+00
+p_r108              =  8.64547e-21 from=  2.29000e+00 to=  2.30000e+00
+p_r109              =  8.65990e-21 from=  2.29000e+00 to=  2.30000e+00
+p_r111              =  5.09323e-04 from=  2.29000e+00 to=  2.30000e+00
+p_r112              =  5.05631e-04 from=  2.29000e+00 to=  2.30000e+00
+p_r113              =  8.09635e-21 from=  2.29000e+00 to=  2.30000e+00
+p_r114              =  5.27746e-03 from=  2.29000e+00 to=  2.30000e+00
+p_r115              =  9.73830e-03 from=  2.29000e+00 to=  2.30000e+00
+p_r119              =  1.09601e-03 from=  2.29000e+00 to=  2.30000e+00
+p_r120              =  1.09646e-03 from=  2.29000e+00 to=  2.30000e+00
+p_r123              =  6.52649e-03 from=  2.29000e+00 to=  2.30000e+00
+p_r126              =  6.40791e-03 from=  2.29000e+00 to=  2.30000e+00
+p_r128              =  1.05903e-03 from=  2.29000e+00 to=  2.30000e+00
+p_r129              =  5.29398e-04 from=  2.29000e+00 to=  2.30000e+00
+p_r130              =  3.98277e-07 from=  2.29000e+00 to=  2.30000e+00
+p_r131              =  7.88615e-08 from=  2.29000e+00 to=  2.30000e+00
+p_r134              =  9.39629e-03 from=  2.29000e+00 to=  2.30000e+00
+p_r135              =  9.45208e-03 from=  2.29000e+00 to=  2.30000e+00
+p_r136              =  2.22827e-19 from=  2.29000e+00 to=  2.30000e+00
+p_r138              =  2.93640e-26 from=  2.29000e+00 to=  2.30000e+00
+p_r143              =  7.16583e-21 from=  2.29000e+00 to=  2.30000e+00
+p_r144              =  2.70404e-03 from=  2.29000e+00 to=  2.30000e+00
+p_r147              =  1.35900e-03 from=  2.29000e+00 to=  2.30000e+00
+p_r149              =  1.43331e-04 from=  2.29000e+00 to=  2.30000e+00
+p_jq110a            =  2.05644e-02 from=  2.29000e+00 to=  2.30000e+00
+p_jq110b            =  2.04918e-02 from=  2.29000e+00 to=  2.30000e+00
+out_avg             =  -2.87371e-03 from=  2.29000e+00 to=  2.30000e+00
+out_max             =  -2.87371e-03 at=  2.29906e+00
+out_min             =  -2.87371e-03 at=  2.29011e+00
+ipp_avg             =  -1.53518e-01 from=  2.29000e+00 to=  2.30000e+00
+ipp_max             =  -1.53518e-01 at=  2.29991e+00
+ipp_min             =  -1.53518e-01 at=  2.29001e+00
+imm_avg             =  1.56137e-01 from=  2.29000e+00 to=  2.30000e+00
+imm_max             =  1.56137e-01 at=  2.29776e+00
+imm_min             =  1.56137e-01 at=  2.29466e+00
+
+Error: measure  t_flt  when(WHEN) : out of interval
+ meas tran t_flt when v(dc_flt)=2.5 fall=1 failed!
+
+Error: &t_flt: no such variable.
+t_mute              =  6.41822e-03
+tmax_max            =  5.07149e-01 at=  0.00000e+00
+ngspice-47 done

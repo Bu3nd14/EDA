@@ -603,8 +603,9 @@ if __name__ == "__main__":
     UPDI = Net("UPDI")
     mcu["16"] += UPDI                  # PA0: UPDI, one-wire programming
     header("UPDI", "J515", [UPDI, V5, RET])
-    # PA1 (17), PA3 (19), PA4 (2): the SPI to the LDR drive's DAC until
-    # L47c1; open since ADR-062 removed it (ERC lists them). The firmware
+    # PA3 (19), PA4 (2): the SPI to the LDR drive's DAC until L47c1; open
+    # since ADR-062 removed it (ERC lists them). PA1 (17), the third, reads
+    # DC_FLT since L45d2b1 (ADR-072, below). The firmware
     # (L47c2a, the user's choice) leaves every open pin an input with its
     # digital input buffer disabled (ISC = INPUT_DISABLE, DS40002205A
     # sec. 16.3.1): firmware/preamp_timer/spec/timer_spec.md sec. 2, checked
@@ -638,10 +639,41 @@ if __name__ == "__main__":
         res("47k", ref, src, n)
         mcu[pin] += n
 
+    # ================= the DC detector's line, J4 pin 4 (ADR-072; L45d2b1)
+    # The audio board's detector (circuits/preamp/dc_detector.py) pulls DC_FLT
+    # to RLY_RET with an open collector when a block's output has held DC for
+    # ~70 ms. Here, IN HARDWARE, without the firmware (PR-24), three Schottky
+    # diodes pull down the three gates ADR-072 names, as D522 pulls MUTE_G:
+    #   MUTE_G  -> Q501 off, MUTE_CMD released: the mute opens (choice 1);
+    #   VR_G    -> Q506 off, Q505 off: VRELAY off the audio board, no coil
+    #              left at 12 V on a signal contact (choice 6). C531 slows the
+    #              off edge ~10 ms, so the jack relays release first;
+    #   MAINS_G -> Q503 off, K501 releases: the toroid off, the audio rails
+    #              run down on their hold (choices 1 and 10).
+    # Each gate sits at ~0.3 V (BAT54) + the collector's ~0.1 V, under the
+    # 2N7002's 0.8 V minimum threshold. Their pull-ups are 10k from V5 or from
+    # a micro pin (R513, R537, R520): with R548, ~1.9 mA in the collector.
+    # The line holds only while the fault holds and the detector has supply;
+    # the firmware reads it on PA1 (through 47k, like the ADC lines) and goes
+    # to GUASTO, which keeps everything off until the front switch (spec 4.6):
+    # without that, the rails falling would release the line, the toroid
+    # come back, and the fault trip it again.
+    # 10 nF: the harness is a wire to the other board; 10k x 10n = 0.1 ms.
+    DC_FLT = Net("DC_FLT")
+    res("10k", "R548", V5, DC_FLT)
+    cap("10n", "C535", DC_FLT, RET)
+    for dref, gate in (("D525", MUTE_G), ("D526", VR_G), ("D527", MAINS_G)):
+        d = part("Device", "D_Schottky", "BAT54", dref, FP_SOD323)
+        d[2] += gate               # A
+        d[1] += DC_FLT             # K
+    DC_IN = Net("DC_FLT_IN")
+    res("47k", "R549", DC_FLT, DC_IN)
+    mcu["17"] += DC_IN             # PA1, free since L47c1 (ADR-062)
+
     # ================= the harnesses to the audio board (check_psu_harness.py)
     header("POWER", "J1", [VP, GND, VM, VRELAY])
     header("RLY_RET", "J2", [RET])
-    header("MUTE_TIMER", "J4", [MUTE_CMD, PERMIT_CMD, MUTE_SW])
+    header("MUTE_TIMER", "J4", [MUTE_CMD, PERMIT_CMD, MUTE_SW, DC_FLT])
 
     # ERC, explained (L41a): "POWER-OUT connected to POWER-OUT" on VPLUS and
     # VRELAY_REG is the KiCad symbol's two OUT pins (1, 20) of ONE TPS7A4701,
@@ -652,7 +684,7 @@ if __name__ == "__main__":
     # the micro's spare PC3. L41b1: 21 warnings, the same 2 "errors". L47c1
     # (ADR-062): U510 / U511 are gone with their two "insufficient drive",
     # and the micro's PA1, PA2, PA3, PA4 and PB4 are unconnected too: 24
-    # warnings.
+    # warnings. L45d2b1: PA1 reads DC_FLT (ADR-072), 23 warnings.
     try:
         ERC()
     except Exception as e:  # noqa: BLE001

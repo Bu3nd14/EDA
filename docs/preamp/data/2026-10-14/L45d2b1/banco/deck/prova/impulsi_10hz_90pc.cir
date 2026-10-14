@@ -1,0 +1,27 @@
+L45d2b1 prova del rivelatore: impulsi_10hz_90pc
+.include @REPO@/models/diodes/1n4148.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/docs/preamp/data/2026-10-14/L45d2b1/banco/inc/cmpoc.lib
+.include @REPO@/spice/preamp/dc_detector.subckt
+VPP VPLUS 0 15
+VMM VMINUS 0 -15
+VRL VRELAY 0 12
+VV5 V5 0 5
+RPU DC_FLT V5 10k
+VRAW RAW 0 PULSE(-9 1 0.1 10u 10u 90m 100m)
+BTAP TAP 0 V = V(RAW)*0.5*(1+tanh((time-0.1)/1e-5))
+XDET 0 0 TAP 0 0 0 VPLUS VMINUS VRELAY 0 DC_FLT DCDET
+.control
+set noaskquit
+tran 10u 0.6 0 20u
+meas tran t_flt WHEN v(dc_flt)=2.5 FALL=1
+meas tran tmax_max MAX v(xdet.det_tmax)
+meas tran vdp AVG v(xdet.det_vdp) from=0.05 to=0.1
+echo "grandezza,valore" > impulsi_10hz_90pc_riv.csv
+echo "t_flt,$&t_flt" >> impulsi_10hz_90pc_riv.csv
+echo "tmax_max,$&tmax_max" >> impulsi_10hz_90pc_riv.csv
+echo "vdp,$&vdp" >> impulsi_10hz_90pc_riv.csv
+wrdata impulsi_10hz_90pc.dat v(tap) v(dc_flt) v(xdet.det_tmax) v(xdet.det_t_bl_p) v(xdet.det_t_bl_m)
+quit
+.endc
+.end

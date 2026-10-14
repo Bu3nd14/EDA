@@ -140,6 +140,12 @@ for _p in (("U505", "1"), ("U505", "7"), ("U506", "1"), ("U506", "7")):
     assert PIN[_p] == "MUTE_G", f"{_p[0]} pin {_p[1]} non tira MUTE_G"
 assert PIN[("Q501", "1")] == "MUTE_G" and PIN[("Q501", "3")] == "MUTE_CMD" \
     and PIN[("J4", "1")] == "MUTE_CMD", "il sink di MUTE_CMD"
+# L45d2b1 (ADR-072): il rivelatore di continua della scheda audio arriva su J4 pin 4 e tira giu',
+# con tre Schottky, MUTE_G, VR_G e MAINS_G; il micro lo legge su PA1 (pin 17)
+assert PIN[("J4", "4")] == "DC_FLT", "J4 pin 4 non e' DC_FLT (ADR-072)"
+for _d, _g in (("D525", "MUTE_G"), ("D526", "VR_G"), ("D527", "MAINS_G")):
+    assert PIN[(_d, "2")] == _g and PIN[(_d, "1")] == "DC_FLT", f"{_d}: non da {_g} a DC_FLT"
+assert PIN[("U509", "17")] == "DC_FLT_IN", "PA1 non legge DC_FLT"
 
 
 RET = ("RLY_RET", "GND")                         # uniti da NT501 (la stella)
@@ -395,6 +401,8 @@ box(23.0, YL, 30.0, 1.9, ["il mute è dei soli relè al jack della scheda audio"
                           "Δ e Δ₂ restano in hardware (pannello 2)",
                           "la tenuta di VRELAY e lo standby col carico nuovo: L47c2"],
     size=8.5, head_size=9.5)
+txt((23.0, 2.3), "J4 pin 4, DC_FLT dal rivelatore di continua (ADR-072): D525–D527 tirano giù "
+    "MUTE_G, VR_G e MAINS_G in hardware; U509 lo legge su PA1 e va in GUASTO", size=8, color=RED)
 txt((23.0, 1.2), f"{len(COMP)} componenti in {os.path.basename(NETLIST)} — il disegno ne "
     "mostra i blocchi, non i dispositivi", size=8, color=DIM)
 

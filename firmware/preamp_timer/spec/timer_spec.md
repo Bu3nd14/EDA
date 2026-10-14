@@ -1,9 +1,14 @@
 # Specifica del temporizzatore — il contratto del firmware
 
-Versione: **L47c2a, 2026-10-05** (prima: L41b2, L41b1). Decisioni: **ADR-048** punto 6,
+Versione: **L45d2b1, 2026-10-14** (prima: L47c2a, L41b2, L41b1). Decisioni: **ADR-048** punto 6,
 **ADR-049**, **ADR-062** (il mute taglia: niente sfumatura, niente pilota delle LDR, i relè subito
-dopo il tasto). Hardware: `circuits/preamp/psu.py` (U509 ATtiny3216, U508 i ritardi).
-Realizzazione: `src/timer_core.c`; prove: `test/`.
+dopo il tasto), **ADR-072** (il rivelatore di continua). Hardware: `circuits/preamp/psu.py` (U509
+ATtiny3216, U508 i ritardi). Realizzazione: `src/timer_core.c`; prove: `test/`.
+
+**Cosa ha cambiato L45d2b1** (ADR-072): **PA1 legge `DC_FLT`**, la linea del rivelatore di
+continua della scheda audio (J4 pin 4). L'hardware ha già aperto il mute, tolto `VRELAY` e staccato
+il toroidale (§ 1); il firmware, con la linea bassa per ≥ 2 ms, va in GUASTO e ci resta fino al
+frontale (§ 4.9). PA1 esce dai pin liberi.
 
 **Cosa ha cambiato L47c2a** (ogni voce ha la sua ragione nel testo sotto e nel report di L47c2a):
 - via la legge delle LDR, la calibrazione, la sfumatura (d) e la SPI verso il MCP4822: l'hardware
@@ -38,6 +43,7 @@ dal 2e (`check_relay_safe_state.py --timer`):
 | Un firmware che abbassa solo `PERMIT_REQ` non muove niente | `PERMIT_T` resta carico da `MUTE_REQ` | nessun rilascio |
 | `VRELAY` della scheda audio cade **dopo** `PERMIT_CMD` | RC su `VR_T` caricato da `PERMIT_T` e da `VRELAY_EN`, U508 B, Q505 | ≥ 56 ms dopo (24,7 col guasto di U503) → **60,4 / 56,5 ms** nominale / angolo minimo (**42,0 / 43,2** col guasto di U503) |
 | Il sorvegliante scavalca `MUTE_REQ` | U505, U506 tirano giù `MUTE_G` (L41a) | rete persa: jack staccati a +14 ms |
+| Il rivelatore di continua scavalca tutto (L45d2b1, ADR-072) | `DC_FLT` basso tira giù `MUTE_G`, `VR_G` e `MAINS_G` con tre BAT54 (D525–D527) | il banco di L45d2b1 (`docs/preamp/data/2026-10-14/L45d2b1/`) |
 
 Quindi il firmware **non** conta Δ per la sicurezza: lo chiede (`PERMIT_REQ` giù 20 ms dopo
 `MUTE_REQ`), e l'hardware lo garantisce comunque.
@@ -57,7 +63,8 @@ Quindi il firmware **non** conta Δ per la sicurezza: lo chiede (`PERMIT_REQ` gi
 | `PERMIT_REQ` | PB1 | uscita | alto = chiedo il permissivo K6 |
 | `MAINS_REQ` | PB2 | uscita | alto = relè del toroidale K501 chiuso |
 | `VRELAY_EN` | PB3 | uscita | alto = `VRELAY` alla scheda audio |
-| — | PA1, PA2, PA3, PA4, PB4, PC3 | **liberi** | niente in `psu.py`: ingressi col buffer digitale disattivato (sotto) |
+| `DC_FLT_IN` | PA1 | ingresso | il rivelatore di continua (attraverso 47 kΩ, L45d2b1): basso = un'uscita della scheda audio ha continua; buffer digitale **acceso** |
+| — | PA2, PA3, PA4, PB4, PC3 | **liberi** | niente in `psu.py`: ingressi col buffer digitale disattivato (sotto) |
 | `UPDI` | PA0 | programmazione | J515 |
 
 **I pin liberi (L47c2a, scelta dell'utente).** PA1, PA3, PA4 erano la SPI verso il MCP4822, PA2 e
@@ -168,19 +175,40 @@ livello. `MUTE_SW_IN` alto vale mute (F10, ADR-028 punto 4): un filo rotto mette
 **4.8 Watchdog**. Il watchdog dell'ATtiny è acceso con finestra ≤ 250 ms. Un firmware bloccato
 va in reset, cioè in riposo (§ 1).
 
+**4.9 Il rivelatore di continua** (L45d2b1, ADR-072; ogni stato acceso → GUASTO). `DC_FLT_IN`
+basso per **≥ 2 ms** consecutivi **con l'alimentazione buona** (rail e `VRELAY_REG` in
+regolazione, rete presente), in qualunque stato tranne STANDBY, GUASTO e l'ultimo passo di
+SPEGNIMENTO (i rail che scendono di proposito). Con la rete che manca i rail scendono e il
+rivelatore può scattare durante la discesa: è un buco di 4.5, che riparte da solo al ritorno
+della rete, non un guasto da frontale. Un guasto vero lo fa scattare coi rail ancora su (i
+serbatoi del toroidale li tengono per decine di ms dopo l'apertura di K501):
+1. si entra in GUASTO come in 4.6, **senza** passare dalla classificazione di 4.5. L'hardware ha
+   già fatto la sua parte (§ 1): `MUTE_G` giù (il buco di 4.5 può essere scattato prima, ed è
+   indifferente), `VRELAY` staccata, il toroidale staccato;
+2. GUASTO tiene tutto spento finché `FRONT_IN` non passa ad alto e poi di nuovo a basso.
+
+Senza questo passo l'apparecchio **non** resterebbe spento: i rail che scendono tolgono
+l'alimentazione al rivelatore, che rilascia la linea; il buco senza causa è di classe 1 (4.5) e un
+rail che scende rifà l'accensione, il toroidale torna e il guasto fa scattare di nuovo il
+rivelatore. I 2 ms scartano un impulso sul cablaggio: il rivelatore stesso aspetta ~70 ms.
+Senza firmware (reset, uscite in alta impedenza) `MAINS_REQ` è tirato giù e il toroidale resta
+staccato comunque (§ 1).
+
 ## 5. Il comando delle LDR
 
 **Tolto in L47c2a** (ADR-062): niente legge, niente calibrazione, niente profilo, niente DAC. La
 versione di L41b2 di questo paragrafo, con la tabella v4 e la cima di ADR-050, è nella storia del
 repository (`git log -- firmware/preamp_timer/spec/timer_spec.md`) e nel report di L41b2.
 
-## 6. Cosa si prova sull'host (L41b2, L47c2a)
+## 6. Cosa si prova sull'host (L41b2, L47c2a, L45d2b1)
 
 `test/run_host_tests.sh` (in `run_tests.sh`, blocco 2k). Un test per ogni sequenza di § 4 e uno
 per i pin liberi di § 2, su `timer_core.c` compilato con `/usr/bin/clang -std=c11 -Wall -Wextra
 -Werror -pedantic`. Il mondo (`mondo.c`) dà gli ingressi e registra le uscite:
 - `test_sequenze`: accensione, inserzione (col tasto che torna a musica dentro Δ), rilascio (col
   rifiuto dell'hardware), spegnimento, debounce, buco di rete di classe 1 e 2, guasto e ritenuta,
+  il rivelatore di continua (`guasto_dc`, L45d2b1: in MUSICA, in ACCENSIONE, un impulso di 1 ms, la
+  rete che manca coi rail che scendono),
   pin liberi (contro `psu.net`, con `--root`).
 
 L47c2a ha tolto `test_legge` (la legge, la calibrazione, il bilancio dell'ADC delle stringhe) e il
@@ -191,7 +219,9 @@ test. I dieci sopravvissuti di L41b2 tengono il loro numero (1, 4, 5, 6, 7, 9, 1
 gli undici legati alla legge, alla calibrazione o alla sfumatura (2, 3, 8, 11, 12, 13, 14, 17, 19,
 20, 21) sono usciti con loro; i nove nuovi sono 22–30 (le sequenze nuove e i pin liberi). Le forme
 d'onda delle uscite si scrivono in CSV (`--csv`), e `test/ponte.c` fa girare il core sui pin del
-circuito simulato.
+circuito simulato. **L45d2b1**: 23 difetti, i quattro nuovi sono 31 (`DC_FLT` non letto), 32 (PA1
+ancora fra i liberi), 33 (`DC_FLT` senza i 2 ms) e 34 (`DC_FLT` contato coi rail giù). `ponte.c` legge `v(dc_flt_in)` se c'è, alto se
+manca (i banchi di prima non la scrivono).
 
 **Sul circuito** (L47c2a, `docs/preamp/data/2026-10-05/L47c2a/seq/`): accensione, rilascio,
 spegnimento, buco di 20 e di 200 ms, guasto, ognuno iterato fino al punto fisso fra il core e il

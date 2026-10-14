@@ -17,7 +17,8 @@
 # string currents) is gone with the law (ADR-062), and with it fakes 2, 3, 8,
 # 11, 12, 13, 14, 17, 19, 20, 21. Fakes 22-30 test the new sequences and the
 # free pins; the ten that survive keep their numbers, so that L41b2's reports
-# still read right. 19 fakes in all.
+# still read right. 19 fakes in all. L45d2b1 (ADR-072): fakes 31-34, the DC
+# detector's line on PA1 - 23 in all.
 set -u
 
 ROOT=${0:A:h:h:h:h}
@@ -63,7 +64,8 @@ if [ -n "$falsi_out" ]; then
     attesi=(1 accensione 4 inserzione 5 buco_classe1 6 buco_classe1 7 debounce
             9 spegnimento 10 buco_classe2 15 guasto 16 debounce 18 accensione
             22 inserzione 23 rilascio 24 rilascio 25 pin_liberi 26 pin_liberi
-            27 pin_liberi 28 accensione 29 spegnimento 30 spegnimento)
+            27 pin_liberi 28 accensione 29 spegnimento 30 spegnimento
+            31 guasto_dc 32 pin_liberi 33 guasto_dc 34 guasto_dc)
     typeset -A cosa
     cosa=(1 "VRELAY_EN -> MUTE_REQ 5 ms (ADR-027: 13 ms)"
           4 "PERMIT_REQ insieme a MUTE_REQ, senza Delta"
@@ -83,7 +85,11 @@ if [ -n "$falsi_out" ]; then
           27 "pin liberi col buffer d'ingresso acceso (ISC 0x0)"
           28 "VRELAY_EN al primo campione buono dei rail, senza i 100 ms"
           29 "spegnimento: MAINS_REQ 80 ms dopo VRELAY_EN"
-          30 "spegnimento da MUSICA senza l'inserzione: niente Delta")
+          30 "spegnimento da MUSICA senza l'inserzione: niente Delta"
+          31 "DC_FLT (PA1) non letto: il rivelatore di continua senza ritenuta"
+          32 "PA1 ancora fra i pin liberi: DC_FLT letto col buffer spento"
+          33 "DC_FLT senza i 2 ms: un impulso sul cablaggio e' un guasto"
+          34 "DC_FLT contato anche coi rail giu': un buco di rete diventa GUASTO")
     : > "$falsi_out"
     echo "# L47c2a: i test sull'host contro i falsi di timer_core.c (FALSO_n)" >> "$falsi_out"
     echo "# ogni falso deve far FALLIRE il test indicato; gli altri possono passare" >> "$falsi_out"
