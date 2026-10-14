@@ -1,75 +1,74 @@
-# Prompt per la sessione successiva — L45d2, la decisione sui rimedi dei guasti
+# Prompt per la sessione successiva — L45d2b, la costruzione dei rimedi dei guasti
 
-Nome della sessione: **hi-fi preamp L45d2** (la convenzione è in `CLAUDE.md`).
+Nome della sessione: **hi-fi preamp L45d2b** (la convenzione è in `CLAUDE.md`).
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L45d2**, e si ferma. Non iniziarne un secondo, salvo che l'utente
+LOTTI PICCOLI: questa sessione fa **L45d2b**, e si ferma. Non iniziarne un secondo, salvo che l'utente
 lo chieda esplicitamente nella sessione.
 
 ## Perché questo lotto, e perché adesso
 
-**NC-042** (maggiore, **prima di G1**): l'analisi dei guasti singoli. L45a il blocco di guadagno, L45b
-i controlli, L45c1 i rail audio, L45c2 la linea dei relè e il comando. **L45d1 (fatto, 2026-10-14)**
-ha riportato le prime tre tabelle alla forma di ADR-070 e le ha messe tutte e quattro in una sintesi.
-L45d era stato diviso dall'utente all'inizio («Due parti»). **L45d2** è la seconda metà, e NC-042 si
-chiude con lei.
+**NC-042** (maggiore, **prima di G1**): l'analisi dei guasti singoli. Le analisi L45a–L45c2 sono
+fatte, L45d1 le ha riportate alla forma di ADR-070 e le ha messe in una sintesi. **L45d2a (fatto,
+2026-10-14)** ha preso tutte le decisioni sui rimedi, con l'utente: otto ADR, **ADR-071…078**, senza
+toccare il circuito. L45d2 era stato diviso dall'utente all'inizio («Prima decidere, poi
+costruire»). **L45d2b** costruisce i rimedi scelti, rifà i guasti toccati, e chiude NC-042.
 
-## Il punto di partenza: il PDF delle scelte
+## Che cosa costruire
 
-**`docs/preamp/data/2026-10-14/L45d1/scelte_L45d2.pdf`** è il passo intermedio, versionato dopo L45d1
-su richiesta dell'utente («teniamolo come step intermedio, così possiamo referenziarlo nelle
-modifiche che applicheremo»). Le 156 righe ad alta e media priorità diventano **10 scelte
-numerate** (118 righe); altre 38 non chiedono una scelta adesso. **Ogni ADR, commit e report di
-questo lotto cita la scelta per numero** («scelta 5 di `scelte_L45d2.pdf`»), e il PDF non si
-riscrive: se la numerazione deve cambiare, se ne fa uno nuovo accanto e lo si dice.
+Il punto di partenza è `docs/preamp/data/2026-10-14/L45d2a/decisioni.csv`: ogni riga alta e media
+della sintesi ha lì la sua decisione, l'ADR e la destinazione. **Le 88 righe con `dove = L45d2b`**
+sono il lavoro di questo lotto, più le 9 righe basse delle sovratensioni. Ogni ADR, commit e report
+cita la scelta per numero di `data/2026-10-14/L45d1/scelte_L45d2.pdf`, che non si riscrive.
 
-Il dettaglio sta nella sintesi: `docs/preamp/data/2026-10-14/L45d1/fmea_sintesi.md` (e `.csv`; il report è
-`reports/2026-10-14-L45d1-riporto-fmea.md`). **469 modi: 96 a priorità alta, 60 media, 313 bassa.**
-Le righe sono raggruppate per rimedio candidato. In testa:
-- **un rivelatore di continua sulle uscite dei blocchi** che apra il mute: 52 righe alte e 6 medie
-  del blocco. Oggi il blocco al rail porta 14,9 V al jack, sopra il tetto per 0,56–3,1 s. Col
-  rivelatore ideale si scende a 0,2–10,1 ms, dentro P10 (ADR-069); il picco non cambia. In 21 di
-  quelle righe c'è anche un secondo guasto per calore (in cima C145 in corto, R144 a 22,5 W);
-- **l'autotest dei sorveglianti** (L45c2, 10 alte): oggi il firmware muta a 2,2 ms, fuori dalla sola
-  clausola di 1 ms di P9 (b) quando a mutare è il firmware;
-- **i corti del grezzo** (L45c1, 9 alte, gravità 5 sul rail negativo: U502 con l'uscita fino a
-  1,76 V sopra l'ingresso, contro −0,3 V): accettarli (≤ 9,0 mV al jack) o rivedere D510 / D511;
-- **i sovraccarichi del comando** (L45c2, 7 alte: i clamp D506 / D508 in corto, D505 o la bobina di
-  K501 in corto) e **la sovratensione su V5** (U504 in corto ingresso-uscita);
-- **il mute che non si inserisce**: Q501 in corto (L45c1), Q501 con gate e drain in corto (L45c2,
-  0,27 V alla perdita di rete, il jack a 685 ms), **il NO di mute saldato** (L45c1, 4 alte; il LED
-  rosso non lo vede);
-- **l'isolamento fra bobina e contatti dei relè** (L45b: sul mute 12 V permanenti sul jack, anche a
-  mute inserito);
-- **il ritardo Δ perso** (L45c2, 45 modi, 6,44 mV): accettarlo come il corto della linea a 12 V
-  (ADR-051) o un permesso indipendente da VRELAY e da `MUTE_G`; e i due latenti **a ogni mute**
-  (D520 in corto, R524 aperta);
-- **il filo del rail + fra le due schede** (L45c1: 13,3 V al jack, nessun mute);
-- **le sovratensioni dei rail** che nessuno vede (L45c1, fino a ±20,3 V; le tensioni massime delle
-  parti del blocco non sono mai state lette) e la presa centrale aperta;
-- lo standby con VRELAY o il toroidale accesi (L45c2);
-- **il tetto delle fisse** (con NC-046): nella sintesi non ha righe proprie.
+1. **Il rivelatore di continua sulle uscite dei blocchi, in hardware** (ADR-072; le scelte 1, 6, 8,
+   9 e 10). Quando un'uscita ha continua:
+   - apre il mute;
+   - toglie la linea dei relè (`VRELAY`) alla scheda audio, così nessuna bobina resta a 12 V;
+   - spegne i rail audio.
 
-**Due casi del «Da riaprire se» di ADR-070** da portare all'utente prima delle scelte:
-1. l'isolamento dei relè di mute esce in **media** per la sola rarità (~0,25–0,75 FIT), mentre lo
-   stesso modo sui relè del selettore e del trim esce in alta;
-2. 28 guasti del blocco **dentro P10** escono in **media** per la sola latenza, senza rimedio candidato.
+   I vincoli scritti in ADR-072:
+   - **la musica non deve farlo scattare** (col volume al massimo supera 0,87 V);
+   - la soglia e la costante di tempo si scelgono contro i 100 ms di P10;
+   - **i rail non si spengono di colpo**: la scarica della tenuta (≥ 1500 µF effettivi per rail) va
+     misurata, e il calore del secondo guasto si giudica su quel tempo contro PR-22 / P7;
+   - dopo lo scatto l'apparecchio resta spento fino a un comando dal frontale. Un candidato è la
+     strada che esiste già: dopo un guasto con la rete presente, il temporizzatore stacca il
+     toroidale.
 
-Ogni scelta prende la sua ADR. Dopo il rimedio si aggiungono la gravità, la probabilità e la priorità
-(ADR-070). Se una scelta cambia il circuito: sorgente, netlist, disegno, `run_tests.sh`, regressione,
-e i guasti toccati rifatti. **È ancora un lotto grande: all'inizio chiedi all'utente se dividerlo**
-(per esempio prima le scelte che cambiano il circuito, poi le accettazioni dichiarate), per nome e
-senza sigle.
+   Col rivelatore vanno verificati sul banco il filo del rail + aperto fra le schede e il
+   condensatore d'uscita in corto seguito da un guasto del blocco.
+2. **D510 / D511 rivisti e U502 protetto** dall'uscita sopra l'ingresso (ADR-074; scelta 3). Oggi
+   U502 arriva fino a 1,76 V sopra l'ingresso, contro un massimo di −0,3 V. Va verificato che i
+   colpi al jack non crescano e che la tenuta di P9 (b) regga ancora.
+3. **Il limite di corrente sul comando** (oggi ~1 A in un 2N7002 col corto di un clamp) e **il
+   limitatore sulla linea a 5 V**, uno zener o un TVS con fusibile ripristinabile (ADR-075; scelta
+   4). Il limite non deve rallentare lo stacco del jack né Δ.
+4. **Le tensioni massime delle parti del blocco**, e la dissipazione dei finali col rail fino a
+   ±20,3 V (ADR-078). Il sorvegliante della sovratensione si aggiunge **solo se** qualcosa esce dai
+   limiti, e in quel caso **si torna all'utente**.
+5. **I guasti toccati rifatti**, con le colonne dopo il rimedio (gravità, probabilità, priorità;
+   ADR-070). Vanno ricontati anche i 28 guasti del blocco di ADR-071: il rivelatore potrebbe
+   vederne qualcuno. **P10 misurato** su ogni guasto del blocco. Poi la sintesi rifatta (README di
+   `data/2026-10-14/L45d1/`, «Rifare») e NC-042 chiusa, se i numeri lo permettono.
+
+Ogni cambio al circuito porta con sé sorgente, netlist, disegno, `run_tests.sh` e regressione. Ogni
+valore nuovo in `circuits/preamp/*.py` ha un commento che punta alla sua ADR.
+
+**È un lotto grande: all'inizio chiedi all'utente se dividerlo**, per nome e senza sigle. Per
+esempio: prima il rivelatore da solo, poi i diodi del grezzo, il comando e i 5 V, poi i guasti
+rifatti.
 
 ## Prima di tutto
 
 - `CLAUDE.md`, `docs/limitations.md` (**58** voci), `AGENTS.md`.
-- `docs/preamp/STATE.md`: «In breve» e le voci di **L45d1**, L45c2, L45c1, L45b, L45a.
+- `docs/preamp/STATE.md`: «In breve» e le voci di L45d2a, L45d1, L45c2, L45c1, L45b, L45a.
 - `NONCOMPLIANCE.md`: NC-042, NC-046, NC-062.
-- `scelte_L45d2.pdf`, il report di L45d1 e la sintesi; i quattro report di L45 per il dettaglio di
-  una riga.
-- `STATE.md`, la riga di **L58** nella tabella dei lotti.
-- ADR-045, ADR-046, ADR-051, ADR-062, ADR-069, **ADR-070**.
+- **ADR-071…078**; poi ADR-045, ADR-046, ADR-051, ADR-069, ADR-070.
+- `reports/2026-10-14-L45d2a-scelte-rimedi.md` e `data/2026-10-14/L45d2a/decisioni.md`.
+- I banchi dei guasti: `data/2026-10-13/L45a/script/genera_canale.py` (il blocco, P10), e i banchi
+  di L45b, L45c1 e L45c2 per le righe che li toccano.
+- `circuits/preamp/psu.py` (U505, Q505, D510 / D511, U502, U504) e la scheda audio.
 
 ## I vincoli
 
@@ -87,21 +86,25 @@ senza sigle.
 - **Non modificare uno script mentre zsh lo sta eseguendo** (zsh lo legge a pezzi).
 - Le domande all'utente si fanno per nome, senza sigle; le soglie in dB SPL.
 - Uno strumento di misura nuovo si controlla su un caso noto prima di usarlo.
-- Per rifare la sintesi dopo un rimedio: `data/2026-10-14/L45d1/README.md` («Rifare»).
+- Piste larghe al layout: non è di questo lotto, ma un rimedio che aggiunge parti di potenza lo
+  ricordi.
 
 ## NON fa parte di questo lotto
 
-- L'ingresso protetto (L57), il riesame del micro e dello standby (L54: `MUTE_REQ` bloccata alta,
-  Q502 in corto all'accensione, D522), il dispositivo d'uscita (L55), il moltiplicatore di Vbe
-  (NC-062), G1. Se una scelta tocca uno di questi, si dice e si lascia al suo lotto.
-- **La diagnosi, L58** (lotto nuovo, richiesta dell'utente dopo L45d1): i test point e l'autodiagnosi
-  dei guasti latenti. Quando un rimedio è una diagnosi (l'autotest dei sorveglianti, il firmware che
-  legge `MUTE_CMD` o il jack, il controllo di Δ a ogni mute), l'utente può sceglierlo qui e
-  **mandarne la realizzazione a L58**; lo si scrive nella ADR.
+- **La diagnosi, L58**. Le vanno:
+  - il mute che non si inserisce (ADR-076);
+  - il degrado silenzioso dei 28 guasti del blocco (ADR-071);
+  - lo standby acceso per guasto (ADR-078);
+  - il rivelatore cieco (ADR-072).
+- L'ingresso protetto (L57), il riesame del micro e dello standby (L54), il dispositivo d'uscita
+  (L55), il moltiplicatore di Vbe (NC-062), il tetto delle fisse (NC-046), G1. Se un rimedio tocca
+  uno di questi, lo si dice e lo si lascia al suo lotto.
+- Le decisioni prese in L45d2a non si riaprono, salvo che un «Da riaprire se» della loro ADR
+  scatti. In quel caso si torna all'utente con i numeri.
 
 ## CHIUSURA
 
-1. `STATE.md` con L45d2 (o le sue parti) **fatto** nella tabella dei lotti, e il prossimo.
+1. `STATE.md` con L45d2b (o le sue parti) **fatto** nella tabella dei lotti, e il prossimo.
 2. Riscrivi QUESTO file per il lotto successivo, con la riga «Nome della sessione: hi-fi preamp
    <lotto nuovo>» subito sotto il titolo.
 3. Commit, push, PR.
