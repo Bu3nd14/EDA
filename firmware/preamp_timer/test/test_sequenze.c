@@ -367,6 +367,76 @@ static void t_guasto(void)
     CHECK(primo_stato(&M, ST_GUASTO, t0) > 0, "guasto in MUTO visto dall'ADC: non va in GUASTO");
 }
 
+/* ------------------------------------- L45d2b1: the DC detector (ADR-072) */
+static void t_guasto_dc(void)
+{
+    /* in MUSICA the detector pulls DC_FLT: in hardware it has dropped MUTE_G too */
+    float t0 = in_musica(csv_per("guasto_dc"));
+    M.dc_trip = 1;
+    mondo_isr(&M);
+    CHECK(M.out.mute_req == 0 && M.out.permit_req == 0, "continua: MUTE_REQ o PERMIT_REQ ancora su");
+    mondo_corri(&M, 300);
+    /* the rails run down: the detector loses its supply and lets the line go */
+    M.dc_trip = 0;
+    rail_giu(&M.in);
+    mondo_corri(&M, 1000);
+    /* and with the toroid back the rails would be healthy again: the front is still on */
+    rete_sana(&M.in);
+    mondo_corri(&M, 5000);
+    float t_g = primo_stato(&M, ST_GUASTO, t0);
+    float t_ma = primo_fronte(&M, M.mains, 0, t0);
+    CHECK(t_g > 0 && t_g - t0 <= 0.0031f, "GUASTO a +%.4f s, voluto entro 2 ms e un passo", t_g - t0);
+    CHECK(t_ma > 0 && t_ma - t0 >= 0.080f - 1e-6f && t_ma - t0 <= 0.0841f,
+          "MAINS_REQ giu' a +%.4f s, voluto 80 ms dopo GUASTO", t_ma - t0);
+    CHECK(primo_fronte(&M, M.mains, 1, t_ma) < 0, "la rete si riaccende col frontale ancora acceso");
+    CHECK(primo_stato(&M, ST_MUSICA, t_g) < 0, "torna in MUSICA dopo la continua");
+    /* front off, then on: only now the power-up */
+    M.in.front_in = 1;
+    mondo_corri(&M, 500);
+    float t_on = M.t_us * 1e-6f;
+    M.in.front_in = 0;
+    mondo_corri(&M, 100);
+    mondo_chiudi(&M);
+    CHECK(primo_fronte(&M, M.mains, 1, t_on) > 0, "dopo spento/acceso la rete non torna");
+    printf("  guasto_dc: GUASTO +%.3f, MAINS_REQ giu' +%.3f s, ritenuta coi rail di nuovo sani, "
+           "riaccensione dopo spento/acceso\n", t_g - t0, t_ma - t0);
+
+    /* in ACCENSIONE, the rails not yet good: GUASTO at once, not after the 2 s of 4.1 */
+    mondo_init(&M, NULL);
+    mondo_corri(&M, 40);
+    CHECK(M.out.stato == ST_ACCENSIONE, "a 40 ms non e' in ACCENSIONE ma in %s", timer_stato_nome(M.out.stato));
+    t0 = M.t_us * 1e-6f;
+    M.dc_trip = 1;
+    mondo_corri(&M, 10);
+    t_g = primo_stato(&M, ST_GUASTO, t0);
+    CHECK(t_g > 0 && t_g - t0 <= 0.0031f, "continua in ACCENSIONE: GUASTO a %+.4f s", t_g > 0 ? t_g - t0 : -1.0f);
+
+    /* a 1 ms glitch on the line: a hole the rails rode (4.5), not GUASTO */
+    t0 = in_musica(NULL);
+    M.dc_trip = 1;
+    mondo_corri(&M, 1);
+    M.dc_trip = 0;
+    mondo_corri(&M, 2000);
+    CHECK(primo_stato(&M, ST_GUASTO, t0) < 0, "un impulso di 1 ms su DC_FLT da' GUASTO");
+    CHECK(M.out.stato == ST_MUSICA, "dopo l'impulso di 1 ms non torna in MUSICA (%s)", timer_stato_nome(M.out.stato));
+
+    /* the mains go, the rails run down, and the detector trips on the way down: a hole of
+     * class 2 (4.5), which restarts by itself when the mains are back - not GUASTO */
+    t0 = in_musica(NULL);
+    rete_assente(&M.in);
+    mondo_isr(&M);
+    mondo_corri(&M, 30);
+    rail_giu(&M.in);
+    M.dc_trip = 1;
+    mondo_corri(&M, 200);
+    M.dc_trip = 0;
+    rete_sana(&M.in);
+    mondo_corri(&M, 2000);
+    CHECK(primo_stato(&M, ST_GUASTO, t0) < 0, "DC_FLT coi rail che scendono per la rete: GUASTO");
+    CHECK(M.out.stato == ST_MUSICA, "dopo il buco coi rail giu' non torna in MUSICA (%s)",
+          timer_stato_nome(M.out.stato));
+}
+
 /* --------------------------------------------- spec sec. 2: the free pins */
 /* The ATtiny3216's SOIC-20 pinout, written again here from DS40002205A
  * (sec. 4.1, "20-Pin SOIC", p. 14), not from the core: pin -> port, bit (0 = power). */
@@ -436,7 +506,8 @@ typedef struct { const char *nome; void (*f)(void); } test_t;
 static const test_t TESTS[] = {
     {"accensione", t_accensione}, {"inserzione", t_inserzione}, {"rilascio", t_rilascio},
     {"spegnimento", t_spegnimento}, {"debounce", t_debounce}, {"buco_classe1", t_buco_classe1},
-    {"buco_classe2", t_buco_classe2}, {"guasto", t_guasto}, {"pin_liberi", t_pin_liberi},
+    {"buco_classe2", t_buco_classe2}, {"guasto", t_guasto}, {"guasto_dc", t_guasto_dc},
+    {"pin_liberi", t_pin_liberi},
 };
 
 int main(int argc, char **argv)

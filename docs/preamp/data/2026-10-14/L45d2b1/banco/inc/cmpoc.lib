@@ -1,0 +1,27 @@
+* L45d2b1: CMPOC, a BEHAVIOURAL open-collector comparator for the TLV1704 / TLV1702 of
+* circuits/preamp/dc_detector.py. DECLARED, not a vendor model: the TLV1701 PSpice model does not
+* run in ngspice (vendor/comparator/ti/TLV1702/PROVENANCE.json). From SBOS589D:
+*   - the output sinks toward V- when in- > in+, and is high impedance otherwise (70 nA leakage
+*     taken as 1 GOhm); saturation ~0.3 V (<= 600 mV at 0 mA: the high end is in the
+*     dimensioning, dimensiona.py), short-circuit current 20 mA, both through one smooth tanh
+*     (a max() with a 30 ohm slope stopped the first run at the trip: "timestep too small");
+*   - 0.5 us of delay (tpHL 460 ns, tpLH 560 ns); no hysteresis, no offset (+-5.5 mV: dimensiona.py);
+*   - below 2.2 V of supply the output is released (the datasheet does not say what it does: the
+*     released output is the worst case for a false trip, and the line driver needs 3.7 V);
+*   - 55 uA per channel from the supply; inputs clamped by diodes to both rails.
+* Ports: in+ in- out V+ V-
+.subckt CMPOC inp inn out vcc vee
+Bu u vee V = 0.5*(1+tanh((V(inn)-V(inp))/2m)) * 0.5*(1+tanh((V(vcc,vee)-2.2)/0.1))
+Ru u uf 1k
+Cu uf vee 0.5n
+Bs out vee I = V(uf,vee) * 20m * tanh(max(0, V(out,vee)-0.3)/0.6 + V(out,vee)/2000)
+Rleak out vee 1G
+* 15 pF: the datasheet's own test load (SBOS589D, 7.6 / 7.7, CL = 15 pF)
+Cout out vee 15p
+Bq vcc vee I = 55u*0.5*(1+tanh((V(vcc,vee)-1)/0.1))
+Dp1 inp vcc DCLMP
+Dp2 vee inp DCLMP
+Dn1 inn vcc DCLMP
+Dn2 vee inn DCLMP
+.model DCLMP D(Is=1e-14 N=1)
+.ends CMPOC

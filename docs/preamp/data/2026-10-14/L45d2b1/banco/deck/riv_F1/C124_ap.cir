@@ -1,0 +1,202 @@
+L45a tr F1 g0 C124_ap musica=0 mute=0 - guasto a 0.3 s
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/docs/preamp/data/2026-10-14/L45d2b1/banco/inc/cmpoc.lib
+.include @REPO@/spice/preamp/dc_detector.subckt
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block.subckt
+.include @REPO@/docs/preamp/data/2026-10-13/L45a/inc/C124_ap.subckt
+* interruttori: SWFC corto del guasto (chiuso con CTL=1), SWFO aperto del guasto (chiuso con
+* CTL=0); SWKO / SWKC i due contatti del deviatore del mute (0,1 ohm, ADR-044): MUTE=0 rilasciato
+.model SWFC SW(VT=0.5 VH=0.1 RON=0.01 ROFF=1e12)
+.model SWFO SW(VT=-0.5 VH=0.1 RON=0.01 ROFF=1e12)
+.model SWKO SW(VT=-0.5 VH=0.1 RON=0.1 ROFF=1e12)
+.model SWKC SW(VT=0.5 VH=0.1 RON=0.1 ROFF=1e12)
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VCTL CTL 0 PWL(0 0 0.3 0 0.30001 1)
+* L45d2b1: la catena del rivelatore (genera_rivelatore.py)
+XDET OUTF1 OUTF2 OUTB 0 0 0 VPLUS VMINUS VRELAY 0 DC_FLT DCDET
+VRL VRELAY 0 DC 12
+VV5 V5 0 5
+RPU DC_FLT V5 10k
+BREQ REQ 0 V = 5*0.5*(1+tanh((2.5-V(DC_FLT))/0.05))
+DLAT REQ LAT DLATCH
+CLAT LAT 0 1u
+RLAT LAT 0 1e12
+RREL LAT MDL 4.33k
+CREL MDL 0 1u
+BMUTE MUTE 0 V = 0.5*(1+tanh((V(MDL)-2.2)/0.01))
+.model DLATCH D(Is=1e-14 N=1)
+VIN SRC 0 DC 0
+RSRC SRC JIN 1.5
+CIN JIN SEL 1u
+RJ JIN 0 10MEG
+RSEL SEL 0 470k
+RSELK SEL INA 0.1
+XA INA OUTA FBA RGA RG10A VPLUS VMINUS GAINBLOCK
+RRGA RGA 0 1G
+CRGA RGA 0 15p
+RRG10A RG10A 0 1G
+CRG10A RG10A 0 15p
+XF1 OUTA OUTF1 FBF1 RGF1 RG10F1 VPLUS VMINUS CTL GAINBLOCKG
+RRGF1 RGF1 0 1G
+CRGF1 RGF1 0 15p
+RRG10F1 RG10F1 0 1G
+CRG10F1 RG10F1 0 15p
+XF2 OUTA OUTF2 FBF2 RGF2 RG10F2 VPLUS VMINUS GAINBLOCK
+RRGF2 RGF2 0 1G
+CRGF2 RGF2 0 15p
+RRG10F2 RG10F2 0 1G
+CRG10F2 RG10F2 0 15p
+* scala del trim (845 + 464 + 464, sempre montata), trim a 0 dB, C_T, volume al massimo
+RTR1 OUTA TAP6 845
+RTR2 TAP6 TAP12 464
+RTR3 TAP12 0 464
+CT OUTA ATT 10u
+RVT ATT W 1m
+RVB W 0 10k
+XB W OUTB FBB RGB RG10B VPLUS VMINUS GAINBLOCK
+RRGB RGB 0 1G
+CRGB RGB 0 15p
+RRG10B RG10B 0 1G
+CRG10B RG10B 0 15p
+RSMAIN OUTB MAIN_A 47
+CMAIN MAIN_A MAINC 4.7u
+RBCMAIN MAINC 0 220k
+SNOMAIN MAINC MAINJACK 0 MUTE SWKO
+SNCMAIN MAINC 0 MUTE 0 SWKC
+RBLMAIN MAINJACK 0 220k
+RSFIX1 OUTF1 FIX1_A 47
+CFIX1 FIX1_A FIX1C 4.7u
+RBCFIX1 FIX1C 0 470k
+SNOFIX1 FIX1C FIX1JACK 0 MUTE SWKO
+SNCFIX1 FIX1C 0 MUTE 0 SWKC
+RBLFIX1 FIX1JACK 0 470k
+RSFIX2 OUTF2 FIX2_A 47
+CFIX2 FIX2_A FIX2C 4.7u
+RBCFIX2 FIX2C 0 470k
+SNOFIX2 FIX2C FIX2JACK 0 MUTE SWKO
+SNCFIX2 FIX2C 0 MUTE 0 SWKC
+RBLFIX2 FIX2JACK 0 470k
+.control
+set noaskquit
+option itl1=1000
+save v(dc_flt) v(mute) v(xdet.det_tmax) v(mainjack) v(fix1jack) v(fix2jack) v(outa) v(outf1) v(outf2) v(outb) i(vpp) i(vmm) @q.xf1.q106[p] @q.xf1.q117[p] @q.xf1.q118[p] @q.xf1.q121a[p] @q.xf1.q121b[p] @q.xf1.q122[p] @q.xf1.q125[p] @q.xf1.q127[p] @q.xf1.q132[p] @q.xf1.q133[p] @q.xf1.q146[p] @q.xf1.q148[p] @r.xf1.r101[p] @r.xf1.r107[p] @r.xf1.r108[p] @r.xf1.r109[p] @r.xf1.r111[p] @r.xf1.r112[p] @r.xf1.r113[p] @r.xf1.r114[p] @r.xf1.r115[p] @r.xf1.r119[p] @r.xf1.r120[p] @r.xf1.r123[p] @r.xf1.r126[p] @r.xf1.r128[p] @r.xf1.r129[p] @r.xf1.r130[p] @r.xf1.r131[p] @r.xf1.r134[p] @r.xf1.r135[p] @r.xf1.r136[p] @r.xf1.r138[p] @r.xf1.r143[p] @r.xf1.r144[p] @r.xf1.r147[p] @r.xf1.r149[p] @j.xf1.jq110a[id] @j.xf1.jq110b[id] v(xf1.d1n) v(xf1.s1) v(xf1.d2n) v(xf1.s2)
+tran 1u 2.3 0 50u
+wrdata C124_ap.dat v(mainjack) v(fix1jack) v(fix2jack) v(outa) v(outf1) v(outf2) v(outb) i(vpp) i(vmm)
+meas tran p_q106 AVG @q.xf1.q106[p] from=2.29 to=2.3
+meas tran p_q117 AVG @q.xf1.q117[p] from=2.29 to=2.3
+meas tran p_q118 AVG @q.xf1.q118[p] from=2.29 to=2.3
+meas tran p_q121a AVG @q.xf1.q121a[p] from=2.29 to=2.3
+meas tran p_q121b AVG @q.xf1.q121b[p] from=2.29 to=2.3
+meas tran p_q122 AVG @q.xf1.q122[p] from=2.29 to=2.3
+meas tran p_q125 AVG @q.xf1.q125[p] from=2.29 to=2.3
+meas tran p_q127 AVG @q.xf1.q127[p] from=2.29 to=2.3
+meas tran p_q132 AVG @q.xf1.q132[p] from=2.29 to=2.3
+meas tran p_q133 AVG @q.xf1.q133[p] from=2.29 to=2.3
+meas tran p_q146 AVG @q.xf1.q146[p] from=2.29 to=2.3
+meas tran p_q148 AVG @q.xf1.q148[p] from=2.29 to=2.3
+meas tran p_r101 AVG @r.xf1.r101[p] from=2.29 to=2.3
+meas tran p_r107 AVG @r.xf1.r107[p] from=2.29 to=2.3
+meas tran p_r108 AVG @r.xf1.r108[p] from=2.29 to=2.3
+meas tran p_r109 AVG @r.xf1.r109[p] from=2.29 to=2.3
+meas tran p_r111 AVG @r.xf1.r111[p] from=2.29 to=2.3
+meas tran p_r112 AVG @r.xf1.r112[p] from=2.29 to=2.3
+meas tran p_r113 AVG @r.xf1.r113[p] from=2.29 to=2.3
+meas tran p_r114 AVG @r.xf1.r114[p] from=2.29 to=2.3
+meas tran p_r115 AVG @r.xf1.r115[p] from=2.29 to=2.3
+meas tran p_r119 AVG @r.xf1.r119[p] from=2.29 to=2.3
+meas tran p_r120 AVG @r.xf1.r120[p] from=2.29 to=2.3
+meas tran p_r123 AVG @r.xf1.r123[p] from=2.29 to=2.3
+meas tran p_r126 AVG @r.xf1.r126[p] from=2.29 to=2.3
+meas tran p_r128 AVG @r.xf1.r128[p] from=2.29 to=2.3
+meas tran p_r129 AVG @r.xf1.r129[p] from=2.29 to=2.3
+meas tran p_r130 AVG @r.xf1.r130[p] from=2.29 to=2.3
+meas tran p_r131 AVG @r.xf1.r131[p] from=2.29 to=2.3
+meas tran p_r134 AVG @r.xf1.r134[p] from=2.29 to=2.3
+meas tran p_r135 AVG @r.xf1.r135[p] from=2.29 to=2.3
+meas tran p_r136 AVG @r.xf1.r136[p] from=2.29 to=2.3
+meas tran p_r138 AVG @r.xf1.r138[p] from=2.29 to=2.3
+meas tran p_r143 AVG @r.xf1.r143[p] from=2.29 to=2.3
+meas tran p_r144 AVG @r.xf1.r144[p] from=2.29 to=2.3
+meas tran p_r147 AVG @r.xf1.r147[p] from=2.29 to=2.3
+meas tran p_r149 AVG @r.xf1.r149[p] from=2.29 to=2.3
+let pja = @j.xf1.jq110a[id] * (v(xf1.d1n) - v(xf1.s1))
+let pjb = @j.xf1.jq110b[id] * (v(xf1.d2n) - v(xf1.s2))
+meas tran p_jq110a AVG pja from=2.29 to=2.3
+meas tran p_jq110b AVG pjb from=2.29 to=2.3
+meas tran out_avg AVG v(outf1) from=2.29 to=2.3
+meas tran out_max MAX v(outf1) from=2.29 to=2.3
+meas tran out_min MIN v(outf1) from=2.29 to=2.3
+meas tran ipp_avg AVG i(vpp) from=2.29 to=2.3
+meas tran ipp_max MAX i(vpp) from=2.29 to=2.3
+meas tran ipp_min MIN i(vpp) from=2.29 to=2.3
+meas tran imm_avg AVG i(vmm) from=2.29 to=2.3
+meas tran imm_max MAX i(vmm) from=2.29 to=2.3
+meas tran imm_min MIN i(vmm) from=2.29 to=2.3
+echo "grandezza,valore" > C124_ap_fine.csv
+echo "p_q106,$&p_q106" >> C124_ap_fine.csv
+echo "p_q117,$&p_q117" >> C124_ap_fine.csv
+echo "p_q118,$&p_q118" >> C124_ap_fine.csv
+echo "p_q121a,$&p_q121a" >> C124_ap_fine.csv
+echo "p_q121b,$&p_q121b" >> C124_ap_fine.csv
+echo "p_q122,$&p_q122" >> C124_ap_fine.csv
+echo "p_q125,$&p_q125" >> C124_ap_fine.csv
+echo "p_q127,$&p_q127" >> C124_ap_fine.csv
+echo "p_q132,$&p_q132" >> C124_ap_fine.csv
+echo "p_q133,$&p_q133" >> C124_ap_fine.csv
+echo "p_q146,$&p_q146" >> C124_ap_fine.csv
+echo "p_q148,$&p_q148" >> C124_ap_fine.csv
+echo "p_r101,$&p_r101" >> C124_ap_fine.csv
+echo "p_r107,$&p_r107" >> C124_ap_fine.csv
+echo "p_r108,$&p_r108" >> C124_ap_fine.csv
+echo "p_r109,$&p_r109" >> C124_ap_fine.csv
+echo "p_r111,$&p_r111" >> C124_ap_fine.csv
+echo "p_r112,$&p_r112" >> C124_ap_fine.csv
+echo "p_r113,$&p_r113" >> C124_ap_fine.csv
+echo "p_r114,$&p_r114" >> C124_ap_fine.csv
+echo "p_r115,$&p_r115" >> C124_ap_fine.csv
+echo "p_r119,$&p_r119" >> C124_ap_fine.csv
+echo "p_r120,$&p_r120" >> C124_ap_fine.csv
+echo "p_r123,$&p_r123" >> C124_ap_fine.csv
+echo "p_r126,$&p_r126" >> C124_ap_fine.csv
+echo "p_r128,$&p_r128" >> C124_ap_fine.csv
+echo "p_r129,$&p_r129" >> C124_ap_fine.csv
+echo "p_r130,$&p_r130" >> C124_ap_fine.csv
+echo "p_r131,$&p_r131" >> C124_ap_fine.csv
+echo "p_r134,$&p_r134" >> C124_ap_fine.csv
+echo "p_r135,$&p_r135" >> C124_ap_fine.csv
+echo "p_r136,$&p_r136" >> C124_ap_fine.csv
+echo "p_r138,$&p_r138" >> C124_ap_fine.csv
+echo "p_r143,$&p_r143" >> C124_ap_fine.csv
+echo "p_r144,$&p_r144" >> C124_ap_fine.csv
+echo "p_r147,$&p_r147" >> C124_ap_fine.csv
+echo "p_r149,$&p_r149" >> C124_ap_fine.csv
+echo "p_jq110a,$&p_jq110a" >> C124_ap_fine.csv
+echo "p_jq110b,$&p_jq110b" >> C124_ap_fine.csv
+echo "out_avg,$&out_avg" >> C124_ap_fine.csv
+echo "out_max,$&out_max" >> C124_ap_fine.csv
+echo "out_min,$&out_min" >> C124_ap_fine.csv
+echo "ipp_avg,$&ipp_avg" >> C124_ap_fine.csv
+echo "ipp_max,$&ipp_max" >> C124_ap_fine.csv
+echo "ipp_min,$&ipp_min" >> C124_ap_fine.csv
+echo "imm_avg,$&imm_avg" >> C124_ap_fine.csv
+echo "imm_max,$&imm_max" >> C124_ap_fine.csv
+echo "imm_min,$&imm_min" >> C124_ap_fine.csv
+meas tran t_flt WHEN v(dc_flt)=2.5 FALL=1
+meas tran t_mute WHEN v(mute)=0.5 RISE=1
+meas tran tmax_max MAX v(xdet.det_tmax)
+echo "grandezza,valore" > C124_ap_riv.csv
+echo "t0,0.3" >> C124_ap_riv.csv
+echo "t_flt,$&t_flt" >> C124_ap_riv.csv
+echo "t_mute,$&t_mute" >> C124_ap_riv.csv
+echo "tmax_max,$&tmax_max" >> C124_ap_riv.csv
+quit
+.endc
+.end

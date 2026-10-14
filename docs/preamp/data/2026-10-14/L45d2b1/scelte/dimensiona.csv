@@ -1,0 +1,24 @@
+grandezza,valore,nota
+VDP (V),14.3 / 11.3,da VPLUS / da VRELAY (rail + assente)
+"S a v = -15,3 / +15,3 V (V)",1.85 / 11.00,"dentro [0, VDP] ai due estremi (SBOS589D: VCM da V- a V+)"
+"VT nominale, + / - (V)",0.579 / -0.579,"300k/150k/300k, 100k/4,12k/100k"
+VT +: min / max (V),0.391 / 0.658,"R 0,1 %, offset 5,5 mV, VDP dai due lati"
+VT -: min / max (V),-0.659 / -0.390,idem
+T_HOLD nominale (ms),71.6,"R_T 976k, C_T 100n C0G, REF = VDP / 2"
+T_HOLD min / max (ms),62.7 / 81.6,"R 1 %, C 5 %, V_SAT, VF, VDP, REF 2 %"
+musica: margine sul periodo a 20 Hz (ms),12.7,T_HOLD min - 50 ms; > 0 = nessuno scatto
+musica: frequenza periodica piu' bassa (Hz),16.0,1 / T_HOLD min
+"taglio peggiore, VX = 0.81 V (ms)",86.2,filtro 0.6 + T_HOLD max + catena + rele' 3 ms; P10: <= 100
+"taglio peggiore, VX = 0.95 V (ms)",86.0,filtro 0.4 + T_HOLD max + catena + rele' 3 ms; P10: <= 100
+"taglio peggiore, VX = 1.50 V (ms)",85.8,filtro 0.2 + T_HOLD max + catena + rele' 3 ms; P10: <= 100
+"taglio peggiore, VX = 5.00 V (ms)",85.7,filtro 0.0 + T_HOLD max + catena + rele' 3 ms; P10: <= 100
+"taglio peggiore, VX = 14.90 V (ms)",85.6,filtro 0.0 + T_HOLD max + catena + rele' 3 ms; P10: <= 100
+"NPN: corrente di base, VDP 14.3 V (uA)",81,"MMBT5551, hFE >= 80: >= 6 mA"
+"NPN: corrente di base, VDP 11.3 V (uA)",49,"MMBT5551, hFE >= 80: >= 4 mA"
+NPN: soglia di TRIP (V),3.71,"VDP sotto i 2,2 V del comparatore non lo accende"
+linea: corrente da assorbire (mA),1.9,"pull-up 10k + R513, R520, R537 (10k) dai 5 V attraverso i BAT54"
+"corrente nell'uscita a 0 V, VDP da VPLUS (uA)",+0.18,"23.9 uA dallo spostamento, 23.7 verso VMINUS per 634k"
+"corrente nell'uscita a 0 V, VDP da VRELAY (uA)",-4.82,"18.9 uA dallo spostamento, 23.7 verso VMINUS per 634k"
+"corrente nell'uscita a 0 V, VMINUS assente (uA)",+23.92,"23.9 uA dallo spostamento, 0.0 verso VMINUS per 634k"
+inibizione all'accensione (ms),99 / 93 / 105,"1,43M x 100n x ln 2, nominale / min / max; i jack si chiudono >= 150 ms dopo i rail buoni"
+VDP: corrente a riposo (mA),1.29,"14 canali da 55 uA, spostamenti, temporizzatori, partitori"

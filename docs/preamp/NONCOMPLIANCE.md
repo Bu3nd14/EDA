@@ -4427,6 +4427,35 @@ riconoscibile; verificato sul banco di L45a (`genera_canale.py`) con i quattro m
 con la regressione dei deck veloci se cambia il blocco. Il momento lo decide l'utente: con L45d o in
 un lotto proprio, comunque prima di G1.
 
+### NC-063 — La partenza morbida dei regolatori dei rail non è mai stata letta: il rail negativo salirebbe in ~12 s, il firmware ne aspetta 2
+
+| | |
+|---|---|
+| Requisito | **P9** (l'accensione e la sequenza del temporizzatore, `firmware/preamp_timer/spec/timer_spec.md` 4.1: i rail entro **2 s**, altrimenti GUASTO) · ADR-048 · ADR-072 (l'inibizione all'accensione del rivelatore) |
+| Severità | **maggiore**, da chiudere **prima di G1** — *proposta*, la decide l'utente |
+| Aperta da | `reports/2026-10-14-L45d2b1-rivelatore-continua.md`, «L'accensione». Trovata dall'**orchestratore** in L45d2b1, dimensionando l'inibizione del rivelatore |
+| Stato | aperta |
+
+**Evidenza.** I datasheet in `vendor/ldo_regulator/ti/`, coi condensatori di `psu.py` sul piedino NR:
+- U501, TPS7A4701, C507 = 10 µF: t_SS = 100 000 · C_NR · ln((15 + 5) / 5) = **1,39 s** (SBVS204G,
+  eq. 5; lo cita già `gain_block.py` alla cella RC);
+- U502, TPS7A3301, C508 = 10 µF: t_SS (ms) = 1,2 · C_NR (nF) = **12 s** (SBVS169D, § 7.3.3, eq. 1).
+
+Il banco dell'alimentatore (`genera_tb_psu.py`, da L41a) usa regolatori comportamentali **senza
+partenza morbida**: i rail vi salgono in ~31 ms, insieme entro 0,2 ms
+(`data/2026-10-14/L45d2b1/psu/misura_accensione.py` sul caso `accensione`), e nessuna sequenza di
+accensione ha mai visto la differenza. Coi tempi dei datasheet il firmware, che vuole i rail in
+regolazione entro 2 s, andrebbe in GUASTO a ogni accensione; e per ~10 s il blocco avrebbe il solo
+rail positivo. Sul banco della scheda audio, con le due rampe dei datasheet, il rivelatore di
+continua scatta a 0,79 s (`data/2026-10-14/L45d2b1/banco/run/partenza_datasheet/`): l'inibizione di
+~0,1 s è dimensionata sui rail del banco, non su questi.
+
+**Cosa serve per chiuderla.** Una scelta dell'utente sui condensatori NR (che sono anche il filtro
+del rumore dei regolatori, ADR-020) per cui i due rail salgano in un tempo noto e vicino; il banco
+dell'alimentatore con la partenza morbida nel modello; la sequenza di accensione rifatta col
+firmware; e l'inibizione del rivelatore (`circuits/preamp/dc_detector.py`, R_POR / C_POR)
+ridimensionata e verificata sul banco della scheda audio (`genera_rivelatore.py accensione`).
+
 ### NC-059 — Nessun banco esercita l'inserimento a caldo di un cavo RCA sull'ingresso selezionato
 
 | | |
