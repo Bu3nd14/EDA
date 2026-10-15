@@ -3560,7 +3560,7 @@ dati `data/2026-10-07/L48b/`, **ADR-065**.
 | Requisito | **PR-22, PR-23, PR-24** · P7, P9 · ADR-027 («Da riaprire se» sulla bobina di K6), ADR-033, ADR-051 |
 | Severità | **maggiore**, da chiudere **prima di G1** (decisione dell'utente in L52, 2026-10-12, «Move the analysis before G1»; prima: prima di G2, L43a) |
 | Aperta da | `reports/2026-09-27-L43a-architetto-avversariale.md`, rilievo **R5**. Trovata dall'**architetto avversariale**, accettata dall'utente in L43a |
-| Stato | aperta — la FMEA è **L45**, prima di G1 (L52): L45a, L45b, L45c1, L45c2 e L45d1 (il riporto alla forma di ADR-070) fatte; L45d2a (le decisioni sui rimedi, ADR-071…078) fatta; L45d2b1 (il rivelatore di continua, ADR-079: 0 guasti del blocco fuori da P10) fatto; restano L45d2b2 e L45d2b3 |
+| Stato | aperta — la FMEA è **L45**, prima di G1 (L52): L45a, L45b, L45c1, L45c2 e L45d1 (il riporto alla forma di ADR-070) fatte; L45d2a (le decisioni sui rimedi, ADR-071…078) fatta; L45d2b1 (il rivelatore di continua, ADR-079: 0 guasti del blocco fuori da P10) fatto; **il rivelatore esce** (ADR-081, L61); L60a (2026-10-15): le scelte 6, 8, 9 e 10 che copriva hanno di nuovo un rimedio, **ADR-082** (il condensatore della Stax dopo il relè di mute, due pin per rail, il condensatore in corto accettato come guasto doppio, Q127 in SOT-223); restano L60b, L60c, L45d2b2 e L45d2b3 |
 
 **Evidenza.** Nel repo «guasto singolo», «FMEA» e «analisi dei guasti» portano solo ad ADR-051 e
 alle clausole di ADR-027 e ADR-033; `psu.py` non ha rivelatori di continua sulle uscite dei
@@ -4514,7 +4514,7 @@ gate-gate nei limiti, e/o tenere l'uscita in mute) va all'utente coi numeri in u
 | Requisito | **PR-30 / P10** («che avviene **mentre si ascolta**») · ADR-072 (il primo «Da riaprire se») · ADR-079 |
 | Severità | **bloccante** per G1 (decisa dall'utente il 2026-10-15, come proposta) |
 | Aperta da | `reports/2026-10-15-L59-architetto-avversariale.md`, R1; esiti in `reports/2026-10-15-L59-esiti-architetto.md` |
-| Stato | aperta — **ADR-081** (L61, 2026-10-15) supera ADR-080: il rivelatore esce dal progetto e la Stax è protetta dal condensatore d'uscita da 1 µF. Si chiude **togliendo il rivelatore** nel lotto successivo (L60, riscritto) |
+| Stato | aperta — **ADR-081** (L61, 2026-10-15) supera ADR-080: il rivelatore esce dal progetto e la Stax è protetta dal condensatore d'uscita da 1 µF. Si chiude **togliendo il rivelatore** in **L60b** (L60 diviso dall'utente in tre parti, L60a) |
 
 **Evidenza.** Le 762 corse dei guasti di L45d2b1 sono tutte in silenzio
 (`data/2026-10-14/L45d2b1/banco/script/genera_rivelatore.py`:215, `musica=False`). Il temporizzatore
@@ -4533,7 +4533,7 @@ senza guasto, sul rivelatore costruito secondo ADR-080: 0 guasti fuori da P10 ne
 | Requisito | **PR-9 / E9** («nessuna banda minima o massima»), PR-19, PR-2 (il phono di casa), PR-14 / ADR-066 (fino a ~0,65 V dalla sorgente) · ADR-079 (il limite dichiarato) |
 | Severità | **bloccante** per G1 (decisa dall'utente il 2026-10-15: «Lo scatto sotto la banda bloccante»; proposta maggiore) |
 | Aperta da | `reports/2026-10-15-L59-architetto-avversariale.md`, R2; esiti in `reports/2026-10-15-L59-esiti-architetto.md` |
-| Stato | aperta — **ADR-081** (L61, 2026-10-15) supera ADR-080: il rivelatore esce dal progetto. Si chiude **togliendo il rivelatore** nel lotto successivo (L60, riscritto) |
+| Stato | aperta — **ADR-081** (L61, 2026-10-15) supera ADR-080: il rivelatore esce dal progetto. Si chiude **togliendo il rivelatore** in **L60b** (L60 diviso dall'utente in tre parti, L60a) |
 
 **Evidenza.** A calcolo (R2): sulle fisse, a qualunque volume, un seno lo fa scattare sotto ~8 Hz;
 l'ampiezza minima di picco è 1,35 / 0,74 / 0,60 V a 5 / 3 / 1 Hz al nominale, 0,71 / 0,47 / 0,40 V
@@ -4553,11 +4553,11 @@ ipotesi), né con la continua di ADR-066 al gradino, agli angoli delle tolleranz
 | Requisito | ADR-072 («resta spento fino al frontale») · ADR-079 (punti 3 e 4) · PR-24 |
 | Severità | minore (proposta e decisa) |
 | Aperta da | `reports/2026-10-15-L59-architetto-avversariale.md`, R3 |
-| Stato | aperta — si chiude togliendo il rivelatore (**ADR-081**, L60 riscritto) |
+| Stato | aperta — si chiude togliendo il rivelatore (**ADR-081**), in **L60b** (L60 diviso dall'utente, L60a) |
 
 **Evidenza.** Il µPC1237 e il brevetto Zenith US 4,301,330 prevedono il riarmo automatico; un
 ingresso accoppiato in alternata (τ 0,32 s) non può tenere una continua all'uscita oltre ~1 s, un
-blocco guasto sì (R3). Il calore della scelta 10 è coperto dal sorvegliante a 106 ms (ADR-079).
+blocco guasto sì (R3). Il calore della scelta 10 è coperto dal sorvegliante a 106 ms (ADR-079). *(Nota di L60a, 2026-10-15: il «106 ms» è il caso C145 in corto, il rail che cede; la scelta 10 è R126 in corto, che non fa cedere i rail e non faceva scattare il rivelatore. Il suo rimedio è ADR-082, Q127 in SOT-223.)*
 **Cosa serve per chiuderla.** Una decisione dell'utente sulla reazione a due tempi (mute e VRELAY
 subito, toroidale e ritenuta oltre ~1 s), oppure la prova che con ADR-080 nessun evento della
 sorgente arriva al rivelatore.
@@ -4569,7 +4569,7 @@ sorgente arriva al rivelatore.
 | Requisito | PR-30 / P10 · V2 all'accensione · ADR-079 punto 5 · spec 4.1 |
 | Severità | minore (proposta e decisa) |
 | Aperta da | `reports/2026-10-15-L59-architetto-avversariale.md`, R4 |
-| Stato | aperta — si chiude togliendo il rivelatore (**ADR-081**, L60 riscritto) |
+| Stato | aperta — si chiude togliendo il rivelatore (**ADR-081**), in **L60b** (L60 diviso dall'utente, L60a) |
 
 **Evidenza.** A calcolo: inibizione 93–105 ms più T_HOLD 62,7–81,6 ms, lo scatto a ~180–215 ms; i
 jack chiudono a ~185–190 ms (spec 4.1). Un colpo fino a ~20 ms al clip del finale, dentro P10 ma
@@ -4585,7 +4585,7 @@ fisso; da ricontrollare chiudendo NC-063.
 | Requisito | la regola di tracciabilità di `CLAUDE.md` |
 | Severità | minore (proposta e decisa) |
 | Aperta da | `reports/2026-10-15-L59-architetto-avversariale.md`, R6 |
-| Stato | aperta — si chiude togliendo `dc_detector.py` (**ADR-081**, L60 riscritto) |
+| Stato | aperta — si chiude togliendo `dc_detector.py` (**ADR-081**), in **L60b** |
 
 **Evidenza.** `circuits/preamp/dc_detector.py`:32–33 e 130 dicono 91,5 ms; ADR-079 e
 `data/2026-10-14/L45d2b1/scelte/dimensiona.py` 86,2 ms (91,5 è il filtro da 3,5 ms della prima
