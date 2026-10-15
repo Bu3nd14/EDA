@@ -14,6 +14,10 @@ attuali». Registrato da **ADR-053**. Da qui, cambiare una voce vuole una ADR.
 - **PR-30**, voce nuova, il 2026-10-13 (**ADR-069**, dopo L45a): un guasto della scheda audio dà al
   più un colpo di 100 ms sopra il tetto di non-danno, su ogni uscita, con qualunque apparecchio a
   valle. Firma dell'utente: «Firmo così».
+- **PR-30**, il 2026-10-15 (**ADR-081**, L61): dalla catena a valle qualunque alla catena di oggi —
+  la Stax protetta dal condensatore d'uscita da 1 µF (al più 125 ms sopra il tetto col suo carico),
+  la principale dal trasformatore del finale a valvole, la fissa 1 dalla protezione dichiarata del
+  Singxer; un apparecchio nuovo a valle fa rivedere il preamp. Firma dell'utente: «Firmo così».
 
 ## Che cos'è, e come sta con gli altri documenti
 
@@ -163,11 +167,10 @@ trasformatore compreso: un obiettivo nostro (l'apparecchio è per uso personale)
 della fabbricazione; senza, il progetto non va avanti.
 *Dettagli: P2 · ADR-010.*
 
-**PR-30 · Un guasto della scheda audio non danneggia la catena a valle.** Un componente che si
-rompe mentre si ascolta può dare un colpo, ma su ogni uscita il colpo resta sopra il tetto di
-non-danno (0,87 V) al più 100 ms, come fanno le protezioni dei diffusori; anche con un apparecchio
-a valle accoppiato in continua e senza protezione propria.
-*Dettagli: P10 · ADR-069 · NC-042 · firmata il 2026-10-13.*
+**PR-30 · Un guasto della scheda audio non danneggia la catena di oggi.** Un componente che si rompe mentre si ascolta
+può dare un colpo, ma sull'uscita della Stax resta sopra il tetto di non-danno (0,87 V) al più 125 ms, col suo carico.
+L'uscita principale conta sul trasformatore del finale a valvole, la fissa 1 sulla protezione dichiarata del Singxer. Un apparecchio nuovo a valle fa rivedere il preamp.
+*Dettagli: P10 · ADR-069, ADR-081 · NC-042 · firmata il 2026-10-13, riscritta e firmata il 2026-10-15.*
 
 ## F. Il fisico
 
