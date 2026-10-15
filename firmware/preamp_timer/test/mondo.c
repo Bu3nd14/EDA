@@ -13,7 +13,6 @@ void rete_sana(timer_in_t *in)
     in->v_sup_vr = 12.0f * 10.0f / 44.0f;  /* 2.73 V */
     in->v_md = 0.5f;
     in->mute_g_in = 1;
-    in->dc_flt_in = 1;                     /* DC_FLT pulled up: no DC (L45d2b1) */
 }
 
 void rete_assente(timer_in_t *in)
@@ -49,8 +48,7 @@ static void registra(mondo_t *m)
 static void passo(mondo_t *m, uint32_t dt)
 {
     if (!m->mute_g_manuale)
-        m->in.mute_g_in = (uint8_t)(m->out.mute_req && !m->sup_trip && !m->dc_trip);
-    m->in.dc_flt_in = (uint8_t)!m->dc_trip;
+        m->in.mute_g_in = (uint8_t)(m->out.mute_req && !m->sup_trip);
     m->out = timer_step(&m->st, &m->in, dt);
 }
 

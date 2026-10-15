@@ -1,0 +1,13 @@
+# L60b: check_psu_harness.py contro i sabotaggi di J1 a sette pin (ADR-083)
+# atteso: 0 sulla coppia intatta, 1 su ogni sabotaggio
+intatta: exit 0  OK: J1 POWER, J2 RLY_RET and J4 MUTE_TIMER agree pin by pin on both boards; the rails come from their regulators and the two commands from two low-side sinks to RLY_RET (ADR-045, ADR-048); VRELAY through the standby switch, the requests from the micro (ADR-049); no LDR_CMD harness on either board (ADR-062)
+s01 audio J1 pin 2 aperto (un filo del + solo): exit 1  FAIL: audio: POWER (J1) connected pins ['1', '3', '4', '5', '6', '7'], expected ['1', '2', '3', '4', '5', '6', '7']
+s02 audio J1 pin 4 aperto (un filo di massa solo): exit 1  FAIL: audio: POWER (J1) connected pins ['1', '2', '3', '5', '6', '7'], expected ['1', '2', '3', '4', '5', '6', '7']
+s03 audio J1 pin 6 aperto (un filo del - solo): exit 1  FAIL: audio: POWER (J1) connected pins ['1', '2', '3', '4', '5', '7'], expected ['1', '2', '3', '4', '5', '6', '7']
+s04 psu J1 pin 1 aperto: exit 1  FAIL: psu: POWER (J1) connected pins ['2', '3', '4', '5', '6', '7'], expected ['1', '2', '3', '4', '5', '6', '7']
+s05 psu J1 pin 3 aperto: exit 1  FAIL: psu: POWER (J1) connected pins ['1', '2', '4', '5', '6', '7'], expected ['1', '2', '3', '4', '5', '6', '7']
+s06 psu J1 pin 5 aperto: exit 1  FAIL: psu: POWER (J1) connected pins ['1', '2', '3', '4', '6', '7'], expected ['1', '2', '3', '4', '5', '6', '7']
+s07 audio J1 pin 2 su VMINUS (le coppie incrociate): exit 1  FAIL: audio: J1 pin 2 on 'VMINUS', expected 'VPLUS'
+s08 psu J1 pin 6 su VPLUS: exit 1  FAIL: psu: J1 pin 6 on 'VPLUS', expected 'VMINUS'
+s09 psu J1 pin 7 su GND (VRELAY persa): exit 1  FAIL: psu: J1 pin 7 on 'GND', expected 'VRELAY'
+ESITO: tutti i sabotaggi presi, la coppia intatta passa

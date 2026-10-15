@@ -37,14 +37,9 @@
 
 #include "mondo.h"
 
-/* L45d2b1 (ADR-072): v(dc_flt_in), PA1, the ninth column, is OPTIONAL - the
- * benches before L45d2b1 do not write it, and without it the line reads high
- * (no DC), which is what their circuit had. */
-#define NCOL 9
-#define NCOL_OBBL 8
+#define NCOL 8
 static const char *NOMI[NCOL] = {"time", "v(front_in)", "v(mute_sw_in)", "v(mute_g_in)",
-                                 "v(adc_sup_p)", "v(adc_sup_m)", "v(adc_sup_vr)", "v(adc_md)",
-                                 "v(dc_flt_in)"};
+                                 "v(adc_sup_p)", "v(adc_sup_m)", "v(adc_sup_vr)", "v(adc_md)"};
 static double *col[NCOL];
 static int nrow;
 static mondo_t M;
@@ -67,7 +62,7 @@ static int leggi(const char *path)
         tok = strtok(NULL, " \t\r\n");
     }
     (void)idx;
-    for (int k = 0; k < NCOL_OBBL; k++)
+    for (int k = 0; k < NCOL; k++)
         if (map[k] < 0) { fprintf(stderr, "ponte: manca la colonna %s\n", NOMI[k]); return 0; }
     int cap = 1 << 16;
     for (int k = 0; k < NCOL; k++) col[k] = malloc(sizeof(double) * cap);
@@ -86,7 +81,7 @@ static int leggi(const char *path)
             cap *= 2;
             for (int k = 0; k < NCOL; k++) col[k] = realloc(col[k], sizeof(double) * cap);
         }
-        for (int k = 0; k < NCOL; k++) col[k][nrow] = map[k] >= 0 ? v[map[k]] : 5.0;
+        for (int k = 0; k < NCOL; k++) col[k][nrow] = v[map[k]];
         nrow++;
     }
     fclose(f);
@@ -114,7 +109,6 @@ static void pin(double t, timer_in_t *in)
     in->v_sup_m = (float)a(5, t);
     in->v_sup_vr = (float)a(6, t);
     in->v_md = (float)a(7, t);
-    in->dc_flt_in = a(8, t) > 2.5;
 }
 
 /* the driving outputs' MUTE_REQ, as steps */
@@ -154,7 +148,7 @@ static long n_sost;
 static int sup_ok(const timer_in_t *in)
 {
     return in->v_md <= V_MD_ABSENT && in->v_sup_p >= V_SUP_P_FAIL && in->v_sup_m <= V_SUP_M_FAIL &&
-           in->v_sup_vr >= V_SUP_VR_FAIL && in->dc_flt_in;   /* D525 (L45d2b1) */
+           in->v_sup_vr >= V_SUP_VR_FAIL;
 }
 /* MUTE_G_IN for this core at t: the circuit's, or rebuilt (see the header) */
 static void correggi(double t, const timer_state_t *st, timer_in_t *in)

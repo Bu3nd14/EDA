@@ -36,9 +36,6 @@
 #define T_CLASSIFY_US      20000u    /* L41b2: MUTE_G can fall ~1 ms before ADC_MD crosses (L41b1:
                                         jacks at +14.3 ms, the detector's 2.5 V at ~15 ms) */
 #define T_FAULT_PERSIST_US  2000u    /* L41b2: a rail out for 2 ms with the mains present is a fault */
-#define T_DC_PERSIST_US     2000u    /* L45d2b1 (ADR-072): DC_FLT low for 2 ms is the DC detector;
-                                        the detector itself already waits ~70 ms, this only rejects
-                                        a glitch on the harness */
 
 /* ---- ADC thresholds, volts at the pin (psu.py dividers, spec sec. 2) --- */
 #define V_SUP_P_OK     2.55f  /* VPLUS x 10/54.2: 13.8 V, in regulation (spec 4.1) */
@@ -51,7 +48,8 @@
 
 /* ---- the pins with nothing on them (spec sec. 2) ----------------------- */
 /* ADR-062 took the LDR drive off psu.py and left PA1, PA2, PA3, PA4 and PB4
- * open; PC3 was spare since L41b1. L45d2b1 (ADR-072) gave PA1 to DC_FLT. The user's choice (L47c2a): the adapter
+ * open; PC3 was spare since L41b1. PA1 read the DC detector's line in L45d2b1
+ * only (ADR-072); free again since L60b (ADR-081). The user's choice (L47c2a): the adapter
  * writes ISC = INPUT_DISABLE in their PORTx.PINnCTRL and leaves them inputs
  * without pull-up. DS40002205A sec. 16.3.1 (p. 131): "For lowest power
  * consumption, disable the digital input buffer of unused pins"; after reset
@@ -78,7 +76,6 @@ typedef struct {
     uint8_t front_in;    /* PC0 level: 0 = on (the switch pulls to RET) */
     uint8_t mute_sw_in;  /* PC1 level: 1 = mute (also a broken wire) */
     uint8_t mute_g_in;   /* PC2 level: 0 = the hardware imposes the mute */
-    uint8_t dc_flt_in;   /* PA1 level: 0 = the audio board's DC detector tripped (ADR-072) */
     float v_sup_p, v_sup_m, v_sup_vr, v_md;   /* PA5, PA6, PA7, PB5 */
 } timer_in_t;
 
@@ -104,7 +101,6 @@ typedef struct {
                               tick that found them good gave 99.7 ms on the circuit) */
     uint8_t alim_prev;     /* the last sample was good */
     uint32_t t_fault;      /* us of a rail out with the mains present */
-    uint32_t t_dc;         /* us of DC_FLT low (L45d2b1, ADR-072) */
     uint8_t rail_dipped;   /* BUCO_RETE: a rail went below |13.5 V| */
     uint8_t mains_absent;  /* BUCO_RETE: the detector saw the mains go */
     uint32_t t_permit_low; /* us since PERMIT_REQ went low, saturating */

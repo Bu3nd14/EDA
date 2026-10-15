@@ -223,7 +223,10 @@ echo
 echo "-- 2j. the harness between the audio board and the supply board (L41a, ADR-048) --"
 # J1 POWER, J2 RLY_RET and J4 MUTE_TIMER exist on BOTH boards
 # (preamp_audio.py, psu.py); each netlist is fine on its own and a pin on the
-# wrong wire errors nowhere - J1 pins 1 and 3 swapped put -15 V on VPLUS.
+# wrong wire errors nowhere - the rails swapped on J1 put -15 V on VPLUS.
+# L60b (ADR-082 point 2, ADR-083): J1 on seven pins, each rail and the
+# ground on two; J4 on three again, the DC detector gone (ADR-081). The
+# sabotages of the new pairs: docs/preamp/data/2026-10-15/L60b/falsi/.
 # Made to fail on 8 sabotaged copies, and it caught a real one while psu.py
 # was written (GND renamed by a net merge, limitations #23):
 # docs/preamp/data/2026-09-26/L41a/falsi/. L41b1: VRELAY through the standby
@@ -334,12 +337,12 @@ echo "$out"
 report "no canonical deck or generated block simulates a placeholder" $rc
 echo
 
-echo "-- 2k. the supply timer's firmware on the host (L41b2, ADR-049; L47c2a, ADR-062; L45d2b1, ADR-072) --"
+echo "-- 2k. the supply timer's firmware on the host (L41b2, ADR-049; L47c2a, ADR-062; L60b, ADR-081) --"
 # firmware/preamp_timer/src/timer_core.c is the timer's logic, no registers;
 # SPICE cannot simulate it, so it is proven here: one test per sequence of
 # the spec (the mute with the relays alone since L47c2a: the LDR law, its
 # calibration and the fade are gone), and the free pins of the micro held
-# against psu.net. With --falsi every one of the 23 deliberate defects
+# against psu.net. With --falsi every one of the 19 deliberate defects
 # (FALSO_n) must make its own test fail - a test that cannot fail proves
 # nothing. Compiled with /usr/bin/clang into $SCRATCH/firmware.
 # Captured first, printed after: `cmd | tail` would report tail's status (2e).
@@ -347,7 +350,7 @@ out=$(/bin/zsh "$ROOT/firmware/preamp_timer/test/run_host_tests.sh" \
       --falsi "$SCRATCH/firmware_falsi.txt" 2>&1)
 rc=$?
 echo "$out" | grep -E '^(PASSA|FALLISCE|==|\[)|  FALLISCE' | sed 's/^/   /'
-report "timer firmware: host tests pass, 23 fakes fail" $rc
+report "timer firmware: host tests pass, 19 fakes fail" $rc
 echo
 
 echo "== run_tests.sh SUMMARY: $n_pass passed, $n_fail failed =="
