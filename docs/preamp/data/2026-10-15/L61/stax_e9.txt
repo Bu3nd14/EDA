@@ -1,0 +1,17 @@
+[ok] C_IN 1u, perdita a 20 Hz [dB]: 0.002689 (atteso 0.003)
+[ok] 4.7u a vuoto, tau [s]: 1.104 (atteso 1.1)
+[ok] 4.7u a vuoto, sopra 0.87 V [s]: 3.137 (atteso 3.1)
+[ok] 4.7u su Stax 50k, tau [s] (ADR-069: 0.20): 0.1938 (atteso 0.2)
+[ok] tau 37 ms, sopra 0.87 V [ms]: 105.1 (atteso 105)
+
+Budget al condensatore d'uscita: 0.1973 dB -> fc <= 4.312 Hz, tau >= 36.9 ms, C >= 895 nF sul carico Stax (41.2 kOhm)
+P10 (100 ms) chiede tau <= 35.2 ms: fc >= 4.52 Hz, a 20 Hz 0.219 dB sulla catena
+
+Valori commerciali (film), con +-5 % di tolleranza:
+      C   tol  E9 20 Hz Stax  sopra 0.87 V Stax   a vuoto
+ 0.82u  0.95       0.261 dB              91 ms    0.52 s
+ 0.82u  1.00       0.237 dB              96 ms    0.55 s
+ 0.82u  1.05       0.216 dB             101 ms    0.57 s
+ 1.00u  0.95       0.178 dB             111 ms    0.63 s
+ 1.00u  1.00       0.162 dB             117 ms    0.67 s
+ 1.00u  1.05       0.147 dB             123 ms    0.70 s
