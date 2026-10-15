@@ -11,8 +11,8 @@ L17 (ADR-023). There is no second topology to validate, and no place for the
 channels or the outputs to drift apart.
 
    IN_L ---------> [BLOCK A] -+-> [BUFFER F1] -> 47R -> 4.7u -> K2 -> FIXED OUT 1 (Singxer)
-                   (buffer,   +-> [BUFFER F2] -> 47R -> 4.7u -> K3 -> FIXED OUT 2 (Stax)
-                    gain 1)
+                   (buffer,   +-> [BUFFER F2] -> 47R -> 1u ---> K3 -> FIXED OUT 2 (Stax)
+                    gain 1)                                 (IM06TS, ADR-085)
                                     +-> [TRIM 0/-6/-12 dB] -> C_T 10u -> balance + volume (off board)
                                            (trim.py, K7/K8)  (ADR-065)          |
                                                                      1M to GND -+
@@ -89,6 +89,8 @@ from gain_block import (  # noqa: E402
 FP_FILM_P15 = "Capacitor_THT:C_Rect_L16.5mm_W7.0mm_P15.00mm_MKT"
 FP_FILM_P22 = "Capacitor_THT:C_Rect_L26.5mm_W10.5mm_P22.50mm_MKS4"
 FP_RELAY = "Relay_SMD:Relay_DPDT_Omron_G6K-2F-Y"
+# K3 only, the Stax's mute relay (ADR-085): TE Axicom IM06TS, SMT J-legs.
+FP_RELAY_IM = "Relay_SMD:Relay_DPDT_AXICOM_IMSeries_JLeg"
 FP_CONN3 = "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical"
 FP_CONN2 = "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
 
@@ -262,7 +264,8 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole,
     # ADR-021 rating constraint for the BOM: with a short at a fixed
     # connector each 47 ohm dissipates up to 0.155 W (tb_mute_corto.cir),
     # so rate it >= 0.16 W at 60 C.
-    for k, (name, cval) in enumerate((("SINGXER", "4.7u"), ("STAX", "4.7u"))):
+    # The Stax's cap is 1u since L60c2: ADR-081 point 1, placed by ADR-084.
+    for k, (name, cval) in enumerate((("SINGXER", "4.7u"), ("STAX", "1u"))):
         # Refs 500/600 (L) and 700/800 (R): 1xx-4xx are blocks A and B.
         # The passives below keep the channel's own numbering (R161-R166,
         # R361-R366), which is what preamp_blocks_draw.py reads.
@@ -275,14 +278,20 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole,
         # on the run and the channel - no connection order made it stable.
         # Nothing in the repo reads it; do not start relying on it.
         a["OUT"] += f["IN"]
-        # 4.7 uF on BOTH fixed outputs - see the ADR-007 addendum.
-        # The Stax alone would be happy at 2.2 uF (50 kOhm => 1.4 Hz), but the
-        # Singxer's input impedance is NOT PUBLISHED (Fase 1 read the official
-        # manual), so its corner is unknowable. 4.7 uF closes that question,
-        # and using one value on all three outputs removes a BOM line and an
-        # assembly error - fitting the wrong cap in the wrong position would
-        # be silent. The cost is board area, which ADR-010's single chassis
-        # can absorb.
+        # FIXED OUT 1 (Singxer): 4.7 uF - the ADR-007 addendum. The Singxer's
+        # input impedance is NOT PUBLISHED (Fase 1 read the official manual),
+        # so its corner is unknowable, and 4.7 uF closes that question.
+        # FIXED OUT 2 (Stax): 1 uF film since L60c2 - ADR-081 point 1, no
+        # longer ADR-007's "one value on all three outputs". The Stax SRM-T1
+        # is DC-coupled with no known protection, and this cap is what keeps
+        # a fault's DC off it: the rail block lasts 117 ms at 1.00 uF and
+        # 123 ms at +5 % (P10 <= 125 ms), while 20 Hz stays inside E9 at -5 %
+        # (0.178 dB, limit 0.2 dB; ADR-081's table, re-measured in L60c2 on
+        # the netlist). It sits BEFORE K3, where 4.7u was (ADR-084: after K3
+        # every mute brought the buffer's DC to the Stax, 6-27 mV). The price
+        # of a value of its own is a BOM line and a cap that can be fitted in
+        # the wrong place, in silence: both keep FP_FILM_P15, so the
+        # footprint does not tell them apart - the assembly drawing must.
         fx = Net(f"{ch}_FIX{k + 1}")
         # ADR-044 (geometry iii): the mute relay's changeover sits BETWEEN the
         # coupling cap and the jack, so the cap's far side is its own node,
@@ -293,8 +302,10 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole,
         C(cval, fx, fc, base, fp=FP_FILM_P15)
         # DC return for the coupling cap. Without it the far side floats when
         # nothing is plugged in, charges on leakage, and thumps on connection.
-        # 470k keeps the corner where ADR-007 put it: 470k||50k = 45.2k with
-        # 2.2 uF => 1.6 Hz. It stays ON THE JACK: with the relay at rest
+        # 470k keeps the corner low: 470k||50k = 45.2k, and with the cap-side
+        # bleed in parallel through the closed NO 41.0k - 4.7 uF => 0.8 Hz
+        # (Singxer), 1 uF => 3.9 Hz (Stax, ADR-081; E9 is measured on the
+        # whole chain, not on this corner). It stays ON THE JACK: with the relay at rest
         # the jack is grounded only through it - ADR-044 point 2, the user's
         # "Il bleed basta" (RBL1 / RBL2 in the V2 decks).
         R("470k", jk, gnd, base)
@@ -446,6 +457,13 @@ if __name__ == "__main__":
     # ~88 mA, the selector coil on top (ADR-064). The gain pick-up passes
     # through a Schottky (gain_interlock.py): 11.4 - ~0.3 V = ~92 % of 12 V
     # at -5 %, against ~78-81 % max must-operate warm (en-g6k.pdf p. 4).
+    # Since L60c2 K3 is an IM06TS (ADR-085): 11.7 mA instead of 9.1. It is on
+    # only OUT of mute, so that case becomes 84.5 + ~4 = ~88.5 mA, level
+    # with the in-mute ~88 mA: the worst case moves by ~0.5 mA. Its coil sits
+    # straight on VRELAY (no Schottky): 95 % of 12 V at -5 %, against the
+    # IM's reliable operate voltage of ~75 % at 23 C, ~84 % at 60 C and ~92 %
+    # at 85 C (ENG_DS_108-98001_K.pdf p. 24, the 140 mW chart, read off the
+    # curve).
     # VRELAY comes from a transformer of its own on the supply board
     # (psu.py), never from the audio rails' reservoirs.
 
@@ -471,8 +489,31 @@ if __name__ == "__main__":
     # delay D after MUTE_CMD on insertion. Same one-net rule as MUTE_CMD.
     PERMIT_CMD = Net("PERMIT_CMD")
     for i in range(3):
-        k = Part("Relay", "G6K-2", value=f"G6K-2F-Y MUTE{i + 1}",
-                 footprint=FP_RELAY, ref=f"K{i + 2}")
+        if i == 1:
+            # K3, FIXED OUT 2 (Stax): TE Axicom IM06TS - ADR-085, the user's
+            # "Accetta il supplementare" and "TE Axicom IM06TS" (L60c2).
+            # ADR-084 moved the Stax's protection onto the 1 uF cap BEFORE
+            # this relay; then the one fault left that puts 12 V on the Stax
+            # for good is K3's coil-contact insulation breaking down. The
+            # G6K's is basic (1500 Vrms); the IM's is SUPPLEMENTARY by
+            # declaration (IEC/EN 60950; 1800 Vrms 1 min, 2500 V surge;
+            # vendor/relays/te/IM/ENG_DS_108-98001_K.pdf p. 3 and 22), and
+            # ADR-085 takes that as not a credible single fault.
+            # Against ADR-044: open contacts max 1 pF (p. 23; ~0.2 pF from the
+            # -37 dB isolation at 100 MHz), under its ~2.4 pF; operate and
+            # release max 3 ms without a diode (the coil sink clamps through
+            # a 24 V zener, psu.py), as the G6K's; no transfer time published
+            # (L60c2 kept 1 ms and measured the window, see its report).
+            # Contacts gold-covered PdRu, bifurcated, < 50 mohm. Coil 12 V,
+            # 1029 ohm: 11.7 mA, 2.6 mA more than a G6K. Same pin map as the
+            # G6K-2F-Y (K_COM/K_NO/K_NC below, read on three legs: the
+            # checker's IM06 entry) - but POLARISED: pin 1 "+", so it MUST be
+            # K_COIL_A on VRELAY, which check_relay_safe_state.py asserts.
+            k = Part("Relay", "IM06", value=f"IM06TS MUTE{i + 1}",
+                     footprint=FP_RELAY_IM, ref=f"K{i + 2}")
+        else:
+            k = Part("Relay", "G6K-2", value=f"G6K-2F-Y MUTE{i + 1}",
+                     footprint=FP_RELAY, ref=f"K{i + 2}")
         k[K_COIL_A] += VCC_RLY
         k[K_COIL_B] += MUTE_CMD
         K_MUTE.append(k)
@@ -529,7 +570,8 @@ if __name__ == "__main__":
     # class B - since L17 (ADR-023) the two fixed buffers and block B, each
     # on its own 47 ohm; block A only drives the buffers and the trim. What
     # goes to ground is now the cap's far side instead of the jack, and the
-    # stage sees the SAME load either way: 47 ohm plus 4.7 uF to ground.
+    # stage sees the SAME load either way: 47 ohm plus its cap to ground
+    # (4.7 uF; 1 uF on FIXED OUT 2 since L60c2, a smaller charge current).
     # tb_mute_corto.cir (L17) grounds the jack side of that cap through
     # 0.01 ohm; here it is the cap side through the contact (0.1 ohm, the
     # contact's own figure in the V2 decks), so L17's P7 figures keep

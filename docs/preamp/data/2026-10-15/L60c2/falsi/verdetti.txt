@@ -1,0 +1,9 @@
+OK  netlist vera: exit 0 (atteso 0)
+OK  01 K3 bobina al contrario (pin 1 sul comando, 8 su VRELAY): exit 1; K3 (IM06): bobina polarizzata, il pin 1 (+) sta su 'MUTE_CMD' e non su VRELAY. Al contrario il rele' non interviene.
+OK  02 K3 pin 1 (+) a GND: exit 1; K3 (IM06): bobina polarizzata, il pin 1 (+) sta su 'GND' e non su VRELAY. Al contrario il rele' non interviene.
+OK  03 K3 polo 1: NC 2 e NO 4 scambiati: exit 1; K3 polo 1 (riga 1-2-3-4): il contatto NC (pin 2) dovrebbe essere a massa e sta su 'L_FIXJACK2'. ADR-012: un rele' di mute diseccitato mette l'uscita a massa, cosi' il progetto si guasta verso il SILENZIO quando l'aliment
+OK  04 K3 polo 2: COM 6 e NC 7 scambiati (la NC-014 sul polo alto): exit 1; K3 polo 2 (riga 8-7-6-5): il contatto NC (pin 7) dovrebbe essere a massa e sta su 'R_FIXC2'. ADR-012: un rele' di mute diseccitato mette l'uscita a massa, cosi' il progetto si guasta verso il SILENZIO quando l'alimentazi
+OK  05 K3 polo 2: NO 5 aperto (il jack della Stax R senza contatto): exit 1; K3 polo 2 (riga 8-7-6-5): COM ('R_FIXC2') o NO (None) non collegato. ADR-044: ogni polo del mute e' un deviatore, COM al lato del condensatore e NO al jack.
+OK  06 K3 pin 8 di bobina aperto: exit 1; K3: il pin di bobina 8 non e' collegato.
+OK  07 K3 parte sconosciuta (IM05 invece di IM06): exit 1; K3 (IM05, 'IM06TS MUTE2'): rele' sconosciuto a questo controllo. La sua piedinatura va letta sul datasheet e scritta in KNOWN_RELAYS, o resta fuori da ogni prova.
+presi 7 su 7; netlist vera pulita
