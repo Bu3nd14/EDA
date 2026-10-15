@@ -8,9 +8,16 @@ The audio board (circuits/preamp/preamp_audio.py) and the supply board
 (circuits/preamp/psu.py) meet on three harnesses, each a connector on BOTH
 boards, found by its VALUE (the ref may differ; the value is the contract):
 
-    POWER       J1  1 VPLUS   2 GND   3 VMINUS   4 VRELAY
+    POWER       J1  1 VPLUS   2 VPLUS   3 GND   4 GND   5 VMINUS   6 VMINUS
+                    7 VRELAY   (L60b, ADR-082 point 2, ADR-083)
     RLY_RET     J2  1 RLY_RET
-    MUTE_TIMER  J4  1 MUTE_CMD  2 PERMIT_CMD  3 MUTE_SW  4 DC_FLT (L45d2b1)
+    MUTE_TIMER  J4  1 MUTE_CMD  2 PERMIT_CMD  3 MUTE_SW
+
+J1 was four pins (VPLUS, GND, VMINUS, VRELAY) until L60b: each rail and the
+ground are now on two pins and two wires, so that one pin or wire that opens
+does not take a rail off. Both pins of a pair are checked, on both boards.
+J4 had a pin 4, DC_FLT, the DC detector's line, in L45d2b1 only (ADR-072);
+it went with the detector (ADR-081, L60b) and J4 is three pins again.
 
 J3 LDR_CMD, the drive of the graduated mute's LEDs (L29b2-L47b2b1), is gone
 since ADR-062 (L47c1): the mute cuts with the jack relays alone. It must be
@@ -19,7 +26,7 @@ back without a decision.
 
 A pin that lands on the wrong wire at the other end does not error anywhere:
 each netlist is fine on its own, and the fault is between them. The classic
-one is J1 pins 1 and 3 swapped, which puts -15 V on the + rail.
+one is the rails swapped on J1, which puts -15 V on the + rail.
 
 What is checked:
   1. each harness exists ONCE on each board, with the same pin count;
@@ -44,10 +51,11 @@ import sys
 from pathlib import Path
 
 HARNESS = {
-    "POWER": {"1": "VPLUS", "2": "GND", "3": "VMINUS", "4": "VRELAY"},
+    # L60b (ADR-082 point 2, ADR-083): two pins per rail and for the ground
+    "POWER": {"1": "VPLUS", "2": "VPLUS", "3": "GND", "4": "GND",
+              "5": "VMINUS", "6": "VMINUS", "7": "VRELAY"},
     "RLY_RET": {"1": "RLY_RET"},
-    # L45d2b1 (ADR-072): pin 4, the DC detector's line (audio -> supply)
-    "MUTE_TIMER": {"1": "MUTE_CMD", "2": "PERMIT_CMD", "3": "MUTE_SW", "4": "DC_FLT"},
+    "MUTE_TIMER": {"1": "MUTE_CMD", "2": "PERMIT_CMD", "3": "MUTE_SW"},
 }
 # ADR-062 (L47c1): retired harnesses, and the nets that ran through them.
 RETIRED = {"LDR_CMD": ("LDR_S_A", "LDR_S_K", "LDR_P_A", "LDR_P_K")}

@@ -248,13 +248,7 @@ for _riso, _buf, _blkA, _fix in (("R161", 5, 1, "L_FIX1"), ("R164", 6, 1, "L_FIX
     assert _fix in _nets and len(_nets) == 2, (
         f"{_riso}: attesi due nodi, {_fix} e l'uscita di un blocco -> {_nets}")
     _src_net = next(n for n in _nets if n != _fix)
-    # L45d2b1 (ADR-072, ADR-079): the DC detector (refs 951 and up, dc_detector.py) touches every
-    # block output with two resistors, the 300k tap and the 634k back to VMINUS; it is not a block
-    _det = {r for r in _NETS[_src_net] if r.startswith("R") and int(re.sub(r"\D", "", r)) >= 951}
-    assert sorted(v(r) for r in _det) == ["300k", "634k"], (
-        f"{_riso}: l'uscita {_src_net} ha le parti del rivelatore {sorted(_det)}, "
-        "ADR-079 vuole la presa da 300k e la 634k verso VMINUS")
-    _blocks = {_hundreds(r) for r in _NETS[_src_net] - {_riso} - _det}
+    _blocks = {_hundreds(r) for r in _NETS[_src_net] - {_riso}}
     assert _blocks == {_buf}, (
         f"{_riso} ({_fix}) parte da {_src_net}, che porta riferimenti delle "
         f"centinaia {sorted(b for b in _blocks if b is not None)}: ADR-023 vuole "
@@ -364,6 +358,8 @@ assert (all("HOLD" in k and k.split()[0] == RELAY_PN for k in K_HOLD)), \
     f"gli ausiliari del guadagno non sono quelli attesi: {K_HOLD}"
 HDR = {r: v(r) for r in ("J4", "J5", "J6", "J7", "SW2", "SW3")}
 assert "J3" not in VAL, "J3 (LDR_CMD) c'e' ancora: ADR-062 l'ha tolta"
+# L60b (ADR-081): il rivelatore di continua di L45d2b1 (DC_FLT su J4 pin 4) e' uscito
+assert "DC_FLT" not in _NETS, "DC_FLT c'e' ancora: ADR-081 ha tolto il rivelatore di continua"
 assert (HDR["J4"] == "MUTE_TIMER" and HDR["J5"] == "TRIM_LED"
         and HDR["J6"] == "GAIN_LED" and HDR["J7"] == "MUTE_LED"
         and HDR["SW2"].startswith("GAIN") and HDR["SW3"] == "MUTE"), \
@@ -687,25 +683,11 @@ txt((8.5, 1.15), "selettore d'ingresso: in preamp_audio.py e\n"
                  "selector.py da L48a (ADR-064), manopola SW4",
     size=8, color=DIM)
 
-# L45d2b1 (ADR-072): il rivelatore di continua (dc_detector.py, riferimenti da 951). Letto e
-# asserito: una presa da 300k su ognuna delle sei uscite dei blocchi F1, F2, B, i quattro
-# comparatori, e la sua linea su J4 pin 4.
-_DET_R = sorted(r for n in ("F1L_OUT", "F2L_OUT", "BL_OUT", "F1R_OUT", "F2R_OUT", "BR_OUT")
-                for r in _NETS.get(n, ()) if r.startswith("R") and int(re.sub(r"\D", "", r)) >= 951)
-_DET_TAPS = [r for r in _DET_R if v(r) == "300k"]
-assert len(_DET_TAPS) == 6 and sum(v(r) == "634k" for r in _DET_R) == 6 and len(_DET_R) == 12, (
-    "il rivelatore di continua deve avere, su ognuna delle sei uscite, la presa da 300k e la 634k "
-    "verso VMINUS (ADR-079): %s" % _DET_R)
-_DET_U = sorted(r for r in VAL if r.startswith("U") and int(re.sub(r"\D", "", r)) >= 951)
-assert len(_DET_U) == 4, "il rivelatore ha quattro comparatori (3 TLV1704 + 1 TLV1702): %s" % _DET_U
-assert any(r == "J4" for r in _NETS.get("DC_FLT", ())), "DC_FLT non arriva a J4 (ADR-072)"
-
 dashed_frame(16.2, 0.5, 30.0, 2.4, "SCHEDA AUDIO (P4)")
 txt((23.1, 1.15), "blocchi A, B e 2 buffer ×2 canali, trim, contatti di mute,\n"
-                  "il mute taglia coi soli relè al jack (ADR-062); il rivelatore\n"
-                  "di continua sulle 6 uscite, DC_FLT su J4 (ADR-072);\n"
-                  f"{len(VAL)} componenti — preamp_audio.py, trim.py, dc_detector.py",
-    size=7.5, color=DIM)
+                  "il mute taglia coi soli relè al jack (ADR-062),\n"
+                  f"{len(VAL)} componenti — preamp_audio.py + trim.py",
+    size=8, color=DIM)
 
 dashed_frame(30.8, 0.5, 44.4, 2.4, "PANNELLO E ALIMENTAZIONE")
 txt((37.6, 1.15), "volume e bilanciamento, SW1–SW4 e LED (J5 J6 J7) a pannello;\n"
@@ -732,8 +714,6 @@ print("  rele' ................... " + " | ".join([K_GAIN, K_GAIN10] + K_MUTE))
 print("  interblocco (ADR-041) .... " + " | ".join(K_HOLD) + f"   {HDR['SW2']}")
 print("  header (ADR-028, -045) ... " + " | ".join(f"{r} {HDR[r]}" for r in
                                                    ("J4", "J5", "J6", "J7", "SW3")))
-print("  rivelatore (ADR-072) ..... prese " + " ".join(_DET_TAPS) + "   comparatori "
-      + " ".join(_DET_U) + "   DC_FLT su J4")
 print("  trim (ADR-027) ........... " + " | ".join(K_TRIM)
       + f"   {TR1}/{TR2}/{TR3}: {TRIM6_DB:.3f} / {TRIM12_DB:.3f} dB")
 if os.environ.get("PREVIEW_PNG"):

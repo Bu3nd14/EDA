@@ -82,7 +82,6 @@ import spice_export as sx  # noqa: E402
 import trim  # noqa: E402
 import gain_interlock  # noqa: E402
 import selector  # noqa: E402
-import dc_detector  # noqa: E402
 from gain_block import (  # noqa: E402
     gain_block, FP_R, FP_ELCO, REPO,
 )
@@ -263,7 +262,6 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole,
     # ADR-021 rating constraint for the BOM: with a short at a fixed
     # connector each 47 ohm dissipates up to 0.155 W (tb_mute_corto.cir),
     # so rate it >= 0.16 W at 60 C.
-    fouts = []      # F1 and F2 outputs, for the DC detector (ADR-072)
     for k, (name, cval) in enumerate((("SINGXER", "4.7u"), ("STAX", "4.7u"))):
         # Refs 500/600 (L) and 700/800 (R): 1xx-4xx are blocks A and B.
         # The passives below keep the channel's own numbering (R161-R166,
@@ -318,7 +316,6 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole,
         jk += cn[1]
         k_mute[k].append(fc)
         k_mute[k].append(jk)
-        fouts.append(f["OUT"])
 
     # ---- the common trim, variable branch only (L16, ADR-027) ------------
     # Between block A's output and the attenuator harness. Ladder and signal
@@ -407,7 +404,7 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole,
     k_gain[K_NO1 if k_pole == 0 else K_NO2] += gnd
     k_gain10[K_COM1 if k_pole == 0 else K_COM2] += b["RG10"]
     k_gain10[K_NO1 if k_pole == 0 else K_NO2] += gnd
-    return a, b, fouts
+    return a, b
 
 
 if __name__ == "__main__":
@@ -594,31 +591,16 @@ if __name__ == "__main__":
     #     K6, K1 / K5 and K11 / K12 drop after the jacks. Ceiling 0.87 V at
     #     the main jack, design target 2 mV; bench <= 1.77 mV, and 69 mV
     #     without D. The rail hold-up is on J1 below.
-    #   DC_FLT, pin 4 (ADR-072, L45d2b1): the DC detector below, an open
-    #     collector to RLY_RET. Low = a block's output has held DC for
-    #     ~70 ms: the supply board opens the mute, takes VRELAY off this
-    #     board and drops the toroid, in hardware; the timer reads it and
-    #     stays off until the front switch (spec 4.6).
+    #   No pin 4 (L60b, ADR-081 / ADR-083): the DC detector's line DC_FLT of
+    #     L45d2b1 (ADR-072, ADR-079) is gone with the detector - the Stax is
+    #     protected by its 1 uF output capacitor, the main and fixed 1 outputs
+    #     by the protection downstream. J4 is back to three pins.
     MUTE_SW = Net("MUTE_SW")
-    DC_FLT = Net("DC_FLT")
-    jt = Part("Connector_Generic", "Conn_01x04", value="MUTE_TIMER",
-              footprint="Connector_PinHeader_2.54mm:"
-                        "PinHeader_1x04_P2.54mm_Vertical", ref="J4")
+    jt = Part("Connector_Generic", "Conn_01x03", value="MUTE_TIMER",
+              footprint=FP_CONN3, ref="J4")
     jt[1] += MUTE_CMD
     jt[2] += PERMIT_CMD
     jt[3] += MUTE_SW
-    jt[4] += DC_FLT
-
-    # ---- the DC detector on the blocks' outputs (ADR-072; L45d2b1) --------
-    # F1, F2 and B of each channel: block A is seen through F1 / F2, which
-    # follow it in DC (ADR-027). Not A_OUT itself: its merged name is not
-    # stable (see channel()). VDP from VPLUS or VRELAY (choice 8 of
-    # ADR-072); the topology and the numbers are in dc_detector.py.
-    taps = []
-    for ch in ("L", "R"):
-        _, b_ch, f_ch = chans[ch]
-        taps += [(f"F1{ch}", f_ch[0]), (f"F2{ch}", f_ch[1]), (f"B{ch}", b_ch["OUT"])]
-    dc_detector.dc_detector(taps, VP, VM, VCC_RLY, GND, K_TRIM["RET"], DC_FLT)
 
     # F10: the mute switch, a PANEL part like SW1 / SW2, on the board as its
     # harness header. Closed = out of mute (MUTE_SW pulled to RLY_RET).
@@ -654,13 +636,21 @@ if __name__ == "__main__":
     # (re-measured in L30: 10.2-10.6 V on the + rail, the - rail alone holds
     # to -7.5 V), against 3 ms release + 1 ms transfer of the jack relays.
     # Dissipation in the chassis ~15-18 W, supply included (ADR-047, P5).
-    pc = Part("Connector_Generic", "Conn_01x04", value="POWER",
+    # Seven pins since L60b (ADR-082 point 2, ADR-083): each rail and the
+    # ground on TWO pins and two wires in parallel, so that one pin or one
+    # wire that opens no longer takes a rail off (the + rail's wire open was
+    # 388-421 ms at the Stax, L60a). The user: "Due pin per il rail", and two
+    # ground pins too. VRELAY stays on one pin, now pin 7.
+    pc = Part("Connector_Generic", "Conn_01x07", value="POWER",
               footprint="Connector_PinHeader_2.54mm:"
-                        "PinHeader_1x04_P2.54mm_Vertical", ref="J1")
+                        "PinHeader_1x07_P2.54mm_Vertical", ref="J1")
     pc[1] += VP
-    pc[2] += GND
-    pc[3] += VM
-    pc[4] += VCC_RLY
+    pc[2] += VP
+    pc[3] += GND
+    pc[4] += GND
+    pc[5] += VM
+    pc[6] += VM
+    pc[7] += VCC_RLY
 
     try:
         ERC()

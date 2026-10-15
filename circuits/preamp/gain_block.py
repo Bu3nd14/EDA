@@ -577,8 +577,15 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # by device Vbe, and no model carries part-to-part spread.
     # This transistor MUST be thermally coupled to the NPN output device
     # (MJE15032) or the bias drifts. ADR-034 / NC-019: the coupling is PCB
-    # COPPER, not thermal compound + cable tie - ADR-017 makes this part an
+    # COPPER, not thermal compound + cable tie - ADR-017 made this part an
     # MMBT5551 in SOT-23, which cannot be tied to a TO-220 tab (T7 stays).
+    # ADR-082 point 4 (L60b; the user: "Package grande"): DZT5551 in SOT-223,
+    # same die and same model as MMBT5551, as ADR-068 did for Q125. With R126
+    # shorted this transistor dissipates 0.49 W for good (L60a): ~231 C in
+    # SOT-23 (417 C/W), ~88 C at 27 C air and ~121 C at 60 C air on the
+    # minimum pad (125 C/W, the same declared assumption as Q125), under
+    # P7's 125 C. Its tab is the COLLECTOR, NX - not a rail - so it is no
+    # obstacle to the copper coupling, and gives it a large pad to work with.
     # The copper must NOT join them galvanically: the TO-220 tab is the
     # collector, on VP, and no pin of this transistor is on VP. And
     # TO-220-3_Vertical has no tab pad. Geometry, layer, isolation and the
@@ -587,7 +594,7 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # NO trimmer, deliberately: with 22 Ohm emitter resistors a 50 mV Vbe
     # spread moves Iq by only +/-1.1 mA, and a trimmer with an open wiper is
     # a thermal-runaway mechanism. R(NBB-NY) is select-on-test if needed.
-    Q("npn", "MMBT5551", "MMBT5551", NX, NBB, NY)
+    Q("npn", "DZT5551", "MMBT5551", NX, NBB, NY, fp=FP_SOT223)
     R("1.58k", NX, NBB)
     R("1.00k", NBB, NY)
 

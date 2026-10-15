@@ -120,9 +120,14 @@ assert PIN[("U501", "1")] == "VPLUS" and PIN[("U502", "1")] == "VMINUS", "uscite
 assert PIN[("U503", "1")] == "VRELAY_REG" and PIN[("U504", "1")] == "VRELAY_REG", \
     "U503 non alimenta VRELAY_REG, o U504 (V5) non ne e' alimentato"
 assert PIN[("U504", "3")] == "V5", "U504 non da' V5"
-# Q505 (ADR-049) fra VRELAY_REG e VRELAY, e VRELAY va a J1 pin 4
+# Q505 (ADR-049) fra VRELAY_REG e VRELAY, e VRELAY va a J1 pin 7
 assert {PIN[("Q505", "2")], PIN[("Q505", "3")]} == {"VRELAY_REG", "VRELAY"}, "Q505"
-assert PIN[("J1", "4")] == "VRELAY" and PIN[("J1", "1")] == "VPLUS" and PIN[("J1", "3")] == "VMINUS"
+# L60b (ADR-082 punto 2, ADR-083): J1 a sette pin, due per rail e due per la massa
+J1_PIN = {"1": "VPLUS", "2": "VPLUS", "3": "GND", "4": "GND", "5": "VMINUS", "6": "VMINUS",
+          "7": "VRELAY"}
+assert {p: n for (r, p), n in PIN.items() if r == "J1"} == J1_PIN, "J1 non e' quello di ADR-083"
+# L60b (ADR-081): il rivelatore di continua non c'e' piu', J4 torna a tre pin
+assert ("J4", "4") not in PIN and "DC_FLT" not in PIN.values(), "il rivelatore di continua e' tornato"
 # K501: la bobina su VRELAY_REG (prima di Q505), pilotata da MAINS_COIL
 assert PIN[("K501", "A1")] == "VRELAY_REG" and PIN[("K501", "A2")] == "MAINS_COIL", "K501"
 # i serbatoi e le tenute, per net
@@ -140,12 +145,6 @@ for _p in (("U505", "1"), ("U505", "7"), ("U506", "1"), ("U506", "7")):
     assert PIN[_p] == "MUTE_G", f"{_p[0]} pin {_p[1]} non tira MUTE_G"
 assert PIN[("Q501", "1")] == "MUTE_G" and PIN[("Q501", "3")] == "MUTE_CMD" \
     and PIN[("J4", "1")] == "MUTE_CMD", "il sink di MUTE_CMD"
-# L45d2b1 (ADR-072): il rivelatore di continua della scheda audio arriva su J4 pin 4 e tira giu',
-# con tre Schottky, MUTE_G, VR_G e MAINS_G; il micro lo legge su PA1 (pin 17)
-assert PIN[("J4", "4")] == "DC_FLT", "J4 pin 4 non e' DC_FLT (ADR-072)"
-for _d, _g in (("D525", "MUTE_G"), ("D526", "VR_G"), ("D527", "MAINS_G")):
-    assert PIN[(_d, "2")] == _g and PIN[(_d, "1")] == "DC_FLT", f"{_d}: non da {_g} a DC_FLT"
-assert PIN[("U509", "17")] == "DC_FLT_IN", "PA1 non legge DC_FLT"
 
 
 RET = ("RLY_RET", "GND")                         # uniti da NT501 (la stella)
@@ -318,7 +317,7 @@ arrow(23.4, YT, 25.0, YT)
 box(27.6, YT, 5.2, 1.7, ["Q505 " + v("Q505"), "interruttore di standby"], color=GREEN,
     size=8.5, head_size=9.5)
 arrow(30.2, YT, 31.6, YT, color=NETC)
-txt((31.8, YT + 0.32), "VRELAY → J1 pin 4", size=9.5, color=NETC, halign="left")
+txt((31.8, YT + 0.32), "VRELAY → J1 pin 7", size=9.5, color=NETC, halign="left")
 txt((31.8, YT - 0.34), "bobine della scheda audio; staccata in standby (NC-037)",
     size=8, color=DIM, halign="left")
 wire(23.4, YT + 0.0, 23.4, YT + 1.6)
@@ -334,8 +333,8 @@ box(15.2, YB, 4.0, 1.7, ["T1 → " + v("D501"), "toroide, 2 × sec."], size=8.5,
 wire(17.2, YB, 18.0, YB)
 wire(18.0, YB - 1.3, 18.0, YB + 1.3)
 for yy, sgn, reg, craw, chold, vv, net, pin in (
-        (YB + 1.3, "+", "U501", C_RAW_P, C_HOLD_P, V_POS, "VPLUS", 1),
-        (YB - 1.3, "−", "U502", C_RAW_M, C_HOLD_M, -V_NEG, "VMINUS", 3)):
+        (YB + 1.3, "+", "U501", C_RAW_P, C_HOLD_P, V_POS, "VPLUS", "1–2"),
+        (YB - 1.3, "−", "U502", C_RAW_M, C_HOLD_M, -V_NEG, "VMINUS", "5–6")):
     arrow(18.0, yy, 19.2, yy)
     box(21.2, yy, 3.8, 1.1, [f"serb. {cap_txt(v(craw))}"], size=8.5, head_size=8.5)
     arrow(23.1, yy, 24.2, yy)
@@ -401,8 +400,6 @@ box(23.0, YL, 30.0, 1.9, ["il mute è dei soli relè al jack della scheda audio"
                           "Δ e Δ₂ restano in hardware (pannello 2)",
                           "la tenuta di VRELAY e lo standby col carico nuovo: L47c2"],
     size=8.5, head_size=9.5)
-txt((23.0, 2.3), "J4 pin 4, DC_FLT dal rivelatore di continua (ADR-072): D525–D527 tirano giù "
-    "MUTE_G, VR_G e MAINS_G in hardware; U509 lo legge su PA1 e va in GUASTO", size=8, color=RED)
 txt((23.0, 1.2), f"{len(COMP)} componenti in {os.path.basename(NETLIST)} — il disegno ne "
     "mostra i blocchi, non i dispositivi", size=8, color=DIM)
 

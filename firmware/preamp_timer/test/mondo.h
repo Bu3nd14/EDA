@@ -29,9 +29,6 @@ typedef struct {
     /* the hardware's gate (psu.py): MUTE_G follows MUTE_REQ unless a
      * supervisor pulls it down (U505, U506); the pin reads it through 1 M */
     uint8_t sup_trip;
-    /* the DC detector (L45d2b1, ADR-072): DC_FLT low pulls MUTE_G down
-     * (D525) as a supervisor does, and PA1 reads the line itself */
-    uint8_t dc_trip;
     uint8_t mute_g_manuale;          /* 1: the test drives in.mute_g_in itself */
     /* the recorder: one row per tick */
     int n;

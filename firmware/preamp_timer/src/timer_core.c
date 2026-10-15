@@ -25,10 +25,7 @@
 
 /* ------------------------------------------------------- the free pins */
 const timer_pin_t TIMER_PIN_LIBERI[] = {
-#if FALSO == 32
-    {'A', 1, 17},                             /* PA1 still listed: DC_FLT read with the buffer off */
-#endif
-    {'A', 2, 18}, {'A', 3, 19}, {'A', 4, 2},
+    {'A', 1, 17}, {'A', 2, 18}, {'A', 3, 19}, {'A', 4, 2},
 #if FALSO != 25
     {'B', 4, 7},                              /* FALSO 25: PB4 forgotten */
 #endif
@@ -211,42 +208,6 @@ timer_out_t timer_step(timer_state_t *st, const timer_in_t *in, uint32_t dt)
     else
         st->t_fault = 0;
     const int fault = st->t_fault >= T_FAULT_PERSIST_US;
-
-    /* L45d2b1 (ADR-072): the audio board's DC detector. The hardware has
-     * already opened the mute, taken VRELAY off and dropped the toroid; the
-     * core only keeps it so, until the front switch (spec 4.6). Without this
-     * the rails falling release DC_FLT, the toroid comes back and the fault
-     * trips it again: a hole with nothing to explain it is a class 1 (4.5),
-     * and a rail that dips redoes the power-up.
-     * Counted only while the supply is good (rails, VRELAY_REG, mains): a
-     * mains loss lets the rails run down, and the detector may trip on the
-     * way down; that is spec 4.5, which restarts by itself when the mains
-     * come back, not a fault that wants the front switch. A real fault trips
-     * it with the rails still up - the toroid's reservoirs hold them for
-     * tens of ms after K501 opens. */
-#if FALSO == 34
-    if (!in->dc_flt_in)                       /* counted with the rails going down too */
-#else
-    if (!in->dc_flt_in && alim_ok(in))
-#endif
-        st->t_dc = SAT_ADD(st->t_dc, dt);
-    else
-        st->t_dc = 0;
-#if FALSO == 33
-    const int dc = !in->dc_flt_in;            /* no persistence: a glitch is a fault */
-#else
-    const int dc = st->t_dc >= T_DC_PERSIST_US;
-#endif
-#if FALSO != 31
-    /* every state with the audio board powered; not STANDBY (the line is
-     * pulled up there), not GUASTO, not the last step of SPEGNIMENTO (the
-     * rails running down on purpose) */
-    if (dc && st->stato != ST_STANDBY && st->stato != ST_GUASTO &&
-        !(st->stato == ST_SPEGNIMENTO && st->fase == 2))
-        entra_guasto(st);
-#else
-    (void)dc;
-#endif
 
     /* the hole's trigger (spec 4.5): the hardware's verdict while asking for
      * music, or the detector itself. RILASCIO fase 0 blanks MUTE_G_IN: the
