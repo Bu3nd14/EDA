@@ -1,6 +1,6 @@
 # ADR-079 — Il rivelatore di continua com'è costruito: la persistenza fuori da una finestra, una linea in più fra le schede, la ritenuta nel firmware
 
-Data: 2026-10-14 · Stato: accettata
+Data: 2026-10-14 · Stato: accettata — la presa sulle uscite e «la musica non lo fa scattare» sono superate da ADR-080 (la presa differenziale, L59)
 
 **Rapporti con le decisioni precedenti.**
 - **Realizza ADR-072** (L45d2b1). Non la riapre: dei suoi «Da riaprire se» non ne scatta nessuno.
