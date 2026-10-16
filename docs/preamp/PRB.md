@@ -18,6 +18,10 @@ attuali». Registrato da **ADR-053**. Da qui, cambiare una voce vuole una ADR.
   la Stax protetta dal condensatore d'uscita da 1 µF (al più 125 ms sopra il tetto col suo carico),
   la principale dal trasformatore del finale a valvole, la fissa 1 dalla protezione dichiarata del
   Singxer; un apparecchio nuovo a valle fa rivedere il preamp. Firma dell'utente: «Firmo così».
+- **PR-30**, il 2026-10-15 (**ADR-086**, L60c2): il tetto sulla Stax da 125 a **150 ms**. Col
+  condensatore da 1 µF nel sorgente, due guasti interni del blocco che la ridondanza non toglie (la
+  source della JFET d'ingresso aperta, il finale PNP in corto) danno 127–149 ms. Scelta dell'utente,
+  sul testo proposto: «Tetto a 150 ms».
 
 ## Che cos'è, e come sta con gli altri documenti
 
@@ -168,9 +172,9 @@ della fabbricazione; senza, il progetto non va avanti.
 *Dettagli: P2 · ADR-010.*
 
 **PR-30 · Un guasto della scheda audio non danneggia la catena di oggi.** Un componente che si rompe mentre si ascolta
-può dare un colpo, ma sull'uscita della Stax resta sopra il tetto di non-danno (0,87 V) al più 125 ms, col suo carico.
+può dare un colpo, ma sull'uscita della Stax resta sopra il tetto di non-danno (0,87 V) al più 150 ms, col suo carico.
 L'uscita principale conta sul trasformatore del finale a valvole, la fissa 1 sulla protezione dichiarata del Singxer. Un apparecchio nuovo a valle fa rivedere il preamp.
-*Dettagli: P10 · ADR-069, ADR-081 · NC-042 · firmata il 2026-10-13, riscritta e firmata il 2026-10-15.*
+*Dettagli: P10 · ADR-069, ADR-081, ADR-086 · NC-042, NC-069 · firmata il 2026-10-13, riscritta e firmata il 2026-10-15; il tetto da 125 a 150 ms il 2026-10-15 (ADR-086).*
 
 ## F. Il fisico
 
