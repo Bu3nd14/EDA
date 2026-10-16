@@ -210,6 +210,12 @@ def sonda_aggiunte(ck="5p", cavo=False):
 
 TT = 1e-3   # L29d: il trasferimento fra i contatti (ipotesi, come il trim)
 CK_DS = "0.1p"   # L29d2: il contatto aperto dal datasheet del G6K (c_contatto.py), per eccesso
+# L60c2 (ADR-085): K3, il mute della Stax, e' un TE Axicom IM06TS. Il suo contatto aperto e' al
+# piu' 1 pF (vendor/relays/te/IM/ENG_DS_108-98001_K.pdf p. 23; ~0,2 pF dall'isolamento di -37 dB a
+# 100 MHz): nel deck dal sorgente l'uscita servita da un IM06 prende il massimo dichiarato, per
+# eccesso come CK_DS. La parte si legge dalla netlist (dal_sorgente), non si suppone.
+CK_RELE = {"G6K-2": CK_DS, "IM06": "1p"}
+CK_USCITA = {}   # --matrice sorgente: {m, 1, 2} -> il contatto aperto del rele' di quell'uscita
 
 
 RBC_BANCO = {"m": "220k", "1": "470k", "2": "470k"}   # L29d2: il bleed lato condensatore
@@ -459,8 +465,11 @@ def corsa(nome, amp=A, f=1000, tmax=10e-6, tf=17.5, ti=1000, tr=2000, tijk=None,
         out += geo_alter(geo, tijk, trjk, RBC)
     if ck is not None:
         # L29d2: il contatto aperto e il cavo, reimpostati da ogni corsa; la tabella dell'op li
-        # stampa (una variante sul nome sbagliato non cambierebbe niente: limitations #29)
-        out += ["alter %s = %s" % (c, ck) for c in ("cksm", "cks1", "cks2")]
+        # stampa (una variante sul nome sbagliato non cambierebbe niente: limitations #29).
+        # L60c2: dal sorgente, il contatto di progetto (CK_DS) e' quello del rele' di ciascuna
+        # uscita (CK_USCITA); una variante che lo cambia (k5) vale per tutte e tre.
+        for u, c in (("m", "cksm"), ("1", "cks1"), ("2", "cks2")):
+            out += ["alter %s = %s" % (c, CK_USCITA.get(u, ck) if ck == CK_DS else ck)]
         out += ["alter %s = %s" % (c, cavo) for c in ("ccavm", "ccav1", "ccav2")]
         out += ["print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance]"
                 " @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]"]
@@ -883,6 +892,31 @@ def dal_sorgente():
                                  "(RBL%s): il banco non e' il sorgente" % (u, vj[0], atteso, u.upper()))
     if set(rbc) != {"m", "1", "2"}:
         raise SystemExit("uscite di mute trovate: %s, attese m, 1, 2" % sorted(rbc))
+    # L60c2: il condensatore d'uscita (fra la 47 ohm e il COM) e la parte del rele' di ciascuna
+    # uscita, letti come i bleed. Fino a L60c1 il condensatore veniva dal blocco CANALE, 4,7u su
+    # tutte e tre: la fissa 2 ha 1 uF da L60c2 (ADR-081, ADR-084).
+    global CAP_USCITA
+    CAP_USCITA = {}
+    for ref, c in relays.items():
+        if crs.role_of(c["value"]) != "MUTE":
+            continue
+        u = USCITA_DI[crs.index_of(c["value"])]
+        if c["part"] not in CK_RELE:
+            raise SystemExit("%s (%s): contatto aperto sconosciuto al generatore (CK_RELE)"
+                             % (ref, c["part"]))
+        if CK_USCITA.setdefault(u, CK_RELE[c["part"]]) != CK_RELE[c["part"]]:
+            raise SystemExit("uscita %s: due rele' diversi" % u)
+        pm = crs.KNOWN_RELAYS[(c["lib"], c["part"])]
+        for pole in pm["poles"]:
+            lato_c = pin_net[(ref, pole["COM"])]
+            caps = sorted({comps[r]["value"] for (r, p), n in pin_net.items()
+                           if n == lato_c and comps.get(r, {}).get("part") == "C"})
+            if len(caps) != 1:
+                raise SystemExit("%s %s: atteso un condensatore sul COM, trovati %s"
+                                 % (ref, pole["name"], caps))
+            if CAP_USCITA.setdefault(u, caps[0]) != caps[0]:
+                raise SystemExit("uscita %s: condensatori diversi fra i canali (%s, %s): T3"
+                                 % (u, CAP_USCITA[u], caps[0]))
     return rbc
 
 
@@ -1040,6 +1074,16 @@ def matrice_l41c():
 if ARG.matrice in ("sorgente", "l30", "l41c"):
     RBC = dal_sorgente()
     print("dal sorgente (%s): bleed lato C %s" % (NET, RBC))
+if ARG.matrice == "sorgente":
+    # L60c2: i condensatori d'uscita della netlist al posto di quelli del blocco CANALE (le righe
+    # CFIX1 / CFIX2 / COUTM, nodi invariati), e il contatto aperto del rele' di ogni uscita.
+    for u, elem in (("1", "CFIX1"), ("2", "CFIX2"), ("m", "COUTM")):
+        k = [i for i, r in enumerate(H) if r.split()[:1] == [elem]]
+        assert len(k) == 1, elem
+        H[k[0]] = " ".join(H[k[0]].split()[:3] + [CAP_USCITA[u]])
+    print("dal sorgente: condensatori d'uscita %s, contatto aperto %s" % (CAP_USCITA, CK_USCITA))
+else:
+    CK_USCITA.clear()
 if ARG.matrice in ("sonda_l29d", "l29d2", "sorgente", "l30", "l41c"):
     C = [("save v(mainjack) v(fixjack1) v(fixjack2) v(ina) v(vplus) v(vminus)"
           " v(main_a) v(mainc) v(fixc1) v(fixc2)") if r.startswith("save ") else r for r in C]

@@ -196,8 +196,32 @@ G6KU_2F_Y = {
     ],
 }
 
+# ---------------------------------------------------------------------
+# IM06TS (TE Axicom IM, 2 Form C, 12 V 140 mW, non-latching) - K3 only, the
+# Stax's mute relay since L60c2 (ADR-085: supplementary coil-contact
+# insulation, declared on p. 3). vendor/relays/te/IM/ENG_DS_108-98001_K.pdf,
+# p. 5, "Terminal Assignment, Relay - top view, Non-Latching Type, not
+# energized condition". Read in L60c2 on three legs that agree, the G6K's
+# method: the rendered page (450 dpi crop); the SVG vector coordinates
+# (docs/preamp/data/2026-10-15/L60c2/script/im_pinmap_svg.py: the armature
+# crosses the 2 / 7 contact at x = 100.9 pt, inside its 96.2-104.0 span,
+# and stops 9.8 pt short of 4 / 5, both poles); the polylines of the KiCad
+# symbol Relay:IM00 (armature tip x EXACTLY the 2 / 7 contact's x). The
+# SAME map as the G6K-2F-Y - but the IM is POLARISED: "+" on pin 1, "-" on
+# pin 8, and with the coil reversed it does not operate at all.
+# ---------------------------------------------------------------------
+IM06 = {
+    "coil": ("1", "8"),
+    "coil_plus": "1",
+    "poles": [
+        {"name": "polo 1 (riga 1-2-3-4)", "COM": "3", "NC": "2", "NO": "4"},
+        {"name": "polo 2 (riga 8-7-6-5)", "COM": "6", "NC": "7", "NO": "5"},
+    ],
+}
+
 # Which part in which library is a relay we know how to judge.
-KNOWN_RELAYS = {("Relay", "G6K-2"): G6K_2F_Y, ("Relay", "G6KU-2"): G6KU_2F_Y}
+KNOWN_RELAYS = {("Relay", "G6K-2"): G6K_2F_Y, ("Relay", "G6KU-2"): G6KU_2F_Y,
+                ("Relay", "IM06"): IM06}
 BISTABLE = {("Relay", "G6KU-2")}
 
 # Switch:SW_Rotary_4x3 (KiCad symbol): commons 13-16, throws 1-3, 4-6, 7-9,
@@ -1343,6 +1367,17 @@ def check(components, pin_net):
     relays = {ref: c for ref, c in components.items()
               if (c["lib"], c["part"]) in KNOWN_RELAYS}
 
+    # L60c2: a relay of the Relay library that is NOT in KNOWN_RELAYS used to
+    # be skipped in silence - only "no known relay at all" was a finding.
+    # Swapping ONE relay for a new part (K3, ADR-085) would have taken it out
+    # of every proof below without a word. Now it is a finding.
+    for ref, c in sorted(components.items()):
+        if c["lib"] == "Relay" and (c["lib"], c["part"]) not in KNOWN_RELAYS:
+            findings.append(
+                f"{ref} ({c['part']}, {c['value']!r}): rele' sconosciuto a "
+                f"questo controllo. La sua piedinatura va letta sul datasheet "
+                f"e scritta in KNOWN_RELAYS, o resta fuori da ogni prova.")
+
     if not relays:
         # Not a pass. A netlist with no relay is either the wrong netlist or
         # a topology change nobody told this checker about.
@@ -1379,6 +1414,15 @@ def check(components, pin_net):
             if pin_net.get((ref, p)) is None:
                 findings.append(
                     f"{ref}: il pin di bobina {p} non e' collegato.")
+        # L60c2: a polarised coil (IM06) must have its "+" on VRELAY - every
+        # command here is a low-side sink. Reversed, the IM does not pick up:
+        # the mute would never release and nothing else would say so.
+        plus = pinmap.get("coil_plus")
+        if plus is not None and pin_net.get((ref, plus)) != SUPPLY_NET:
+            findings.append(
+                f"{ref} ({comp['part']}): bobina polarizzata, il pin {plus} "
+                f"(+) sta su {pin_net.get((ref, plus))!r} e non su "
+                f"{SUPPLY_NET}. Al contrario il rele' non interviene.")
 
     check_trim(components, relays, by_role, pin_net, findings)
     report = check_mute_geometry(components, relays, by_role, pin_net,

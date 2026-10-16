@@ -31,7 +31,7 @@ funzione. Sarebbe sbagliato lasciar credere il contrario.
 COSA E' VERIFICATO QUI, ALLORA
 ------------------------------
 Le CIFRE ANNOTATE. Ogni valore stampato su questo disegno - 1 MOhm, 47 Ohm,
-4,7 uF, 470k, 220k, 10k, 1,50k, 3,57k/866 - non e' scritto a mano nel testo
+4,7 uF, 1 uF (Stax), 470k, 220k, 10k, 1,50k, 3,57k/866 - non e' scritto a mano nel testo
 del disegno: viene LETTO da circuits/preamp/preamp_audio.net, la netlist
 generata dalla fonte di verita', e le asserzioni sotto fanno fallire
 l'esecuzione se non corrisponde. I guadagni "+3 dB" e "+10 dB" sono CALCOLATI
@@ -140,7 +140,12 @@ assert '(lib "Isolator")' not in _src, \
 RISO = same(["R161", "R164", "R261", "R361", "R364", "R461"], "isolamento uscite")
 
 # Condensatori d'accoppiamento, 3 per canale (E8/ADR-007 addendum: 4,7 uF).
-COUT = same(["C162", "C165", "C262", "C362", "C365", "C462"], "cap d'uscita")
+# Da L60c2 la fissa 2 (Stax) ha il suo: 1 uF film (ADR-081, ADR-084), letto a
+# parte, e diverso da quello delle altre due per asserzione.
+COUT = same(["C162", "C262", "C362", "C462"], "cap d'uscita, Singxer e principale")
+COUT_STAX = same(["C165", "C365"], "cap d'uscita della Stax")
+assert COUT_STAX != COUT, \
+    f"la Stax ha di nuovo il condensatore delle altre uscite ({COUT}): ADR-081"
 
 # Resistenze di scarico: fisse 470k, principale 220k.
 RBLEED_FIX = same(["R163", "R166", "R363", "R366"], "bleeder uscite fisse")
@@ -217,6 +222,12 @@ assert ("GAIN" in K_GAIN and "GAIN" in K_GAIN10
         and all("MUTE" in k for k in K_MUTE)), \
     f"i rele' non sono quelli attesi: {K_GAIN}, {K_GAIN10}, {K_MUTE}"
 RELAY_PN = K_GAIN.split()[0]                 # "G6K-2F-Y"
+# L60c2 (ADR-085): il mute della Stax, K3, e' un'altra parte, a isolamento
+# supplementare fra bobina e contatti; K2 e K4 restano quella del guadagno.
+STAX_RELAY_PN = K_MUTE[1].split()[0]         # "IM06TS"
+assert (K_MUTE[0].split()[0] == K_MUTE[2].split()[0] == RELAY_PN
+        and STAX_RELAY_PN != RELAY_PN), \
+    f"i rele' di mute non sono quelli attesi (ADR-085): {K_MUTE}"
 
 # =============================================================================
 # ADR-023: OGNI USCITA FISSA HA IL PROPRIO BUFFER (L17, chiude NC-010)
@@ -379,6 +390,7 @@ def pretty(val, unit):
 OHM = "Ω"                                # Ω
 R_ISO = pretty(RISO, OHM)
 C_OUT = pretty(COUT, "F").replace("u", "µ")     # 4,7 µF
+C_OUT_STAX = pretty(COUT_STAX, "F").replace("u", "µ")   # 1 µF
 R_ZIN = pretty(ZIN, OHM)
 R_BFIX = pretty(RBLEED_FIX, OHM)
 R_BMAIN = pretty(RBLEED_MAIN, OHM)
@@ -533,9 +545,9 @@ wire(25.8, Y, 27.6, Y)
 dot(27.6, Y)
 wire(27.6, YA, 27.6, YS)                   # montante verticale
 
-for yy, dest, tag, kref, bname in (
-        (YS, "Singxer SA-1 V2", "uscita fissa 1", "K2", "BUFFER F1"),
-        (Y, "Stax SRM-T1", "uscita fissa 2", "K3", "BUFFER F2")):
+for yy, dest, tag, kref, bname, c_out in (
+        (YS, "Singxer SA-1 V2", "uscita fissa 1", "K2", "BUFFER F1", C_OUT),
+        (Y, "Stax SRM-T1", "uscita fissa 2", "K3", "BUFFER F2", C_OUT_STAX)):
     dot(27.6, yy)
     wire(27.6, yy, 28.4, yy)
     box(29.9, yy, 3.0, 1.9, [bname, "guadagno 1", "ADR-023"],
@@ -543,7 +555,7 @@ for yy, dest, tag, kref, bname in (
     wire(31.4, yy, 32.0, yy)
     series(33.1, yy, R_ISO, w=2.2)
     wire(34.2, yy, 34.8, yy)
-    series(35.9, yy, C_OUT, w=2.2)
+    series(35.9, yy, c_out, w=2.2)
     # L29e (ADR-044, geometria iii): il mute e' un DEVIATORE in serie fra il
     # lato del condensatore e il jack - NC a massa sul lato C, NO al jack.
     wire(37.0, yy, 37.6, yy)
@@ -650,8 +662,9 @@ box(6.6, 4.95, 11.0, 2.4,
     head_size=9.5, size=8.5)
 
 box(19.6, 4.95, 12.2, 2.4,
-    [f"K2 K3 K4 — MUTE   {RELAY_PN}",
-     "2 scambi ciascuno = 6 linee (3 uscite × 2 canali)",
+    [f"K2 K4 — MUTE {RELAY_PN} · K3 (Stax) {STAX_RELAY_PN}",
+     "2 scambi ciascuno = 6 linee (3 uscite × 2 canali); K3 a isolamento "
+     "supplementare (ADR-085)",
      "deviatori (ADR-044): a riposo lato C a massa, jack staccati"],
     color=RED, head_size=10)
 
@@ -701,7 +714,7 @@ print(f"valori letti da {os.path.relpath(NETLIST, REPO)} "
       f"({len(VAL)} componenti nella netlist)")
 print(f"  Zin blocco A ............ {ZIN}")
 print(f"  isolamento uscite ....... {RISO} ohm  x3 per canale")
-print(f"  accoppiamento d'uscita .. {COUT}     x3 per canale")
+print(f"  accoppiamento d'uscita .. {COUT} x2 per canale (Singxer, principale), {COUT_STAX} Stax (ADR-081)")
 print(f"  scarico fisse / main .... {RBLEED_FIX} / {RBLEED_MAIN}")
 print(f"  scarico lato C (ADR-044)  {RBLEEDC_FIX} / {RBLEEDC_MAIN}")
 print(f"  volume .................. {ATT}")

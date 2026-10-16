@@ -133,6 +133,8 @@ C_RAW = "4700u"
 # L41a's load. Smaller values on L47c2a's bench (data/2026-10-05/L47c2a/
 # varianti/): 3300 uF 41.0 ms, 2200 uF 25.1 ms at -10 %. Kept at 4700 uF by
 # the user's choice (L47c2a), for the loads still to come before the freeze.
+# L60c2: K3 an IM06TS (ADR-085, 11.7 mA instead of 9.1) -> 46.4 / 119.7 /
+# 193.3 ms on L51b's bench with that one change (data/2026-10-15/L60c2/rete/).
 # 25 V parts: the raw is ~17 V at +10 % mains.
 C_VRELAY = "4700u"
 # Supervisor thresholds (ADR-046: |13.5 V|), from the LM4040 2.5 V:

@@ -1,0 +1,40 @@
+{
+  "part_name": "IM06TS (Axicom IM relay, 2 poles changeover / 2 Form C / DPDT, 12 VDC 140 mW non-latching, SMT J-legs)",
+  "vendor_name": "TE Connectivity (Axicom; the document is still branded Tyco Electronics)",
+  "device_class": "relay",
+  "product_page": "https://www.te.com/en/product-2-1462037-7.html",
+  "date_obtained": "2026-10-15",
+  "lotto": "L60c2",
+  "obtained_by": "AI agent (Claude Opus 5.5) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl from Farnell's datasheet host (www.farnell.com/datasheets/477186.pdf), a DISTRIBUTOR MIRROR. TE's own document host (www.te.com/commerce/DocumentDelivery/DDEController, both srchrtrv and showdoc forms) answers HTTP 403 to a non-browser request, the same wall OMRON's site put up in L7; Mouser's mirror answers with an access-denied HTML page. The file is byte-for-byte as served; nothing was converted, re-saved or edited.",
+  "license_notes": "Manufacturer datasheet, redistributed here unmodified for engineering traceability only. Copyright remains TE Connectivity.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "477186.pdf",
+      "role": "datasheet",
+      "url": "https://www.farnell.com/datasheets/477186.pdf",
+      "served_content_type": "application/pdf",
+      "served_last_modified": "Tue, 20 Sep 2011 01:00:10 GMT",
+      "bytes": 1773284,
+      "pages": 28,
+      "sha256": "f4a0572ae72dd98fc7a8acb825860a39ac4e31b04f7a15aeb55b6000cb7b8d34",
+      "local_filename": "ENG_DS_108-98001_K.pdf",
+      "renamed": true,
+      "refetched_same_day": "The URL was requested twice on 2026-10-15 and both responses hashed identically."
+    }
+  ],
+  "revision_note": "THE REVISION IS READ FROM THE DOCUMENT: every page header says '108-98001 Rev. K'; PDF creation date 2009-08-07. The local name carries that revision because the served name (477186.pdf) carries none. TE has published later revisions (a 2017 'Rev. V' specification is referenced on te.com) that could not be fetched (HTTP 403). Before ordering, re-read the current TE revision for the three facts this repo depends on (insulation category, terminal assignment, open-contact capacitance). Falsifiable with: /opt/homebrew/bin/pdftotext -layout ENG_DS_108-98001_K.pdf - | grep -m1 'Rev.'",
+  "why_this_file": "ADR-084 makes the Stax mute relay K3 a relay whose coil-to-contact insulation does not count as a credible single failure; ADR-085 (L60c2, the user's 'Accetta il supplementare' and 'TE Axicom IM06TS') accepts SUPPLEMENTARY insulation declared by the maker. This datasheet is where that declaration, the pin map and the figures ADR-044 compares are read.",
+  "what_was_read": {
+    "insulation_category": "p. 3 (Features block, right column): 'Insulation Category: Supplementary insulation according IEC / EN 60950; Working voltage <= 300 Vrms; Mains supply voltage <= 250 Vrms; Repetitive peak voltage 2500 V; Pollution degree internal 1, external 2'.",
+    "insulation_figures": "p. 22, Insulation, standard version: dielectric test (1 min) coil-contacts 1800 Vrms, adjacent contact sets 1000 Vrms, open contacts 1000 Vrms; surge 2500 V coil-contacts (Telcordia 2/10 us and IEC 60950 10/700 us); insulation resistance > 1e9 ohm at 500 Vdc.",
+    "coil": "p. 6, coil versions, 140 mW standard: 12 V nominal, operate 9.00 V, max 28.90 V, release 1.20 V, 140 mW, 1029 ohm; IM06TS = 2-1462037-7 (SMT J-legs), IM06GR = 2-1462037-3 (THT standard). 12 V / 1029 ohm = 11.7 mA.",
+    "contacts": "p. 20: 2 changeover, bifurcated, palladium-ruthenium gold-covered; initial contact resistance < 50 mohm (10 mA / 20 mV); minimum switching voltage 100 uV; thermoelectric potential < 10 uV.",
+    "capacitance_and_rf": "p. 23, High Frequency Data, IM: capacitance coil-contacts max 2 pF, adjacent contact sets max 2 pF, OPEN CONTACTS MAX 1 pF; isolation -37.0 dB at 100 MHz, -18.8 dB at 900 MHz (50 ohm).",
+    "timing": "p. 23, General Data: operate time typ 1 ms / max 3 ms; release time without diode typ 1 / max 3 ms, with diode in parallel typ 3 / max 5 ms; bounce at closing typ 1 / max 5 ms. No transfer time is published.",
+    "terminal_assignment": "p. 5, 'Terminal Assignment, Relay - top view, Non-Latching Type, not energized condition': coil + on pin 1, - on pin 8 (POLARISED); pole 1 COM 3 resting on 2, open to 4; pole 2 COM 6 resting on 7, open to 5. Read on three legs that agree, in L60c2: the rendered page (450 dpi crop); the SVG vector coordinates (docs/preamp/data/2026-10-15/L60c2/script/im_pinmap_svg.py: at the contact-tip height the armature crosses the 2 / 7 contact segment at x = 100.9 pt, inside its 96.2-104.0 pt span, and stops 9.8 pt short of the 4 / 5 segment, on both poles); the polylines of the KiCad symbol Relay:IM00, where the armature tip's x is EXACTLY the 2 / 7 contact's x (-1.905 / 8.255 mm). Same map as the G6K-2F-Y.",
+    "pad_layout": "p. 5, Solder Pad Layout, SMT J-legs: pins 1-4 bottom row, 8-5 top row, 2.2 mm pitch, 3.2 mm from the coil pin; the KiCad footprint Relay_SMD:Relay_DPDT_AXICOM_IMSeries_JLeg numbers its pads 1-8 the same way, rotated 90 degrees: 1-4 at x = -2.2 mm, 8-5 at x = +2.2 mm, spacing 3.2 / 2.2 / 2.2 mm along y."
+  }
+}
