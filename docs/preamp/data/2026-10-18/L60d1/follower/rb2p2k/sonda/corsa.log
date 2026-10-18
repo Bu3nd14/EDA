@@ -1,0 +1,317 @@
+warning, model type mismatch in line
+    q121a nmirc nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: tb_v2_casopeggiore.cir - v2 al jack, il caso peggiore col mute che taglia coi soli rele' al jack (adr-062): guadagno, trim, dispersione, durata del mute, accensione (l29c, nc-028, l47c2b1)
+
+Warning: Model issue on line 122 :
+  .model lsk489a njf(beta=2.2m betatce=-.5 rd=11 rs=30 lambda=4.3m vto=-1. ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+unrecognized parameter (mj) - ignored
+
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Note: True gmin stepping completed
+@cksm[capacitance] = 1.000000000000000e-13
+@cks1[capacitance] = 1.000000000000000e-13
+@cks2[capacitance] = 1.000000000000000e-12
+@ccavm[capacitance] = 1.000000000000000e-18
+@ccav1[capacitance] = 1.000000000000000e-18
+@ccav2[capacitance] = 1.000000000000000e-18
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+vplus                                       15
+vminus                                     -15
+namp                                     3.818
+nfrq                                      1000
+nphs                                    1.5708
+nten                                       0.3
+src                                          0
+sela                               1.39467e-11
+ntijk                                     1000
+ntrjk                                     2000
+ntgjk                                        1
+nmhjk                                        1
+sjkr                                         0
+sjk                                          0
+ntipre                                    1000
+ntrpre                                    2000
+ntgpre                                       1
+nmhpre                                       1
+sprer                                        0
+spre                                         0
+ntiser                                     -10
+ntrser                                    1000
+ntgser                                       1
+nmhser                                       1
+sserr                                        1
+sser                                         1
+ntisel                                    1000
+ntrsel                                    2000
+ntgsel                                       1
+nmhsel                                       1
+sselr                                        0
+ssel                                         0
+ina                                1.48765e-11
+inax                               1.48765e-11
+xa.nref                               -13.6718
+xa.ncasc                               9.86824
+xa.nx                                  1.02181
+xa.nhi                                 12.7603
+outa                                 -0.003509
+fba                                -0.00350897
+xa.vpf                                  14.834
+xa.nrefm                              -14.3359
+xa.d1n                                 9.18061
+xa.g1                              9.44657e-10
+xa.s1                                0.0683254
+xa.d2n                                 9.18075
+xa.g2                              -0.00350897
+xa.s2                                0.0673248
+xa.src                               -0.157447
+xa.nte                                -14.3772
+xa.nmirc                               13.0828
+xa.nmiri                                13.637
+xa.nme1                                14.3432
+xa.nme2                                 14.343
+xa.nb122                                13.557
+xa.nve                                 14.2295
+xa.nvb                                 13.3745
+xa.ny                                -0.999333
+xa.nvle                                -14.401
+xa.nbb                               -0.271735
+xa.nbn                                 1.01982
+xa.nen                                0.451806
+xa.nbp                               -0.998446
+xa.nep                               -0.458868
+rga                                -0.00350896
+rg10a                              -0.00350897
+w                                  7.67834e-08
+f1in                                 -0.003509
+xf1.nref                              -13.6718
+xf1.ncasc                              9.86824
+xf1.nx                                 1.01832
+xf1.nhi                                12.7603
+outf1                              -0.00701798
+fbf1                               -0.00701794
+xf1.vpf                                 14.834
+xf1.nrefm                             -14.3359
+xf1.d1n                                9.18061
+xf1.g1                               -0.003509
+xf1.s1                               0.0648241
+xf1.d2n                                9.18075
+xf1.g2                             -0.00701794
+xf1.s2                               0.0638235
+xf1.src                              -0.160948
+xf1.nte                               -14.3772
+xf1.nmirc                              13.0828
+xf1.nmiri                              13.6371
+xf1.nme1                               14.3432
+xf1.nme2                                14.343
+xf1.nb122                               13.557
+xf1.nve                                14.2295
+xf1.nvb                                13.3745
+xf1.ny                                -1.00282
+xf1.nvle                               -14.401
+xf1.nbb                              -0.275225
+xf1.nbn                                1.01633
+xf1.nen                               0.448318
+xf1.nbp                               -1.00194
+xf1.nep                              -0.462354
+rgf1                               -0.00701792
+rg10f1                             -0.00701794
+f2in                                 -0.003509
+xf2.nref                              -13.6718
+xf2.ncasc                              9.86824
+xf2.nx                                 1.01832
+xf2.nhi                                12.7603
+outf2                              -0.00701798
+fbf2                               -0.00701794
+xf2.vpf                                 14.834
+xf2.nrefm                             -14.3359
+xf2.d1n                                9.18061
+xf2.g1                               -0.003509
+xf2.s1                               0.0648241
+xf2.d2n                                9.18075
+xf2.g2                             -0.00701794
+xf2.s2                               0.0638235
+xf2.src                              -0.160948
+xf2.nte                               -14.3772
+xf2.nmirc                              13.0828
+xf2.nmiri                              13.6371
+xf2.nme1                               14.3432
+xf2.nme2                                14.343
+xf2.nb122                               13.557
+xf2.nve                                14.2295
+xf2.nvb                                13.3745
+xf2.ny                                -1.00282
+xf2.nvle                               -14.401
+xf2.nbb                              -0.275225
+xf2.nbn                                1.01633
+xf2.nen                               0.448318
+xf2.nbp                               -1.00194
+xf2.nep                              -0.462354
+rgf2                               -0.00701792
+rg10f2                             -0.00701794
+fix1                               -0.00701798
+fixc1                                        0
+fixjack1                                     0
+fix2                               -0.00701798
+fixc2                                        0
+fixjack2                                     0
+wb                                 7.67834e-08
+xb.nref                               -13.6718
+xb.ncasc                               9.86824
+xb.nx                                  1.01422
+xb.nhi                                 12.7603
+outb                                -0.0110601
+fbb                                -0.00350885
+xb.vpf                                  14.834
+xb.nrefm                              -14.3359
+xb.d1n                                 9.18061
+xb.g1                              7.77131e-08
+xb.s1                                0.0683257
+xb.d2n                                 9.18075
+xb.g2                              -0.00350885
+xb.s2                                0.0673251
+xb.src                               -0.157447
+xb.nte                                -14.3772
+xb.nmirc                               13.0828
+xb.nmiri                               13.6371
+xb.nme1                                14.3432
+xb.nme2                                 14.343
+xb.nb122                                13.557
+xb.nve                                 14.2295
+xb.nvb                                 13.3745
+xb.ny                                 -1.00693
+xb.nvle                                -14.401
+xb.nbb                               -0.279332
+xb.nbn                                 1.01222
+xb.nen                                0.444219
+xb.nbp                                -1.00604
+xb.nep                                -0.46645
+rgb                               -9.82843e-08
+rg10b                             -4.05132e-07
+main_a                              -0.0110601
+mainc                                        0
+mainjack                                     0
+nk1i                                         1
+nk1t                                      1000
+sk1r                                         1
+nk5i                                         1
+nk5t                                      1000
+sk5r                                         1
+nksa                                       -10
+nksb                                      1000
+nksr                                         0
+nkca                                    -9.999
+nkcb                                      1000
+nkcr                                         1
+tap6                               -0.00183663
+tap12                             -0.000918317
+nt1ri                                        1
+nt1rt                                     1000
+st1rr                                        1
+atop                                 -0.003509
+nt1si                                        0
+nt1st                                     1000
+st1sr                                        0
+t2c                                -0.00183663
+nt2ri                                        1
+nt2rt                                     1000
+st2rr                                        1
+nt2si                                        0
+nt2st                                     1000
+st2sr                                        0
+attc                               7.67832e-08
+vh                                 7.67832e-08
+vl                                 7.67833e-08
+nkvhi                                        1
+nkvht                                     1000
+skvhr                                        1
+nkvli                                        0
+nkvlt                                     1000
+skvlr                                        0
+prbd                                        15
+prbg                                         0
+bkvlr#branch                                 0
+bkvhr#branch                                 0
+bt2sr#branch                                 0
+bt2rr#branch                                 0
+bt1sr#branch                                 0
+bt1rr#branch                                 0
+bkcr#branch                                  0
+bksr#branch                                  0
+bk5r#branch                                  0
+bk1r#branch                                  0
+bsselr#branch                                0
+bsserr#branch                                0
+bsprer#branch                                0
+bsjkr#branch                                 0
+bsrc#branch                        9.29779e-12
+vprbg#branch                       1.50551e-11
+vprbd#branch                       -0.00259188
+vkvlt#branch                                 0
+vkvli#branch                                 0
+vkvht#branch                                 0
+vkvhi#branch                                 0
+vt2st#branch                                 0
+vt2si#branch                                 0
+vt2rt#branch                                 0
+vt2ri#branch                                 0
+vt1st#branch                                 0
+vt1si#branch                                 0
+vt1rt#branch                                 0
+vt1ri#branch                                 0
+vkcb#branch                                  0
+vkca#branch                                  0
+vksb#branch                                  0
+vksa#branch                                  0
+vk5t#branch                                  0
+vk5i#branch                                  0
+vk1t#branch                                  0
+vk1i#branch                                  0
+vosb#branch                       -9.22102e-12
+vosf2#branch                      -3.51911e-09
+vosf1#branch                       -3.5183e-09
+vosa#branch                       -9.29779e-12
+vmhsel#branch                                0
+vtgsel#branch                                0
+vtrsel#branch                                0
+vtisel#branch                                0
+vmhser#branch                                0
+vtgser#branch                                0
+vtrser#branch                                0
+vtiser#branch                                0
+vmhpre#branch                                0
+vtgpre#branch                                0
+vtrpre#branch                                0
+vtipre#branch                                0
+vmhjk#branch                                 0
+vtgjk#branch                                 0
+vtrjk#branch                                 0
+vtijk#branch                                 0
+vten#branch                                  0
+vphs#branch                                  0
+vfrq#branch                                  0
+vamp#branch                                  0
+vmm#branch                             0.15657
+vpp#branch                            -0.15248
+
+ Reference value :  1.12034e-02 Reference value :  2.83522e-02 Reference value :  4.62083e-02 Reference value :  6.33752e-02 Reference value :  8.06601e-02 Reference value :  9.60864e-02 Reference value :  1.07235e-01 Reference value :  1.16472e-01 Reference value :  1.24240e-01 Reference value :  1.31758e-01 Reference value :  1.38708e-01 Reference value :  1.45574e-01 Reference value :  1.51792e-01 Reference value :  1.58061e-01 Reference value :  1.63993e-01 Reference value :  1.70092e-01 Reference value :  1.75887e-01 Reference value :  1.81702e-01 Reference value :  1.87491e-01 Reference value :  1.92605e-01 Reference value :  1.97199e-01 Reference value :  2.01331e-01 Reference value :  2.05329e-01 Reference value :  2.09187e-01 Reference value :  2.12717e-01 Reference value :  2.16109e-01 Reference value :  2.19003e-01 Reference value :  2.21016e-01 Reference value :  2.22954e-01 Reference value :  2.24491e-01 Reference value :  2.26029e-01 Reference value :  2.27205e-01 Reference value :  2.28517e-01 Reference value :  2.29521e-01 Reference value :  2.30897e-01 Reference value :  2.32013e-01 Reference value :  2.33044e-01 Reference value :  2.34115e-01 Reference value :  2.35422e-01 Reference value :  2.36453e-01 Reference value :  2.37537e-01 Reference value :  2.38539e-01 Reference value :  2.39541e-01 Reference value :  2.40575e-01 Reference value :  2.41869e-01 Reference value :  2.42915e-01 Reference value :  2.43909e-01 Reference value :  2.44912e-01 Reference value :  2.46037e-01 Reference value :  2.47036e-01 Reference value :  2.48060e-01 Reference value :  2.49062e-01 Reference value :  2.50064e-01 Reference value :  2.51376e-01 Reference value :  2.52426e-01 Reference value :  2.53556e-01 Reference value :  2.54557e-01 Reference value :  2.55559e-01 Reference value :  2.56593e-01 Reference value :  2.57707e-01 Reference value :  2.58694e-01 Reference value :  2.59886e-01 Reference value :  2.60790e-01 Reference value :  2.61891e-01 Reference value :  2.62876e-01 Reference value :  2.63896e-01 Reference value :  2.64894e-01 Reference value :  2.65897e-01 Reference value :  2.66897e-01 Reference value :  2.67897e-01 Reference value :  2.68937e-01 Reference value :  2.70065e-01 Reference value :  2.71076e-01 Reference value :  2.72077e-01 Reference value :  2.73078e-01 Reference value :  2.74191e-01 Reference value :  2.75371e-01 Reference value :  2.76408e-01 Reference value :  2.77561e-01 Reference value :  2.78570e-01 Reference value :  2.79571e-01 Reference value :  2.80572e-01 Reference value :  2.81611e-01 Reference value :  2.82880e-01 Reference value :  2.83892e-01 Reference value :  2.85079e-01 Reference value :  2.86081e-01 Reference value :  2.87360e-01 Reference value :  2.88544e-01 Reference value :  2.89573e-01 Reference value :  2.90574e-01 Reference value :  2.91693e-01 Reference value :  2.92933e-01 Reference value :  2.94081e-01 Reference value :  2.95086e-01 Reference value :  2.96386e-01 Reference value :  2.97565e-01 Reference value :  2.98574e-01 Reference value :  2.99631e-01
+No. of Data Rows : 177450
+Note: Simulation executed from .control section 

@@ -1258,3 +1258,51 @@ memoria esplodono, e una lista da qualche migliaio di deck esaurisce la macchina
 `uno.sh`), che limita i figli da sé; e dopo il lancio si contano i processi
 (`ps -eo args`, poi `grep -c "[n]gspice -b"`) invece di fidarsi del limite scritto nello script.
 **Non** con `pgrep -c`: su macOS `-c` non conta, e l'uscita elenca PID di sistema che non c'entrano.
+
+Nota di L60d1: le copie di `regressione.sh` ed `esegui.sh` in
+`docs/preamp/data/2026-10-18/L60d1/script/` contano i figli con `${#jobstates}` (con `zmodload
+zsh/parameter`), il conteggio di `L29c/script/corri.sh`, che non passa da una sottoshell. In L60d1
+il numero di ngspice non è stato contato con `ps`: la regola sopra resta.
+
+## 59. Un `op` che CONVERGE in una soluzione spuria: il source stepping dice «completed» e il canale è spento
+
+Visto in L60d1 (`docs/preamp/data/2026-10-18/L60d1/`, `tb_e4_uscite`). È la #57 senza nessun
+avviso di fallimento: «gmin stepping failed», poi «Source stepping completed», e una soluzione del
+sistema in continua col canale spento — **5,57 A** tirati dal rail positivo, guadagno −151,6 dB
+invece di −9,0 dB, Zout ~300 Ω anche sui buffer fissi, che non dipendono né dall'attenuatore né dal
+modo. Una sola cella su 45 (trim 0, attenuatore al 25 %, +3 dB), dopo un cambio del blocco che non
+tocca quella cella; il punto di lavoro calcolato da zero ricade nella stessa soluzione. Il
+transitorio d'accensione nella stessa cella arriva allo stato vivo (153 mA): la soluzione esiste per
+il solutore, non per il circuito. Un `.nodeset` sui VPF dei quattro blocchi (14,85 V) riporta tutte
+le 135 righe alla sesta cifra.
+
+**Regola operativa**: una cella di una tabella che salta di ordini di grandezza rispetto alle
+vicine si controlla col transitorio d'accensione prima di crederci; e un `op` si giudica anche dalla
+corrente dei rail, non solo dai messaggi del solutore (`script/prova_e4.py`, `e4_nodeset.py`).
+
+## 60. V2 campiona a 96 kHz senza anti-aliasing: un impulso di 134 ns diventa 132 µV
+
+Visto in L60d1 (`docs/preamp/data/2026-10-18/L60d1/script/b1_confronto.py`). `scripts/v2_metodo.py`
+scarta i punti di ngspice più vicini di `dtmin` (2 µs) all'ultimo tenuto, ricampiona a 96 kHz con
+un'interpolazione cubica e poi filtra 20 Hz–20 kHz. Un treno di impulsi stretti a fase fissa (due
+per periodo, 134 ns, 0,58 mV sul jack in mute col blocco di L56) cade ogni periodo nello stesso
+punto della griglia: B1 **132,2 µV**, B2g 263,7 µV. Con ogni campione uguale alla media del segnale
+sul suo intervallo, B1 **3,3 µV** e B2g 5,9 µV; su un segnale liscio i due metodi danno la stessa
+cifra (0,93 µV). Il verdetto dipendeva da dove cadeva il campione, non da quanta musica passava.
+
+**Regola operativa**: un residuo di V2 che cambia di ordini di grandezza fra due varianti del
+circuito si rifà con la media (`b1_confronto.py`) prima di cercare la musica nel circuito. ADR-087
+porta la media dentro `v2_metodo.py` (L60d2).
+
+## 61. I deck d'anello rompono l'anello al posto di R109: non provano il guasto di R109, e una resistenza in parallelo li scavalca
+
+Visto in L60d1 (`docs/preamp/data/2026-10-18/L60d1/script/prepara_shunt.py`). `tb_loop`,
+`tb_loop_blockA`, `tb_loop_bufferfissa` e `tb_idss_loop` aprono la resistenza di gate generata R109
+(`alter r109 = 1G`) e la rifanno come `RBRK 100` + `VINJ` verso il gate. Due conseguenze, entrambe
+silenziose:
+- una resistenza in parallelo a R109 (R150, ADR-086) scavalca l'iniezione. Il metodo resta esatto
+  (T = V(FB)/V(G2) su un gate che non assorbe corrente; R150 toglie solo efficienza), ma va saputo;
+- il guasto «R109 aperta» non si prova cambiando il blocco: il deck rimette i suoi 100 Ω e misura
+  margini identici al blocco sano. Per il guasto l'iniezione va dal lato di FB (bassa impedenza),
+  `VINJ FB NBRK`, `RBRK NBRK G2 <la resistenza rimasta>`, T = V(FB)/V(NBRK); col controllo a 100 Ω
+  ridà i margini dei deck entro 0,07°.
