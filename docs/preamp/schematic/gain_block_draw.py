@@ -104,6 +104,9 @@ DEVICES = {
     "JQ110B": {"D": "D2N",    "G": "G2",    "S": "S2"},
     "R111":  {"1": "S1",     "2": "SRC"},
     "R112":  {"1": "S2",     "2": "SRC"},
+    # ADR-086 (L60d1): redundancy - R150 across R109, R151 twin of R112
+    "R150":  {"1": "FB",     "2": "G2"},
+    "R151":  {"1": "S2",     "2": "SRC"},
     "Q106":  {"C": "SRC",    "B": "NREF",  "E": "NTE"},
     "R107":  {"1": "NTE",    "2": "VMINUS"},
     "Q117":  {"C": "NHI",    "B": "NCASC", "E": "D1N"},
@@ -116,7 +119,8 @@ DEVICES = {
     "R123":  {"1": "VPF",    "2": "NVE"},
     "Q122":  {"C": "NX",     "B": "NVB",   "E": "NVE"},     # ADR-067
     # ADR-067 (L56): the follower before the VAS and the helper on the mirror
-    "Q146":  {"C": "VMINUS", "B": "NHI",   "E": "NVB"},
+    "Q146":  {"C": "NFC",    "B": "NHI",   "E": "NVB"},     # ADR-087
+    "R153":  {"1": "NFC",    "2": "VMINUS"},                 # ADR-087
     "R147":  {"1": "VPF",    "2": "NVB"},
     "Q148":  {"C": "VMINUS", "B": "NMIRC", "E": "NMIRI"},
     "R149":  {"1": "VPF",    "2": "NMIRI"},
@@ -152,6 +156,7 @@ DEVICES = {
     "C142":  {"1": "VMINUS", "2": "0"},
     # ADR-056 (L46b): the RC cell that makes VPF for the mirror and the VAS
     "R144":  {"1": "VPLUS",  "2": "VPF"},
+    "R152":  {"1": "VPLUS",  "2": "VPF"},                    # ADR-086
     "C145":  {"1": "VPF",    "2": "0"},
 }
 
@@ -340,12 +345,23 @@ res("R109", (17.4, NODE_XY["JQ110B.G"][1]), NODE_XY["JQ110B.G"], value="100",
 wire("R109.2", "JQ110B.G")
 flag("R109.1", "FB", direction="right", length=1.0)
 txt((18.75, 4.35), "dal riquadro 3", size=7.5, color=NETCOL)
+# ADR-086 (L60d1): R150 across R109 - if R109 opens the loop stays closed
+_gx = NODE_XY["JQ110B.G"][0] + 0.6
+res("R150", (17.4, gy + 1.5), (_gx, gy + 1.5), value="4,7k",
+    lbl=((15.7, gy + 2.55), "center"))
+wire("R150.1", "R109.1", dots=[NODE_XY["R109.1"]])
+wire("R150.2", "JQ110B.G", via=[(_gx, gy)], dots=[(_gx, gy)])
 
 # --- source degeneration and tail -------------------------------------------
 res("R111", NODE_XY["JQ110A.S"], (5.0, 2.2), value="100",
     lbl=((4.52, 3.7), "right"))
-res("R112", NODE_XY["JQ110B.S"], (13.0, 2.2), value="100",
+res("R112", NODE_XY["JQ110B.S"], (13.0, 2.2), value="200",
     lbl=((13.48, 3.7), "left"))
+# ADR-086 (L60d1): R151, twin of R112 - two 200 in parallel
+res("R151", (15.4, NODE_XY["JQ110B.S"][1]), (15.4, 2.2), value="200",
+    lbl=((15.88, 3.7), "left"))
+wire("R112.1", "R151.1", first="h", dots=[NODE_XY["R112.1"]])
+wire("R112.2", "R151.2", first="h")
 npn("Q106", "collector", (9.0, 2.2))
 wire("R111.2", "Q106.C", dots=[NODE_XY["R111.2"]])
 wire("Q106.C", "R112.2", dots=[NODE_XY["R112.2"], NODE_XY["Q106.C"]])
@@ -457,7 +473,11 @@ res("R147", (34.0, 13.6), (34.0, 10.9), value="1,2k",
 d.add(elm.Dot().at(NODE_XY["R147.1"]))
 TOUCHED.add("R147.1")
 wire("R147.2", "Q146.E")
-flag("Q146.C", "V-", direction="down", length=0.6, color=BLUE)
+# ADR-087 (L60d1): R153 limits the follower under overload (~10 mA)
+_c = NODE_XY["Q146.C"]
+res("R153", _c, (_c[0], _c[1] - 1.9), value="4,7k",
+    lbl=((_c[0] + 0.48, _c[1] - 0.75), "left"))
+flag("R153.2", "V-", direction="right", length=0.5, color=BLUE)
 txt((32.1, 9.62), "Q146 inseguitore", size=7.5, halign="center")
 
 # --- VAS --------------------------------------------------------------------
@@ -715,7 +735,7 @@ for ref, x, val, top in (("C139", 35.0, "100n", True),
 txt((36.5, -17.2), "disaccoppiamento locale dei rail", size=7.5, color=DIM)
 
 # --- RC cell for the mirror and the VAS (ADR-056, L46b) ---------------------
-res("R144", (40.0, -9.7), (40.0, -12.0), value="10",
+res("R144", (40.0, -9.7), (40.0, -12.0), value="20",
     lbl=((39.52, -10.6), "right"), color=ORANGE)
 d.add(elm.Dot().at(NODE_XY["R144.1"]))
 TOUCHED.add("R144.1")
@@ -724,8 +744,14 @@ cap("C145", (40.0, -12.0), (40.0, -14.6), value="1000u",
 wire("R144.2", "C145.1", color=ORANGE)
 gnd(NODE_XY["C145.2"])
 TOUCHED.add("C145.2")
-flag("R144.2", "VPF", direction="right", length=0.5, color=ORANGE)
-txt((36.5, -17.75), "R144 + C145: VPF, il V+ filtrato di specchio e VAS (ADR-056)",
+# ADR-086 (L60d1): R152, twin of R144 - two 20 in parallel
+res("R152", (41.2, -9.7), (41.2, -12.0), value="20",
+    lbl=((41.62, -10.6), "left"), color=ORANGE)
+wire("R144.1", "R152.1", first="h", color=ORANGE)
+wire("R144.2", "R152.2", first="h", color=ORANGE)
+d.add(elm.Dot().at(NODE_XY["R144.2"]))
+flag("R152.2", "VPF", direction="down", length=0.5, color=ORANGE)
+txt((36.5, -17.75), "R144 || R152 + C145: VPF, il V+ filtrato di specchio e VAS (ADR-056, ADR-086)",
     size=7.5, color=ORANGE)
 
 # =============================================================================

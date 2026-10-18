@@ -383,8 +383,10 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole,
     # block at +10 dB, 20 kHz full scale, this resistor dissipates 1.13 W
     # (tb_mute_corto.cir: 1.10 W in L11, 0.95 W in L40 where the 1 nF Miller
     # slew-limited the stage, 1.128 W with the faster VAS of ADR-054,
-    # docs/preamp/data/2026-10-01/L46a/regressione/). It must be rated
-    # >= 1.13 W at 60 C; the DIN0207 footprint alone does not guarantee that.
+    # docs/preamp/data/2026-10-01/L46a/regressione/; 0.99 W with the follower
+    # of ADR-067, which saturated the VAS; 1.28 W with its collector resistor
+    # of ADR-087, data/2026-10-18/L60d1/regressione/, p7.py). It must be rated
+    # >= 1.3 W at 60 C; the DIN0207 footprint alone does not guarantee that.
     R("47", b["OUT"], main_a, base + 100)
     # C_out: 4.7u film - ADR-007. Sized for a FUTURE 10 kOhm power amp
     # (3.4 Hz), not for the cj EV250's 100 kOhm, on the same logic that put

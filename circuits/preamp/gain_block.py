@@ -157,6 +157,39 @@ R_SDEG = "100"      # source degeneration. Linearises the pair and gives a
                     # measurable node for checking the tail split. 100 Ohm
                     # adds 1.29 nV/rtHz per side; kept small for that reason.
 
+# ADR-086 (L60d1): REDUNDANCY on the three parts whose single open circuit
+# kept the Stax above its no-damage ceiling for longer than the 1 uF cap
+# allows (NC-069). All three extras are appended LAST (section 9).
+R_GATE_SHUNT = "4.7k"  # in parallel with the FEEDBACK gate stopper only: if
+                       # that 100 Ohm opens, the loop stays closed through
+                       # 4.7k instead of the buffer oscillating rail to rail.
+                       # 100 || 4.7k = 97.9 Ohm nominal; V1 margins at nominal
+                       # identical to the 100 Ohm alone. With the 100 Ohm open
+                       # the 4.7k and the JFET's ~6 pF put a pole inside the
+                       # loop: worst counting position 62.6 deg (10k: 59.7,
+                       # 22k: 53.5) - the fault still meets V1's 60 deg.
+                       # data/2026-10-18/L60d1/shunt/margini_shunt.csv.
+R_SDEG_HALF = "200"    # the feedback-side degeneration as TWO 200 Ohm in
+                       # parallel = R_SDEG: one open leaves 200 Ohm, an
+                       # offset, not the jump to +12 V. The input side stays
+                       # a single 100 Ohm: its open is a DC step, which the
+                       # Stax's 1 uF already stops (ADR-081), and the two
+                       # sides are equal at nominal.
+R_FOLLOW_C = "4.7k"    # ADR-087 (L60d1): the collector resistor of the follower
+                       # before the VAS (ADR-067). ~5 V across it at rest
+                       # (1.1 mA); under overload it caps the follower at
+                       # ~10 mA (0.027 W average, 0.075 W peak in P7, against
+                       # 0.41 / 2.0 W without). V1 -0.4 deg, positive clip
+                       # -0.04 V, recovery and model THD unchanged; the 134 ns
+                       # edges it caused at the muted jack drop from 2.7 to
+                       # 1.1 uV (B1 averaged, the same 0.3 s run).
+                       # data/2026-10-18/L60d1/follower/.
+                       # Not 10k: the operating point stops converging in
+                       # parts of the loop matrix (limitations.md #57).
+R_CELL_HALF = "20"     # the RC cell's resistor as TWO 20 Ohm in parallel =
+                       # the 10 Ohm of ADR-056; one open leaves 20 Ohm (0.3 V
+                       # drop instead of 0.15), not the slow slide to the rail.
+
 # Cascode base reference: ~10 V from a 4.99k/10.0k divider off V+.
 # THE NON-OBVIOUS NUMBER IN THE WHOLE BLOCK, and the one place where this
 # draft had to extend ADR-014 rather than just implement it.
@@ -355,7 +388,7 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     sx.spice_dev(jp, "J", ["2", "4", "1"], "LSK489A", suffix="A")
     sx.spice_dev(jp, "J", ["6", "8", "5"], "LSK489A", suffix="B")
     R(R_SDEG, S1, SRC)
-    R(R_SDEG, S2, SRC)
+    R(R_SDEG_HALF, S2, SRC)             # ADR-086: + its twin in section 9
     if r_in:
         R(r_in, IN, GND)                # E3: Zin. See R_IN above.
 
@@ -620,8 +653,9 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # below dissipate up to 0.28 W (block B, short at MAIN, +10 dB, 20 kHz
     # full scale; 0.24 W in L40, 0.280 W with the faster VAS of ADR-054,
     # data/2026-10-01/L46a/regressione/, p7.py; 0.298 W with the follower of
-    # ADR-067, data/2026-10-12/L56/regressione/), so they must be rated
-    # >= 0.30 W at 60 C.
+    # ADR-067, data/2026-10-12/L56/regressione/; 0.333 W with the follower's
+    # collector resistor of ADR-087, data/2026-10-18/L60d1/regressione/), so
+    # they must be rated >= 0.34 W at 60 C.
     R("10", NX, NBN)
     R("10", NY, NBP)
     # Qmje15032/Qmje15033: onsemi's model names, left as served (ADR-017,
@@ -696,7 +730,10 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # NOT on the cascode reference (R114: already ~1 Hz, it made no difference)
     # and NOT on the MJE15032 collector (an emitter follower rejects its rail).
     # The 1000 uF electrolytic: >= 25 V, + terminal on VPF.
-    R("10", VP, VPF)
+    # ADR-086 (L60d1): the 10 Ohm is now two 20 Ohm in parallel, this one and
+    # its twin in section 9. With the 1000 uF shorted each takes half of the
+    # 22.5 W peak / 1.37 J of L45d2b1: 11.3 W, 0.69 J.
+    R(R_CELL_HALF, VP, VPF)
     C("1000u", VPF, GND, fp="Capacitor_THT:CP_Radial_D10.0mm_P5.00mm")
 
     # ========================================================================
@@ -721,11 +758,34 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # carries the VAS base current, i.e. signal, and must not return through
     # signal ground. Measured both ways: distortion identical, PSRR- at 100 Hz
     # / 1 kHz 95.4 / 95.0 dB (99.7 / 104.9 to ground; 76.2 / 86.3 before L56).
-    # Dissipation ~33 mW (follower, ~28.6 V) and ~4 mW (helper): SOT-23 is fine.
-    Q("pnp", "MMBT5401", "MMBT5401", VM, NHI, NVB)
+    # Dissipation ~33 mW (follower, ~28.6 V) and ~4 mW (helper) AT REST.
+    # ADR-087 (L60d1): NOT under overload. With block B unable to drive the
+    # mute's 47 Ohm (music at +10 dB, full input) or a shorted main output,
+    # nothing limited the follower: up to 82 mA, 0.41 W average and 2 W peak
+    # against the 0.31 W of P7, the VAS driven deep into saturation. Its
+    # collector now reaches VM through R_FOLLOW_C (section 10).
+    NFC = n("NFC")                            # follower collector
+    Q("pnp", "MMBT5401", "MMBT5401", NFC, NHI, NVB)
     R("1.2k", VPF, NVB)
     Q("pnp", "MMBT5401", "MMBT5401", VM, NMIRC, NMIRI)
     R("10k", VPF, NMIRI)
+
+    # ========================================================================
+    # 9. REDUNDANCY (ADR-086, L60d1, NC-069)
+    # ========================================================================
+    # Appended LAST for the reason sections 7 and 8 are (limitations.md #22).
+    # On this file's block R150 / R151 / R152; on the audio board they follow
+    # each instance's base. Values and reasons: R_GATE_SHUNT, R_SDEG_HALF,
+    # R_CELL_HALF at the top.
+    R(R_GATE_SHUNT, FB, G2)             # across the feedback gate stopper
+    R(R_SDEG_HALF, S2, SRC)             # twin of the feedback degeneration
+    R(R_CELL_HALF, VP, VPF)             # twin of the RC cell's resistor
+
+    # ========================================================================
+    # 10. FOLLOWER CURRENT LIMIT (ADR-087, L60d1)
+    # ========================================================================
+    # Appended LAST (limitations.md #22): R153 on this file's block.
+    R(R_FOLLOW_C, NFC, VM)
 
     return dict(IN=IN, OUT=OUT, FB=FB, RG=RG, RG10=RG10, VP=VP, VM=VM,
                 GND=GND)
@@ -872,9 +932,12 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 #     at +10 dB -19.7 mV (L46a -79.3). L40's v3.py, which does not remove DC,
 #     reported "14000 us" in L46a because of that -79 mV: not a failed recovery.
 #   P7 (tb_mute_corto.cir): worst MJE 0.361 W (1.04 W allowed), Q122 / Q125
-#     0.142 / 0.144 W (310 mW in SOT-23); 22 ohm emitter 0.28 W, 47 ohm main
-#     1.12 W (the BOM ratings follow, preamp_audio.py). Class A holds on every
-#     listening path.
+#     0.142 / 0.144 W (310 mW in SOT-23); 22 ohm emitter 0.333 W, 47 ohm main
+#     1.28 W (the BOM ratings follow, preamp_audio.py). Class A holds on every
+#     listening path. L60d1 (ADR-087): the follower Q146 and the helper Q148,
+#     never measured here before, 0.027 / 0.024 W (0.41 W for Q146 without
+#     its collector resistor), R153 0.043 W
+#     (data/2026-10-18/L60d1/script/p7_l56.py).
 #   V2 - GAIN RELAYS (tb_switch_v2.cir): window peaks -2.2 %, nothing else.
 #     Mute: the graduated mute is gone (ADR-062); the cut with the jack relays
 #     alone is L47c2b1's V2 matrix (tb_v2_casopeggiore.cir, 145 runs): 0 of 247
