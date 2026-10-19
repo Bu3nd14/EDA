@@ -131,6 +131,11 @@ DEVICES = {
     "Q127":  {"C": "NX",     "B": "NBB",   "E": "NY"},
     "R128":  {"1": "NX",     "2": "NBB"},
     "R129":  {"1": "NBB",    "2": "NY"},
+    # ADR-090 (L62b): four reserve diodes across the Vbe multiplier
+    "D154":  {"A": "NX",     "K": "NXD1"},
+    "D155":  {"A": "NXD1",   "K": "NXD2"},
+    "D156":  {"A": "NXD2",   "K": "NXD3"},
+    "D157":  {"A": "NXD3",   "K": "NY"},
     "R130":  {"1": "NX",     "2": "NBN"},
     "R131":  {"1": "NY",     "2": "NBP"},
     "Q132":  {"C": "VPLUS",  "B": "NBN",   "E": "NEN"},
@@ -567,6 +572,22 @@ wire("R128.2", "R129.1")
 wire("R129.2", "P3.ny_r131", dots=[NODE_XY["P3.ny_r131"]])
 wire("P3.ny_q129", "P3.ny_r131")
 wire("Q127.B", "R128.2", dots=[NODE_XY["R128.2"]])
+
+# ADR-090 (L62b, NC-062): four 1N4148 in series across NX-NY. Off at the
+# nominal ~2 V; they catch the spread at ~3 V if Q127 turns off.
+node("P3.nx_d154", "NX", (55.0, 10.5))
+node("P3.ny_d157", "NY", (55.0, 0.5))
+dio("D154", NODE_XY["P3.nx_d154"], (55.0, 8.0), lbl=((55.4, 9.25), "left"))
+dio("D155", NODE_XY["D154.K"], (55.0, 5.5), lbl=((55.4, 6.75), "left"))
+dio("D156", NODE_XY["D155.K"], (55.0, 3.0), lbl=((55.4, 4.25), "left"))
+dio("D157", NODE_XY["D156.K"], NODE_XY["P3.ny_d157"], lbl=((55.4, 1.75), "left"))
+wire("P3.nx_d154", "D154.A", dots=[NODE_XY["P3.nx_d154"]])
+wire("D154.K", "D155.A")
+wire("D155.K", "D156.A")
+wire("D156.K", "D157.A")
+wire("D157.K", "P3.ny_d157", dots=[NODE_XY["P3.ny_d157"]])
+txt((54.6, -0.25), "4 x 1N4148 di riserva (ADR-090)", size=7, color=DIM,
+    halign="center")
 
 # --- output devices ---------------------------------------------------------
 wire("P3.nx_r130", "P3.nx_r132")
