@@ -847,6 +847,27 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 # ============================================================================
 
 # ============================================================================
+# SIMULATED RESULTS - L62b, 2026-10-19: ADR-090 (four reserve diodes across the
+# Vbe multiplier, section 11). docs/preamp/data/2026-10-19/L62b/; regression
+# prima = main 5036d8e3 (the block below without diodes), dopo = this one.
+# Where this section gives a figure it supersedes the ones below.
+#
+#   OPERATING POINT: output pair 20.45 / 20.56 mA (was 20.50 / 20.61), rails
+#     37.92 mA (+) per block; rest current -0.05 / -0.09 / -0.13 mA at 27 /
+#     60 / 90 C uniform. The diode string carries 94 / 134 / 177 uA there,
+#     taken from Q127 (9.69 -> 9.60 mA at 27 C).
+#   NC-062 FAULTS (L62a bench, five channel positions): Q127 emitter open,
+#     Q127 B-E short, R129 short, R128 open -> MJEs 97-98 C at 60 C air (were
+#     213-216 C), 22 ohm <= 0.041 W (were up to 7.54 W). Any diode open or
+#     shorted: harmless (one short: rest 19.65 / 20.87 / 22.13 mA at 27 / 60
+#     / 90 C).
+#   V1: within +0.05 deg of the block below. P7: MJE 0.362 / 0.363 W, 22 ohm
+#     0.332 W, 47 ohm main 1.282 W, unchanged. V4 hot (L56 method, SOT-223,
+#     diodes at air and at the NPN's Tj): 0 of 48 outside, figures identical
+#     to L60d1. V2 bench: largest relative change 4e-4; matrix not re-run.
+# ============================================================================
+
+# ============================================================================
 # SIMULATED RESULTS - L56, 2026-10-12: ADR-067 (follower + helper, R120 220)
 # AND ADR-068 (VAS and its load in SOT-223). Same manufacturer models.
 # docs/preamp/data/2026-10-12/L56/ (regressione/prima = main 96bacb07, the
