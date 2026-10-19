@@ -1294,6 +1294,11 @@ cifra (0,93 µV). Il verdetto dipendeva da dove cadeva il campione, non da quant
 circuito si rifà con la media (`b1_confronto.py`) prima di cercare la musica nel circuito. ADR-087
 porta la media dentro `v2_metodo.py` (L60d2).
 
+**Da L60d2** (ADR-088) la media è il metodo di `v2_metodo.py`, con la correzione dell'attenuazione;
+il metodo di prima resta come colonna `picco_puntuale_V`. `b1_confronto.py` importa `v2_metodo.py`:
+la sua riga «v2» adesso legge la media corretta, non più il metodo di prima. Il metodo di prima si
+chiede per nome: `campiona(t, cols, dtmin, t_fine, "puntuale")`.
+
 ## 61. I deck d'anello rompono l'anello al posto di R109: non provano il guasto di R109, e una resistenza in parallelo li scavalca
 
 Visto in L60d1 (`docs/preamp/data/2026-10-18/L60d1/script/prepara_shunt.py`). `tb_loop`,
@@ -1306,3 +1311,19 @@ silenziose:
   margini identici al blocco sano. Per il guasto l'iniezione va dal lato di FB (bassa impedenza),
   `VINJ FB NBRK`, `RBRK NBRK G2 <la resistenza rimasta>`, T = V(FB)/V(NBRK); col controllo a 100 Ω
   ridà i margini dei deck entro 0,07°.
+
+## 62. I deck di guasto di L45a includono una copia del blocco scritta una volta: cambiato il blocco, provano quello vecchio
+
+Visto in L60d2 (`docs/preamp/data/2026-10-19/L60d2/script/genera_L60d2.py`). `genera_canale.py tr`
+(L45a) legge i *nomi* dei modi da `spice/preamp/gain_block.subckt` di oggi, ma il deck non guasta il
+blocco al volo: include `docs/preamp/data/2026-10-13/L45a/inc/<modo>.subckt`, la copia con la riga
+cambiata che `genera_canale.py modi` ha scritto il 2026-10-13. Dopo L60d1 quella copia è il blocco
+senza R150–R153, con R112 / R144 a 100 / 10 Ω: un deck di «R109 aperta» generato oggi prova R109
+aperta **senza** la resistenza in parallelo che la ridondanza ha messo apposta. Le corse finiscono,
+i numeri sono plausibili, e niente avvisa. Solo un modo nuovo (R150_ap) fa cadere ngspice, perché la
+sua copia non esiste. Anche il controllo `CTRL_OUT_VP` viene da lì.
+
+**Regola operativa**: un banco di guasti costruito sui deck di L45a riscrive le copie dal blocco di
+oggi (`gc.subckt_guasto(modo)`) in una cartella sua e ci sposta l'`.include`, e rifiuta una copia
+che non contiene le parti del blocco attuale (`genera_L60d2.py`, `copia_guasta()` e
+`reindirizza()`). Le corse di L60c2 erano giuste: il blocco era ancora quello di L45a.

@@ -8,7 +8,16 @@ COSA FA
 Applica alla lettera il "Metodo di misura" di V2 alle forme d'onda al jack
 scritte da `wrdata` nei deck spice/preamp/tb/tb_v2_mute_*.cir:
 
-- ricampionamento uniforme a 96 kHz. Interpolazione CUBICA (Lagrange a 4 punti
+- ricampionamento uniforme a 96 kHz, DA L60d2 CON LA MEDIA (ADR-087, ADR-088):
+  ogni campione k e' la media del segnale di ngspice, lineare a tratti fra i
+  suoi punti e senza diradamento, su [k/FS - 1/(2 FS), k/FS + 1/(2 FS)]; poi
+  la correzione a tre coefficienti [-a, 1+2a, -a] che toglie l'attenuazione
+  della media (sinc: -0,63 dB a 20 kHz), con `a` tale che a 20 kHz il guadagno
+  sia esatto (in banda al piu' +0,032 dB, a 14 kHz). E' cio' che vedrebbe un
+  convertitore col suo filtro anti-aliasing: un impulso di 134 ns conta per la
+  sua area, non per dove un campione gli cade sopra (limitations #60, L60d1).
+  Il metodo di prima, "puntuale", resta come colonna di confronto
+  (`picco_puntuale_V` per A e B): interpolazione CUBICA (Lagrange a 4 punti
   sulla griglia non uniforme di ngspice), non lineare: l'autotest misura quanto
   sbaglia la lineare. I punti piu' vicini di `dtmin` all'ultimo tenuto si
   scartano, perche' due campioni a 1e-12 s fanno esplodere i pesi di Lagrange;
@@ -91,7 +100,12 @@ SABOTAGGI = ("senza_filtro", "hp_primo_ordine", "rif_sfasato", "senza_fit",
              "fit_perfetto", "freq_sbagliata", "lineare",
              "senza_diradamento", "canale_cieco",
              "c2_senza_riferimento", "soglia_unica", "a_con_musica",
-             "b_grezzo_filtrato")
+             "b_grezzo_filtrato", "senza_media", "senza_correzione")
+# La correzione dopo la media (ADR-088, L60d2): la media su un intervallo 1/FS ha guadagno
+# sin(x)/x, x = pi f / FS; il filtro [-a, 1+2a, -a] ha 1 + 2a (1 - cos(2 pi f / FS)). `a` li fa
+# moltiplicare a 1 esatto a 20 kHz: a = 0,05068.
+_XC = math.pi * 20000.0 / FS
+A_CORR = (_XC / math.sin(_XC) - 1.0) / (2.0 * (1.0 - math.cos(2.0 * _XC)))
 
 
 def base_di(grandezza, amp):
@@ -229,8 +243,52 @@ def ricampiona(t, y, t_fine):
     return out
 
 
-def leggi_wrdata(path, dtmin, t_fine):
-    """wrdata di ngspice: 't v1 t v2 t v3 ...' -> colonne ricampionate."""
+def media_campioni(t, y, t_fine):
+    """y(t) lineare a tratti fra i punti di ngspice -> griglia k/FS, k = 0 .. floor(t_fine*FS):
+    ogni campione e' la media di y su [k/FS - 1/(2 FS), k/FS + 1/(2 FS)] (tagliato a [t0, t_fine]),
+    poi la correzione a tre coefficienti (ADR-087, ADR-088). Nessun diradamento: i punti vicini
+    pesano per la loro durata, non fanno esplodere niente."""
+    tf = min(t_fine, t[-1])
+    n = int(math.floor(tf * FS)) + 1
+    N = len(t)
+    h = 1.0 / FS
+    # integrale cumulativo a trapezi: esatto per il segnale lineare a tratti
+    C = [0.0] * N
+    for i in range(1, N):
+        C[i] = C[i - 1] + 0.5 * (y[i] + y[i - 1]) * (t[i] - t[i - 1])
+    j = [0]
+
+    def integrale(tt):
+        # I(tt) = integrale da t[0] a tt; tt cresce da una chiamata all'altra
+        i = j[0]
+        while i < N - 2 and t[i + 1] <= tt:
+            i += 1
+        j[0] = i
+        dt = t[i + 1] - t[i]
+        u = tt - t[i]
+        yy = y[i] + (y[i + 1] - y[i]) * u / dt if dt > 0 else y[i]
+        return C[i] + 0.5 * (y[i] + yy) * u
+
+    m = [0.0] * n
+    ta = max(t[0], -0.5 * h)
+    a = integrale(ta)
+    for k in range(n):
+        tb = min((k + 0.5) * h, tf)
+        b = integrale(tb)
+        m[k] = (b - a) / (tb - ta) if tb > ta else y[-1]
+        a, ta = b, tb
+    if "senza_correzione" in SABOTA or n < 3:
+        return m
+    c0, c1 = 1.0 + 2.0 * A_CORR, A_CORR
+    out = [0.0] * n
+    out[0], out[-1] = m[0], m[-1]
+    for k in range(1, n - 1):
+        out[k] = c0 * m[k] - c1 * (m[k - 1] + m[k + 1])
+    return out
+
+
+def leggi_punti(path):
+    """wrdata di ngspice: 't v1 t v2 t v3 ...' -> (t, colonne) sulla griglia di ngspice."""
     t = []
     cols = None
     with open(path) as f:
@@ -254,8 +312,26 @@ def leggi_wrdata(path, dtmin, t_fine):
                 c.append(v[1 + 2 * k])
     if not t:
         raise SystemExit("ERRORE: nessun dato in %s" % path)
+    return t, cols
+
+
+def metodo_di_oggi():
+    return "puntuale" if "senza_media" in SABOTA else "media"
+
+
+def campiona(t, cols, dtmin, t_fine, metodo=None):
+    """Le colonne sulla griglia a 96 kHz: "media" (il metodo, ADR-087) o "puntuale" (quello di
+    prima, diradamento + Lagrange cubica: la colonna di confronto)."""
+    if (metodo or metodo_di_oggi()) == "media":
+        return [media_campioni(t, c, t_fine) for c in cols], t[-1]
     t, cols = dirada(t, cols, dtmin)
     return [ricampiona(t, c, t_fine) for c in cols], t[-1]
+
+
+def leggi_wrdata(path, dtmin, t_fine, metodo=None):
+    """wrdata di ngspice -> colonne campionate a 96 kHz col metodo dato (di default la media)."""
+    t, cols = leggi_punti(path)
+    return campiona(t, cols, dtmin, t_fine, metodo)
 
 
 # ------------------------------------------------------------------ fit C ----
@@ -641,6 +717,53 @@ def autotest():
     verifica("T15 taglio netto 12 V a 20 Hz: B filtrato vede la coda (> 100 mV), B2g zero",
              vf > 0.1 and vg == 0.0, "filtrato %.3g V, grezzo %.3g V" % (vf, vg))
 
+    # T16 (ADR-087, L60d2) - gli impulsi stretti di L60d1: due per millisecondo, triangoli da
+    # 1 mV larghi 134 ns, a fase fissa, ciascuno centrato su un istante k/FS, sulla griglia di
+    # ngspice (2,5 us, fitta solo sull'impulso). Un convertitore col suo filtro vede l'AREA:
+    # 67 pV s su 10,4 us, 6,4 uV in un solo campione. Il metodo di prima prende il vertice,
+    # 1 mV, e la Lagrange cubica lo allarga: T16 deve cadere con `senza_media`.
+    ap, wp, hs = 1e-3, 134e-9, 1.0 / FS
+    centri = [(96 * p + d) / FS for p in range(600) for d in (10, 58)]
+    tt, yy = [], []
+    g = 0.0
+    for tc in centri:
+        while g < tc - 2.1e-6:
+            tt.append(g)
+            yy.append(0.0)
+            g += 2.5e-6
+        tt += [tc - 2.05e-6, tc - wp / 2, tc, tc + wp / 2]
+        yy += [0.0, 0.0, ap, 0.0]
+        while g < tc + 2.4e-6:
+            g += 2.5e-6
+    tt.append(0.6)
+    yy.append(0.0)
+    zm = campiona(tt, [yy], 1e-5 / 5, 0.6)[0][0]
+    zp = campiona(tt, [yy], 1e-5 / 5, 0.6, "puntuale")[0][0]
+    ideale = [0.0] * len(zm)
+    for tc in centri:
+        ideale[int(round(tc * FS))] = 0.5 * ap * wp / hs
+    b_m = b_picco(zm, 0.5, 0.6)[0]
+    b_p = b_picco(zp, 0.5, 0.6)[0]
+    b_i = b_picco(ideale, 0.5, 0.6)[0]
+    verifica("T16 impulsi di 134 ns: B1 entro il 10 % dell'area, sotto 10 uV",
+             abs(b_m / b_i - 1.0) <= 0.10 and b_m <= SOGLIA / 10,
+             "%.3g V (l'area %.3g V; il metodo puntuale %.3g V)" % (b_m, b_i, b_p))
+
+    # T17 (ADR-088) - la media attenua i 20 kHz di 0,63 dB (sin x / x); la correzione li riporta.
+    # Toni da 12 V sulla griglia di ngspice di T7 coi passi delle corse vere (10 us a 1 kHz,
+    # 0,5 us a 20 kHz), ampiezza per proiezione su 10 ms interi: entro 0,01 dB.
+    for f, tmax in ((1000.0, 10e-6), (20000.0, 0.5e-6)):
+        t = griglia(tmax, 0.03)
+        y = [12.0 * math.sin(2 * math.pi * f * x) for x in t]
+        z = campiona(t, [y], tmax / 5, 0.029)[0][0]
+        i0 = int(0.01 * FS)
+        w = 2 * math.pi * f / FS
+        sa = sum(z[i] * math.sin(w * i) for i in range(i0, i0 + 960)) * 2 / 960
+        ca = sum(z[i] * math.cos(w * i) for i in range(i0, i0 + 960)) * 2 / 960
+        db = 20 * math.log10(math.hypot(sa, ca) / 12.0)
+        verifica("T17 tono 12 V a %g Hz con la media: ampiezza entro 0,01 dB" % f,
+                 abs(db) <= 0.01, "%+.4f dB" % db)
+
     nf = esiti.count(False)
     print("# %d controlli, %d caduti" % (len(esiti), nf))
     return 1 if nf else 0
@@ -801,8 +924,12 @@ def analizza(manifest, datadir, outpath):
             ordine.append(k)
             return cache[k]
         tmax = float(c["tmax"])
-        cols, tend = leggi_wrdata(os.path.join(datadir, c["file"]), tmax / 5, float(c["t_fine"]))
-        cache[k] = (cols, tend)
+        # i punti si leggono una volta e si campionano coi due metodi: il metodo (la media,
+        # ADR-087 / ADR-088) e quello di prima, per la colonna di confronto di A e B
+        t, pc = leggi_punti(os.path.join(datadir, c["file"]))
+        cols, tend = campiona(t, pc, tmax / 5, float(c["t_fine"]))
+        colsp, _ = campiona(t, pc, tmax / 5, float(c["t_fine"]), "puntuale")
+        cache[k] = (cols, tend, colsp)
         ordine.append(k)
         while len(ordine) > 6:
             vecchia = ordine.pop(0)
@@ -834,7 +961,7 @@ def analizza(manifest, datadir, outpath):
 
     righe = []
 
-    def scrivi(c, gr, u, v, i, fin, nota):
+    def scrivi(c, gr, u, v, i, fin, nota, vp=None):
         if v is None:
             esito = "n/d"
         elif v > soglia_di(gr):
@@ -846,10 +973,11 @@ def analizza(manifest, datadir, outpath):
         righe.append([c["cella"], c["variante"], c["f_hz"], c["amp"], c["gm"], c["rl"], gr, u,
                       "" if v is None else "%.4g" % v,
                       "" if i is None else "%.6f" % (i / FS),
-                      "" if fin is None else "%.3f" % fin, esito, nota])
+                      "" if fin is None else "%.3f" % fin, esito, nota,
+                      "" if vp is None else "%.4g" % vp])
 
     for c in celle:
-        cols, tend = dati(c)
+        cols, tend, colsp = dati(c)
         t_fine = min(float(c["t_fine"]), tend)
         t_ins, t_rel = float(c["t_ins"]), float(c["t_rel"])
         tg = float(c.get("t_grad") or 0.0)
@@ -858,9 +986,11 @@ def analizza(manifest, datadir, outpath):
         tipo = c["tipo"]
         for k, u in enumerate(USCITE):
             x = cols[k]
+            xp = colsp[k]
             if tipo == "rif_sempre":
                 v, i = b_picco(x, 0.5, t_fine)
-                scrivi(c, "B1", u, v, i, None, "riferimento sempre in mute, da 0,5 s")
+                scrivi(c, "B1", u, v, i, None, "riferimento sempre in mute, da 0,5 s",
+                       b_picco(xp, 0.5, t_fine)[0])
             # Il pavimento di C e' della corsa MAI in mute: in quella sempre in
             # mute il C misura il residuo in mute (gia' B1), non un pavimento.
             if tipo == "rif_mai" and amp > 0:
@@ -872,7 +1002,7 @@ def analizza(manifest, datadir, outpath):
                                "pavimento di C a %.3f s, cond %.3g" % (te, cond))
             if tipo == "pav_num":
                 # pavimento numerico: la stessa corsa con un altro TMAX, letta come A
-                rcols, _ = dati(per_nome[c["rif_ins"]])
+                rcols, _, _ = dati(per_nome[c["rif_ins"]])
                 v, i, fin = a_picco(x, rcols[k], t_ins, min(t_ins + DURATA_A, t_fine))
                 scrivi(c, "A_pav", u, v, i, fin, "contro %s" % c["rif_ins"])
                 # e lo stesso evento nullo letto come C2: e' il pavimento del
@@ -893,12 +1023,14 @@ def analizza(manifest, datadir, outpath):
                 rn = c.get(rif_k, "-")
                 if rn in ("", "-") or not (0 < te < t_fine):
                     continue
-                rcols, _ = dati(per_nome[rn])
+                rcols, _, rcolsp = dati(per_nome[rn])
                 v, i, fin = a_picco(x, rcols[k], te, min(t_stop, t_fine))
-                scrivi(c, nome, u, v, i, fin, "riferimento %s" % rn)
+                vp = a_picco(xp, rcolsp[k], te, min(t_stop, t_fine))[0]
+                scrivi(c, nome, u, v, i, fin, "riferimento %s" % rn, vp)
             if 0 < t_ins < t_fine:
                 v, i = b_picco(x, t_ins + tg + 0.020, min(t_rel, t_fine))
-                scrivi(c, "B2", u, v, i, None, "mute da t_ins+t_grad+20 ms a t_rel")
+                scrivi(c, "B2", u, v, i, None, "mute da t_ins+t_grad+20 ms a t_rel",
+                       b_picco(xp, t_ins + tg + 0.020, min(t_rel, t_fine))[0])
                 if amp > 0:
                     # B2g (ADR-063, L47c2b1): il jack GREZZO, senza filtro, nella stessa
                     # finestra. Dopo un taglio netto B2 contiene la coda del passa-alto che
@@ -907,7 +1039,8 @@ def analizza(manifest, datadir, outpath):
                     # (e B1 del riferimento sempre in mute), B2 va col clic.
                     vg, ig = b_grezzo(x, t_ins + tg + 0.020, min(t_rel, t_fine))
                     scrivi(c, "B2g", u, vg, ig, None,
-                           "jack grezzo da t_ins+t_grad+20 ms a t_rel (ADR-063)")
+                           "jack grezzo da t_ins+t_grad+20 ms a t_rel (ADR-063)",
+                           b_grezzo(xp, t_ins + tg + 0.020, min(t_rel, t_fine))[0])
             if amp > 0:
                 ev = [te for te in (t_ins, t_rel) if 0.3 < te < t_fine]
                 # C1: il fit della sola fondamentale, com'e' in ADR-032.
@@ -925,7 +1058,7 @@ def analizza(manifest, datadir, outpath):
                     rn = c.get(rif_k, "-")
                     if rn in ("", "-") or not (0.3 < te < t_fine):
                         continue
-                    rcols, _ = dati(per_nome[rn])
+                    rcols, _, _ = dati(per_nome[rn])
                     res_rf = residuo_di(rn, k, rcols[k], f)
                     pk2, cond2 = c2_da_residui(res_ev, res_rf, [te], tg)
                     v2, i2 = pk2[0]
@@ -934,7 +1067,7 @@ def analizza(manifest, datadir, outpath):
     with open(outpath, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["cella", "variante", "f_hz", "amp", "gm", "rl", "grandezza", "uscita",
-                    "picco_V", "t_picco_s", "finestra_s", "esito", "nota"])
+                    "picco_V", "t_picco_s", "finestra_s", "esito", "nota", "picco_puntuale_V"])
         w.writerows(righe)
     print("%d righe -> %s" % (len(righe), outpath))
     return 0

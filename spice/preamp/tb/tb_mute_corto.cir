@@ -55,7 +55,7 @@ tb_mute_corto.cir - mute tenuto e corto su ciascuna uscita, coi buffer delle fis
 *   Q122 VAS   Q125 carico VAS   Q127 moltiplicatore Vbe   Q106 coda
 *   Q117/Q118 cascode   Q121A/B LS352   JQ110A/B LSK489
 *   R134/R135 22 ohm d'emettitore   R130/R131 10 ohm di base
-*   R123/R126 91 ohm di VAS e carico VAS
+*   R123/R126 56 ohm di VAS e carico VAS (91 fino a ADR-054; le potenze col 56 da L60d2)
 * Il `@q134` citato da NC-001 e da G0 NON esiste piu' (rinumerazioni L22/L10).
 *
 * MODELLI (L39, NC-017): ogni dispositivo attivo e' il modello del costruttore
@@ -286,8 +286,8 @@ foreach c $cases
   let x135 = @r.xa.r135[i] * @r.xa.r135[i] * 22
   let x130 = @r.xa.r130[i] * @r.xa.r130[i] * 10
   let x131 = @r.xa.r131[i] * @r.xa.r131[i] * 10
-  let x123 = @r.xa.r123[i] * @r.xa.r123[i] * 91
-  let x126 = @r.xa.r126[i] * @r.xa.r126[i] * 91
+  let x123 = @r.xa.r123[i] * @r.xa.r123[i] * 56
+  let x126 = @r.xa.r126[i] * @r.xa.r126[i] * 56
   meas tran pr134 AVG x134 from=4m to=8m
   meas tran pr135 AVG x135 from=4m to=8m
   meas tran pr130 AVG x130 from=4m to=8m
@@ -323,8 +323,8 @@ foreach c $cases
   let x135 = @r.xf1.r135[i] * @r.xf1.r135[i] * 22
   let x130 = @r.xf1.r130[i] * @r.xf1.r130[i] * 10
   let x131 = @r.xf1.r131[i] * @r.xf1.r131[i] * 10
-  let x123 = @r.xf1.r123[i] * @r.xf1.r123[i] * 91
-  let x126 = @r.xf1.r126[i] * @r.xf1.r126[i] * 91
+  let x123 = @r.xf1.r123[i] * @r.xf1.r123[i] * 56
+  let x126 = @r.xf1.r126[i] * @r.xf1.r126[i] * 56
   meas tran pr134 AVG x134 from=4m to=8m
   meas tran pr135 AVG x135 from=4m to=8m
   meas tran pr130 AVG x130 from=4m to=8m
@@ -363,8 +363,8 @@ foreach c $cases
   let x135 = @r.xf2.r135[i] * @r.xf2.r135[i] * 22
   let x130 = @r.xf2.r130[i] * @r.xf2.r130[i] * 10
   let x131 = @r.xf2.r131[i] * @r.xf2.r131[i] * 10
-  let x123 = @r.xf2.r123[i] * @r.xf2.r123[i] * 91
-  let x126 = @r.xf2.r126[i] * @r.xf2.r126[i] * 91
+  let x123 = @r.xf2.r123[i] * @r.xf2.r123[i] * 56
+  let x126 = @r.xf2.r126[i] * @r.xf2.r126[i] * 56
   meas tran pr134 AVG x134 from=4m to=8m
   meas tran pr135 AVG x135 from=4m to=8m
   meas tran pr130 AVG x130 from=4m to=8m
@@ -403,8 +403,8 @@ foreach c $cases
   let x135 = @r.xb.r135[i] * @r.xb.r135[i] * 22
   let x130 = @r.xb.r130[i] * @r.xb.r130[i] * 10
   let x131 = @r.xb.r131[i] * @r.xb.r131[i] * 10
-  let x123 = @r.xb.r123[i] * @r.xb.r123[i] * 91
-  let x126 = @r.xb.r126[i] * @r.xb.r126[i] * 91
+  let x123 = @r.xb.r123[i] * @r.xb.r123[i] * 56
+  let x126 = @r.xb.r126[i] * @r.xb.r126[i] * 56
   meas tran pr134 AVG x134 from=4m to=8m
   meas tran pr135 AVG x135 from=4m to=8m
   meas tran pr130 AVG x130 from=4m to=8m

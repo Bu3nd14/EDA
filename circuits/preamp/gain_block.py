@@ -554,6 +554,9 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # R123 sees up to 0.123 W with a short at MAIN (+10 dB, 20 kHz, the
     # follower drives the VAS harder than the saturated mirror could):
     # rate it >= 0.13 W at 60 C (data/2026-10-12/L56/regressione/, p7.py).
+    # L60d2: that P7 squared the current into 91 ohm, the value before
+    # ADR-054 (0.076 W with 56); with R153 limiting the follower (ADR-087)
+    # P7 now reads 8.8 mW (data/2026-10-19/L60d2/p7/). The 0.13 W rating stays.
     NVE = n("NVE")
     Q("pnp", "DZT5401", "MMBT5401", NX, NVB, NVE, fp=FP_SOT223)
     R("56", VPF, NVE)
@@ -848,6 +851,7 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 #     no requirement bounds it, and the power amplifier is already clipping).
 #   P7 (short at MAIN): MJE 0.393 W, Q125 0.191 W (84 C at 60 C air in
 #     SOT-223, 140 C it would be in SOT-23: NC-061), R123 0.123 W, 22 ohm 0.298 W.
+#     (L60d2: R123 was computed with 91 ohm; with 56 ohm and R153 it is 8.8 mW.)
 #   SUPPLY FAULTS AT THE JACK (L56-alimentatore/, L51b's chain on this load):
 #     U502 off 14 uV, U501 off 0.136 mV, 12 V relay-line short 6.4 mV.
 # ============================================================================
