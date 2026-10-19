@@ -4457,7 +4457,7 @@ nel sorgente: R123 ≥ 0,13 W, le 22 Ω ≥ 0,30 W a 60 °C.
 | Requisito | **PR-22** (niente si scalda oltre i propri limiti) · **P7** (Tj ≤ 125 °C a 60 °C d'aria, ADR-021) · NC-042 |
 | Severità | **bloccante per G1** (decisione dell'utente, 2026-10-13: «apri la non conformità del moltiplicatore di Vbe come bloccante») |
 | Aperta da | `reports/2026-10-13-L45a-fmea-blocco.md`, «Il calore». Trovata dall'**orchestratore** in L45a |
-| Stato | aperta |
+| Stato | aperta — il rimedio in **L62** (decisione dell'utente dopo L60d2, 2026-10-19): L62a i quattro modi rifatti sul blocco di oggi, i rimedi sul banco e la scelta; L62b il sorgente. Prima di L45d2b2 |
 
 **Evidenza.** `data/2026-10-13/L45a/analisi_B.csv` (lo stesso in ogni posizione del canale), 27 °C
 d'aria, Tj = Ta + P · R_thJA (MJE in TO-220 senza dissipatore, 62,5 °C/W):
