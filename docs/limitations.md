@@ -1327,3 +1327,16 @@ sua copia non esiste. Anche il controllo `CTRL_OUT_VP` viene da lì.
 oggi (`gc.subckt_guasto(modo)`) in una cartella sua e ci sposta l'`.include`, e rifiuta una copia
 che non contiene le parti del blocco attuale (`genera_L60d2.py`, `copia_guasta()` e
 `reindirizza()`). Le corse di L60c2 erano giuste: il blocco era ancora quello di L45a.
+
+## 63. Il verdetto di V2 tiene solo l'uscita peggiore di ogni cella: una cifra alta su un'altra uscita sparisce
+
+Visto in L60d2 (`docs/preamp/data/2026-10-19/L60d2/v2/`). `verdetto.py` (L47c2b1) prende, per ogni
+cella e grandezza, il massimo delle tre uscite e scrive una riga sola, con l'uscita che lo dà.
+`verdetto_per_uscita.py` (L60c2) divide quella tabella per uscita: vede un'uscita solo dove è la
+peggiore. In L60c2, sulla cella `mev_20k_iii` (la musica a 20 kHz a mute inserito), la principale
+era a 173 µV e copriva la Stax a **84,1 µV** (in `analisi.csv`, non nel verdetto): il report diceva
+«la Stax il peggiore 14,7 µV». In L60d2, con la principale a 28 µV, la Stax compare: 82,4 µV (L48b
+col condensatore da 4,7 µF: 11,1 µV; il contatto aperto di K3 IM06TS è 1 pF contro 0,1 pF).
+
+**Regola operativa**: il peggiore di un'uscita si legge da `analisi.csv` filtrata per quell'uscita
+(colonna `uscita`, righe col tetto), non dal verdetto.

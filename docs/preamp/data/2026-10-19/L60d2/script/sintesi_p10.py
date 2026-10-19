@@ -50,7 +50,9 @@ for r in csv.DictReader(open(os.path.join(L60D2, "p10.csv"))):
                   "L45b_vuoto_4u7_sopra_ms": v["fix2_sopra_ms"] if v else "",
                   "L60c2_sopra_ms": l60c2[(pos, modo, k)]["stax_sopra_ms"]
                   if (pos, modo, k) in l60c2 else "",
-                  "peggio_di_L60c2": "si" if (pos, modo, k) in l60c2 and sopra >
+                  # una corsa di L60c2 ferma presto (CORSA CORTA) non e' un riferimento
+                  "peggio_di_L60c2": "si" if (pos, modo, k) in l60c2
+                  and l60c2[(pos, modo, k)]["stato"] == "ok" and sopra >
                   float(l60c2[(pos, modo, k)]["stax_sopra_ms"]) + 1.0 else "",
                   "stato": r["stato"]})
 righe.sort(key=lambda x: -float(x["stax_sopra_ms"]))
