@@ -630,6 +630,8 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # NO trimmer, deliberately: with 22 Ohm emitter resistors a 50 mV Vbe
     # spread moves Iq by only +/-1.1 mA, and a trimmer with an open wiper is
     # a thermal-runaway mechanism. R(NBB-NY) is select-on-test if needed.
+    # ADR-090 (L62b, NC-062): four reserve diodes across NX-NY catch the four
+    # single faults that turn this transistor off - section 11, appended last.
     Q("npn", "DZT5551", "MMBT5551", NX, NBB, NY, fp=FP_SOT223)
     R("1.58k", NX, NBB)
     R("1.00k", NBB, NY)
@@ -789,6 +791,31 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # ========================================================================
     # Appended LAST (limitations.md #22): R153 on this file's block.
     R(R_FOLLOW_C, NFC, VM)
+
+    # ========================================================================
+    # 11. RESERVE DIODES ACROSS THE VBE MULTIPLIER (ADR-090, L62b, NC-062)
+    # ========================================================================
+    # Appended LAST (limitations.md #22): D154..D157 on this file's block. On
+    # the audio board the number depends on the instance's part count: block A
+    # D152-D155, block B D253-D256, the fixed buffers D551-D554 / D651-D654,
+    # and the same pattern on the other channel (554 parts, was 522).
+    # Four 1N4148 in series from NX to NY, anode towards NX, across section 4.
+    # Four single faults turn Q127 off (emitter open, base-emitter short, R129
+    # short, R128 open): the VAS current then lands in the output bases and
+    # the MJEs reach 213-216 C at 60 C air, the 22 ohm up to 7.5 W, nothing at
+    # the jack (L45a, L62a). With the diodes the spread stops at ~3.0 V:
+    # 42 mA per device, 97-98 C at 60 C air, 22 ohm <= 0.041 W (L62a bench).
+    # At the nominal ~2.0 V they do not conduct: rest current -0.05 mA, V1
+    # within 0.05 deg, P7 unchanged. One diode shorted leaves three, which at
+    # 2.0 V conduct little: 19.7 / 20.9 / 22.1 mA at 27 / 60 / 90 C.
+    # Elliott (ESP Project 03) keeps them as a fail-safe for the same reason.
+    # Place them AWAY from the output devices (ADR-090 "Da riaprire se"): hot
+    # diodes conduct earlier and steal rest current.
+    NXD1, NXD2, NXD3 = n("NXD1"), n("NXD2"), n("NXD3")
+    D("1N4148", NX, NXD1)
+    D("1N4148", NXD1, NXD2)
+    D("1N4148", NXD2, NXD3)
+    D("1N4148", NXD3, NY)
 
     return dict(IN=IN, OUT=OUT, FB=FB, RG=RG, RG10=RG10, VP=VP, VM=VM,
                 GND=GND)
