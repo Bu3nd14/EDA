@@ -1340,3 +1340,20 @@ col condensatore da 4,7 µF: 11,1 µV; il contatto aperto di K3 IM06TS è 1 pF c
 
 **Regola operativa**: il peggiore di un'uscita si legge da `analisi.csv` filtrata per quell'uscita
 (colonna `uscita`, righe col tetto), non dal verdetto.
+
+## 64. Con la media di V2 l'interruttore ideale dei banchi di guasto diventa un gradino: un impulso di 2 µs letto per area
+
+Visto in L62a (`docs/preamp/data/2026-10-19/L62a/`, `script/metodo_scatto.py`). I banchi di guasto di
+L45a inseriscono il guasto con un interruttore ideale che cambia stato in 10 µs. Quando si apre
+l'emettitore del moltiplicatore di Vbe (20 mA che si interrompono), il jack principale fa un solo
+punto a −1,35 V, largo ~2 µs, e poi si ferma a −0,39 mV. Il metodo di L45a (puntuale, coi punti più
+vicini di 10 µs scartati) non lo vedeva: **0,42 mV**. Il metodo con la media su ogni campione (ADR-087,
+ADR-088, da L60d2), fatto apposta per contare un impulso stretto per la sua area, lo vede: **74 mV**,
+91 dB SPL (227 mV, 101 dB SPL, col blocco B a +10 dB). Le stesse corse lette coi due metodi danno
+74 / 0,43 mV; la copia guasta di L45a nel banco di oggi dà gli stessi 74 mV, quindi il blocco non
+c'entra. Niente avvisa: le corse finiscono, e la cifra è plausibile.
+
+**Regola operativa**: un gradino di un banco di guasto che cambia fra due lotti si legge anche col
+metodo puntuale (`v2_metodo.leggi_wrdata(..., metodo="puntuale")`) e sulla forma d'onda intorno
+all'istante del guasto, prima di attribuirlo al circuito. Se è un impulso di µs dell'interruttore, lo
+si dice come tale: è la velocità del guasto simulato, non una misura del guasto vero.
