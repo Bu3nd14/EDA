@@ -33,7 +33,8 @@ What is checked:
   2. audio side: the named pins sit on the named nets (VPLUS, GND, ...);
   3. supply side: the same named nets on the same pins, and they are what
      their name says - VPLUS / VMINUS on the OUT pin of a TPS7A4701 /
-     TPS7A3301, MUTE_CMD and PERMIT_CMD each on the DRAIN of its own
+     TPS7A3301 (or, ADR-093, behind one Schottky in series from that OUT,
+     the right way round), MUTE_CMD and PERMIT_CMD each on the DRAIN of its own
      N-MOSFET whose source is RLY_RET, MUTE_SW pulled to a logic rail, and
      every TPS7A's thermal pad on its GND;
   4. (L41b1, ADR-049, NC-037) VRELAY is the DRAIN of a P-MOSFET - the
@@ -138,13 +139,23 @@ def check_psu(components, pin_net, findings):
             if pins.get(pin) != name:
                 findings.append("psu: %s pin %s on %r, expected %r"
                                 % (ref, pin, pins.get(pin), name))
-    # the rails are what their names say
+    # the rails are what their names say: the OUT of the regulator, or
+    # (L45d2b2b1, ADR-093) behind ONE Schottky in series from that OUT, the
+    # right way round - cathode on VPLUS, anode on VMINUS (KiCad D_Schottky:
+    # 1 K, 2 A). A reversed series diode would leave the rail dead.
     for net, part in REG_OUT.items():
-        outs = [(r, p) for (r, p) in pins_of_net(pin_net, net)
-                if components.get(r, {}).get("part", "").startswith(part)
-                and p in ("1", "20")]
-        if not outs:
-            findings.append("psu: %s is not the OUT of any %s" % (net, part))
+        def is_reg_out(n, part=part):
+            return any(components.get(r, {}).get("part", "").startswith(part)
+                       and p in ("1", "20") for (r, p) in pins_of_net(pin_net, n))
+        if is_reg_out(net):
+            continue
+        rail_pin, reg_pin = ("1", "2") if net == "VPLUS" else ("2", "1")
+        series = [r for (r, p) in pins_of_net(pin_net, net)
+                  if components.get(r, {}).get("part") == "D_Schottky"
+                  and p == rail_pin and is_reg_out(pin_net.get((r, reg_pin)))]
+        if len(series) != 1:
+            findings.append("psu: %s is not the OUT of any %s (nor behind one "
+                            "Schottky from it, ADR-093)" % (net, part))
     # every TPS7A's thermal pad (21) on its own GND pin's net (7): both
     # datasheets say the pad is internally GND (SBVS204G, SBVS169D). L41a's
     # first draft put the TPS7A3301's pad on IN - RAW_M shorted to ground.

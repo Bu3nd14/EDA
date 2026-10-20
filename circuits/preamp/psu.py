@@ -12,8 +12,8 @@ reads it) and the contracts written on the audio board next to J1 and J4.
       +-- F501 -- T2 (small toroid, ALWAYS on while the rear is on) -- D503 --+-- D504 -- C_V --[U503 12 V]-- VRELAY_REG -+-[U504 5 V]-- V5 (logic, micro)
       |                                                                      |                                     +-[Q505]-- VRELAY (J1 pin 4, the audio board)
       |                                                                      +-- mains detector (Q504, U506 ch 1)
-      +-- K501 (DPST, coil on VRELAY_REG) -- T1 (toroid 2x15 V 50 VA) -- D501 -+-- C501 -- R550 --[U501 TPS7A4701]-- C505 -- VPLUS
-                                                                              +-- C502 -- R551 --[U502 TPS7A3301]-- C506 -- VMINUS
+      +-- K501 (DPST, coil on VRELAY_REG) -- T1 (toroid 2x15 V 50 VA) -- D501 -+-- C501 -- R550 --[U501 TPS7A4701]-- VPLUS_REG --D515>-- C505 -- VPLUS
+                                                                              +-- C502 -- R551 --[U502 TPS7A3301]-- VMINUS_REG --<D516-- C506 -- VMINUS
     supervisor U505: VPLUS < 13.5 V, |VMINUS| < 13.5 V   \
     mains detector U506 A: no half-wave for ~15 ms        -> pull MUTE_G low: Q501 off, MUTE_CMD released (mute)
     VRELAY supervisor U506 B: VRELAY_REG < 11.0 V         /
@@ -96,6 +96,8 @@ FP_QFN = ("Package_DFN_QFN:Texas_RGW0020A_VQFN-20-1EP_5x5mm_P0.65mm_"
           "EP3.15x3.15mm_ThermalVias")
 FP_BRIDGE = "Diode_THT:Diode_Bridge_Vishay_KBL"
 FP_DO41 = "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal"
+# ADR-093: the SB340s (3 A, 40 V) of the rail regulators - in series after OUT, and on the pins
+FP_DO201 = "Diode_THT:D_DO-201AD_P15.24mm_Horizontal"
 FP_DO35 = "Diode_THT:D_DO-35_SOD27_P7.62mm_Horizontal"
 FP_CP16 = "Capacitor_THT:CP_Radial_D16.0mm_P7.50mm"
 FP_CP12 = "Capacitor_THT:CP_Radial_D12.5mm_P5.00mm"
@@ -325,19 +327,29 @@ if __name__ == "__main__":
     r = part("Device", "R", "4.7", "R550", FP_R_2W)
     r[1] += RAW_P
     r[2] += RAW_PR
-    u = part("Regulator_Linear", "TPS7A4701xRGW", "TPS7A4701 15V", "U501",
+    # ADR-093 (L45d2b2b1, ADR-074): OUT is VPLUS_REG, and D515 (SB340) carries it to VPLUS. In a
+    # short of the raw side the hold-up (C505, the audio board's 800 uF and its RC cells) can no
+    # longer flow back into the short through D510: the rail stays up until the jack opens (13.5 V
+    # at the jack in all 24 rows of ADR-074, ~32 dB SPL at the worst, against ~78 dB SPL with the
+    # pin's ceramic C509 shorted before). SENSE stays on the PIN, not on the rail: a diode inside
+    # the loop (~0.09 ohm against ~3.6 mF, a pole near 500 Hz) is a stability risk no bench here
+    # can see; the regulator sees its own 10 uF (C511) as today. The rail is the pin minus the
+    # SB340's ~0.31 V (25 C typical, Vishay 88719 fig. 3), so the set point is 15.3 V.
+    VP_REG = Net("VPLUS_REG")
+    u = part("Regulator_Linear", "TPS7A4701xRGW", "TPS7A4701 15.3V", "U501",
              FP_QFN)
     u["15"] += RAW_PR
     u["16"] += RAW_PR
     u["13"] += RAW_PR                # EN: on whenever the toroid is on
-    u["1"] += VP
-    u["20"] += VP
-    u["3"] += VP                     # SENSE to OUT (ANY-OUT mode)
+    u["1"] += VP_REG
+    u["20"] += VP_REG
+    u["3"] += VP_REG                 # SENSE to OUT (ANY-OUT mode), at the pin (ADR-093)
     u["7"] += GND
     u["21"] += GND
-    for p in ("4", "5", "9"):        # 6.4 + 6.4 + 0.8 = 13.6 V over 1.4 V
+    # 6.4 + 6.4 + 0.8 = 13.6 V over 1.4 V, and ADR-093's 0.2 + 0.1 V: 15.3 V
+    for p in ("4", "5", "9", "11", "12"):
         u[p] += GND
-    # ANY-OUT pins 6, 8, 10, 11, 12 stay open: SKiDL 2.3 has no NC marker
+    # ANY-OUT pins 6, 8, 10 stay open: SKiDL 2.3 has no NC marker
     # (L36), so ERC lists them as unconnected - on purpose.
     NR_P = Net("NR_P")
     u["14"] += NR_P
@@ -350,18 +362,26 @@ if __name__ == "__main__":
     # The noise bound of ADR-020 is drawn at C_NR 1 uF (fig. 5-1): it still holds.
     cap("4.7u", "C507", NR_P, GND)
     cap("10u", "C509", RAW_PR, GND)
-    cap("10u", "C511", VP, GND)
+    cap("10u", "C511", VP_REG, GND)  # at the pin (ADR-093)
+    # D515, ADR-093: the series diode, 0.095 W at regime (SB340 on its leads' copper: +3 C)
+    d = part("Device", "D_Schottky", "SB340", "D515", FP_DO201)
+    d[2] += VP_REG                   # A
+    d[1] += VP                       # K
     cap(C_HOLD, "C505", VP, GND, FP_CP16, polar=True)
     # D510: the datasheet says nothing on reverse current (no "revers*" in
-    # SBVS204G, L41a), and 2200 uF sit on OUT: a Schottky OUT -> IN keeps OUT
-    # from rising above IN if the raw side collapses first.
-    d = part("Device", "D_Schottky", "1N5819", "D510", FP_DO41)
-    d[2] += VP
-    d[1] += RAW_PR                   # the pin's side of R550 (ADR-092)
+    # SBVS204G, L41a): a Schottky OUT -> IN keeps OUT from rising above IN if
+    # the raw side collapses first. ADR-093: behind D515 only C511 (10 uF) is
+    # left on OUT, and D510 + D513 (two SB340 in parallel, 0.28 V at 0.22 A,
+    # the worst of ADR-074's rows) discharge it; the pin side of R550 (ADR-092).
+    for ref in ("D510", "D513"):
+        d = part("Device", "D_Schottky", "SB340", ref, FP_DO201)
+        d[2] += VP_REG
+        d[1] += RAW_PR
 
     # U502, - rail. TPS7A3301, adjustable (vendor/ldo_regulator/ti/TPS7A3301/
     # tps7a33.pdf, SBVS169D): VREF = -1.175 V typ, VOUT = VREF (1 + R1 / R2)
-    # (Eq. 2) = -1.175 x 12.8 = -15.04 V; divider current 117 uA > 5 uA;
+    # (Eq. 2) = -1.175 x 13.0 = -15.28 V at the pin since ADR-093 (-15.04 V with 118k before);
+    # divider current 117 uA > 5 uA;
     # 10 nF FB -> OUT as recommended (pin table); EN to IN allowed ("|VEN| <=
     # |VIN|"); the THERMAL PAD IS INTERNALLY GND (pin table) - L41a's first
     # draft had it on IN, i.e. RAW_M shorted to ground on the board.
@@ -372,20 +392,26 @@ if __name__ == "__main__":
     r = part("Device", "R", "4.7", "R551", FP_R_2W)
     r[1] += RAW_MR
     r[2] += RAW_M
-    u = part("Regulator_Linear", "TPS7A3301RGW", "TPS7A3301 -15V", "U502",
+    # ADR-093 (L45d2b2b1, ADR-074): as U501 - OUT is VMINUS_REG, D516 (SB340) carries it to
+    # VMINUS, the divider and C512 on the pin. SBVS169D p. 5: OUT to IN no lower than -0.3 V; in
+    # ADR-074's rows the hold-up can no longer pull IN above OUT through D511 (68 A and 3.9 V before,
+    # with C510 shorted), only C512's 10 uF can: 0.28 V at the worst.
+    VM_REG = Net("VMINUS_REG")
+    u = part("Regulator_Linear", "TPS7A3301RGW", "TPS7A3301 -15.3V", "U502",
              FP_QFN)
     u["15"] += RAW_MR
     u["16"] += RAW_MR
     u["13"] += RAW_MR                # EN
     u["21"] += GND                   # thermal pad = GND (SBVS169D pin table)
-    u["1"] += VM
-    u["20"] += VM
+    u["1"] += VM_REG
+    u["20"] += VM_REG
     u["7"] += GND
     FB_M = Net("FB_M")
     u["3"] += FB_M
-    res("118k", "R501", VM, FB_M)
+    # ADR-093: 120k, -1.175 x (1 + 120 / 10) = -15.28 V at the pin, the rail ~-14.97 V behind D516
+    res("120k", "R501", VM_REG, FB_M)
     res("10k", "R502", FB_M, GND)
-    cap("10n", "C513", VM, FB_M)     # feed-forward, noise
+    cap("10n", "C513", VM_REG, FB_M)  # feed-forward, noise
     NR_M = Net("NR_M")
     u["14"] += NR_M
     # C508, ADR-091 (L45d2b2a, NC-063): 470 nF. t_SS = 1.2 ms per nF = 0.56 s (SBVS169D eq. 1),
@@ -393,13 +419,19 @@ if __name__ == "__main__":
     # recommends for C_NR. The noise bound of ADR-020 is drawn at 10 nF (fig. 22): it still holds.
     cap("470n", "C508", GND, NR_M)
     cap("10u", "C510", GND, RAW_MR)
-    cap("10u", "C512", GND, VM)
+    cap("10u", "C512", GND, VM_REG)  # at the pin (ADR-093)
+    # D516, ADR-093: the series diode, the rail's current from VMINUS into the pin, 0.098 W
+    d = part("Device", "D_Schottky", "SB340", "D516", FP_DO201)
+    d[2] += VM                       # A
+    d[1] += VM_REG                   # K
     cap(C_HOLD, "C506", GND, VM, FP_CP16, polar=True)
-    # D511: Abs Max "OUT pin to IN pin -0.3 V" (SBVS169D p. 5) - with 2200 uF
-    # on OUT, IN must not rise above OUT by more than a Schottky's drop.
-    d = part("Device", "D_Schottky", "1N5819", "D511", FP_DO41)
-    d[2] += RAW_MR                   # the pin's side of R551 (ADR-092)
-    d[1] += VM
+    # D511: Abs Max "OUT pin to IN pin -0.3 V" (SBVS169D p. 5): IN must not
+    # rise above OUT by more than a Schottky's drop. ADR-093: D511 + D514, two
+    # SB340 in parallel, on C512 alone; the pin's side of R551 (ADR-092).
+    for ref in ("D511", "D514"):
+        d = part("Device", "D_Schottky", "SB340", ref, FP_DO201)
+        d[2] += RAW_MR
+        d[1] += VM_REG
 
     # ================= VRELAY = 12 V from T2's own winding (ADR-048 point 3)
     header("T2_SEC", "J514", [T2A, T2B], fp=FP_TB2)
@@ -441,7 +473,7 @@ if __name__ == "__main__":
     # supervisor and the hold are exactly L41a's; the audio board draws on it
     # through Q505, which the timer holds on for D + D2 after the mute.
     cap(C_VR_HOLD, "C523", VREG, RET, FP_CP16, polar=True)
-    d = part("Device", "D_Schottky", "1N5819", "D512", FP_DO41)   # as D510
+    d = part("Device", "D_Schottky", "1N5819", "D512", FP_DO41)   # as D510 was before ADR-093
     d[2] += VREG
     d[1] += RAW_V
     # V5, the logic: MCP1703A-5002, ~2 uA quiescent, for the standby budget.
@@ -691,6 +723,8 @@ if __name__ == "__main__":
     # and the micro's PA1, PA2, PA3, PA4 and PB4 are unconnected too: 24
     # warnings. L45d2b1: PA1 read DC_FLT, 23. L60b (ADR-081): PA1 open
     # again, 24 warnings and the same 2 "errors" (read from the run).
+    # ADR-093 (L45d2b2b1): U501's OUT pins are on VPLUS_REG now, so the first
+    # "error" is there; its ANY-OUT pins 11 and 12 are grounded: 22 warnings.
     try:
         ERC()
     except Exception as e:  # noqa: BLE001
