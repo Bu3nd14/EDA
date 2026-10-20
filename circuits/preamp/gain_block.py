@@ -729,9 +729,10 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # still gives 62.7 dB at 10 kHz, so low-ESR is NOT required.
     # Cost: ~15 mA (mirror + VAS) x 10 Ohm = 0.15 V; positive clip at +10 dB
     # 13.28 -> 13.14 V (margin over E6 x E2 0.82 -> 0.73 dB, see HEADROOM).
-    # Power in the resistor ~2 mW. tau = 10 ms, far below the ~1.4 s soft-start
-    # of the TPS7A4701 (C_NR 10 uF, SBVS204G eq. 5): eight cells draw ~0.16 A
-    # while the rail ramps, against a 1.26 A current limit.
+    # Power in the resistor ~2 mW. tau = 10 ms, far below the 0.65 s soft-start
+    # of the TPS7A4701 (C_NR 4.7 uF since ADR-091, SBVS204G eq. 5): U501 draws
+    # at most 0.45 A while the rail ramps, the eight cells included, against a
+    # 1 A minimum current limit (L45d2b2a's supply bench; with 10 uF ~0.16 A).
     # NOT on the cascode reference (R114: already ~1 Hz, it made no difference)
     # and NOT on the MJE15032 collector (an emitter follower rejects its rail).
     # The 1000 uF electrolytic: >= 25 V, + terminal on VPF.

@@ -1357,3 +1357,28 @@ c'entra. Niente avvisa: le corse finiscono, e la cifra è plausibile.
 metodo puntuale (`v2_metodo.leggi_wrdata(..., metodo="puntuale")`) e sulla forma d'onda intorno
 all'istante del guasto, prima di attribuirlo al circuito. Se è un impulso di µs dell'interruttore, lo
 si dice come tale: è la velocità del guasto simulato, non una misura del guasto vero.
+
+## 65. Il banco dell'alimentatore non aveva la partenza morbida né i condensatori della scheda audio: ogni accensione simulata era di un altro circuito
+
+Visto in L45d2b2a (`docs/preamp/data/2026-10-20/L45d2b2a/`). Da L41a a L45d2b1 i regolatori
+comportamentali `REGP` / `REGM` regolavano subito alla loro tensione, e la scheda audio era due
+resistenze sui rail: i rail salivano in ~31 ms. Il circuito vero, coi 10 µF sul piedino NR, saliva
+in 1,39 s sul + e in **12 s** sul −, e il firmware (2 s) andava in GUASTO a ogni accensione: nessuna
+sequenza lo ha visto per diciotto lotti. Lo stesso vale per V2 (L29c): le sue sei accensioni
+supponevano rampe di 10 o 300 ms e il rilascio 2,5 s dopo. Niente avvisa: le corse finiscono, e i
+tempi sono plausibili.
+
+**Regola operativa**: un banco che simula una sequenza nel tempo modella anche la dinamica dei
+regolatori (la partenza morbida dal loro piedino NR, `REGPSS` / `REGMSS` di L45d2b2a) e i
+condensatori a valle (`--cap-audio`); i tempi che un altro banco suppone (V2, il rivelatore) si
+rileggono da lì.
+
+## 66. Un `alter` di un PWL con troppi punti non ferma ngspice: la corsa gira con la sorgente di prima
+
+Visto in L45d2b2a (`v2/genera_v2_accensione.py`). Un `alter @vpp[pwl] = [ ... ]` con ~1000 numeri
+stampa «alter: too many args.» e la corsa continua, con il PWL di prima, fino in fondo, rc = 0.
+L'ha presa la guardia di V2 (`guardia_v2.py` di L47b2b1, che cerca gli errori nel log), non
+l'esito di ngspice. Con 35 punti (70 numeri) passa.
+
+**Regola operativa**: un PWL lungo in un `alter` si tiene sotto ~100 numeri, e il log di ogni corsa
+si passa a una guardia che cerca anche «too many args».
