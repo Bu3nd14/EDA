@@ -138,6 +138,15 @@ C_HOLD_M = only(lambda r: COMP[r][1] == "C_Polarized" and "VMINUS" in ends(r), "
 C_RAW_V = only(lambda r: COMP[r][1] == "C_Polarized" and "RAW_V" in ends(r), "serbatoio VRELAY")
 C_HOLD_V = only(lambda r: COMP[r][1] == "C_Polarized" and "VRELAY_REG" in ends(r), "tenuta VRELAY")
 assert v(C_RAW_P) == v(C_RAW_M) and v(C_HOLD_P) == v(C_HOLD_M), "i due rail non sono simmetrici"
+# L45d2b2a (ADR-092): una resistenza fra il serbatoio e l'ingresso di ciascun regolatore audio,
+# uguale sui due rail; l'ingresso del regolatore non e' piu' sul serbatoio
+R_SER = {}
+for _reg, _raw in (("U501", "RAW_P"), ("U502", "RAW_M")):
+    _in = PIN[(_reg, "15")]
+    assert _in != _raw, f"{_reg}: l'ingresso e' di nuovo sul serbatoio (ADR-092)"
+    R_SER[_reg] = only(lambda r: COMP[r][1] == "R" and set(ends(r)) == {_raw, _in},
+                       f"resistenza davanti a {_reg}")
+assert v(R_SER["U501"]) == v(R_SER["U502"]), "le resistenze davanti ai regolatori non sono uguali"
 
 # ---- il sorvegliante: le soglie CALCOLATE dai partitori e da VREF ------------
 # U505, U506 A e B: le quattro uscite open-drain sul gate del sink di MUTE_CMD
@@ -338,13 +347,14 @@ for yy, sgn, reg, craw, chold, vv, net, pin in (
     arrow(18.0, yy, 19.2, yy)
     box(21.2, yy, 3.8, 1.1, [f"serb. {cap_txt(v(craw))}"], size=8.5, head_size=8.5)
     arrow(23.1, yy, 24.2, yy)
-    box(27.0, yy, 5.4, 1.1, [f"{reg} {v(reg).split()[0]}  {it(vv, 0)} V"], size=8.5,
-        head_size=8.5)
+    box(27.0, yy, 5.4, 1.5, [f"{reg} {v(reg).split()[0]}  {it(vv, 0)} V",
+                             f"dietro {R_SER[reg]} {v(R_SER[reg]).replace('.', ',')} Ω"],
+        size=8.5, head_size=8.5)
     arrow(29.7, yy, 30.8, yy)
     box(33.0, yy, 4.2, 1.1, [f"tenuta {cap_txt(v(chold))}"], size=8.5, head_size=8.5)
     arrow(35.1, yy, 36.2, yy, color=NETC)
     txt((36.4, yy), f"{net} → J1 pin {pin}", size=9.5, color=NETC, halign="left")
-txt((23.0, 21.1), f"U502: {it(V_NEG_FB, 2)} V dal partitore di FB ({FB_TOP} / {FB_BOT}, "
+txt((23.0, 20.7), f"U502:{it(V_NEG_FB, 2)} V dal partitore di FB ({FB_TOP} / {FB_BOT}, "
     "1,176 V di riferimento)", size=8, color=DIM)
 
 # ---------------------------------------------------------------------------

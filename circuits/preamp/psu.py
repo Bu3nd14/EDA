@@ -12,8 +12,8 @@ reads it) and the contracts written on the audio board next to J1 and J4.
       +-- F501 -- T2 (small toroid, ALWAYS on while the rear is on) -- D503 --+-- D504 -- C_V --[U503 12 V]-- VRELAY_REG -+-[U504 5 V]-- V5 (logic, micro)
       |                                                                      |                                     +-[Q505]-- VRELAY (J1 pin 4, the audio board)
       |                                                                      +-- mains detector (Q504, U506 ch 1)
-      +-- K501 (DPST, coil on VRELAY_REG) -- T1 (toroid 2x15 V 50 VA) -- D501 -+-- C501 --[U501 TPS7A4701]-- C505 -- VPLUS
-                                                                              +-- C502 --[U502 TPS7A3301]-- C506 -- VMINUS
+      +-- K501 (DPST, coil on VRELAY_REG) -- T1 (toroid 2x15 V 50 VA) -- D501 -+-- C501 -- R550 --[U501 TPS7A4701]-- C505 -- VPLUS
+                                                                              +-- C502 -- R551 --[U502 TPS7A3301]-- C506 -- VMINUS
     supervisor U505: VPLUS < 13.5 V, |VMINUS| < 13.5 V   \
     mains detector U506 A: no half-wave for ~15 ms        -> pull MUTE_G low: Q501 off, MUTE_CMD released (mute)
     VRELAY supervisor U506 B: VRELAY_REG < 11.0 V         /
@@ -87,6 +87,8 @@ from skidl import Part, Net, generate_netlist, POWER, ERC  # noqa: E402
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 FP_R = "Resistor_SMD:R_0805_2012Metric"
+# ADR-092: R550 / R551, 0.44-0.46 W at regime - a 2 W axial, lifted off the board (piste larghe)
+FP_R_2W = "Resistor_THT:R_Axial_DIN0414_L11.9mm_D4.5mm_P15.24mm_Horizontal"
 FP_C = "Capacitor_SMD:C_0805_2012Metric"
 FP_SOT23 = "Package_TO_SOT_SMD:SOT-23"
 FP_SOIC8 = "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"
@@ -312,11 +314,22 @@ if __name__ == "__main__":
     # tied to GND (vendor/ldo_regulator/ti/TPS7A4701/tps7a47.pdf, SBVS204G,
     # sec. 6.5.1, Table 6-1: pin 4 = 6.4, 5 = 6.4, 6 = 3.2, 8 = 1.6, 9 = 0.8,
     # 10 = 0.4, 11 = 0.2, 12 = 0.1 V); SENSE to OUT, EN to IN, pad to GND.
+    # ADR-092 (L45d2b2a): R550, 4.7 ohm between the reservoir and the regulator's IN. At regime
+    # U501 dissipates (RAW - 15 V) x ~0.3 A: 2.34 W at mains +10 %, 136 C with 60 C of air at
+    # SBVS204G's 32.5 C/W, over the 125 C of ADR-021. With R550 1.90 W (122 C) and 0.44 W in the
+    # resistor (a 2 W axial: <= half its rating at 60 C); the headroom IN - OUT at mains -10 %
+    # goes from 2.88 to 1.45 V, over the 1 V the PSRR quota of ADR-020 assumes. The rest is the
+    # copper under the pad at the layout (<= 27 C/W, NC-072). EN, C509 and D510 sit on the pin's
+    # side, RAW_PR: EN must not exceed IN, and D510 guards the pin.
+    RAW_PR = Net("RAW_PR")
+    r = part("Device", "R", "4.7", "R550", FP_R_2W)
+    r[1] += RAW_P
+    r[2] += RAW_PR
     u = part("Regulator_Linear", "TPS7A4701xRGW", "TPS7A4701 15V", "U501",
              FP_QFN)
-    u["15"] += RAW_P
-    u["16"] += RAW_P
-    u["13"] += RAW_P                 # EN: on whenever the toroid is on
+    u["15"] += RAW_PR
+    u["16"] += RAW_PR
+    u["13"] += RAW_PR                # EN: on whenever the toroid is on
     u["1"] += VP
     u["20"] += VP
     u["3"] += VP                     # SENSE to OUT (ANY-OUT mode)
@@ -328,8 +341,15 @@ if __name__ == "__main__":
     # (L36), so ERC lists them as unconnected - on purpose.
     NR_P = Net("NR_P")
     u["14"] += NR_P
-    cap("10u", "C507", NR_P, GND)
-    cap("10u", "C509", RAW_P, GND)
+    # C507, ADR-091 (L45d2b2a, NC-063): 4.7 uF. The NR capacitor is also the soft-start:
+    # t_SS = 100 kOhm x C_NR x ln((15 + 5) / 5) = 0.65 s (SBVS204G eq. 5), with C508 on U502 the
+    # two rails together (0.65 / 0.56 s) and settled before the jack relays close (0.71 s from
+    # MAINS_REQ), inside the firmware's 2 s (timer_spec.md 4.1). With 10 uF it was 1.39 s and the -
+    # rail 12 s: GUASTO at every power-up. Not 1 uF: ~9.6 mF downstream (C505, the audio board's
+    # 800.8 uF and the eight 1000 uF cells) would put U501 in current limit, 1.0 A and 16 W.
+    # The noise bound of ADR-020 is drawn at C_NR 1 uF (fig. 5-1): it still holds.
+    cap("4.7u", "C507", NR_P, GND)
+    cap("10u", "C509", RAW_PR, GND)
     cap("10u", "C511", VP, GND)
     cap(C_HOLD, "C505", VP, GND, FP_CP16, polar=True)
     # D510: the datasheet says nothing on reverse current (no "revers*" in
@@ -337,7 +357,7 @@ if __name__ == "__main__":
     # from rising above IN if the raw side collapses first.
     d = part("Device", "D_Schottky", "1N5819", "D510", FP_DO41)
     d[2] += VP
-    d[1] += RAW_P
+    d[1] += RAW_PR                   # the pin's side of R550 (ADR-092)
 
     # U502, - rail. TPS7A3301, adjustable (vendor/ldo_regulator/ti/TPS7A3301/
     # tps7a33.pdf, SBVS169D): VREF = -1.175 V typ, VOUT = VREF (1 + R1 / R2)
@@ -345,11 +365,18 @@ if __name__ == "__main__":
     # 10 nF FB -> OUT as recommended (pin table); EN to IN allowed ("|VEN| <=
     # |VIN|"); the THERMAL PAD IS INTERNALLY GND (pin table) - L41a's first
     # draft had it on IN, i.e. RAW_M shorted to ground on the board.
+    # ADR-092 (L45d2b2a): R551, 4.7 ohm, as R550 on the + rail - U502 2.38 -> 1.91 W at mains
+    # +10 % (137 -> 122 C with 60 C of air), 0.46 W in R551, the headroom at mains -10 % 2.79 ->
+    # 1.32 V; EN, C510 and D511 on the pin's side, RAW_MR.
+    RAW_MR = Net("RAW_MR")
+    r = part("Device", "R", "4.7", "R551", FP_R_2W)
+    r[1] += RAW_MR
+    r[2] += RAW_M
     u = part("Regulator_Linear", "TPS7A3301RGW", "TPS7A3301 -15V", "U502",
              FP_QFN)
-    u["15"] += RAW_M
-    u["16"] += RAW_M
-    u["13"] += RAW_M                 # EN
+    u["15"] += RAW_MR
+    u["16"] += RAW_MR
+    u["13"] += RAW_MR                # EN
     u["21"] += GND                   # thermal pad = GND (SBVS169D pin table)
     u["1"] += VM
     u["20"] += VM
@@ -361,14 +388,17 @@ if __name__ == "__main__":
     cap("10n", "C513", VM, FB_M)     # feed-forward, noise
     NR_M = Net("NR_M")
     u["14"] += NR_M
-    cap("10u", "C508", GND, NR_M)
-    cap("10u", "C510", GND, RAW_M)
+    # C508, ADR-091 (L45d2b2a, NC-063): 470 nF. t_SS = 1.2 ms per nF = 0.56 s (SBVS169D eq. 1),
+    # with C507 the two rails together; with 10 uF it was 12 s, and above the 1 uF that SBVS169D
+    # recommends for C_NR. The noise bound of ADR-020 is drawn at 10 nF (fig. 22): it still holds.
+    cap("470n", "C508", GND, NR_M)
+    cap("10u", "C510", GND, RAW_MR)
     cap("10u", "C512", GND, VM)
     cap(C_HOLD, "C506", GND, VM, FP_CP16, polar=True)
     # D511: Abs Max "OUT pin to IN pin -0.3 V" (SBVS169D p. 5) - with 2200 uF
     # on OUT, IN must not rise above OUT by more than a Schottky's drop.
     d = part("Device", "D_Schottky", "1N5819", "D511", FP_DO41)
-    d[2] += RAW_M
+    d[2] += RAW_MR                   # the pin's side of R551 (ADR-092)
     d[1] += VM
 
     # ================= VRELAY = 12 V from T2's own winding (ADR-048 point 3)
