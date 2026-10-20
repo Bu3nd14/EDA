@@ -108,7 +108,8 @@ assert COMP["U502"][1].startswith("TPS7A3301")
 # il ramo negativo: la tensione la fa il partitore di FB (TPS7A3301, 1,176 V
 # di riferimento, SBVS125): deve ridare la sigla entro 0,2 V
 _fbm = [r for r in COMP if COMP[r][1] == "R" and "FB_M" in ends(r)]
-_fbt = [r for r in _fbm if "VMINUS" in ends(r)]
+# L45d2b2b1 (ADR-093): il partitore parte dal piedino d'uscita di U502, non dal rail
+_fbt = [r for r in _fbm if PIN[("U502", "1")] in ends(r)]
 _fbb = [r for r in _fbm if "GND" in ends(r)]
 assert len(_fbt) == 1 and len(_fbb) == 1, f"partitore di FB_M: {_fbm}"
 FB_TOP, FB_BOT = v(_fbt[0]), v(_fbb[0])
@@ -116,7 +117,21 @@ V_NEG_FB = 1.176 * (1 + num(FB_TOP) / num(FB_BOT))
 assert abs(V_NEG_FB - V_NEG) < 0.2, f"U502: FB da' {V_NEG_FB:.3f} V, la sigla {V_NEG} V"
 
 # ---- chi sta dove: la catena della potenza ---------------------------------
-assert PIN[("U501", "1")] == "VPLUS" and PIN[("U502", "1")] == "VMINUS", "uscite dei rail"
+# L45d2b2b1 (ADR-093): l'uscita di ciascun regolatore audio e' il suo piedino, VPLUS_REG /
+# VMINUS_REG; uno Schottky in serie la porta al rail (il rail non torna nel corto del lato grezzo),
+# e sul piedino due Schottky in parallelo dall'uscita all'ingresso
+assert PIN[("U501", "1")] == "VPLUS_REG" and PIN[("U502", "1")] == "VMINUS_REG", \
+    "uscite dei rail: il regolatore e' di nuovo sul rail, senza il diodo in serie (ADR-093)"
+D_SER, D_PIN = {}, {}
+for _reg, _rail, _a, _k in (("U501", "VPLUS", "VPLUS_REG", "VPLUS"),
+                            ("U502", "VMINUS", "VMINUS", "VMINUS_REG")):
+    D_SER[_reg] = only(lambda r: COMP[r][1] == "D_Schottky" and PIN.get((r, "2")) == _a
+                       and PIN.get((r, "1")) == _k, f"diodo in serie dopo {_reg}")
+    _o, _i = PIN[(_reg, "1")], PIN[(_reg, "15")]
+    _a2, _k2 = (_o, _i) if _reg == "U501" else (_i, _o)
+    D_PIN[_reg] = sorted(r for r in COMP if COMP[r][1] == "D_Schottky"
+                         and PIN.get((r, "2")) == _a2 and PIN.get((r, "1")) == _k2)
+    assert len(D_PIN[_reg]) == 2, f"{_reg}: attesi due Schottky dall'uscita all'ingresso, {D_PIN[_reg]}"
 assert PIN[("U503", "1")] == "VRELAY_REG" and PIN[("U504", "1")] == "VRELAY_REG", \
     "U503 non alimenta VRELAY_REG, o U504 (V5) non ne e' alimentato"
 assert PIN[("U504", "3")] == "V5", "U504 non da' V5"
@@ -347,8 +362,10 @@ for yy, sgn, reg, craw, chold, vv, net, pin in (
     arrow(18.0, yy, 19.2, yy)
     box(21.2, yy, 3.8, 1.1, [f"serb. {cap_txt(v(craw))}"], size=8.5, head_size=8.5)
     arrow(23.1, yy, 24.2, yy)
-    box(27.0, yy, 5.4, 1.5, [f"{reg} {v(reg).split()[0]}  {it(vv, 0)} V",
-                             f"dietro {R_SER[reg]} {v(R_SER[reg]).replace('.', ',')} Ω"],
+    # L45d2b2b1 (ADR-093): il diodo in serie dopo il regolatore, nel riquadro
+    box(27.0, yy, 5.4, 2.0, [f"{reg} {v(reg).split()[0]}  {it(vv, 1)} V",
+                             f"dietro {R_SER[reg]} {v(R_SER[reg]).replace('.', ',')} Ω",
+                             f"poi {D_SER[reg]} {v(D_SER[reg])} in serie"],
         size=8.5, head_size=8.5)
     arrow(29.7, yy, 30.8, yy)
     box(33.0, yy, 4.2, 1.1, [f"tenuta {cap_txt(v(chold))}"], size=8.5, head_size=8.5)
@@ -418,6 +435,8 @@ d.save(SVG)
 print(f"SVG -> {SVG}")
 print(f"valori letti da {os.path.relpath(NETLIST, REPO)} ({len(COMP)} componenti)")
 print(f"  rail ..................... +{V_POS:g} / -{V_NEG:g} V (FB: {V_NEG_FB:.3f}), VRELAY_REG {V_REL:g} V, V5 {V_5:g} V")
+print(f"  diodi (ADR-093) .......... in serie {D_SER['U501']} / {D_SER['U502']}, sul piedino "
+      f"{'+'.join(D_PIN['U501'])} / {'+'.join(D_PIN['U502'])}")
 print(f"  serbatoi / tenute ........ {v(C_RAW_P)} / {v(C_HOLD_P)} per rail, VRELAY {v(C_RAW_V)} / {v(C_HOLD_V)}")
 print(f"  sorvegliante ............. +{TRIP_P:.3f} / {TRIP_M:.3f} V, VRELAY_REG {TRIP_V:.3f} V, rete {TAU_MD * 1e3:.2f} ms")
 print(f"  temporizzatore ........... tau_T {TAU_T * 1e3:.2f} ms, tau_T2 {TAU_T2 * 1e3:.2f} ms")
