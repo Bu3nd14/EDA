@@ -9,7 +9,7 @@ reads it) and the contracts written on the audio board next to J1 and J4.
 
     rear IEC module (fuse + DOUBLE-POLE switch: off = mains off everything)
       |
-      +-- F501 -- T2 (small toroid, ALWAYS on while the rear is on) -- D503 --+-- D504 -- C_V --[U503 12 V]-- VRELAY_REG -+-[U504 5 V]-- V5 (logic, micro)
+      +-- F501 -- T2 (small toroid, ALWAYS on while the rear is on) -- D503 --+-- D504 -- C_V --[U503 12 V]-- VRELAY_REG -+-[U504 5 V]-[U512 5 V]-- V5 (logic, micro; ADR-094)
       |                                                                      |                                     +-[Q505]-- VRELAY (J1 pin 4, the audio board)
       |                                                                      +-- mains detector (Q504, U506 ch 1)
       +-- K501 (DPST, coil on VRELAY_REG) -- T1 (toroid 2x15 V 50 VA) -- D501 -+-- C501 -- R550 --[U501 TPS7A4701]-- VPLUS_REG --D515>-- C505 -- VPLUS
@@ -154,6 +154,7 @@ R_M_TOP, R_M_BOT = "10k", "118k"
 # with the mains gone (ADR-048 point 5: ~15-20 ms), against a ~0.8 ms gap per
 # half-wave with the mains present.
 R_MD, C_MD = "220k", "100n"
+R_MD_HALF = "110k"      # ADR-094: R_MD as two in series (R512 + R555), 2 x 110k = 220k
 # VRELAY supervisor (L41a, U506 ch B): VRELAY * 10k / (34k + 10k) = 2.5 V at
 # VRELAY = 11.0 V, below the -5 % tolerance (11.4 V) of a +-1-2 % regulator.
 R_VR_TOP, R_VR_BOT = "34k", "10k"
@@ -209,7 +210,7 @@ def header(value, ref, nets, fp=None):
     return j
 
 
-def sink(ref, drain, gate, ret, clamp_to, rclamp, dref, zref):
+def sink(ref, drain, gate, ret, clamp_to, rclamp, dref, dref2, zref):
     """Low-side N-MOSFET for a relay coil command, with a diode + zener clamp.
 
     The clamp (diode then 24 V zener to VRELAY) and not a plain flyback diode:
@@ -217,6 +218,12 @@ def sink(ref, drain, gate, ret, clamp_to, rclamp, dref, zref):
     the G6K's 3 ms maximum release (en-g6k.pdf p. 3). Clamp ~12 + 24 + 0.7 V,
     inside the 2N7002's 60 V. Whether the datasheet's 3 ms is measured with
     or without suppression is NOT read yet: L41c / G2 must.
+
+    ADR-094 (L45d2b2b2, ADR-075): the diode is TWO 1N4148 in series (dref, dref2). With one
+    shorted the zener, forward from VRELAY, put VRELAY on the drain: 0.87 A in a 2N7002 saturated
+    (its datasheet), ~9 W, and at mains +10 % for good (VRELAY_REG never below the supervisor's
+    11.0 V), Delta lost on PERMIT_CMD (~70 dB SPL). With two, one shorted leaves the other
+    blocking: 0 mA. The clamp rises one diode, ~12 + 25.6 + 1.7 = 39.3 V at the worst.
     """
     q = part("Transistor_FET", "2N7002", "2N7002", ref, FP_SOT23)
     q[1] += gate
@@ -224,6 +231,10 @@ def sink(ref, drain, gate, ret, clamp_to, rclamp, dref, zref):
     q[3] += drain
     d = part("Device", "D", "1N4148", dref, FP_DO35)
     d[2] += drain                  # A
+    m = Net(rclamp + "_D")
+    d[1] += m                      # K
+    d = part("Device", "D", "1N4148", dref2, FP_DO35)
+    d[2] += m                      # A
     k = Net(rclamp)
     d[1] += k                      # K
     z = part("Device", "D_Zener", "24V", zref, FP_DO35)
@@ -289,13 +300,31 @@ if __name__ == "__main__":
     k["A1"] += VREG     # on VRELAY_REG: the standby switch is the audio board's
     MAINS_D = Net("MAINS_COIL")
     k["A2"] += MAINS_D
+    # plain flyback: the mains relay's release time is not in any budget (it drops >= 50 ms after
+    # the mute). ADR-094: two 1N4148 in series, D505 + D532 - one shorted put VRELAY_REG on Q503
+    # (0.89 A, 10.6 W in a 2N7002, Delta lost, ~70 dB SPL); with two the other blocks, 0 mA
+    MAINS_DM = Net("MAINS_COIL_D")
     dk = part("Device", "D", "1N4148", "D505", FP_DO35)
-    dk[2] += MAINS_D    # plain flyback: the mains relay's release time is
-    dk[1] += VREG       # not in any budget (it drops >= 50 ms after the mute)
+    dk[2] += MAINS_D
+    dk[1] += MAINS_DM
+    dk = part("Device", "D", "1N4148", "D532", FP_DO35)
+    dk[2] += MAINS_DM
+    dk[1] += VREG
+    # R552, ADR-094: 47 ohm between the coil and Q503, outside the flyback loop (coil + D505 / D532).
+    # A shorted coil put VRELAY_REG on Q503 and dumped C523 (2200 uF) into it: 0.89 A, 10.6 W in
+    # a 2N7002 - a 60 V / 2 A MOSFET instead took 14.7 A, 137 W (L45d2b2b2's bench). With R552:
+    # 0.24 A, Q503 at <= 114 C with 60 C of air, R552 2.7 W for ~0.2 s (0.56 J) until the firmware
+    # drops MAINS_REQ, the mute ordered (~16 dB SPL), Delta 17.2 ms. At regime 29.5 mA, 41 mW in
+    # R552, the coil at 12 x 360 / 407 = 10.6 V (88 %). A 2 W axial as R550 (piste larghe): its
+    # short-time overload against 2.7 W for 0.2 s is read at the part's choice (G2)
+    MAINS_S = Net("MAINS_SINK")
+    r = part("Device", "R", "47", "R552", FP_R_2W)
+    r[1] += MAINS_D
+    r[2] += MAINS_S
     q = part("Transistor_FET", "2N7002", "2N7002", "Q503", FP_SOT23)
     q[1] += MAINS_G
     q[2] += RET
-    q[3] += MAINS_D
+    q[3] += MAINS_S
     res("10k", "R520", MAINS_REQ, MAINS_G)
     res("100k", "R521", MAINS_G, RET)        # no timer => toroid off
 
@@ -477,12 +506,25 @@ if __name__ == "__main__":
     d[2] += VREG
     d[1] += RAW_V
     # V5, the logic: MCP1703A-5002, ~2 uA quiescent, for the standby budget.
+    # ADR-094 (L45d2b2b2, ADR-075): TWO in series, U504 then U512, through V5_PRE. U504 with IN
+    # shorted to OUT put VRELAY_REG on V5: 12.0 V on the ATtiny3216 (6.0 V absolute maximum,
+    # DS40002205A Table 36-1). With two, either shorted leaves the other regulating: V5 5.000 V at
+    # the three mains levels, the working one at 0.027 W. U512 runs in dropout, V5 ~4.98 V (650 mV
+    # max at 250 mA, DS20005122B p4: ~16 mV at the logic's few mA); +2 uA in standby. ADR-075's
+    # zener with a resettable fuse would take ~6 W for up to 0.2 s and not hold V5 under 6.0 V.
+    V5_PRE = Net("V5_PRE")
     u = part("Regulator_Linear", "MCP1703Ax-500xxDB", "MCP1703A-5002",
              "U504", "Package_TO_SOT_SMD:SOT-223-3_TabPin2")
     u["1"] += VREG
     u["2"] += RET
-    u["3"] += V5
+    u["3"] += V5_PRE
     cap("1u", "C524", VREG, RET)
+    cap("1u", "C536", V5_PRE, RET)    # U504's output, U512's input (>= 1 uF, MCP1703A)
+    u = part("Regulator_Linear", "MCP1703Ax-500xxDB", "MCP1703A-5002",
+             "U512", "Package_TO_SOT_SMD:SOT-223-3_TabPin2")
+    u["1"] += V5_PRE
+    u["2"] += RET
+    u["3"] += V5
     cap("1u", "C525", V5, RET)
 
     # The star: the ONE point where VRELAY's return meets the audio ground.
@@ -498,7 +540,12 @@ if __name__ == "__main__":
                FP_SOT23)
     ref["1"] += VREF
     ref["2"] += RET
-    res("2k", "R503", V5, VREF)           # ~1.2 mA through the shunt
+    # ~1.2 mA through the shunt. ADR-094: 2k as two 1k in series (R503 + R553). One 2k shorted put
+    # V5 on the LM4040 - 0.25 A, 0.62 W against its 20 mA / 0.22 W with 60 C of air, U504 at its
+    # limit (2.4 W) and the logic at ~2.5 V; with one 1k shorted, 2.2 mA
+    VREF_R = Net("VREF_R")
+    res("1k", "R503", V5, VREF_R)
+    res("1k", "R553", VREF_R, VREF)
     res("10k", "R504", VREF, VREF2)
     res("10k", "R505", VREF2, RET)
     cap("100n", "C514", VREF, RET)
@@ -528,13 +575,22 @@ if __name__ == "__main__":
     # mains. Each half-wave turns Q504 on and empties C_MD; with the mains
     # gone, C_MD charges through R_MD and crosses VREF after ~15 ms.
     MB, MD = Net("MD_B"), Net("MD")
-    res("22k", "R510", RECT_V, MB)
+    # ADR-094: 22k as two 11k (R510 + R554). One 22k shorted put RECT_V (~17 V peak) on Q504's base:
+    # 4.8-7.6 W in a BC847 (0.18 W with 60 C of air); with one 11k shorted, < 1 mW
+    MB_R = Net("MD_B_R")
+    res("11k", "R510", RECT_V, MB_R)
+    res("11k", "R554", MB_R, MB)
     res("4.7k", "R511", MB, RET)          # on above ~4 V of RECT_V
     qd = part("Transistor_BJT", "BC847", "BC847", "Q504", FP_SOT23)
     qd[1] += MB
     qd[2] += RET
     qd[3] += MD
-    res(R_MD, "R512", V5, MD)
+    # ADR-094: R_MD as two halves (R512 + R555). One R_MD shorted let Q504 pull V5 down at each
+    # half-wave through U504's limit (133-149 C in Q504 with the bench's beta of 100; a BC847B's
+    # higher gain takes more); with one half shorted, < 0.3 mW. The time constant is the sum
+    MD_R = Net("MD_R")
+    res(R_MD_HALF, "R512", V5, MD_R)
+    res(R_MD_HALF, "R555", MD_R, MD)
     cap(C_MD, "C518", MD, RET)
     cmp2 = part("Comparator", "LM2903", "TLV1702 (dual, open-drain)", "U506",
                 FP_SOIC8)
@@ -569,7 +625,7 @@ if __name__ == "__main__":
     res("10k", "R513", MUTE_REQ, MUTE_G)
     res("100k", "R514", MUTE_G, RET)
     cap(C_MUTE_G, "C527", MUTE_G, RET)
-    sink("Q501", MUTE_CMD, MUTE_G, RET, VRELAY, "CLAMP_MUTE", "D506", "D507")
+    sink("Q501", MUTE_CMD, MUTE_G, RET, VRELAY, "CLAMP_MUTE", "D506", "D530", "D507")
     # MUTE_G can never stand above PERMIT_G: a Schottky from MUTE_G to
     # PERMIT_G clamps it to PERMIT_G + ~0.3 V, below any 2N7002 threshold
     # while PERMIT_G is low. So the jack relays cannot be energised before
@@ -600,7 +656,7 @@ if __name__ == "__main__":
     dly["1"] += PERMIT_G
     res("10k", "R524", V5, PERMIT_G)
     res("100k", "R516", PERMIT_G, RET)     # a dead U508: permissive released
-    sink("Q502", PERMIT_CMD, PERMIT_G, RET, VRELAY, "CLAMP_PERMIT", "D508",
+    sink("Q502", PERMIT_CMD, PERMIT_G, RET, VRELAY, "CLAMP_PERMIT", "D508", "D531",
          "D509")
 
     # ================= VRELAY to the audio board: the standby switch (NC-037)
@@ -725,6 +781,8 @@ if __name__ == "__main__":
     # again, 24 warnings and the same 2 "errors" (read from the run).
     # ADR-093 (L45d2b2b1): U501's OUT pins are on VPLUS_REG now, so the first
     # "error" is there; its ANY-OUT pins 11 and 12 are grounded: 22 warnings.
+    # ADR-094 (L45d2b2b2): U512's ground pin on RLY_RET, "insufficient drive" as U504's: 23 warnings,
+    # the same 2 "errors" (read from the run).
     try:
         ERC()
     except Exception as e:  # noqa: BLE001

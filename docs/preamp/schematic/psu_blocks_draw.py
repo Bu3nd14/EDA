@@ -134,7 +134,23 @@ for _reg, _rail, _a, _k in (("U501", "VPLUS", "VPLUS_REG", "VPLUS"),
     assert len(D_PIN[_reg]) == 2, f"{_reg}: attesi due Schottky dall'uscita all'ingresso, {D_PIN[_reg]}"
 assert PIN[("U503", "1")] == "VRELAY_REG" and PIN[("U504", "1")] == "VRELAY_REG", \
     "U503 non alimenta VRELAY_REG, o U504 (V5) non ne e' alimentato"
-assert PIN[("U504", "3")] == "V5", "U504 non da' V5"
+# L45d2b2b2 (ADR-094): due MCP1703A in serie, U504 su V5_PRE e U512 da V5_PRE a V5 - uno in corto
+# fra ingresso e uscita lascia l'altro a regolare (il micro non vede i 12 V)
+assert "U512" in COMP, "manca U512, il secondo regolatore a 5 V (ADR-094)"
+assert v("U512").startswith("MCP1703A-50"), f"U512 non e' il secondo 5 V: {v('U512')}"
+assert PIN[("U504", "3")] == "V5_PRE" and PIN[("U512", "1")] == "V5_PRE" and PIN[("U512", "3")] == "V5", \
+    "V5: non sono due regolatori in serie (ADR-094)"
+# ADR-094: ogni diodo di bloccaggio dei comandi e' due 1N4148 in serie, e K501 ha 47 ohm verso Q503
+for _q, _dr in (("Q501", "MUTE_CMD"), ("Q502", "PERMIT_CMD")):
+    _d1 = only(lambda r: COMP[r][1] == "D" and PIN.get((r, "2")) == _dr, f"primo diodo del bloccaggio di {_q}")
+    _d2 = only(lambda r: COMP[r][1] == "D" and PIN.get((r, "2")) == PIN[(_d1, "1")],
+               f"secondo diodo del bloccaggio di {_q}")
+    _z = only(lambda r: COMP[r][1] == "D_Zener" and PIN.get((r, "1")) == PIN[(_d2, "1")], f"zener di {_q}")
+_f1 = only(lambda r: COMP[r][1] == "D" and PIN.get((r, "2")) == "MAINS_COIL", "primo diodo di K501")
+_f2 = only(lambda r: COMP[r][1] == "D" and PIN.get((r, "2")) == PIN[(_f1, "1")]
+           and PIN.get((r, "1")) == "VRELAY_REG", "secondo diodo di K501")
+R_K = only(lambda r: COMP[r][1] == "R" and ends(r) == {"MAINS_COIL", PIN[("Q503", "3")]}, "R fra K501 e Q503")
+assert PIN[("Q503", "3")] != "MAINS_COIL", "Q503 di nuovo sulla bobina, senza la resistenza (ADR-094)"
 # Q505 (ADR-049) fra VRELAY_REG e VRELAY, e VRELAY va a J1 pin 7
 assert {PIN[("Q505", "2")], PIN[("Q505", "3")]} == {"VRELAY_REG", "VRELAY"}, "Q505"
 # L60b (ADR-082 punto 2, ADR-083): J1 a sette pin, due per rail e due per la massa
@@ -204,10 +220,18 @@ assert 13.3 < TRIP_P < 13.8 and -13.8 < TRIP_M < -13.3, \
     f"soglie dei rail {TRIP_P:.2f} / {TRIP_M:.2f} V: ADR-046 dice |13,5 V|"
 assert 10.5 < TRIP_V < 11.4, f"soglia di VRELAY {TRIP_V:.2f} V: sotto 11,4 V (P9)"
 # il rivelatore di rete: C_MD caricato da V5 attraverso R_MD, contro VREF
-_rmd = only(lambda r: COMP[r][1] == "R" and ends(r) == {"V5", "MD"}, "R_MD")
+# L45d2b2b2 (ADR-094): R_MD e' due resistenze in serie, V5 - MD_R - MD (una in corto non mette V5 sul
+# collettore di Q504): la costante di tempo e' la loro somma
+_rmd1 = only(lambda r: COMP[r][1] == "R" and ends(r) == {"V5", "MD_R"}, "R_MD, la meta' su V5")
+_rmd2 = only(lambda r: COMP[r][1] == "R" and ends(r) == {"MD_R", "MD"}, "R_MD, la meta' su MD")
 _cmd = only(lambda r: COMP[r][1] == "C" and "MD" in ends(r), "C_MD")
 assert PIN[("U506", "2")] == "MD", "U506 A non legge MD"
-TAU_MD = num(v(_rmd)) * num(v(_cmd)) * math.log(V_5 / (V_5 - V_REF))
+TAU_MD = (num(v(_rmd1)) + num(v(_rmd2))) * num(v(_cmd)) * math.log(V_5 / (V_5 - V_REF))
+# ADR-094: anche R503 (V5 -> VREF) e R510 (RECT_V -> base di Q504) sono due in serie
+only(lambda r: COMP[r][1] == "R" and ends(r) == {"V5", "VREF_R"}, "R503, la meta' su V5")
+only(lambda r: COMP[r][1] == "R" and ends(r) == {"VREF_R", "VREF"}, "R503, la meta' su VREF")
+only(lambda r: COMP[r][1] == "R" and ends(r) == {"RECT_V", "MD_B_R"}, "R510, la meta' su RECT_V")
+only(lambda r: COMP[r][1] == "R" and ends(r) == {"MD_B_R", "MD_B"}, "R510, la meta' sulla base")
 
 # ---- il temporizzatore: Δ e Δ₂ (ADR-049) ------------------------------------
 assert PIN[("U508", "3")] == "PERMIT_T" and PIN[("U508", "1")] == "PERMIT_G", "U508 A: Δ"
@@ -346,7 +370,7 @@ txt((31.8, YT - 0.34), "bobine della scheda audio; staccata in standby (NC-037)"
     size=8, color=DIM, halign="left")
 wire(23.4, YT + 0.0, 23.4, YT + 1.6)
 arrow(23.4, YT + 1.6, 25.0, YT + 1.6)
-box(29.0, YT + 1.6, 8.0, 1.1, [f"U504 {v('U504')} → V5 ({it(V_5, 1)} V): logica, micro"],
+box(29.0, YT + 1.6, 8.0, 1.1, [f"U504 + U512 {v('U504')} in serie → V5 ({it(V_5, 1)} V): logica, micro"],
     size=8.5, head_size=8.5)
 # il ramo di T1, dietro K501
 arrow(6.2, YB, 7.4, YB)
