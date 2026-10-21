@@ -230,6 +230,11 @@ silenzio dal circuito — è **meccanizzato** da
 `scripts/check_schematic.py`. Non si può piazzare in automatico, ma si
 può verificare in automatico. Vedi `docs/architecture.md`.
 
+Da L63a lo stesso controllo copre le schede intere: `check_schematic.py` legge
+anche le netlist KiCad, e `docs/preamp/schematic/sheet_kit.py` disegna una
+pagina rifiutando fili fra reti, corti, fili sopra le parti, reti in pezzi senza
+nome e testi sovrapposti (la prima: `psu_draw.py`, l'alimentatore, 133 parti).
+
 ## 17. Un costruttore può pubblicare **due modelli della stessa parte**, e sceglierne uno sbagliato non dà errore
 
 Scoperto in L8 sul THAT320 (`vendor/bjt_array/that/THAT320/300_Series_Macro_01.lib`).
@@ -1424,3 +1429,21 @@ base-emettitore, quindi la corsa non cambia, le potenze sono plausibili, e nient
 limiti della parte, anche quelli di tensione (V_EBO è il più basso di un bipolare, 5–6 V). Dove un
 nodo si muove col segnale, la tensione fra i terminali si legge nel transitorio, non al punto di
 lavoro (`vbe_p7()` in `script/genera_massimi.py` di L45d2b2c).
+
+## 70. schemdraw: prima di `save()` la figura è 6,4 × 4,8 pollici, e un testo misurato lì è misurato su un'altra pagina
+
+Visto in L63a (`docs/preamp/schematic/sheet_kit.py`, `text_overlaps()`). Per trovare i testi
+sovrapposti dello schematico A3 si chiede a matplotlib la scatola di ogni testo dopo
+`Drawing.draw()`. Ma la dimensione della figura schemdraw la fissa solo nel salvataggio: prima è
+quella di default di matplotlib, 6,4 × 4,8 pollici, mentre i testi restano in punti. Le scatole
+escono su una pagina diversa da quella vera, lontane fra loro, e il controllo ha detto
+**«0 sovrapposti»** su una pagina che a occhio ne aveva decine (erano 170).
+
+**Regola operativa**: prima di misurare, la figura va portata alla dimensione della pagina e gli assi
+alla sua estensione (`set_size_inches`, `ax.set_position([0, 0, 1, 1])`, `set_xlim` / `set_ylim`); e un
+controllo nuovo si prova su un caso che *deve* fallire prima di credere al suo zero (in L63a: due
+testi messi apposta uno sull'altro, `data/2026-10-21/L63a/script/sabotaggi.py`).
+
+Collegata, sullo stesso disegno: la netlist KiCad che SKiDL scrive **non ha la sezione `libparts`**, quindi
+non porta i nomi dei piedini. Il kit li legge dai simboli della libreria di KiCad, seguendo gli
+`extends` (`symbol_pins()`); un simbolo che cambia nome di piedino cambia il disegno, non la netlist.
