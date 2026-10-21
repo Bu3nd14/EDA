@@ -1,0 +1,626 @@
+L45d2b2c rail=p L62b base L45a tr B g0 R128_ap musica=0 mute=0 - guasto a 0.3 s
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/docs/preamp/data/2026-10-21/L45d2b2c/varianti/base/gain_block.subckt
+.include @REPO@/docs/preamp/data/2026-10-21/L45d2b2c/inc/base/R128_ap.subckt
+* interruttori: SWFC corto del guasto (chiuso con CTL=1), SWFO aperto del guasto (chiuso con
+* CTL=0); SWKO / SWKC i due contatti del deviatore del mute (0,1 ohm, ADR-044): MUTE=0 rilasciato
+.model SWFC SW(VT=0.5 VH=0.1 RON=0.01 ROFF=1e12)
+.model SWFO SW(VT=-0.5 VH=0.1 RON=0.01 ROFF=1e12)
+.model SWKO SW(VT=-0.5 VH=0.1 RON=0.1 ROFF=1e12)
+.model SWKC SW(VT=0.5 VH=0.1 RON=0.1 ROFF=1e12)
+VPP VPLUS 0 DC 20.3
+VMM VMINUS 0 DC -15
+VCTL CTL 0 PWL(0 0 0.3 0 0.30001 1)
+VMUTE MUTE 0 DC 0
+VIN SRC 0 DC 0
+RSRC SRC JIN 1.5
+CIN JIN SEL 1u
+RJ JIN 0 10MEG
+RSEL SEL 0 470k
+RSELK SEL INA 0.1
+XA INA OUTA FBA RGA RG10A VPLUS VMINUS GAINBLOCK
+RRGA RGA 0 1G
+CRGA RGA 0 15p
+RRG10A RG10A 0 1G
+CRG10A RG10A 0 15p
+XF1 OUTA OUTF1 FBF1 RGF1 RG10F1 VPLUS VMINUS GAINBLOCK
+RRGF1 RGF1 0 1G
+CRGF1 RGF1 0 15p
+RRG10F1 RG10F1 0 1G
+CRG10F1 RG10F1 0 15p
+XF2 OUTA OUTF2 FBF2 RGF2 RG10F2 VPLUS VMINUS GAINBLOCK
+RRGF2 RGF2 0 1G
+CRGF2 RGF2 0 15p
+RRG10F2 RG10F2 0 1G
+CRG10F2 RG10F2 0 15p
+* scala del trim (845 + 464 + 464, sempre montata), trim a 0 dB, C_T, volume al massimo
+RTR1 OUTA TAP6 845
+RTR2 TAP6 TAP12 464
+RTR3 TAP12 0 464
+CT OUTA ATT 10u
+RVT ATT W 1m
+RVB W 0 10k
+XB W OUTB FBB RGB RG10B VPLUS VMINUS CTL GAINBLOCKG
+RRGB RGB 0 1G
+CRGB RGB 0 15p
+RRG10B RG10B 0 1G
+CRG10B RG10B 0 15p
+RSMAIN OUTB MAIN_A 47
+CMAIN MAIN_A MAINC 4.7u
+RBCMAIN MAINC 0 220k
+SNOMAIN MAINC MAINJACK 0 MUTE SWKO
+SNCMAIN MAINC 0 MUTE 0 SWKC
+RBLMAIN MAINJACK 0 220k
+RLDMAIN MAINJACK 0 100k
+RSFIX1 OUTF1 FIX1_A 47
+CFIX1 FIX1_A FIX1C 4.7u
+RBCFIX1 FIX1C 0 470k
+SNOFIX1 FIX1C FIX1JACK 0 MUTE SWKO
+SNCFIX1 FIX1C 0 MUTE 0 SWKC
+RBLFIX1 FIX1JACK 0 470k
+RLDFIX1 FIX1JACK 0 10k
+RSFIX2 OUTF2 FIX2_A 47
+CFIX2 FIX2_A FIX2C 4.7u
+RBCFIX2 FIX2C 0 470k
+SNOFIX2 FIX2C FIX2JACK 0 MUTE SWKO
+SNCFIX2 FIX2C 0 MUTE 0 SWKC
+RBLFIX2 FIX2JACK 0 470k
+RLDFIX2 FIX2JACK 0 50k
+.control
+set noaskquit
+option itl1=1000
+save v(fbb) v(outb) v(rg10b) v(rgb) v(vminus) v(vplus) v(w) v(xb.d1n) v(xb.d2n) v(xb.g1) v(xb.g2) v(xb.nbb) v(xb.nbn) v(xb.nbp) v(xb.ncasc) v(xb.nen) v(xb.nep) v(xb.nfc) v(xb.nhi) v(xb.nme1) v(xb.nme2) v(xb.nmirc) v(xb.nmiri) v(xb.nref) v(xb.nrefm) v(xb.nte) v(xb.nvb) v(xb.nve) v(xb.nvle) v(xb.nx) v(xb.nxd1) v(xb.nxd2) v(xb.nxd3) v(xb.ny) v(xb.s1) v(xb.s2) v(xb.src) v(xb.vpf) v(mainjack) v(fix1jack) v(fix2jack) v(outa) v(outf1) v(outf2) v(outb) i(vpp) i(vmm) @q.xb.q106[p] @q.xb.q117[p] @q.xb.q118[p] @q.xb.q121a[p] @q.xb.q121b[p] @q.xb.q122[p] @q.xb.q125[p] @q.xb.q127[p] @q.xb.q132[p] @q.xb.q133[p] @q.xb.q146[p] @q.xb.q148[p] @r.xb.r101[p] @r.xb.r107[p] @r.xb.r108[p] @r.xb.r109[p] @r.xb.r111[p] @r.xb.r112[p] @r.xb.r113[p] @r.xb.r114[p] @r.xb.r115[p] @r.xb.r119[p] @r.xb.r120[p] @r.xb.r123[p] @r.xb.r126[p] @r.xb.r128[p] @r.xb.r129[p] @r.xb.r130[p] @r.xb.r131[p] @r.xb.r134[p] @r.xb.r135[p] @r.xb.r136[p] @r.xb.r138[p] @r.xb.r143[p] @r.xb.r144[p] @r.xb.r147[p] @r.xb.r149[p] @r.xb.r150[p] @r.xb.r151[p] @r.xb.r152[p] @r.xb.r153[p] @j.xb.jq110a[id] @j.xb.jq110b[id] v(xb.d1n) v(xb.s1) v(xb.d2n) v(xb.s2)
+tran 1u 2.3 0 50u
+wrdata R128_ap.dat v(mainjack) v(fix1jack) v(fix2jack) v(outa) v(outf1) v(outf2) v(outb) i(vpp) i(vmm)
+meas tran p_q106 AVG @q.xb.q106[p] from=2.29 to=2.3
+meas tran p_q117 AVG @q.xb.q117[p] from=2.29 to=2.3
+meas tran p_q118 AVG @q.xb.q118[p] from=2.29 to=2.3
+meas tran p_q121a AVG @q.xb.q121a[p] from=2.29 to=2.3
+meas tran p_q121b AVG @q.xb.q121b[p] from=2.29 to=2.3
+meas tran p_q122 AVG @q.xb.q122[p] from=2.29 to=2.3
+meas tran p_q125 AVG @q.xb.q125[p] from=2.29 to=2.3
+meas tran p_q127 AVG @q.xb.q127[p] from=2.29 to=2.3
+meas tran p_q132 AVG @q.xb.q132[p] from=2.29 to=2.3
+meas tran p_q133 AVG @q.xb.q133[p] from=2.29 to=2.3
+meas tran p_q146 AVG @q.xb.q146[p] from=2.29 to=2.3
+meas tran p_q148 AVG @q.xb.q148[p] from=2.29 to=2.3
+meas tran p_r101 AVG @r.xb.r101[p] from=2.29 to=2.3
+meas tran p_r107 AVG @r.xb.r107[p] from=2.29 to=2.3
+meas tran p_r108 AVG @r.xb.r108[p] from=2.29 to=2.3
+meas tran p_r109 AVG @r.xb.r109[p] from=2.29 to=2.3
+meas tran p_r111 AVG @r.xb.r111[p] from=2.29 to=2.3
+meas tran p_r112 AVG @r.xb.r112[p] from=2.29 to=2.3
+meas tran p_r113 AVG @r.xb.r113[p] from=2.29 to=2.3
+meas tran p_r114 AVG @r.xb.r114[p] from=2.29 to=2.3
+meas tran p_r115 AVG @r.xb.r115[p] from=2.29 to=2.3
+meas tran p_r119 AVG @r.xb.r119[p] from=2.29 to=2.3
+meas tran p_r120 AVG @r.xb.r120[p] from=2.29 to=2.3
+meas tran p_r123 AVG @r.xb.r123[p] from=2.29 to=2.3
+meas tran p_r126 AVG @r.xb.r126[p] from=2.29 to=2.3
+meas tran p_r128 AVG @r.xb.r128[p] from=2.29 to=2.3
+meas tran p_r129 AVG @r.xb.r129[p] from=2.29 to=2.3
+meas tran p_r130 AVG @r.xb.r130[p] from=2.29 to=2.3
+meas tran p_r131 AVG @r.xb.r131[p] from=2.29 to=2.3
+meas tran p_r134 AVG @r.xb.r134[p] from=2.29 to=2.3
+meas tran p_r135 AVG @r.xb.r135[p] from=2.29 to=2.3
+meas tran p_r136 AVG @r.xb.r136[p] from=2.29 to=2.3
+meas tran p_r138 AVG @r.xb.r138[p] from=2.29 to=2.3
+meas tran p_r143 AVG @r.xb.r143[p] from=2.29 to=2.3
+meas tran p_r144 AVG @r.xb.r144[p] from=2.29 to=2.3
+meas tran p_r147 AVG @r.xb.r147[p] from=2.29 to=2.3
+meas tran p_r149 AVG @r.xb.r149[p] from=2.29 to=2.3
+meas tran p_r150 AVG @r.xb.r150[p] from=2.29 to=2.3
+meas tran p_r151 AVG @r.xb.r151[p] from=2.29 to=2.3
+meas tran p_r152 AVG @r.xb.r152[p] from=2.29 to=2.3
+meas tran p_r153 AVG @r.xb.r153[p] from=2.29 to=2.3
+let pja = @j.xb.jq110a[id] * (v(xb.d1n) - v(xb.s1))
+let pjb = @j.xb.jq110b[id] * (v(xb.d2n) - v(xb.s2))
+meas tran p_jq110a AVG pja from=2.29 to=2.3
+meas tran p_jq110b AVG pjb from=2.29 to=2.3
+meas tran out_avg AVG v(outb) from=2.29 to=2.3
+meas tran out_max MAX v(outb) from=2.29 to=2.3
+meas tran out_min MIN v(outb) from=2.29 to=2.3
+meas tran ipp_avg AVG i(vpp) from=2.29 to=2.3
+meas tran ipp_max MAX i(vpp) from=2.29 to=2.3
+meas tran ipp_min MIN i(vpp) from=2.29 to=2.3
+meas tran imm_avg AVG i(vmm) from=2.29 to=2.3
+meas tran imm_max MAX i(vmm) from=2.29 to=2.3
+meas tran imm_min MIN i(vmm) from=2.29 to=2.3
+echo "grandezza,valore" > R128_ap_fine.csv
+echo "p_q106,$&p_q106" >> R128_ap_fine.csv
+echo "p_q117,$&p_q117" >> R128_ap_fine.csv
+echo "p_q118,$&p_q118" >> R128_ap_fine.csv
+echo "p_q121a,$&p_q121a" >> R128_ap_fine.csv
+echo "p_q121b,$&p_q121b" >> R128_ap_fine.csv
+echo "p_q122,$&p_q122" >> R128_ap_fine.csv
+echo "p_q125,$&p_q125" >> R128_ap_fine.csv
+echo "p_q127,$&p_q127" >> R128_ap_fine.csv
+echo "p_q132,$&p_q132" >> R128_ap_fine.csv
+echo "p_q133,$&p_q133" >> R128_ap_fine.csv
+echo "p_q146,$&p_q146" >> R128_ap_fine.csv
+echo "p_q148,$&p_q148" >> R128_ap_fine.csv
+echo "p_r101,$&p_r101" >> R128_ap_fine.csv
+echo "p_r107,$&p_r107" >> R128_ap_fine.csv
+echo "p_r108,$&p_r108" >> R128_ap_fine.csv
+echo "p_r109,$&p_r109" >> R128_ap_fine.csv
+echo "p_r111,$&p_r111" >> R128_ap_fine.csv
+echo "p_r112,$&p_r112" >> R128_ap_fine.csv
+echo "p_r113,$&p_r113" >> R128_ap_fine.csv
+echo "p_r114,$&p_r114" >> R128_ap_fine.csv
+echo "p_r115,$&p_r115" >> R128_ap_fine.csv
+echo "p_r119,$&p_r119" >> R128_ap_fine.csv
+echo "p_r120,$&p_r120" >> R128_ap_fine.csv
+echo "p_r123,$&p_r123" >> R128_ap_fine.csv
+echo "p_r126,$&p_r126" >> R128_ap_fine.csv
+echo "p_r128,$&p_r128" >> R128_ap_fine.csv
+echo "p_r129,$&p_r129" >> R128_ap_fine.csv
+echo "p_r130,$&p_r130" >> R128_ap_fine.csv
+echo "p_r131,$&p_r131" >> R128_ap_fine.csv
+echo "p_r134,$&p_r134" >> R128_ap_fine.csv
+echo "p_r135,$&p_r135" >> R128_ap_fine.csv
+echo "p_r136,$&p_r136" >> R128_ap_fine.csv
+echo "p_r138,$&p_r138" >> R128_ap_fine.csv
+echo "p_r143,$&p_r143" >> R128_ap_fine.csv
+echo "p_r144,$&p_r144" >> R128_ap_fine.csv
+echo "p_r147,$&p_r147" >> R128_ap_fine.csv
+echo "p_r149,$&p_r149" >> R128_ap_fine.csv
+echo "p_r150,$&p_r150" >> R128_ap_fine.csv
+echo "p_r151,$&p_r151" >> R128_ap_fine.csv
+echo "p_r152,$&p_r152" >> R128_ap_fine.csv
+echo "p_r153,$&p_r153" >> R128_ap_fine.csv
+echo "p_jq110a,$&p_jq110a" >> R128_ap_fine.csv
+echo "p_jq110b,$&p_jq110b" >> R128_ap_fine.csv
+echo "out_avg,$&out_avg" >> R128_ap_fine.csv
+echo "out_max,$&out_max" >> R128_ap_fine.csv
+echo "out_min,$&out_min" >> R128_ap_fine.csv
+echo "ipp_avg,$&ipp_avg" >> R128_ap_fine.csv
+echo "ipp_max,$&ipp_max" >> R128_ap_fine.csv
+echo "ipp_min,$&ipp_min" >> R128_ap_fine.csv
+echo "imm_avg,$&imm_avg" >> R128_ap_fine.csv
+echo "imm_max,$&imm_max" >> R128_ap_fine.csv
+echo "imm_min,$&imm_min" >> R128_ap_fine.csv
+let t_c104_12 = v(xb.nref) - v(vminus)
+let t_c105_12 = v(xb.nref) - v(vminus)
+let t_c116_12 = v(xb.ncasc) - 0
+let t_c124_12 = v(xb.nx) - v(xb.nhi)
+let t_c137_12 = v(outb) - v(fbb)
+let t_c139_12 = v(vplus) - 0
+let t_c140_12 = v(vminus) - 0
+let t_c141_12 = v(vplus) - 0
+let t_c142_12 = v(vminus) - 0
+let t_c145_12 = v(xb.vpf) - 0
+let t_d102_ak = v(xb.nref) - v(xb.nrefm)
+let t_d103_ak = v(xb.nrefm) - v(vminus)
+let t_d154_ak = v(xb.nx) - v(xb.nxd1)
+let t_d155_ak = v(xb.nxd1) - v(xb.nxd2)
+let t_d156_ak = v(xb.nxd2) - v(xb.nxd3)
+let t_d157_ak = v(xb.nxd3) - v(xb.ny)
+let t_jq110a_ds = v(xb.d1n) - v(xb.s1)
+let t_jq110a_gs = v(xb.g1) - v(xb.s1)
+let t_jq110a_gd = v(xb.g1) - v(xb.d1n)
+let t_jq110b_ds = v(xb.d2n) - v(xb.s2)
+let t_jq110b_gs = v(xb.g2) - v(xb.s2)
+let t_jq110b_gd = v(xb.g2) - v(xb.d2n)
+let t_q106_ce = v(xb.src) - v(xb.nte)
+let t_q106_cb = v(xb.src) - v(xb.nref)
+let t_q106_eb = v(xb.nte) - v(xb.nref)
+let t_q117_ce = v(xb.nhi) - v(xb.d1n)
+let t_q117_cb = v(xb.nhi) - v(xb.ncasc)
+let t_q117_eb = v(xb.d1n) - v(xb.ncasc)
+let t_q118_ce = v(xb.nmirc) - v(xb.d2n)
+let t_q118_cb = v(xb.nmirc) - v(xb.ncasc)
+let t_q118_eb = v(xb.d2n) - v(xb.ncasc)
+let t_q121a_ce = v(xb.nmirc) - v(xb.nme1)
+let t_q121a_cb = v(xb.nmirc) - v(xb.nmiri)
+let t_q121a_eb = v(xb.nme1) - v(xb.nmiri)
+let t_q121b_ce = v(xb.nhi) - v(xb.nme2)
+let t_q121b_cb = v(xb.nhi) - v(xb.nmiri)
+let t_q121b_eb = v(xb.nme2) - v(xb.nmiri)
+let t_q122_ce = v(xb.nx) - v(xb.nve)
+let t_q122_cb = v(xb.nx) - v(xb.nvb)
+let t_q122_eb = v(xb.nve) - v(xb.nvb)
+let t_q125_ce = v(xb.ny) - v(xb.nvle)
+let t_q125_cb = v(xb.ny) - v(xb.nref)
+let t_q125_eb = v(xb.nvle) - v(xb.nref)
+let t_q127_ce = v(xb.nx) - v(xb.ny)
+let t_q127_cb = v(xb.nx) - v(xb.nbb)
+let t_q127_eb = v(xb.ny) - v(xb.nbb)
+let t_q132_ce = v(vplus) - v(xb.nen)
+let t_q132_cb = v(vplus) - v(xb.nbn)
+let t_q132_eb = v(xb.nen) - v(xb.nbn)
+let t_q133_ce = v(vminus) - v(xb.nep)
+let t_q133_cb = v(vminus) - v(xb.nbp)
+let t_q133_eb = v(xb.nep) - v(xb.nbp)
+let t_q146_ce = v(xb.nfc) - v(xb.nvb)
+let t_q146_cb = v(xb.nfc) - v(xb.nhi)
+let t_q146_eb = v(xb.nvb) - v(xb.nhi)
+let t_q148_ce = v(vminus) - v(xb.nmiri)
+let t_q148_cb = v(vminus) - v(xb.nmirc)
+let t_q148_eb = v(xb.nmiri) - v(xb.nmirc)
+let t_r101_12 = 0 - v(xb.nref)
+let t_r107_12 = v(xb.nte) - v(vminus)
+let t_r108_12 = v(w) - v(xb.g1)
+let t_r109_12 = v(fbb) - v(xb.g2)
+let t_r111_12 = v(xb.s1) - v(xb.src)
+let t_r112_12 = v(xb.s2) - v(xb.src)
+let t_r113_12 = v(w) - 0
+let t_r114_12 = v(vplus) - v(xb.ncasc)
+let t_r115_12 = v(xb.ncasc) - 0
+let t_r119_12 = v(xb.vpf) - v(xb.nme1)
+let t_r120_12 = v(xb.vpf) - v(xb.nme2)
+let t_r123_12 = v(xb.vpf) - v(xb.nve)
+let t_r126_12 = v(xb.nvle) - v(vminus)
+let t_r128_12 = v(xb.nx) - v(xb.nbb)
+let t_r129_12 = v(xb.nbb) - v(xb.ny)
+let t_r130_12 = v(xb.nx) - v(xb.nbn)
+let t_r131_12 = v(xb.ny) - v(xb.nbp)
+let t_r134_12 = v(xb.nen) - v(outb)
+let t_r135_12 = v(xb.nep) - v(outb)
+let t_r136_12 = v(outb) - v(fbb)
+let t_r138_12 = v(fbb) - v(rgb)
+let t_r143_12 = v(fbb) - v(rg10b)
+let t_r144_12 = v(vplus) - v(xb.vpf)
+let t_r147_12 = v(xb.vpf) - v(xb.nvb)
+let t_r149_12 = v(xb.vpf) - v(xb.nmiri)
+let t_r150_12 = v(fbb) - v(xb.g2)
+let t_r151_12 = v(xb.s2) - v(xb.src)
+let t_r152_12 = v(vplus) - v(xb.vpf)
+let t_r153_12 = v(xb.nfc) - v(vminus)
+meas tran t_c104_12_max MAX t_c104_12
+meas tran t_c104_12_min MIN t_c104_12
+meas tran t_c105_12_max MAX t_c105_12
+meas tran t_c105_12_min MIN t_c105_12
+meas tran t_c116_12_max MAX t_c116_12
+meas tran t_c116_12_min MIN t_c116_12
+meas tran t_c124_12_max MAX t_c124_12
+meas tran t_c124_12_min MIN t_c124_12
+meas tran t_c137_12_max MAX t_c137_12
+meas tran t_c137_12_min MIN t_c137_12
+meas tran t_c139_12_max MAX t_c139_12
+meas tran t_c139_12_min MIN t_c139_12
+meas tran t_c140_12_max MAX t_c140_12
+meas tran t_c140_12_min MIN t_c140_12
+meas tran t_c141_12_max MAX t_c141_12
+meas tran t_c141_12_min MIN t_c141_12
+meas tran t_c142_12_max MAX t_c142_12
+meas tran t_c142_12_min MIN t_c142_12
+meas tran t_c145_12_max MAX t_c145_12
+meas tran t_c145_12_min MIN t_c145_12
+meas tran t_d102_ak_max MAX t_d102_ak
+meas tran t_d102_ak_min MIN t_d102_ak
+meas tran t_d103_ak_max MAX t_d103_ak
+meas tran t_d103_ak_min MIN t_d103_ak
+meas tran t_d154_ak_max MAX t_d154_ak
+meas tran t_d154_ak_min MIN t_d154_ak
+meas tran t_d155_ak_max MAX t_d155_ak
+meas tran t_d155_ak_min MIN t_d155_ak
+meas tran t_d156_ak_max MAX t_d156_ak
+meas tran t_d156_ak_min MIN t_d156_ak
+meas tran t_d157_ak_max MAX t_d157_ak
+meas tran t_d157_ak_min MIN t_d157_ak
+meas tran t_jq110a_ds_max MAX t_jq110a_ds
+meas tran t_jq110a_ds_min MIN t_jq110a_ds
+meas tran t_jq110a_gs_max MAX t_jq110a_gs
+meas tran t_jq110a_gs_min MIN t_jq110a_gs
+meas tran t_jq110a_gd_max MAX t_jq110a_gd
+meas tran t_jq110a_gd_min MIN t_jq110a_gd
+meas tran t_jq110b_ds_max MAX t_jq110b_ds
+meas tran t_jq110b_ds_min MIN t_jq110b_ds
+meas tran t_jq110b_gs_max MAX t_jq110b_gs
+meas tran t_jq110b_gs_min MIN t_jq110b_gs
+meas tran t_jq110b_gd_max MAX t_jq110b_gd
+meas tran t_jq110b_gd_min MIN t_jq110b_gd
+meas tran t_q106_ce_max MAX t_q106_ce
+meas tran t_q106_ce_min MIN t_q106_ce
+meas tran t_q106_cb_max MAX t_q106_cb
+meas tran t_q106_cb_min MIN t_q106_cb
+meas tran t_q106_eb_max MAX t_q106_eb
+meas tran t_q106_eb_min MIN t_q106_eb
+meas tran t_q117_ce_max MAX t_q117_ce
+meas tran t_q117_ce_min MIN t_q117_ce
+meas tran t_q117_cb_max MAX t_q117_cb
+meas tran t_q117_cb_min MIN t_q117_cb
+meas tran t_q117_eb_max MAX t_q117_eb
+meas tran t_q117_eb_min MIN t_q117_eb
+meas tran t_q118_ce_max MAX t_q118_ce
+meas tran t_q118_ce_min MIN t_q118_ce
+meas tran t_q118_cb_max MAX t_q118_cb
+meas tran t_q118_cb_min MIN t_q118_cb
+meas tran t_q118_eb_max MAX t_q118_eb
+meas tran t_q118_eb_min MIN t_q118_eb
+meas tran t_q121a_ce_max MAX t_q121a_ce
+meas tran t_q121a_ce_min MIN t_q121a_ce
+meas tran t_q121a_cb_max MAX t_q121a_cb
+meas tran t_q121a_cb_min MIN t_q121a_cb
+meas tran t_q121a_eb_max MAX t_q121a_eb
+meas tran t_q121a_eb_min MIN t_q121a_eb
+meas tran t_q121b_ce_max MAX t_q121b_ce
+meas tran t_q121b_ce_min MIN t_q121b_ce
+meas tran t_q121b_cb_max MAX t_q121b_cb
+meas tran t_q121b_cb_min MIN t_q121b_cb
+meas tran t_q121b_eb_max MAX t_q121b_eb
+meas tran t_q121b_eb_min MIN t_q121b_eb
+meas tran t_q122_ce_max MAX t_q122_ce
+meas tran t_q122_ce_min MIN t_q122_ce
+meas tran t_q122_cb_max MAX t_q122_cb
+meas tran t_q122_cb_min MIN t_q122_cb
+meas tran t_q122_eb_max MAX t_q122_eb
+meas tran t_q122_eb_min MIN t_q122_eb
+meas tran t_q125_ce_max MAX t_q125_ce
+meas tran t_q125_ce_min MIN t_q125_ce
+meas tran t_q125_cb_max MAX t_q125_cb
+meas tran t_q125_cb_min MIN t_q125_cb
+meas tran t_q125_eb_max MAX t_q125_eb
+meas tran t_q125_eb_min MIN t_q125_eb
+meas tran t_q127_ce_max MAX t_q127_ce
+meas tran t_q127_ce_min MIN t_q127_ce
+meas tran t_q127_cb_max MAX t_q127_cb
+meas tran t_q127_cb_min MIN t_q127_cb
+meas tran t_q127_eb_max MAX t_q127_eb
+meas tran t_q127_eb_min MIN t_q127_eb
+meas tran t_q132_ce_max MAX t_q132_ce
+meas tran t_q132_ce_min MIN t_q132_ce
+meas tran t_q132_cb_max MAX t_q132_cb
+meas tran t_q132_cb_min MIN t_q132_cb
+meas tran t_q132_eb_max MAX t_q132_eb
+meas tran t_q132_eb_min MIN t_q132_eb
+meas tran t_q133_ce_max MAX t_q133_ce
+meas tran t_q133_ce_min MIN t_q133_ce
+meas tran t_q133_cb_max MAX t_q133_cb
+meas tran t_q133_cb_min MIN t_q133_cb
+meas tran t_q133_eb_max MAX t_q133_eb
+meas tran t_q133_eb_min MIN t_q133_eb
+meas tran t_q146_ce_max MAX t_q146_ce
+meas tran t_q146_ce_min MIN t_q146_ce
+meas tran t_q146_cb_max MAX t_q146_cb
+meas tran t_q146_cb_min MIN t_q146_cb
+meas tran t_q146_eb_max MAX t_q146_eb
+meas tran t_q146_eb_min MIN t_q146_eb
+meas tran t_q148_ce_max MAX t_q148_ce
+meas tran t_q148_ce_min MIN t_q148_ce
+meas tran t_q148_cb_max MAX t_q148_cb
+meas tran t_q148_cb_min MIN t_q148_cb
+meas tran t_q148_eb_max MAX t_q148_eb
+meas tran t_q148_eb_min MIN t_q148_eb
+meas tran t_r101_12_max MAX t_r101_12
+meas tran t_r101_12_min MIN t_r101_12
+meas tran t_r107_12_max MAX t_r107_12
+meas tran t_r107_12_min MIN t_r107_12
+meas tran t_r108_12_max MAX t_r108_12
+meas tran t_r108_12_min MIN t_r108_12
+meas tran t_r109_12_max MAX t_r109_12
+meas tran t_r109_12_min MIN t_r109_12
+meas tran t_r111_12_max MAX t_r111_12
+meas tran t_r111_12_min MIN t_r111_12
+meas tran t_r112_12_max MAX t_r112_12
+meas tran t_r112_12_min MIN t_r112_12
+meas tran t_r113_12_max MAX t_r113_12
+meas tran t_r113_12_min MIN t_r113_12
+meas tran t_r114_12_max MAX t_r114_12
+meas tran t_r114_12_min MIN t_r114_12
+meas tran t_r115_12_max MAX t_r115_12
+meas tran t_r115_12_min MIN t_r115_12
+meas tran t_r119_12_max MAX t_r119_12
+meas tran t_r119_12_min MIN t_r119_12
+meas tran t_r120_12_max MAX t_r120_12
+meas tran t_r120_12_min MIN t_r120_12
+meas tran t_r123_12_max MAX t_r123_12
+meas tran t_r123_12_min MIN t_r123_12
+meas tran t_r126_12_max MAX t_r126_12
+meas tran t_r126_12_min MIN t_r126_12
+meas tran t_r128_12_max MAX t_r128_12
+meas tran t_r128_12_min MIN t_r128_12
+meas tran t_r129_12_max MAX t_r129_12
+meas tran t_r129_12_min MIN t_r129_12
+meas tran t_r130_12_max MAX t_r130_12
+meas tran t_r130_12_min MIN t_r130_12
+meas tran t_r131_12_max MAX t_r131_12
+meas tran t_r131_12_min MIN t_r131_12
+meas tran t_r134_12_max MAX t_r134_12
+meas tran t_r134_12_min MIN t_r134_12
+meas tran t_r135_12_max MAX t_r135_12
+meas tran t_r135_12_min MIN t_r135_12
+meas tran t_r136_12_max MAX t_r136_12
+meas tran t_r136_12_min MIN t_r136_12
+meas tran t_r138_12_max MAX t_r138_12
+meas tran t_r138_12_min MIN t_r138_12
+meas tran t_r143_12_max MAX t_r143_12
+meas tran t_r143_12_min MIN t_r143_12
+meas tran t_r144_12_max MAX t_r144_12
+meas tran t_r144_12_min MIN t_r144_12
+meas tran t_r147_12_max MAX t_r147_12
+meas tran t_r147_12_min MIN t_r147_12
+meas tran t_r149_12_max MAX t_r149_12
+meas tran t_r149_12_min MIN t_r149_12
+meas tran t_r150_12_max MAX t_r150_12
+meas tran t_r150_12_min MIN t_r150_12
+meas tran t_r151_12_max MAX t_r151_12
+meas tran t_r151_12_min MIN t_r151_12
+meas tran t_r152_12_max MAX t_r152_12
+meas tran t_r152_12_min MIN t_r152_12
+meas tran t_r153_12_max MAX t_r153_12
+meas tran t_r153_12_min MIN t_r153_12
+echo "grandezza,valore" > R128_ap_tensioni.csv
+echo "t_c104_12_max,$&t_c104_12_max" >> R128_ap_tensioni.csv
+echo "t_c104_12_min,$&t_c104_12_min" >> R128_ap_tensioni.csv
+echo "t_c105_12_max,$&t_c105_12_max" >> R128_ap_tensioni.csv
+echo "t_c105_12_min,$&t_c105_12_min" >> R128_ap_tensioni.csv
+echo "t_c116_12_max,$&t_c116_12_max" >> R128_ap_tensioni.csv
+echo "t_c116_12_min,$&t_c116_12_min" >> R128_ap_tensioni.csv
+echo "t_c124_12_max,$&t_c124_12_max" >> R128_ap_tensioni.csv
+echo "t_c124_12_min,$&t_c124_12_min" >> R128_ap_tensioni.csv
+echo "t_c137_12_max,$&t_c137_12_max" >> R128_ap_tensioni.csv
+echo "t_c137_12_min,$&t_c137_12_min" >> R128_ap_tensioni.csv
+echo "t_c139_12_max,$&t_c139_12_max" >> R128_ap_tensioni.csv
+echo "t_c139_12_min,$&t_c139_12_min" >> R128_ap_tensioni.csv
+echo "t_c140_12_max,$&t_c140_12_max" >> R128_ap_tensioni.csv
+echo "t_c140_12_min,$&t_c140_12_min" >> R128_ap_tensioni.csv
+echo "t_c141_12_max,$&t_c141_12_max" >> R128_ap_tensioni.csv
+echo "t_c141_12_min,$&t_c141_12_min" >> R128_ap_tensioni.csv
+echo "t_c142_12_max,$&t_c142_12_max" >> R128_ap_tensioni.csv
+echo "t_c142_12_min,$&t_c142_12_min" >> R128_ap_tensioni.csv
+echo "t_c145_12_max,$&t_c145_12_max" >> R128_ap_tensioni.csv
+echo "t_c145_12_min,$&t_c145_12_min" >> R128_ap_tensioni.csv
+echo "t_d102_ak_max,$&t_d102_ak_max" >> R128_ap_tensioni.csv
+echo "t_d102_ak_min,$&t_d102_ak_min" >> R128_ap_tensioni.csv
+echo "t_d103_ak_max,$&t_d103_ak_max" >> R128_ap_tensioni.csv
+echo "t_d103_ak_min,$&t_d103_ak_min" >> R128_ap_tensioni.csv
+echo "t_d154_ak_max,$&t_d154_ak_max" >> R128_ap_tensioni.csv
+echo "t_d154_ak_min,$&t_d154_ak_min" >> R128_ap_tensioni.csv
+echo "t_d155_ak_max,$&t_d155_ak_max" >> R128_ap_tensioni.csv
+echo "t_d155_ak_min,$&t_d155_ak_min" >> R128_ap_tensioni.csv
+echo "t_d156_ak_max,$&t_d156_ak_max" >> R128_ap_tensioni.csv
+echo "t_d156_ak_min,$&t_d156_ak_min" >> R128_ap_tensioni.csv
+echo "t_d157_ak_max,$&t_d157_ak_max" >> R128_ap_tensioni.csv
+echo "t_d157_ak_min,$&t_d157_ak_min" >> R128_ap_tensioni.csv
+echo "t_jq110a_ds_max,$&t_jq110a_ds_max" >> R128_ap_tensioni.csv
+echo "t_jq110a_ds_min,$&t_jq110a_ds_min" >> R128_ap_tensioni.csv
+echo "t_jq110a_gs_max,$&t_jq110a_gs_max" >> R128_ap_tensioni.csv
+echo "t_jq110a_gs_min,$&t_jq110a_gs_min" >> R128_ap_tensioni.csv
+echo "t_jq110a_gd_max,$&t_jq110a_gd_max" >> R128_ap_tensioni.csv
+echo "t_jq110a_gd_min,$&t_jq110a_gd_min" >> R128_ap_tensioni.csv
+echo "t_jq110b_ds_max,$&t_jq110b_ds_max" >> R128_ap_tensioni.csv
+echo "t_jq110b_ds_min,$&t_jq110b_ds_min" >> R128_ap_tensioni.csv
+echo "t_jq110b_gs_max,$&t_jq110b_gs_max" >> R128_ap_tensioni.csv
+echo "t_jq110b_gs_min,$&t_jq110b_gs_min" >> R128_ap_tensioni.csv
+echo "t_jq110b_gd_max,$&t_jq110b_gd_max" >> R128_ap_tensioni.csv
+echo "t_jq110b_gd_min,$&t_jq110b_gd_min" >> R128_ap_tensioni.csv
+echo "t_q106_ce_max,$&t_q106_ce_max" >> R128_ap_tensioni.csv
+echo "t_q106_ce_min,$&t_q106_ce_min" >> R128_ap_tensioni.csv
+echo "t_q106_cb_max,$&t_q106_cb_max" >> R128_ap_tensioni.csv
+echo "t_q106_cb_min,$&t_q106_cb_min" >> R128_ap_tensioni.csv
+echo "t_q106_eb_max,$&t_q106_eb_max" >> R128_ap_tensioni.csv
+echo "t_q106_eb_min,$&t_q106_eb_min" >> R128_ap_tensioni.csv
+echo "t_q117_ce_max,$&t_q117_ce_max" >> R128_ap_tensioni.csv
+echo "t_q117_ce_min,$&t_q117_ce_min" >> R128_ap_tensioni.csv
+echo "t_q117_cb_max,$&t_q117_cb_max" >> R128_ap_tensioni.csv
+echo "t_q117_cb_min,$&t_q117_cb_min" >> R128_ap_tensioni.csv
+echo "t_q117_eb_max,$&t_q117_eb_max" >> R128_ap_tensioni.csv
+echo "t_q117_eb_min,$&t_q117_eb_min" >> R128_ap_tensioni.csv
+echo "t_q118_ce_max,$&t_q118_ce_max" >> R128_ap_tensioni.csv
+echo "t_q118_ce_min,$&t_q118_ce_min" >> R128_ap_tensioni.csv
+echo "t_q118_cb_max,$&t_q118_cb_max" >> R128_ap_tensioni.csv
+echo "t_q118_cb_min,$&t_q118_cb_min" >> R128_ap_tensioni.csv
+echo "t_q118_eb_max,$&t_q118_eb_max" >> R128_ap_tensioni.csv
+echo "t_q118_eb_min,$&t_q118_eb_min" >> R128_ap_tensioni.csv
+echo "t_q121a_ce_max,$&t_q121a_ce_max" >> R128_ap_tensioni.csv
+echo "t_q121a_ce_min,$&t_q121a_ce_min" >> R128_ap_tensioni.csv
+echo "t_q121a_cb_max,$&t_q121a_cb_max" >> R128_ap_tensioni.csv
+echo "t_q121a_cb_min,$&t_q121a_cb_min" >> R128_ap_tensioni.csv
+echo "t_q121a_eb_max,$&t_q121a_eb_max" >> R128_ap_tensioni.csv
+echo "t_q121a_eb_min,$&t_q121a_eb_min" >> R128_ap_tensioni.csv
+echo "t_q121b_ce_max,$&t_q121b_ce_max" >> R128_ap_tensioni.csv
+echo "t_q121b_ce_min,$&t_q121b_ce_min" >> R128_ap_tensioni.csv
+echo "t_q121b_cb_max,$&t_q121b_cb_max" >> R128_ap_tensioni.csv
+echo "t_q121b_cb_min,$&t_q121b_cb_min" >> R128_ap_tensioni.csv
+echo "t_q121b_eb_max,$&t_q121b_eb_max" >> R128_ap_tensioni.csv
+echo "t_q121b_eb_min,$&t_q121b_eb_min" >> R128_ap_tensioni.csv
+echo "t_q122_ce_max,$&t_q122_ce_max" >> R128_ap_tensioni.csv
+echo "t_q122_ce_min,$&t_q122_ce_min" >> R128_ap_tensioni.csv
+echo "t_q122_cb_max,$&t_q122_cb_max" >> R128_ap_tensioni.csv
+echo "t_q122_cb_min,$&t_q122_cb_min" >> R128_ap_tensioni.csv
+echo "t_q122_eb_max,$&t_q122_eb_max" >> R128_ap_tensioni.csv
+echo "t_q122_eb_min,$&t_q122_eb_min" >> R128_ap_tensioni.csv
+echo "t_q125_ce_max,$&t_q125_ce_max" >> R128_ap_tensioni.csv
+echo "t_q125_ce_min,$&t_q125_ce_min" >> R128_ap_tensioni.csv
+echo "t_q125_cb_max,$&t_q125_cb_max" >> R128_ap_tensioni.csv
+echo "t_q125_cb_min,$&t_q125_cb_min" >> R128_ap_tensioni.csv
+echo "t_q125_eb_max,$&t_q125_eb_max" >> R128_ap_tensioni.csv
+echo "t_q125_eb_min,$&t_q125_eb_min" >> R128_ap_tensioni.csv
+echo "t_q127_ce_max,$&t_q127_ce_max" >> R128_ap_tensioni.csv
+echo "t_q127_ce_min,$&t_q127_ce_min" >> R128_ap_tensioni.csv
+echo "t_q127_cb_max,$&t_q127_cb_max" >> R128_ap_tensioni.csv
+echo "t_q127_cb_min,$&t_q127_cb_min" >> R128_ap_tensioni.csv
+echo "t_q127_eb_max,$&t_q127_eb_max" >> R128_ap_tensioni.csv
+echo "t_q127_eb_min,$&t_q127_eb_min" >> R128_ap_tensioni.csv
+echo "t_q132_ce_max,$&t_q132_ce_max" >> R128_ap_tensioni.csv
+echo "t_q132_ce_min,$&t_q132_ce_min" >> R128_ap_tensioni.csv
+echo "t_q132_cb_max,$&t_q132_cb_max" >> R128_ap_tensioni.csv
+echo "t_q132_cb_min,$&t_q132_cb_min" >> R128_ap_tensioni.csv
+echo "t_q132_eb_max,$&t_q132_eb_max" >> R128_ap_tensioni.csv
+echo "t_q132_eb_min,$&t_q132_eb_min" >> R128_ap_tensioni.csv
+echo "t_q133_ce_max,$&t_q133_ce_max" >> R128_ap_tensioni.csv
+echo "t_q133_ce_min,$&t_q133_ce_min" >> R128_ap_tensioni.csv
+echo "t_q133_cb_max,$&t_q133_cb_max" >> R128_ap_tensioni.csv
+echo "t_q133_cb_min,$&t_q133_cb_min" >> R128_ap_tensioni.csv
+echo "t_q133_eb_max,$&t_q133_eb_max" >> R128_ap_tensioni.csv
+echo "t_q133_eb_min,$&t_q133_eb_min" >> R128_ap_tensioni.csv
+echo "t_q146_ce_max,$&t_q146_ce_max" >> R128_ap_tensioni.csv
+echo "t_q146_ce_min,$&t_q146_ce_min" >> R128_ap_tensioni.csv
+echo "t_q146_cb_max,$&t_q146_cb_max" >> R128_ap_tensioni.csv
+echo "t_q146_cb_min,$&t_q146_cb_min" >> R128_ap_tensioni.csv
+echo "t_q146_eb_max,$&t_q146_eb_max" >> R128_ap_tensioni.csv
+echo "t_q146_eb_min,$&t_q146_eb_min" >> R128_ap_tensioni.csv
+echo "t_q148_ce_max,$&t_q148_ce_max" >> R128_ap_tensioni.csv
+echo "t_q148_ce_min,$&t_q148_ce_min" >> R128_ap_tensioni.csv
+echo "t_q148_cb_max,$&t_q148_cb_max" >> R128_ap_tensioni.csv
+echo "t_q148_cb_min,$&t_q148_cb_min" >> R128_ap_tensioni.csv
+echo "t_q148_eb_max,$&t_q148_eb_max" >> R128_ap_tensioni.csv
+echo "t_q148_eb_min,$&t_q148_eb_min" >> R128_ap_tensioni.csv
+echo "t_r101_12_max,$&t_r101_12_max" >> R128_ap_tensioni.csv
+echo "t_r101_12_min,$&t_r101_12_min" >> R128_ap_tensioni.csv
+echo "t_r107_12_max,$&t_r107_12_max" >> R128_ap_tensioni.csv
+echo "t_r107_12_min,$&t_r107_12_min" >> R128_ap_tensioni.csv
+echo "t_r108_12_max,$&t_r108_12_max" >> R128_ap_tensioni.csv
+echo "t_r108_12_min,$&t_r108_12_min" >> R128_ap_tensioni.csv
+echo "t_r109_12_max,$&t_r109_12_max" >> R128_ap_tensioni.csv
+echo "t_r109_12_min,$&t_r109_12_min" >> R128_ap_tensioni.csv
+echo "t_r111_12_max,$&t_r111_12_max" >> R128_ap_tensioni.csv
+echo "t_r111_12_min,$&t_r111_12_min" >> R128_ap_tensioni.csv
+echo "t_r112_12_max,$&t_r112_12_max" >> R128_ap_tensioni.csv
+echo "t_r112_12_min,$&t_r112_12_min" >> R128_ap_tensioni.csv
+echo "t_r113_12_max,$&t_r113_12_max" >> R128_ap_tensioni.csv
+echo "t_r113_12_min,$&t_r113_12_min" >> R128_ap_tensioni.csv
+echo "t_r114_12_max,$&t_r114_12_max" >> R128_ap_tensioni.csv
+echo "t_r114_12_min,$&t_r114_12_min" >> R128_ap_tensioni.csv
+echo "t_r115_12_max,$&t_r115_12_max" >> R128_ap_tensioni.csv
+echo "t_r115_12_min,$&t_r115_12_min" >> R128_ap_tensioni.csv
+echo "t_r119_12_max,$&t_r119_12_max" >> R128_ap_tensioni.csv
+echo "t_r119_12_min,$&t_r119_12_min" >> R128_ap_tensioni.csv
+echo "t_r120_12_max,$&t_r120_12_max" >> R128_ap_tensioni.csv
+echo "t_r120_12_min,$&t_r120_12_min" >> R128_ap_tensioni.csv
+echo "t_r123_12_max,$&t_r123_12_max" >> R128_ap_tensioni.csv
+echo "t_r123_12_min,$&t_r123_12_min" >> R128_ap_tensioni.csv
+echo "t_r126_12_max,$&t_r126_12_max" >> R128_ap_tensioni.csv
+echo "t_r126_12_min,$&t_r126_12_min" >> R128_ap_tensioni.csv
+echo "t_r128_12_max,$&t_r128_12_max" >> R128_ap_tensioni.csv
+echo "t_r128_12_min,$&t_r128_12_min" >> R128_ap_tensioni.csv
+echo "t_r129_12_max,$&t_r129_12_max" >> R128_ap_tensioni.csv
+echo "t_r129_12_min,$&t_r129_12_min" >> R128_ap_tensioni.csv
+echo "t_r130_12_max,$&t_r130_12_max" >> R128_ap_tensioni.csv
+echo "t_r130_12_min,$&t_r130_12_min" >> R128_ap_tensioni.csv
+echo "t_r131_12_max,$&t_r131_12_max" >> R128_ap_tensioni.csv
+echo "t_r131_12_min,$&t_r131_12_min" >> R128_ap_tensioni.csv
+echo "t_r134_12_max,$&t_r134_12_max" >> R128_ap_tensioni.csv
+echo "t_r134_12_min,$&t_r134_12_min" >> R128_ap_tensioni.csv
+echo "t_r135_12_max,$&t_r135_12_max" >> R128_ap_tensioni.csv
+echo "t_r135_12_min,$&t_r135_12_min" >> R128_ap_tensioni.csv
+echo "t_r136_12_max,$&t_r136_12_max" >> R128_ap_tensioni.csv
+echo "t_r136_12_min,$&t_r136_12_min" >> R128_ap_tensioni.csv
+echo "t_r138_12_max,$&t_r138_12_max" >> R128_ap_tensioni.csv
+echo "t_r138_12_min,$&t_r138_12_min" >> R128_ap_tensioni.csv
+echo "t_r143_12_max,$&t_r143_12_max" >> R128_ap_tensioni.csv
+echo "t_r143_12_min,$&t_r143_12_min" >> R128_ap_tensioni.csv
+echo "t_r144_12_max,$&t_r144_12_max" >> R128_ap_tensioni.csv
+echo "t_r144_12_min,$&t_r144_12_min" >> R128_ap_tensioni.csv
+echo "t_r147_12_max,$&t_r147_12_max" >> R128_ap_tensioni.csv
+echo "t_r147_12_min,$&t_r147_12_min" >> R128_ap_tensioni.csv
+echo "t_r149_12_max,$&t_r149_12_max" >> R128_ap_tensioni.csv
+echo "t_r149_12_min,$&t_r149_12_min" >> R128_ap_tensioni.csv
+echo "t_r150_12_max,$&t_r150_12_max" >> R128_ap_tensioni.csv
+echo "t_r150_12_min,$&t_r150_12_min" >> R128_ap_tensioni.csv
+echo "t_r151_12_max,$&t_r151_12_max" >> R128_ap_tensioni.csv
+echo "t_r151_12_min,$&t_r151_12_min" >> R128_ap_tensioni.csv
+echo "t_r152_12_max,$&t_r152_12_max" >> R128_ap_tensioni.csv
+echo "t_r152_12_min,$&t_r152_12_min" >> R128_ap_tensioni.csv
+echo "t_r153_12_max,$&t_r153_12_max" >> R128_ap_tensioni.csv
+echo "t_r153_12_min,$&t_r153_12_min" >> R128_ap_tensioni.csv
+quit
+.endc
+.end

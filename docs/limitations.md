@@ -1410,3 +1410,17 @@ rimappaggio del corto, che è finito a valle di tutti e due i regolatori (V5 a 1
 quelle che **non** sceglie, e protesta se ne resta fuori una del tipo che dovrebbe guardare (il
 guardiano ora lo fa per ogni 2N7002; `falsi/psu_q503_non_riconosciuto.net` di L45d2b2b2 lo prova).
 Un banco che confronta nodi li legge dalla netlist, non dalle righe del deck.
+
+## 69. P7 misurava potenze e correnti, non le giunzioni: una base-emettitore in inversa oltre il suo limite non dava nessun segno
+
+Visto in L45d2b2c (`docs/preamp/data/2026-10-21/L45d2b2c/`, README). `tb_mute_corto.cir` (P7, ADR-021)
+legge per ogni cella potenze medie e correnti di picco dei finali, e su quelle è stato giudicato per
+tutti i lotti da L11. Nella cella più dura (principale a +10 dB, 20 kHz a fondo scala, mute inserito o uscita
+in corto) la base del finale NPN spento sale **5,18 V** sopra il suo emettitore, mentre il PNP porta la
+corrente del corto: il MJE15032 ammette 5 V. Il modello di Gummel-Poon non ha rottura inversa della
+base-emettitore, quindi la corsa non cambia, le potenze sono plausibili, e niente avvisa.
+
+**Regola operativa**: un requisito «nessun componente esce dai propri limiti» si misura su tutti i
+limiti della parte, anche quelli di tensione (V_EBO è il più basso di un bipolare, 5–6 V). Dove un
+nodo si muove col segnale, la tensione fra i terminali si legge nel transitorio, non al punto di
+lavoro (`vbe_p7()` in `script/genera_massimi.py` di L45d2b2c).

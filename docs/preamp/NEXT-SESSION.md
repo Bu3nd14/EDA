@@ -1,62 +1,61 @@
-# Prompt per la sessione successiva — L45d2b2c, i massimi del blocco
+# Prompt per la sessione successiva — L63, lo schematico completo leggibile
 
-Nome della sessione: **hi-fi preamp L45d2b2c** (la convenzione è in `CLAUDE.md`).
+Nome della sessione: **hi-fi preamp L63** (la convenzione è in `CLAUDE.md`).
 
-> Prompt scritto alla chiusura di L45d2b2b2 (2026-10-21), da quello messo da parte in
-> `data/2026-10-20/L45d2b2a/NEXT-SESSION-L45d2b2c.md`. Dopo viene L45d2b3, i guasti rifatti e la
-> sintesi.
+> Prompt scritto alla chiusura di L45d2b2c (2026-10-21), su richiesta dell'utente in quella
+> sessione. Dopo viene **L45d2b3**, i guasti rifatti e la sintesi: il suo prompt è già pronto in
+> `data/2026-10-21/L45d2b2c/NEXT-SESSION-L45d2b3.md`, e chi chiude L63 lo copia qui.
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L45d2b2c**, e si ferma. Non iniziarne un secondo, salvo che
-l'utente lo chieda esplicitamente nella sessione. Se si rivela più grande di una sessione,
-**dividilo con l'utente all'inizio**.
+LOTTI PICCOLI: questa sessione fa **L63**, e si ferma. Non iniziarne un secondo, salvo che l'utente lo
+chieda esplicitamente nella sessione. Se si rivela più grande di una sessione, **dividilo con
+l'utente all'inizio** (per esempio: L63a la scheda audio, L63b l'alimentatore).
 
-## Perché questo lotto, e perché adesso
+## La richiesta dell'utente (2026-10-21, a fine L45d2b2c, parola per parola)
 
-**NC-042** (maggiore, **prima di G1**): l'analisi dei guasti singoli. L45d2a ha deciso i rimedi
-(ADR-071…078); L45d2b li costruisce:
-- L45d2b2: a) la partenza morbida (fatta, ADR-091), b1) i diodi della tenuta (fatto, ADR-093),
-  b2) il comando e i 5 V (fatto, ADR-094), **c) questa**;
-- L45d2b3, i guasti rifatti nella forma di ADR-070 e la sintesi.
-
-**Che cosa è cambiato con L45d2b2b2 (2026-10-21)**. Riguarda l'alimentatore e non il blocco:
-- **ADR-094**: due 1N4148 in serie per ogni diodo di bloccaggio (D530–D532), R552 47 Ω davanti a
-  Q503, R503 / R510 / R512 sdoppiate (R553–R555), U504 + U512 in serie per i 5 V. `psu.py` 133 parti.
-- Il banco dell'alimentatore di `data/2026-10-20/L45d2b2b2/psu/` (README):
-  - una sonda di corrente sui pin (`SONDE_I`, `--sonde`) e la corrente del corto, `i(vfc)`;
-  - `GIRI_MAX`;
-  - il 2N7002 tarato sul datasheet, `--n2n7002 ds`; quello di default satura ~4 volte (limitations #67).
-- Trovato: il firmware rifà l'accensione dopo un falso «buco di rete» (§ 4.5), e ogni guasto del
-  comando si ripete; è di L58.
+> «dopo questo passo voglio vedere lo schematico, due pagine, ma complete (anche fosse A3) una per la
+> scheda audio e una per l´alimentatore, complete senza blocchi ripetuti, crea un lotto per generare
+> un full schematic human readable, subito dopo questo step»
 
 ## Che cosa costruire
 
-1. **Le tensioni massime delle parti del blocco** col rail fino a ±20,3 V, e la dissipazione dei
-   finali (ADR-078; la scelta di `data/2026-10-14/L45d1/scelte_L45d2.pdf`).
-   - Si lavora sul blocco coi quattro diodi di ADR-090. Ai loro capi c'è lo spread: ~2 V a riposo, e
-     ~3 V coi guasti del moltiplicatore, quando portano la corrente del VAS (~10 mA).
-   - Il sorvegliante della sovratensione si aggiunge **solo se** qualcosa esce dai limiti, e in quel
-     caso **si torna all'utente**.
-   - ±20,3 V è il rail col regolatore in corto fra ingresso e uscita, e va riletto col percorso di
-     oggi:
-     - il grezzo passa da R550 / R551 (ADR-092: ~1,4 V in meno a regime);
-     - il rail sta dietro lo Schottky in serie (ADR-093: ~0,3 V in meno);
-     - il regolatore è impostato a 15,3 V.
-2. **Ogni opzione portata all'utente** arriva già con la sua cifra contro il limite della parte (Tj a
-   60 °C d'aria, tensione, corrente), alle tre reti.
+Due pagine, generate dal sorgente e leggibili da una persona:
+1. **La scheda audio** (`circuits/preamp/preamp_audio.py`, 570 parti): ingressi e selettore, trim,
+   volume, i blocchi di guadagno, le uscite col mute, i relè, i connettori.
+2. **L'alimentatore** (`circuits/preamp/psu.py`, 133 parti): trasformatori, raddrizzatori, rail,
+   VRELAY, i 5 V, il sorvegliante, il temporizzatore, il comando dei relè, i connettori.
 
-Ogni cambio al circuito porta con sé sorgente, netlist, disegno, `run_tests.sh` e regressione. Ogni
-valore nuovo in `circuits/preamp/*.py` ha un commento che punta alla sua ADR. Uno strumento di
-misura nuovo si controlla su un caso noto prima di usarlo.
+Formato A3 se serve (anche più grande, se l'utente lo accetta), SVG e PDF.
+
+**Da chiarire con l'utente all'inizio, per nome e senza sigle**: che cosa vuol dire «senza blocchi
+ripetuti». La lettura proposta da L45d2b2c:
+- il blocco di guadagno è **uno** (otto istanze identiche, ADR-006): si disegna **una volta**, completo
+  in ogni parte, con una tabella delle istanze e delle loro sigle;
+- i due canali sono uguali: si disegna il sinistro e si nomina il destro;
+- tutto il resto **completo**, parte per parte, senza riquadri astratti.
+Se l'utente intende altro (per esempio ogni istanza disegnata), cambia la dimensione del lavoro: lo si
+dice coi numeri prima di cominciare.
+
+**Come, non solo che cosa** (limitations #16, #5): il piazzamento automatico di uno schematico
+analogico leggibile non esiste; SKiDL `generate_schematic()` è inutilizzabile. Lo strumento che
+funziona nel repo è il disegno a mano in codice con schemdraw **più un manifesto verificato contro la
+netlist nei due sensi** (`docs/preamp/schematic/gain_block_draw.py`, `scripts/check_schematic.py`, il
+controllo 2d di `run_tests.sh`). Le due pagine nuove si fanno allo stesso modo, e il controllo 2d le
+deve prendere da sé (cerca ogni `docs/*/schematic/*.manifest.json`). Un disegno che non corrisponde
+alla netlist è un test rosso, non una nota.
+
+Riusare: il disegno del blocco (completo, 61 dispositivi), gli schemi a blocchi della scheda e
+dell'alimentatore (`preamp_blocks_draw.py`, `psu_blocks_draw.py`, con le loro asserzioni nel 2f), i
+disegni del dossier (L32b, L51a–c).
 
 ## Prima di tutto
 
-- `CLAUDE.md`, `docs/limitations.md` (in particolare **#59, #62, #63, #65, #66, #67, #68**), `AGENTS.md`.
-- `docs/preamp/STATE.md`: «In breve» e le voci di L45d2b2b2, L45d2b2b1, L45d2b2a.
-- `NONCOMPLIANCE.md`: NC-042, NC-072.
-- ADR-078, ADR-090, ADR-092, ADR-093, ADR-094.
-- Il banco del blocco di L62b (`data/2026-10-19/L62b/`) e i deck di guasto rifatti dal blocco di
-  oggi (limitations #62).
+- `CLAUDE.md`, `docs/limitations.md` (in particolare **#5, #16, #22, #47, #68**), `AGENTS.md`.
+- `docs/preamp/STATE.md`: «In breve» e la voce di L45d2b2c.
+- `docs/preamp/schematic/` e `scripts/check_schematic.py`.
+- Guardare le pagine con gli occhi prima di consegnarle: il controllo verifica le connessioni, non la
+  leggibilità. L'anteprima PNG: `/usr/bin/env PREVIEW_PNG=<file.png> <python del venv> <script>`
+  (`gain_block_draw.py` lo fa già); la miniatura di Quick Look taglia i disegni larghi.
 
 ## I vincoli
 
@@ -67,41 +66,25 @@ misura nuovo si controlla su un caso noto prima di usarlo.
   - `xargs` sulla riga di comando (va dentro uno script);
   - `awk` con programmi, i cicli con variabili, un heredoc, un `python3 -c` dentro un altro comando,
     gli script lunghi passati sulla riga di comando (scriverli su file e lanciarli);
-  - `sed` con un valore calcolato al momento (si scrive uno script);
-  - un comando che nomina la storia del repository in forma che il guardiano non sa verificare;
-  - `pkill -f` col percorso relativo;
   - un titolo di PR con l'apostrofo: il corpo va su file, con `--body-file`.
 - Si usano comandi semplici, **percorsi assoluti**, script scritti su file con Write, ed Edit per i
   testi. `/usr/bin/env VAR=… comando` passa.
-- **SKiDL scrive i suoi `.erc` / `.log` / `_sklib.py` nella cartella corrente**: i sorgenti in
-  `circuits/preamp` si lanciano con la cartella corrente lì.
-- **Non modificare uno script mentre zsh lo sta eseguendo**, e non cambiare un generatore mentre una
-  lista di casi gira. Se succede, si prova che i deck sono rimasti uguali (L45d2b2b2 l'ha fatto).
-- **Se lanci un agente che deve eseguire comandi**, il worktree si apre **dopo** che ha finito. Un
-  agente di sola ricerca web, senza comandi né scritture, può girare anche a worktree aperto.
-- Le domande all'utente si fanno per nome, senza sigle; i colpi al jack in dB SPL.
-- Piste larghe al layout: un rimedio che aggiunge parti di potenza lo ricordi.
+- I disegni girano col Python del venv (`/Users/roberto/EDA/env/venv/bin/python3`, schemdraw 0.23).
+- Le domande all'utente si fanno per nome, senza sigle.
 
 ## NON fa parte di questo lotto
 
-- **I guasti rifatti nella forma di ADR-070** e la sintesi: sono di **L45d2b3**. Ci vanno anche:
-  - R144 contro la sua parte, R153 in corto, le durate di P10 sulla Stax;
-  - i modi delle parti nuove di ADR-093 (D513–D516) e di ADR-094 (D530–D532 aperti, R552, U512, C536,
-    le metà aperte delle resistenze sdoppiate).
-- **NC-073** (l'impulso di R550 / R551) e il sovraccarico breve di R552: alla scelta della parte.
-- **Il rame sotto i regolatori** (NC-072): al layout dell'alimentatore, G2.
-- Il micro bloccato e lo standby (L54), la diagnosi (L58: anche il firmware che riparte dopo un falso
-  buco di rete), l'ingresso protetto (L57), il dispositivo d'uscita (L55), il tetto delle fisse
-  (NC-046), G1.
-- Le decisioni prese in L45d2a, L60a…L60d, L62, L45d2b2a, L45d2b2b1 e L45d2b2b2 non si riaprono,
-  salvo che un «Da riaprire se» della loro ADR scatti. In quel caso si torna all'utente coi numeri.
+- **Nessun cambio al circuito.** Se disegnando si trova un errore nel sorgente, lo si scrive nel report
+  e lo si porta all'utente; la topologia sta solo in `circuits/preamp/*.py`.
+- Il layout, i gerber, G1, G2.
+- I guasti rifatti (L45d2b3).
 
 ## CHIUSURA
 
-1. `STATE.md` con L45d2b2c **fatto** nella tabella dei lotti, e il prossimo (L45d2b3).
-2. Riscrivi QUESTO file per il lotto successivo (L45d2b3), con la riga «Nome della sessione: hi-fi
-   preamp <lotto nuovo>» subito sotto il titolo.
+1. `STATE.md` con L63 **fatto** nella tabella dei lotti, e il prossimo (L45d2b3).
+2. Copia `data/2026-10-21/L45d2b2c/NEXT-SESSION-L45d2b3.md` in QUESTO file, aggiornando le righe che
+   L63 avesse cambiato, con la riga «Nome della sessione: hi-fi preamp L45d2b3» subito sotto il titolo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L45d2b2c`.
+4. `/bin/zsh scripts/chunk_close.sh L63`.
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**

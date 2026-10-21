@@ -136,6 +136,9 @@ DEVICES = {
     "D155":  {"A": "NXD1",   "K": "NXD2"},
     "D156":  {"A": "NXD2",   "K": "NXD3"},
     "D157":  {"A": "NXD3",   "K": "NY"},
+    # ADR-095 (L45d2b2c): the output pair's reverse base-emitter clamps
+    "D158":  {"A": "NEN",    "K": "NBN"},
+    "D159":  {"A": "NBP",    "K": "NEP"},
     "R130":  {"1": "NX",     "2": "NBN"},
     "R131":  {"1": "NY",     "2": "NBP"},
     "Q132":  {"C": "VPLUS",  "B": "NBN",   "E": "NEN"},
@@ -600,17 +603,35 @@ node("P3.vp", "VPLUS", (NODE_XY["Q132.C"][0], 13.6))
 wire("Q132.C", "P3.vp", dots=[NODE_XY["P3.vp"]])
 txt((61.25, 11.6), "Q132   MJE15032", size=8.5, halign="left")
 
+# ADR-095: the label below the resistor, D159's sits above it
 res("R131", NODE_XY["P3.ny_r133"], (59.5, 0.5), value="10",
-    lbl=((57.75, 1.65), "center"))
+    lbl=((57.75, -0.1), "center"))
 pnp("Q133", "base", (59.5, 0.5))
 wire("R131.2", "Q133.B")
 node("P3.vm", "VMINUS", (NODE_XY["Q133.C"][0], -3.4))
 wire("Q133.C", "P3.vm", dots=[NODE_XY["P3.vm"]])
 txt((61.25, -0.6), "Q133   MJE15033", size=8.5, halign="left")
 
-res("R134", NODE_XY["Q132.E"], (NODE_XY["Q132.E"][0], 6.8), value="22",
+# ADR-095 (L45d2b2c): a 1N4148 across each output device's base-emitter, the
+# wrong way round - the off device's base never more than ~0.8 V past its
+# emitter (P7: 5.18 V before, the MJE allows 5 V). Drawn left of the base,
+# reaching the emitter one unit along its lead, before the 22 ohm.
+_ex, _ey = NODE_XY["Q132.E"]
+node("P3.nen_d158", "NEN", (_ex, _ey - 1.0))
+wire("Q132.E", "P3.nen_d158")
+dio("D158", (58.9, _ey - 1.0), (58.9, 10.5), lbl=((58.7, _ey - 0.3), "right"))
+wire("D158.K", "Q132.B", dots=[NODE_XY["D158.K"]])
+wire("D158.A", "P3.nen_d158", dots=[NODE_XY["P3.nen_d158"]])
+_ex, _ey = NODE_XY["Q133.E"]
+node("P3.nep_d159", "NEP", (_ex, _ey + 1.0))
+wire("Q133.E", "P3.nep_d159")
+dio("D159", (58.9, 0.5), (58.9, _ey + 1.0), lbl=((58.7, _ey + 0.3), "right"))
+wire("D159.A", "Q133.B", dots=[NODE_XY["D159.A"]])
+wire("D159.K", "P3.nep_d159", dots=[NODE_XY["P3.nep_d159"]])
+
+res("R134", NODE_XY["P3.nen_d158"], (NODE_XY["Q132.E"][0], 6.8), value="22",
     lbl=((60.75, 8.4), "left"))
-res("R135", NODE_XY["Q133.E"], (NODE_XY["Q133.E"][0], 4.2), value="22",
+res("R135", NODE_XY["P3.nep_d159"], (NODE_XY["Q133.E"][0], 4.2), value="22",
     lbl=((60.75, 2.8), "left"))
 node("P3.out", "OUT", (NODE_XY["R134.2"][0], 5.5))
 wire("R134.2", "P3.out")
