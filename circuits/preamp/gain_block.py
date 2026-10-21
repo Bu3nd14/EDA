@@ -660,7 +660,9 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # data/2026-10-01/L46a/regressione/, p7.py; 0.298 W with the follower of
     # ADR-067, data/2026-10-12/L56/regressione/; 0.333 W with the follower's
     # collector resistor of ADR-087, data/2026-10-18/L60d1/regressione/), so
-    # they must be rated >= 0.34 W at 60 C.
+    # they must be rated >= 0.34 W at 60 C. ADR-095 (L45d2b2c): with the
+    # base-emitter clamps of section 12 they take 0.158 W, <= 0.181 W with a
+    # rail regulator shorted (0.401 W without the clamps); the rating stays.
     R("10", NX, NBN)
     R("10", NY, NBP)
     # Qmje15032/Qmje15033: onsemi's model names, left as served (ADR-017,
@@ -818,6 +820,31 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     D("1N4148", NXD2, NXD3)
     D("1N4148", NXD3, NY)
 
+    # ========================================================================
+    # 12. REVERSE BASE-EMITTER CLAMPS ON THE OUTPUT PAIR (ADR-095, L45d2b2c)
+    # ========================================================================
+    # Appended LAST (limitations.md #22): D158, D159 on this file's block; on
+    # the audio board block A D156 / D157, block B D257 / D258, the fixed
+    # buffers D555 / D556 and D655 / D656, and the same pattern on the other
+    # channel (570 parts, was 554).
+    # In P7's hardest cell (main at +10 dB, 20 kHz full scale, mute engaged or
+    # output shorted) the base of the OFF device rises above its emitter by
+    # ~22 ohm x I less the bias spread: 5.18 V on Q132 at +/-15 V, against
+    # the MJE15032's 5 V V_EB (onsemi MJE15032/D Rev 7), up to 5.57 V with a
+    # rail regulator shorted IN-OUT. A 1N4148 across each base-emitter, the
+    # wrong way round, holds it at 0.77 / 0.84 V. Reverse-biased by one Vbe
+    # at rest and with music: they do not conduct.
+    # They also make an output current limit: with the off base held at its
+    # emitter, the multiplier's spread sets (spread + 0.77 - Vbe) / 22 ohm,
+    # ~0.11 A on the PNP side (0.214 A before) - far above the block's
+    # normal ~10 mA. In P7 the 22 ohm drop to <= 0.18 W and the 47 ohm of the
+    # main output to <= 0.78 W, with the rail high too (they were 0.40 and
+    # 1.47 W): ADR-087's ratings stand. The PNP runs hotter, 92.7 C at
+    # +/-15 V and 109.8 C with the - rail high at mains +10 %, 60 C air.
+    # data/2026-10-21/L45d2b2c/ (p7_cbe.csv); peak 29 mA, <= 5 mW per diode.
+    D("1N4148", NEN, NBN)
+    D("1N4148", NBP, NEP)
+
     return dict(IN=IN, OUT=OUT, FB=FB, RG=RG, RG10=RG10, VP=VP, VM=VM,
                 GND=GND)
 
@@ -845,6 +872,26 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 #   (c) accept it: +10 dB exists for a FUTURE low-output chain (ADR-004), not
 #       for the K11, and V3 already names this combination as
 #       "raggiungibile per errore".
+# ============================================================================
+
+# ============================================================================
+# SIMULATED RESULTS - L45d2b2c, 2026-10-21: ADR-095 (the output pair's reverse
+# base-emitter clamps, section 12) and ADR-078 (the rails up to +/-20.3 V).
+# docs/preamp/data/2026-10-21/L45d2b2c/; regression prima = main 82a94e57
+# (the block below without D158 / D159), dopo = this one.
+#
+#   RAIL HIGH (a rail regulator shorted IN-OUT: +20.05 / -19.97 V at mains
+#     +10 %): every part of the block inside its datasheet voltages, both
+#     rails at +/-20.3 V too (272 maxima, 0 outside; LSK489 V_DS 12.7 V,
+#     C145 20.1 V of 25 V); MJEs 85.5 C at rest, 112.9 C with a multiplier
+#     fault on top, at 60 C air. No overvoltage supervisor.
+#   P7: the off MJE's base 0.77 / 0.84 V past its emitter (5.18 V before,
+#     5 V allowed); the PNP side limited to ~0.11 A: 22 ohm 0.158 / 0.129 W,
+#     47 ohm main 0.683 W (were 0.295 / 0.332 / 1.282 W), <= 0.181 / 0.78 W
+#     with the rail high; Q133 0.523 W, 92.7 C (was 82.7 C), 109.8 C with
+#     the - rail high at mains +10 %. Diodes <= 29 mA, <= 5 mW.
+#   EVERYTHING ELSE unchanged: the 21 fast decks within 3e-3 relative outside
+#     P7 (phase margins -0.004 deg at most, noise and E3 to the sixth digit).
 # ============================================================================
 
 # ============================================================================

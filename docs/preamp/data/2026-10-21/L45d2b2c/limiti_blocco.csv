@@ -1,0 +1,67 @@
+parte,grandezza,valore,unita,condizioni,fonte,tipo_lettura
+LSK489 (Linear Systems),V_GSO max,60,V,Gate-Source; TA 25 C,"Linear Integrated Systems Doc 201151 Rev A30 (05/14/2014) p1 Abs Max table; https://xdevs.com/doc/_Datasheets/LinearSystems/LSK489.pdf (Rev A40 04/12/2022 at mouser.com/datasheet/2/1442/LSK489DSRevA38-3180057.pdf not readable: fetch timed out)",DS
+LSK489 (Linear Systems),V_GDO max,60,V,Gate-Drain; TA 25 C,same p1,DS
+LSK489 (Linear Systems),BV_GSS min,-60,V,VDS 0 ID -1 nA,same p2 Electrical Characteristics,DS
+LSK489 (Linear Systems),V(BR)G1-G2,30 min / 45 typ,V,IG +-1 uA ID=IS=0,same p2,DS
+LSK489 (Linear Systems),V_DS max,non dichiarata,,nessuna riga V_DS/V_DSO nella tabella; solo V_GDO e V_GSO a 60 V. Con VGS circa -0.5..-3.5 V il limite effettivo di VDS e' circa V_GDO + VGS (>= ~56 V) ma e' una deduzione non scritta,same p1,non trovato
+LSK489 (Linear Systems),I_G(F) max,10,mA,gate forward current,same p1,DS
+LSK489 (Linear Systems),P per lato,300,mW,TA 25 C continuo,same p1 (nota 4 derating non letta),DS
+LSK489 (Linear Systems),P totale,500,mW,TA 25 C,same p1,DS
+LSK489 (Linear Systems),Tj op / Tstg,-55..+150 / -55..+150,C,,same p1,DS
+LS352 (Linear Systems),V_CBO (BV_CBO),60 min,V,IC 10 uA IE 0 (caratteristica elettrica non abs max),LS350/351/352 Rev A5 10/14/2020 p1 tabella elettrica; https://www.linearsystems.com/_files/ugd/7e8069_0775e202786d48dc98c0f2a967dba7d0.pdf,DS
+LS352 (Linear Systems),V_CEO (BV_CEO),60 min,V,IC 1 mA IB 0 - conferma il valore del repo; e' un breakdown minimo garantito non un limite abs max,same p1,DS
+LS352 (Linear Systems),V_EBO limite inversa,6.0,V,"nota 2: la tensione base-emettitore inversa non deve mai superare 6.0 V, corrente inversa <10 uA (BV_EBO min 6.0 V a 10 uA)",same p2 nota 2,DS
+LS352 (Linear Systems),BV_CCO,+-80 min,V,IC 1 uA IE=IB=0 (collettore-collettore),same p1,DS
+LS352 (Linear Systems),I_C max,10,mA,,same p1 Abs Max,DS
+LS352 (Linear Systems),P per lato / totale,250 / 500,mW,free air TA 25 C; derating 2.3 / 4.3 mW/C,same p1,DS
+LS352 (Linear Systems),Tj op / Tstg,+150 / -55..+150,C,,same p1,DS
+LS352 (Linear Systems),V_CB max di prova,30,V,nota 3 (condizione di prova ICBO per LS351/LS352),same p2 nota 3,DS
+MMBT5551 (Diodes Inc),V_CBO / V_CEO / V_EBO,180 / 160 / 6.0,V,TA 25 C,Diodes DS30061 Rev 15-2 (Feb 2025) p2 Abs Max; https://www.diodes.com/assets/Datasheets/MMBT5551.pdf,DS
+MMBT5551 (Diodes Inc),I_C continua,600,mA,,same p2,DS
+MMBT5551 (Diodes Inc),P_D,300,mW,pad minimo 2 oz Cu FR4 aria ferma (nota 5),same p2,DS
+MMBT5551 (Diodes Inc),R_thJA,417,C/W,stessa scheda,same p2,DS
+MMBT5551 (Diodes Inc),Tj / Tstg,-55..+150,C,,same p2,DS
+MMBT5551 (onsemi),V_CEO / V_CBO / V_EBO,160 / 180 / 6,V,,onsemi MMBT5551/D Rev 3 (Sep 2021) p1 - marcato OBSOLETE; https://www.onsemi.com/pdf/datasheet/mmbt5551-d.pdf,DS
+MMBT5551 (onsemi),P_D / R_thJA,350 / 357,mW / C/W,FR-4 76x114x0.6 mm pad minimo; derating 2.8 mW/C,same p2,DS
+DZT5551 (Diodes Inc),V_CBO / V_CEO / V_EBO,180 / 160 / 6,V,TA 25 C,Diodes DS31219 Rev 4-2 (Jun 2023) p2; https://diodes.com/datasheet/download/DZT5551.pdf,DS
+DZT5551 (Diodes Inc),I_C / I_CM,600 / 1000,mA,,same p2,DS
+DZT5551 (Diodes Inc),P_D,2,W,PCB FR-4 50x50x1.6 mm 1 oz Cu singolo lato su ampia area aria ferma (nota 5),same p2,DS
+DZT5551 (Diodes Inc),R_thJA / R_thJL / R_thJC,62.5 / 45 / 27,C/W,stessa scheda (JL = a punto di saldatura; JC = alla parte superiore),same p2,DS
+DZT5551 (Diodes Inc),Tj / Tstg,-55..+150,C,,same p2,DS
+DZT5551 (Diodes Inc),P_D con pad minimo,non dichiarata,,il DS dichiara solo la scheda 50x50 mm,same p2,non trovato
+DZT5551 (Diodes Inc),P_D derating,2 W fino a 25 C poi lineare a 0 W a circa 150 C,W,50x50x1.6 mm 1 oz Cu,DS31219 p3 Fig. derating (letta dal DZT5551Q DS38496 Rev 1-2 p3 stessa curva; pagina 3 del non-Q non letta),curva
+MMBT5401 (Diodes Inc),V_CBO / V_CEO / V_EBO,-160 / -150 / -5,V,TA 25 C,Diodes DS30057 Rev 12-2 (Mar 2024) p2; https://www.diodes.com/assets/Datasheets/MMBT5401.pdf,DS
+MMBT5401 (Diodes Inc),I_C,-600,mA,,same p2,DS
+MMBT5401 (Diodes Inc),P_D,310 (pad minimo 1 oz) / 350 (15x15 mm 1 oz),mW,note 5/6 FR4 aria ferma,same p2,DS
+MMBT5401 (Diodes Inc),R_thJA,403 (pad minimo) / 357 (15x15 mm),C/W,note 5/6,same p2,DS
+MMBT5401 (Diodes Inc),R_thJL,350,C/W,punto di saldatura,same p2,DS
+MMBT5401 (Diodes Inc),Tj / Tstg,-55..+150,C,,same p2,DS
+DZT5401 (Diodes Inc),V_CBO / V_CEO / V_EBO,-160 / -150 / -6,V,TA 25 C - conferma BV_CEO 150 V del repo,Diodes DS31218 Rev 4-2 (Feb 2026) p2; https://www.diodes.com/assets/Datasheets/DZT5401.pdf,DS
+DZT5401 (Diodes Inc),I_C,-600,mA,,same p2,DS
+DZT5401 (Diodes Inc),P_D,1 (pad minimo 1 oz singolo lato 1.6 mm FR4) / 2 (50x50x1.6 mm 1 oz Cu),W,note 5/6 aria ferma,same p2,DS
+DZT5401 (Diodes Inc),R_thJA,125 (pad minimo) / 62.5 (50x50 mm),C/W,note 5/6,same p2,DS
+DZT5401 (Diodes Inc),Tj / Tstg,-65..+150,C,,same p2,DS
+MJE15032 / MJE15033 (onsemi),V_CEO,250,Vdc,,onsemi MJE15032/D Rev 7 (Dec 2024) p1; https://www.onsemi.com/pdf/datasheet/mje15032-d.pdf,DS
+MJE15032 / MJE15033 (onsemi),V_CB / V_EB,250 / 5.0,Vdc,,same p1 (il simbolo e' V_CB e non V_CBO),DS
+MJE15032 / MJE15033 (onsemi),I_C continua / picco / I_B,8.0 / 16 / 2.0,Adc,,same p1,DS
+MJE15032 / MJE15033 (onsemi),P_D a Tc=25 C,50 (derating 0.40 W/C),W,,same p1,DS
+MJE15032 / MJE15033 (onsemi),P_D a TA=25 C,2.0 (derating 0.016 W/C),W,,same p1,DS
+MJE15032 / MJE15033 (onsemi),R_thJC / R_thJA,2.5 / 62.5,C/W max,,same p1,DS
+MJE15032 / MJE15033 (onsemi),Tj / Tstg,-65..+150,C,,same p1,DS
+MJE15032 / MJE15033 (onsemi),SOA DC a basso Vce,"non tracciata: curve solo impulsive 100 us / 10 / 50 / 250 ms; 250 ms a Vce 20 V circa 8 A; nessuna linea DC",A,"Tc 25 C, Tj(pk) 150 C",same p3 Fig. 2,curva (bassa fiducia)
+1N4148 (Vishay 81857),V_RRM / V_R,100 / 75,V,TA 25 C,Vishay 81857 Rev 1.4 (06-Jul-17) p1; https://www.vishay.com/docs/81857/1n4148.pdf,DS
+1N4148 (Vishay 81857),I_F continua / I_FRM / I_F(AV),300 / 500 / 150,mA,,same p1,DS
+1N4148 (Vishay 81857),I_FSM,2,A,tp 1 us,same p1,DS
+1N4148 (Vishay 81857),P_tot,500 (TL<=25 C) / 440 (TL 45 C),mW,l=4 mm,same p1,DS
+1N4148 (Vishay 81857),R_thJA / Tj / Tstg,350 / 175 / -65..+150,K/W / C / C,l=4 mm TL costante,same p1,DS
+Panasonic FC-A,tensioni nominali serie,6.3 10 16 25 35 50 63 100,V,,Panasonic Industry FC-A series 01-Sep-25 p1 (ABA0000C1209); https://industrial.panasonic.com/cdbs/www-data/pdf/RDF0000/ABA0000C1209.pdf,DS
+Panasonic FC-A,100 uF ad 8 mm di diametro,solo 35 V (EEUFC1V101 8x11.5 mm); 10 V 5x11; 16 V 6.3x11.2; 25 V 6.3x11.2; 50 V 10x12.5 (EEUFC1H101),,,same p4-8 lista caratteristiche,DS
+Panasonic FC-A,47 uF,nessuna versione a 8 mm: 16 V 5x11; 25 V 5x11; 35 V 6.3x11.2; 50 V 6.3x11.2,,,same p5-8,DS
+Panasonic FC-A,1000 uF a 10 mm,25 V si (EEUFC1E102L 10x30; 12.5x20 in alternativa); 35 V NO a 10 mm (12.5x25 o 16x20); 16 V 10x20 o 10x25; 10 V 10x16,,,same p4-8,DS
+Panasonic FC-A,regola tensione,"somma DC + picco ripple non deve superare la tensione nominale (nota Endurance)",,,same p1,DS
+Panasonic FC-A,tensione di surge,non dichiarata nel catalogo letto (pagine 1-8),V,,same,non trovato
+Ceramica 100 nF radiale 5 mm,tensione tipica,50,V,listing (Kemet C315C104M5U5TA Z5U 50 V); X7R 100 nF non verificato,RS/Buerklin listing; NON un DS,secondaria
+470 pF C0G 5 mm (Vishay K471J15C0GH53H5H),tensione,100,V,listing element14 (codice non verificato su DS),https://au.element14.com/vishay/k471j15c0gh53h5h/cap-470pf-100v-5-c0g-np0/dp/2544858,secondaria
+330 pF C0G 5 mm,tensione,non verificata,,,non cercata,non trovato
+Yageo MFR-25 (0207),P a 70 C,0.25,W,derating lineare da 70 C a 0 W a 155 C,Yageo MFR general type datasheet (https://www.pdp8online.com/mfm/board/datasheets/Yageo_MFR.pdf) p1-2,DS
+Yageo MFR-25 (0207),tensione max di lavoro / sovraccarico,250 / 500,V,RCWV = sqrt(P x R),same p2,DS

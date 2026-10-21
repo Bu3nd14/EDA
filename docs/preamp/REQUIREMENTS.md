@@ -366,10 +366,14 @@ righe, nessuno stadio ascoltabile fuori dalla classe A.
 
 | Resistenza | Potenza misurata | Nominale richiesta a 60 °C |
 |---|---|---|
-| 47 Ω dell'uscita principale | 1,13 W (corto MAIN, +10 dB, 20 kHz fondo scala; L46a, ADR-054) | **≥ 1,13 W** |
-| 22 Ω d'emettitore, blocco B | 0,28 W (L46a, ADR-054) | ≥ 0,28 W |
+| 47 Ω dell'uscita principale | 0,683 W, ≤ 0,78 W con un regolatore dei rail in corto (corto MAIN, +10 dB, 20 kHz fondo scala; L45d2b2c, ADR-095; era 1,13 W in L46a, 1,28 W in L60d1) | **≥ 1,3 W** (ADR-087, tenuto da ADR-095) |
+| 22 Ω d'emettitore, blocco B | 0,158 W, ≤ 0,181 W col rail alto (L45d2b2c, ADR-095; era 0,28 W in L46a, 0,333 W in L60d1) | ≥ 0,34 W (ADR-087, tenuto da ADR-095) |
 | 47 Ω delle uscite fisse | 0,155 W | ≥ 0,16 W |
 | 22 Ω d'emettitore dei buffer delle fisse (L17) | 0,037 W | ≥ 0,04 W |
+
+**La base dei finali** (L45d2b2c, ADR-095, limitations #69): P7 si giudica anche sulla base-emettitore
+in inversa dei MJE (5 V). Senza i diodi D158 / D159 era 5,18 V a ±15 V; coi diodi ≤ 0,84 V, anche col
+rail alto.
 
 **Cosa la nota non copre.**
 - **Un apparecchio spento a valle con Zin bassa** rientra da L17 (ADR-023):

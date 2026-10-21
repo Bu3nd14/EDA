@@ -387,6 +387,9 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole,
     # of ADR-067, which saturated the VAS; 1.28 W with its collector resistor
     # of ADR-087, data/2026-10-18/L60d1/regressione/, p7.py). It must be rated
     # >= 1.3 W at 60 C; the DIN0207 footprint alone does not guarantee that.
+    # ADR-095 (L45d2b2c): with the output pair's base-emitter clamps it takes
+    # 0.683 W, <= 0.78 W with a rail regulator shorted (1.47 W without them);
+    # the >= 1.3 W rating stays.
     R("47", b["OUT"], main_a, base + 100)
     # C_out: 4.7u film - ADR-007. Sized for a FUTURE 10 kOhm power amp
     # (3.4 Hz), not for the cj EV250's 100 kOhm, on the same logic that put
