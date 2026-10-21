@@ -294,6 +294,24 @@ if [ $rc -eq 0 ] && ! cmp -s "$SCRATCH/psu_sheet/psu.manifest.json" \
     rc=1
 fi
 report "complete supply schematic draws, and its manifest is the versioned one" $rc
+# L63b: the COMPLETE schematic of the audio board, «Blocco una volta, un canale».
+# Drawing it also runs Sheet.fold(): the table of the eight instances of the gain
+# block and the left -> right correspondence, derived and asserted on
+# preamp_audio.net (one solution of the numbering, same part and value on every
+# row, a bijection of the nets); its manifest is the drawing EXPANDED to all 570
+# parts, which block 2d checks against preamp_audio.net. Same rule as above: the
+# manifest drawn now must be the versioned one.
+mkdir -p "$SCRATCH/audio_sheet"
+out=$(AUDIO_SHEET_DIR="$SCRATCH/audio_sheet" \
+      "$VENV_PY" "$ROOT/docs/preamp/schematic/audio_draw.py" 2>&1)
+rc=$?
+echo "$out" | tail -4 | sed 's/^/   /'
+if [ $rc -eq 0 ] && ! cmp -s "$SCRATCH/audio_sheet/audio.manifest.json" \
+                           "$ROOT/docs/preamp/schematic/audio.manifest.json"; then
+    echo "   il manifesto generato ora non e' quello versionato: rigenera audio_draw.py" >&2
+    rc=1
+fi
+report "complete audio schematic draws, its fold holds, and its manifest is the versioned one" $rc
 echo
 
 echo "-- 2g. every device a testbench names exists, every block contact node is terminated --"

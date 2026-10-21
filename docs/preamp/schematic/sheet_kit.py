@@ -35,8 +35,26 @@ Junction dots are placed by the kit, wherever three or more wire ends of the sam
 net meet: the caller cannot forget one or put one where nothing joins.
 
 Pin names come from the KiCad symbol libraries (the netlist SKiDL writes has no
-libparts section); a symbol that `extends` another is followed.
+libparts section); a symbol that `extends` another is followed. The project's own
+parts (lib "preamp": LSK489, LS352) come from library/preamp.kicad_sym (L63b).
+
+A FOLDED PAGE (L63b, the audio board: «Blocco una volta, un canale»). Eight
+instances of one gain block and two equal channels would make a page of repeats.
+So a page may draw:
+  - a TEMPLATE once - a second netlist (circuits/preamp/gain_block.net), its refs
+    and nets under a namespace ("BLK:R108"), printed without it - and a box for
+    each instance it stands for;
+  - the LEFT channel only, the right one given by a rule (refs and net prefixes).
+Sheet.fold() DERIVES the table template -> instance from the numbering of
+gain_block() and the instance's part count, and asserts it on the netlist: one
+solution only, same part and value on every row, every template net landing on
+one net of the instance. finish() then EXPANDS the drawing - the template into
+its eight instances through the table, the left channel into the right through
+the rule - so the manifest names all the parts of the board and
+scripts/check_schematic.py compares it to the netlist as it does for a flat
+page. Coverage becomes "every part either drawn or expanded, exactly once".
 """
+import itertools
 import json
 import math
 import os
@@ -48,6 +66,9 @@ import schemdraw                      # noqa: E402
 import schemdraw.elements as elm      # noqa: E402
 
 SYMBOLS = "/Users/roberto/Applications/KiCad.app/Contents/SharedSupport/symbols"
+# the project's own symbols (lib "preamp"), next to the sources in the repo
+LIBRARY = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))))), "library")
 
 INK = "#111111"
 DIM = "#5a5a5a"
@@ -108,6 +129,8 @@ def symbol_pins(lib, part):
     if key in _SYM_CACHE:
         return _SYM_CACHE[key]
     path = os.path.join(SYMBOLS, lib + ".kicad_sym")
+    if not os.path.exists(path):
+        path = os.path.join(LIBRARY, lib + ".kicad_sym")
     text = open(path, encoding="utf-8").read()
     blk = _symbol_block(text, part)
     assert blk is not None, f"simbolo {lib}:{part} assente da {path}"
@@ -227,12 +250,41 @@ class Sheet:
         self.ic_refs = {}       # ref -> pins the symbol declares
         self.texts = []
         self.bodies = []        # (kind, geometry, ref): what a wire may not run through
+        self.sym_refs = set()   # refs whose every symbol pin must be a terminal or nc
+        self.marks = []         # (rect, what): ground / return / rail symbols, for texts
+        self.tmpl = None        # the template netlist of a folded page (L63b)
+        self.folded = None      # what Sheet.fold() derived
+        self.boxes = {}         # tag -> {port: node}: the instance boxes
+        for name in list(self.comp) + list(self.nets):
+            assert ":" not in name, f"{name}: ':' e' il separatore dello spazio dei nomi"
         self._auto = 0
         # the page frame: the drawing's bounding box IS the page
         self._line((0, 0), (self.W, 0), FRAME, 0.5)
         self._line((self.W, 0), (self.W, self.H), FRAME, 0.5)
         self._line((self.W, self.H), (0, self.H), FRAME, 0.5)
         self._line((0, self.H), (0, 0), FRAME, 0.5)
+
+    # ---- the template of a folded page ------------------------------------------
+    @staticmethod
+    def show(name):
+        """A ref or a net as printed: without the template's namespace."""
+        return name.split(":", 1)[1] if ":" in name else name
+
+    def template(self, netlist, ns, source_rel):
+        """Load a second netlist - the block drawn once - under namespace `ns`:
+        "BLK:R108" on "BLK:NREF". Its parts must all be drawn, like the page's."""
+        assert self.tmpl is None, "un solo modello per pagina"
+        comp, pin = read_kicad_net(netlist)
+        for r, v in comp.items():
+            assert ":" not in r
+            self.comp[f"{ns}:{r}"] = v
+        for (r, p), n in pin.items():
+            self.pin[(f"{ns}:{r}", p)] = f"{ns}:{n}"
+            self.nets.add(f"{ns}:{n}")
+        self.tmpl = {"ns": ns, "comp": comp, "pin": pin, "source": source_rel}
+
+    def is_tmpl(self, ref):
+        return self.tmpl is not None and ref.startswith(self.tmpl["ns"] + ":")
 
     # ---- low level -----------------------------------------------------------
     def _line(self, p, q, color=INK, lw=None, ls="-"):
@@ -332,14 +384,15 @@ class Sheet:
 
     # ---- names: labels, grounds, rails ----------------------------------------
     def _name(self, n, text):
-        self.named[n] = text
+        assert text == self.show(self.net[n])
+        self.named[n] = self.net[n]          # the island's name IS its net
         self._touch(n)
 
     def label(self, n, direction="right", length=0.8, text=None, size=None):
         """A net label at the end of a short stub: a named island."""
         net = self.net[n]
-        text = text or net
-        assert text == net, f"etichetta {text} su {n}, che sta su {net}"
+        text = text or self.show(net)
+        assert text == self.show(net), f"etichetta {text} su {n}, che sta su {net}"
         x, y = self.xy[n]
         dx, dy = {"right": (length, 0), "left": (-length, 0),
                   "up": (0, length), "down": (0, -length)}[direction]
@@ -354,26 +407,38 @@ class Sheet:
         self._name(end, text)
         return end
 
+    def _mark(self, x0, y0, x1, y1, what):
+        """A symbol's footprint on the page: a text over it is unreadable (L63b - a
+        ground symbol on a resistor's label passed the text check of L63a)."""
+        self.marks.append(((min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1)), what))
+
     def gnd(self, n):
-        assert self.net[n] == "GND", f"simbolo di massa su {n}, che sta su {self.net[n]}"
+        assert self.show(self.net[n]) == "GND", f"simbolo di massa su {n}, che sta su {self.net[n]}"
         self.d.add(elm.Ground(lead=False).theta(0).at(self.xy[n]).color(GNDCOL).scale(0.85))
+        x, y = self.xy[n]
+        self._mark(x - 0.32, y - 0.45, x + 0.32, y, "simbolo GND")
         self._name(n, "GND")
 
     def ret(self, n):
-        assert self.net[n] == "RLY_RET", f"simbolo RLY_RET su {n}, che sta su {self.net[n]}"
+        assert self.show(self.net[n]) == "RLY_RET", f"simbolo RLY_RET su {n}, che sta su {self.net[n]}"
         self.d.add(elm.GroundSignal(lead=False).theta(0).at(self.xy[n]).color(RETCOL).scale(0.85))
+        x, y = self.xy[n]
+        self._mark(x - 0.32, y - 0.45, x + 0.32, y, "simbolo RLY_RET")
         self._name(n, "RLY_RET")
 
     def rail(self, n, up=True, text=None, size=None):
         """A supply arrow with the net's name: a named island."""
         net = self.net[n]
-        text = text or net
-        assert text == net, f"rail {text} su {n}, che sta su {net}"
+        text = text or self.show(net)
+        assert text == self.show(net), f"rail {text} su {n}, che sta su {net}"
         x, y = self.xy[n]
         s = 1 if up else -1
         self._line((x, y), (x, y + 0.45 * s), NETCOL)
         self._line((x - 0.3, y + 0.45 * s), (x + 0.3, y + 0.45 * s), NETCOL, 1.1)
-        self.text((x, y + 0.8 * s), text, size=size or self.fs, color=NETCOL)
+        self._mark(x - 0.3, y + 0.4 * s, x + 0.3, y + 0.5 * s, f"simbolo {text}")
+        # below the bar the text needs its own height of room (L63b: at -0.8 the bar
+        # crossed it)
+        self.text((x, y + (0.8 if up else 1.1) * s), text, size=size or self.fs, color=NETCOL)
         self._name(n, text)
 
     # ---- parts ---------------------------------------------------------------
@@ -386,9 +451,10 @@ class Sheet:
     def _lbl2(self, ref, a, b, side, extra=None, size=None):
         """Reference and value next to a two-terminal part."""
         value, lib, part = self.comp[ref]
+        ref = self.show(ref)                 # printed without the namespace
         val = value_text(value, part) if extra is None else extra
-        if getattr(self, "_value_override", None):
-            val = self._value_override
+        if getattr(self, "_value_override", None) is not None:
+            val = self._value_override       # "" prints the reference alone
         (x0, y0), (x1, y1) = self.xy[a], self.xy[b]
         mx, my = (x0 + x1) / 2, (y0 + y1) / 2
         fs = size or self.fs
@@ -460,6 +526,222 @@ class Sheet:
         a, b = self.term(ref, "1", p1), self.term(ref, "2", p2)
         return self._two(ref, elm.Fuse(), a, b, side)
 
+    def tvs(self, ref, p1, p2, side=None):
+        """A bidirectional TVS: symmetric, pins 1 / 2 (A1 / A2)."""
+        _, lib, part = self._part(ref)
+        assert part == "D_TVS" and symbol_pins(lib, part) == {"1": "A1", "2": "A2"}
+        a, b = self.term(ref, "1", p1), self.term(ref, "2", p2)
+        return self._two(ref, elm.DiodeTVS(), a, b, side)
+
+    def spst(self, ref, p1, p2, side=None):
+        """A panel switch drawn open (its rest state)."""
+        _, lib, part = self._part(ref)
+        assert part == "SW_SPST"
+        a, b = self.term(ref, "1", p1), self.term(ref, "2", p2)
+        return self._two(ref, elm.Switch(), a, b, side)
+
+    # ---- transistors: single and dual (L63b) ---------------------------------------
+    _BJT = {"npn": (elm.BjtNpn, {"C": "collector", "B": "base", "E": "emitter"}),
+            "pnp": (elm.BjtPnp, {"C": "collector", "B": "base", "E": "emitter"}),
+            "njf": (elm.JFetN, {"D": "drain", "G": "gate", "S": "source"})}
+
+    def trans(self, ref, kind, anchor, xy, rev=False, unit=None, label_side="r",
+              note=None, label_dy=0.0):
+        """A transistor with `anchor` ('collector', 'emitter', 'drain', 'base' ...)
+        at xy, the control terminal on the left (rev: on the right).
+
+        `unit` picks one half of a dual (LS352, LSK489): its pins are the symbol's
+        names with the unit's digit (C1 B1 E1, D2 G2 S2). Every pin of a dual's
+        symbol must end up a terminal or a declared free pin (nc_note)."""
+        value, lib, part = self.comp[ref]
+        if ref not in self.placed:
+            self._part(ref)
+        cls, roles = self._BJT[kind]
+        names = symbol_pins(lib, part)
+        byname = {}
+        for num, nm in names.items():
+            byname.setdefault(nm, num)
+        e = cls().right()                    # .right() pins the vertical orientation
+        if rev:
+            e = e.reverse()
+        e = e.scale(0.8).anchor(anchor).at(_p(xy))
+        self.d.add(e)
+        out = {}
+        for role, anch in roles.items():
+            nm = role + (str(unit) if unit else "")
+            assert nm in byname, f"{ref}: il simbolo {lib}:{part} non ha il piedino {nm}"
+            out[role] = self.term(ref, byname[nm], e.absanchors[anch])
+            self._touch(out[role])
+        if unit:
+            self.sym_refs.add(ref)
+        # the body: no wire may run through the transistor's core
+        xs = [e.absanchors[a][0] for a in roles.values()]
+        ys = [e.absanchors[a][1] for a in roles.values()]
+        self.bodies.append(("rect", (min(xs) + 0.15, min(ys) + 0.15,
+                                     max(xs) - 0.15, max(ys) - 0.15), ref))
+        c = e.absanchors["center"]
+        sgn = 1 if label_side == "r" else -1
+        ha = "left" if label_side == "r" else "right"
+        name = self.show(ref) + ("ABCD"[unit - 1] if unit else "")
+        self.text((c[0] + 0.85 * sgn, c[1] + 0.32 + label_dy), name, halign=ha)
+        self.text((c[0] + 0.85 * sgn, c[1] - 0.32 + label_dy),
+                  note or (value + (f" {unit}/2" if unit else "")),
+                  size=self.fs - 0.5, color=DIM, halign=ha)
+        return out
+
+    def nc_note(self, ref, pins, xy, halign="left"):
+        """Pins of a symbol the netlist leaves free, written down instead of drawn
+        as stubs (the substrate pins of a dual): each must be free, each is recorded."""
+        for p in pins:
+            assert (ref, p) not in self.pin, f"{ref}.{p} e' collegato: non e' libero"
+            self.nc.add((ref, p))
+        self.sym_refs.add(ref)
+        value, lib, part = self.comp[ref]
+        names = symbol_pins(lib, part)
+        self.text(xy, f"{self.show(ref)}: " + ", ".join(f"{p} {names[p]}" for p in pins)
+                  + " liberi", size=self.fs - 1.2, color=DIM, halign=halign)
+
+    # ---- relays and rotary switches (L63b) ----------------------------------------
+    # G6K-2, G6KU-2, IM06: the pin map of circuits/preamp/preamp_audio.py
+    # (K_COM / K_NO / K_NC, read on en-g6k.pdf p. 6, NC-014); on the bistable
+    # G6KU-2 the throws are SET (4 / 5) and RESET (2 / 7), trim.py
+    RELAY_POLES = {1: ("3", "4", "2"), 2: ("6", "5", "7")}
+    RELAY_COIL = ("1", "8")
+
+    def _free_cross(self, ref, pin, xy):
+        assert (ref, pin) not in self.pin, f"{ref}.{pin} e' collegato: non e' libero"
+        self.nc.add((ref, pin))
+        x, y = xy
+        self._line((x - 0.18, y - 0.18), (x + 0.18, y + 0.18), INK)
+        self._line((x - 0.18, y + 0.18), (x + 0.18, y - 0.18), INK)
+
+    def _pin_or_free(self, ref, pin, xy):
+        if (ref, pin) in self.pin:
+            n = self.term(ref, pin, xy)
+            self._touch(n)
+            return n
+        self._free_cross(ref, pin, xy)
+        return None
+
+    def relay_pole(self, ref, pole, xy, length=2.2, h=0.5, flip=False, note=None,
+                   label="t", rtl=False):
+        """One changeover pole, drawn at rest: COM at xy, the throws `length` to its
+        right (to its left with rtl), NO (SET on a bistable) above and NC (RESET)
+        below - or the other way with flip. A throw the netlist leaves free carries
+        its cross."""
+        value, lib, part = self.comp[ref]
+        assert part in ("G6K-2", "G6KU-2", "IM06"), f"{ref}: {part} non e' un rele' noto"
+        if ref not in self.placed:
+            self._part(ref)
+        self.sym_refs.add(ref)
+        com, no, nc = self.RELAY_POLES[pole]
+        bist = part == "G6KU-2"
+        x, y = _p(xy)
+        s = -1 if flip else 1
+        k = -1 if rtl else 1
+        xno, yno, ync = x + k * length, y + h * s, y - h * s
+        out = {"COM": self._pin_or_free(ref, com, (x, y)),
+               "NO": self._pin_or_free(ref, no, (xno, yno)),
+               "NC": self._pin_or_free(ref, nc, (xno, ync))}
+        piv = (x + k * 0.45, y)
+        self._line((x, y), piv)
+        self.d.add(elm.Dot(radius=0.07).at(piv))
+        self._line((xno - k * 0.55, yno), (xno, yno))
+        self._line((xno - k * 0.55, ync), (xno, ync))
+        self._line(piv, (xno - k * 0.55, ync + 0.09 * s))       # the blade, at rest
+        xa, xb = sorted((x + k * 0.3, xno - k * 0.3))
+        self.bodies.append(("rect", (xa, min(yno, ync) + 0.12, xb, max(yno, ync) - 0.12), ref))
+        tno, tnc = ("S", "R") if bist else ("NO", "NC")
+        # the pin texts sit over the contacts, clear of a wire that reaches a throw
+        # from outside (it arrives at xno, vertically or horizontally)
+        self.text((xno - k * 0.65, yno + 0.3 * s), f"{tno} {no}", size=self.fs - 1.6,
+                  color=DIM)
+        self.text((xno - k * 0.65, ync - 0.3 * s), f"{tnc} {nc}", size=self.fs - 1.6,
+                  color=DIM)
+        self.text((x + k * 0.2, y - 0.3), com, size=self.fs - 1.6, color=DIM,
+                  halign="left" if k > 0 else "right")
+        lx, ly = (x + k * length / 2, max(yno, ync) + 0.95) if label == "t" else \
+            (x + k * length / 2, min(yno, ync) - 0.95)
+        self.text((lx, ly), f"{self.show(ref)}·{pole}" + (f"  {note}" if note else ""),
+                  size=self.fs - 0.5)
+        return out
+
+    def relay_coil(self, ref, a1, a2, side="r", note=None, pins=("A1", "A2"), word=" bobina"):
+        """The coil of a relay whose contacts are drawn elsewhere (same ref).
+        pins: the coil's pin numbers, the first at a1 (G6K / IM06: RELAY_COIL);
+        word: printed after the ref ("" where the coils stand in a tight row)."""
+        value, lib, part = self.comp[ref]
+        if ref not in self.placed:
+            self._part(ref)
+        if part in ("G6K-2", "G6KU-2", "IM06"):
+            self.sym_refs.add(ref)
+            pins = self.RELAY_COIL
+        A1, A2 = self.term(ref, pins[0], a1), self.term(ref, pins[1], a2)
+        (x, y0), (_, y1) = self.xy[A1], self.xy[A2]
+        assert abs(self.xy[A1][0] - self.xy[A2][0]) < EPS
+        top, bot = max(y0, y1), min(y0, y1)
+        m = (top + bot) / 2
+        self._line((x, top), (x, m + 0.5))
+        self._line((x, bot), (x, m - 0.5))
+        for p, q in (((x - 0.4, m - 0.5), (x + 0.4, m - 0.5)), ((x + 0.4, m - 0.5), (x + 0.4, m + 0.5)),
+                     ((x + 0.4, m + 0.5), (x - 0.4, m + 0.5)), ((x - 0.4, m + 0.5), (x - 0.4, m - 0.5))):
+            self._line(p, q, INK, 1.0)
+        self._line((x - 0.4, m - 0.5), (x + 0.4, m + 0.5), INK)
+        self.bodies.append(("seg", ((x, m - 0.5), (x, m + 0.5)), ref))
+        self._touch(A1)
+        self._touch(A2)
+        dx, ha = (0.6, "left") if side == "r" else (-0.6, "right")
+        self.text((x + dx, m + 0.32), f"{self.show(ref)}{word}", halign=ha)
+        self.text((x + dx, m - 0.32), note or value, size=self.fs - 0.8, color=DIM, halign=ha)
+        # pin numbers inside the leads' corner, clear of a wire along the top or bottom
+        sx = 1 if side == "l" else -1
+        self.text((x + 0.55 * sx, top - 0.3), pins[0], size=self.fs - 1.6, color=DIM,
+                  halign="left" if sx > 0 else "right")
+        self.text((x + 0.55 * sx, bot + 0.3), pins[1], size=self.fs - 1.6, color=DIM,
+                  halign="left" if sx > 0 else "right")
+        return A1, A2
+
+    # SW_Rotary_4x3: commons 13-16, throws 1-2-3, 4-5-6, 7-8-9, 10-11-12;
+    # SW_Rotary_3x4: commons 13-15, throws 1-4, 5-8, 9-12; the k-th throw of each
+    # pole is position k (pin geometry read on the KiCad symbol in L48a:
+    # circuits/preamp/selector.py, gain_interlock.py, trim.py)
+    ROTARY = {"SW_Rotary_4x3": [("13", ("1", "2", "3")), ("14", ("4", "5", "6")),
+                                ("15", ("7", "8", "9")), ("16", ("10", "11", "12"))],
+              "SW_Rotary_3x4": [("13", ("1", "2", "3", "4")), ("14", ("5", "6", "7", "8")),
+                                ("15", ("9", "10", "11", "12"))]}
+
+    def rotary_pole(self, ref, pole, xy, pitch=0.8, length=2.4, positions=None, label=True):
+        """One pole of a rotary switch: the common at xy on the left, its throws in a
+        column on the right, position 1 on top; the wiper drawn on position 1.
+        `positions` names them (0 dB, +3 dB ...). A free pin carries its cross."""
+        value, lib, part = self.comp[ref]
+        if ref not in self.placed:
+            self._part(ref)
+        self.sym_refs.add(ref)
+        com, throws = self.ROTARY[part][pole]
+        x, y = _p(xy)
+        n = len(throws)
+        ys = [y + (n - 1) / 2 * pitch - i * pitch for i in range(n)]
+        xt = x + length
+        out = {"COM": self._pin_or_free(ref, com, (x, y))}
+        piv = (x + 0.45, y)
+        self._line((x, y), piv)
+        self.d.add(elm.Dot(radius=0.07).at(piv))
+        for i, (t, yt) in enumerate(zip(throws, ys)):
+            out[i + 1] = self._pin_or_free(ref, t, (xt, yt))
+            self._line((xt - 0.55, yt), (xt, yt))
+            self.d.add(elm.Dot(radius=0.06, open=True).at((xt - 0.6, yt)))
+            lbl = f"{t}" + (f" {positions[i]}" if positions else "")
+            # over the throw, ending short of it: a wire may join two throws at xt
+            self.text((xt - 0.3, yt + 0.27), lbl, size=self.fs - 1.8, color=DIM, halign="right")
+        self._line(piv, (xt - 0.68, ys[0] - 0.05))             # the wiper, on position 1
+        self.bodies.append(("rect", (x + 0.3, min(ys) - 0.1, xt - 0.7, max(ys) + 0.1), ref))
+        self.text((x - 0.1, y + 0.3), com, size=self.fs - 1.6, color=DIM, halign="right")
+        if label:
+            self.text((x + length / 2, max(ys) + 0.85),
+                      f"{self.show(ref)} polo {'abcd'[pole]}", size=self.fs - 0.5)
+        return out
+
     def nettie(self, ref, p1, p2, side=None):
         """A net tie: the one place two named nets are allowed to meet."""
         _, _, part = self._part(ref)
@@ -489,7 +771,8 @@ class Sheet:
             if part in ("D", "D_Schottky", "D_Zener"):
                 return self.dio(ref, anode=p2, cathode=p1, side=side)
             fn = {"R": self.res, "C": self.cap, "C_Polarized": self.cap,
-                  "Fuse": self.fuse, "NetTie_2": self.nettie}[part]
+                  "Fuse": self.fuse, "NetTie_2": self.nettie,
+                  "D_TVS": self.tvs, "SW_SPST": self.spst}[part]
             return fn(ref, p1, p2, side=side)
         finally:
             self._value_override = None
@@ -716,31 +999,6 @@ class Sheet:
         self.text((cx + dx, cy + r * 0.75 - 0.64), value, size=self.fs - 0.5, color=DIM, halign=ha)
         return out
 
-    def relay_coil(self, ref, a1, a2, side="r", note=None):
-        """The coil of a relay whose contacts are drawn elsewhere (same ref)."""
-        value, lib, part = self.comp[ref]
-        if ref not in self.placed:
-            self._part(ref)
-        A1, A2 = self.term(ref, "A1", a1), self.term(ref, "A2", a2)
-        (x, y0), (_, y1) = self.xy[A1], self.xy[A2]
-        assert abs(self.xy[A1][0] - self.xy[A2][0]) < EPS
-        top, bot = max(y0, y1), min(y0, y1)
-        m = (top + bot) / 2
-        self._line((x, top), (x, m + 0.5))
-        self._line((x, bot), (x, m - 0.5))
-        for p, q in (((x - 0.4, m - 0.5), (x + 0.4, m - 0.5)), ((x + 0.4, m - 0.5), (x + 0.4, m + 0.5)),
-                     ((x + 0.4, m + 0.5), (x - 0.4, m + 0.5)), ((x - 0.4, m + 0.5), (x - 0.4, m - 0.5))):
-            self._line(p, q, INK, 1.0)
-        self._line((x - 0.4, m - 0.5), (x + 0.4, m + 0.5), INK)
-        self._touch(A1)
-        self._touch(A2)
-        dx, ha = (0.6, "left") if side == "r" else (-0.6, "right")
-        self.text((x + dx, m + 0.32), f"{ref} bobina", halign=ha)
-        self.text((x + dx, m - 0.32), note or value, size=self.fs - 0.8, color=DIM, halign=ha)
-        self.text((x + 0.55, top - 0.15), "A1", size=self.fs - 1.6, color=DIM, halign="left")
-        self.text((x + 0.55, bot + 0.15), "A2", size=self.fs - 1.6, color=DIM, halign="left")
-        return A1, A2
-
     def relay_contact(self, ref, p_in, p_out, xy_in, xy_out, note=None):
         """One normally-open contact, horizontal, left (p_in) to right (p_out)."""
         if ref not in self.placed:
@@ -752,6 +1010,245 @@ class Sheet:
         (x0, y0), (x1, _) = self.xy[a], self.xy[b]
         self.text(((x0 + x1) / 2, y0 + 0.75), f"{ref}  {p_in}–{p_out}", size=self.fs - 0.5)
         return a, b
+
+    # ---- the fold: one block for eight, one channel for two (L63b) ----------------
+    @staticmethod
+    def _num(ref):
+        m = re.fullmatch(r"([A-Z]+)(\d+)", ref)
+        assert m, f"sigla non numerata: {ref}"
+        return m.group(1), int(m.group(2))
+
+    def fold(self, instances, optional, tbase, left, ref_lr, net_lr, pairs,
+             value_lr=lambda v: v):
+        """Derive, and assert on the netlist, what the drawing stands for.
+
+        instances  [(tag, base)]: every instance of the template on the board;
+        optional   {role: (net, net)}: the template's parts gain_block() fits only
+                   with some parameters, found by their two TEMPLATE nets;
+        tbase      the template's own base (gain_block.net: 100);
+        left       predicate: an audio part of the left channel outside the blocks,
+                   drawn, whose twin on the right is NOT drawn;
+        ref_lr, net_lr, value_lr   the left -> right rules for its ref, its nets and
+                   its value (a connector's value names its channel: IN1_L);
+        pairs      [(left tag, right tag)]: the right instance a left box stands for.
+
+        The table template ref -> instance ref is DERIVED from the numbering of
+        gain_block() (one counter from `base`, a part skipped is a number not used):
+        for each subset of optional parts left out, every template part t maps to
+        base + (t - tbase) - (left-out parts numbered below t), and exactly one
+        subset must give the instance's parts. Then, row by row: the same symbol and
+        the same value (or the difference is recorded, to be printed), and every
+        template net landing on ONE net of the instance - its own prefixed net, a
+        rail, or a port of the instance."""
+        assert self.tmpl is not None, "fold() vuole un modello (template())"
+        ns = self.tmpl["ns"]
+        tc, tp = self.tmpl["comp"], self.tmpl["pin"]
+        tparts = sorted(tc, key=lambda r: (self._num(r)[1], r))
+        letters = {self._num(r)[0] for r in tparts}
+        opt = {}
+        for role, nets in optional.items():
+            hits = [r for r in tparts
+                    if sorted(n for (q, _), n in tp.items() if q == r) == sorted(nets)]
+            assert len(hits) == 1, f"parte opzionale {role} su {nets}: {hits}"
+            opt[role] = hits[0]
+        audio = {r for r in self.comp if not self.is_tmpl(r)}
+        apin = {k: n for k, n in self.pin.items() if not self.is_tmpl(k[0])}
+        tnets = sorted(set(tp.values()))
+        table, absent, diffs, netmap = {}, {}, {}, {}
+        for tag, base in instances:
+            inst = sorted(r for r in audio if self._num(r)[0] in letters
+                          and base < self._num(r)[1] < base + 60)
+            sols = []
+            for k in range(len(opt) + 1):
+                for out in itertools.combinations(sorted(opt.values()), k):
+                    mp = {}
+                    for t in tparts:
+                        if t in out:
+                            continue
+                        lt, nt = self._num(t)
+                        shift = sum(1 for o in out if self._num(o)[1] < nt)
+                        mp[t] = f"{lt}{base + nt - tbase - shift}"
+                    if sorted(mp.values()) == inst:
+                        sols.append((out, mp))
+            assert len(sols) == 1, (
+                f"istanza {tag} (base {base}): {len(sols)} soluzioni della numerazione "
+                f"per {len(inst)} parti")
+            out, mp = sols[0]
+            table[tag], absent[tag] = mp, {r: o for r, o in opt.items() if o in out}
+            diffs[tag] = {}
+            for t, i in mp.items():
+                (tv, tl, tpart), (iv, il, ipart) = tc[t], self.comp[i]
+                assert (tl, tpart) == (il, ipart), f"{tag}: {t} e' {tl}:{tpart}, {i} e' {il}:{ipart}"
+                if tv != iv:
+                    diffs[tag][t] = iv
+            nm = {}
+            for (t, p), x in tp.items():
+                if t not in mp:
+                    continue
+                got = apin.get((mp[t], p))
+                assert got is not None, f"{tag}: {mp[t]}.{p} libero, {t}.{p} su {x}"
+                nm.setdefault(x, set()).add(got)
+            for (i, p) in apin:
+                if i in inst:
+                    t = {v: k for k, v in mp.items()}[i]
+                    assert (t, p) in tp, f"{tag}: {i}.{p} collegato, {t}.{p} no"
+            # a template net is a RAIL where it keeps its name (VPLUS, GND), a PORT
+            # where a part outside the instance shares it (IN, OUT, RG), and
+            # otherwise INTERNAL - and then its name must be the rule's, tag_X
+            kinds = {}
+            insts = set(inst)
+            for x in tnets:
+                got = nm.get(x)
+                if not got:              # a net only the left-out parts touch (RG on A)
+                    continue
+                assert len(got) == 1, f"{tag}: la rete {x} del blocco cade su {sorted(got)}"
+                g = got.pop()
+                outside = any(n == g and r not in insts for (r, _), n in apin.items())
+                if g == x:
+                    kinds[x] = ("rail", g)
+                elif outside:
+                    kinds[x] = ("port", g)
+                else:
+                    assert g == f"{tag}_{x}", f"{tag}: la rete interna {x} si chiama {g}"
+                    kinds[x] = ("int", g)
+            netmap[tag] = kinds
+        # the right channel: the rule, asserted part by part (values too: the
+        # manifest check compares only the connections)
+        lefts = sorted(r for r in audio if left(r))
+        in_blocks = {i for mp in table.values() for i in mp.values()}
+        assert not set(lefts) & in_blocks, f"parti del canale nei blocchi: {sorted(set(lefts) & in_blocks)}"
+        mirror = {}
+        for r in lefts:
+            q = ref_lr(r)
+            assert q in audio, f"{r} -> {q}: non esiste nella netlist"
+            (v, l, p), (vq, lq, pq) = self.comp[r], self.comp[q]
+            assert (value_lr(v), l, p) == (vq, lq, pq), f"{r} {self.comp[r]} -> {q} {self.comp[q]}"
+            mirror[r] = q
+        # the nets: the rule names them, the netlist must agree. A merged node takes
+        # ONE of its names in SKiDL (preamp_audio.py: "do not start relying on it"),
+        # so where the rule's name does not exist the right net is the one the
+        # mirrored pins sit on - recorded as an alias, printed on the page. Either
+        # way the correspondence must be a bijection: one left net, one right net.
+        seen = {}
+        for r, q in mirror.items():
+            lp_ = {p: n for (rr, p), n in apin.items() if rr == r}
+            rq_ = {p: n for (rr, p), n in apin.items() if rr == q}
+            assert set(lp_) == set(rq_), f"{r} -> {q}: piedini {sorted(lp_)} != {sorted(rq_)}"
+            for p in lp_:
+                seen.setdefault(lp_[p], set()).add(rq_[p])
+        for lt, rt in pairs:
+            assert table[lt] and set(table[lt]) == set(table[rt]), f"{lt} e {rt} diversi"
+            lp = {x: g for x, (k, g) in netmap[lt].items() if k == "port"}
+            rp = {x: g for x, (k, g) in netmap[rt].items() if k == "port"}
+            assert set(lp) == set(rp), f"porte di {rt} {sorted(rp)} != di {lt} {sorted(lp)}"
+            for x in lp:
+                seen.setdefault(lp[x], set()).add(rp[x])
+        lr, aliases = {}, {}
+        anets = set(apin.values())
+        for n, got in sorted(seen.items()):
+            assert len(got) == 1, f"la rete {n} del sinistro cade a destra su {sorted(got)}"
+            g = got.pop()
+            want = net_lr(n)
+            if want in anets:
+                assert g == want, f"{n} -> {want} per la regola, ma la netlist dice {g}"
+            else:
+                aliases[want] = g
+            lr[n] = g
+        inv = {}
+        for n, g in lr.items():
+            assert g not in inv, f"{inv.get(g)} e {n} del sinistro cadono entrambe su {g}"
+            inv[g] = n
+        expanded = {}
+        for tag in table:
+            for t, i in table[tag].items():
+                assert i not in expanded, f"{i} espanso due volte"
+                expanded[i] = ("istanza", tag, t)
+        for r, q in mirror.items():
+            assert q not in expanded, f"{q} espanso due volte"
+            expanded[q] = ("destro", r)
+        self.folded = {"table": table, "absent": absent, "diffs": diffs, "netmap": netmap,
+                       "mirror": mirror, "net_lr": lambda n: lr[n], "lr": lr,
+                       "aliases": aliases, "pairs": dict(pairs),
+                       "expanded": expanded, "instances": [t for t, _ in instances],
+                       "tparts": tparts, "optional": opt}
+        return self.folded
+
+    def instance(self, tag, x0, y1, w, h, ports, title=None, sub=None):
+        """A box for one instance of the template: its ports, on the instance's
+        own nets (derived by fold()), are nodes the drawing must wire or label.
+        ports = {template net: (side, offset)}, as ic(); every port, no others."""
+        F = self.folded
+        assert F is not None, "instance() dopo fold()"
+        assert tag not in self.boxes, f"istanza {tag} disegnata due volte"
+        have = {x: g for x, (k, g) in F["netmap"][tag].items() if k == "port"}
+        assert set(ports) == set(have), f"{tag}: porte {sorted(have)} != disegnate {sorted(ports)}"
+        x1, yb = x0 + w, y1 - h
+        self.bodies.append(("rect", (x0, yb, x1, y1), f"istanza {tag}"))
+        for p, q in (((x0, yb), (x1, yb)), ((x1, yb), (x1, y1)),
+                     ((x1, y1), (x0, y1)), ((x0, y1), (x0, yb))):
+            self._line(p, q, INK, 1.1)
+        out = {}
+        for x, (side, off) in ports.items():
+            if side == "l":
+                pin_in, pin_out, txy, ha = (x0, y1 - off), (x0 - 0.6, y1 - off), (x0 + 0.15, y1 - off), "left"
+            elif side == "r":
+                pin_in, pin_out, txy, ha = (x1, y1 - off), (x1 + 0.6, y1 - off), (x1 - 0.15, y1 - off), "right"
+            elif side == "b":
+                pin_in, pin_out, txy, ha = (x0 + off, yb), (x0 + off, yb - 0.6), (x0 + off, yb + 0.35), "center"
+            else:
+                pin_in, pin_out, txy, ha = (x0 + off, y1), (x0 + off, y1 + 0.6), (x0 + off, y1 - 0.35), "center"
+            self._line(pin_in, pin_out, INK)
+            self.text(txy, x, size=self.fs - 1.0, halign=ha)
+            out[x] = self.node(f"{tag}.{x}", have[x], pin_out)
+        self.boxes[tag] = out
+        self.text(((x0 + x1) / 2, y1 + 0.5), title or f"blocco {tag}", size=self.fs + 0.5)
+        if sub:                                 # under the top edge, above the ports
+            for i, line in enumerate(sub if isinstance(sub, (list, tuple)) else [sub]):
+                self.text(((x0 + x1) / 2, y1 - 0.55 - 0.55 * i), line,
+                          size=self.fs - 1.0, color=DIM)
+        return out
+
+    def instance_table(self, x0, y1, order, colw=2.55, refw=3.2, row=0.5, size=None):
+        """The table of the instances: one row per template part (the ref printed on
+        the block), one column per instance (`order`), the instance's own ref - or
+        '—' where that instance does not fit it; a value that differs from the
+        block's is printed in the cell. Every cell comes from fold()."""
+        F = self.folded
+        fs = size or self.fs - 0.8
+        ns = self.tmpl["ns"]
+        cols = list(order)
+        assert sorted(cols) == sorted(F["instances"])
+        hdr = ["blocco", "valore"] + cols
+        xs = [x0, x0 + refw] + [x0 + refw + 2.6 + colw * i for i in range(len(cols))]
+        y = y1
+        for x, t in zip(xs, hdr):
+            self.text((x, y), t, size=fs, halign="left")
+        self._line((x0, y - 0.38), (xs[-1] + colw, y - 0.38), FRAME, 0.5)
+        y -= row + 0.35
+        rows = sorted(F["tparts"], key=lambda r: ("QRCD".find(self._num(r)[0][0]), self._num(r)[1]))
+        for t in rows:
+            v, lib, part = self.tmpl["comp"][t]
+            cells = [t, value_text(v, part)]
+            for tag in cols:
+                i = F["table"][tag].get(t)
+                d = F["diffs"][tag].get(t)
+                cells.append("—" if i is None else (i + (f" {d}" if d else "")))
+            for x, c in zip(xs, cells):
+                self.text((x, y), c, size=fs, halign="left",
+                          color=DIM if c == "—" else INK)
+            y -= row
+        self._line((x0, y + row - 0.3), (xs[-1] + colw, y + row - 0.3), FRAME, 0.5)
+        y -= 0.15
+        ports = sorted({x for tag in cols for x, (k, _) in F["netmap"][tag].items() if k == "port"})
+        for x in ports:
+            cells = [f"porta {x}", ""]
+            for tag in cols:
+                k = F["netmap"][tag].get(x)
+                cells.append(k[1] if k and k[0] == "port" else "—")
+            for xx, c in zip(xs, cells):
+                self.text((xx, y), c, size=fs - 0.6, halign="left", color=NETCOL if c not in ("", "—") else DIM)
+            y -= row
+        return y
 
     # ---- decoration ------------------------------------------------------------
     def panel(self, x0, y0, x1, y1, title, sub=None):
@@ -864,11 +1361,30 @@ class Sheet:
                         continue
                     if hi - lo > EPS:
                         problems.append(f"ATTRAVERSA: un filo di {net} entra in {ref} ({p}-{q})")
-        # (4) coverage
-        for ref in sorted(set(self.comp) - self.placed):
+        # (4) coverage: on a folded page, every part is drawn or expanded, once
+        required = set(self.comp)
+        if self.folded is not None:
+            exp = self.folded["expanded"]
+            required -= set(exp)
+            for ref in sorted(self.placed & set(exp)):
+                problems.append(f"DOPPIO: {ref} disegnato, ed e' anche espanso da {exp[ref]}")
+            for tag in self.folded["instances"]:
+                lt = {v: k for k, v in self.folded["pairs"].items()}.get(tag, tag)
+                if lt not in self.boxes:
+                    problems.append(f"OMESSO: il riquadro dell'istanza {lt} non disegnato")
+            for tag, ports in self.boxes.items():
+                for x, n in ports.items():
+                    if n not in self.touched:
+                        problems.append(f"PENZOLA: la porta {x} di {tag} ne' cablata ne' etichettata")
+        for ref in sorted(required - self.placed):
             problems.append(f"OMESSO: {ref} non disegnato")
-        for key in sorted(set(self.pin) - set(self.terminals)):
+        for key in sorted(k for k in set(self.pin) - set(self.terminals) if k[0] in required):
             problems.append(f"OMESSO: piedino {key[0]}.{key[1]} ({self.pin[key]}) non disegnato")
+        for ref in sorted(self.sym_refs):
+            sym = set(symbol_pins(*self.comp[ref][1:]))
+            done = {p for (r, p) in self.terminals if r == ref} | {p for (r, p) in self.nc if r == ref}
+            if sym - done:
+                problems.append(f"OMESSO: {ref}, piedini del simbolo non disegnati {sorted(sym - done)}")
         for key, n in sorted(self.terminals.items()):
             if n not in self.touched:
                 problems.append(f"PENZOLA: {n} ne' cablato ne' etichettato")
@@ -895,6 +1411,8 @@ class Sheet:
         devices = {}
         for (ref, pin), n in self.terminals.items():
             devices.setdefault(ref, {})[pin] = names[self._find(n)]
+        if self.folded is not None:
+            devices = self._expand(devices, names)
         self.d.save(svg)
         self.d.save(pdf)
         if png:
@@ -907,6 +1425,45 @@ class Sheet:
         return {"parts": len(self.placed), "terminals": len(self.terminals),
                 "nc": len(self.nc), "nets": len(islands), "islands": n_isl,
                 "dots": len(dots), "named": len(self.named)}
+
+    def _expand(self, devices, names):
+        """The manifest of a folded page: what is drawn, plus the template through
+        the table into every instance, plus the left channel through the rule into
+        the right. The nets of an expanded pin come from the DRAWING - the template's
+        island, renamed by the rule (tag_X), a rail as it is, a port from the island
+        its box's port sits on - and never from the netlist the manifest is then
+        compared with."""
+        F = self.folded
+        tdev = {self.show(r): {p: self.show(x) for p, x in pins.items()}
+                for r, pins in devices.items() if self.is_tmpl(r)}
+        drawn = {r: pins for r, pins in devices.items() if not self.is_tmpl(r)}
+        out = dict(drawn)
+        rev = {rt: lt for lt, rt in F["pairs"].items()}
+        boxed = {tag: {x: names[self._find(n)] for x, n in ports.items()}
+                 for tag, ports in self.boxes.items()}
+
+        def port(tag, x):
+            if tag in boxed:
+                return boxed[tag][x]
+            return F["net_lr"](boxed[rev[tag]][x])
+
+        for tag in F["instances"]:
+            kinds = F["netmap"][tag]
+            for t, pins in sorted(tdev.items()):
+                i = F["table"][tag].get(t)
+                if i is None:
+                    continue
+                assert i not in out, f"{i} gia' nel manifesto"
+                row = {}
+                for p, x in pins.items():
+                    k = kinds[x][0]
+                    row[p] = f"{tag}_{x}" if k == "int" else (x if k == "rail" else port(tag, x))
+                out[i] = row
+        for r, q in sorted(F["mirror"].items()):
+            if r in drawn:
+                assert q not in out, f"{q} gia' nel manifesto"
+                out[q] = {p: F["net_lr"](n) for p, n in drawn[r].items()}
+        return out
 
     def text_overlaps(self):
         """Pairs of texts whose boxes overlap on the rendered page (readability)."""
@@ -946,5 +1503,9 @@ class Sheet:
                     break
                 if abs(x0 - x1) < EPS and tx0 < x0 < tx1 and min(y0, y1) < ty1 and max(y0, y1) > ty0:
                     hits.append((s, f"filo/parte {what}"))
+                    break
+            for (mx0, my0, mx1, my1), what in self.marks:
+                if mx0 < tx1 and mx1 > tx0 and my0 < ty1 and my1 > ty0:
+                    hits.append((s, what))
                     break
         return hits

@@ -233,7 +233,9 @@ può verificare in automatico. Vedi `docs/architecture.md`.
 Da L63a lo stesso controllo copre le schede intere: `check_schematic.py` legge
 anche le netlist KiCad, e `docs/preamp/schematic/sheet_kit.py` disegna una
 pagina rifiutando fili fra reti, corti, fili sopra le parti, reti in pezzi senza
-nome e testi sovrapposti (la prima: `psu_draw.py`, l'alimentatore, 133 parti).
+nome e testi sovrapposti (la prima: `psu_draw.py`, l'alimentatore, 133 parti). Da L63b anche una
+pagina «ripiegata»: `audio_draw.py` disegna il blocco di guadagno una volta e il canale sinistro, e il
+kit la espande nelle 570 parti della scheda audio prima del confronto (`Sheet.fold()`, #71).
 
 ## 17. Un costruttore può pubblicare **due modelli della stessa parte**, e sceglierne uno sbagliato non dà errore
 
@@ -1447,3 +1449,32 @@ testi messi apposta uno sull'altro, `data/2026-10-21/L63a/script/sabotaggi.py`).
 Collegata, sullo stesso disegno: la netlist KiCad che SKiDL scrive **non ha la sezione `libparts`**, quindi
 non porta i nomi dei piedini. Il kit li legge dai simboli della libreria di KiCad, seguendo gli
 `extends` (`symbol_pins()`); un simbolo che cambia nome di piedino cambia il disegno, non la netlist.
+Da L63b il kit legge anche i simboli del progetto (`library/preamp.kicad_sym`: LSK489, LS352), e i
+piedini dei relè G6K / G6KU / IM06, che nel simbolo di KiCad **non hanno nome**, li prende dalla mappa
+di `preamp_audio.py` (`Sheet.RELAY_POLES`).
+
+## 71. Il controllo della leggibilità guardava testi e fili, non i simboli: una massa sopra un'etichetta passava
+
+Visto in L63b (`docs/preamp/schematic/sheet_kit.py`, `text_overlaps()`). Il controllo di L63a rifiuta un
+testo sopra un altro testo, un filo o una parte a due terminali. I simboli di massa, di RLY_RET e dei
+rail però non sono né testi né fili, e il controllo non li vedeva: sulla pagina della scheda audio la
+massa del piedino 2 di J110, J111 e J230 copriva l'etichetta delle resistenze di bleed accanto. Il
+controllo diceva «nessun testo sopra un filo o una parte», e a 300 dpi «R163» era illeggibile. Rieseguito
+col controllo nuovo, l'alimentatore di L63a ne aveva quattro: J2, J508, J515 e il «−» del ponte D503.
+
+**Regola operativa**: ogni cosa che il kit disegna e che non è un testo lascia un'impronta
+(`Sheet._mark`), e un testo sopra un'impronta è un rifiuto (il sabotaggio «un testo sopra un simbolo di
+massa», `data/2026-10-21/L63b/script/sabotaggi.py`). E la pagina si guarda comunque a 300 dpi, a pezzi:
+in L63b è lo sguardo, non il controllo, ad aver trovato la massa sull'etichetta.
+
+Sulla stessa pagina, due trappole che il kit **ha** preso, e che un disegno senza controlli avrebbe
+lasciato passare in silenzio:
+- **le coordinate degli ancoraggi di schemdraw non sono esatte**: una resistenza messa all'emettitore
+  di Q122 (`P(q122["E"])`) cadeva a 1e-7 dal nodo del rail VPF che la «toccava». Disegnata attaccata,
+  collegata a niente: il controllo delle isole l'ha rifiutata come «VPF in 3 pezzi senza nome». Un filo
+  esplicito verso il terminale, non una coincidenza di coordinate;
+- **un nodo unito prende in SKiDL uno solo dei suoi nomi** (`preamp_audio.py`, al buffer delle fisse):
+  la regola sinistro → destro dà `R_ATT_W`, che nella netlist non esiste, perché lì il nodo si chiama
+  `BR_IN`. `Sheet.fold()` non si fida della regola per nome: la corrispondenza fra le reti dev'essere
+  una biiezione letta sui piedini specchiati; dove il nome della regola esiste deve coincidere, dove
+  non esiste diventa un alias, scritto sulla pagina.
