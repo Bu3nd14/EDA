@@ -1,15 +1,16 @@
-# Prompt per la sessione successiva — L63, lo schematico completo leggibile
+# Prompt per la sessione successiva — L63b, lo schematico completo della scheda audio
 
-Nome della sessione: **hi-fi preamp L63** (la convenzione è in `CLAUDE.md`).
+Nome della sessione: **hi-fi preamp L63b** (la convenzione è in `CLAUDE.md`).
 
-> Prompt scritto alla chiusura di L45d2b2c (2026-10-21), su richiesta dell'utente in quella
-> sessione. Dopo viene **L45d2b3**, i guasti rifatti e la sintesi: il suo prompt è già pronto in
-> `data/2026-10-21/L45d2b2c/NEXT-SESSION-L45d2b3.md`, e chi chiude L63 lo copia qui.
+> Prompt scritto alla chiusura di L63a (2026-10-21). L63 è stato diviso dall'utente in due («Prima
+> l'alimentatore»): la pagina dell'alimentatore è fatta, questa è la scheda audio. Dopo viene
+> **L45d2b3**, i guasti rifatti e la sintesi: il suo prompt è pronto in
+> `data/2026-10-21/L45d2b2c/NEXT-SESSION-L45d2b3.md`, e chi chiude L63b lo copia qui.
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L63**, e si ferma. Non iniziarne un secondo, salvo che l'utente lo
+LOTTI PICCOLI: questa sessione fa **L63b**, e si ferma. Non iniziarne un secondo, salvo che l'utente lo
 chieda esplicitamente nella sessione. Se si rivela più grande di una sessione, **dividilo con
-l'utente all'inizio** (per esempio: L63a la scheda audio, L63b l'alimentatore).
+l'utente all'inizio**, coi numeri.
 
 ## La richiesta dell'utente (2026-10-21, a fine L45d2b2c, parola per parola)
 
@@ -17,45 +18,71 @@ l'utente all'inizio** (per esempio: L63a la scheda audio, L63b l'alimentatore).
 > scheda audio e una per l´alimentatore, complete senza blocchi ripetuti, crea un lotto per generare
 > un full schematic human readable, subito dopo questo step»
 
+## Che cosa ha già deciso l'utente (L63a, 2026-10-21)
+
+«Senza blocchi ripetuti» vuol dire **«Blocco una volta, un canale»**:
+- il blocco di guadagno è **uno** (otto istanze identiche nella topologia, ADR-006): si disegna **una
+  volta**, completo in ogni parte, con una **tabella delle otto istanze**, delle loro sigle e dei valori
+  che cambiano da un'istanza all'altra;
+- i due canali sono uguali: si disegna il **sinistro** e si nomina il destro;
+- tutto il resto **completo**, parte per parte, senza riquadri astratti.
+
+Non si richiede: è deciso. Si chiede solo se i numeri cambiano la dimensione (per esempio se non entra
+in A3).
+
 ## Che cosa costruire
 
-Due pagine, generate dal sorgente e leggibili da una persona:
-1. **La scheda audio** (`circuits/preamp/preamp_audio.py`, 570 parti): ingressi e selettore, trim,
-   volume, i blocchi di guadagno, le uscite col mute, i relè, i connettori.
-2. **L'alimentatore** (`circuits/preamp/psu.py`, 133 parti): trasformatori, raddrizzatori, rail,
-   VRELAY, i 5 V, il sorvegliante, il temporizzatore, il comando dei relè, i connettori.
+Una pagina, `docs/preamp/schematic/audio_draw.py` → `audio.svg`, `audio.pdf`, `audio.manifest.json`,
+disegnata da `circuits/preamp/preamp_audio.net` (570 parti):
 
-Formato A3 se serve (anche più grande, se l'utente lo accetta), SVG e PDF.
+- ingressi e selettore;
+- trim e volume;
+- il blocco di guadagno una volta, con la tabella delle istanze;
+- i buffer delle uscite fisse e l'uscita principale col mute;
+- i relè, i connettori, i comandi a pannello.
 
-**Da chiarire con l'utente all'inizio, per nome e senza sigle**: che cosa vuol dire «senza blocchi
-ripetuti». La lettura proposta da L45d2b2c:
-- il blocco di guadagno è **uno** (otto istanze identiche, ADR-006): si disegna **una volta**, completo
-  in ogni parte, con una tabella delle istanze e delle loro sigle;
-- i due canali sono uguali: si disegna il sinistro e si nomina il destro;
-- tutto il resto **completo**, parte per parte, senza riquadri astratti.
-Se l'utente intende altro (per esempio ogni istanza disegnata), cambia la dimensione del lavoro: lo si
-dice coi numeri prima di cominciare.
+## Come, con quello che L63a ha già fatto
 
-**Come, non solo che cosa** (limitations #16, #5): il piazzamento automatico di uno schematico
-analogico leggibile non esiste; SKiDL `generate_schematic()` è inutilizzabile. Lo strumento che
-funziona nel repo è il disegno a mano in codice con schemdraw **più un manifesto verificato contro la
-netlist nei due sensi** (`docs/preamp/schematic/gain_block_draw.py`, `scripts/check_schematic.py`, il
-controllo 2d di `run_tests.sh`). Le due pagine nuove si fanno allo stesso modo, e il controllo 2d le
-deve prendere da sé (cerca ogni `docs/*/schematic/*.manifest.json`). Un disegno che non corrisponde
-alla netlist è un test rosso, non una nota.
-
-Riusare: il disegno del blocco (completo, 61 dispositivi), gli schemi a blocchi della scheda e
-dell'alimentatore (`preamp_blocks_draw.py`, `psu_blocks_draw.py`, con le loro asserzioni nel 2f), i
-disegni del dossier (L32b, L51a–c).
+- **Il kit**, `docs/preamp/schematic/sheet_kit.py`. Leggerlo prima di tutto: la docstring dice che cosa
+  rifiuta e perché.
+  - Le parti si piazzano **per rete** (`two(ref, {rete: punto, rete: punto})`, `N(ref, rete)`).
+  - Integrati, connettori, comparatori, MOSFET, bipolari, ponti, relè.
+  - `finish()` rifiuta: fili fra reti, corti, fili sopra le parti, reti in pezzi senza nome, testi
+    sovrapposti, parti o piedini non disegnati.
+- **Il modello**: `docs/preamp/schematic/psu_draw.py`, la pagina dell'alimentatore (133 parti, A3). Da
+  usare come esempio, non da estendere.
+- **La difficoltà nuova è il manifesto di una pagina «ripiegata».** Il controllo di oggi
+  (`check_schematic.py`, 2d) vuole **tutte** le parti della netlist nel manifesto. Una pagina che
+  disegna il blocco una volta e il canale sinistro solo deve quindi **espandere** il disegno nelle sue
+  istanze: il blocco disegnato più la tabella → otto blocchi; il sinistro più la corrispondenza → il
+  destro. Il manifesto espanso si confronta con `preamp_audio.net` nei due sensi, come oggi. Una
+  tabella sbagliata deve essere un test rosso, non una nota.
+  - **Fatti già verificati**:
+    - le reti interne di ogni istanza hanno il prefisso dell'istanza (`AL_NREF`, `BR_VPF`, `F1L_…`;
+      `tag` in `gain_block()`, `circuits/preamp/gain_block.py`);
+    - le sigle avanzano da un contatore che parte da `base` e dipende dai parametri (`switchable`,
+      `r_in`), quindi **le istanze non hanno le stesse sigle relative**: la 1xx ha R142 e R145, la 5xx
+      R541 e R544.
+  - La tabella va **ricavata** (dalla numerazione di `gain_block()` o dai prefissi delle reti) e
+    asserita, mai ricopiata a mano.
+  - Le parti che esistono solo in alcune istanze (i relè del guadagno di B, l'R_IN di A) vanno nella
+    tabella come tali.
+- **Fuori dal kit**, deciderlo all'inizio guardando il codice: se l'espansione la fa il disegno (un
+  manifesto già espanso, il controllo invariato) o il controllo (un manifesto con le istanze). La
+  prima tiene `check_schematic.py` com'è.
 
 ## Prima di tutto
 
-- `CLAUDE.md`, `docs/limitations.md` (in particolare **#5, #16, #22, #47, #68**), `AGENTS.md`.
-- `docs/preamp/STATE.md`: «In breve» e la voce di L45d2b2c.
-- `docs/preamp/schematic/` e `scripts/check_schematic.py`.
-- Guardare le pagine con gli occhi prima di consegnarle: il controllo verifica le connessioni, non la
-  leggibilità. L'anteprima PNG: `/usr/bin/env PREVIEW_PNG=<file.png> <python del venv> <script>`
-  (`gain_block_draw.py` lo fa già); la miniatura di Quick Look taglia i disegni larghi.
+- `CLAUDE.md`, `docs/limitations.md` (in particolare **#16, #22, #47, #68, #70**), `AGENTS.md`.
+- `docs/preamp/STATE.md`: «In breve» e la voce di L63a.
+- `docs/preamp/reports/2026-10-21-L63a-schematico-alimentatore.md`.
+- `docs/preamp/schematic/` (`sheet_kit.py`, `psu_draw.py`, `gain_block_draw.py`, `preamp_blocks_draw.py`)
+  e `scripts/check_schematic.py`.
+- Guardare la pagina con gli occhi prima di consegnarla, a pezzi e a 300 dpi:
+  `/usr/bin/env PREVIEW_PNG=<file.png> PREVIEW_DPI=300 <python del venv> <script>`. Il controllo dei
+  testi del kit vede le sovrapposizioni, non la leggibilità.
+- Ogni controllo nuovo si prova prima su un caso che deve fallire (limitations #70; i sabotaggi di L63a
+  in `data/2026-10-21/L63a/script/sabotaggi.py` sono il modello).
 
 ## I vincoli
 
@@ -76,15 +103,15 @@ disegni del dossier (L32b, L51a–c).
 
 - **Nessun cambio al circuito.** Se disegnando si trova un errore nel sorgente, lo si scrive nel report
   e lo si porta all'utente; la topologia sta solo in `circuits/preamp/*.py`.
-- Il layout, i gerber, G1, G2.
+- La pagina dell'alimentatore (fatta in L63a), il layout, i gerber, G1, G2.
 - I guasti rifatti (L45d2b3).
 
 ## CHIUSURA
 
-1. `STATE.md` con L63 **fatto** nella tabella dei lotti, e il prossimo (L45d2b3).
+1. `STATE.md` con L63b **fatto** nella tabella dei lotti, e il prossimo (L45d2b3).
 2. Copia `data/2026-10-21/L45d2b2c/NEXT-SESSION-L45d2b3.md` in QUESTO file, aggiornando le righe che
    L63 avesse cambiato, con la riga «Nome della sessione: hi-fi preamp L45d2b3» subito sotto il titolo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L63`.
+4. `/bin/zsh scripts/chunk_close.sh L63b`.
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**

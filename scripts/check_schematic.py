@@ -44,6 +44,12 @@ Pin names must match the netlist's positional order for the device letter
 (see PINOUTS below). Net names are compared case-insensitively, since SPICE
 is case-insensitive about node names.
 
+Since L63a the netlist may also be a KiCad netlist (it starts with `(export`,
+as circuits/preamp/*.net do): pins are then the symbol's pin numbers, read
+from the nets section, and a pin on no net is not connected - see
+parse_kicad_net(). The drawings of whole boards (docs/preamp/schematic/
+sheet_kit.py) are checked this way.
+
 USAGE
 -----
     /usr/bin/python3 scripts/check_schematic.py <manifest.json> <netlist.cir>
@@ -109,6 +115,37 @@ def parse_netlist(path: Path) -> dict:
     return {"devices": devices, "unknown": unknown}
 
 
+def parse_kicad_net(path: Path) -> dict:
+    """Parse a KiCad netlist (the S-expression SKiDL writes) into
+    {refdes: {pin: net}} (L63a).
+
+    Pins are the symbol's pin NUMBERS ("1", "13", "A1"), as the netlist names
+    them, so a manifest for a board names them the same way. A pin that no net
+    lists is not connected: it is absent here, and a drawing that shows it
+    connected is a PIN INVENTATO. A component with no pin on any net would be
+    invisible to the nets section, so the components section is read too, and
+    such a part is kept with no pins: drawing it still has to be a choice.
+    """
+    src = path.read_text(encoding="utf-8")
+    devices = {}
+    comps = src.split("(nets", 1)[0]
+    for ref in re.findall(r'\(comp\s*\(ref "([^"]+)"\)', comps):
+        devices.setdefault(ref.upper(), {})
+    for chunk in re.split(r"\(net\s*\(code", src.split("(nets", 1)[-1])[1:]:
+        nm = re.search(r'\(name "([^"]*)"\)', chunk)
+        if not nm:
+            continue
+        for ref, pin in re.findall(r'\(ref "([^"]+)"\)\s*\(pin "([^"]+)"\)', chunk):
+            devices.setdefault(ref.upper(), {})[pin.upper()] = nm.group(1).upper()
+    return {"devices": devices, "unknown": []}
+
+
+def read_netlist(path: Path) -> dict:
+    """A KiCad netlist starts with `(export`; anything else is flat SPICE."""
+    head = path.read_text(encoding="utf-8", errors="replace").lstrip()[:16]
+    return parse_kicad_net(path) if head.startswith("(export") else parse_netlist(path)
+
+
 def compare(manifest: dict, netlist: dict) -> list:
     """Return a list of human-readable findings. Empty list == match."""
     findings = []
@@ -151,7 +188,7 @@ def main(argv):
             return 2
 
     manifest = json.loads(manifest_path.read_text())
-    netlist = parse_netlist(netlist_path)
+    netlist = read_netlist(netlist_path)
 
     print(f"disegno : {manifest_path}")
     print(f"netlist : {netlist_path}")

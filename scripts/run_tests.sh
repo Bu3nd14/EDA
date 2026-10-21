@@ -277,6 +277,23 @@ out=$(PSU_BLOCKS_SVG="$SCRATCH/psu_blocks.svg" \
 rc=$?
 echo "$out" | tail -7 | sed 's/^/   /'
 report "supply block diagram assertions against psu.net" $rc
+# L63a: the COMPLETE schematic of the supply board. Drawing it runs the kit's
+# refusals (sheet_kit.py: wires only within a net, no short or wire through a
+# part, a name on every island, every part and pin drawn, no text on a text or
+# a wire); block 2d checks its manifest against psu.net. Here the manifest the
+# drawing produces NOW must also be the versioned one 2d checked - otherwise 2d
+# would pass on a file the drawing no longer writes.
+mkdir -p "$SCRATCH/psu_sheet"
+out=$(PSU_SHEET_DIR="$SCRATCH/psu_sheet" \
+      "$VENV_PY" "$ROOT/docs/preamp/schematic/psu_draw.py" 2>&1)
+rc=$?
+echo "$out" | tail -4 | sed 's/^/   /'
+if [ $rc -eq 0 ] && ! cmp -s "$SCRATCH/psu_sheet/psu.manifest.json" \
+                           "$ROOT/docs/preamp/schematic/psu.manifest.json"; then
+    echo "   il manifesto generato ora non e' quello versionato: rigenera psu_draw.py" >&2
+    rc=1
+fi
+report "complete supply schematic draws, and its manifest is the versioned one" $rc
 echo
 
 echo "-- 2g. every device a testbench names exists, every block contact node is terminated --"

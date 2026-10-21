@@ -3,8 +3,8 @@
 Nome della sessione: **hi-fi preamp L45d2b3** (la convenzione è in `CLAUDE.md`).
 
 > Prompt scritto alla chiusura di L45d2b2c (2026-10-21) e messo da parte qui: per decisione
-> dell'utente prima viene **L63**, lo schematico completo. Chi chiude L63 lo copia in
-> `docs/preamp/NEXT-SESSION.md`, aggiornando le righe che L63 avesse cambiato.
+> dell'utente prima viene **L63**, lo schematico completo, diviso dall'utente in L63a (l'alimentatore, fatto) e
+> L63b (la scheda audio). Chi chiude L63b lo copia in `docs/preamp/NEXT-SESSION.md`, aggiornando le righe che L63 avesse cambiato.
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
 LOTTI PICCOLI: questa sessione fa **L45d2b3**, e si ferma. Non iniziarne un secondo, salvo che
