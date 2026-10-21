@@ -1382,3 +1382,31 @@ l'esito di ngspice. Con 35 punti (70 numeri) passa.
 
 **Regola operativa**: un PWL lungo in un `alter` si tiene sotto ~100 numeri, e il log di ogni corsa
 si passa a una guardia che cerca anche «too many args».
+
+## 67. Il 2N7002 del banco dell'alimentatore satura a ~2,5 A: i guasti del comando avevano un'altra forma
+
+Visto in L45d2b2b2 (`docs/preamp/data/2026-10-20/L45d2b2b2/`, README). `MNGEN` a W 2000u (L41a,
+scelto per la soglia bassa, il caso peggiore di Δ) ha K = 0,4 A/V² e con 4,5 V sul gate satura a
+~2,5 A. Il 2N7002 di Nexperia (Rev. 7, fig. 5) satura a ~0,55–0,7 A. Con un clamp in corto il banco
+dava 2,9 A e un MOSFET quasi interruttore, VRELAY che cede e il sorvegliante che muta. Col 2N7002 del
+datasheet la corrente è ~0,87 A con ~11 V sul MOSFET, e a rete +10 % VRELAY_REG non scende mai sotto
+gli 11,0 V del sorvegliante: il guasto resta acceso, 6,4 W, e nessuno se ne accorge. Niente avvisa:
+le due corse finiscono e i loro numeri sono entrambi «fuori», ma per ragioni diverse.
+
+**Regola operativa**: un guasto che porta un MOSFET in saturazione si corre col MOSFET tarato sulla
+caratteristica d'uscita del datasheet (`--n2n7002 ds` del banco di L45d2b2b2), non col generico
+scelto per la soglia; se il risultato dipende dal modello, si corrono tutti e due.
+
+## 68. Un guardiano che riconosce le parti dal nome della rete le perde in silenzio quando la rete cambia nome
+
+Visto in L45d2b2b2 (`scripts/check_relay_safe_state.py --timer`). Le regole T1–T5 trovavano i MOSFET
+del comando dal drain su `MUTE_CMD` / `PERMIT_CMD` / `MAINS_COIL`. Con R552 fra la bobina di K501 e
+Q503 il drain diventa `MAINS_SINK`: Q503 sarebbe uscito da T1–T3 senza un messaggio, e T5 lo avrebbe
+scambiato per l'interruttore di standby (questo sì, rumoroso: è così che si è visto). Lo stesso è
+successo al banco: una sonda che rinomina il pin d'uscita di U504 ha fatto mancare il nodo al
+rimappaggio del corto, che è finito a valle di tutti e due i regolatori (V5 a 12 V, un falso «fuori»).
+
+**Regola operativa**: un controllo che sceglie le parti da guardare per nome di rete conta anche
+quelle che **non** sceglie, e protesta se ne resta fuori una del tipo che dovrebbe guardare (il
+guardiano ora lo fa per ogni 2N7002; `falsi/psu_q503_non_riconosciuto.net` di L45d2b2b2 lo prova).
+Un banco che confronta nodi li legge dalla netlist, non dalle righe del deck.

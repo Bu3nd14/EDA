@@ -1561,17 +1561,25 @@ def check_timer(components, pin_net):
     # (the drain of a 2N7002 that reaches a P-MOSFET's gate through a resistor)
     pgates = {pin_net.get((r, "1")) for r, c in components.items()
               if c["part"] in ("AO3401A",)}
+    resistors = _two_pin(components, pin_net, "R")
+    # L45d2b2b2 (ADR-094): a drain may reach its coil command through ONE resistor (R552, 47 ohm
+    # between K501's coil and Q503: the shorted coil's current limit)
+    via_r = {x for _, a, b in resistors for x, y in ((a, b), (b, a)) if y in TIMER_COMMANDS}
     cmd = {}
     for q in nfets:
         d = pin_net.get((q, "3"))
-        if d in TIMER_COMMANDS or _timer_walk(components, pin_net, d,
-                                              set(TIMER_SUPPLIES)) & pgates:
+        if d in TIMER_COMMANDS or d in via_r or _timer_walk(components, pin_net, d,
+                                                            set(TIMER_SUPPLIES)) & pgates:
             cmd[q] = (pin_net.get((q, "1")), pin_net.get((q, "2")), d)
     if not cmd:
         findings.append("timer: nessun MOSFET di comando trovato - il controllo "
                         "non puo' passare alla cieca")
         return findings, report
-    resistors = _two_pin(components, pin_net, "R")
+    # L45d2b2b2: every 2N7002 of the board is a command FET. One the rule above no longer
+    # recognises (its drain moved behind a part) must not drop out of T1-T3 silently
+    for q in sorted(set(nfets) - set(cmd)):
+        findings.append("timer: %s (2N7002, drain %s) non e' riconosciuto come MOSFET di comando: "
+                        "T1-T3 non lo guarderebbero" % (q, pin_net.get((q, "3"))))
     caps = _two_pin(components, pin_net, "C")
     # comparator outputs (LM2903 symbol: 1 out A, 3 +A; 7 out B, 5 +B)
     comp_out = {}
@@ -1666,7 +1674,8 @@ def check_timer(components, pin_net):
                         % (pt, drivers))
     else:
         report.append("timer: %s si carica da %s" % (pt[0], ", ".join(drivers)))
-    sw = [g for q, (g, s, d) in cmd.items() if d not in TIMER_COMMANDS]
+    # (L45d2b2b2: a drain behind one resistor is a coil command too, not the switch's drive)
+    sw = [g for q, (g, s, d) in cmd.items() if d not in TIMER_COMMANDS and d not in via_r]
     for g in sw:
         vt_ = timing_node(g)
         if not pt or not vt_ or vt_[0] not in _timer_walk(components, pin_net,
