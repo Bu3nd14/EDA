@@ -64,6 +64,55 @@ in corto **a 0,6 s, una corsa alla volta** (limitations #75). `script/genera_sta
 (`deck/stax_lunghi/`): i guasti oltre 100 ms sulla Stax rifatti sul blocco nuovo, per il «Da riaprire
 se» di ADR-089 («R153 cambia valore»).
 
+- **Il calore** (`sintesi_calore_dopo097.csv`): il riferimento sano uguale (−2,9 mV, 151,7 mA); R153 /
+  R160 aperte o in corto e R120 in corto (0,6 s) **senza parti oltre i limiti**, Tj massima 86–87 °C.
+  R153 o R160 aperta: la principale a 1,36 V (116 dB SPL), senza durata (ADR-081); sulla Stax 0 ms.
+- **La Stax** (`stax_lunghi.csv`, `script/confronta_lunghi.py`): 121 casi, scarto ≤ 0,4 ms, nessuno
+  oltre 150 ms (Q122 in corto, fermata subito dopo il guasto, rifatta in gear con `rifai_gear.py
+  --da stax_lunghi`: 118,1 ms) → ADR-098.
+- **Le righe** (`righe_b1.csv`, `script/righe_b1.py`): 97 = 80 entro, 15 al calore (L45d2b3b2), C145 in
+  corto all'impulso della cella (NC-075), K3 escluso (ADR-085). Ingresso della sintesi (L45d2b3b3).
+
+## Rifare
+
+```sh
+/usr/bin/python3 -I <L>/script/genera_calore.py
+/bin/zsh <L>/script/corri.sh <L>/deck/lista_controllo.txt 8      # il caso noto
+/usr/bin/python3 -I <L>/script/analizza_calore.py l62b ; /usr/bin/python3 -I <L>/script/confronta_l62b.py
+/bin/zsh <L>/script/corri.sh <L>/deck/lista_calore.txt 6         # NON R120 in corto su 2,3 s insieme (#75)
+/usr/bin/python3 -I <L>/script/analizza_calore.py oggi ; /usr/bin/python3 -I <L>/script/sintesi_calore.py
+/usr/bin/python3 -I <L>/script/genera_stax.py
+/bin/zsh <L>/script/corri.sh <L>/deck/lista_stax_controllo.txt 3
+/usr/bin/python3 -I <R>/docs/preamp/data/2026-10-13/L45b/script/analizza_p10.py <L>/p10_controllo.csv <L>/run/stax_l60d2/*/
+/usr/bin/python3 -I <L>/script/confronta_l60d2.py
+/bin/zsh <L>/script/corri.sh <L>/deck/lista_stax.txt 3
+/usr/bin/python3 -I <R>/docs/preamp/data/2026-10-13/L45b/script/analizza_p10.py <L>/p10_stax_grezzo.csv <L>/run/stax_g0/G0_CTRL_*/ <L>/run/stax_g0/G0_pin_*/ <L>/run/stax_guasti/*/
+/usr/bin/python3 -I <L>/script/sintesi_stax.py
+/usr/bin/python3 -I <L>/script/rifai_gear.py G0_A_R107_cc G0_A_R107_cc_k105 G0_A_Q106_ce   # poi corri.sh e analizza_p10 -> p10_stax_gear.csv
+/usr/bin/python3 -I <L>/script/genera_rele.py ; /bin/zsh <L>/script/corri.sh <L>/deck/lista_rele.txt 4
+/usr/bin/python3 -I <L>/script/genera_p7.py ; /bin/zsh <L>/script/corri.sh <L>/deck/lista_p7.txt 3
+/usr/bin/python3 -I <L>/script/sintesi_p7.py
+/bin/zsh <L>/psu/corri_seq.sh --solo-compila
+/usr/bin/env GIRI_MAX=20 /bin/zsh <L>/psu/corri_lista.sh <L>/lista_controllo_psu.txt controllo --n2n7002 ds
+/usr/bin/env GIRI_MAX=20 /bin/zsh <L>/psu/corri_lista.sh <L>/lista_nuove.txt nuove --n2n7002 ds
+/usr/bin/python3 -I <L>/script/analizza_075.py <L>/seq/nuove <L>/analisi_nuove.csv @<L>/lista_nuove.txt
+/usr/bin/python3 -I <L>/script/riassunto_075.py <L>/analisi_nuove.csv <L>/riassunto_nuove.csv
+/usr/bin/env GIRI_MAX=20 /bin/zsh <L>/psu/corri_lista.sh <L>/lista_cella.txt cella --n2n7002 ds
+/usr/bin/python3 -I <L>/script/energia_cella.py <L>/seq/cella f_c145_corto_musm10s f_c145_corto_muss f_c145_corto_musp10s
+/bin/zsh <L>/script/regressione.sh prima                          # sul blocco generato PRIMA del sorgente
+/bin/zsh <L>/script/rigenera.sh
+/bin/zsh <L>/script/regressione.sh dopo
+/usr/bin/python3 -I <L>/script/misure_regressione.py ; /usr/bin/python3 -I <L>/script/riassunto_regressione.py ; /usr/bin/python3 -I <L>/script/p7_massimi.py
+/usr/bin/python3 -I <L>/script/genera_dopo097.py
+/bin/zsh <L>/script/corri.sh <L>/deck/lista_dopo097.txt 3
+/bin/zsh <L>/script/corri.sh <L>/deck/lista_dopo097_r120.txt 2   # ~1 GB l'una, ~30 min
+/usr/bin/python3 -I <L>/script/analizza_calore.py dopo097 ; /usr/bin/python3 -I <L>/script/sintesi_calore.py dopo097
+/usr/bin/python3 -I <L>/script/genera_stax_lunghi.py ; /bin/zsh <L>/script/corri.sh <L>/deck/lista_stax_lunghi.txt 3
+/usr/bin/python3 -I <R>/docs/preamp/data/2026-10-13/L45b/script/analizza_p10.py <L>/p10_stax_lunghi.csv <L>/run/stax_lunghi/*/
+/usr/bin/python3 -I <L>/script/confronta_lunghi.py
+/usr/bin/python3 -I <L>/script/righe_b1.py
+```
+
 ## Il crash
 
 Alle 12:48 il Mac si è bloccato: le cinque corse di R120 in corto del calore, su 2,3 s, stavano a
