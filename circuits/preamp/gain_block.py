@@ -971,6 +971,31 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 # ============================================================================
 
 # ============================================================================
+# SIMULATED RESULTS - L45d2b3b2b1, 2026-10-22: ADR-099 (the heat remedies of
+# the block's faults: R190 on the helper, R192 + Q193 the VAS limit, R194 on
+# the tail, R101 + R191; the WA-T220-101E heatsink on the output pair).
+# docs/preamp/data/2026-10-22/L45d2b3b2b1/; prima = main 23fca7fb.
+# Where this section gives a figure it supersedes the ones below.
+#
+#   THE GENERATED BLOCK is the L45d2b3b2a variant rv2 line for line, but for
+#     the designators (confronta_rv2.py), so the bench's figures carry over:
+#     13 of the 15 faults back inside the thermal limits, the VAS at most
+#     123 C (119 C with the devices at 60 C); the two output-device shorts
+#     99 / 95 C with the heatsink, by calculation.
+#   REGRESSION (the 21 fast decks): against rv2 every deck within 1e-3 but P7
+#     (the class B transient: a few off-device current minima); against
+#     main the minimum phase margin 43.11 -> 43.64 deg (tb_loop_blockA),
+#     43.18 -> 43.71 (fixed buffer), 47.18 -> 47.57 (tb_loop), 64.09 -> 64.25
+#     (I_DSS loop); output noise and E3 within 2e-5 (margini.csv).
+#   P7 (60 C air): Q133 0.404 W, 85 C bare, 70 C with the heatsink (0.522 W
+#     before); Q132 82 / 69 C; Q148 0.0067 W, 63 C (0.046 W before); R123
+#     0.0059 W; the new parts R190 0.024, R194 0.020, R191 0.014, R192 0.004 W,
+#     Q193 0.0043 W, 62 C. Nothing outside; within 0.12 % of rv2.
+#   NOT YET (L45d2b3b2b2): the heat bench on this block, the Stax's long
+#     cases, the rest current and V4 hot with the heatsink.
+# ============================================================================
+
+# ============================================================================
 # SIMULATED RESULTS - L45d2b2c, 2026-10-21: ADR-095 (the output pair's reverse
 # base-emitter clamps, section 12) and ADR-078 (the rails up to +/-20.3 V).
 # docs/preamp/data/2026-10-21/L45d2b2c/; regression prima = main 82a94e57

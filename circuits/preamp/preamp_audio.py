@@ -86,6 +86,17 @@ from gain_block import (  # noqa: E402
     gain_block, FP_R, FP_ELCO, REPO,
 )
 
+# BOM constraints of ADR-099 (L45d2b3b2b1), on each of the eight blocks:
+# - the tail's collector resistor (R194 on gain_block.net; R194 / R294 /
+#   R594 / R694 and R394 / R494 / R794 / R894 here): >= 0.5 W at 60 C - 0.236 W
+#   with R107 shorted, 94 % of a 0207's 0.25 W. The footprint (DIN0207) does
+#   not say it; the part does.
+# - the output pair (Q132 / Q133 and their twins, sixteen devices): each with
+#   an Ohmite WA-T220-101E clip-on heatsink (vendor/heatsink/ohmite/), sixteen
+#   on the board, in the footprint FP_TO220_HS. Each heatsink is at its
+#   collector's potential (+15 V on the MJE15032, -15 V on the MJE15033):
+#   they must touch neither each other nor the chassis (G2 layout).
+
 FP_FILM_P15 = "Capacitor_THT:C_Rect_L16.5mm_W7.0mm_P15.00mm_MKT"
 FP_FILM_P22 = "Capacitor_THT:C_Rect_L26.5mm_W10.5mm_P22.50mm_MKS4"
 FP_RELAY = "Relay_SMD:Relay_DPDT_Omron_G6K-2F-Y"
