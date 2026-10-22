@@ -1,0 +1,208 @@
+L62b d_Q122cc L45a tr B g10 Q125_ce musica=0 mute=0 - guasto a 0.3 s
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/docs/preamp/data/2026-10-22/L45d2b3b2a/varianti/d_Q122cc/gain_block.subckt
+.include @REPO@/docs/preamp/data/2026-10-22/L45d2b3b2a/inc/d_Q122cc/Q125_ce.subckt
+* interruttori: SWFC corto del guasto (chiuso con CTL=1), SWFO aperto del guasto (chiuso con
+* CTL=0); SWKO / SWKC i due contatti del deviatore del mute (0,1 ohm, ADR-044): MUTE=0 rilasciato
+.model SWFC SW(VT=0.5 VH=0.1 RON=0.01 ROFF=1e12)
+.model SWFO SW(VT=-0.5 VH=0.1 RON=0.01 ROFF=1e12)
+.model SWKO SW(VT=-0.5 VH=0.1 RON=0.1 ROFF=1e12)
+.model SWKC SW(VT=0.5 VH=0.1 RON=0.1 ROFF=1e12)
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VCTL CTL 0 PWL(0 0 0.3 0 0.30001 1)
+VMUTE MUTE 0 DC 0
+VIN SRC 0 DC 0
+RSRC SRC JIN 1.5
+CIN JIN SEL 1u
+RJ JIN 0 10MEG
+RSEL SEL 0 470k
+RSELK SEL INA 0.1
+XA INA OUTA FBA RGA RG10A VPLUS VMINUS GAINBLOCK
+RRGA RGA 0 1G
+CRGA RGA 0 15p
+RRG10A RG10A 0 1G
+CRG10A RG10A 0 15p
+XF1 OUTA OUTF1 FBF1 RGF1 RG10F1 VPLUS VMINUS GAINBLOCK
+RRGF1 RGF1 0 1G
+CRGF1 RGF1 0 15p
+RRG10F1 RG10F1 0 1G
+CRG10F1 RG10F1 0 15p
+XF2 OUTA OUTF2 FBF2 RGF2 RG10F2 VPLUS VMINUS GAINBLOCK
+RRGF2 RGF2 0 1G
+CRGF2 RGF2 0 15p
+RRG10F2 RG10F2 0 1G
+CRG10F2 RG10F2 0 15p
+* scala del trim (845 + 464 + 464, sempre montata), trim a 0 dB, C_T, volume al massimo
+RTR1 OUTA TAP6 845
+RTR2 TAP6 TAP12 464
+RTR3 TAP12 0 464
+CT OUTA ATT 10u
+RVT ATT W 1m
+RVB W 0 10k
+XB W OUTB FBB RGB RG10B VPLUS VMINUS CTL GAINBLOCKG
+RRGB RGB 0 0.1
+CRGB RGB 0 15p
+RRG10B RG10B 0 0.1
+CRG10B RG10B 0 15p
+RSMAIN OUTB MAIN_A 47
+CMAIN MAIN_A MAINC 4.7u
+RBCMAIN MAINC 0 220k
+SNOMAIN MAINC MAINJACK 0 MUTE SWKO
+SNCMAIN MAINC 0 MUTE 0 SWKC
+RBLMAIN MAINJACK 0 220k
+RLDMAIN MAINJACK 0 100k
+RSFIX1 OUTF1 FIX1_A 47
+CFIX1 FIX1_A FIX1C 4.7u
+RBCFIX1 FIX1C 0 470k
+SNOFIX1 FIX1C FIX1JACK 0 MUTE SWKO
+SNCFIX1 FIX1C 0 MUTE 0 SWKC
+RBLFIX1 FIX1JACK 0 470k
+RLDFIX1 FIX1JACK 0 10k
+RSFIX2 OUTF2 FIX2_A 47
+CFIX2 FIX2_A FIX2C 4.7u
+RBCFIX2 FIX2C 0 470k
+SNOFIX2 FIX2C FIX2JACK 0 MUTE SWKO
+SNCFIX2 FIX2C 0 MUTE 0 SWKC
+RBLFIX2 FIX2JACK 0 470k
+RLDFIX2 FIX2JACK 0 50k
+.control
+set noaskquit
+option itl1=1000
+save v(mainjack) v(fix1jack) v(fix2jack) v(outa) v(outf1) v(outf2) v(outb) i(vpp) i(vmm) @q.xb.q106[p] @q.xb.q117[p] @q.xb.q118[p] @q.xb.q121a[p] @q.xb.q121b[p] @q.xb.q122[p] @q.xb.q125[p] @q.xb.q127[p] @q.xb.q132[p] @q.xb.q133[p] @q.xb.q146[p] @q.xb.q148[p] @r.xb.r101[p] @r.xb.r107[p] @r.xb.r108[p] @r.xb.r109[p] @r.xb.r111[p] @r.xb.r112[p] @r.xb.r113[p] @r.xb.r114[p] @r.xb.r115[p] @r.xb.r119[p] @r.xb.r120[p] @r.xb.r123[p] @r.xb.r126[p] @r.xb.r128[p] @r.xb.r129[p] @r.xb.r130[p] @r.xb.r131[p] @r.xb.r134[p] @r.xb.r135[p] @r.xb.r136[p] @r.xb.r138[p] @r.xb.r143[p] @r.xb.r144[p] @r.xb.r147[p] @r.xb.r149[p] @r.xb.r150[p] @r.xb.r151[p] @r.xb.r152[p] @r.xb.r153[p] @r.xb.r160[p] @j.xb.jq110a[id] @j.xb.jq110b[id] v(xb.d1n) v(xb.s1) v(xb.d2n) v(xb.s2) @d.xb.d102[p] @d.xb.d103[p] @d.xb.d154[p] @d.xb.d155[p] @d.xb.d156[p] @d.xb.d157[p] @d.xb.d158[p] @d.xb.d159[p]
+tran 1u 2.3 0 50u
+wrdata Q125_ce.dat v(mainjack) v(fix1jack) v(fix2jack) v(outa) v(outf1) v(outf2) v(outb) i(vpp) i(vmm)
+meas tran p_q106 AVG @q.xb.q106[p] from=2.29 to=2.3
+meas tran p_q117 AVG @q.xb.q117[p] from=2.29 to=2.3
+meas tran p_q118 AVG @q.xb.q118[p] from=2.29 to=2.3
+meas tran p_q121a AVG @q.xb.q121a[p] from=2.29 to=2.3
+meas tran p_q121b AVG @q.xb.q121b[p] from=2.29 to=2.3
+meas tran p_q122 AVG @q.xb.q122[p] from=2.29 to=2.3
+meas tran p_q125 AVG @q.xb.q125[p] from=2.29 to=2.3
+meas tran p_q127 AVG @q.xb.q127[p] from=2.29 to=2.3
+meas tran p_q132 AVG @q.xb.q132[p] from=2.29 to=2.3
+meas tran p_q133 AVG @q.xb.q133[p] from=2.29 to=2.3
+meas tran p_q146 AVG @q.xb.q146[p] from=2.29 to=2.3
+meas tran p_q148 AVG @q.xb.q148[p] from=2.29 to=2.3
+meas tran p_r101 AVG @r.xb.r101[p] from=2.29 to=2.3
+meas tran p_r107 AVG @r.xb.r107[p] from=2.29 to=2.3
+meas tran p_r108 AVG @r.xb.r108[p] from=2.29 to=2.3
+meas tran p_r109 AVG @r.xb.r109[p] from=2.29 to=2.3
+meas tran p_r111 AVG @r.xb.r111[p] from=2.29 to=2.3
+meas tran p_r112 AVG @r.xb.r112[p] from=2.29 to=2.3
+meas tran p_r113 AVG @r.xb.r113[p] from=2.29 to=2.3
+meas tran p_r114 AVG @r.xb.r114[p] from=2.29 to=2.3
+meas tran p_r115 AVG @r.xb.r115[p] from=2.29 to=2.3
+meas tran p_r119 AVG @r.xb.r119[p] from=2.29 to=2.3
+meas tran p_r120 AVG @r.xb.r120[p] from=2.29 to=2.3
+meas tran p_r123 AVG @r.xb.r123[p] from=2.29 to=2.3
+meas tran p_r126 AVG @r.xb.r126[p] from=2.29 to=2.3
+meas tran p_r128 AVG @r.xb.r128[p] from=2.29 to=2.3
+meas tran p_r129 AVG @r.xb.r129[p] from=2.29 to=2.3
+meas tran p_r130 AVG @r.xb.r130[p] from=2.29 to=2.3
+meas tran p_r131 AVG @r.xb.r131[p] from=2.29 to=2.3
+meas tran p_r134 AVG @r.xb.r134[p] from=2.29 to=2.3
+meas tran p_r135 AVG @r.xb.r135[p] from=2.29 to=2.3
+meas tran p_r136 AVG @r.xb.r136[p] from=2.29 to=2.3
+meas tran p_r138 AVG @r.xb.r138[p] from=2.29 to=2.3
+meas tran p_r143 AVG @r.xb.r143[p] from=2.29 to=2.3
+meas tran p_r144 AVG @r.xb.r144[p] from=2.29 to=2.3
+meas tran p_r147 AVG @r.xb.r147[p] from=2.29 to=2.3
+meas tran p_r149 AVG @r.xb.r149[p] from=2.29 to=2.3
+meas tran p_r150 AVG @r.xb.r150[p] from=2.29 to=2.3
+meas tran p_r151 AVG @r.xb.r151[p] from=2.29 to=2.3
+meas tran p_r152 AVG @r.xb.r152[p] from=2.29 to=2.3
+meas tran p_r153 AVG @r.xb.r153[p] from=2.29 to=2.3
+meas tran p_r160 AVG @r.xb.r160[p] from=2.29 to=2.3
+let pja = @j.xb.jq110a[id] * (v(xb.d1n) - v(xb.s1))
+let pjb = @j.xb.jq110b[id] * (v(xb.d2n) - v(xb.s2))
+meas tran p_jq110a AVG pja from=2.29 to=2.3
+meas tran p_jq110b AVG pjb from=2.29 to=2.3
+meas tran out_avg AVG v(outb) from=2.29 to=2.3
+meas tran out_max MAX v(outb) from=2.29 to=2.3
+meas tran out_min MIN v(outb) from=2.29 to=2.3
+meas tran ipp_avg AVG i(vpp) from=2.29 to=2.3
+meas tran ipp_max MAX i(vpp) from=2.29 to=2.3
+meas tran ipp_min MIN i(vpp) from=2.29 to=2.3
+meas tran imm_avg AVG i(vmm) from=2.29 to=2.3
+meas tran imm_max MAX i(vmm) from=2.29 to=2.3
+meas tran imm_min MIN i(vmm) from=2.29 to=2.3
+echo "grandezza,valore" > Q125_ce_fine.csv
+echo "p_q106,$&p_q106" >> Q125_ce_fine.csv
+echo "p_q117,$&p_q117" >> Q125_ce_fine.csv
+echo "p_q118,$&p_q118" >> Q125_ce_fine.csv
+echo "p_q121a,$&p_q121a" >> Q125_ce_fine.csv
+echo "p_q121b,$&p_q121b" >> Q125_ce_fine.csv
+echo "p_q122,$&p_q122" >> Q125_ce_fine.csv
+echo "p_q125,$&p_q125" >> Q125_ce_fine.csv
+echo "p_q127,$&p_q127" >> Q125_ce_fine.csv
+echo "p_q132,$&p_q132" >> Q125_ce_fine.csv
+echo "p_q133,$&p_q133" >> Q125_ce_fine.csv
+echo "p_q146,$&p_q146" >> Q125_ce_fine.csv
+echo "p_q148,$&p_q148" >> Q125_ce_fine.csv
+echo "p_r101,$&p_r101" >> Q125_ce_fine.csv
+echo "p_r107,$&p_r107" >> Q125_ce_fine.csv
+echo "p_r108,$&p_r108" >> Q125_ce_fine.csv
+echo "p_r109,$&p_r109" >> Q125_ce_fine.csv
+echo "p_r111,$&p_r111" >> Q125_ce_fine.csv
+echo "p_r112,$&p_r112" >> Q125_ce_fine.csv
+echo "p_r113,$&p_r113" >> Q125_ce_fine.csv
+echo "p_r114,$&p_r114" >> Q125_ce_fine.csv
+echo "p_r115,$&p_r115" >> Q125_ce_fine.csv
+echo "p_r119,$&p_r119" >> Q125_ce_fine.csv
+echo "p_r120,$&p_r120" >> Q125_ce_fine.csv
+echo "p_r123,$&p_r123" >> Q125_ce_fine.csv
+echo "p_r126,$&p_r126" >> Q125_ce_fine.csv
+echo "p_r128,$&p_r128" >> Q125_ce_fine.csv
+echo "p_r129,$&p_r129" >> Q125_ce_fine.csv
+echo "p_r130,$&p_r130" >> Q125_ce_fine.csv
+echo "p_r131,$&p_r131" >> Q125_ce_fine.csv
+echo "p_r134,$&p_r134" >> Q125_ce_fine.csv
+echo "p_r135,$&p_r135" >> Q125_ce_fine.csv
+echo "p_r136,$&p_r136" >> Q125_ce_fine.csv
+echo "p_r138,$&p_r138" >> Q125_ce_fine.csv
+echo "p_r143,$&p_r143" >> Q125_ce_fine.csv
+echo "p_r144,$&p_r144" >> Q125_ce_fine.csv
+echo "p_r147,$&p_r147" >> Q125_ce_fine.csv
+echo "p_r149,$&p_r149" >> Q125_ce_fine.csv
+echo "p_r150,$&p_r150" >> Q125_ce_fine.csv
+echo "p_r151,$&p_r151" >> Q125_ce_fine.csv
+echo "p_r152,$&p_r152" >> Q125_ce_fine.csv
+echo "p_r153,$&p_r153" >> Q125_ce_fine.csv
+echo "p_r160,$&p_r160" >> Q125_ce_fine.csv
+echo "p_jq110a,$&p_jq110a" >> Q125_ce_fine.csv
+echo "p_jq110b,$&p_jq110b" >> Q125_ce_fine.csv
+echo "out_avg,$&out_avg" >> Q125_ce_fine.csv
+echo "out_max,$&out_max" >> Q125_ce_fine.csv
+echo "out_min,$&out_min" >> Q125_ce_fine.csv
+echo "ipp_avg,$&ipp_avg" >> Q125_ce_fine.csv
+echo "ipp_max,$&ipp_max" >> Q125_ce_fine.csv
+echo "ipp_min,$&ipp_min" >> Q125_ce_fine.csv
+echo "imm_avg,$&imm_avg" >> Q125_ce_fine.csv
+echo "imm_max,$&imm_max" >> Q125_ce_fine.csv
+echo "imm_min,$&imm_min" >> Q125_ce_fine.csv
+meas tran p_d102 AVG @d.xb.d102[p] from=2.29 to=2.3
+echo "p_d102,$&p_d102" >> Q125_ce_fine.csv
+meas tran p_d103 AVG @d.xb.d103[p] from=2.29 to=2.3
+echo "p_d103,$&p_d103" >> Q125_ce_fine.csv
+meas tran p_d154 AVG @d.xb.d154[p] from=2.29 to=2.3
+echo "p_d154,$&p_d154" >> Q125_ce_fine.csv
+meas tran p_d155 AVG @d.xb.d155[p] from=2.29 to=2.3
+echo "p_d155,$&p_d155" >> Q125_ce_fine.csv
+meas tran p_d156 AVG @d.xb.d156[p] from=2.29 to=2.3
+echo "p_d156,$&p_d156" >> Q125_ce_fine.csv
+meas tran p_d157 AVG @d.xb.d157[p] from=2.29 to=2.3
+echo "p_d157,$&p_d157" >> Q125_ce_fine.csv
+meas tran p_d158 AVG @d.xb.d158[p] from=2.29 to=2.3
+echo "p_d158,$&p_d158" >> Q125_ce_fine.csv
+meas tran p_d159 AVG @d.xb.d159[p] from=2.29 to=2.3
+echo "p_d159,$&p_d159" >> Q125_ce_fine.csv
+quit
+.endc
+.end
