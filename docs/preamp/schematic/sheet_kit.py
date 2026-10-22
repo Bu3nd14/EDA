@@ -1019,7 +1019,7 @@ class Sheet:
         return m.group(1), int(m.group(2))
 
     def fold(self, instances, optional, tbase, left, ref_lr, net_lr, pairs,
-             value_lr=lambda v: v):
+             value_lr=lambda v: v, fixed=None):
         """Derive, and assert on the netlist, what the drawing stands for.
 
         instances  [(tag, base)]: every instance of the template on the board;
@@ -1031,6 +1031,12 @@ class Sheet:
         ref_lr, net_lr, value_lr   the left -> right rules for its ref, its nets and
                    its value (a connector's value names its channel: IN1_L);
         pairs      [(left tag, right tag)]: the right instance a left box stands for.
+        fixed      None, or an offset: the template parts numbered from tbase + fixed
+                   up are NOT on the running count - gain_block() numbers them from
+                   base + fixed on every instance (section 14, ADR-099, L45d2b3b2b1:
+                   R190.. so as not to land on the channel's own base + 61..), so no
+                   left-out part shifts them, and they are found in base + fixed ..
+                   base + 99.
 
         The table template ref -> instance ref is DERIVED from the numbering of
         gain_block() (one counter from `base`, a part skipped is a number not used):
@@ -1057,7 +1063,9 @@ class Sheet:
         table, absent, diffs, netmap = {}, {}, {}, {}
         for tag, base in instances:
             inst = sorted(r for r in audio if self._num(r)[0] in letters
-                          and base < self._num(r)[1] < base + 60)
+                          and (base < self._num(r)[1] < base + 60
+                               or (fixed is not None
+                                   and base + fixed <= self._num(r)[1] < base + 100)))
             sols = []
             for k in range(len(opt) + 1):
                 for out in itertools.combinations(sorted(opt.values()), k):
@@ -1066,7 +1074,8 @@ class Sheet:
                         if t in out:
                             continue
                         lt, nt = self._num(t)
-                        shift = sum(1 for o in out if self._num(o)[1] < nt)
+                        shift = (0 if fixed is not None and nt - tbase >= fixed
+                                 else sum(1 for o in out if self._num(o)[1] < nt))
                         mp[t] = f"{lt}{base + nt - tbase - shift}"
                     if sorted(mp.values()) == inst:
                         sols.append((out, mp))

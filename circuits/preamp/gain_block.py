@@ -107,6 +107,15 @@ FP_SOT23 = "Package_TO_SOT_SMD:SOT-23"   # MMBT5551/MMBT5401, ADR-017 (L39)
 # the tab is NX / NY, and big copper there is capacitance on the VAS node.
 FP_SOT223 = "Package_TO_SOT_SMD:SOT-223-3_TabPin2"
 FP_TO220 = "Package_TO_SOT_THT:TO-220-3_Vertical"
+# ADR-099 (L45d2b3b2b1): the output pair carries an Ohmite WA-T220-101E clip-on
+# heatsink each. Its footprint is in library/preamp.pretty (KiCad has none):
+# the TO-220 plus the heatsink's two solderable pins, drawn from Ohmite's land
+# pattern (vendor/heatsink/ohmite/WA-T220-101E/sink-w.pdf, rev 8/21-1).
+# Its pads are named B / C / E like Device:Q_NPN / Q_PNP's pins, and the two
+# heatsink pins are pad C: the heatsink sits on the tab, the collector, so it
+# is at +15 V (MJE15032) or -15 V (MJE15033). They must touch neither each
+# other nor the chassis: a layout constraint for G2.
+FP_TO220_HS = "preamp:TO-220-3_Vertical_Ohmite_WA-T220-101E"
 FP_SOIC8 = "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"
 FP_DO35 = "Diode_THT:D_DO-35_SOD27_P7.62mm_Horizontal"
 FP_CERAMIC = "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm"
@@ -328,7 +337,12 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # Bypassed to V-, NOT to ground: a current source must hold its current
     # constant relative to the rail it stands on. That single choice is what
     # turns negative-rail PSRR from a topology problem into a decoupling one.
-    R("6.81k", GND, NREF)               # ~2.0 mA through the reference string
+    # ADR-099 (L45d2b3b2b1): the 6.81k as TWO 3.40k in series (6.80k, this one
+    # and its twin R191 in section 14). With the single 6.81k shorted the two
+    # diodes took ~99 W (~35 000 C on the L45d2b3b2a bench); with one half
+    # shorted 3.40k is left, and the worst part stays at 80 C (60 C air).
+    NREFH = n("NREFH")                  # between the two halves
+    R("3.40k", GND, NREFH)              # ~2.0 mA through the reference string
     D("1N4148", NREF, NREFM)
     D("1N4148", NREFM, VM)
     C("100u", NREF, VM, fp=FP_ELCO)     # + terminal on NREF
@@ -339,7 +353,13 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # ========================================================================
     # Tail current sink: 4.0 mA => 2.0 mA per JFET half.
     # R = (1.2 V - Vbe)/4 mA = 0.55/4m = 137 Ohm (E96).
-    Q("npn", "MMBT5551", "MMBT5551", SRC, NREF, NTE)
+    # ADR-099 (L45d2b3b2b1): the collector reaches SRC through 1 kOhm (R194,
+    # section 14), not directly. With this transistor shorted, the 137 Ohm
+    # (R107) shorted or the reference lost, the tail went to the JFETs' I_DSS
+    # and the input stage to 515-553 C; with the 1k it stays under ~13 mA. At
+    # rest it drops ~4.7 V of the ~14 V of Vce (L45d2b3b2a, genera.py).
+    NTCX = n("NTCX")                    # tail collector, before the 1k
+    Q("npn", "MMBT5551", "MMBT5551", NTCX, NREF, NTE)
     R("137", NTE, VM)
 
     # ADR-013: ONE LSK489 monolithic dual - and, since L10, ONE Part.
@@ -565,9 +585,19 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # L60d2: that P7 squared the current into 91 ohm, the value before
     # ADR-054 (0.076 W with 56); with R153 limiting the follower (ADR-087)
     # P7 now reads 8.8 mW (data/2026-10-19/L60d2/p7/). The 0.13 W rating stays.
-    NVE = n("NVE")
+    # ADR-099 (L45d2b3b2b1): the 56 Ohm is now 33 Ohm from VPF to NVS (this
+    # one) + 22 Ohm from NVS to the emitter (R192, section 14), 55 Ohm in all,
+    # and an MMBT5401 (Q193, section 14) with its emitter on VPF, its base on
+    # NVS and its collector on NVB: past ~16 mA in the VAS (0.53 V on the 33)
+    # it steals the VAS base drive. With the output PNP shorted, the load sink
+    # Q125 shorted, R126 shorted or D102 / D103 open the VAS went to 229-307 C;
+    # with the limit 123 C (119 C with the bench's devices at 60 C) against
+    # P7's 125. At rest it is off: 0.35 V on the 33, 0.06 / 0.9 / 7.5 uA at
+    # 27 / 60 / 90 C against the VAS's 83 uA of base current (L45d2b3b2a,
+    # op_caldo.csv). Phase margin 43.1 -> 43.6 deg on the variant.
+    NVE, NVS = n("NVE"), n("NVS")       # VAS emitter / the limiter's tap
     Q("pnp", "DZT5401", "MMBT5401", NX, NVB, NVE, fp=FP_SOT223)
-    R("56", VPF, NVE)
+    R("33", VPF, NVS)
 
     # Miller compensation - the dominant pole of the whole amplifier.
     # MUST be C0G/NP0: it sees ~13 V of DC bias and carries the entire
@@ -676,8 +706,16 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # Qmje15032/Qmje15033: onsemi's model names, left as served (ADR-017,
     # models/bjt_npn/mje15032.lib). Both miss their datasheet f_T minimum and
     # the NPN its h_FE minimum (NC-024, NC-025): figures from them carry that.
-    Q("npn", "MJE15032", "Qmje15032", VP, NBN, NEN, fp=FP_TO220)
-    Q("pnp", "MJE15033", "Qmje15033", VM, NBP, NEP, fp=FP_TO220)
+    # ADR-099 (L45d2b3b2b1): each with the WA-T220-101E heatsink (FP_TO220_HS
+    # at the top). With one output device shorted the other carries 1.4-1.6 W:
+    # 149 / 160 C bare (62.5 C/W), beyond P7 and - the NPN - beyond the 150 C
+    # absolute maximum; with the heatsink 99 / 95 C by calculation (20 C/W at
+    # 1 W from Ohmite's curve, 2.5 C/W junction-case, 2 C/W interface as a
+    # declared assumption; L45d2b3b2a dissipatore.csv). At rest 79 -> 67 C,
+    # P7 85 -> 70 C. Read the Vbe multiplier comment (section 4): the
+    # thermal coupling to this NPN is now to a cooler, slower device.
+    Q("npn", "MJE15032", "Qmje15032", VP, NBN, NEN, fp=FP_TO220_HS)
+    Q("pnp", "MJE15033", "Qmje15033", VM, NBP, NEP, fp=FP_TO220_HS)
     R("22", NEN, OUT)
     R("22", NEP, OUT)
 
@@ -787,7 +825,13 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     NFC = n("NFC")                            # follower collector
     Q("pnp", "MMBT5401", "MMBT5401", NFC, NHI, NVB)
     R("1.2k", VPF, NVB)
-    Q("pnp", "MMBT5401", "MMBT5401", VM, NMIRC, NMIRI)
+    # ADR-099 (L45d2b3b2b1): the helper's collector reaches VM through 10 kOhm
+    # (R190, section 14), the logic of ADR-087 on the follower. With R149
+    # shorted, a mirror base-emitter short or R119 open this SOT-23 took up to
+    # ~12.6 W (5123 C); with the 10k 86 C, and the mirror with the helper
+    # shorted 574 -> 82 C (60 C air, L45d2b3b2a sintesi_rv2.csv).
+    NHC = n("NHC")                            # helper collector, before the 10k
+    Q("pnp", "MMBT5401", "MMBT5401", NHC, NMIRC, NMIRI)
     R("10k", VPF, NMIRI)
 
     # ========================================================================
@@ -868,6 +912,35 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # Why two: R_FOLLOW_C_HALF at the top.
     R(R_FOLLOW_C_HALF, NFCR, VM)
 
+    # ========================================================================
+    # 14. THE HEAT REMEDIES OF THE BLOCK'S FAULTS (ADR-099, L45d2b3b2b1, NC-042)
+    # ========================================================================
+    # Appended LAST (limitations.md #22), and NOT on the running count: from
+    # base + 90, R190 / R191 / R192 / Q193 / R194 on this file's block. The
+    # running count would have taken block A to 163 and block B to 264, onto
+    # the channel's own parts at base + 61..68 and base + 161..165
+    # (preamp_audio.py: R161 the fixed output's 47 ohm, R261 the main
+    # output's), and SKiDL renames a duplicate to R161_1 without an error
+    # (seen on the first regeneration of L45d2b3b2b1). x90-x99 is free on
+    # every instance: block A R190.., block B R290.., the fixed buffers
+    # R590.. / R690.., the right channel 390 / 490 / 790 / 890 (618 parts on
+    # the audio board, was 578). The drawing's fold knows it (sheet_kit.py,
+    # fold(fixed=90)).
+    # Why each: the comments where they act (sections 1, 2, 3, 8). On the
+    # L45d2b3b2a bench they were R161 / R162 / R167 / Q168 / R169 (variant
+    # rv2): 13 of the 15 faults that took a part beyond its thermal limits
+    # come back inside, the healthy block unchanged; the two output-device
+    # shorts are the heatsink's (section 5).
+    i[0] = base + 89
+    R("10k", NHC, VM)                   # the helper's collector resistor
+    R("3.40k", NREFH, NREF)             # the reference resistor's twin
+    R("22", NVS, NVE)                   # the VAS degeneration's second part
+    Q("pnp", "MMBT5401", "MMBT5401", NVB, NVS, VPF)   # the VAS current limit
+    # The tail's collector resistor. BOM: >= 0.5 W at 60 C - it takes 0.236 W
+    # with R107 shorted (L45d2b3b2a, nuove_max_rv2.csv), 94 % of a 0207's
+    # 0.25 W. The other new parts take <= 0.089 W, Q193 <= 69 C.
+    R("1k", SRC, NTCX)
+
     return dict(IN=IN, OUT=OUT, FB=FB, RG=RG, RG10=RG10, VP=VP, VM=VM,
                 GND=GND)
 
@@ -895,6 +968,31 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
 #   (c) accept it: +10 dB exists for a FUTURE low-output chain (ADR-004), not
 #       for the K11, and V3 already names this combination as
 #       "raggiungibile per errore".
+# ============================================================================
+
+# ============================================================================
+# SIMULATED RESULTS - L45d2b3b2b1, 2026-10-22: ADR-099 (the heat remedies of
+# the block's faults: R190 on the helper, R192 + Q193 the VAS limit, R194 on
+# the tail, R101 + R191; the WA-T220-101E heatsink on the output pair).
+# docs/preamp/data/2026-10-22/L45d2b3b2b1/; prima = main 23fca7fb.
+# Where this section gives a figure it supersedes the ones below.
+#
+#   THE GENERATED BLOCK is the L45d2b3b2a variant rv2 line for line, but for
+#     the designators (confronta_rv2.py), so the bench's figures carry over:
+#     13 of the 15 faults back inside the thermal limits, the VAS at most
+#     123 C (119 C with the devices at 60 C); the two output-device shorts
+#     99 / 95 C with the heatsink, by calculation.
+#   REGRESSION (the 21 fast decks): against rv2 every deck within 1e-3 but P7
+#     (the class B transient: a few off-device current minima); against
+#     main the minimum phase margin 43.11 -> 43.64 deg (tb_loop_blockA),
+#     43.18 -> 43.71 (fixed buffer), 47.18 -> 47.57 (tb_loop), 64.09 -> 64.25
+#     (I_DSS loop); output noise and E3 within 2e-5 (margini.csv).
+#   P7 (60 C air): Q133 0.404 W, 85 C bare, 70 C with the heatsink (0.522 W
+#     before); Q132 82 / 69 C; Q148 0.0067 W, 63 C (0.046 W before); R123
+#     0.0059 W; the new parts R190 0.024, R194 0.020, R191 0.014, R192 0.004 W,
+#     Q193 0.0043 W, 62 C. Nothing outside; within 0.12 % of rv2.
+#   NOT YET (L45d2b3b2b2): the heat bench on this block, the Stax's long
+#     cases, the rest current and V4 hot with the heatsink.
 # ============================================================================
 
 # ============================================================================

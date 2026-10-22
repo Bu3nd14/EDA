@@ -55,7 +55,9 @@ tb_mute_corto.cir - mute tenuto e corto su ciascuna uscita, coi buffer delle fis
 *   Q122 VAS   Q125 carico VAS   Q127 moltiplicatore Vbe   Q106 coda
 *   Q117/Q118 cascode   Q121A/B LS352   JQ110A/B LSK489
 *   R134/R135 22 ohm d'emettitore   R130/R131 10 ohm di base
-*   R123/R126 56 ohm di VAS e carico VAS (91 fino a ADR-054; le potenze col 56 da L60d2)
+*   R123 33 ohm (ADR-099; 56 fino a L45d2b3b2b1, 91 fino a ADR-054) e R126 56 ohm, di VAS e
+*   carico VAS. tb_mute_corto_parti.csv (L45d2b3b2b1): Q146, Q148, R123, R126 e le parti di
+*   ADR-099 R190 R191 R192 Q193 R194, potenza media e massima da @<dev>[p]
 * Il `@q134` citato da NC-001 e da G0 NON esiste piu' (rinumerazioni L22/L10).
 *
 * MODELLI (L39, NC-017): ogni dispositivo attivo e' il modello del costruttore
@@ -196,6 +198,11 @@ echo "blk,modo_db,f_hz,vin_pk,k_att,caso,p_q132,p_q133,icmax_q132,icmin_q132,icm
 *     fissa in corto o spenta, l'uscita principale a +10 dB resta in classe A.
 * 1c: +3 dB (L27, ADR-026), come 1b. ADR-021 lo chiede nel suo «da riaprire
 *     se»: il modo nuovo e' dentro il dominio, ma va verificato, non dedotto.
+save @q.xa.q146[p] @q.xa.q148[p] @r.xa.r123[p] @r.xa.r126[p] @q.xa.q193[p] @r.xa.r190[p] @r.xa.r191[p] @r.xa.r192[p] @r.xa.r194[p]
+save @q.xf1.q146[p] @q.xf1.q148[p] @r.xf1.r123[p] @r.xf1.r126[p] @q.xf1.q193[p] @r.xf1.r190[p] @r.xf1.r191[p] @r.xf1.r192[p] @r.xf1.r194[p]
+save @q.xf2.q146[p] @q.xf2.q148[p] @r.xf2.r123[p] @r.xf2.r126[p] @q.xf2.q193[p] @r.xf2.r190[p] @r.xf2.r191[p] @r.xf2.r192[p] @r.xf2.r194[p]
+save @q.xb.q146[p] @q.xb.q148[p] @r.xb.r123[p] @r.xb.r126[p] @q.xb.q193[p] @r.xb.r190[p] @r.xb.r191[p] @r.xb.r192[p] @r.xb.r194[p]
+echo "blk,modo_db,f_hz,vin_pk,k_att,caso,p_q146,pmax_q146,p_q148,pmax_q148,p_r123,pmax_r123,p_r126,pmax_r126,p_q193,pmax_q193,p_r190,pmax_r190,p_r191,pmax_r191,p_r192,pmax_r192,p_r194,pmax_r194" > tb_mute_corto_parti.csv
 foreach sweep 1 2 3
 if $sweep = 1
   alter rrgb = 1G
@@ -262,6 +269,82 @@ foreach c $cases
   let prail = -15 * vpp#branch + 15 * vmm#branch
   meas tran pra AVG prail from=4m to=8m
 
+  meas tran pp_q146 AVG @q.xa.q146[p] from=4m to=8m
+  meas tran px_q146 MAX @q.xa.q146[p] from=4m to=8m
+  meas tran pp_q148 AVG @q.xa.q148[p] from=4m to=8m
+  meas tran px_q148 MAX @q.xa.q148[p] from=4m to=8m
+  meas tran pp_r123 AVG @r.xa.r123[p] from=4m to=8m
+  meas tran px_r123 MAX @r.xa.r123[p] from=4m to=8m
+  meas tran pp_r126 AVG @r.xa.r126[p] from=4m to=8m
+  meas tran px_r126 MAX @r.xa.r126[p] from=4m to=8m
+  meas tran pp_q193 AVG @q.xa.q193[p] from=4m to=8m
+  meas tran px_q193 MAX @q.xa.q193[p] from=4m to=8m
+  meas tran pp_r190 AVG @r.xa.r190[p] from=4m to=8m
+  meas tran px_r190 MAX @r.xa.r190[p] from=4m to=8m
+  meas tran pp_r191 AVG @r.xa.r191[p] from=4m to=8m
+  meas tran px_r191 MAX @r.xa.r191[p] from=4m to=8m
+  meas tran pp_r192 AVG @r.xa.r192[p] from=4m to=8m
+  meas tran px_r192 MAX @r.xa.r192[p] from=4m to=8m
+  meas tran pp_r194 AVG @r.xa.r194[p] from=4m to=8m
+  meas tran px_r194 MAX @r.xa.r194[p] from=4m to=8m
+  echo "A,$gm,$f,$a,$k,$c,$&pp_q146,$&px_q146,$&pp_q148,$&px_q148,$&pp_r123,$&px_r123,$&pp_r126,$&px_r126,$&pp_q193,$&px_q193,$&pp_r190,$&px_r190,$&pp_r191,$&px_r191,$&pp_r192,$&px_r192,$&pp_r194,$&px_r194" >> tb_mute_corto_parti.csv
+  meas tran pp_q146 AVG @q.xf1.q146[p] from=4m to=8m
+  meas tran px_q146 MAX @q.xf1.q146[p] from=4m to=8m
+  meas tran pp_q148 AVG @q.xf1.q148[p] from=4m to=8m
+  meas tran px_q148 MAX @q.xf1.q148[p] from=4m to=8m
+  meas tran pp_r123 AVG @r.xf1.r123[p] from=4m to=8m
+  meas tran px_r123 MAX @r.xf1.r123[p] from=4m to=8m
+  meas tran pp_r126 AVG @r.xf1.r126[p] from=4m to=8m
+  meas tran px_r126 MAX @r.xf1.r126[p] from=4m to=8m
+  meas tran pp_q193 AVG @q.xf1.q193[p] from=4m to=8m
+  meas tran px_q193 MAX @q.xf1.q193[p] from=4m to=8m
+  meas tran pp_r190 AVG @r.xf1.r190[p] from=4m to=8m
+  meas tran px_r190 MAX @r.xf1.r190[p] from=4m to=8m
+  meas tran pp_r191 AVG @r.xf1.r191[p] from=4m to=8m
+  meas tran px_r191 MAX @r.xf1.r191[p] from=4m to=8m
+  meas tran pp_r192 AVG @r.xf1.r192[p] from=4m to=8m
+  meas tran px_r192 MAX @r.xf1.r192[p] from=4m to=8m
+  meas tran pp_r194 AVG @r.xf1.r194[p] from=4m to=8m
+  meas tran px_r194 MAX @r.xf1.r194[p] from=4m to=8m
+  echo "F1,$gm,$f,$a,$k,$c,$&pp_q146,$&px_q146,$&pp_q148,$&px_q148,$&pp_r123,$&px_r123,$&pp_r126,$&px_r126,$&pp_q193,$&px_q193,$&pp_r190,$&px_r190,$&pp_r191,$&px_r191,$&pp_r192,$&px_r192,$&pp_r194,$&px_r194" >> tb_mute_corto_parti.csv
+  meas tran pp_q146 AVG @q.xf2.q146[p] from=4m to=8m
+  meas tran px_q146 MAX @q.xf2.q146[p] from=4m to=8m
+  meas tran pp_q148 AVG @q.xf2.q148[p] from=4m to=8m
+  meas tran px_q148 MAX @q.xf2.q148[p] from=4m to=8m
+  meas tran pp_r123 AVG @r.xf2.r123[p] from=4m to=8m
+  meas tran px_r123 MAX @r.xf2.r123[p] from=4m to=8m
+  meas tran pp_r126 AVG @r.xf2.r126[p] from=4m to=8m
+  meas tran px_r126 MAX @r.xf2.r126[p] from=4m to=8m
+  meas tran pp_q193 AVG @q.xf2.q193[p] from=4m to=8m
+  meas tran px_q193 MAX @q.xf2.q193[p] from=4m to=8m
+  meas tran pp_r190 AVG @r.xf2.r190[p] from=4m to=8m
+  meas tran px_r190 MAX @r.xf2.r190[p] from=4m to=8m
+  meas tran pp_r191 AVG @r.xf2.r191[p] from=4m to=8m
+  meas tran px_r191 MAX @r.xf2.r191[p] from=4m to=8m
+  meas tran pp_r192 AVG @r.xf2.r192[p] from=4m to=8m
+  meas tran px_r192 MAX @r.xf2.r192[p] from=4m to=8m
+  meas tran pp_r194 AVG @r.xf2.r194[p] from=4m to=8m
+  meas tran px_r194 MAX @r.xf2.r194[p] from=4m to=8m
+  echo "F2,$gm,$f,$a,$k,$c,$&pp_q146,$&px_q146,$&pp_q148,$&px_q148,$&pp_r123,$&px_r123,$&pp_r126,$&px_r126,$&pp_q193,$&px_q193,$&pp_r190,$&px_r190,$&pp_r191,$&px_r191,$&pp_r192,$&px_r192,$&pp_r194,$&px_r194" >> tb_mute_corto_parti.csv
+  meas tran pp_q146 AVG @q.xb.q146[p] from=4m to=8m
+  meas tran px_q146 MAX @q.xb.q146[p] from=4m to=8m
+  meas tran pp_q148 AVG @q.xb.q148[p] from=4m to=8m
+  meas tran px_q148 MAX @q.xb.q148[p] from=4m to=8m
+  meas tran pp_r123 AVG @r.xb.r123[p] from=4m to=8m
+  meas tran px_r123 MAX @r.xb.r123[p] from=4m to=8m
+  meas tran pp_r126 AVG @r.xb.r126[p] from=4m to=8m
+  meas tran px_r126 MAX @r.xb.r126[p] from=4m to=8m
+  meas tran pp_q193 AVG @q.xb.q193[p] from=4m to=8m
+  meas tran px_q193 MAX @q.xb.q193[p] from=4m to=8m
+  meas tran pp_r190 AVG @r.xb.r190[p] from=4m to=8m
+  meas tran px_r190 MAX @r.xb.r190[p] from=4m to=8m
+  meas tran pp_r191 AVG @r.xb.r191[p] from=4m to=8m
+  meas tran px_r191 MAX @r.xb.r191[p] from=4m to=8m
+  meas tran pp_r192 AVG @r.xb.r192[p] from=4m to=8m
+  meas tran px_r192 MAX @r.xb.r192[p] from=4m to=8m
+  meas tran pp_r194 AVG @r.xb.r194[p] from=4m to=8m
+  meas tran px_r194 MAX @r.xb.r194[p] from=4m to=8m
+  echo "B,$gm,$f,$a,$k,$c,$&pp_q146,$&px_q146,$&pp_q148,$&px_q148,$&pp_r123,$&px_r123,$&pp_r126,$&px_r126,$&pp_q193,$&px_q193,$&pp_r190,$&px_r190,$&pp_r191,$&px_r191,$&pp_r192,$&px_r192,$&pp_r194,$&px_r194" >> tb_mute_corto_parti.csv
   * --- blocco A ---
   meas tran pq132 AVG @q.xa.q132[p] from=4m to=8m
   meas tran pq133 AVG @q.xa.q133[p] from=4m to=8m
@@ -286,7 +369,7 @@ foreach c $cases
   let x135 = @r.xa.r135[i] * @r.xa.r135[i] * 22
   let x130 = @r.xa.r130[i] * @r.xa.r130[i] * 10
   let x131 = @r.xa.r131[i] * @r.xa.r131[i] * 10
-  let x123 = @r.xa.r123[i] * @r.xa.r123[i] * 56
+  let x123 = @r.xa.r123[i] * @r.xa.r123[i] * 33
   let x126 = @r.xa.r126[i] * @r.xa.r126[i] * 56
   meas tran pr134 AVG x134 from=4m to=8m
   meas tran pr135 AVG x135 from=4m to=8m
@@ -323,7 +406,7 @@ foreach c $cases
   let x135 = @r.xf1.r135[i] * @r.xf1.r135[i] * 22
   let x130 = @r.xf1.r130[i] * @r.xf1.r130[i] * 10
   let x131 = @r.xf1.r131[i] * @r.xf1.r131[i] * 10
-  let x123 = @r.xf1.r123[i] * @r.xf1.r123[i] * 56
+  let x123 = @r.xf1.r123[i] * @r.xf1.r123[i] * 33
   let x126 = @r.xf1.r126[i] * @r.xf1.r126[i] * 56
   meas tran pr134 AVG x134 from=4m to=8m
   meas tran pr135 AVG x135 from=4m to=8m
@@ -363,7 +446,7 @@ foreach c $cases
   let x135 = @r.xf2.r135[i] * @r.xf2.r135[i] * 22
   let x130 = @r.xf2.r130[i] * @r.xf2.r130[i] * 10
   let x131 = @r.xf2.r131[i] * @r.xf2.r131[i] * 10
-  let x123 = @r.xf2.r123[i] * @r.xf2.r123[i] * 56
+  let x123 = @r.xf2.r123[i] * @r.xf2.r123[i] * 33
   let x126 = @r.xf2.r126[i] * @r.xf2.r126[i] * 56
   meas tran pr134 AVG x134 from=4m to=8m
   meas tran pr135 AVG x135 from=4m to=8m
@@ -403,7 +486,7 @@ foreach c $cases
   let x135 = @r.xb.r135[i] * @r.xb.r135[i] * 22
   let x130 = @r.xb.r130[i] * @r.xb.r130[i] * 10
   let x131 = @r.xb.r131[i] * @r.xb.r131[i] * 10
-  let x123 = @r.xb.r123[i] * @r.xb.r123[i] * 56
+  let x123 = @r.xb.r123[i] * @r.xb.r123[i] * 33
   let x126 = @r.xb.r126[i] * @r.xb.r126[i] * 56
   meas tran pr134 AVG x134 from=4m to=8m
   meas tran pr135 AVG x135 from=4m to=8m
