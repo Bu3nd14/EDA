@@ -70,7 +70,8 @@ T, P, FS = S.T, S.P, S.fs
 # L_FIXJACK2 / R_FIXJACK2, with the same pins (data/2026-10-22/L45d2b3b1/script/nomi_reti.py;
 # limitations #74). The page asks for a net by the name it was drawn with; if the netlist has
 # the other name instead, that one is used. Never both, never neither.
-SINONIMI = {"AL_OUT": "F1L_IN", "L_FIXOUT2": "L_FIXJACK2", "R_FIXOUT2": "R_FIXJACK2"}
+SINONIMI = {"AL_OUT": "F1L_IN", "L_FIXOUT2": "L_FIXJACK2", "R_FIXOUT2": "R_FIXJACK2",
+            "L_ATT_W": "BL_IN"}     # L45d2b3b2b1: the 40 parts of ADR-099 renamed it
 
 
 def rete(n):
@@ -136,10 +137,12 @@ def ret_right(n, dx=0.5):
 # =============================================================================
 def left(ref):
     """A part of the left channel outside the blocks: 1xx / 2xx above 60 (the
-    channel's own numbering, preamp_audio.py `_n[0] = 60`), the connectors J1xx /
+    channel's own numbering, preamp_audio.py `_n[0] = 60`) and below 90 (x90-x99
+    are the blocks' own, gain_block.py section 14, ADR-099), the connectors J1xx /
     J2xx, the trim ladder R90x (trim.py, base 900)."""
     letter, n = S._num(ref)
-    return (100 <= n < 300 and (n % 100 > 60 or letter == "J")) or 900 <= n < 910
+    return ((100 <= n < 300 and (60 < n % 100 < 90 or letter == "J"))
+            or 900 <= n < 910)
 
 
 def ref_lr(ref):
@@ -166,7 +169,8 @@ F = S.fold(INSTANCES,
            100,                       # gain_block.net: gain_block(tag="", base=100)
            left, ref_lr, net_lr,
            [("AL", "AR"), ("BL", "BR"), ("F1L", "F1R"), ("F2L", "F2R")],
-           value_lr=lambda v: v.replace("_L", "_R"))
+           value_lr=lambda v: v.replace("_L", "_R"),
+           fixed=90)                  # gain_block.py section 14 (ADR-099): base + 90..
 ONLY = {role: sorted(tag for tag in F["instances"] if role not in F["absent"][tag])
         for role in F["optional"]}
 
@@ -271,10 +275,11 @@ W(k7["COM"], N("C265", "L_TRIM_OUT"))
 j120 = S.conn("J120", 48.6, YA - 0.05, ["1", "2", "3"], side="l")
 W(N("C265", "L_ATT_TOP"), j120["1"])
 gnd(j120["3"])
-attw = node("attw", "L_ATT_W", (47.2, 89.0))
+ATTW = rete("L_ATT_W")       # BL_IN since L45d2b3b2b1 (limitations.md #74)
+attw = node("attw", ATTW, (47.2, 89.0))
 W(j120["2"], attw, (47.2, P(j120["2"])[1]))
-hang("R265", "L_ATT_W", (45.6, 89.0), 2.2, side="l")
-W(attw, N("R265", "L_ATT_W"))
+hang("R265", ATTW, (45.6, 89.0), 2.2, side="l")
+W(attw, N("R265", ATTW))
 boxB = S.instance("BL", 49.4, 91.4, 6.4, 5.6,
                   {"IN": ("l", 2.4), "OUT": ("r", 1.2), "RG": ("r", 3.2), "RG10": ("r", 4.6)},
                   title="blocco BL", sub=["0 / +3 / +10 dB"])
@@ -424,11 +429,14 @@ two(t("R111"), {b("S1"): P(qa["S"]), b("SRC"): (9.0, 59.2)})
 two(t("R112"), {b("S2"): P(qb["S"]), b("SRC"): (17.0, 59.2)}, side="l")
 two(t("R151"), {b("S2"): (19.2, P(qb["S"])[1]), b("SRC"): (19.2, 59.2)})
 W(qb["S"], N(t("R151"), b("S2")))
-q106 = S.trans(t("Q106"), "npn", "collector", (13.0, 57.0))
+# ADR-099: the tail's collector reaches SRC through R194 (base + 94)
+two(t("R194"), {b("SRC"): (13.0, 57.6), b("NTCX"): (13.0, 55.4)})
+q106 = S.trans(t("Q106"), "npn", "collector", (13.0, 54.6))
+W(N(t("R194"), b("NTCX")), q106["C"])
 src = [node(f"src_{i}", b("SRC"), (x, 58.2)) for i, x in enumerate((9.0, 13.0, 17.0, 19.2))]
 chain(*src)
 W(N(t("R111"), b("SRC")), src[0])
-W(q106["C"], src[1])
+W(src[1], N(t("R194"), b("SRC")))
 W(N(t("R112"), b("SRC")), src[2])
 W(N(t("R151"), b("SRC")), src[3])
 lab(q106["B"], "left")
@@ -454,9 +462,9 @@ lab(q117["C"], "up")
 lab(q118["C"], "up")
 lab(q117["B"], "left")
 lab(q118["B"], "left")
-notes(1.6, 51.0, [f"R113 (R_IN, 1 MΩ): montata solo in {', '.join(ONLY['R_IN'])}",
+notes(1.6, 47.4, [f"R113 (R_IN, 1 MΩ): montata solo in {', '.join(ONLY['R_IN'])}",
                   "coppia JFET duale cascodata (ADR-013, ADR-014);",
-                  "R150 e R151: la ridondanza di ADR-086"])
+                  "R150 e R151: la ridondanza di ADR-086; R194 di ADR-099"])
 # ---- the mirror, the follower, the VAS (ADR-056, ADR-067, ADR-087) ----------------
 YP = 76.5
 vpf = [node(f"vpf_{i}", b("VPF"), (x, YP)) for i, x in enumerate((31.6, 33.6, 36.6, 39.6, 43.0))]
@@ -474,7 +482,8 @@ mbus = node("mirror_bus", b("NMIRI"), (36.6, P(ma["B"])[1]))
 W(N(t("R149"), b("NMIRI")), mbus)
 q148 = S.trans(t("Q148"), "pnp", "emitter", (36.6, 72.4), note="aiuto")
 W(mbus, q148["E"])
-rail(to(q148["C"], 0, -0.3), up=False)
+# ADR-099: R190 in the helper's collector, as R153 on the follower
+hang(t("R190"), b("NHC"), P(q148["C"]), 1.3, sym=lambda n: rail(n, up=False))
 nmirc = node("nmirc_h", b("NMIRC"), (33.6, P(q148["B"])[1]))
 W(ma["C"], nmirc)
 W(nmirc, q148["B"])
@@ -490,10 +499,26 @@ W(N(t("R147"), b("NVB")), q146["E"])
 _, nfcr = hang(t("R153"), b("NFC"), P(q146["C"]), 1.3)
 hang(t("R160"), b("NFCR"), P(nfcr), 1.3, sym=lambda n: rail(n, up=False))
 nvb = node("nvb_j", b("NVB"), (43.0, 73.9))
-q122 = S.trans(t("Q122"), "pnp", "base", (47.0, 73.9), note="VAS")
-W(nvb, q122["B"])
-two(t("R123"), {b("VPF"): (P(q122["E"])[0], YP), b("NVE"): P(q122["E"])})
+# ADR-099: the VAS degeneration is R123 (33) + R192 (22), and Q193 on the 33
+# steals the VAS base drive past ~16 mA; Q122 sits 1.4 lower to make room
+q122 = S.trans(t("Q122"), "pnp", "base", (47.0, 72.5), note="VAS")
+nvb_e = node("nvb_elbow", b("NVB"), (46.5, 73.9))   # clear of Q146's labels
+W(nvb, nvb_e)
+W(nvb_e, q122["B"], (46.5, 72.5))
+lab(nvb_e, "up")                               # Q193's collector lands here by name
+_ex, _ey = P(q122["E"])
+YS = 74.8                                      # NVS, the limiter's tap
+two(t("R123"), {b("VPF"): (_ex, YP), b("NVS"): (_ex, YS)})
+two(t("R192"), {b("NVS"): (_ex, YS), b("NVE"): (_ex, _ey)})
+W(q122["E"], N(t("R192"), b("NVE")))
 W(vpf[-1], N(t("R123"), b("VPF")))             # the bus ends on R123, wherever Q122 puts it
+q193 = S.trans(t("Q193"), "pnp", "base", (_ex + 1.8, YS), note="limite",
+               label_dy=0.7)
+W(N(t("R123"), b("NVS")), q193["B"])
+vq = node("vpf_q193", b("VPF"), (P(q193["E"])[0], YP))
+W(N(t("R123"), b("VPF")), vq)
+W(vq, q193["E"])
+lab(q193["C"], "right")
 nx2 = node("nx_vas", b("NX"), (47.6, 71.0))
 W(q122["C"], nx2)
 two(t("C124"), {b("NX"): (51.6, 71.0), b("NHI"): (51.6, 68.6)})
@@ -506,7 +531,8 @@ lab(q125["B"], "left")
 hang(t("R126"), b("NVLE"), P(q125["E"]), 2.2, sym=lambda n: rail(n, up=False))
 notes(31.0, 51.0, ["specchio LS352 appaiato, aiuto Q148 (ADR-067); inseguitore",
                    "Q146 con R153 + R160 sul collettore (ADR-087, ADR-097); VAS Q122 compensato",
-                   "a Miller da C124; specchio e VAS su VPF (ADR-056)"])
+                   "a Miller da C124; specchio e VAS su VPF (ADR-056). ADR-099: R190 sull'aiuto,",
+                   "R123 + R192 e il limite Q193 sul VAS, R194 sulla coda, R101 + R191"])
 # ---- the Vbe multiplier, the output pair, the feedback ---------------------------
 YX, YY = 72.4, 50.0
 nx = [node(f"nx_{i}", b("NX"), (x, YX)) for i, x in enumerate((59.8, 63.0, 66.0, 69.0))]
@@ -570,15 +596,17 @@ notes(58.6, 46.2, [f"R138 (R_g, +3 dB) e R143 (R_g10, +10 dB): montate solo in "
 S.panel(0.8, 0.8, 58.0, 41.0, "7  (segue) Il blocco: riferimenti e disaccoppiamento",
         "ogni rete nominata sopra è generata qui, una volta sola")
 YT = 34.6
-gr = node("gnd_r101", b("GND"), (2.4, YT + 2.4))
-two(t("R101"), {b("GND"): (4.0, YT + 2.4), b("NREF"): (4.0, YT)})
+# ADR-099: R101 + R191, two 3.40k in series
+gr = node("gnd_r101", b("GND"), (2.4, YT + 4.4))
+two(t("R101"), {b("GND"): (4.0, YT + 4.4), b("NREFH"): (4.0, YT + 2.2)})
+two(t("R191"), {b("NREFH"): (4.0, YT + 2.2), b("NREF"): (4.0, YT)})
 W(N(t("R101"), b("GND")), gr)
 gnd(gr)
 two(t("D102"), {b("NREF"): (4.0, YT), b("NREFM"): (4.0, YT - 2.4)})
 two(t("D103"), {b("NREFM"): (4.0, YT - 2.4), b("VMINUS"): (4.0, YT - 4.8)})
 two(t("C104"), {b("NREF"): (7.6, YT), b("VMINUS"): (7.6, YT - 4.8)})
 two(t("C105"), {b("NREF"): (10.6, YT), b("VMINUS"): (10.6, YT - 4.8)})
-chain(N(t("R101"), b("NREF")), N(t("C104"), b("NREF")), N(t("C105"), b("NREF")))
+chain(N(t("R191"), b("NREF")), N(t("C104"), b("NREF")), N(t("C105"), b("NREF")))
 lab(to(N(t("C105"), b("NREF")), 1.4, 0), "right")
 chain(N(t("D103"), b("VMINUS")), N(t("C104"), b("VMINUS")), N(t("C105"), b("VMINUS")))
 rail(to(N(t("C105"), b("VMINUS")), 1.4, 0), up=False)

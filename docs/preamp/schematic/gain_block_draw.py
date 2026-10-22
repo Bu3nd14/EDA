@@ -107,7 +107,8 @@ DEVICES = {
     # ADR-086 (L60d1): redundancy - R150 across R109, R151 twin of R112
     "R150":  {"1": "FB",     "2": "G2"},
     "R151":  {"1": "S2",     "2": "SRC"},
-    "Q106":  {"C": "SRC",    "B": "NREF",  "E": "NTE"},
+    "Q106":  {"C": "NTCX",   "B": "NREF",  "E": "NTE"},     # ADR-099
+    "R194":  {"1": "SRC",    "2": "NTCX"},                   # ADR-099
     "R107":  {"1": "NTE",    "2": "VMINUS"},
     "Q117":  {"C": "NHI",    "B": "NCASC", "E": "D1N"},
     "Q118":  {"C": "NMIRC",  "B": "NCASC", "E": "D2N"},     # ADR-067
@@ -116,14 +117,17 @@ DEVICES = {
     "R120":  {"1": "VPF",    "2": "NME2"},
     "Q121A":  {"C": "NMIRC",  "B": "NMIRI", "E": "NME1"},   # ADR-067
     "Q121B":  {"C": "NHI",    "B": "NMIRI", "E": "NME2"},
-    "R123":  {"1": "VPF",    "2": "NVE"},
+    "R123":  {"1": "VPF",    "2": "NVS"},                    # ADR-099
+    "R192":  {"1": "NVS",    "2": "NVE"},                    # ADR-099
+    "Q193":  {"C": "NVB",    "B": "NVS",   "E": "VPF"},      # ADR-099
     "Q122":  {"C": "NX",     "B": "NVB",   "E": "NVE"},     # ADR-067
     # ADR-067 (L56): the follower before the VAS and the helper on the mirror
     "Q146":  {"C": "NFC",    "B": "NHI",   "E": "NVB"},     # ADR-087
     "R153":  {"1": "NFC",    "2": "NFCR"},                   # ADR-087, ADR-097
     "R160":  {"1": "NFCR",   "2": "VMINUS"},                 # ADR-097
     "R147":  {"1": "VPF",    "2": "NVB"},
-    "Q148":  {"C": "VMINUS", "B": "NMIRC", "E": "NMIRI"},
+    "Q148":  {"C": "NHC",    "B": "NMIRC", "E": "NMIRI"},    # ADR-099
+    "R190":  {"1": "NHC",    "2": "VMINUS"},                 # ADR-099
     "R149":  {"1": "VPF",    "2": "NMIRI"},
     "C124":  {"1": "NX",     "2": "NHI"},
     "Q125":  {"C": "NY",     "B": "NREF",  "E": "NVLE"},
@@ -151,7 +155,8 @@ DEVICES = {
     "R138":  {"1": "FB",     "2": "RG"},
     "R143":  {"1": "FB",     "2": "RG10"},
     # ---- panel 4: bias references and rail decoupling -----------------------
-    "R101":  {"1": "0",      "2": "NREF"},
+    "R101":  {"1": "0",      "2": "NREFH"},                  # ADR-099
+    "R191":  {"1": "NREFH",  "2": "NREF"},                   # ADR-099
     "D102":  {"A": "NREF",   "K": "NREFM"},
     "D103":  {"A": "NREFM",  "K": "VMINUS"},
     "C104":  {"1": "NREF",   "2": "VMINUS"},
@@ -371,14 +376,18 @@ res("R151", (15.4, NODE_XY["JQ110B.S"][1]), (15.4, 2.2), value="200",
     lbl=((15.88, 3.7), "left"))
 wire("R112.1", "R151.1", first="h", dots=[NODE_XY["R112.1"]])
 wire("R112.2", "R151.2", first="h")
-npn("Q106", "collector", (9.0, 2.2))
-wire("R111.2", "Q106.C", dots=[NODE_XY["R111.2"]])
-wire("Q106.C", "R112.2", dots=[NODE_XY["R112.2"], NODE_XY["Q106.C"]])
-txt((10.05, 1.78), "Q106   2N5551", size=8.5, halign="left")
-txt((10.05, 1.32), "coda  4,41 mA", size=8, color=RED, halign="left")
+# ADR-099 (L45d2b3b2b1): the tail's collector reaches SRC through R194, 1k -
+# with Q106 or R107 shorted the tail no longer goes to the JFETs' I_DSS
+res("R194", (9.0, 2.2), (9.0, 0.9), value="1k", lbl=((9.48, 1.75), "left"))
+wire("R111.2", "R194.1", dots=[NODE_XY["R111.2"]])
+wire("R194.1", "R112.2", dots=[NODE_XY["R112.2"], NODE_XY["R194.1"]])
+npn("Q106", "collector", NODE_XY["R194.2"])
+TOUCHED.update({"R194.2", "Q106.C"})
+txt((10.05, 0.3), "Q106   2N5551", size=8.5, halign="left")
+txt((10.05, -0.16), "coda  4,41 mA", size=8, color=RED, halign="left")
 flag("Q106.B", "NREF", direction="left", length=1.6)
-res("R107", NODE_XY["Q106.E"], (9.0, -2.0), value="137",
-    lbl=((9.48, -0.35), "left"))
+res("R107", NODE_XY["Q106.E"], (9.0, -2.6), value="137",
+    lbl=((9.48, -1.65), "left"))
 node("P1.vm", "VMINUS", (9.0, -3.4))
 wire("R107.2", "P1.vm", dots=[NODE_XY["P1.vm"]])
 
@@ -457,7 +466,12 @@ TOUCHED.add("R149.1")
 wire("R149.2", "P2.bus", dots=[NODE_XY["P2.bus"]])
 pnp("Q148", "emitter", (28.5, 9.1))
 wire("P2.bus", "Q148.E")
-flag("Q148.C", "V-", direction="down", length=0.6, color=BLUE)
+# ADR-099 (L45d2b3b2b1): R190 in the helper's collector, as R153 on Q146
+_h = NODE_XY["Q148.C"]
+res("R190", _h, (_h[0], _h[1] - 1.2), value="10k",
+    lbl=((_h[0] + 0.48, _h[1] - 0.45), "left"))
+TOUCHED.update({"R190.1", "Q148.C"})
+flag("R190.2", "V-", direction="down", length=0.4, color=BLUE)
 txt((28.95, 8.75), "Q148", size=8, halign="left")
 txt((28.95, 8.35), "aiuto", size=7.5, color=DIM, halign="left")
 
@@ -493,14 +507,29 @@ flag("R160.2", "V-", direction="right", length=1.0, color=BLUE)
 txt((32.1, 9.62), "Q146 inseguitore", size=7.5, halign="center")
 
 # --- VAS --------------------------------------------------------------------
-res("R123", (36.5, 13.6), (36.5, 10.6), value="56",
-    lbl=((36.98, 12.35), "left"))
+# ADR-099 (L45d2b3b2b1): the 56 is 33 (R123) + 22 (R192), and Q193 on the 33
+# steals the VAS base drive past ~16 mA. Its collector goes to NVB by name.
+pnp("Q193", "emitter", (39.6, 12.4))
+node("P2.vpf_q193", "VPF", (39.6, 13.6))
+wire("P2.vpf_q193", "Q193.E", dots=[NODE_XY["P2.vpf_q193"]])
+_vs = NODE_XY["Q193.B"][1]
+res("R123", (36.5, 13.6), (36.5, _vs), value="33",
+    lbl=((36.02, 12.75), "right"))
 d.add(elm.Dot().at(NODE_XY["R123.1"]))
 TOUCHED.add("R123.1")
+res("R192", NODE_XY["R123.2"], (36.5, 9.5), value="22",
+    lbl=((36.98, 10.6), "left"))
+TOUCHED.add("R192.1")
+wire("R123.2", "Q193.B", first="h", dots=[NODE_XY["R123.2"]])
+flag("Q193.C", "NVB", direction="down", length=0.5)
+txt((40.05, 11.75), "Q193", size=8, halign="left")
+txt((40.05, 11.35), "limite", size=7.5, color=DIM, halign="left")
 pnp("Q122", "emitter", (36.5, 9.0))
-wire("R123.2", "Q122.E")
+wire("R192.2", "Q122.E")
 wire("Q146.E", "Q122.B", via=[(35.1, NODE_XY["Q146.E"][1])],
      dots=[NODE_XY["Q146.E"]])
+txt((35.25, NODE_XY["Q146.E"][1] + 0.3), "NVB", size=7.5, color=NETCOL,
+    halign="left")                             # where Q193's collector lands
 txt((37.65, 9.2), "Q122   2N5401", size=8.5, halign="left")
 txt((37.65, 8.74), "VAS,  10,7 mA", size=8, color=RED, halign="left")
 
@@ -708,11 +737,15 @@ node("P4.gnd", "0", (2.2, -9.7))
 node("P4.r101", "0", (4.0, -9.7))
 gnd(NODE_XY["P4.gnd"])
 d.add(elm.Line().at(NODE_XY["P4.gnd"]).to(NODE_XY["P4.r101"]))
-res("R101", NODE_XY["P4.r101"], (4.0, -12.4), value="6.81k",
-    lbl=((3.52, -10.85), "right"))
+# ADR-099 (L45d2b3b2b1): two 3.40k in series, so that one shorted leaves 3.40k
+res("R101", NODE_XY["P4.r101"], (4.0, -11.05), value="3.40k",
+    lbl=((3.52, -10.2), "right"))
 TOUCHED.add("R101.1")
-dio("D102", NODE_XY["R101.2"], (4.0, -14.2), lbl=((3.52, -13.3), "right"))
-wire("R101.2", "D102.A")
+res("R191", NODE_XY["R101.2"], (4.0, -12.4), value="3.40k",
+    lbl=((3.52, -11.55), "right"))
+TOUCHED.add("R101.2")
+dio("D102", NODE_XY["R191.2"], (4.0, -14.2), lbl=((3.52, -13.3), "right"))
+wire("R191.2", "D102.A")
 dio("D103", NODE_XY["D102.K"], (4.0, -16.0), lbl=((3.52, -15.1), "right"))
 wire("D102.K", "D103.A")
 
@@ -721,7 +754,7 @@ cap("C104", (7.5, -12.4), (7.5, -16.0), value="100u",
 cap("C105", (10.5, -12.4), (10.5, -16.0), value="100n",
     lbl=((10.98, -13.95), "left"))
 node("P4.nref_tag", "NREF", (13.6, -12.4))
-wire("R101.2", "C104.1", dots=[NODE_XY["R101.2"]])
+wire("R191.2", "C104.1", dots=[NODE_XY["R191.2"]])
 wire("C104.1", "C105.1", dots=[NODE_XY["C104.1"]])
 wire("C105.1", "P4.nref_tag", dots=[NODE_XY["C105.1"]])
 flag("P4.nref_tag", "NREF   ->  basi di Q106 e Q125", direction="right",

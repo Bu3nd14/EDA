@@ -1,0 +1,40 @@
+{
+  "part_name": "WA-T220-101E (Ohmite W Series board-level clip-on heatsink for TO-220, black anodized, two solderable pins)",
+  "vendor_name": "Ohmite Mfg. Co.",
+  "device_class": "heatsink",
+  "product_page": "https://www.ohmite.com/catalog/w-series-heatsink",
+  "date_obtained": "2026-10-22",
+  "lotto": "L45d2b3b2b1",
+  "obtained_by": "AI agent (Claude Opus 5.5, Claude Code) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl from Ohmite's own host (https://www.ohmite.com/assets/images/sink-w.pdf?r=false, the datasheet DigiKey links for WA-T220-101E). Byte-for-byte as served.",
+  "license_notes": "Manufacturer datasheet, redistributed here unmodified for engineering traceability only. Copyright remains Ohmite Mfg. Co.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "ADR-099 (the user, 2026-10-22, 'Dissipatore scelto ora'): one on each output device MJE15032 / MJE15033, sixteen on the audio board, so that a short of one output device does not take the other beyond 150 C (149 / 160 C without, 99 / 95 C with, by calculation, L45d2b3b2a dissipatore.csv). The footprint library/preamp.pretty/TO-220-3_Vertical_Ohmite_WA-T220-101E.kicad_mod is drawn from this document's land pattern.",
+  "files": [
+    {
+      "original_filename": "sink-w.pdf",
+      "role": "datasheet",
+      "url": "https://www.ohmite.com/assets/images/sink-w.pdf?r=false",
+      "served_content_type": "application/pdf",
+      "bytes": 275917,
+      "pages": 2,
+      "sha256": "1569849c3158afe5d33d40f996d6f2c0fcf34c37d7cff59b7540d8999357faf3",
+      "local_filename": "sink-w.pdf",
+      "renamed": false
+    }
+  ],
+  "revision_note": "Footer of page 2: 'rev 8/21-1'.",
+  "read_from_the_document": {
+    "thermal": "Rs-a = 12 C/W for WA-T220-101E, natural convection at 10 W heat dissipation (series table, page 1). The free-air curve (page 2) is steeper at low power: ~20 C rise at 1 W, the figure L45d2b3b2a used (20 C/W, the worst of the curve).",
+    "outline_T220": "18.3 mm wide, 16.0 mm deep, 32.0 mm +/-0.3 tall (30.5 mm +/-0.3 body above the pins' shoulder), mm +/-0.3.",
+    "pins": "two, solderable (100 % tin over copper strike), 1.5 mm diameter, 3.6 mm REF below the body, 12.7 mm apart for T220.",
+    "land_pattern_T220": "heatsink pins on 2.0 mm holes, 12.7 mm apart, centred on the device lead row; device leads on 1.3 mm holes; heatsink-pin row 4.6 mm from the lead row, 6.9 mm from the outline edge on its side. READ FROM THE DRAWING: the drawing places the heatsink-pin row on the tab side of the lead row (the body is behind the tab, the spring clip wraps the front). To be checked against a part in hand before G2.",
+    "ordering_code": "W A - T220 - 101 E: series W, coating A = black anodized (V degreased, N Alodine 1500 clear), device size T220, package modifier 101, E = RoHS compliant.",
+    "electrical": "The clip and body are not isolated from the TO-220 tab (the datasheet offers Sil-Pad 900S as optional interface isolation): mounted directly, each heatsink is at the collector potential, +15 V (MJE15032) or -15 V (MJE15033)."
+  },
+  "lifecycle": {
+    "status": "Active for WA-T220-101E: DigiKey listing 2202817 (2026-10-22). The DISCONTINUED banner on the datasheet (July 2021) concerns only the DT2 dual heatsink and the T264 parts marked with a cross in the series table; WA-T220-101E carries no cross.",
+    "note": "A second DigiKey listing (16838525, 'TO-220 AUTO CLIP HEAT SINK') shows 'Not Available'; it was not opened."
+  }
+}
