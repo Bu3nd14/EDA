@@ -20,7 +20,7 @@ L63a, 2026-10-21):
   - everything else part by part.
 How the drawing is kept honest is in sheet_kit.py: Sheet.fold() derives the
 table and the left -> right correspondence and asserts them on the netlist, and
-finish() expands the drawing into a manifest of all 570 parts, which
+finish() expands the drawing into a manifest of all the board's parts (578 since ADR-097), which
 scripts/check_schematic.py compares with preamp_audio.net in both directions
 (block 2d of run_tests.sh).
 
@@ -63,6 +63,22 @@ S.template(BLOCK, "BLK", "circuits/preamp/gain_block.net")
 two, N, W, to, at, node = S.two, S.N, S.wire, S.to, S.at, S.node
 gnd, ret, lab, rail = S.gnd, S.ret, S.label, S.rail
 T, P, FS = S.T, S.P, S.fs
+
+
+# L45d2b3b1: SKiDL keeps ONE name of two joined nets, and which one depends on the order of the
+# parts: adding R160 (ADR-097) turned AL_OUT into F1L_IN and L_FIXOUT2 / R_FIXOUT2 into
+# L_FIXJACK2 / R_FIXJACK2, with the same pins (data/2026-10-22/L45d2b3b1/script/nomi_reti.py;
+# limitations #74). The page asks for a net by the name it was drawn with; if the netlist has
+# the other name instead, that one is used. Never both, never neither.
+SINONIMI = {"AL_OUT": "F1L_IN", "L_FIXOUT2": "L_FIXJACK2", "R_FIXOUT2": "R_FIXJACK2"}
+
+
+def rete(n):
+    """A net of the page by its drawn name, or by its declared synonym (exactly one exists)."""
+    alt = SINONIMI.get(n)
+    ci = [x for x in (n, alt) if x and x in S.nets]
+    assert len(ci) == 1, f"rete {n}: nella netlist {ci or 'nessuna'} (sinonimi {SINONIMI})"
+    return ci[0]
 
 
 def b(x):
@@ -166,7 +182,7 @@ S.text((86.25, 119.95),
        size=FS - 0.3, color=DIM)
 S.text((86.25, 119.3),
        "Le reti con lo stesso nome sono la stessa rete. Verificato contro la netlist nei due sensi "
-       "su tutte le 570 parti, il blocco espanso nelle otto istanze e il sinistro nel destro "
+       f"su tutte le {len(S.comp) - len(F['tparts'])} parti, il blocco espanso nelle otto istanze e il sinistro nel destro "
        "(scripts/check_schematic.py, run_tests.sh 2d).", size=FS - 0.3, color=DIM)
 
 # =============================================================================
@@ -207,7 +223,8 @@ S.panel(21.0, 80.4, 86.0, 118.6, "2  Blocco A, uscite fisse, trim, volume, blocc
 boxA = S.instance("AL", 22.8, YA + 2.4, 5.0, 4.8, {"IN": ("l", 2.4), "OUT": ("r", 2.4)},
                   title="blocco AL", sub=["guadagno 1", "R113 montata"])
 W(ain, boxA["IN"])
-aout = node("al_out_j", "AL_OUT", (29.6, YA))
+AOUT = rete("AL_OUT")
+aout = node("al_out_j", AOUT, (29.6, YA))
 W(boxA["OUT"], aout)
 # the fixed outputs: one buffer each (ADR-023), the mute changeover after the cap (ADR-044)
 YF = {1: 110.0, 2: 103.6}
@@ -219,7 +236,7 @@ for k, (riso, cap, rbc, rbl, jk, relay, name) in {
     tag = f"F{k}L"
     box = S.instance(tag, 31.2, y + 1.6, 5.0, 3.2, {"IN": ("l", 1.6), "OUT": ("r", 1.6)},
                      title=f"blocco {tag}", sub=["buffer, guadagno 1"])
-    fin = node(f"f{k}_in", "AL_OUT", (29.6, y))
+    fin = node(f"f{k}_in", AOUT, (29.6, y))
     W(fin, box["IN"])
     fins.append(fin)
     two(riso, {f"{tag}_OUT": (37.8, y), f"L_FIX{k}": (40.2, y)})
@@ -231,23 +248,23 @@ for k, (riso, cap, rbc, rbl, jk, relay, name) in {
     kp = S.relay_pole(relay, 1, (46.2, y), note="mute")
     W(N(rbc, f"L_FIXC{k}"), kp["COM"])
     ground_right(kp["NC"])
-    jn = node(f"fixout_{k}", f"L_FIXOUT{k}", (49.8, y + 0.5))
+    jn = node(f"fixout_{k}", rete(f"L_FIXOUT{k}"), (49.8, y + 0.5))
     W(kp["NO"], jn)
-    hang(rbl, f"L_FIXOUT{k}", (49.8, y + 0.5), 2.2)
+    hang(rbl, rete(f"L_FIXOUT{k}"), (49.8, y + 0.5), 2.2)
     jj = S.conn(jk, 53.4, y + 1.05, ["1", "2"], side="l")
     W(jn, jj["1"])
     gnd(to(jj["2"], 0, -0.7))
 chain(aout, fins[1], fins[0])
 # the trim: the ladder and pole 1 of K7 / K8 (trim.py, ADR-027); K7 reset = 0 dB
-two("R901", {"AL_OUT": (31.6, YA), "L_TAP6": (31.6, YA - 2.4)}, side="l")
+two("R901", {AOUT: (31.6, YA), "L_TAP6": (31.6, YA - 2.4)}, side="l")
 two("R902", {"L_TAP6": (31.6, YA - 2.4), "L_TAP12": (31.6, YA - 4.8)}, side="l")
 hang("R903", "L_TAP12", (31.6, YA - 4.8), 2.2, side="l")
-W(aout, N("R901", "AL_OUT"))
+W(aout, N("R901", AOUT))
 k8 = S.relay_pole("K8", 1, (37.2, YA - 3.6), rtl=True, flip=True, h=0.6, note="−12")
 W(N("R902", "L_TAP6"), k8["NC"], first="h")
 W(N("R903", "L_TAP12"), k8["NO"], first="h")
 k7 = S.relay_pole("K7", 1, (42.4, YA - 0.6), rtl=True, flip=True, h=0.6, note="−6")
-W(N("R901", "AL_OUT"), k7["NC"])
+W(N("R901", AOUT), k7["NC"])
 W(k8["COM"], k7["NO"], first="h")
 two("C265", {"L_TRIM_OUT": (43.8, YA - 0.6), "L_ATT_TOP": (46.2, YA - 0.6)})
 W(k7["COM"], N("C265", "L_TRIM_OUT"))
@@ -469,7 +486,9 @@ W(nhi, q146["B"])
 lab(nhi, "up")
 two(t("R147"), {b("VPF"): (43.0, YP), b("NVB"): (43.0, 74.9)}, side="r")
 W(N(t("R147"), b("NVB")), q146["E"])
-hang(t("R153"), b("NFC"), P(q146["C"]), 2.2, sym=lambda n: rail(n, up=False))
+# ADR-097: R153 + R160 in series, NFC -> NFCR -> V-
+_, nfcr = hang(t("R153"), b("NFC"), P(q146["C"]), 1.3)
+hang(t("R160"), b("NFCR"), P(nfcr), 1.3, sym=lambda n: rail(n, up=False))
 nvb = node("nvb_j", b("NVB"), (43.0, 73.9))
 q122 = S.trans(t("Q122"), "pnp", "base", (47.0, 73.9), note="VAS")
 W(nvb, q122["B"])
@@ -486,7 +505,7 @@ lab(to(q125["C"], 0, 0.8), "right")
 lab(q125["B"], "left")
 hang(t("R126"), b("NVLE"), P(q125["E"]), 2.2, sym=lambda n: rail(n, up=False))
 notes(31.0, 51.0, ["specchio LS352 appaiato, aiuto Q148 (ADR-067); inseguitore",
-                   "Q146 con R153 sul collettore (ADR-087); VAS Q122 compensato",
+                   "Q146 con R153 + R160 sul collettore (ADR-087, ADR-097); VAS Q122 compensato",
                    "a Miller da C124; specchio e VAS su VPF (ADR-056)"])
 # ---- the Vbe multiplier, the output pair, the feedback ---------------------------
 YX, YY = 72.4, 50.0

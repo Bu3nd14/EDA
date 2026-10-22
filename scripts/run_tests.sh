@@ -298,8 +298,8 @@ report "complete supply schematic draws, and its manifest is the versioned one" 
 # Drawing it also runs Sheet.fold(): the table of the eight instances of the gain
 # block and the left -> right correspondence, derived and asserted on
 # preamp_audio.net (one solution of the numbering, same part and value on every
-# row, a bijection of the nets); its manifest is the drawing EXPANDED to all 570
-# parts, which block 2d checks against preamp_audio.net. Same rule as above: the
+# row, a bijection of the nets); its manifest is the drawing EXPANDED to all the
+# board's parts (578 since ADR-097), which block 2d checks against preamp_audio.net. Same rule as above: the
 # manifest drawn now must be the versioned one.
 mkdir -p "$SCRATCH/audio_sheet"
 out=$(AUDIO_SHEET_DIR="$SCRATCH/audio_sheet" \
