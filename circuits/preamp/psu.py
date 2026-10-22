@@ -360,10 +360,12 @@ if __name__ == "__main__":
     # short of the raw side the hold-up (C505, the audio board's 800 uF and its RC cells) can no
     # longer flow back into the short through D510: the rail stays up until the jack opens (13.5 V
     # at the jack in all 24 rows of ADR-074, ~32 dB SPL at the worst, against ~78 dB SPL with the
-    # pin's ceramic C509 shorted before). SENSE stays on the PIN, not on the rail: a diode inside
-    # the loop (~0.09 ohm against ~3.6 mF, a pole near 500 Hz) is a stability risk no bench here
-    # can see; the regulator sees its own 10 uF (C511) as today. The rail is the pin minus the
-    # SB340's ~0.31 V (25 C typical, Vishay 88719 fig. 3), so the set point is 15.3 V.
+    # pin's ceramic C509 shorted before). SENSE stays on the PIN, not on the rail: the regulator
+    # sees its own 10 uF (C511) as today. ADR-096 (L45d2b3a) measured the other form: with the
+    # diode inside the loop (~0.13 ohm against the rail's mF) the phase margin falls to 51 deg
+    # with TI's model and 22-59 deg with a generic one, lowest with low-ESR hold-up capacitors;
+    # here 89-91 deg. The rail is the pin minus the SB340's ~0.31 V (25 C typical, Vishay 88719
+    # fig. 3), so the set point is 15.3 V.
     VP_REG = Net("VPLUS_REG")
     u = part("Regulator_Linear", "TPS7A4701xRGW", "TPS7A4701 15.3V", "U501",
              FP_QFN)
@@ -437,7 +439,8 @@ if __name__ == "__main__":
     u["7"] += GND
     FB_M = Net("FB_M")
     u["3"] += FB_M
-    # ADR-093: 120k, -1.175 x (1 + 120 / 10) = -15.28 V at the pin, the rail ~-14.97 V behind D516
+    # ADR-093: 120k, -1.175 x (1 + 120 / 10) = -15.28 V at the pin, the rail ~-14.97 V behind D516;
+    # the divider on the pin, not on the rail (ADR-096)
     res("120k", "R501", VM_REG, FB_M)
     res("10k", "R502", FB_M, GND)
     cap("10n", "C513", VM_REG, FB_M)  # feed-forward, noise

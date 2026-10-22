@@ -1,14 +1,22 @@
-# Prompt per la sessione successiva — L45d2b3, i guasti rifatti e la sintesi
+# Prompt per la sessione successiva — L45d2b3b, i guasti rifatti e la sintesi
 
-Nome della sessione: **hi-fi preamp L45d2b3** (la convenzione è in `CLAUDE.md`).
+Nome della sessione: **hi-fi preamp L45d2b3b** (la convenzione è in `CLAUDE.md`).
 
 > Prompt scritto alla chiusura di L45d2b2c (2026-10-21), messo da parte mentre si faceva **L63** (lo
 > schematico completo, deciso dall'utente prima di questo lotto) e copiato qui alla chiusura di L63b
 > (2026-10-21). L63 non ha toccato il circuito: l'alimentatore (L63a) e la scheda audio (L63b) hanno
 > ciascuno la sua pagina completa, `schematic/psu_draw.py` e `schematic/audio_draw.py`.
+>
+> Ripreso alla chiusura di **L45d2b3a** (2026-10-22): l'utente ha riaperto la retroazione dei
+> regolatori dei rail (sul piedino o sul rail dopo D515 / D516) e L45d2b3 si è diviso. La risposta è
+> stata **«Sul piedino»** (ADR-096): **il circuito non è cambiato**, e questo prompt vale com'era, col
+> lotto rinominato L45d2b3b. Una cosa nuova: il modello di TI del TPS7A4701 ora gira in ngspice
+> (`models/ldo_regulator/`, limitations #72). È buono per il punto di lavoro e la regolazione di carico,
+> **non per l'anello**: non va messo nei banchi dei guasti al posto del regolatore comportamentale
+> senza prima provarlo sui casi che quel banco già riproduce.
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L45d2b3**, e si ferma. Non iniziarne un secondo, salvo che
+LOTTI PICCOLI: questa sessione fa **L45d2b3b**, e si ferma. Non iniziarne un secondo, salvo che
 l'utente lo chieda esplicitamente nella sessione. Se si rivela più grande di una sessione,
 **dividilo con l'utente all'inizio**.
 
@@ -20,7 +28,7 @@ l'utente lo chieda esplicitamente nella sessione. Se si rivela più grande di un
 - L45d2b2a…c la partenza morbida (ADR-091, ADR-092), i diodi della tenuta (ADR-093), il comando e i
   5 V (ADR-094), i massimi del blocco (ADR-095).
 
-Resta **L45d2b3**: i guasti rifatti nella forma di ADR-070, sul circuito di oggi, e la sintesi. Se i
+Resta **L45d2b3b**: i guasti rifatti nella forma di ADR-070, sul circuito di oggi, e la sintesi. Se i
 numeri lo permettono NC-042 si chiude.
 
 ## Che cosa costruire
@@ -43,10 +51,10 @@ generato uguale). Uno strumento di misura nuovo si controlla su un caso noto pri
 
 ## Prima di tutto
 
-- `CLAUDE.md`, `docs/limitations.md` (in particolare **#59, #62, #64, #67, #68, #69**), `AGENTS.md`.
-- `docs/preamp/STATE.md`: «In breve» e le voci di L45d2b2c, L45d2b2b2, L45d2b2b1, L45d2b2a.
+- `CLAUDE.md`, `docs/limitations.md` (in particolare **#59, #62, #64, #67, #68, #69, #72**), `AGENTS.md`.
+- `docs/preamp/STATE.md`: «In breve» e le voci di L45d2b3a, L45d2b2c, L45d2b2b2, L45d2b2b1, L45d2b2a.
 - `NONCOMPLIANCE.md`: NC-042, NC-072, NC-073, NC-074.
-- ADR-070, ADR-071, ADR-078, ADR-090, ADR-093, ADR-094, ADR-095.
+- ADR-070, ADR-071, ADR-078, ADR-090, ADR-093, ADR-094, ADR-095, ADR-096.
 - I banchi: del blocco di L45d2b2c (`data/2026-10-21/L45d2b2c/`, con le giunzioni dei finali in P7) e
   dell'alimentatore di L45d2b2b2 / L45d2b2c; le copie guaste del blocco rifatte dal blocco di oggi
   (limitations #62).
@@ -80,15 +88,15 @@ generato uguale). Uno strumento di misura nuovo si controlla su un caso noto pri
   delle parti.
 - Il micro bloccato e lo standby (L54), la diagnosi (L58), l'ingresso protetto (L57), il dispositivo
   d'uscita (L55), il tetto delle fisse (NC-046), G1.
-- Le decisioni prese in L45d2a, L60a…L60d, L62, L45d2b2a…c non si riaprono, salvo che un «Da riaprire
+- Le decisioni prese in L45d2a, L60a…L60d, L62, L45d2b2a…c, L45d2b3a non si riaprono, salvo che un «Da riaprire
   se» della loro ADR scatti. In quel caso si torna all'utente coi numeri.
 
 ## CHIUSURA
 
-1. `STATE.md` con L45d2b3 **fatto** nella tabella dei lotti, e il prossimo.
+1. `STATE.md` con L45d2b3b **fatto** nella tabella dei lotti, e il prossimo.
 2. Riscrivi `docs/preamp/NEXT-SESSION.md` per il lotto successivo, con la riga «Nome della sessione:
    hi-fi preamp <lotto nuovo>» subito sotto il titolo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L45d2b3`.
+4. `/bin/zsh scripts/chunk_close.sh L45d2b3b`.
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**

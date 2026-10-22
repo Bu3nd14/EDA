@@ -1478,3 +1478,31 @@ lasciato passare in silenzio:
   `BR_IN`. `Sheet.fold()` non si fida della regola per nome: la corrispondenza fra le reti dev'essere
   una biiezione letta sui piedini specchiati; dove il nome della regola esiste deve coincidere, dove
   non esiste diventa un alias, scritto sulla pagina.
+
+## 72. ngspice senza modo di compatibilità non legge `LIMIT` come PSpice: un modello del costruttore dà un'uscita sbagliata senza errori
+
+Visto in L45d2b3a sul modello di TI del TPS7A4701 (`vendor/ldo_regulator/ti/TPS7A4701/`). In PSpice
+`LIMIT(x, a, b)` taglia x fra a e b. In ngspice 47 senza `ngbehavior` di compatibilità la stessa
+espressione in una sorgente comportamentale **non dà errore e dà un altro numero**: `LIMIT(5, -1, 2)`
+vale 0 e `LIMIT(0.5, 2, -1)` vale −1,5 (`docs/preamp/data/2026-10-22/L45d2b3a/prova/tb_limit.cir`). Il
+modello del regolatore usa `LIMIT` nella sorgente di riferimento e nell'amplificatore d'errore: con le
+altre due patch di L41a si caricava senza errori e dava ~1,0 V qualunque fosse la taratura. L41a ne
+cercò la causa nel cablaggio dei piedini e lasciò il verdetto «DO NOT USE»; la causa era questa.
+
+Un secondo inciampo, nello stesso lotto, nella patch stessa: un'espressione regolare che leggeva
+`ROFF=1G` come 1 Ω (il suffisso perso) chiudeva l'interruttore del condensatore NR verso massa. Anche
+lì: nessun errore, un'uscita sbagliata.
+
+**Regola operativa**: prima di usare un modello PSpice in ngspice si cercano le funzioni di PSpice nelle
+sorgenti comportamentali (`LIMIT`, e in generale ogni funzione non elencata nel manuale di ngspice per
+le sorgenti B) e si riscrivono, provando la riscrittura su un deck di una riga con i due ordini degli
+argomenti. `LIMIT(x, a, b)` diventa `MIN(MAX(x, MIN(a, b)), MAX(a, b))`, che vale per tutti e due gli
+ordini (il modello di TI li usa entrambi). I valori dei parametri si leggono coi suffissi SPICE. E il
+modello patchato si prova su un caso noto del datasheet prima di qualunque misura: in L45d2b3a la
+tensione d'uscita alla taratura e il gradino della figura 5-19 (`validate_models.py`, `tb_tps7a4701`).
+
+Una nota sullo stesso modello, che non è un errore ma limita l'uso: l'uscita vale
+V(NR) × V(OUT) / V(SENSE) dietro un ritardo di 1,6 µs e 4 mΩ. Con SENSE sull'uscita il rapporto vale 1
+identicamente: **non c'è anello**, e nessun caso del datasheet ne conferma la banda. Il modello di TI
+del TPS7A3301 ha la stessa forma senza nemmeno il ritardo. Un margine di fase ricavato da uno dei due è
+del modello, non della parte.

@@ -1,0 +1,20 @@
+L45d2b3a - known case: SBVS204G fig. 5-19, VIN 5 V, VOUT 3.3 V (0P1V + 0P2V + 1P6V), 10 mA -> 845 mA
+.include ../../../../../../models/ldo_regulator/tps7a4701_ngspice.lib
+VIN in 0 5
+* pins: 0P1V 0P2V 0P4V 0P8V 1P6V 3P2V 6P4V1 6P4V2 EN GND NR SENSE IN_0 IN_1 OUT_0 OUT_1
+XU501 0 0 p04 p08 0 p32 p64a p64b in 0 nr out in in out out TPS7A4701_TRANS
+CNR nr 0 1u
+CIN in 0 10u
+COUT out 0 10u
+ILOAD out 0 PWL(0 10m 1m 10m 1.001m 845m 3m 845m 3.001m 10m 5m 10m)
+.control
+tran 0.1u 5m 0 0.1u
+meas tran v0 find v(out) at=0.9m
+meas tran vmin min v(out) from=1m to=1.5m
+meas tran vfin find v(out) at=2.9m
+meas tran vmax max v(out) from=3m to=3.5m
+let calo = (v0 - vmin) * 1000
+let picco = (vmax - vfin) * 1000
+print calo picco
+.endc
+.end
