@@ -14,11 +14,16 @@ L45a (fmea_blocco.csv: il blocco di allora, a 27 C d'aria). I controlli prima: i
 """
 import csv
 import os
+import sys
 
 L = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.abspath(os.path.join(L, "..", ".."))
-jack = {(r["variante"], r["modo"]): r for r in csv.DictReader(open(os.path.join(L, "analisi_jack_oggi.csv")))}
-cal = list(csv.DictReader(open(os.path.join(L, "calore_oggi.csv"))))
+# sintesi_calore.py [variante]: oggi (default, -> sintesi_calore.csv) o dopo097 (il blocco di ADR-097,
+# -> sintesi_calore_dopo097.csv)
+V = sys.argv[1] if len(sys.argv) > 1 else "oggi"
+USCITA = "sintesi_calore.csv" if V == "oggi" else "sintesi_calore_%s.csv" % V
+jack = {(r["variante"], r["modo"]): r for r in csv.DictReader(open(os.path.join(L, "analisi_jack_%s.csv" % V)))}
+cal = list(csv.DictReader(open(os.path.join(L, "calore_%s.csv" % V))))
 l45a = {r["modo"]: r for r in csv.DictReader(open(os.path.join(DATA, "2026-10-13", "L45a", "fmea_blocco.csv")))}
 
 
@@ -31,7 +36,7 @@ def f(x, d=float("nan")):
 
 print("CONTROLLI")
 for r in cal:
-    j = jack[("oggi_" + r["posizione"], r["modo"])]
+    j = jack[(V + "_" + r["posizione"], r["modo"])]
     if r["modo"] == "rif":
         print("  %-5s rif: uscita blocco %s V, rail + %s mA, Tj finale 27 C %s, stato %s"
               % (r["posizione"], j.get("out_avg"), r.get("I_rail_piu_mA"), r.get("Tj_q132_27"), j["stato"]))
@@ -42,7 +47,7 @@ righe = {}
 for r in cal:
     if r["modo"] in ("rif", "CTRL_OUT_VP"):
         continue
-    j = jack[("oggi_" + r["posizione"], r["modo"])]
+    j = jack[(V + "_" + r["posizione"], r["modo"])]
     s = righe.setdefault(r["modo"], {"stati": set(), "pos": [], "main": 0.0, "fix1": 0.0, "fix2": 0.0,
                                      "dB": -999.0, "tj": 0.0, "tjd": "", "oltre": {}, "pd": 0.0,
                                      "pdd": "", "p158": 0.0, "p159": 0.0, "diodi": {}, "manca": 0})
@@ -81,7 +86,7 @@ for m in sorted(righe):
                 "P_d158_max_W": "%.4f" % s["p158"], "P_d159_max_W": "%.4f" % s["p159"],
                 "diodi_oltre_60C": diodi,
                 "L45a_calore_27C": l45a[m]["calore"] if m in l45a else "(modo nuovo)"})
-with open(os.path.join(L, "sintesi_calore.csv"), "w", newline="") as fo:
+with open(os.path.join(L, USCITA), "w", newline="") as fo:
     w = csv.DictWriter(fo, fieldnames=list(out[0]))
     w.writeheader()
     w.writerows(out)

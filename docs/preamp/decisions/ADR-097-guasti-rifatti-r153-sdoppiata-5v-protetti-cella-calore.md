@@ -46,8 +46,10 @@ Parole dell'utente (2026-10-22), alle quattro domande:
    termico dichiarato dal costruttore. La potenza (2,99 W) si scrive nella riga.
 3. **«Alla scelta della parte»**: R144 / R152 con un impulso dichiarato ≥ 1,3 J in 0,25 s, 11,1 W di
    picco; NC-075, maggiore, si chiude alla scelta della parte come NC-073.
-4. **«Lotto dedicato»**: i rimedi dei 16 modi del calore si studiano e si misurano in un lotto apposta,
-   **L45d2b3b2**, prima della sintesi (che diventa L45d2b3b3). NC-042 resta aperta.
+4. **«Lotto dedicato»**: i rimedi dei modi del calore si studiano e si misurano in un lotto apposta,
+   **L45d2b3b2**, prima della sintesi (che diventa L45d2b3b3). Sono quindici dei sedici: C145 in corto
+   ci sta solo coi rail ideali del banco, e sull'alimentatore vero è l'impulso del punto 3. NC-042
+   resta aperta.
 
 ## Perché
 
