@@ -1,0 +1,20 @@
+L45d2b3a - how ngspice reads LIMIT(x, a, b), and the order-free clamp that replaces it
+V1 x 0 5
+B1 a 0 V={LIMIT(V(x), -1, 2)}
+B2 b 0 V={LIMIT(V(x), 2, -1)}
+B3 c 0 V={MIN(MAX(V(x), MIN(-1, 2)), MAX(-1, 2))}
+B4 d 0 V={MIN(MAX(V(x), MIN(2, -1)), MAX(2, -1))}
+B5 e 0 V={MIN(MAX(-V(x), MIN(2, -1)), MAX(2, -1))}
+B6 f 0 V={MIN(MAX(0.5, MIN(2, -1)), MAX(2, -1))}
+Ra a 0 1
+Rb b 0 1
+Rc c 0 1
+Rd d 0 1
+Re e 0 1
+Rf f 0 1
+.control
+op
+* expected: a, b PSpice 2 (ngspice native: wrong); c 2, d 2, e -1, f 0.5
+print v(a) v(b) v(c) v(d) v(e) v(f)
+.endc
+.end

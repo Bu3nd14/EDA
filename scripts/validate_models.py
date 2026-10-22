@@ -1276,6 +1276,50 @@ wrdata {csv} vdb(pri_p) vdb(sec_p)
 
 
 # ---------------------------------------------------------------------
+# L45d2b3a - TI's TPS7A4701 model made to run in ngspice (limitations
+# #72: LIMIT). Two known cases in one op, one instance each: U501's set
+# point (ANY-OUT 6.4 + 6.4 + 0.8 + 0.2 + 0.1 + 1.4 = 15.3 V, VIN 19 V,
+# 0.3 A) and SBVS204G fig. 5-19 (VIN 5 V, 3.3 V, 10 mA and 845 mA: the
+# figure dips ~5 mV and settles ~3 mV low, read by eye). The vendor
+# original gave ~1.0 V on both.
+# ---------------------------------------------------------------------
+
+def tb_tps7a4701(model_file):
+    csv = os.path.join(SCRATCH_DIR, "ldo_tps7a4701.csv")
+    cir = f"""* validate tps7a4701_ngspice.lib (set point and load regulation)
+.include {model_file}
+* pins: 0P1V 0P2V 0P4V 0P8V 1P6V 3P2V 6P4V1 6P4V2 EN GND NR SENSE IN_0 IN_1 OUT_0 OUT_1
+VA ina 0 19
+XA 0 0 a04 0 a16 a32 0 0 ina 0 nra outa ina ina outa outa TPS7A4701_TRANS
+CNRA nra 0 4.7u
+RLA outa 0 51
+VB inb 0 5
+XB 0 0 b04 b08 0 b32 b64 b65 inb 0 nrb outb inb inb outb outb TPS7A4701_TRANS
+CNRB nrb 0 1u
+ILB outb 0 10m
+VC inc 0 5
+XC 0 0 c04 c08 0 c32 c64 c65 inc 0 nrc outc inc inc outc outc TPS7A4701_TRANS
+CNRC nrc 0 1u
+ILC outc 0 845m
+.control
+op
+wrdata {csv} v(outa) v(outb) v(outc)
+.endc
+.end
+"""
+    def check(rows):
+        if len(rows) != 1:
+            return False, f"expected 1 op-point row, got {len(rows)}"
+        va, vb, vc = rows[0]["y0"], rows[0]["y1"], rows[0]["y2"]
+        step_mv = (vb - vc) * 1e3
+        ok = close(va, 15.3, rel=0.005) and close(vb, 3.3, rel=0.005) and 1.0 <= step_mv <= 10.0
+        msg = (f"15.3 V set point at 0.3 A: {va:.4f} V; 3.3 V at 10 mA {vb:.4f} V, "
+               f"10 -> 845 mA {step_mv:.2f} mV (SBVS204G fig. 5-19 ~5 mV peak, ~3 settled)")
+        return ok, msg if ok else msg + " - model not at its known cases (LIMIT patch lost?)"
+    return cir, csv, 3, check
+
+
+# ---------------------------------------------------------------------
 # L29b - the mute-graduale candidates (ADR-037, then ADR-038). Single op
 # with one instance per point: the VTL5C4 behavioural model does NOT
 # converge through a sequence of `alter` + `op` (each op starts from the
@@ -1598,6 +1642,8 @@ def build_registry():
     reg["bjt_pnp/zxtp25040dz.lib"] = lambda p: tb_zxtp25040dz(p)
     reg["opamp/generic_opamp.lib"] = lambda p: tb_opamp(p)
     reg["subckt_generic/generic_transformer.lib"] = lambda p: tb_transformer(p)
+    # L45d2b3a - TI's U501 model, run in ngspice (limitations #72).
+    reg["ldo_regulator/tps7a4701_ngspice.lib"] = lambda p: tb_tps7a4701(p)
     return reg
 
 

@@ -1,0 +1,17 @@
+L45d2b3a - TPS7A4701 derivative, the operating point at 15.3 V (ANY-OUT 6.4 + 6.4 + 0.8 + 0.2 + 0.1)
+.include ../../../../../../models/ldo_regulator/tps7a4701_ngspice.lib
+VIN in 0 19
+* pins: 0P1V 0P2V 0P4V 0P8V 1P6V 3P2V 6P4V1 6P4V2 EN GND NR SENSE IN_0 IN_1 OUT_0 OUT_1
+XU501 0 0 p04 0 p16 p32 0 0 in 0 nr out in in out out TPS7A4701_TRANS
+CNR nr 0 4.7u
+CIN in 0 10u
+COUT out 0 10u
+RL out 0 51
+.control
+op
+print v(out) v(nr) v(xu501.u1_vref) v(xu501.n15343) v(xu501.u1_n766920) v(xu501.u1_n14649)
+tran 100u 2
+meas tran vout_fin find v(out) at=1.9
+meas tran t_95 when v(out)=14.535 rise=1
+.endc
+.end
