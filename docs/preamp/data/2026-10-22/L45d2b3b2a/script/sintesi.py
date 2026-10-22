@@ -41,7 +41,13 @@ def sintesi(v):
     for r in cal:
         if r["modo"] == "CTRL_OUT_VP":
             continue
-        j = jack[(v + "_" + r["posizione"], r["modo"])]
+        # analizza_calore.py di b1 divide la cartella al primo «_»: per d_Q148ap_A la «variante» e'
+        # «d» e la «posizione» «Q148ap_A». La cartella intera e' la loro unione.
+        cart = r["variante"] + "_" + r["posizione"]
+        if not cart.startswith(v + "_"):
+            sys.exit("RIFIUTATO: %s non e' della variante %s" % (cart, v))
+        r = dict(r, posizione=cart[len(v) + 1:])
+        j = jack[(cart, r["modo"])]
         s = righe.setdefault(r["modo"], {"stati": set(), "pos": [], "main": 0.0, "fix1": 0.0, "dB": -999.0,
                                          "tj": 0.0, "tjd": "", "oltre": {}, "diodi": {}, "dip": 0.0, "dim": 0.0})
         s["pos"].append(r["posizione"])

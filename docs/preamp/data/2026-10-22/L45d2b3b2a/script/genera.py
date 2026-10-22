@@ -56,8 +56,18 @@ BRUCIA = {
 }
 PARTI = {"Q121": ("Q121A", "Q121B")}
 FORME = {"D102": ("ap",)}
-# il secondo giro, dopo aver letto il primo: (nome, parte gia' bruciata, sua forma, parte nuova, forme, modi)
-BRUCIA2 = []
+# il secondo giro, dopo aver letto il primo (sintesi_d_*.csv): i percorsi in cui la parte aperta
+# lascia un'altra parte oltre 150 C. (nome, [(parte, forma) gia' bruciate], parte nuova, forme, modi)
+# - Q148 aperto, D102 / D103 aperti: il carico del VAS Q125 a 211 C;
+# - Q125 in corto, R126 in corto: il VAS Q122 a 274 C;
+# - D102 aperto, R101 in corto: R126 3,52 W e R107 1,46 W (si aprono: tutte e due insieme).
+# I corti del primo giro propagano subito (Q148 in corto: Q121 a 493-577 C, e con R149 in corto le
+# 20 ohm della cella a 45 W): non si inseguono oltre, sono gia' la risposta.
+BRUCIA2 = [
+    ("Q148ap", [("Q148", "ap")], "Q125", ("ap", "cc"), ("D102_ap", "D103_ap")),
+    ("Q125cc", [("Q125", "cc")], "Q122", ("ap", "cc"), ("R126_cc",)),
+    ("D102ap", [("D102", "ap"), ("R126", "ap")], "R107", ("ap",), ("R101_cc",)),
+]
 
 
 def scrivi(p, t):
@@ -116,11 +126,22 @@ def unisci(*vv):
     return c, a, n
 
 
+# Dopo il primo giro dei rimedi (sintesi_sdopp.csv, misure_sdopp.csv): i diodi in parallelo a D102 /
+# D103 abbassano il riferimento (meta' corrente per diodo) e spostano il punto di lavoro (finali
+# -3 %, Q121A Vbc interna -40 -> -95 mV). Al loro posto e al posto di R107 sdoppiata, una resistenza
+# sul collettore della sorgente di coda: con Q106 in corto, R107 in corto o il riferimento perso la
+# coda resta sotto ~13 mA invece di andare all'IDSS dei JFET. A riposo 4,7 V su ~14 di Vce.
+# R101 sdoppiata da sola (stesso valore totale): con R101 in corto D102 / D103 vanno a ~99 W.
+CODA = ({"Q106": ["Q106 NTCX NREF NTE MMBT5551"]}, ["R169 SRC NTCX 1k"], ["R169"])
+R101S = ({"R101": ["R101 0 NREFH 3.40k"]}, ["R162 NREFH NREF 3.40k"], ["R162"])
+
 RIMEDI = {
     "rc148": RC148,
     "sdopp": SDOPP,
     "vaslim": VASLIM,
     "tutti": unisci(RC148, SDOPP, VASLIM),
+    "coda": CODA,
+    "rv2": unisci(RC148, VASLIM, CODA, R101S),
 }
 
 
@@ -249,10 +270,11 @@ def dopo():
 
 def dopo2():
     casi = []
-    for nome, p1, f1, p2, forme, modi in BRUCIA2:
+    for nome, prima, p2, forme, modi in BRUCIA2:
         for forma in forme:
-            casi.append(("d2_%s_%s%s" % (nome, p2, forma),
-                         [(PARTI.get(p1, (p1,)), f1), (PARTI.get(p2, (p2,)), forma)], list(modi)))
+            casi.append(("d2%s%s%s" % (nome, p2, forma),
+                         [(PARTI.get(p, (p,)), f) for p, f in prima] + [(PARTI.get(p2, (p2,)), forma)],
+                         list(modi)))
     giro(casi, "lista_dopo2.txt")
 
 
@@ -271,8 +293,9 @@ def rimedi(scelte):
                 if m == "rif" or (pos, gain) in posizioni_di(m):
                     lista.append(un_deck(v, pos, gain, m, nuove))
     gc.SUBCKT = os.path.join(SP, "gain_block.subckt")
-    scrivi(os.path.join(L, "deck", "lista_rimedi.txt"), "\n".join(lista) + "\n")
-    print("rimedi: %d deck" % len(lista))
+    nome = "lista_rimedi%s.txt" % ("_" + "_".join(scelte) if scelte else "")
+    scrivi(os.path.join(L, "deck", nome), "\n".join(lista) + "\n")
+    print("%s: %d deck" % (nome, len(lista)))
 
 
 if __name__ == "__main__":

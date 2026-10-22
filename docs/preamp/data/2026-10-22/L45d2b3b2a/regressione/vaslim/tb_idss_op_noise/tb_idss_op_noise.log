@@ -1,0 +1,1017 @@
+warning, model type mismatch in line
+    q121a nmirc nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: tb_idss_op_noise.cir - l20: the gain block at five i_dss of its input jfet, operating point, common-mode range and noise
+
+Warning: Model issue on line 122 :
+  .model lsk489a njf(beta=2.2m betatce=-.5 rd=11 rs=30 lambda=4.3m vto=-1. ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+unrecognized parameter (mj) - ignored
+
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+=== variant a_come_e: the model the block and the probe simulate ===
+ JFET models (Junction Field effect transistor)
+      model               lsk489a
+
+        vto                 -1.13
+       beta                0.0022
+     lambda                0.0043
+         is                 3e-15
+         rd                    11
+         rs                    30
+        cgs              2.92e-12
+        cgd              3.19e-12
+         pb                   0.8
+         fc                   0.5
+         kf                 9e-19
+         af                     1
+    betatce                  -0.5
+      vtotc               -0.0025
+       nlev                     3
+     gdsnoi                  2.15
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 1
+ipr = 2.591878e-03
+ida = 2.256829e-03
+idb = 2.248618e-03
+vgsa = -1.36254e-01
+vgsb = -1.38066e-01
+gma = 4.542065e-03
+gmb = 4.533806e-03
+vout0 = -2.87966e-03
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 383
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.195235e-06
+inoise_total = 1.195890e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.253177e-06
+inoise_total = 1.254400e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.501092e-06
+inoise_total = 1.505661e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 4.336664e-06
+inoise_total = 1.383112e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 2.056202e-06
+inoise_total = 1.453275e-06
+=== variant a_come_e_kf0: the model the block and the probe simulate ===
+ JFET models (Junction Field effect transistor)
+      model               lsk489a
+
+        vto                 -1.13
+       beta                0.0022
+     lambda                0.0043
+         is                 3e-15
+         rd                    11
+         rs                    30
+        cgs              2.92e-12
+        cgd              3.19e-12
+         pb                   0.8
+         fc                   0.5
+         kf                     0
+         af                     1
+    betatce                  -0.5
+      vtotc               -0.0025
+       nlev                     3
+     gdsnoi                  2.15
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 1
+ipr = 2.591878e-03
+ida = 2.256829e-03
+idb = 2.248618e-03
+vgsa = -1.36254e-01
+vgsb = -1.38066e-01
+gma = 4.542065e-03
+gmb = 4.533806e-03
+vout0 = -2.87966e-03
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 383
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.194666e-06
+inoise_total = 1.195321e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.252635e-06
+inoise_total = 1.253857e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+ Reference value :  2.00000e+04Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Note: True gmin stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+
+No. of Data Rows : 1
+onoise_total = 1.500639e-06
+inoise_total = 1.505207e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 4.335109e-06
+inoise_total = 1.382617e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 2.055536e-06
+inoise_total = 1.452804e-06
+=== variant a_tip: the model the block and the probe simulate ===
+ JFET models (Junction Field effect transistor)
+      model               lsk489a
+
+        vto                -1.696
+       beta                0.0022
+     lambda                0.0043
+         is                 3e-15
+         rd                    11
+         rs                    30
+        cgs              2.92e-12
+        cgd              3.19e-12
+         pb                   0.8
+         fc                   0.5
+         kf                 9e-19
+         af                     1
+    betatce                  -0.5
+      vtotc               -0.0025
+       nlev                     3
+     gdsnoi                  2.15
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 1
+ipr = 5.487106e-03
+ida = 2.257049e-03
+idb = 2.248838e-03
+vgsa = -7.01042e-01
+vgsb = -7.02856e-01
+gma = 4.536974e-03
+gmb = 4.528725e-03
+vout0 = -2.88164e-03
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 383
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.195780e-06
+inoise_total = 1.196436e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.253697e-06
+inoise_total = 1.254922e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.501525e-06
+inoise_total = 1.506097e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 4.338141e-06
+inoise_total = 1.383587e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 2.056838e-06
+inoise_total = 1.453726e-06
+=== variant b_min: the model the block and the probe simulate ===
+ JFET models (Junction Field effect transistor)
+      model               lsk489a
+
+        vto                -2.086
+       beta                0.0022
+     lambda                0.0043
+         is                 3e-15
+         rd                    11
+         rs                    30
+        cgs              2.92e-12
+        cgd              3.19e-12
+         pb                   0.8
+         fc                   0.5
+         kf                 9e-19
+         af                     1
+    betatce                  -0.5
+      vtotc               -0.0025
+       nlev                     3
+     gdsnoi                  2.15
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 1
+ipr = 7.976164e-03
+ida = 2.257201e-03
+idb = 2.248989e-03
+vgsa = -1.09020e+00
+vgsb = -1.09202e+00
+gma = 4.533461e-03
+gmb = 4.525220e-03
+vout0 = -2.88301e-03
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 383
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.196158e-06
+inoise_total = 1.196814e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+ Reference value :  2.24404e+01Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.254057e-06
+inoise_total = 1.255282e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.501826e-06
+inoise_total = 1.506399e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 4.339163e-06
+inoise_total = 1.383916e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 2.057279e-06
+inoise_total = 1.454039e-06
+=== variant b_tip: the model the block and the probe simulate ===
+ JFET models (Junction Field effect transistor)
+      model               lsk489a
+
+        vto                -2.557
+       beta                0.0022
+     lambda                0.0043
+         is                 3e-15
+         rd                    11
+         rs                    30
+        cgs              2.92e-12
+        cgd              3.19e-12
+         pb                   0.8
+         fc                   0.5
+         kf                 9e-19
+         af                     1
+    betatce                  -0.5
+      vtotc               -0.0025
+       nlev                     3
+     gdsnoi                  2.15
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 1
+ipr = 1.145196e-02
+ida = 2.257394e-03
+idb = 2.249183e-03
+vgsa = -1.56019e+00
+vgsb = -1.56200e+00
+gma = 4.529226e-03
+gmb = 4.520993e-03
+vout0 = -2.88466e-03
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 383
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.196615e-06
+inoise_total = 1.197271e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.254493e-06
+inoise_total = 1.255719e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.502189e-06
+inoise_total = 1.506764e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 4.340325e-06
+inoise_total = 1.384289e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 2.057815e-06
+inoise_total = 1.454418e-06
+=== variant b_max: the model the block and the probe simulate ===
+ JFET models (Junction Field effect transistor)
+      model               lsk489a
+
+        vto                -2.976
+       beta                0.0022
+     lambda                0.0043
+         is                 3e-15
+         rd                    11
+         rs                    30
+        cgs              2.92e-12
+        cgd              3.19e-12
+         pb                   0.8
+         fc                   0.5
+         kf                 9e-19
+         af                     1
+    betatce                  -0.5
+      vtotc               -0.0025
+       nlev                     3
+     gdsnoi                  2.15
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 1
+ipr = 1.493055e-02
+ida = 2.257557e-03
+idb = 2.249346e-03
+vgsa = -1.97828e+00
+vgsb = -1.98010e+00
+gma = 4.525444e-03
+gmb = 4.517219e-03
+vout0 = -2.88614e-03
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 383
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.197024e-06
+inoise_total = 1.197681e-06
+Doing analNote: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+ysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+ Reference value :  2.00000e+01Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.254882e-06
+inoise_total = 1.256109e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.502515e-06
+inoise_total = 1.507091e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 4.341513e-06
+inoise_total = 1.384670e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 2.058293e-06
+inoise_total = 1.454757e-06
+=== variant a_ripristinato: the model the block and the probe simulate ===
+ JFET models (Junction Field effect transistor)
+      model               lsk489a
+
+        vto                 -1.13
+       beta                0.0022
+     lambda                0.0043
+         is                 3e-15
+         rd                    11
+         rs                    30
+        cgs              2.92e-12
+        cgd              3.19e-12
+         pb                   0.8
+         fc                   0.5
+         kf                 9e-19
+         af                     1
+    betatce                  -0.5
+      vtotc               -0.0025
+       nlev                     3
+     gdsnoi                  2.15
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 1
+ipr = 2.591878e-03
+ida = 2.256828e-03
+idb = 2.248616e-03
+vgsa = -1.36254e-01
+vgsb = -1.38067e-01
+gma = 4.542064e-03
+gmb = 4.533805e-03
+vout0 = -2.87966e-03
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 383
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.195235e-06
+inoise_total = 1.195890e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.253177e-06
+inoise_total = 1.254400e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.501092e-06
+inoise_total = 1.505661e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 4.336664e-06
+inoise_total = 1.383112e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 2.056202e-06
+inoise_total = 1.453275e-06
+=== variant xa: the model the block and the probe simulate ===
+ JFET models (Junction Field effect transistor)
+      model               lsk489a
+
+        vto                  -1.5
+       beta                 0.002
+     lambda                  0.01
+         is                 1e-14
+         rd                    10
+         rs                    10
+        cgs               2.9e-12
+        cgd               1.1e-12
+         pb                   0.8
+         fc                   0.5
+         kf                     0
+         af                     1
+    betatce                     0
+      vtotc                     0
+       nlev                     0
+     gdsnoi                     1
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 1
+ipr = 4.842200e-03
+ida = 2.256980e-03
+idb = 2.248769e-03
+vgsa = -4.80987e-01
+vgsb = -4.82847e-01
+gma = 4.429737e-03
+gmb = 4.421694e-03
+vout0 = -2.76379e-03
+=== XA: THE PRINTS OF tb_op.cir ===
+v(in) = 4.151621e-09
+v(fb) = -2.76377e-03
+v(out) = -2.76379e-03
+v(jack) = 0.000000e+00
+v(nref) = -1.36718e+01
+v(nrefm) = -1.43359e+01
+v(ncasc) = 9.868281e+00
+v(src) = 2.327189e-01
+v(g1) = 5.117530e-09
+v(g2) = -2.76377e-03
+v(s1) = 4.584169e-01
+v(s2) = 4.575958e-01
+v(d1n) = 9.180670e+00
+v(d2Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Note: Dynamic gmin stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Note: True gmin stepping completed
+Note: Starting dynamic gmin stepping
+Warning: Dynamic gmin stepping failed
+Note: Starting true gmin stepping
+Warning: True gmin stepping failed
+Note: Starting source stepping
+Note: Source stepping completed
+n) = 9.180778e+00
+v(nmiri) = 1.363840e+01
+v(nhi) = 1.295835e+01
+v(nx) = 1.021431e+00
+v(ny) = -9.97415e-01
+v(nbb) = -2.70087e-01
+v(nbn) = 1.019437e+00
+v(nbp) = -9.96530e-01
+v(nen) = 4.515072e-01
+v(nep) = -4.57035e-01
+v(nve) = 1.424188e+01
+v(nvle) = -1.44010e+01
+v(nte) = -1.43772e+01
+@jq110a[id] = 2.256980e-03
+@jq110b[id] = 2.248769e-03
+@jq110a[vgs] = -4.80987e-01
+@jq110b[vgs] = -4.82847e-01
+@jq110a[gm] = 4.429737e-03
+@jq110b[gm] = 4.421694e-03
+i(vpp) = -3.79132e-02
+i(vmm) = 3.893399e-02
+@q106[ic] = 4.505749e-03
+@q106[ib] = 4.032265e-05
+@q106[vbe] = 7.042939e-01
+@q106[vbc] = -1.31192e+01
+@q117[ic] = 2.236152e-03
+@q117[ib] = 2.082839e-05
+@q117[vbe] = 6.870860e-01
+@q117[vbc] = -2.70463e+00
+@q118[ic] = 2.228025e-03
+@q118[ib] = 2.074416e-05
+@q118[vbe] = 6.869804e-01
+@q118[vbc] = -2.83185e+00
+@q121a[ic] = -2.22700e-03
+@q121a[ib] = -5.15899e-06
+@q121a[vbe] = 7.034867e-01
+@q121a[vbc] = -3.95690e-02
+@q121b[ic] = -2.22743e-03
+@q121b[ib] = -5.14104e-06
+@q121b[vbe] = 7.033955e-01
+@q121b[vbc] = -1.65266e-01
+@q122[ic] = -1.07128e-02
+@q122[ib] = -8.29644e-05
+@q122[vbe] = 6.696924e-01
+@q122[vbc] = -1.23949e+01
+@q125[ic] = 1.060190e-02
+@q125[ib] = 9.520720e-05
+@q125[vbe] = 7.266386e-01
+@q125[vbc] = -1.07690e+01
+@q127[ic] = 9.602479e-03
+@q127[ib] = 9.008806e-05
+@q127[vbe] = 7.250753e-01
+@q127[vbc] = 4.142211e-01
+@q132[ic] = 2.044928e-02
+@q132[ib] = 1.993927e-04
+@q132[vbe] = 5.660237e-01
+@q132[vbc] = -1.39806e+01
+@q133[ic] = -2.05602e-02
+@q133[ib] = -8.84504e-05
+@q133[vbe] = 5.391020e-01
+@q133[vbc] = -1.39960e+01
+@riso[i] = 0.000000e+00
+@r136[i] = -1.51914e-11
+@r134[i] = 2.064868e-02
+@r135[i] = -2.06487e-02
+@r107[i] = 4.546072e-03
+@r123[i] = 1.079581e-02
+@r126[i] = 1.069711e-02
+=== XA: END ===
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 383
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.166656e-06
+inoise_total = 1.167302e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.225949e-06
+inoise_total = 1.227153e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 1.478434e-06
+inoise_total = 1.482943e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 4.259321e-06
+inoise_total = 1.358339e-06
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+ Reference value :  2.00000e+01
+No. of Data Rows : 301
+
+No. of Data Rows : 1
+onoise_total = 2.022892e-06
+inoise_total = 1.429722e-06
+Note: Simulation executed from .control section 
