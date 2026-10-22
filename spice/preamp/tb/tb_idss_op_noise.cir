@@ -186,7 +186,8 @@ foreach v 1 2 3 4 5 6 7 8
   let vdsa = v(d1n) - v(s1)
   let vdsb = v(d2n) - v(s2)
   let ic106 = @q106[ic]
-  let vce106 = v(src) - v(nte)
+  * ADR-099 (L45d2b3b2b1): Q106's collector is NTCX, below the 1k (R194) to SRC
+  let vce106 = v(ntcx) - v(nte)
   let ic117 = @q117[ic]
   let ic118 = @q118[ic]
   let vncasc = v(ncasc)
