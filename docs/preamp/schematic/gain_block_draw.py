@@ -120,7 +120,8 @@ DEVICES = {
     "Q122":  {"C": "NX",     "B": "NVB",   "E": "NVE"},     # ADR-067
     # ADR-067 (L56): the follower before the VAS and the helper on the mirror
     "Q146":  {"C": "NFC",    "B": "NHI",   "E": "NVB"},     # ADR-087
-    "R153":  {"1": "NFC",    "2": "VMINUS"},                 # ADR-087
+    "R153":  {"1": "NFC",    "2": "NFCR"},                   # ADR-087, ADR-097
+    "R160":  {"1": "NFCR",   "2": "VMINUS"},                 # ADR-097
     "R147":  {"1": "VPF",    "2": "NVB"},
     "Q148":  {"C": "VMINUS", "B": "NMIRC", "E": "NMIRI"},
     "R149":  {"1": "VPF",    "2": "NMIRI"},
@@ -481,11 +482,14 @@ res("R147", (34.0, 13.6), (34.0, 10.9), value="1,2k",
 d.add(elm.Dot().at(NODE_XY["R147.1"]))
 TOUCHED.add("R147.1")
 wire("R147.2", "Q146.E")
-# ADR-087 (L60d1): R153 limits the follower under overload (~10 mA)
+# ADR-087 (L60d1): R153 limits the follower under overload (~10 mA); ADR-097
+# (L45d2b3b1): in two halves, R153 + R160, so that one shorted still limits it
 _c = NODE_XY["Q146.C"]
-res("R153", _c, (_c[0], _c[1] - 1.9), value="4,7k",
-    lbl=((_c[0] + 0.48, _c[1] - 0.75), "left"))
-flag("R153.2", "V-", direction="right", length=0.5, color=BLUE)
+res("R153", _c, (_c[0], _c[1] - 1.3), value="2,4k",
+    lbl=((_c[0] + 0.48, _c[1] - 0.45), "left"))
+res("R160", NODE_XY["R153.2"], (_c[0], _c[1] - 2.6), value="2,4k",
+    lbl=((_c[0] + 0.48, _c[1] - 1.6), "left"))
+flag("R160.2", "V-", direction="right", length=1.0, color=BLUE)
 txt((32.1, 9.62), "Q146 inseguitore", size=7.5, halign="center")
 
 # --- VAS --------------------------------------------------------------------

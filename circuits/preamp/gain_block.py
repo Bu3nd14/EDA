@@ -175,17 +175,25 @@ R_SDEG_HALF = "200"    # the feedback-side degeneration as TWO 200 Ohm in
                        # a single 100 Ohm: its open is a DC step, which the
                        # Stax's 1 uF already stops (ADR-081), and the two
                        # sides are equal at nominal.
-R_FOLLOW_C = "4.7k"    # ADR-087 (L60d1): the collector resistor of the follower
-                       # before the VAS (ADR-067). ~5 V across it at rest
-                       # (1.1 mA); under overload it caps the follower at
-                       # ~10 mA (0.027 W average, 0.075 W peak in P7, against
-                       # 0.41 / 2.0 W without). V1 -0.4 deg, positive clip
-                       # -0.04 V, recovery and model THD unchanged; the 134 ns
-                       # edges it caused at the muted jack drop from 2.7 to
-                       # 1.1 uV (B1 averaged, the same 0.3 s run).
-                       # data/2026-10-18/L60d1/follower/.
+R_FOLLOW_C_HALF = "2.4k"  # ADR-097 (L45d2b3b1): the follower's collector
+                       # resistor as TWO 2.4k in series (R153 + its twin in
+                       # section 13), 4.8k in all. One 4.7k shorted gave the
+                       # follower back without a limit: 0.39 W in P7 with the
+                       # mute engaged, 216 C at 60 C air against the SOT-23's
+                       # 150 C (data/2026-10-22/L45d2b3b1/p7_r153cc.txt). With
+                       # one half shorted 2.4k is left: 0.029 W, 72 C.
+                       # ADR-087 (L60d1), the resistor itself: the collector
+                       # resistor of the follower before the VAS (ADR-067).
+                       # ~5 V across it at rest (1.1 mA); under overload it caps
+                       # the follower at ~10 mA (0.027 W average, 0.075 W peak
+                       # in P7, against 0.41 / 2.0 W without). V1 -0.4 deg,
+                       # positive clip -0.04 V, recovery and model THD
+                       # unchanged; the 134 ns edges it caused at the muted
+                       # jack drop from 2.7 to 1.1 uV (B1 averaged, the same
+                       # 0.3 s run). data/2026-10-18/L60d1/follower/.
                        # Not 10k: the operating point stops converging in
-                       # parts of the loop matrix (limitations.md #57).
+                       # parts of the loop matrix (limitations.md #57); 4.8k
+                       # is 2 % above 4.7k (E24 has no 2.35k).
 R_CELL_HALF = "20"     # the RC cell's resistor as TWO 20 Ohm in parallel =
                        # the 10 Ohm of ADR-056; one open leaves 20 Ohm (0.3 V
                        # drop instead of 0.15), not the slow slide to the rail.
@@ -739,8 +747,12 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # and NOT on the MJE15032 collector (an emitter follower rejects its rail).
     # The 1000 uF electrolytic: >= 25 V, + terminal on VPF.
     # ADR-086 (L60d1): the 10 Ohm is now two 20 Ohm in parallel, this one and
-    # its twin in section 9. With the 1000 uF shorted each takes half of the
-    # 22.5 W peak / 1.37 J of L45d2b1: 11.3 W, 0.69 J.
+    # its twin in section 9. With the 1000 uF shorted each takes, on today's
+    # supply (ADR-091..094; L45d2b3b1, data/2026-10-22/L45d2b3b1/seq/cella/),
+    # 11.1 W peak and 1.09 / 1.24 / 1.28 J at mains -10 / 0 / +10 %, ~0.25 s
+    # above 1 W (it was 0.69 J, half of L45d2b1's 1.37 J on the supply of
+    # then). Whether a 0207 takes it is read on the chosen part's pulse curve:
+    # a BOM constraint, ADR-097, NC-075.
     R(R_CELL_HALF, VP, VPF)
     C("1000u", VPF, GND, fp="Capacitor_THT:CP_Radial_D10.0mm_P5.00mm")
 
@@ -771,7 +783,7 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # mute's 47 Ohm (music at +10 dB, full input) or a shorted main output,
     # nothing limited the follower: up to 82 mA, 0.41 W average and 2 W peak
     # against the 0.31 W of P7, the VAS driven deep into saturation. Its
-    # collector now reaches VM through R_FOLLOW_C (section 10).
+    # collector now reaches VM through R_FOLLOW_C_HALF twice (sections 10, 13).
     NFC = n("NFC")                            # follower collector
     Q("pnp", "MMBT5401", "MMBT5401", NFC, NHI, NVB)
     R("1.2k", VPF, NVB)
@@ -792,8 +804,11 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # ========================================================================
     # 10. FOLLOWER CURRENT LIMIT (ADR-087, L60d1)
     # ========================================================================
-    # Appended LAST (limitations.md #22): R153 on this file's block.
-    R(R_FOLLOW_C, NFC, VM)
+    # Appended LAST (limitations.md #22): R153 on this file's block. Since
+    # ADR-097 the first of two halves: NFC -> NFCR here, NFCR -> VM in
+    # section 13.
+    NFCR = n("NFCR")                          # between the two halves
+    R(R_FOLLOW_C_HALF, NFC, NFCR)
 
     # ========================================================================
     # 11. RESERVE DIODES ACROSS THE VBE MULTIPLIER (ADR-090, L62b, NC-062)
@@ -844,6 +859,14 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # data/2026-10-21/L45d2b2c/ (p7_cbe.csv); peak 29 mA, <= 5 mW per diode.
     D("1N4148", NEN, NBN)
     D("1N4148", NBP, NEP)
+
+    # ========================================================================
+    # 13. THE SECOND HALF OF THE FOLLOWER'S COLLECTOR RESISTOR (ADR-097, L45d2b3b1)
+    # ========================================================================
+    # Appended LAST (limitations.md #22): R160 on this file's block; on the
+    # audio board it follows each instance's numbering, as sections 7-12.
+    # Why two: R_FOLLOW_C_HALF at the top.
+    R(R_FOLLOW_C_HALF, NFCR, VM)
 
     return dict(IN=IN, OUT=OUT, FB=FB, RG=RG, RG10=RG10, VP=VP, VM=VM,
                 GND=GND)

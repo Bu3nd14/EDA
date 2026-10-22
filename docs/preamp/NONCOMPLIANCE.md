@@ -4918,6 +4918,27 @@ ammette V_EB 5 V (onsemi MJE15032/D Rev 7). P7 leggeva potenze e correnti, non l
 rail; i diodi ≤ 29 mA, ≤ 5 mW. Effetto collaterale, dichiarato in ADR-095: un limite di corrente
 d'uscita a ~0,11 A che raffredda le resistenze d'uscita e scalda il PNP (92,7 °C, 109,8 col rail alto).
 
+### NC-075 — Col condensatore della cella RC in corto, ciascuna delle due 20 Ω riceve ~1,3 J in ~0,25 s
+
+| | |
+|---|---|
+| Requisito | **ADR-070** (una parte oltre i suoi limiti è gravità 5) · ADR-056 · ADR-086 · ADR-097 |
+| Severità | **maggiore** (decisa dall'utente il 2026-10-22: «Alla scelta della parte», come NC-073) |
+| Aperta da | `reports/2026-10-22-L45d2b3b1-guasti-rifatti.md`, «La cella RC». Trovata dall'**orchestratore** in L45d2b3b1, rifacendo sull'alimentatore di oggi il caso di L45d2b1 |
+| Stato | aperta |
+
+**Evidenza.** `data/2026-10-22/L45d2b3b1/seq/cella/` (il banco dell'alimentatore col firmware, la
+primitiva `carico` di 10 Ω su VPLUS), `script/energia_cella.py`: il 1000 µF della cella di un blocco in
+corto mette R144 ∥ R152 (due 20 Ω) fra il rail + e massa finché il rail non crolla. **Ciascuna 11,1 W di
+picco, 1,09 / 1,24 / 1,28 J a rete −10 / 0 / +10 %, ~0,22–0,25 s sopra 1 W.** Il sorgente diceva
+0,69 J, la metà degli 1,37 J di L45d2b1 sull'alimentatore di allora: con la partenza morbida, R550 e lo
+Schottky in serie (ADR-091…093) il rail impiega di più a cadere. Una 0207 a film non dichiara di solito
+un impulso così.
+
+**Cosa serve per chiuderla.** Alla scelta della parte (distinta): R144 / R152 di ogni blocco con un
+impulso singolo dichiarato dal costruttore che copra **≥ 1,3 J in 0,25 s, 11,1 W di picco**, letto sul
+datasheet e scritto nel sorgente; o un'altra forma che lo tolga.
+
 ## Voci chiuse
 
 **NC-063 — la partenza morbida dei regolatori dei rail** (maggiore). **CHIUSA il 2026-10-20 da

@@ -1506,3 +1506,34 @@ V(NR) × V(OUT) / V(SENSE) dietro un ritardo di 1,6 µs e 4 mΩ. Con SENSE sull'
 identicamente: **non c'è anello**, e nessun caso del datasheet ne conferma la banda. Il modello di TI
 del TPS7A3301 ha la stessa forma senza nemmeno il ritardo. Un margine di fase ricavato da uno dei due è
 del modello, non della parte.
+
+## 73. Il micro del banco dell'alimentatore assorbe 2 mA anche senza alimentazione: con i 5 V spenti V5 va a −20 V, e l'analisi lo dà «dentro»
+
+Visto in L45d2b3b1 (`data/2026-10-22/L45d2b3b1/seq/nuove/f_u512_spento_*`, `script/v5_relativa.py`).
+Nel banco dell'alimentatore il micro è una sorgente di corrente fissa da V5 a RLY_RET
+(`BU509q v5 rly_ret I = V(iq_mcu)`, `VIQ` a 2 mA), che non si ferma a 0 V. Con U512 spento V5 resta
+tenuta solo dagli 1 MΩ dei modelli dei regolatori: la corrente fissa la porta a **−20,2 V** contro
+RLY_RET, finché qualche giunzione non conduce. Un micro senza alimentazione non fa niente di simile: è
+un artefatto del banco. `analizza_075.py` controlla solo `v5_max` contro i 6 V dell'ATtiny3216, e i
+−20 V passano come «dentro». Lo stesso vale per ogni caso che spegne i 5 V (U504 spento di L45c2).
+Il firmware in quei casi non trova un punto fisso in 20 giri: anche questo è in parte l'artefatto.
+
+**Regola operativa**: un caso che spegne i 5 V si legge come «i 5 V persi» e non per la forma di V5;
+chi tocca `genera_tb_psu.py` può legare l'assorbimento del micro a V5 (per esempio
+`I = V(iq_mcu) * (V(v5,rly_ret) > 2.5)`), e allora i casi noti vanno rifatti; un controllo su V5
+guarda anche il minimo.
+
+## 74. SKiDL tiene uno solo dei nomi di due reti unite, e quale dipende dalle parti: aggiungerne una cambia il nome di un'altra rete
+
+Visto in L45d2b3b1: aggiungere R160 (ADR-097, otto resistenze in tutte le istanze del blocco) ha
+rinominato tre reti della scheda audio che il cambio non toccava: `AL_OUT` → `F1L_IN`, `L_FIXOUT2` →
+`L_FIXJACK2`, `R_FIXOUT2` → `R_FIXJACK2`, con gli stessi piedini
+(`data/2026-10-22/L45d2b3b1/script/nomi_reti.py`, che confronta due netlist per insieme di piedini). In
+L63b lo stesso fenomeno aveva dato l'alias `BR_IN` per `R_ATT_W`. Niente dà errore: è la pagina
+completa che si ferma su una rete che non trova, e un controllo che cercasse parti per nome di rete
+le perderebbe in silenzio (#68).
+
+**Regola operativa**: dopo una rigenerazione si confrontano le netlist per piedini
+(`nomi_reti.py <prima> <dopo> <parti nuove>`): la topologia deve cambiare solo dove si è voluto, e un
+nome cambiato si dichiara. I disegni chiedono le reti per nome con un sinonimo dichiarato
+(`audio_draw.py`, `SINONIMI` e `rete()`: esattamente uno dei due nomi deve esistere).
