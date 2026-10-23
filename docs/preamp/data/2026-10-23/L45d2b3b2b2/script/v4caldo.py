@@ -25,6 +25,19 @@ Le opzioni termiche, che non cambiano il circuito (spec = variante[--opzione...]
   freddo  il VAS (Q122) e il suo carico (Q125) a meta' R_thJA: un package che scalda la meta'
           (SOT-89 / SOT-223 su rame). Sensibilita', senza un modello nuovo.
 
+L45d2b3b2b2 (copiato da L60d1 come v4caldo.py; genera.py di L46b e' qui genera_imd.py), il blocco
+del sorgente con ADR-099 (variante «sorg», inc/sorg.inc = spice/preamp/gain_block_flat.inc). Due
+opzioni nuove:
+  diss    i finali (MJE15032 / MJE15033) col dissipatore Ohmite WA-T220-101E (ADR-099):
+          R_thJA = 2,5 (giunzione-case, onsemi) + 2 (interfaccia, IPOTESI) + 20 (la curva del
+          costruttore a 1 W) = 24,5 C/W invece di 62,5.
+  molt    il moltiplicatore di Vbe Q127 alla temperatura del tab del finale NPN Q132, cioe' del suo
+          case: Ta + P_Q132 * (R_thJA - R_thJC), 60 C/W nudo, 22 col dissipatore. E' l'accoppiamento
+          in rame PERFETTO di ADR-034 (la geometria non e' ancora disegnata, G2): un limite superiore
+          di quanto il moltiplicatore insegue il finale, come «acc» per i diodi del riferimento.
+          Senza «molt» Q127 si scalda da se' a 417 C/W, come in L56 / L60d1 (il confronto resta
+          omogeneo; a riposo dissipa pochi mW).
+
 Le condizioni: u27 (27 gradi uniformi, il banco di L46b: il controllo), e t27/t57 (aria a 27 / 57
 gradi) x rame/minima. Ogni deck di prova: THD 20 kHz (3 modi x sorgente 2,5 / 5,6 kOhm x 0,2 / 2
 V, il banco di V4 di L53), IMD CCIF (genera.py di L46b, sorgente 2,5 kOhm), e il gradino della
@@ -44,10 +57,12 @@ import sys
 QUI = os.path.dirname(os.path.abspath(__file__))
 LOTTO = os.path.dirname(QUI)
 sys.path.insert(0, QUI)
-import genera  # noqa: E402  (L46b: imd())
+import genera_imd as genera  # noqa: E402  (L46b: imd())
 
 REL = os.path.relpath(LOTTO, genera.ROOT)
 CALDE = [(27, "rame"), (27, "minima"), (57, "rame"), (57, "minima")]
+# L45d2b3b2b2: i finali, nudi (onsemi MJE15032/D) e col WA-T220-101E (ADR-099, dissipatore.py)
+RJA_NUDO, RJC_MJE, RJA_DISS = 62.5, 2.5, 2.5 + 2.0 + 20.0
 RC_LS350 = 231.405      # models/bjt_pnp/ls350.lib
 R107 = [150.7, 144, 137, 130.2, 123.3, 116.4, 109.6]
 
@@ -114,7 +129,7 @@ LIVELLI = (("lo", 0.282843), ("hi", 2.82843))
 def parti(spec):
     v, *opz = spec.split("--")
     for o in opz:
-        if o not in ("acc", "freddo", "sot223"):
+        if o not in ("acc", "freddo", "sot223", "diss", "molt"):
             sys.exit("opzione sconosciuta: %s" % o)
     return v, set(opz)
 
@@ -140,12 +155,23 @@ def scrivi(p, testo):
     return p
 
 
-def deck_op(titolo, inc, temps, disp, marca):
-    """Un `op` per temperatura dell'aria: tutti i nodi e la corrente di ogni Q/J."""
+def deck_op(titolo, inc, temps, disp, marca, prima=None):
+    """Un `op` per temperatura dell'aria: tutti i nodi e la corrente di ogni Q/J.
+
+    L45d2b3b2b2: `prima` = il punto di lavoro del passo precedente, scritto come .nodeset (ogni
+    tensione di nodo). Il passo 2 di sorg--sot223--diss--molt (aria 27) falliva gmin e source stepping,
+    e il transient op cadeva sul punto spento (VPF 0,07 V, coda 1,6 nA; rifiutato da leggi_op);
+    `option gminsteps=40` (limitations, L29c) non bastava. Partire dal passo prima e' la strada
+    naturale (le Tj si muovono di pochi gradi fra un passo e l'altro) e cambia l'avvio, non il punto
+    a cui l'op converge: su tutti gli op dal passo 2, per omogeneita'."""
     corr = " ".join("@%s[%s]" % (n.lower(), "ic" if t == "Q" else "id")
                     for n, (t, _, _) in sorted(disp.items()) if t in "QJ")
     s = titolo + "\n* generato da L56/script/caldo.py\n" + MODELLI
     s += ".include %s\n" % inc + BANCO.format(ta=temps[0]).replace("VS VSN 0 SIN(0 0.282843 20000)", "VS VSN 0 DC 0")
+    if prima:
+        nodi = sorted(k for k in prima if re.fullmatch(r"[a-z0-9_.]+", k) and k not in ("0", "vplus", "vminus"))
+        for i in range(0, len(nodi), 6):
+            s += ".nodeset " + " ".join("v(%s)=%.9g" % (k, prima[k]) for k in nodi[i:i + 6]) + "\n"
     s += "\n.control\noption itl1=1000\n"   # L56: come i deck di distorsione (L46a)
     for ta in temps:
         s += "set temp = %d\nop\necho \"%s ta=%d\"\nprint all\nprint %s\ndestroy all\n" % (ta, marca, ta, corr)
@@ -198,7 +224,7 @@ def tj(ta, var, opz, p, disp):
         elif mod == "MMBT5551":
             r = 417
         elif mod.startswith("Qmje"):
-            r = 62.5
+            r = RJA_DISS if "diss" in opz else RJA_NUDO
         else:
             sys.exit("R_thJA sconosciuta per %s %s" % (n, mod))
         if "freddo" in opz and n in ("Q122", "Q125"):
@@ -216,6 +242,9 @@ def tj(ta, var, opz, p, disp):
     t["JQ110A"] = t["JQ110B"] = ta + (p["JQ110A"] + p["JQ110B"]) * 250
     if "acc" in opz:
         t["D102"] = t["D103"] = t["Q106"]
+    if "molt" in opz:
+        # L45d2b3b2b2: il moltiplicatore al case del finale NPN (accoppiamento perfetto, ADR-034)
+        t["Q127"] = ta + p["Q132"] * ((RJA_DISS if "diss" in opz else RJA_NUDO) - RJC_MJE)
     return t
 
 
@@ -299,13 +328,14 @@ def main():
             # la coda e il carico del VAS salgono col calore e scaldano di piu')
             k = int(fase[1:])
             for ta, rv in CALDE:
-                t = tj(ta, rv, opz, potenze(passo(k - 1, ta, rv), disp), disp)
+                v_prima = passo(k - 1, ta, rv)
+                t = tj(ta, rv, opz, potenze(v_prima, disp), disp)
                 nome = "%s__t%d_%s_p%d" % (spec, ta, rv, k - 1)
                 inc_caldo(var, nome, t, "Tj del passo %d (aria %d, %s)" % (k - 1, ta, rv))
                 lista.append(scrivi(os.path.join(dop, "op_p%d_t%d_%s.cir" % (k, ta, rv)),
                                     deck_op("op_p%d - L56: %s, Tj del passo %d, aria %d, %s"
                                             % (k, spec, k - 1, ta, rv),
-                                            inc_rel(nome), (ta,), disp, "L56_OP%d" % k)))
+                                            inc_rel(nome), (ta,), disp, "L56_OP%d" % k, v_prima)))
             continue
         if not fase.startswith("deck"):
             sys.exit("fase: op | p<K> | deck<K>")
