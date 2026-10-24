@@ -1,92 +1,82 @@
-# Prompt per la sessione successiva — L45d2b3b3, la sintesi della FMEA della scheda audio
+# Prompt per la sessione successiva — L57, l'ingresso protetto per l'RCA a caldo
 
-Nome della sessione: **hi-fi preamp L45d2b3b3** (la convenzione è in `CLAUDE.md`).
+Nome della sessione: **hi-fi preamp L57** (la convenzione è in `CLAUDE.md`).
 
-> Prompt scritto alla chiusura di **L45d2b3b2b2** (2026-10-23): il calore, la Stax dei casi lunghi e il
-> riposo a caldo sul blocco del sorgente, tutti dentro, nessun «Da riaprire se» scattato. Con lui è finito
-> **L45d2b3b2** (il calore dei quindici guasti del blocco, ADR-099). Resta la sintesi.
+> Prompt scritto alla chiusura di **L45d2b3b3** (2026-10-24): la sintesi della FMEA della scheda audio
+> dopo i rimedi, **NC-042 chiusa** (ADR-100), R550 / R551 in corto a NC-072. Con lui è finito **L45**.
+> Il prossimo nell'ordine deciso con l'utente dopo L45d2b3b2a: L57 → L54 → L55 → L58 → L64 → L65 → G1.
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L45d2b3b3**, e si ferma. Non iniziarne un secondo, salvo che
-l'utente lo chieda esplicitamente nella sessione. Se si rivela più grande di una sessione,
-**dividilo con l'utente all'inizio**.
+LOTTI PICCOLI: questa sessione fa **L57**, e si ferma. Non iniziarne un secondo, salvo che l'utente lo
+chieda esplicitamente nella sessione. Se si rivela più grande di una sessione, **dividilo con l'utente
+all'inizio**.
 
 ## Perché questo lotto
 
-**NC-042** (maggiore, prima di G1): la FMEA della scheda audio. Le corse sono fatte (L45d2b3b1 le 88 + 9
-righe sul circuito di oggi, `righe_b1.csv`; L45d2b3b2 i quindici guasti del blocco oltre i limiti termici,
-rimediati da ADR-099 e rimisurati sul sorgente in L45d2b3b2b2). Manca la **sintesi nella forma di
-ADR-070**: per ogni riga le colonne **dopo il rimedio** (gravità, probabilità, rilevabilità o priorità,
-secondo ADR-070 e le due eccezioni di ADR-071), e da lì se NC-042 si può chiudere.
+**NC-059** (maggiore, prima di G1, «Remedy in circuit, major», decisione dell'utente in L53): inserendo
+un cavo RCA sull'ingresso selezionato, con una sorgente in classe II (la massa a metà rete attraverso i
+condensatori Y), il polo caldo tocca prima della massa e l'ingresso vede il 50 Hz a decine di volt. In
+L53 (`data/2026-10-12/L53/rca/`): al volume in cima **il clip del finale,
+~113,8 dB SPL**, sopra il tetto di non-danno di **112,2 dB SPL** di PR-23 (`rca/out/rca_spl.csv`,
+`rca/out_gate/gate.csv`); il gate-gate dell'LSK489 del
+blocco A a **−28,1 V** contro una rottura di ±30 V minima (1,9 V di margine). Con una sorgente a terra
+conta la sola continua (0,65 V: 110 dB SPL in cima e il clip a +10 dB).
 
 ## Che cosa fare
 
-1. **Le righe**: `data/2026-10-22/L45d2b3b1/righe_b1.csv` (97: 80 entro, 15 al calore, C145 in corto
-   all'impulso della cella → NC-075, K3 escluso → ADR-085). Le 15 del calore prendono il loro esito dopo il
-   rimedio da `data/2026-10-23/L45d2b3b2b2/sintesi_sorg.csv` (13 entro; i due corti dei finali col
-   dissipatore da `dissipatore.csv`: 99 / 95 °C, entro P7 e sotto il massimo assoluto) e, per i quattro
-   guasti del VAS, da `sintesi_sorgt60.csv`.
-2. **I modi delle parti nuove di ADR-099** (R190, R191, R192, Q193, R194, aperte e in corto; 11 modi), dalla
-   stessa `sintesi_sorg.csv`: tutti entro. Sono righe nuove della FMEA.
-3. **La Stax**: P10 per riga dove serve, da `data/2026-10-23/L45d2b3b2b2/stax_lunghi.csv` per i 121 casi
-   oltre 100 ms (nessuno oltre 125 ms) e da L45d2b3b1 per gli altri.
-4. **Le colonne dopo il rimedio** con le regole di ADR-070 / ADR-071 e gli strumenti di L45d1
-   (`data/2026-10-14/L45d1/script/`: `motore.py`, `sintesi.py`, `tipi.py`); la sintesi rifatta sulle
-   quattro tabelle di prima più queste righe.
-5. **NC-042 chiusa se i numeri lo permettono**: che cosa resta aperto lo decide l'utente, coi numeri, per
-   nome (le righe ancora alte, i guasti latenti che vanno a L58).
+1. **Il banco di L53 sul circuito di oggi**, provato prima su un suo caso noto (lo stesso deck sul
+   blocco di L53 deve ridare `out/rca_spl.csv` / `out_gate/gate.csv`). Il blocco è cambiato da allora (L56,
+   ADR-086/087/090/095/097/099): le copie del blocco si rifanno da quello di oggi (limitations #62).
+2. **I numeri di oggi** senza rimedio: il gradino al jack principale e alle fisse in dB SPL a 1 m, col
+   volume in cima e alla posizione d'ascolto, e il gate-gate / gate-source dell'LSK489 contro i limiti
+   del datasheet.
+3. **Le strade, coi numeri**, ciascuna con la sua cifra contro il limite della parte e contro il tetto:
+   proteggere l'ingresso (un limitatore, diodi verso i rail, una resistenza in serie, coi loro effetti
+   su rumore e distorsione), tenere l'uscita in mute (che cosa vede il cambio d'ingresso), un avviso.
+   La catena a valle è quella generica (memoria «catena a valle generica»: l'RCA a caldo non è un
+   guasto della scheda audio, ADR-081 non vale qui).
+4. **La scelta è dell'utente**, con ADR; se cambia il circuito: sorgente, netlist, disegni,
+   `run_tests.sh`, regressione (V1, E5, V4 dove il rimedio tocca l'ingresso).
 
 ## Prima di tutto
 
-- `CLAUDE.md`, `docs/limitations.md` (in particolare **#22**, **#37**, **#62**, **#75**), `AGENTS.md`.
-- `docs/preamp/STATE.md`: «In breve» e le voci di L45d2b3b2b2, L45d2b3b2a, L45d2b3b1, L45d1.
-- **ADR-070**, ADR-071, ADR-069 (il criterio PR-30), ADR-081, ADR-097, ADR-098, ADR-099.
-- `data/2026-10-22/L45d2b3b1/README.md` (le righe) e `data/2026-10-23/L45d2b3b2b2/README.md` (il calore
-  sul sorgente, la mappa delle sigle).
-- Il report di L45d2b3b2b2: la lettura della corrente di riposo a caldo (ADR-042 non ha una banda) è
-  dichiarata lì; se l'utente vuole una banda, è una sua decisione.
-
-## Le sigle (attenzione, #22)
-
-Sul banco di L45d2b3b2a le parti nuove erano R161 / R162 / R167 / Q168 / R169; nel sorgente e nei dati di
-L45d2b3b2b2 sono **R190 / R191 / R192 / Q193 / R194** (base + 90 su ogni istanza). In `calore_*.csv` le
-colonne `P_r161_W` / `P_r162_W` sono una lista fissa dell'analizzatore e sul sorgente restano vuote: non
-sono le parti nuove.
+- `CLAUDE.md`, `docs/limitations.md` (in particolare **#22**, **#62**, **#75**), `AGENTS.md`.
+- `docs/preamp/STATE.md`: «In breve» e le voci di L45d2b3b3 e L53.
+- **NC-059** in `NONCOMPLIANCE.md`; il report di L53 (`reports/2026-10-12-L53-misure-veloci.md`, la parte
+  sull'RCA) e `data/2026-10-12/L53/rca/` (le ipotesi dichiarate in `genera.py`: il polo caldo 10 ms
+  prima della massa, i condensatori Y 1 nF e 3,46 nF, la corrente di contatto di 0,25 mA).
+- ADR-064 (il selettore: C_IN, R_SEL, R_J), ADR-066 (fino a ~0,65 V dalla sorgente), ADR-052 (i pin SS
+  dell'LSK489), PR-20 / PR-23 in `PRB.md`.
 
 ## I vincoli
 
 - Nel worktree vengono rifiutati: i comandi composti, le pipe o i `;` attorno a comandi che eseguono
-  script (anche `run_tests.sh` da solo, senza redirezioni); `cd … && script`; le variabili di shell nei
-  percorsi e nei cicli; `xargs` sulla riga di comando; `awk` con programmi, heredoc, `python3 -c` dentro un
-  altro comando, script lunghi sulla riga di comando (scriverli su file); `sed` con valori calcolati; un
-  titolo di PR con l'apostrofo (il corpo su file, `--body-file`). Comandi semplici, **percorsi assoluti**,
-  script scritti con Write, Edit per i testi.
-- Se serve rieseguire corse: la memoria (limitations #75) decide il parallelo, commit e push prima di una
-  lista lunga; le forme d'onda grandi non si committano.
-- Le domande all'utente si fanno per nome, senza sigle (al più fra parentesi); i colpi al jack in dB SPL;
-  ogni opzione con la sua cifra contro il limite della parte, alle tre reti.
+  script; `cd … && script`; le variabili di shell nei percorsi e nei cicli; `xargs` sulla riga di
+  comando; `awk` con programmi, heredoc, `python3 -c`, script lunghi sulla riga di comando (scriverli su
+  file); `sed` con valori calcolati; un titolo di PR con l'apostrofo (il corpo su file,
+  `--body-file`). Comandi semplici, **percorsi assoluti**, script scritti con Write, Edit per i testi.
+- Le corse: la memoria (limitations #75) decide il parallelo; commit e push prima di una lista lunga; le
+  forme d'onda grandi non si committano (`run/` nel `.gitignore`).
+- Le domande all'utente si fanno per nome, senza sigle (al più fra parentesi); i colpi al jack in dB
+  SPL; ogni opzione con la sua cifra contro il limite della parte, alle tre reti dove la rete conta.
 
 ## NON fa parte di questo lotto
 
-- **I piedini dei transistor e le piazzole** (B / C / E contro 1 / 2 / 3, trovato in L45d2b3b2b1): al
-  layout, prima di G2; se l'utente vuole aprirne una non conformità, glielo si chiede.
-- **NC-073 / NC-075** (gli impulsi di R550 / R551 e di R144 / R152): alla scelta della parte.
-- **Il rame sotto i regolatori** (NC-072) e il comportamento dinamico del riposo col dissipatore: al
-  layout e al prototipo.
-- La tensione degli elettrolitici del blocco (C141 / C142 fino a 20,3 V): alla scelta delle parti.
-- Il micro bloccato e lo standby (L54), la diagnosi (L58), l'ingresso protetto (L57), il dispositivo
-  d'uscita (L55), il tetto delle fisse (NC-046), il dossier (L64), la revisione (L65), G1.
-- Le decisioni prese in L45d2a, L60a…L60d, L62, L45d2b2a…c, L45d2b3a, L45d2b3b1, L45d2b3b2a non si
-  riaprono, salvo che un «Da riaprire se» della loro ADR scatti. In quel caso si torna all'utente coi
-  numeri.
+- Il micro e lo standby (L54), il dispositivo d'uscita (L55), la diagnosi (L58, con le 46 righe latenti
+  della FMEA di L45d2b3b3, `data/2026-10-24/L45d2b3b3/fmea_dopo.csv`), il dossier (L64), la revisione
+  (L65), G1.
+- NC-072 (il rame al layout, ora anche con R550 / R551 in corto, ADR-100), NC-073 / NC-075 (alla scelta
+  della parte), i piedini dei transistor contro le piazzole (al layout).
+- Le decisioni prese non si riaprono, salvo che un «Da riaprire se» della loro ADR scatti. In quel caso
+  si torna all'utente coi numeri.
 
 ## CHIUSURA
 
-1. `STATE.md` con L45d2b3b3 **fatto** nella tabella dei lotti, e il prossimo (dall'ordine deciso con
-   l'utente dopo L45d2b3b2a).
+1. `STATE.md` con L57 **fatto** nella tabella dei lotti, e il prossimo (L54, dall'ordine deciso con
+   l'utente).
 2. Riscrivi `docs/preamp/NEXT-SESSION.md` per il lotto successivo, con la riga «Nome della sessione:
    hi-fi preamp <lotto nuovo>» subito sotto il titolo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L45d2b3b3`.
+4. `/bin/zsh scripts/chunk_close.sh L57`.
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**
