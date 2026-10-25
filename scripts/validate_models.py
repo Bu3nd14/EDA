@@ -1221,6 +1221,157 @@ destroy all
     return cir, [vf_csv, ct_csv], [1, 2], check
 
 
+def tb_lm4040_5v0(model_file):
+    """REGRESSION LOCK on the L57b check of TI's LM4040 5.0 V model
+    (LM4040_NB5P0, grade B, TOL=0) against SNOS633N section 5.16, p. 26.
+
+      V_R @ I_R = 100 uA   4.99193 V   5 V +/-10 mV (grade B, 25 C)  inside
+      V_R @ I_R = 1 mA     4.99281 V   (no datasheet limit at this point)
+      V_R @ I_R = 10 mA    4.99471 V   (idem)
+      V_R(1mA..15mA) rise  2.65 mV     8 mV MAX.                    inside
+      Z_R @ 1 mA, 120 Hz   0.464 ohm   1.1 ohm MAX. (0.5 typ.)      inside
+
+    KNOWN GAP, not asserted as a pass: the model's knee (V_R reaches 4.9 V)
+    sits near 34 uA, below the datasheet I_RMIN of 54 uA typ. / 74 uA max.
+    at 25 C (p. 26). The model is optimistic about the minimum current; a
+    design must take I_RMIN from the datasheet (74 uA), never from this
+    model. The model has no noise (datasheet: 80 uVrms, 10 Hz..10 kHz).
+
+    The model name is LM4040_NB5P0 (grade B, 5.0 V): TI publishes no
+    unencrypted model for the A grade at 5.0 V.
+    """
+    dc_csv = os.path.join(SCRATCH_DIR, "lm4040_5v0_dc.csv")
+    ac_csv = os.path.join(SCRATCH_DIR, "lm4040_5v0_ac.csv")
+    cir = f"""* validate lm4040_5v0_ngspice.lib at the datasheet's own conditions
+.include {model_file}
+Iref 0 vp DC 100u AC 100u
+X1 vp 0 LM4040_NB5P0 TOL=0
+.control
+set temp = 25
+save v(vp)
+dc Iref 5e-5 1.5e-2 5e-5
+wrdata {dc_csv} v(vp)
+destroy all
+alter Iref = 1m
+ac lin 1 120 120
+let zre = real(v(vp))
+let zim = imag(v(vp))
+wrdata {ac_csv} zre zim
+destroy all
+.endc
+.end
+"""
+    LOCK = {1e-4: 4.99193, 1e-3: 4.99281, 1e-2: 4.99471}
+    TOL = 0.5e-3
+
+    def at(rows, i):
+        prev = None
+        for r in rows:
+            if prev is not None and prev["x"] < i <= r["x"] + 1e-12:
+                f = (i - prev["x"]) / (r["x"] - prev["x"])
+                return prev["y0"] + f * (r["y0"] - prev["y0"])
+            prev = r
+        raise ValueError(f"I_R={i} not in the sweep")
+
+    def check(sets):
+        dc_rows, ac_rows = sets
+        problems, report = [], []
+        v = {i: at(dc_rows, i) for i in (1e-4, 1e-3, 1e-2, 1.5e-2)}
+        if abs(v[1e-4] - 5.0) > 0.010:
+            problems.append(f"V_R(100uA)={v[1e-4]:.5f}V outside 5V +/-10mV (grade B)")
+        for i, lock in LOCK.items():
+            if abs(v[i] - lock) > TOL:
+                problems.append(
+                    f"V_R({i * 1e3:g}mA)={v[i]:.5f}V moved from the L57b "
+                    f"value {lock:.5f}V by more than {TOL * 1e3:g}mV")
+        step = v[1.5e-2] - v[1e-3]
+        if step > 8e-3:
+            problems.append(f"V_R 1..15mA rise {step * 1e3:.2f}mV exceeds 8mV MAX.")
+        report.append(f"V_R 100uA/1mA/10mA = {v[1e-4]:.4f}/{v[1e-3]:.4f}/{v[1e-2]:.4f} V")
+        report.append(f"rise 1..15mA {step * 1e3:.2f}mV (<=8)")
+        if len(ac_rows) != 1:
+            return False, f"expected one AC row, got {len(ac_rows)}"
+        import math
+        zr = math.hypot(ac_rows[0]["y0"], ac_rows[0]["y1"]) / 100e-6
+        if zr > 1.1:
+            problems.append(f"Z_R={zr:.3f}ohm exceeds 1.1ohm MAX.")
+        report.append(f"Z_R@1mA,120Hz = {zr:.3f}ohm (<=1.1)")
+        if problems:
+            return False, "; ".join(problems)
+        return True, ", ".join(report) + " - model knee ~34uA is BELOW datasheet I_RMIN 74uA max: use the datasheet"
+    return cir, [dc_csv, ac_csv], [1, 2], check
+
+
+def tb_bav199_fit(model_file):
+    """L57b: bav199_fit.lib is an ESTIMATE from the BAV199 datasheet
+    (Nexperia, 1 April 2023), NOT the manufacturer's model. The recipe
+    checks the three things it was built for:
+
+      C_d @ V_R = 0 V,  1 MHz   1.85 pF +/-5%   (Fig. 5 p. 4, read by eye)
+      C_d @ V_R = 5 V,  1 MHz   1.10 pF +/-5%   (idem)
+      V_F @ I_F = 1 mA          <= 0.9 V        (p. 3, MAX.)
+      I_R @ V_R = 5 V           <= 5 nA         (p. 3 MAX. is at 75 V, 25 C;
+                                                 the datasheet has no 5 V point)
+
+    The leakage passing is by construction: it is the 1N4148's, a ceiling
+    for the BAV199, not a prediction.  Measured in L57b: 0.635 V,
+    3.9 nA, 1.848 pF, 1.095 pF.
+    """
+    dc_csv = os.path.join(SCRATCH_DIR, "bav199_fit_dc.csv")
+    ac_csv = os.path.join(SCRATCH_DIR, "bav199_fit_ac.csv")
+    cir = f"""* validate bav199_fit.lib
+.include {model_file}
+If 0 a DC 1m
+D1 a 0 BAV199
+Vr 0 r DC 5
+D2 r 0 BAV199
+Vc0 k0 0 DC 0 AC 1
+D3 k0 0 BAV199
+Vc5 m5 0 DC 5 AC 1
+D4 0 m5 BAV199
+.control
+set temp = 25
+dc If 1m 1m 1m
+wrdata {dc_csv} v(a) i(Vr)
+destroy all
+ac lin 1 1meg 1meg
+let a0 = real(i(Vc0))
+let b0 = imag(i(Vc0))
+let a5 = real(i(Vc5))
+let b5 = imag(i(Vc5))
+wrdata {ac_csv} a0 b0 a5 b5
+destroy all
+.endc
+.end
+"""
+
+    def check(sets):
+        dc_rows, ac_rows = sets
+        if len(dc_rows) != 1 or len(ac_rows) != 1:
+            return False, f"expected one DC and one AC row, got {len(dc_rows)}/{len(ac_rows)}"
+        problems = []
+        vf, ir = dc_rows[0]["y0"], abs(dc_rows[0]["y1"])
+        r = ac_rows[0]
+        c0, rat0 = _cap_from(r, "y0", "y1")
+        c5, rat5 = _cap_from(r, "y2", "y3")
+        if max(rat0, rat5) > 0.05:
+            problems.append("the C_d reading is not capacitive")
+        if vf > 0.9:
+            problems.append(f"V_F={vf:.4f}V exceeds 0.9V MAX.")
+        if ir > 5e-9:
+            problems.append(f"I_R(5V)={ir * 1e9:.2f}nA exceeds 5nA")
+        if abs(c0 / 1.85e-12 - 1) > 0.05:
+            problems.append(f"C_d(0V)={c0 * 1e12:.3f}pF not within 5% of 1.85pF")
+        if abs(c5 / 1.10e-12 - 1) > 0.05:
+            problems.append(f"C_d(5V)={c5 * 1e12:.3f}pF not within 5% of 1.10pF")
+        if problems:
+            return False, "; ".join(problems)
+        return True, (f"V_F@1mA={vf:.3f}V (<=0.9), I_R@5V={ir * 1e9:.2f}nA (<=5, the "
+                      f"1N4148's leakage: a ceiling), C_d 0V/5V={c0 * 1e12:.3f}/"
+                      f"{c5 * 1e12:.3f}pF - ESTIMATE, not Nexperia's model")
+    return cir, [dc_csv, ac_csv], [2, 4], check
+
+
 def tb_opamp(model_file):
     csv = os.path.join(SCRATCH_DIR, "opamp_generic.csv")
     cir = f"""* validate generic_opamp.lib (unity-gain buffer)
@@ -1640,6 +1791,10 @@ def build_registry():
     # L46a - the faster output pair measured against the MJE15032/33.
     reg["bjt_npn/zxtn25040dz.lib"] = lambda p: tb_zxtn25040dz(p)
     reg["bjt_pnp/zxtp25040dz.lib"] = lambda p: tb_zxtp25040dz(p)
+    # L57b - TI LM4040 5.0 V shunt reference (ADR-101 limiter rails).
+    reg["voltage_reference/lm4040_5v0_ngspice.lib"] = lambda p: tb_lm4040_5v0(p)
+    # L57b - BAV199 ESTIMATE from the datasheet, not the manufacturer's model.
+    reg["diodes/bav199_fit.lib"] = lambda p: tb_bav199_fit(p)
     reg["opamp/generic_opamp.lib"] = lambda p: tb_opamp(p)
     reg["subckt_generic/generic_transformer.lib"] = lambda p: tb_transformer(p)
     # L45d2b3a - TI's U501 model, run in ngspice (limitations #72).

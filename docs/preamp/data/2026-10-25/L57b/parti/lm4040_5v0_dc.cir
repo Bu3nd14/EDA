@@ -1,0 +1,22 @@
+* L57b - LM4040 5.0 V (TI LM4040_NB5P0, grade B) against SNOS633N section 5.16 (p. 26)
+.include /Users/roberto/EDA/.claude/worktrees/L57b/models/voltage_reference/lm4040_5v0_ngspice.lib
+Iref 0 vp DC 100u
+X1 vp 0 LM4040_NB5P0 TOL=0
+.control
+set temp = 25
+op
+dc Iref 1u 15.001m 1u
+meas dc v100u find v(vp) at=100u
+meas dc v1m find v(vp) at=1m
+meas dc v10m find v(vp) at=10m
+meas dc v15m find v(vp) at=15m
+meas dc i_v4p9 when v(vp)=4.9 cross=1
+meas dc i_v4p99 when v(vp)=4.99 cross=1
+meas dc i_v4p0 when v(vp)=4.0 cross=1
+meas dc v20u find v(vp) at=20u
+meas dc v40u find v(vp) at=40u
+meas dc v54u find v(vp) at=54u
+meas dc v74u find v(vp) at=74u
+wrdata /Users/roberto/EDA/.claude/worktrees/L57b/docs/preamp/data/2026-10-25/L57b/parti/lm4040_5v0_dc.csv v(vp)
+.endc
+.end

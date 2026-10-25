@@ -1,0 +1,27 @@
+lm4040_rif_solo - L57b: i due riferimenti del limitatore da soli (INREF generato), op e transitorio
+* Prima riga = titolo. Il subckt INREF di spice/preamp/input_limiter.subckt coi rail a +/-15 V, senza
+* diodi. Serve a capire se il modello di TI (LM4040_NB5P0) col suo 100 nF oscilla o e' solo rigido:
+* il punto di lavoro, poi 1 ms di transitorio dal punto di lavoro, poi un gradino di corrente di 1 mA
+* iniettato in VLIM_P e VLIM_M (quello di un diodo del limitatore), e le escursioni.
+.include @REPO@/models/voltage_reference/lm4040_5v0_ngspice.lib
+.include @REPO@/spice/preamp/input_limiter.subckt
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+XREF VLIM_P VLIM_M VPLUS VMINUS INREF
+* il gradino di corrente di un diodo: in VLIM_P entra, da VLIM_M esce
+IDP 0 VLIM_P PULSE(0 1m 0.5m 1u 1u 0.2m 1)
+IDM VLIM_M 0 PULSE(0 1m 0.5m 1u 1u 0.2m 1)
+.control
+set numdgt=8
+op
+print v(vlim_p) v(vlim_m)
+tran 0.1u 1m
+meas tran pmax max v(vlim_p) from=10u to=1m
+meas tran pmin min v(vlim_p) from=10u to=1m
+meas tran mmax max v(vlim_m) from=10u to=1m
+meas tran mmin min v(vlim_m) from=10u to=1m
+meas tran prima_pp pp v(vlim_p) from=10u to=0.49m
+meas tran prima_mp pp v(vlim_m) from=10u to=0.49m
+wrdata lm4040_rif_solo.txt v(vlim_p) v(vlim_m)
+.endc
+.end

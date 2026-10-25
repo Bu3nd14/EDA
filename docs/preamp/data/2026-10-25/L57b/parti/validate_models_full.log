@@ -1,0 +1,71 @@
+
+MODEL / CHECK                                           STATUS DETAIL
+--------------------------------------------------------------------------------------------------------------
+bjt_npn/generic_npn.lib [provenance]                    PASS   authored, provenance OK
+bjt_npn/generic_npn.lib [electrical]                    PASS   Ib=8.809e-05A, Ic=4.867e-03A, hFE(computed)=55.2 (plausible range 20-500)
+bjt_npn/mje15032.lib [provenance]                       PASS   vendor_derived, provenance OK (source hash verified: vendor/bjt_npn/onsemi/MJE15032/mje15032.lib)
+bjt_npn/mje15032.lib [electrical]                       PASS   hFE@0.5A=66.4 BELOW its 70 minimum, hFE@1A=61.3, hFE@2A=53.5, fT=27.667MHz (7.8% below its 30MHz minimum - NC-025)
+bjt_npn/mje15032.lib [flicker]                          PASS   AF=1.398 (declared 1.4), KF=9.957e-14 (declared 1e-13) at Ib=7.29e-06 A, 1/f corner 2739 Hz
+bjt_npn/mmbt5551.lib [provenance]                       PASS   vendor_derived, provenance OK (source hash verified: vendor/bjt_npn/diodes_inc/MMBT5551/MMBT5551.spice.txt)
+bjt_npn/mmbt5551.lib [electrical]                       PASS   hFE@10mA=107.2, fT=175.7MHz, C_obo=2.221pF - three of three inside the datasheet windows, at IC verified to 10.000 mA
+bjt_npn/mmbt5551.lib [flicker]                          PASS   AF=1.400 (declared 1.4), KF=9.999e-14 (declared 1e-13) at Ib=1.6e-06 A, 1/f corner 1501 Hz
+bjt_npn/zxtn25040dz.lib [provenance]                    PASS   vendor_derived, provenance OK (source hash verified: vendor/bjt_npn/diodes_inc/ZXTN25040DZ/ZXTN25040DZ.spice.txt)
+bjt_npn/zxtn25040dz.lib [electrical]                    PASS   hFE@0.01A=447.8, hFE@1A=311.2, fT=194.6MHz (no published minimum), C_obo=12.178pF, at IC verified to 50.000 mA
+bjt_pnp/generic_pnp.lib [provenance]                    PASS   authored, provenance OK
+bjt_pnp/generic_pnp.lib [electrical]                    PASS   Ib=8.809e-05A, Ic=4.867e-03A, hFE(computed)=55.2 (plausible range 20-500)
+bjt_pnp/ls350.lib [provenance]                          PASS   vendor_derived, provenance OK (source hash verified: vendor/bjt_pnp/linear_systems/LS350/LS350-SPICE-Model-Rev2.pdf)
+bjt_pnp/ls350.lib [electrical]                          PASS   hFE@0.001A=490.6, hFE@0.0001A=483.2, hFE@1e-05A=441.2 - all inside [200, 600]; fT is 35% below the datasheet minimum, which is NC-020, not a regression
+bjt_pnp/ls350.lib [flicker]                             PASS   AF=1.399 (declared 1.4), KF=9.969e-14 (declared 1e-13) at Ib=2.17e-07 A, 1/f corner 672 Hz
+bjt_pnp/mje15033.lib [provenance]                       PASS   vendor_derived, provenance OK (source hash verified: vendor/bjt_pnp/onsemi/MJE15033/mje15033.lib)
+bjt_pnp/mje15033.lib [electrical]                       PASS   hFE@0.5A=88.2, hFE@1A=66.9, hFE@2A=42.8, fT=29.286MHz (2.4% below its 30MHz minimum - NC-025)
+bjt_pnp/mje15033.lib [flicker]                          PASS   AF=1.399 (declared 1.4), KF=9.979e-14 (declared 1e-13) at Ib=7.76e-06 A, 1/f corner 2814 Hz
+bjt_pnp/mmbt5401.lib [provenance]                       PASS   vendor_derived, provenance OK (source hash verified: vendor/bjt_pnp/diodes_inc/MMBT5401/MMBT5401.spice.txt)
+bjt_pnp/mmbt5401.lib [electrical]                       PASS   hFE@10mA=124.9, fT=160.1MHz, C_obo=3.706pF - three of three inside the datasheet windows, at IC verified to 10.000 mA
+bjt_pnp/mmbt5401.lib [flicker]                          PASS   AF=1.400 (declared 1.4), KF=9.989e-14 (declared 1e-13) at Ib=1.22e-05 A, 1/f corner 3376 Hz
+bjt_pnp/zxtp25040dz.lib [provenance]                    PASS   vendor_derived, provenance OK (source hash verified: vendor/bjt_pnp/diodes_inc/ZXTP25040DZ/ZXTP25040DZ.spice.txt)
+bjt_pnp/zxtp25040dz.lib [electrical]                    PASS   hFE@0.01A=409.2, hFE@1A=291.1, fT=275.5MHz (no published minimum), C_obo=18.087pF, at IC verified to 50.000 mA
+capacitors/generic_cap.lib [provenance]                 PASS   authored, provenance OK
+capacitors/generic_cap.lib [electrical]                 PASS   v(out) at t~1tau(1ms)=3.1562V (expected ~3.1606V, tau=R*C)
+diodes/1n4148.lib [provenance]                          PASS   vendor_derived, provenance OK (source hash verified: vendor/diodes/onsemi/1N4148/1n914.lib)
+diodes/1n4148.lib [electrical]                          PASS   V_F@10mA=0.7662V, C_T@VR=0=0.8687pF - both published limits inside (C_T sits 4.6x below its ceiling, so the model is a typical specimen, not the datasheet's worst case)
+diodes/bav199_fit.lib [provenance]                      PASS   vendor_derived, provenance OK (source hash verified: vendor/diodes/onsemi/1N4148/1n914.lib)
+diodes/bav199_fit.lib [electrical]                      PASS   V_F@1mA=0.635V (<=0.9), I_R@5V=3.91nA (<=5, the 1N4148's leakage: a ceiling), C_d 0V/5V=1.848/1.095pF - ESTIMATE, not Nexperia's model
+diodes/generic_diode.lib [provenance]                   PASS   authored, provenance OK
+diodes/generic_diode.lib [electrical]                   PASS   reverse I(-1V)=1.010e-12A (blocking), forward I(0.7V)=5.823e-04A (conducting)
+diodes/generic_diode_from_vendor.lib [provenance]       PASS   vendor_derived, provenance OK (source hash verified: vendor/diodes/demo_vendor/1N4148_TEST/vendor_1n4148_test.lib)
+diodes/generic_diode_from_vendor.lib [electrical]       PASS   reverse I(-1V)=4.352e-09A (blocking), forward I(0.7V)=9.390e-04A (conducting)
+inductors/generic_ind.lib [provenance]                  PASS   authored, provenance OK
+inductors/generic_ind.lib [electrical]                  PASS   v(L) right after edge=4.998V (~5V expected), v(L) at t=5ms=-3.53e-17V (~0V expected)
+jfet/generic_njf.lib [provenance]                       PASS   authored, provenance OK
+jfet/generic_njf.lib [electrical]                       PASS   I(Vgs=0, on)=4.400e-03A, I(Vgs=-3V, pinched off)=8.010e-12A
+jfet/lsk489.lib [provenance]                            PASS   vendor_derived, provenance OK (source hash verified: vendor/jfet/linear_systems/LSK489/Copy_LSK489A_NJF.pdf)
+jfet/lsk489.lib [electrical]                            PASS   I_DSS=2.593mA in [2.5, 8.5]mA; V_GS@500uA=-0.6502V in [-0.5, -3.5]V; V_P=-1.1244V locked to L7 - still 0.376V short of the datasheet -1.5V minimum, which is NC-013, not a regression
+jfet/mmbfj112.lib [provenance]                          PASS   vendor_derived, provenance OK (source hash verified: vendor/jfet/onsemi/MMBFJ111_112_113/mmbfj111_mmbfj112_mmbfj113 (pspice model).lib)
+jfet/mmbfj112.lib [electrical]                          PASS   IDSS=14.95mA (>=5 datasheet), rDS(on)=59.7ohm (model 1/(2*BETA*|VTO|)=59.5; DEVIATION: datasheet max 50), I(Vgs=-5V)=1.02e-11A
+ldo_regulator/tps7a4701_ngspice.lib [provenance]        PASS   vendor_derived, provenance OK (source hash verified: vendor/ldo_regulator/ti/TPS7A4701/tps7a4701_trans.lib)
+ldo_regulator/tps7a4701_ngspice.lib [electrical]        PASS   15.3 V set point at 0.3 A: 15.2940 V; 3.3 V at 10 mA 3.3007 V, 10 -> 845 mA 3.34 mV (SBVS204G fig. 5-19 ~5 mV peak, ~3 settled)
+mosfet_n/dmn6040svt.lib [provenance]                    PASS   vendor_derived, provenance OK (source hash verified: vendor/mosfet_n/diodes_inc/DMN6040SVT/MOSFET-Master-Table.spice.txt)
+mosfet_n/dmn6040svt.lib [electrical]                    PASS   ID(VGS=VDS=1V)=2.65e-09A, ID(3V)=5.01e+00A (250uA in between), RDS(on)@4.5V,4A=46.0mohm (<=60)
+mosfet_n/dmn6040svt_sottosoglia.lib [provenance]        PASS   authored, provenance OK
+mosfet_n/dmn6040svt_sottosoglia.lib [electrical]        PASS   ID(VGS=vth=2.0V)=250.0uA (250), ID(1.9V)/ID(2.0V)=0.100 (0.1: one decade per s)
+mosfet_n/generic_nmos.lib [provenance]                  PASS   authored, provenance OK
+mosfet_n/generic_nmos.lib [electrical]                  PASS   I(Vgs=0, off)=5.010e-12A, I(Vgs=+/-5V, on)=1.760e-02A
+mosfet_p/generic_pmos.lib [provenance]                  PASS   authored, provenance OK
+mosfet_p/generic_pmos.lib [electrical]                  PASS   I(Vgs=0, off)=5.010e-12A, I(Vgs=+/-5V, on)=8.800e-03A
+opamp/generic_opamp.lib [provenance]                    PASS   authored, provenance OK
+opamp/generic_opamp.lib [electrical]                    PASS   unity-buffer: Vin=1.000000V, Vout=0.999995V (diff=5.00e-06V)
+optocoupler/nsl32sr3_comportamentale.lib [provenance]   PASS   authored, provenance OK
+optocoupler/nsl32sr3_comportamentale.lib [electrical]   PASS   B@0.9738mA=300ohm (300), B@9.824mA=82.68ohm (82.69), A@0.01mA=1.6e+04ohm (16000), C@0.01mA=8.9e+04ohm (89000), C@20mA=60.01ohm (60), B@1e-06mA=2.5e+07ohm (2.5e+07)
+optocoupler/vom1271.lib [provenance]                    PASS   vendor_derived, provenance OK (source hash verified: vendor/optocoupler/vishay/VOM1271/spicemodelvom1271.zip)
+optocoupler/vom1271.lib [electrical]                    PASS   Voc=8.387V (8.4 typ), Isc=15.00uA (15 typ) at IF=10mA
+optocoupler/vtl5c4_comportamentale.lib [provenance]     PASS   authored, provenance OK
+optocoupler/vtl5c4_comportamentale.lib [electrical]     PASS   B@1.051mA=1020ohm (1020), B@10.53mA=121ohm (121), A@38.701mA=60.01ohm (60), B@1e-06mA=4e+08ohm (4e+08)
+resistors/generic_res.lib [provenance]                  PASS   authored, provenance OK
+resistors/generic_res.lib [electrical]                  PASS   I(27C)=-1.000000e-03 A (exp -1.000e-03), I(127C)=-9.090909e-04 A (exp -9.091e-04)
+subckt_generic/generic_transformer.lib [provenance]     PASS   authored, provenance OK
+subckt_generic/generic_transformer.lib [electrical]     PASS   sec/pri ratio at 100000Hz = 13.97dB (expected ~13.97dB for N=5, K=0.999)
+voltage_reference/lm4040_5v0_ngspice.lib [provenance]   PASS   vendor_derived, provenance OK (source hash verified: vendor/voltage_reference/ti/LM4040_5V0/LM4040_NB5P0_TRANS.lib)
+voltage_reference/lm4040_5v0_ngspice.lib [electrical]   PASS   V_R 100uA/1mA/10mA = 4.9919/4.9928/4.9947 V, rise 1..15mA 2.65mV (<=8), Z_R@1mA,120Hz = 0.464ohm (<=1.1) - model knee ~34uA is BELOW datasheet I_RMIN 74uA max: use the datasheet
+--------------------------------------------------------------------------------------------------------------
+TOTAL: 65 PASS, 0 FAIL, 0 SKIP  (out of 65 checks)
+

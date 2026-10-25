@@ -1,0 +1,23 @@
+* L57b - bav199_fit.lib (ESTIMATE, not Nexperia's model) vs BAV199 datasheet 1 April 2023
+* VF at 1 mA (p. 3: max 0.9 V), IR at 5 V reverse (p. 3 has only 75 V: 5 nA max),
+* Cd at 0 V and 5 V, 1 MHz (Fig. 5 p. 4 read by eye: 1.85 / 1.10 pF)
+.include /Users/roberto/EDA/.claude/worktrees/L57b/models/diodes/bav199_fit.lib
+If 0 a DC 1m
+D1 a 0 BAV199
+Vr 0 r DC 5
+D2 r 0 BAV199
+Vc0 k0 0 DC 0 AC 1
+D3 k0 0 BAV199
+Vc5 m5 0 DC 5 AC 1
+D4 0 m5 BAV199
+.control
+set temp = 25
+op
+print v(a)
+print i(Vr)
+ac lin 1 1meg 1meg
+let c0 = abs(imag(i(Vc0)))/(2*pi*1meg)
+let c5 = abs(imag(i(Vc5)))/(2*pi*1meg)
+print c0 c5
+.endc
+.end

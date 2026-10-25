@@ -783,9 +783,11 @@ class Sheet:
         assert len(got) == 1, f"{ref} su {net}: {got}"
         return got[0]
 
-    def zref(self, ref, anode, cathode, side=None):
+    def zref(self, ref, anode, cathode, side=None, shown=None):
         """A shunt reference (LM4040): drawn as a zener, K and A from its symbol;
-        the other pins of the symbol must be unconnected, and are recorded so."""
+        the other pins of the symbol must be unconnected, and are recorded so.
+        `shown` replaces the printed value, as `value` in two(): the caller prints the
+        netlist's own text elsewhere."""
         value, lib, part = self._part(ref)
         sym = symbol_pins(lib, part)
         byname = {nm: num for num, nm in sym.items()}
@@ -795,10 +797,33 @@ class Sheet:
             if num not in (byname["A"], byname["K"]):
                 assert (ref, num) not in self.pin, f"{ref}.{num} e' collegato"
                 self.nc.add((ref, num))
-        self._two(ref, elm.Zener(), a, k, side,
-                  extra=value + "  (" + ", ".join(f"{n} nc" for n in sorted(sym)
-                                                  if n not in (byname["A"], byname["K"])) + ")")
+        self._value_override = shown
+        try:
+            self._two(ref, elm.Zener(), a, k, side,
+                      extra=value + "  (" + ", ".join(f"{n} nc" for n in sorted(sym)
+                                                      if n not in (byname["A"], byname["K"])) + ")")
+        finally:
+            self._value_override = None
         return a, k
+
+    def dio_pair(self, ref, a1, com, k2, side=None):
+        """Two diodes in series in one SOT-23 (Diode:BAV99, fitted as BAV99 or BAV199,
+        L57b): pin 1 = A1, pin 3 = K1/A2 the common node, pin 2 = K2 - by NUMBER, as the
+        Nexperia datasheets say (BAV199 p. 1, table 2). The KiCad symbol names pins 1 / 2
+        "K" / "A", against its own drawing: the names are not read."""
+        _, lib, part = self._part(ref)
+        assert (lib, part) == ("Diode", "BAV99"), f"{ref}: {lib}:{part}"
+        assert sorted(symbol_pins(lib, part)) == ["1", "2", "3"]
+        a = self.term(ref, "1", a1)
+        c = self.term(ref, "3", com)
+        k = self.term(ref, "2", k2)
+        for p, q in ((a, c), (c, k)):
+            self.d.add(elm.Diode().at(self.xy[p]).to(self.xy[q]))
+            self.bodies.append(("seg", (self.xy[p], self.xy[q]), ref))
+        for n in (a, c, k):
+            self._touch(n)
+        self._lbl2(ref, a, k, side)
+        return a, c, k
 
     def _mos(self, ref, e, pinmap, xy_anchor, anchor, label_side):
         value, lib, part = self._part(ref)

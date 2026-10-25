@@ -1,0 +1,28 @@
+{
+  "part_name": "BAV99 (high-speed switching double diode in series, SOT23)",
+  "vendor_name": "Nexperia B.V.",
+  "device_class": "diodes",
+  "product_page": "https://www.nexperia.com/product/BAV99",
+  "date_obtained": "2026-10-25",
+  "lotto": "L57b",
+  "obtained_by": "AI agent (bom-component-manager subagent) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "NOT FROM nexperia.com (it refuses automated downloads with HTTP 403; I did not attempt to get around it). Downloaded with curl from the third-party mirror https://extranet.mandieselturbo.com/electronics/datasheets/Nexperia/BAV99/BAV99.pdf (MAN Energy Solutions / Everllence ECDB archive, 'BAV99 - (2022-07-01)'). PDF metadata: Author 'Nexperia BV', Creator 'Nexperia SSG plugin 2.7.0'; footer 'Product data sheet, 1 July 2022', 10 pages. Byte-identity with nexperia.com is NOT verified; a newer revision may exist.",
+  "license_notes": "Manufacturer datasheet, redistributed here unmodified for engineering traceability only. Copyright remains Nexperia B.V.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "L57b / ADR-101: alternative to BAV199 for the input limiter diodes (same SOT23 pinout and package; KiCad symbol Diode:BAV99 exists). Lower capacitance (Cd <= 1.5 pF max at 0 V) but a leakage specified in nA at 25 C (30 nA max at 25 V) against pA for the BAV199.",
+  "files": [
+    {
+      "original_filename": "BAV99.pdf",
+      "role": "datasheet (Nexperia BAV99, 1 July 2022, 10 pages)",
+      "url": "https://extranet.mandieselturbo.com/electronics/datasheets/Nexperia/BAV99/BAV99.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 203011,
+      "pages": 10,
+      "sha256": "826c982f4f2bbefcc047abea7ed2be517c09cf46bf61c10c25e4b7c378369b2f",
+      "local_filename": "BAV99.pdf",
+      "renamed": false
+    }
+  ],
+  "spice_model_status": "NOT OBTAINED (assets.nexperia.com refuses automated downloads; the BAV99 model exists on Nexperia's side, URL not verified). No model in models/."
+}

@@ -1,0 +1,49 @@
+* bav199_fit.lib - ESTIMATE of one diode of the Nexperia BAV199, SOT23.
+* THIS IS NOT THE MANUFACTURER'S MODEL. Nexperia's own SPICE model could
+* not be downloaded (assets.nexperia.com and www.nexperia.com answer
+* HTTP 403 to automated clients; L57b). Replace this file with the
+* manufacturer's model when it is available.
+*
+* USAGE (one diode per .MODEL; the part is two diodes in series, so
+* instantiate two):
+*   .include models/diodes/bav199_fit.lib
+*   D1 anode cathode BAV199
+* Pinout of the real part (datasheet p. 1): pin 1 = A1, pin 2 = K2,
+* pin 3 = K1/A2 (common node).
+*
+* HOW IT WAS BUILT
+*  - STATIC part (IS RS IKF N ISR NR BV IBV EG, FC, TT): copied
+*    unchanged from .MODEL D1N914 of models/diodes/1n4148.lib (onsemi,
+*    frozen at vendor/diodes/onsemi/1N4148/1n914.lib).
+*  - CAPACITANCE: CJO=1.85p VJ=0.7 M=0.25, fitted by eye to Fig. 5 of the
+*    BAV199 datasheet (p. 4, typical, per diode, 1 MHz, 25 C), which was
+*    READ BY EYE from the plot: about 1.85 pF at 0 V, 1.1 at 5 V,
+*    0.9 at 10 V, 0.7 at 20 V. The datasheet table (p. 3) gives only
+*    Cd typ 2 pF at 0 V.
+*
+* WHAT IS WRONG ON PURPOSE - read before using a number from it
+*  - LEAKAGE is the 1N4148's (IS = 3.45 nA, ISR = 1.01 nA): an UPPER
+*    bound, far above the BAV199 (typ 3 pA, max 5 nA at 75 V, 25 C,
+*    datasheet p. 3; no figure at 5 V exists in the datasheet). Any
+*    offset or leak computed with this model is a ceiling, not a
+*    prediction; the real part is orders of magnitude better at 25 C.
+*  - VF is the 1N4148's: datasheet BAV199 gives only maxima
+*    (0.9 V at 1 mA, 1 V at 10 mA).
+*  - TT is the D1N914's 10 ns, not the BAV199's trr (0.8 us typ).
+*  - No flicker noise, no temperature behaviour beyond EG.
+*
+.MODEL BAV199 D
++ IS=3.45e-09
++ RS=0.452422
++ IKF=0.0528
++ N=1.94
++ ISR=1.01e-09
++ NR=2.0
++ CJO=1.85e-12
++ M=0.25
++ VJ=0.7
++ FC=0.5
++ TT=1.012e-8
++ BV=100
++ IBV=1e-05
++ EG=0.92

@@ -210,14 +210,23 @@ for k, y in enumerate(YIN):
     W(N(f"C{170 + n}", f"L_SEL{n}"), N(f"R{170 + n}", f"L_SEL{n}"))
     kp = S.relay_pole(f"K{12 + n}", 1, (15.4, y - 0.5), rtl=True, note=f"IN{n}")
     W(N(f"R{170 + n}", f"L_SEL{n}"), kp["NO"])
-    bn = node(f"alin_{n}", "AL_IN", (XBUS, y - 0.5))
+    bn = node(f"selcom_{n}", "L_SELCOM", (XBUS, y - 0.5))
     W(kp["COM"], bn)
     bus_in.append(bn)
 chain(*bus_in)
-ain = node("al_in_a", "AL_IN", (XBUS, YA))      # on the bus, between inputs 3 and 4
+# L57b, ADR-101: the COMs meet on L_SELCOM; the limiter - R179 1 k and the diode pair D179
+# to the two +/-5 V references (drawn in panel 2, under block AL) - is block A's input
+two("R179", {"L_SELCOM": (XBUS, 89.0), "AL_IN": (XBUS, 86.6)}, side="l")
+W(bus_in[-1], N("R179", "L_SELCOM"))
+S.dio_pair("D179", (15.2, 84.4), (XBUS, 84.4), (20.0, 84.4), side="b")
+W(N("R179", "AL_IN"), S.T("D179", "3"))
+lab(S.T("D179", "1"), "left")
+ain = node("al_in_a", "AL_IN", (20.4, 86.6))
+W(N("R179", "AL_IN"), ain)
 notes(1.2, 85.2, ["C171–C174 film; R171–R174 tengono a 0 V",
                   "il lato del preamp di ogni ingresso,",
-                  "R175–R178 il jack vuoto (F1, PR-14)"])
+                  "R175–R178 il jack vuoto (F1, PR-14);",
+                  "R179 + D179 il limitatore (ADR-101)"])
 
 # =============================================================================
 # 2  BLOCK A, FIXED OUTPUTS, TRIM, VOLUME, BLOCK B, MAIN OUTPUT (left channel)
@@ -227,6 +236,26 @@ S.panel(21.0, 80.4, 86.0, 118.6, "2  Blocco A, uscite fisse, trim, volume, blocc
 boxA = S.instance("AL", 22.8, YA + 2.4, 5.0, 4.8, {"IN": ("l", 2.4), "OUT": ("r", 2.4)},
                   title="blocco AL", sub=["guadagno 1", "R113 montata"])
 W(ain, boxA["IN"])
+# the limiter's references (input_limiter.py, ADR-101): shared by the two channels
+for ux, cx, (ur, rr, cr), sup, vnet in ((23.4, 24.8, ("U1", "R4", "C1"), "VPLUS", "VLIM_P"),
+                                       (27.8, 29.6, ("U2", "R5", "C2"), "VMINUS", "VLIM_M")):
+    two(rr, {sup: (ux, 88.0), vnet: (ux, 85.8)}, side="l")
+    rail(N(rr, sup), up=True)
+    if vnet == "VLIM_P":
+        a, k = S.zref(ur, (ux, 82.8), (ux, 85.0), side="l", shown="")
+        W(N(rr, vnet), k)
+        gnd(a)
+        # one island with the diode pair's cathode end, under the AL_IN wire
+        W(S.T("D179", "2"), N(rr, vnet), (21.0, 84.4), (21.0, 85.8), first="h")
+    else:
+        a, k = S.zref(ur, (ux, 85.0), (ux, 82.8), side="r", shown="")
+        W(N(rr, vnet), a)
+        gnd(k)
+    hang(cr, vnet, (cx, 85.8), 2.2, side="r")
+    W(N(rr, vnet), N(cr, vnet))
+lab(N("C2", "VLIM_M"), "up")
+assert S.comp["U1"][0] == S.comp["U2"][0]
+notes(21.4, 81.3, [f"U1, U2: {S.comp['U1'][0]}, pin 3 libero; ±5 V del limitatore (ADR-101)"])
 AOUT = rete("AL_OUT")
 aout = node("al_out_j", AOUT, (29.6, YA))
 W(boxA["OUT"], aout)
