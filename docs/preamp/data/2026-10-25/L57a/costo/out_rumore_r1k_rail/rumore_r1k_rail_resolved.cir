@@ -1,0 +1,50 @@
+rumore - L57a: il costo della protezione dell'ingresso, prot=R=1k,D=rail
+* generato da L57a/script/dist.py
+.include /Users/roberto/EDA/.claude/worktrees/L57a/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L57a/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L57a/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L57a/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L57a/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L57a/models/diodes/1n4148.lib
+.include /Users/roberto/EDA/.claude/worktrees/L57a/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L57a/spice/preamp/gain_block.subckt
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VIN VSN 0 DC 0 AC 1
+RSRC VSN JIN 2500
+RJ    JIN 0 10Meg
+CIN   JIN SEL 1u
+RSEL  SEL 0 470k
+RKSEL SEL NK 0.1
+RP NK AIN 1k
+DP AIN VPLUS D1N914
+DN VMINUS AIN D1N914
+.include /Users/roberto/EDA/.claude/worktrees/L57a/docs/preamp/data/2026-10-25/L57a/costo/nodeset.inc
+CSEL  AIN 0 68p
+XA AIN AOUT AFB ARG ARG10 VPLUS VMINUS GAINBLOCK
+RARG   ARG   0 1G
+RARG10 ARG10 0 1G
+RL1 AOUT 0 1773
+XF1 AOUT F1OUT F1FB F1RG F1RG10 VPLUS VMINUS GAINBLOCK
+RF1RG   F1RG   0 1G
+RF1RG10 F1RG10 0 1G
+RSEP1 F1OUT FIX1 47
+CFIX1 FIX1 FIXJACK1 4.7u
+RBL1  FIXJACK1 0 470k
+RLD1  FIXJACK1 0 10k
+* rshunt 1 TOhm su ogni nodo: senza, alcuni punti di lavoro coi diodi ripiegavano su un blocco
+* spento (vedi NODESET); su questi nodi pesa meno di una parte su un milione
+.options reltol=1e-6 abstol=1e-15 vntol=1e-9 rshunt=1e12
+.control
+option itl1=1000
+set numdgt=6
+ac lin 1 1k 1k
+let g = vm(aout)[0]
+echo "L57A_GUADAGNO g=$&g"
+noise v(aout) vin dec 100 20 20k
+setplot noise2
+let n_uv = onoise_total * 1e6
+echo "L57A_RUMORE prot=R=1k,D=rail onoise_aout_uv=$&n_uv"
+.endc
+.end

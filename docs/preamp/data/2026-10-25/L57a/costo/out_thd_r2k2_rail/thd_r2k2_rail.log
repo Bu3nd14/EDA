@@ -1,0 +1,698 @@
+warning, model type mismatch in line
+    q121a nmirc nmiri nme1 ls350
+warning, model type mismatch in line
+    q121b nhi nmiri nme2 ls350
+
+Note: No compatibility mode selected!
+
+
+Circuit: thd - l57a: il costo della protezione dell'ingresso, prot=r=2.2k,d=rail
+
+Warning: Model issue on line 122 :
+  .model lsk489a njf(beta=2.2m betatce=-.5 rd=11 rs=30 lambda=4.3m vto=-1. ...
+unrecognized parameter (isr) - ignored
+unrecognized parameter (alpha) - ignored
+unrecognized parameter (vk) - ignored
+unrecognized parameter (mj) - ignored
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+vplus                                       15
+vminus                                     -15
+vsn                                          0
+sel                                2.30152e-08
+nk                                 2.30162e-08
+ain                                4.33773e-08
+xa.nref                               -13.6717
+xa.ncasc                               9.86836
+xa.nx                                  1.02132
+xa.nhi                                 12.9582
+aout                               -0.00287976
+afb                                -0.00287974
+xa.vpf                                 14.8356
+xa.nrefm                              -14.3359
+xa.nxd1                               0.516598
+xa.nxd2                              0.0118728
+xa.nxd3                              -0.492852
+xa.ny                                -0.997578
+xa.nen                                0.451399
+xa.nbn                                 1.01933
+xa.nbp                               -0.996693
+xa.nep                               -0.457194
+xa.d1n                                 9.18077
+xa.g1                              4.43071e-08
+xa.s1                                0.0688446
+xa.d2n                                 9.18087
+xa.g2                              -0.00287974
+xa.s2                                0.0680235
+xa.ntcx                               -4.65981
+xa.nte                                -14.3775
+xa.nmirc                               13.0844
+xa.nmiri                               13.6387
+xa.nme1                                14.3449
+xa.nme2                                14.3448
+xa.nvb                                 13.5693
+xa.nve                                 14.2418
+xa.nvle                               -14.4008
+xa.nbb                               -0.270243
+xa.nfc                                -9.57776
+xa.nhc                                -13.7105
+xa.nvs                                 14.4793
+xa.nrefh                              -6.83585
+xa.src                                -0.15672
+arg                                -0.00287973
+arg10                              -0.00287974
+xa.nfcr                               -12.2889
+xf1.nref                              -13.6717
+xf1.ncasc                              9.86836
+xf1.nx                                 1.01846
+xf1.nhi                                12.9582
+f1out                              -0.00575956
+f1fb                               -0.00575953
+xf1.vpf                                14.8356
+xf1.nrefm                             -14.3359
+xf1.nxd1                              0.513734
+xf1.nxd2                            0.00900866
+xf1.nxd3                             -0.495716
+xf1.ny                                -1.00044
+xf1.nen                               0.448536
+xf1.nbn                                1.01646
+xf1.nbp                              -0.999557
+xf1.nep                              -0.460055
+xf1.d1n                                9.18077
+xf1.g1                             -0.00287976
+xf1.s1                                0.065971
+xf1.d2n                                9.18087
+xf1.g2                             -0.00575952
+xf1.s2                               0.0651499
+xf1.ntcx                              -4.66268
+xf1.nte                               -14.3775
+xf1.nmirc                              13.0844
+xf1.nmiri                              13.6387
+xf1.nme1                               14.3449
+xf1.nme2                               14.3448
+xf1.nvb                                13.5693
+xf1.nve                                14.2418
+xf1.nvle                              -14.4008
+xf1.nbb                              -0.273107
+xf1.nfc                               -9.57777
+xf1.nhc                               -13.7105
+xf1.nvs                                14.4793
+xf1.nrefh                             -6.83585
+xf1.src                              -0.159594
+f1rg                               -0.00575951
+f1rg10                             -0.00575952
+xf1.nfcr                              -12.2889
+fix1                               -0.00575956
+fixjack1                                     0
+vs#branch                           9.2061e-12
+vmm#branch                           0.0778763
+vpp#branch                          -0.0758273
+
+ Reference value :  3.55056e-03
+No. of Data Rows : 10044
+L57A_CASO livello=lo freq=1000 ampin=0.282843
+Fourier analysis for v(vsn):
+  No. Harmonics: 10, THD: 1.84437e-10 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -4.55189272e-14 0               0               0              
+ 1       1000            0.2828428511    -1.72261988e-11 1               0              
+ 2       2000            8.283886633e-14 -88.7100066     2.928794771e-13 -88.7100066    
+ 3       3000            3.333816792e-13 -16.2709573     1.178681653e-12 -16.2709573    
+ 4       4000            8.923611917e-14 -89.9071971     3.154971703e-13 -89.9071971    
+ 5       5000            3.291933381e-13 -165.787361     1.163873638e-12 -165.787361    
+ 6       6000            8.201946183e-14 -89.3873669     2.899824461e-13 -89.3873669    
+ 7       7000            9.606677796e-14 -130.489256     3.396471842e-13 -130.489256    
+ 8       8000            8.961300466e-14 -87.6963023     3.168296611e-13 -87.6963023    
+ 9       9000            1.175219373e-13 -54.6610583     4.155025905e-13 -54.6610583    
+
+Fourier analysis for v(fix1):
+  No. Harmonics: 10, THD: 3.78495e-05 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -0.00575528933  0               0               0              
+ 1       1000            0.2786929291    -0.239122063    1               0              
+ 2       2000            1.042879314e-07 178.9125308     3.742037221e-07 179.1516529    
+ 3       3000            9.835183096e-09 2.031435627     3.529039337e-08 2.27055769     
+ 4       4000            7.345184286e-09 0.1358446949    2.635583296e-08 0.3749667582   
+ 5       5000            5.874162028e-09 0.1483276105    2.10775424e-08  0.3874496738   
+ 6       6000            4.895502248e-09 0.163633665     1.756593633e-08 0.4027557283   
+ 7       7000            4.195924373e-09 0.1802131478    1.505572598e-08 0.4193352111   
+ 8       8000            3.671489381e-09 0.1993814411    1.317395957e-08 0.4385035044   
+ 9       9000            3.26372968e-09  0.2210564912    1.171084495e-08 0.4601785546   
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+vplus                                       15
+vminus                                     -15
+vsn                                          0
+sel                                2.30152e-08
+nk                                 2.30162e-08
+ain                                4.33773e-08
+xa.nref                               -13.6717
+xa.ncasc                               9.86836
+xa.nx                                  1.02132
+xa.nhi                                 12.9582
+aout                               -0.00287976
+afb                                -0.00287974
+xa.vpf                                 14.8356
+xa.nrefm                              -14.3359
+xa.nxd1                               0.516598
+xa.nxd2                              0.0118728
+xa.nxd3                              -0.492852
+xa.ny                                -0.997578
+xa.nen                                0.451399
+xa.nbn                                 1.01933
+xa.nbp                               -0.996693
+xa.nep                               -0.457194
+xa.d1n                                 9.18077
+xa.g1                              4.43071e-08
+xa.s1                                0.0688446
+xa.d2n                                 9.18087
+xa.g2                              -0.00287974
+xa.s2                                0.0680235
+xa.ntcx                               -4.65981
+xa.nte                                -14.3775
+xa.nmirc                               13.0844
+xa.nmiri                               13.6387
+xa.nme1                                14.3449
+xa.nme2                                14.3448
+xa.nvb                                 13.5693
+xa.nve                                 14.2418
+xa.nvle                               -14.4008
+xa.nbb                               -0.270243
+xa.nfc                                -9.57776
+xa.nhc                                -13.7105
+xa.nvs                                 14.4793
+xa.nrefh                              -6.83585
+xa.src                                -0.15672
+arg                                -0.00287973
+arg10                              -0.00287974
+xa.nfcr                               -12.2889
+xf1.nref                              -13.6717
+xf1.ncasc                              9.86836
+xf1.nx                                 1.01846
+xf1.nhi                                12.9582
+f1out                              -0.00575956
+f1fb                               -0.00575953
+xf1.vpf                                14.8356
+xf1.nrefm                             -14.3359
+xf1.nxd1                              0.513734
+xf1.nxd2                            0.00900866
+xf1.nxd3                             -0.495716
+xf1.ny                                -1.00044
+xf1.nen                               0.448536
+xf1.nbn                                1.01646
+xf1.nbp                              -0.999557
+xf1.nep                              -0.460055
+xf1.d1n                                9.18077
+xf1.g1                             -0.00287976
+xf1.s1                                0.065971
+xf1.d2n                                9.18087
+xf1.g2                             -0.00575952
+xf1.s2                               0.0651499
+xf1.ntcx                              -4.66268
+xf1.nte                               -14.3775
+xf1.nmirc                              13.0844
+xf1.nmiri                              13.6387
+xf1.nme1                               14.3449
+xf1.nme2                               14.3448
+xf1.nvb                                13.5693
+xf1.nve                                14.2418
+xf1.nvle                              -14.4008
+xf1.nbb                              -0.273107
+xf1.nfc                               -9.57777
+xf1.nhc                               -13.7105
+xf1.nvs                                14.4793
+xf1.nrefh                             -6.83585
+xf1.src                              -0.159594
+f1rg                               -0.00575951
+f1rg10                             -0.00575952
+xf1.nfcr                              -12.2889
+fix1                               -0.00575956
+fixjack1                                     0
+vs#branch                           9.2061e-12
+vmm#branch                           0.0778763
+vpp#branch                          -0.0758273
+
+ Reference value :  3.26624e-03
+No. of Data Rows : 10069
+L57A_CASO livello=hi freq=1000 ampin=2.82843
+Fourier analysis for v(vsn):
+  No. Harmonics: 10, THD: 2.08328e-10 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -6.38737327e-13 0               0               0              
+ 1       1000            2.828428511     -2.62903521e-11 1               0              
+ 2       2000            1.294581722e-12 -90.6455595     4.57703533e-13  -90.6455595    
+ 3       3000            1.887274466e-12 83.22314771     6.672519592e-13 83.22314771    
+ 4       4000            1.311148836e-12 -90.8188453     4.635608892e-13 -90.8188453    
+ 5       5000            4.491386916e-12 -92.8456976     1.587944294e-12 -92.8456976    
+ 6       6000            1.31743417e-12  -87.2763225     4.657830895e-13 -87.2763225    
+ 7       7000            1.44947616e-12  -61.9905013     5.124669597e-13 -61.9905013    
+ 8       8000            1.292449164e-12 -88.5449291     4.569495601e-13 -88.5449291    
+ 9       9000            1.443574294e-12 -115.440325     5.103803361e-13 -115.440325    
+
+Fourier analysis for v(fix1):
+  No. Harmonics: 10, THD: 0.000423365 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -0.00571695128  0               0               0              
+ 1       1000            2.786929174     -0.239128834    1               0              
+ 2       2000            1.179246925e-05 179.0757573     4.231348739e-06 179.3148861    
+ 3       3000            3.631523192e-07 67.96092694     1.30305543e-07  68.20005577    
+ 4       4000            9.541177572e-08 0.6892994307    3.423545048e-08 0.9284282651   
+ 5       5000            5.875828876e-08 -3.2875998      2.108352423e-08 -3.04847096    
+ 6       6000            4.860185394e-08 0.1604968966    1.743921388e-08 0.3996257311   
+ 7       7000            4.198604587e-08 0.2537118728    1.50653437e-08  0.4928407072   
+ 8       8000            3.674339753e-08 0.1962934957    1.318418777e-08 0.4354223301   
+ 9       9000            3.265392502e-08 0.2134826505    1.171681194e-08 0.452611485    
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+vplus                                       15
+vminus                                     -15
+vsn                                          0
+sel                                2.30152e-08
+nk                                 2.30162e-08
+ain                                4.33773e-08
+xa.nref                               -13.6717
+xa.ncasc                               9.86836
+xa.nx                                  1.02132
+xa.nhi                                 12.9582
+aout                               -0.00287976
+afb                                -0.00287974
+xa.vpf                                 14.8356
+xa.nrefm                              -14.3359
+xa.nxd1                               0.516598
+xa.nxd2                              0.0118728
+xa.nxd3                              -0.492852
+xa.ny                                -0.997578
+xa.nen                                0.451399
+xa.nbn                                 1.01933
+xa.nbp                               -0.996693
+xa.nep                               -0.457194
+xa.d1n                                 9.18077
+xa.g1                              4.43071e-08
+xa.s1                                0.0688446
+xa.d2n                                 9.18087
+xa.g2                              -0.00287974
+xa.s2                                0.0680235
+xa.ntcx                               -4.65981
+xa.nte                                -14.3775
+xa.nmirc                               13.0844
+xa.nmiri                               13.6387
+xa.nme1                                14.3449
+xa.nme2                                14.3448
+xa.nvb                                 13.5693
+xa.nve                                 14.2418
+xa.nvle                               -14.4008
+xa.nbb                               -0.270243
+xa.nfc                                -9.57776
+xa.nhc                                -13.7105
+xa.nvs                                 14.4793
+xa.nrefh                              -6.83585
+xa.src                                -0.15672
+arg                                -0.00287973
+arg10                              -0.00287974
+xa.nfcr                               -12.2889
+xf1.nref                              -13.6717
+xf1.ncasc                              9.86836
+xf1.nx                                 1.01846
+xf1.nhi                                12.9582
+f1out                              -0.00575956
+f1fb                               -0.00575953
+xf1.vpf                                14.8356
+xf1.nrefm                             -14.3359
+xf1.nxd1                              0.513734
+xf1.nxd2                            0.00900866
+xf1.nxd3                             -0.495716
+xf1.ny                                -1.00044
+xf1.nen                               0.448536
+xf1.nbn                                1.01646
+xf1.nbp                              -0.999557
+xf1.nep                              -0.460055
+xf1.d1n                                9.18077
+xf1.g1                             -0.00287976
+xf1.s1                                0.065971
+xf1.d2n                                9.18087
+xf1.g2                             -0.00575952
+xf1.s2                               0.0651499
+xf1.ntcx                              -4.66268
+xf1.nte                               -14.3775
+xf1.nmirc                              13.0844
+xf1.nmiri                              13.6387
+xf1.nme1                               14.3449
+xf1.nme2                               14.3448
+xf1.nvb                                13.5693
+xf1.nve                                14.2418
+xf1.nvle                              -14.4008
+xf1.nbb                              -0.273107
+xf1.nfc                               -9.57777
+xf1.nhc                               -13.7105
+xf1.nvs                                14.4793
+xf1.nrefh                             -6.83585
+xf1.src                              -0.159594
+f1rg                               -0.00575951
+f1rg10                             -0.00575952
+xf1.nfcr                              -12.2889
+fix1                               -0.00575956
+fixjack1                                     0
+vs#branch                           9.2061e-12
+vmm#branch                           0.0778763
+vpp#branch                          -0.0758273
+
+ Reference value :  1.45745e-04 Reference value :  3.34805e-04 Reference value :  5.23785e-04 Reference value :  7.08145e-04 Reference value :  9.02045e-04 Reference value :  1.09037e-03 Reference value :  1.27313e-03 Reference value :  1.46173e-03 Reference value :  1.64583e-03 Reference value :  1.83267e-03 Reference value :  2.02065e-03
+No. of Data Rows : 105019
+L57A_CASO livello=lo freq=20000 ampin=0.282843
+Fourier analysis for v(vsn):
+  No. Harmonics: 10, THD: 2.24876e-10 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -5.23947205e-14 0               0               0              
+ 1       20000           0.2828428511    -1.3191736e-11  1               0              
+ 2       40000           1.265502139e-13 -67.8797552     4.474223529e-13 -67.8797552    
+ 3       60000           4.84584402e-13  -66.4851491     1.713263744e-12 -66.4851491    
+ 4       80000           8.153361353e-14 -123.997088     2.882647138e-13 -123.997088    
+ 5       100000          2.820473197e-13 127.5036068     9.971873732e-13 127.5036068    
+ 6       120000          1.424348017e-13 -75.4554909     5.035828241e-13 -75.4554909    
+ 7       140000          1.395786812e-13 -45.2719594     4.93484918e-13  -45.2719594    
+ 8       160000          8.7874163e-14   -97.517104      3.106819304e-13 -97.517104     
+ 9       180000          1.415197106e-13 -141.476223     5.003474899e-13 -141.476223    
+
+Fourier analysis for v(fix1):
+  No. Harmonics: 10, THD: 0.000856684 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -0.00575931952  0               0               0              
+ 1       20000           0.2784155508    -4.76227727     1               0              
+ 2       40000           2.385137429e-06 169.2189847     8.56682546e-06  173.981262     
+ 3       60000           4.244370969e-09 108.4137496     1.524473384e-08 113.1760268    
+ 4       80000           6.338673846e-11 -11.9237653     2.276695331e-10 -7.16148802    
+ 5       100000          1.568163378e-11 -15.5432266     5.632456139e-11 -10.7809493    
+ 6       120000          1.333046437e-11 -17.6114554     4.787974065e-11 -12.8491781    
+ 7       140000          1.169070652e-11 -19.1843443     4.199013483e-11 -14.4220671    
+ 8       160000          1.05572951e-11  -22.9074256     3.791920053e-11 -18.1451483    
+ 9       180000          9.25905999e-12  -25.7979536     3.325626016e-11 -21.0356763    
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+vplus                                       15
+vminus                                     -15
+vsn                                          0
+sel                                2.30152e-08
+nk                                 2.30162e-08
+ain                                4.33773e-08
+xa.nref                               -13.6717
+xa.ncasc                               9.86836
+xa.nx                                  1.02132
+xa.nhi                                 12.9582
+aout                               -0.00287976
+afb                                -0.00287974
+xa.vpf                                 14.8356
+xa.nrefm                              -14.3359
+xa.nxd1                               0.516598
+xa.nxd2                              0.0118728
+xa.nxd3                              -0.492852
+xa.ny                                -0.997578
+xa.nen                                0.451399
+xa.nbn                                 1.01933
+xa.nbp                               -0.996693
+xa.nep                               -0.457194
+xa.d1n                                 9.18077
+xa.g1                              4.43071e-08
+xa.s1                                0.0688446
+xa.d2n                                 9.18087
+xa.g2                              -0.00287974
+xa.s2                                0.0680235
+xa.ntcx                               -4.65981
+xa.nte                                -14.3775
+xa.nmirc                               13.0844
+xa.nmiri                               13.6387
+xa.nme1                                14.3449
+xa.nme2                                14.3448
+xa.nvb                                 13.5693
+xa.nve                                 14.2418
+xa.nvle                               -14.4008
+xa.nbb                               -0.270243
+xa.nfc                                -9.57776
+xa.nhc                                -13.7105
+xa.nvs                                 14.4793
+xa.nrefh                              -6.83585
+xa.src                                -0.15672
+arg                                -0.00287973
+arg10                              -0.00287974
+xa.nfcr                               -12.2889
+xf1.nref                              -13.6717
+xf1.ncasc                              9.86836
+xf1.nx                                 1.01846
+xf1.nhi                                12.9582
+f1out                              -0.00575956
+f1fb                               -0.00575953
+xf1.vpf                                14.8356
+xf1.nrefm                             -14.3359
+xf1.nxd1                              0.513734
+xf1.nxd2                            0.00900866
+xf1.nxd3                             -0.495716
+xf1.ny                                -1.00044
+xf1.nen                               0.448536
+xf1.nbn                                1.01646
+xf1.nbp                              -0.999557
+xf1.nep                              -0.460055
+xf1.d1n                                9.18077
+xf1.g1                             -0.00287976
+xf1.s1                                0.065971
+xf1.d2n                                9.18087
+xf1.g2                             -0.00575952
+xf1.s2                               0.0651499
+xf1.ntcx                              -4.66268
+xf1.nte                               -14.3775
+xf1.nmirc                              13.0844
+xf1.nmiri                              13.6387
+xf1.nme1                               14.3449
+xf1.nme2                               14.3448
+xf1.nvb                                13.5693
+xf1.nve                                14.2418
+xf1.nvle                              -14.4008
+xf1.nbb                              -0.273107
+xf1.nfc                               -9.57777
+xf1.nhc                               -13.7105
+xf1.nvs                                14.4793
+xf1.nrefh                             -6.83585
+xf1.src                              -0.159594
+f1rg                               -0.00575951
+f1rg10                             -0.00575952
+xf1.nfcr                              -12.2889
+fix1                               -0.00575956
+fixjack1                                     0
+vs#branch                           9.2061e-12
+vmm#branch                           0.0778763
+vpp#branch                          -0.0758273
+
+ Reference value :  1.00735e-04 Reference value :  2.77775e-04 Reference value :  4.58375e-04 Reference value :  6.38295e-04 Reference value :  8.15095e-04 Reference value :  9.95455e-04 Reference value :  1.17416e-03 Reference value :  1.35276e-03 Reference value :  1.52736e-03 Reference value :  1.70538e-03 Reference value :  1.88246e-03 Reference value :  2.06242e-03
+No. of Data Rows : 105043
+L57A_CASO livello=hi freq=20000 ampin=2.82843
+Fourier analysis for v(vsn):
+  No. Harmonics: 10, THD: 2.39381e-10 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -7.67552688e-13 0               0               0              
+ 1       20000           2.828428511     -3.4228169e-11  1               0              
+ 2       40000           1.369743815e-12 -99.5609272     4.842773326e-13 -99.5609272    
+ 3       60000           3.588049914e-12 1.810535794     1.268566591e-12 1.810535794    
+ 4       80000           1.523513015e-12 -90.3492252     5.386429279e-13 -90.3492252    
+ 5       100000          4.177257345e-12 -146.018545     1.476882774e-12 -146.018545    
+ 6       120000          1.375988343e-12 -85.0585796     4.864851058e-13 -85.0585796    
+ 7       140000          2.321626875e-12 -106.820307     8.20818651e-13  -106.820307    
+ 8       160000          1.610352649e-12 -83.6350898     5.693453599e-13 -83.6350898    
+ 9       180000          1.202259128e-12 -58.5565711     4.250625828e-13 -58.5565711    
+
+Fourier analysis for v(fix1):
+  No. Harmonics: 10, THD: 0.0085999 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -0.00575558582  0               0               0              
+ 1       20000           2.784155796     -4.76260992     1               0              
+ 2       40000           0.0002393926556 169.2431155     8.598392947e-05 174.0057254    
+ 3       60000           4.463059874e-06 107.865781      1.60302088e-06  112.6283909    
+ 4       80000           4.707380206e-07 -11.7199089     1.690774709e-07 -6.95729894    
+ 5       100000          8.476969577e-08 -91.947227      3.044718112e-08 -87.1846171    
+ 6       120000          8.910349073e-09 159.892752      3.200377323e-09 164.6553619    
+ 7       140000          1.403790815e-09 71.6882517      5.042069905e-10 76.45086162    
+ 8       160000          8.748080277e-11 -8.64343092     3.142094379e-11 -3.880821      
+ 9       180000          1.370334504e-10 9.639331248     4.921903098e-11 14.40194117    
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+vplus                                       15
+vminus                                     -15
+vsn                                          0
+sel                                2.30152e-08
+nk                                 2.30162e-08
+ain                                4.33773e-08
+xa.nref                               -13.6717
+xa.ncasc                               9.86836
+xa.nx                                  1.02132
+xa.nhi                                 12.9582
+aout                               -0.00287976
+afb                                -0.00287974
+xa.vpf                                 14.8356
+xa.nrefm                              -14.3359
+xa.nxd1                               0.516598
+xa.nxd2                              0.0118728
+xa.nxd3                              -0.492852
+xa.ny                                -0.997578
+xa.nen                                0.451399
+xa.nbn                                 1.01933
+xa.nbp                               -0.996693
+xa.nep                               -0.457194
+xa.d1n                                 9.18077
+xa.g1                              4.43071e-08
+xa.s1                                0.0688446
+xa.d2n                                 9.18087
+xa.g2                              -0.00287974
+xa.s2                                0.0680235
+xa.ntcx                               -4.65981
+xa.nte                                -14.3775
+xa.nmirc                               13.0844
+xa.nmiri                               13.6387
+xa.nme1                                14.3449
+xa.nme2                                14.3448
+xa.nvb                                 13.5693
+xa.nve                                 14.2418
+xa.nvle                               -14.4008
+xa.nbb                               -0.270243
+xa.nfc                                -9.57776
+xa.nhc                                -13.7105
+xa.nvs                                 14.4793
+xa.nrefh                              -6.83585
+xa.src                                -0.15672
+arg                                -0.00287973
+arg10                              -0.00287974
+xa.nfcr                               -12.2889
+xf1.nref                              -13.6717
+xf1.ncasc                              9.86836
+xf1.nx                                 1.01846
+xf1.nhi                                12.9582
+f1out                              -0.00575956
+f1fb                               -0.00575953
+xf1.vpf                                14.8356
+xf1.nrefm                             -14.3359
+xf1.nxd1                              0.513734
+xf1.nxd2                            0.00900866
+xf1.nxd3                             -0.495716
+xf1.ny                                -1.00044
+xf1.nen                               0.448536
+xf1.nbn                                1.01646
+xf1.nbp                              -0.999557
+xf1.nep                              -0.460055
+xf1.d1n                                9.18077
+xf1.g1                             -0.00287976
+xf1.s1                                0.065971
+xf1.d2n                                9.18087
+xf1.g2                             -0.00575952
+xf1.s2                               0.0651499
+xf1.ntcx                              -4.66268
+xf1.nte                               -14.3775
+xf1.nmirc                              13.0844
+xf1.nmiri                              13.6387
+xf1.nme1                               14.3449
+xf1.nme2                               14.3448
+xf1.nvb                                13.5693
+xf1.nve                                14.2418
+xf1.nvle                              -14.4008
+xf1.nbb                              -0.273107
+xf1.nfc                               -9.57777
+xf1.nhc                               -13.7105
+xf1.nvs                                14.4793
+xf1.nrefh                             -6.83585
+xf1.src                              -0.159594
+f1rg                               -0.00575951
+f1rg10                             -0.00575952
+xf1.nfcr                              -12.2889
+fix1                               -0.00575956
+fixjack1                                     0
+vs#branch                           9.2061e-12
+vmm#branch                           0.0778763
+vpp#branch                          -0.0758273
+
+ Reference value :  1.34661e-04 Reference value :  3.08801e-04 Reference value :  4.86921e-04 Reference value :  6.63201e-04 Reference value :  8.35021e-04 Reference value :  1.01150e-03 Reference value :  1.18416e-03 Reference value :  1.35990e-03 Reference value :  1.53650e-03 Reference value :  1.71138e-03 Reference value :  1.90536e-03 Reference value :  2.09704e-03
+No. of Data Rows : 105048
+L57A_CASO livello=e6 freq=20000 ampin=3.81838
+Fourier analysis for v(vsn):
+  No. Harmonics: 10, THD: 1.66769e-10 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               1.406375016e-13 0               0               0              
+ 1       20000           3.81837799      -5.48063121e-12 1               0              
+ 2       40000           5.401942591e-13 -126.53124      1.414721802e-13 -126.53124     
+ 3       60000           4.365983034e-12 169.310618      1.143413e-12    169.310618     
+ 4       80000           3.390083412e-13 101.1433243     8.878333734e-14 101.1433243    
+ 5       100000          4.356786029e-12 -10.0733404     1.141004385e-12 -10.0733404    
+ 6       120000          4.899517018e-13 -117.318499     1.283140912e-13 -117.318499    
+ 7       140000          7.218536358e-13 155.3032503     1.890471917e-13 155.3032503    
+ 8       160000          5.889148386e-13 4.94058072      1.542316764e-13 4.94058072     
+ 9       180000          9.957313463e-13 -63.0631454     2.607733831e-13 -63.0631454    
+
+Fourier analysis for v(fix1):
+  No. Harmonics: 10, THD: 0.0116501 %, Gridsize: 8192, Interpolation Degree: 1, No. Periods: 1
+
+Harmonic Frequency       Magnitude       Phase           Norm. Mag       Norm. Phase    
+-------- ---------       ---------       -----           ---------       -----------    
+ 0       0               -0.00575331858  0               0               0              
+ 1       20000           3.758610168     -4.76289095     1               0              
+ 2       40000           0.0004377276192 169.2647725     0.0001164599678 174.0276635    
+ 3       60000           1.144220004e-05 107.1461657     3.044263577e-06 111.9090566    
+ 4       80000           1.660121591e-06 -11.6770251     4.416849626e-07 -6.9141342     
+ 5       100000          4.051117485e-07 -92.3653704     1.077823266e-07 -87.6024794    
+ 6       120000          5.914335227e-08 159.900036      1.573543135e-08 164.6629269    
+ 7       140000          1.25068036e-08  75.39829758     3.32750752e-09  80.16118853    
+ 8       160000          1.718803205e-09 -25.9443736     4.572975458e-10 -21.1814826    
+ 9       180000          4.462582472e-10 -126.375195     1.187295908e-10 -121.612304    
+
+Note: Simulation executed from .control section 
