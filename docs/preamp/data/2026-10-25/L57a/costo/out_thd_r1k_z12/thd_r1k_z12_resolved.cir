@@ -1,0 +1,71 @@
+thd - L57a: il costo della protezione dell'ingresso, prot=R=1k,D=12
+* generato da L57a/script/dist.py
+.include /Users/roberto/EDA/.claude/worktrees/L57a/models/jfet/lsk489.lib
+.include /Users/roberto/EDA/.claude/worktrees/L57a/models/bjt_npn/mmbt5551.lib
+.include /Users/roberto/EDA/.claude/worktrees/L57a/models/bjt_pnp/mmbt5401.lib
+.include /Users/roberto/EDA/.claude/worktrees/L57a/models/bjt_npn/mje15032.lib
+.include /Users/roberto/EDA/.claude/worktrees/L57a/models/bjt_pnp/mje15033.lib
+.include /Users/roberto/EDA/.claude/worktrees/L57a/models/diodes/1n4148.lib
+.include /Users/roberto/EDA/.claude/worktrees/L57a/models/bjt_pnp/ls350.lib
+.include /Users/roberto/EDA/.claude/worktrees/L57a/spice/preamp/gain_block.subckt
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VS VSN 0 SIN(0 0.282843 1000)
+RSRC VSN SEL 2500
+RSEL  SEL 0 470k
+RKSEL SEL NK 0.1
+RP NK AIN 1k
+VCLP VCLP 0 DC 12
+VCLN VCLN 0 DC -12
+DP AIN VCLP D1N914
+DN VCLN AIN D1N914
+.include /Users/roberto/EDA/.claude/worktrees/L57a/docs/preamp/data/2026-10-25/L57a/costo/nodeset.inc
+CSEL  AIN 0 68p
+XA AIN AOUT AFB ARG ARG10 VPLUS VMINUS GAINBLOCK
+RARG   ARG   0 1G
+RARG10 ARG10 0 1G
+RL1 AOUT 0 1773
+XF1 AOUT F1OUT F1FB F1RG F1RG10 VPLUS VMINUS GAINBLOCK
+RF1RG   F1RG   0 1G
+RF1RG10 F1RG10 0 1G
+RSEP1 F1OUT FIX1 47
+CFIX1 FIX1 FIXJACK1 4.7u
+RBL1  FIXJACK1 0 470k
+RLD1  FIXJACK1 0 10k
+* rshunt 1 TOhm su ogni nodo: senza, alcuni punti di lavoro coi diodi ripiegavano su un blocco
+* spento (vedi NODESET); su questi nodi pesa meno di una parte su un milione
+.options reltol=1e-6 abstol=1e-15 vntol=1e-9 rshunt=1e12
+.control
+option itl1=1000
+set numdgt=10
+set fourgridsize=8192
+set nfreqs=10
+save fix1 vsn aout
+alter @vs[sin] = [ 0 0.282843 1000 ]
+tran 4e-07 0.004 0 4e-07
+echo "L57A_CASO livello=lo freq=1000 ampin=0.282843"
+fourier 1000 v(vsn) v(fix1)
+destroy all
+alter @vs[sin] = [ 0 2.82843 1000 ]
+tran 4e-07 0.004 0 4e-07
+echo "L57A_CASO livello=hi freq=1000 ampin=2.82843"
+fourier 1000 v(vsn) v(fix1)
+destroy all
+alter @vs[sin] = [ 0 0.282843 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L57A_CASO livello=lo freq=20000 ampin=0.282843"
+fourier 20000 v(vsn) v(fix1)
+destroy all
+alter @vs[sin] = [ 0 2.82843 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L57A_CASO livello=hi freq=20000 ampin=2.82843"
+fourier 20000 v(vsn) v(fix1)
+destroy all
+alter @vs[sin] = [ 0 3.81838 20000 ]
+tran 2e-08 0.0021 0 2e-08
+echo "L57A_CASO livello=e6 freq=20000 ampin=3.81838"
+fourier 20000 v(vsn) v(fix1)
+destroy all
+.endc
+.end

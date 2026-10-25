@@ -24,7 +24,8 @@ QUI = os.path.dirname(os.path.abspath(__file__))
 D = os.path.join(os.path.dirname(QUI), "costo")
 RIFIUTI = ("Error", "Transient op started", "aborted", "too many args", "Timestep too small")
 E5, E5_TETTO, G_MAX = 4.577, 9.95, 3.152
-VARIANTI = ["senza", "r1k_rail", "r2k2_rail", "r4k7_rail", "r10k_rail", "r1k_lim5", "r2k2_lim5", "r4k7_lim5"]
+VARIANTI = ["senza", "r1k_rail", "r2k2_rail", "r4k7_rail", "r10k_rail", "r1k_lim5", "r2k2_lim5", "r4k7_lim5",
+            "r1k_z12", "r1k5_z12"]     # le ultime due: la variante di AN-015 (esegui.py costo_an015)
 
 
 def tabelle(log):

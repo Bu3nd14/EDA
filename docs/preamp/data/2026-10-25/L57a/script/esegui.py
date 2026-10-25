@@ -57,14 +57,27 @@ for v, prot in (("senza", "nessuna"), ("r1k_rail", "R=1k,D=rail"), ("r2k2_rail",
     for fam in ("thd", "rumore"):
         COSTO["%s_%s" % (fam, v)] = ["--prot", prot]
 GRUPPI["costo"] = COSTO
+# la variante di Elliott Sound Products, AN-015 fig. 4 (chiesta dall'utente dopo la ricerca): la
+# resistenza in serie (>= 1 k, meglio 1,5 k) e diodi a bassa capacita' in serie a zener da 12 V verso
+# massa, cioe' un limitatore a ~+/-12,6 V; lo zener e' una sorgente ideale da 12 V (nessun modello di
+# zener nel repo: ginocchio netto, la sua capacita' e' isolata dal diodo in serie come in AN-015)
+AN015, COSTO_AN015 = {}, {}
+for v, prot in (("r1k_z12", "R=1k,D=12"), ("r1k5_z12", "R=1.5k,D=12")):
+    for rete in ("0.9", "1.0", "1.1"):
+        AN015["%s_rete%s" % (v, rete.replace(".", ""))] = ["--prot", prot, "--rete", rete]
+    for fam in ("thd", "rumore"):
+        COSTO_AN015["%s_%s" % (fam, v)] = ["--prot", prot]
+GRUPPI["an015"] = AN015
+GRUPPI["costo_an015"] = COSTO_AN015
 
 
 def corri(gruppo, nome, argomenti):
-    d = os.path.join(L57A, "rca" if gruppo != "costo" else "costo", gruppo if gruppo != "costo" else "")
+    costo = gruppo.startswith("costo")
+    d = os.path.join(L57A, "costo") if costo else os.path.join(L57A, "rca", gruppo)
     os.makedirs(d, exist_ok=True)
     deck = os.path.join(d, nome + ".cir")
     out = os.path.join(d, "out_" + nome)
-    if gruppo == "costo":
+    if costo:
         subprocess.run([PY, os.path.join(QUI, "dist.py"), nome.split("_")[0], deck] + argomenti, check=True)
         r = subprocess.run(["/bin/zsh", SIM, deck, out], capture_output=True, text=True)
         return "%s: ngspice rc=%d" % (nome, r.returncode)

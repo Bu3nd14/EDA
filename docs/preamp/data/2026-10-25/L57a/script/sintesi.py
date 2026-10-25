@@ -26,12 +26,13 @@ for d in sorted(os.listdir(os.path.join(RCA, "reti"))):
     m = re.match(r"out_(.+)_rete(09|11)$", d)
     if m:
         cartelle.append((m.group(1), "0.9" if m.group(2) == "09" else "1.1", os.path.join(RCA, "reti", d)))
-# il mute inserito durante il gesto (genera.py --mute), alle tre reti
-for d in sorted(os.listdir(os.path.join(RCA, "mute"))):
-    m = re.match(r"out_(mute_.+)_rete(09|10|11)$", d)
-    if m:
-        cartelle.append((m.group(1), {"09": "0.9", "10": "1.0", "11": "1.1"}[m.group(2)],
-                         os.path.join(RCA, "mute", d)))
+# il mute inserito durante il gesto (genera.py --mute) e la variante di AN-015, alle tre reti
+for sotto in ("mute", "an015"):
+    for d in sorted(os.listdir(os.path.join(RCA, sotto))):
+        m = re.match(r"out_(.+)_rete(09|10|11)$", d)
+        if m:
+            cartelle.append((m.group(1), {"09": "0.9", "10": "1.0", "11": "1.1"}[m.group(2)],
+                             os.path.join(RCA, sotto, d)))
 
 costo = {}
 p = os.path.join(L57A, "costo", "costo.csv")
