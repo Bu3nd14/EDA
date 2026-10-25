@@ -39,6 +39,15 @@ tb_f1_selettore.cir - L48a: F1 sul banco, il cambio d'ingresso fra due sorgenti 
 .include @REPO@/models/diodes/1n4148.lib
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block.subckt
+* L57b (ADR-101, NC-059): block A's input limiter - 1 kOhm in series and a BAV199 diode pair
+* to two LM4040 5.0 V shunts at +/-5 V - generated from the source by
+* circuits/preamp/input_limiter.py (INLIM per channel, INREF once). The BAV199 is
+* models/diodes/bav199_fit.lib, a DECLARED FIT of its datasheet (capacitance from fig. 5,
+* leakage the 1N4148's, an upper bound): no Nexperia model could be obtained. The two LM4040
+* are INREF_EQ, their datasheet figure (4.992 V behind 1.1 ohm): TI's model finds no operating
+* point in ngspice behind a feed resistor (docs/limitations.md #76).
+.include @REPO@/models/diodes/bav199_fit.lib
+.include @REPO@/spice/preamp/input_limiter.subckt
 
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15
@@ -53,8 +62,8 @@ CINA JA SELA 1u
 RLKA JA SELA 1e10
 RBYA JA SELA 1e15
 RSLA SELA 0 470k
-SWA  SELA AIN CTLA 0 swk
-CKA  SELA AIN 15p
+SWA  SELA SELCOM CTLA 0 swk
+CKA  SELA SELCOM 15p
 
 * --- ingresso B, alla continua VB ---
 VB   VBN 0 DC 0.01
@@ -64,10 +73,13 @@ CINB JB SELB 1u
 RLKB JB SELB 1e10
 RBYB JB SELB 1e15
 RSLB SELB 0 470k
-SWB  SELB AIN CTLB 0 swk
-CKB  SELB AIN 15p
+SWB  SELB SELCOM CTLB 0 swk
+CKB  SELB SELCOM 15p
 
-CSEL AIN 0 68p
+CSEL SELCOM 0 68p
+* L57b (ADR-101): the limiter between the selector's COM node and block A's input
+XLIM SELCOM AIN VLIM_P VLIM_M INLIM
+XREF VLIM_P VLIM_M VPLUS VMINUS INREF_EQ
 
 * --- i comandi: A si apre a 50 ms; B si chiude a 51 ms (trasf) o a 49 ms (sovrap) ---
 VCA  CTLA 0 PWL(0 1 50m 1 50.1m 0)

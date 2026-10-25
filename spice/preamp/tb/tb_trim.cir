@@ -61,6 +61,15 @@ tb_trim.cir - L16: the common trim on the variable-output branch. Attenuation, E
 * L22: the input current mirror is an LS352 (ADR-018), vendor model.
 .include @REPO@/models/bjt_pnp/ls350.lib
 .include @REPO@/spice/preamp/gain_block.subckt
+* L57b (ADR-101, NC-059): block A's input limiter - 1 kOhm in series and a BAV199 diode pair
+* to two LM4040 5.0 V shunts at +/-5 V - generated from the source by
+* circuits/preamp/input_limiter.py (INLIM per channel, INREF once). The BAV199 is
+* models/diodes/bav199_fit.lib, a DECLARED FIT of its datasheet (capacitance from fig. 5,
+* leakage the 1N4148's, an upper bound): no Nexperia model could be obtained. The two LM4040
+* are INREF_EQ, their datasheet figure (4.992 V behind 1.1 ohm): TI's model finds no operating
+* point in ngspice behind a feed resistor (docs/limitations.md #76).
+.include @REPO@/models/diodes/bav199_fit.lib
+.include @REPO@/spice/preamp/input_limiter.subckt
 
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15
@@ -74,8 +83,11 @@ RSRC  VSN JIN 1.5
 RJ    JIN 0 10Meg
 CIN   JIN SEL 1u
 RSEL  SEL 0 470k
-RKSEL SEL AIN 0.1
-CSEL  AIN 0 1f
+RKSEL SEL SELCOM 0.1
+CSEL  SELCOM 0 1f
+* L57b (ADR-101): the limiter between the selector's COM node and block A's input
+XLIM SELCOM AIN VLIM_P VLIM_M INLIM
+XREF VLIM_P VLIM_M VPLUS VMINUS INREF_EQ
 
 * --- block A, unity gain, relay leg not fitted ---
 XA AIN AOUT AFB ARG ARG10 VPLUS VMINUS GAINBLOCK

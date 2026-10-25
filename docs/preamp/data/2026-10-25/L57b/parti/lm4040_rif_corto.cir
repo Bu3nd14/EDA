@@ -1,0 +1,26 @@
+lm4040_rif_corto - L57b: i due riferimenti del limitatore da soli, 100 us, la forma d'onda
+* Prima riga = titolo. Come lm4040_rif_solo.cir (che a 1 ms non finiva in 8 minuti), corto e con la
+* forma d'onda: oscilla o e' solo rigido? Tre bypass: 100 nF (il sorgente), nessuno, 1 uF.
+.include @REPO@/models/voltage_reference/lm4040_5v0_ngspice.lib
+.include @REPO@/spice/preamp/input_limiter.subckt
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+XREF VLIM_P VLIM_M VPLUS VMINUS INREF
+.nodeset v(VLIM_P)=4.992 v(VLIM_M)=-4.992
+.control
+set numdgt=8
+op
+print v(vlim_p) v(vlim_m)
+foreach cb 100n 1f 1u
+  alter @c.xref.c1[capacitance] = $cb
+  alter @c.xref.c2[capacitance] = $cb
+  tran 2n 100u 0 2n
+  meas tran ppp pp v(vlim_p) from=20u to=100u
+  meas tran mpp pp v(vlim_m) from=20u to=100u
+  meas tran pav avg v(vlim_p) from=20u to=100u
+  echo "L57B_RIF cb=$cb vlimp_pp=$&ppp vlimm_pp=$&mpp vlimp_media=$&pav"
+  wrdata lm4040_rif_corto_$cb.txt v(vlim_p) v(vlim_m)
+  destroy all
+end
+.endc
+.end

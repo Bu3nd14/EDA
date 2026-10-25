@@ -71,11 +71,23 @@ tb_loop_blockA.cir - loop gain of BLOCK A, loaded as preamp_audio.py wires it si
 .include @REPO@/spice/preamp/gain_block_flat.inc
 * the two buffers it drives, as subcircuits
 .include @REPO@/spice/preamp/gain_block.subckt
+* L57b (ADR-101, NC-059): block A's input limiter - 1 kOhm in series and a BAV199 diode pair
+* to two LM4040 5.0 V shunts at +/-5 V - generated from the source by
+* circuits/preamp/input_limiter.py (INLIM per channel, INREF once). The BAV199 is
+* models/diodes/bav199_fit.lib, a DECLARED FIT of its datasheet (capacitance from fig. 5,
+* leakage the 1N4148's, an upper bound): no Nexperia model could be obtained. The two LM4040
+* are INREF_EQ, their datasheet figure (4.992 V behind 1.1 ohm): TI's model finds no operating
+* point in ngspice behind a feed resistor (docs/limitations.md #76).
+.include @REPO@/models/diodes/bav199_fit.lib
+.include @REPO@/spice/preamp/input_limiter.subckt
 
 VPP VPLUS 0 DC 15
 VMM VMINUS 0 DC -15
 VIN VSRCN 0 DC 0
-RSRCA VSRCN IN 1m
+RSRCA VSRCN SELCOM 1m
+* L57b (ADR-101): the limiter between the selector's COM node and block A's input
+XLIM SELCOM IN VLIM_P VLIM_M INLIM
+XREF VLIM_P VLIM_M VPLUS VMINUS INREF_EQ
 
 * R_g / relay not fitted on block A
 RRG RG 0 1G

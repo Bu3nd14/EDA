@@ -99,6 +99,9 @@ REF_K, REF_A = "1", "2"      # Reference_Voltage:LM4040DBZ-5, as U507
 # shorted, L45d2b2c) - against 15 mA recommended; 18.5 mW against 306 mW in
 # SOT-23. R_FEED dissipates 10 mW, 22.5 mW at 20 V.
 R_FEED = "10k"
+# The datasheet equivalent of each shunt, for the decks (INREF_EQ, below): TI's model's voltage
+# at 100 uA, 4.992 V, inside grade B's 5 V +/-10 mV; ZR 1.1 ohm max at 1 mA (SNOS633N p. 26).
+REF_EQ_V, REF_EQ_ZR = "4.992", "1.1"
 # C_BYP: TI says the LM4040 is stable with any capacitive load (p. 1, p. 40);
 # 100 nF keeps the clamp's sub-microsecond edges off the shunt's own loop.
 C_BYP = "100n"
@@ -157,6 +160,30 @@ if __name__ == "__main__":
     ref_sub = sx.subckt("INREF", ["VLIM_P", "VLIM_M", "VPLUS", "VMINUS"],
                         header=head + "Ports: VLIM_P VLIM_M VPLUS VMINUS "
                         "(node 0 = signal ground). Once per board.")
+    # INREF_EQ: the same board parts, each LM4040 replaced by its datasheet figure - 5.0 V
+    # (TI's model sits at 4.992 V at 100 uA) behind ZR 1.1 ohm max (SNOS633N p. 26). TI's
+    # transistor-level model finds no operating point in ngspice when fed through R_FEED (gmin
+    # and source stepping fail; it has a start-up capacitor, Cstart 400 nF): limitations #76.
+    # With <= 1.1 mA in a clamping diode ZR moves the threshold by ~1 mV out of 5.6 V.
+    eq = []
+    for ln in ref_sub.splitlines():
+        t = ln.split()
+        if ln.startswith(".subckt INREF"):
+            eq.append(ln.replace("INREF", "INREF_EQ"))
+        elif ln.startswith(".ends"):
+            eq.append(".ends INREF_EQ")
+        elif t and t[0] in ("XU1", "XU2"):
+            k, a = t[1], t[2]
+            u = t[0][1:]
+            eq.append(f"V{u} N_{u} {a} DC {REF_EQ_V}")
+            eq.append(f"RZ{u} {k} N_{u} {REF_EQ_ZR}")
+        elif ln.startswith("* Ports"):
+            eq.append(ln)
+            eq.append("* EQUIVALENT: each LM4040 as its datasheet figure, a source behind ZR max "
+                      "(limitations #76).")
+        else:
+            eq.append(ln)
+    ref_sub += "\n" + "\n".join(eq) + "\n"
     sx.reset()
     limiter(100, Net("SELCOM"), Net("AIN"), vlp, vlm)
     lim_sub = sx.subckt("INLIM", ["SELCOM", "AIN", "VLIM_P", "VLIM_M"],
