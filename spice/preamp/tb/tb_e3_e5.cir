@@ -56,11 +56,11 @@ tb_e3_e5.cir - L48a: E3 ed E5 sull'ingresso col condensatore e il selettore (ADR
 * L57b (ADR-101, NC-059): block A's input limiter - 1 kOhm in series and a BAV199 diode pair
 * to two LM4040 5.0 V shunts at +/-5 V - generated from the source by
 * circuits/preamp/input_limiter.py (INLIM per channel, INREF once). The BAV199 is
-* models/diodes/bav199_fit.lib, a DECLARED FIT of its datasheet (capacitance from fig. 5,
-* leakage the 1N4148's, an upper bound): no Nexperia model could be obtained. The two LM4040
+* Diodes Incorporated's model DI_BAV199 (models/diodes/bav199.lib, since "dopo L57b";
+* L57b used a fit of the Nexperia datasheet, bav199_fit.lib). The two LM4040
 * are INREF_EQ, their datasheet figure (4.992 V behind 1.1 ohm): TI's model finds no operating
 * point in ngspice behind a feed resistor (docs/limitations.md #76).
-.include @REPO@/models/diodes/bav199_fit.lib
+.include @REPO@/models/diodes/bav199.lib
 .include @REPO@/spice/preamp/input_limiter.subckt
 
 VPP VPLUS 0 DC 15

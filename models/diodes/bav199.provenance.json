@@ -1,0 +1,12 @@
+{
+  "canonical_file": "bav199.lib",
+  "device_class": "diodes",
+  "origin": "vendor_derived",
+  "vendor_source_path": "vendor/diodes/diodes_inc/BAV199/BAV199.spice.txt",
+  "vendor_source_sha256": "d99caaab552e71d021763036af0274a1a45e2205e168323210adc37d43853390",
+  "date_created": "2026-10-25",
+  "author": "AI orchestrator (Claude Opus 5.5, session hi-fi preamp dopo L57b) on behalf of roberto.carmeli@gmail.com, from the file the user pasted",
+  "changes": "NOTHING WAS CHANGED, not even a header: this file is a byte-for-byte copy of the frozen vendor file (cmp is silent). The model name stays the manufacturer's, DI_BAV199, and circuits/preamp/input_limiter.py names it (DIODE_MODEL).",
+  "reason": "ADR-101 (L57b, NC-059): the input limiter's diode pair. Replaces models/diodes/bav199_fit.lib, the declared estimate L57b had to use because Nexperia's model could not be downloaded. The source keeps the BAV199 type; this is Diodes Incorporated's model of it, a second source whose ratings line (85 V, 160 mA, 3 us) matches the Nexperia datasheet.",
+  "notes": "Checked in ngspice 47 at 25 C (validate_models.py tb_bav199): see the recipe. What the model is and is not: IS 59 pA with N 1.78 is its reverse leakage at a few volts - about 60x below the 1N4148 ceiling the estimate used (3.9 nA), against the Nexperia datasheet's 3 pA typ / 5 nA max at 75 V and 25 C; CJO 2.00 pF, M 0.333, VJ the ngspice default (1 V): ~1.10 pF at 5 V reverse, the same as the Nexperia fig. 5 read by eye. TT 4.32 us (trr max 3 us). No KF/AF: no 1/f noise. No temperature parameters beyond the defaults (XTI, EG): leakage at temperature is not described. A typical specimen, no spread."
+}

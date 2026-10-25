@@ -71,7 +71,10 @@ T, P, FS = S.T, S.P, S.fs
 # limitations #74). The page asks for a net by the name it was drawn with; if the netlist has
 # the other name instead, that one is used. Never both, never neither.
 SINONIMI = {"AL_OUT": "F1L_IN", "L_FIXOUT2": "L_FIXJACK2", "R_FIXOUT2": "R_FIXJACK2",
-            "L_ATT_W": "BL_IN"}     # L45d2b3b2b1: the 40 parts of ADR-099 renamed it
+            "L_ATT_W": "BL_IN",     # L45d2b3b2b1: the 40 parts of ADR-099 renamed it
+            # dopo L57b: input_limiter.py edited (comments and the SPICE model name only) and
+            # SKiDL picked the other name of two more joined pairs, same pins
+            "L_FIXOUT1": "L_FIXJACK1", "R_FIXJACK1": "R_FIXOUT1"}
 
 
 def rete(n):

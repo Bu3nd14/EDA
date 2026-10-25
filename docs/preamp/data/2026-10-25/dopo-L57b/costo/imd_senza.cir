@@ -1,0 +1,46 @@
+imd - L57b: il costo della protezione dell'ingresso, prot=nessuna
+* generato da L57b/script/dist.py (il banco di L57a, la protezione dal subckt generato)
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block.subckt
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VS1 VSN VMIDS SIN(0 0.141421 19000)
+VS2 VMIDS 0 SIN(0 0.141421 20000)
+RSRC VSN SEL 2500
+RSEL  SEL 0 470k
+RKSEL SEL AIN 0.1
+.include @REPO@/docs/preamp/data/2026-10-25/dopo-L57b/costo/nodeset.inc
+CSEL  AIN 0 68p
+XA AIN AOUT AFB ARG ARG10 VPLUS VMINUS GAINBLOCK
+RARG   ARG   0 1G
+RARG10 ARG10 0 1G
+RL1 AOUT 0 1773
+XF1 AOUT F1OUT F1FB F1RG F1RG10 VPLUS VMINUS GAINBLOCK
+RF1RG   F1RG   0 1G
+RF1RG10 F1RG10 0 1G
+RSEP1 F1OUT FIX1 47
+CFIX1 FIX1 FIXJACK1 4.7u
+RBL1  FIXJACK1 0 470k
+RLD1  FIXJACK1 0 10k
+* rshunt 1 TOhm su ogni nodo: senza, alcuni punti di lavoro coi diodi ripiegavano su un blocco
+* spento (vedi NODESET); su questi nodi pesa meno di una parte su un milione
+.options reltol=1e-6 abstol=1e-15 vntol=1e-9 rshunt=1e12
+.control
+option itl1=1000
+set numdgt=10
+set fourgridsize=16384
+set nfreqs=24
+save fix1 vsn aout
+tran 0.02u 3m 0 0.02u
+echo "L57A_CASO livello=ccif freq=1000 ampin=0.141421"
+fourier 1000 v(vsn) v(fix1)
+destroy all
+.endc
+.end

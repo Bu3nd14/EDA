@@ -1302,6 +1302,75 @@ destroy all
     return cir, [dc_csv, ac_csv], [1, 2], check
 
 
+def tb_bav199(model_file):
+    """Dopo L57b: bav199.lib is Diodes Incorporated's model of the BAV199
+    (DI_BAV199, vendor/diodes/diodes_inc/BAV199/), the type the limiter of
+    ADR-101 names. Checked against the Nexperia datasheet the part was
+    chosen on (vendor/diodes/nexperia/BAV199/BAV199.pdf, 1 April 2023):
+
+      C_d @ V_R = 0 V,  1 MHz   2.00 pF +/-5%   (p. 3, TYP.)
+      C_d @ V_R = 5 V,  1 MHz   1.10 pF +/-10%  (Fig. 5 p. 4, typical, by eye)
+      V_F @ I_F = 1 mA          <= 0.9 V        (p. 3, MAX.)
+      I_R @ V_R = 5 V           <= 5 nA         (p. 3 MAX. is at 75 V, 25 C;
+                                                 no 5 V point in the datasheet)
+
+    A second source's model against the first source's datasheet: the
+    type is the same, the specimen is typical.
+    """
+    dc_csv = os.path.join(SCRATCH_DIR, "bav199_dc.csv")
+    ac_csv = os.path.join(SCRATCH_DIR, "bav199_ac.csv")
+    cir = f"""* validate bav199.lib
+.include {model_file}
+If 0 a DC 1m
+D1 a 0 DI_BAV199
+Vr 0 r DC 5
+D2 r 0 DI_BAV199
+Vc0 k0 0 DC 0 AC 1
+D3 k0 0 DI_BAV199
+Vc5 m5 0 DC 5 AC 1
+D4 0 m5 DI_BAV199
+.control
+set temp = 25
+dc If 1m 1m 1m
+wrdata {dc_csv} v(a) i(Vr)
+destroy all
+ac lin 1 1meg 1meg
+let a0 = real(i(Vc0))
+let b0 = imag(i(Vc0))
+let a5 = real(i(Vc5))
+let b5 = imag(i(Vc5))
+wrdata {ac_csv} a0 b0 a5 b5
+destroy all
+.endc
+.end
+"""
+
+    def check(sets):
+        dc_rows, ac_rows = sets
+        if len(dc_rows) != 1 or len(ac_rows) != 1:
+            return False, f"expected one DC and one AC row, got {len(dc_rows)}/{len(ac_rows)}"
+        problems = []
+        vf, ir = dc_rows[0]["y0"], abs(dc_rows[0]["y1"])
+        r = ac_rows[0]
+        c0, rat0 = _cap_from(r, "y0", "y1")
+        c5, rat5 = _cap_from(r, "y2", "y3")
+        if max(rat0, rat5) > 0.05:
+            problems.append("the C_d reading is not capacitive")
+        if vf > 0.9:
+            problems.append(f"V_F={vf:.4f}V exceeds 0.9V MAX.")
+        if ir > 5e-9:
+            problems.append(f"I_R(5V)={ir * 1e9:.3f}nA exceeds 5nA")
+        if abs(c0 / 2.00e-12 - 1) > 0.05:
+            problems.append(f"C_d(0V)={c0 * 1e12:.3f}pF not within 5% of 2.00pF")
+        if abs(c5 / 1.10e-12 - 1) > 0.10:
+            problems.append(f"C_d(5V)={c5 * 1e12:.3f}pF not within 10% of 1.10pF")
+        if problems:
+            return False, "; ".join(problems)
+        return True, (f"V_F@1mA={vf:.3f}V (<=0.9), I_R@5V={ir * 1e9:.3f}nA (<=5), "
+                      f"C_d 0V/5V={c0 * 1e12:.3f}/{c5 * 1e12:.3f}pF - Diodes Inc. model")
+    return cir, [dc_csv, ac_csv], [2, 4], check
+
+
 def tb_bav199_fit(model_file):
     """L57b: bav199_fit.lib is an ESTIMATE from the BAV199 datasheet
     (Nexperia, 1 April 2023), NOT the manufacturer's model. The recipe
@@ -1793,6 +1862,8 @@ def build_registry():
     reg["bjt_pnp/zxtp25040dz.lib"] = lambda p: tb_zxtp25040dz(p)
     # L57b - TI LM4040 5.0 V shunt reference (ADR-101 limiter rails).
     reg["voltage_reference/lm4040_5v0_ngspice.lib"] = lambda p: tb_lm4040_5v0(p)
+    # Dopo L57b - BAV199, Diodes Incorporated's model (the user's file).
+    reg["diodes/bav199.lib"] = lambda p: tb_bav199(p)
     # L57b - BAV199 ESTIMATE from the datasheet, not the manufacturer's model.
     reg["diodes/bav199_fit.lib"] = lambda p: tb_bav199_fit(p)
     reg["opamp/generic_opamp.lib"] = lambda p: tb_opamp(p)
