@@ -9,7 +9,7 @@ scelte qui, nel suo perimetro). Non conformità: **NC-059 chiusa**. L'utente all
 |---|---|
 | `script/rigenera.sh` | Rigenera il blocco, `spice/preamp/input_limiter.subckt` e `preamp_audio.net` dal sorgente |
 | `script/falsi.py`, `falsi/` | I falsi del controllo del limitatore (2e): cinque varianti sbagliate generate in una cartella temporanea e la netlist di main di prima (`falsi/prima_di_adr101.net`); `falsi/esito.txt` 6 su 6 |
-| `parti/` | Le parti: i controlli in ngspice dei due modelli nuovi (`bav199_fit.cir`, `lm4040_5v0_*.cir`, i log di `validate_models.py`); i due banchi del riferimento da solo (`lm4040_rif_*.cir` / `.log`, limitations #76); gli script con cui l'agente ha adattato il modello di TI e scritto le ricette (`script/patch_lm4040_5v0.py`, `insert_tb_*.py`) |
+| `parti/` | Le parti: i controlli in ngspice dei due modelli nuovi (`bav199_fit.cir`, `lm4040_5v0_*.cir`, i log di `validate_models.py`); i due banchi del riferimento da solo (`lm4040_rif_*.cir` / `.log`, limitations #76). Gli script con cui è stato adattato il modello di TI e scritte le ricette sono in `script/` (`patch_lm4040_5v0.py`, `insert_tb_lm4040.py`, `insert_tb_bav199.py`) |
 | `script/deck_limitatore.py` | Una volta: mette `XLIM` / `XREF` nei quattro deck canonici dell'ingresso (poi `INREF_EQ`, limitations #76) |
 | `script/regressione.sh <prima\|dopo>`, `script/confronta_regressione.py`, `script/verdetti_regressione.py` | La regressione dei quattro deck (E3, E5, F1, V1 del blocco A): `regressione/confronto.csv`, `regressione/verdetti.csv` |
 | `regressione/tb_e3_e5_2c.cir`, `dopo_2c/` | E3 / E5 col BAV199 a capacità raddoppiata |
