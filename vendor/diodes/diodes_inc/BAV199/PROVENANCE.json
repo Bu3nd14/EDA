@@ -1,0 +1,25 @@
+{
+  "part_name": "BAV199 (low-leakage double diode in series, SOT-23), Diodes Incorporated SPICE model DI_BAV199",
+  "vendor_name": "Diodes Incorporated",
+  "device_class": "diodes",
+  "product_page": "https://www.diodes.com/part/view/BAV199",
+  "date_obtained": "2026-10-25",
+  "lotto": "dopo L57b",
+  "obtained_by": "roberto.carmeli@gmail.com (the user), who pasted the file's content into the session; written to disk verbatim by the AI orchestrator",
+  "obtained_from": "Pasted by the user as 'il contenuto del BAV199.spice.txt'. Not downloaded by an agent: the URL it came from and byte-identity with what diodes.com serves are NOT verified (the paste may have changed trailing whitespace or line endings). The header is Diodes Incorporated's standard SPICE-model disclaimer; the model line reads '*SRC=BAV199;DI_BAV199;Diodes;Si; 85.0V 0.160A 3.00us Diodes, Inc. diode'.",
+  "license_notes": "Manufacturer SPICE model, redistributed here unmodified for engineering traceability only, under the disclaimer in its own header. Copyright remains Diodes Incorporated.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "ADR-101 / L57b: the input limiter's diode pair (D179 / D379). The source names the BAV199 type, chosen on the Nexperia datasheet (vendor/diodes/nexperia/BAV199/); Nexperia's own model could not be downloaded (HTTP 403), and L57b simulated a declared estimate (models/diodes/bav199_fit.lib). This is a MANUFACTURER model of the same type from a second source, Diodes Incorporated: its summary line agrees with the Nexperia datasheet's ratings (VRRM 85 V, IF 160 mA, trr max 3 us). The Diodes Incorporated datasheet is NOT in the repo.",
+  "files": [
+    {
+      "original_filename": "BAV199.spice.txt",
+      "role": "SPICE model (.MODEL DI_BAV199 D, one diode of the pair)",
+      "url": null,
+      "bytes": 1397,
+      "sha256": "d99caaab552e71d021763036af0274a1a45e2205e168323210adc37d43853390",
+      "local_filename": "BAV199.spice.txt",
+      "renamed": false
+    }
+  ]
+}
