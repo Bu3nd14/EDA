@@ -43,6 +43,8 @@ p.add_argument("--prot", default="nessuna")
 p.add_argument("--rete", type=float, default=1.0)
 p.add_argument("--casi", default="tutti")
 p.add_argument("--tstop", default="0.4")
+p.add_argument("--mute", action="store_true",
+               help="il mute inserito: i contatti dei jack aperti (1 pF)")
 p.add_argument("--forma", action="store_true",
                help="solo volume in cima e 0 dB, e la forma d'onda in forma_<caso>.txt")
 a = p.parse_args()
@@ -225,6 +227,16 @@ def oggi():
                           "RLD1  FIXJACK1 0 50k\nRBC1  FIXJACK1 0 470k\n")
     testa = testa.replace("RATTL BIN 0 10k\n", "RATTL BIN 0 10k\nRGB   BIN 0 1MEG\n")
     testa = testa.replace("RLOAD  MAIN 0 100k\n", "RLOAD  MAIN 0 100k\nRBCM   MAIN 0 220k\n")
+    if a.mute:
+        # il mute inserito (ADR-044, geometria iii): il contatto aperto fra il condensatore e il jack,
+        # 1 pF (la cifra del contatto aperto in limitations #63); la scarica lato condensatore resta
+        # sul condensatore, quella del jack sul jack
+        testa = testa.replace("CFIX1 FIX1 FIXJACK1 4.7u\n",
+                              "CFIX1 FIX1 FIXC1 4.7u\nRBC1  FIXC1 0 470k\nCK2   FIXC1 FIXJACK1 1p\n")
+        testa = testa.replace("RBC1  FIXJACK1 0 470k\n", "")
+        testa = testa.replace("COUT   BOUTA MAIN 4.7u\n",
+                              "COUT   BOUTA MAINC 4.7u\nCK4    MAINC MAIN 1p\n")
+        testa = testa.replace("RBCM   MAIN 0 220k\n", "RBCM   MAINC 0 220k\n")
     t = a.tstop
     s = testa + """
 .control

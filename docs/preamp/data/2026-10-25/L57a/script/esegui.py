@@ -36,17 +36,38 @@ GRUPPI = {
 # le tre reti, solo i casi in classe II (la tensione dei condensatori Y scala con la rete)
 RETI = {}
 for v, prot in (("senza", "nessuna"), ("r2k2_rail", "R=2.2k,D=rail"), ("r4k7_rail", "R=4.7k,D=rail"),
-                ("r2k2_lim5", "R=2.2k,D=5"), ("r4k7_lim5", "R=4.7k,D=5")):
+                ("r2k2_lim5", "R=2.2k,D=5"), ("r4k7_lim5", "R=4.7k,D=5"),
+                # le due da 1 k aggiunte dopo il costo: 4,7 k esce da V4 (costo/costo.csv)
+                ("r1k_rail", "R=1k,D=rail"), ("r1k_lim5", "R=1k,D=5")):
     for rete in ("0.9", "1.1"):
         RETI["%s_rete%s" % (v, rete.replace(".", ""))] = ["--prot", prot, "--rete", rete, "--casi", "classeII"]
 GRUPPI["reti"] = RETI
+# il mute inserito durante il gesto, senza rimedio e con le due protezioni da 1 k, alle tre reti
+MUTE = {}
+for v, prot in (("senza", "nessuna"), ("r1k_rail", "R=1k,D=rail"), ("r1k_lim5", "R=1k,D=5")):
+    for rete in ("0.9", "1.0", "1.1"):
+        MUTE["mute_%s_rete%s" % (v, rete.replace(".", ""))] = ["--prot", prot, "--rete", rete,
+                                                               "--casi", "classeII", "--mute"]
+GRUPPI["mute"] = MUTE
+# il costo al segnale (dist.py): thd e rumore per ciascuna protezione
+COSTO = {}
+for v, prot in (("senza", "nessuna"), ("r1k_rail", "R=1k,D=rail"), ("r2k2_rail", "R=2.2k,D=rail"),
+                ("r4k7_rail", "R=4.7k,D=rail"), ("r10k_rail", "R=10k,D=rail"), ("r1k_lim5", "R=1k,D=5"),
+                ("r2k2_lim5", "R=2.2k,D=5"), ("r4k7_lim5", "R=4.7k,D=5")):
+    for fam in ("thd", "rumore"):
+        COSTO["%s_%s" % (fam, v)] = ["--prot", prot]
+GRUPPI["costo"] = COSTO
 
 
 def corri(gruppo, nome, argomenti):
-    d = os.path.join(L57A, "rca", gruppo)
+    d = os.path.join(L57A, "rca" if gruppo != "costo" else "costo", gruppo if gruppo != "costo" else "")
     os.makedirs(d, exist_ok=True)
     deck = os.path.join(d, nome + ".cir")
     out = os.path.join(d, "out_" + nome)
+    if gruppo == "costo":
+        subprocess.run([PY, os.path.join(QUI, "dist.py"), nome.split("_")[0], deck] + argomenti, check=True)
+        r = subprocess.run(["/bin/zsh", SIM, deck, out], capture_output=True, text=True)
+        return "%s: ngspice rc=%d" % (nome, r.returncode)
     subprocess.run([PY, os.path.join(QUI, "genera.py"), "oggi", deck] + argomenti, check=True)
     r = subprocess.run(["/bin/zsh", SIM, deck, out], capture_output=True, text=True)
     if r.returncode != 0:
