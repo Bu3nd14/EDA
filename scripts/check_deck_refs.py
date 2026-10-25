@@ -221,6 +221,15 @@ def noise_vector_exists(vector, rest, devices, lets):
 def block_nodes(path, line_no, line):
     """Node names of one element line inside a generated block file."""
     toks = line.split()
+    if toks[0][0].lower() == "x":
+        # L57b: spice/preamp/input_limiter.subckt instantiates the LM4040 model
+        # (XU1 K A LM4040_NB5P0 TOL=0): the nodes are what stands between the
+        # name and the subcircuit's name, the NAME=value parameters dropped.
+        rest = [t for t in toks[1:] if "=" not in t]
+        if len(rest) < 2:
+            raise ValueError(f"{path}:{line_no}: subcircuit instance '{toks[0]}' "
+                             f"without nodes")
+        return [t.lower() for t in rest[:-1]]
     n = NODE_COUNT.get(toks[0][0].lower())
     if n is None:
         raise ValueError(f"{path}:{line_no}: element '{toks[0]}' of a type "

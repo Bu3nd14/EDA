@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import limitatore  # noqa: E402  (L57b: la protezione dal subckt generato)
 
 p = argparse.ArgumentParser()
-p.add_argument("famiglia", choices=("thd", "rumore", "op"))
+p.add_argument("famiglia", choices=("thd", "rumore", "op", "imd"))
 p.add_argument("deck")
 p.add_argument("--prot", default="nessuna")
 p.add_argument("--nodeset", default="docs/preamp/data/2026-10-25/L57b/costo/nodeset.inc",
@@ -118,8 +118,11 @@ elif a.famiglia == "thd":
     # e6: il pieno livello d'ingresso di E6 (2,7 V RMS, 3,82 V di picco) a 20 kHz, dove il
     # limitatore a +/-5,6 V e' piu' vicino al segnale; V4 non ha un tetto a questo livello: e' un
     # confronto fra le varianti
-    for f in (1000, 20000):
+    # L57b: anche 10 kHz a 0,2 V RMS, dove V4 chiede h5+ <= -140 dB (1 / 10 / 20 kHz)
+    for f in (1000, 10000, 20000):
         livelli = [("lo", 0.2 * 2 ** 0.5), ("hi", 2.0 * 2 ** 0.5)]
+        if f == 10000:
+            livelli = livelli[:1]
         if f == 20000:
             livelli.append(("e6", 2.7 * 2 ** 0.5))
         for liv, vpk in livelli:
@@ -128,6 +131,21 @@ elif a.famiglia == "thd":
                   "tran %.4g %.6g 0 %.4g" % (tmax, 2e-3 + 2.0 / f, tmax),
                   'echo "L57A_CASO livello=%s freq=%d ampin=%.6g"' % (liv, f, vpk),
                   "fourier %d v(vsn) v(fix1)" % f, "destroy all"]
+    s += "\n".join(c + [".endc", ".end", ""])
+elif a.famiglia == "imd":
+    # L57b: la CCIF di V4 (19 + 20 kHz, toni uguali, picco composto di 0,2 V RMS; il prodotto a
+    # 1 kHz contro un tono, <= -110 dB), col metodo di L46a (data/2026-10-01/L46a/script/genera.py,
+    # imd): due sorgenti in serie, 2 ms di assestamento + 1 ms, fourier a 1 kHz, nfreqs 24
+    a_tono = 0.2 * 2 ** 0.5 / 2
+    s = TESTA.format(fam="imd", prot=a.prot,
+                     sorgente="VS1 VSN VMIDS SIN(0 %.6g 19000)\nVS2 VMIDS 0 SIN(0 %.6g 20000)\n"
+                              "RSRC VSN SEL 2500" % (a_tono, a_tono))
+    s = s.replace("RJ    JIN 0 10Meg\nCIN   JIN SEL 1u\n", "")
+    s = s.replace("RSEL  SEL 0 470k\n", "RSEL  SEL 0 470k\n" + prot_righe(a.prot) + INC_NODESET)
+    c = [".control", "option itl1=1000", "set numdgt=10", "set fourgridsize=16384", "set nfreqs=24",
+         "save fix1 vsn aout", "tran 0.02u 3m 0 0.02u",
+         'echo "L57A_CASO livello=ccif freq=1000 ampin=%.6g"' % a_tono,
+         "fourier 1000 v(vsn) v(fix1)", "destroy all"]
     s += "\n".join(c + [".endc", ".end", ""])
 else:
     s = TESTA.format(fam="rumore", prot=a.prot, sorgente="VIN VSN 0 DC 0 AC 1\nRSRC VSN JIN 2500")

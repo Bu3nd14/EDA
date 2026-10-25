@@ -1556,3 +1556,25 @@ a 0,32–0,6 s (`tr_corta`, `tr_r120_B`); il banco di L62b, da cui viene questo,
 casi lenti noti (R120 in corto) si corrono **da soli e corti** (0,6 s: il guasto entra a 0,3 s, le
 potenze sono a regime molto prima), mai in una lista con `-P`. Una lista lunga si guarda con
 `ps -o rss` ogni tanto; e prima di lasciarla girare si committa e si pusha il lavoro.
+
+## 76. Il modello di TI dell'LM4040 a 5,0 V non trova il punto di lavoro dietro una resistenza: il deck esce 0 e le cifre sono false
+
+Visto in L57b, il 2026-10-25 (`docs/preamp/data/2026-10-25/L57b/parti/lm4040_rif_*.log`,
+`regressione/dopo_ti/`). Il modello
+`LM4040_NB5P0` (TI, SNOM508, `models/voltage_reference/lm4040_5v0_ngspice.lib`) passa i suoi controlli
+in `validate_models.py`, che lo pilotano con una **sorgente di corrente**. Alimentato come nel circuito —
+10 kΩ dal rail, 100 nF a massa — il `.op` fallisce: «Dynamic gmin stepping failed», «True gmin stepping
+failed», «source stepping failed», anche col riferimento da solo e con un `.nodeset` a 4,992 V; il
+punto di ripiego mette il nodo a **0,566 V** invece di 4,99 (`lm4040_rif_corto.log`). Il
+modello ha un circuito d'avvio con un condensatore (`C_Cstart` 400 nF) e in serie all'uscita 10 µH
+(`L_Lx1`), che coi 100 nF di bypass risuona a ~160 kHz. Nel deck del selettore (`tb_f1_selettore.cir`)
+il transitorio partito dal punto di lavoro di ripiego si è fermato a ~92 µs su «Timestep too small» nel
+JFET del blocco A, a ogni caso; **ngspice ha scritto il CSV lo stesso**, con celle vuote e celle con
+cifre sbagliate (un gradino di 608 µV dove il deck di main dà 6,3 µV). Coi riferimenti ideali lo stesso
+deck ridà main entro lo 0,1–1 %.
+
+**Regola operativa**: nei deck i due riferimenti del limitatore sono `INREF_EQ`, che
+`circuits/preamp/input_limiter.py` genera accanto a `INREF`: le stesse R e C, ogni LM4040 come la sua
+cifra di datasheet (4,992 V dietro 1,1 Ω, la ZR massima). Nel limitatore conduce al più ~1 mA: 1 mV su
+5,6 V. Un modello di riferimento si prova nel circuito in cui sta, non solo con la sorgente della sua
+ricetta; e un deck che cambia si confronta coi numeri di prima, non col suo codice d'uscita.

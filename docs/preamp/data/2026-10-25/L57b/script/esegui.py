@@ -37,7 +37,7 @@ GRUPPI["mute"] = {"mute_lim_rete%s" % r.replace(".", ""): ["--prot", VARIANTI["l
 COSTO = {}
 for v, prot in (("senza", "nessuna"), ("noto", VARIANTI["noto"]), ("lim", VARIANTI["lim"]),
                 ("lim_2c", VARIANTI["lim_2c"])):
-    for fam in ("thd", "rumore"):
+    for fam in ("thd", "rumore", "imd"):
         COSTO["%s_%s" % (fam, v)] = ["--prot", prot]
 GRUPPI["costo"] = COSTO
 

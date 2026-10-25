@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""L57a: il costo di ciascuna protezione - THD (V4) e rumore (E5) - dai deck di dist.py.
+"""L57b (copia di L57a): il costo di ciascuna protezione - THD (V4) e rumore (E5) - dai deck di dist.py.
 
 THD: le tabelle `fourier` di v(vsn) (il pavimento) e v(fix1), lette come L46a/leggi_four.py
 (stessi rifiuti: Error, Transient op started, aborted, too many args, Timestep too small); per caso
@@ -24,8 +24,7 @@ QUI = os.path.dirname(os.path.abspath(__file__))
 D = os.path.join(os.path.dirname(QUI), "costo")
 RIFIUTI = ("Error", "Transient op started", "aborted", "too many args", "Timestep too small")
 E5, E5_TETTO, G_MAX = 4.577, 9.95, 3.152
-VARIANTI = ["senza", "r1k_rail", "r2k2_rail", "r4k7_rail", "r10k_rail", "r1k_lim5", "r2k2_lim5", "r4k7_lim5",
-            "r1k_z12", "r1k5_z12"]     # le ultime due: la variante di AN-015 (esegui.py costo_an015)
+VARIANTI = ["senza", "noto", "lim", "lim_2c"]   # L57b: esegui.py costo
 
 
 def tabelle(log):
@@ -86,10 +85,25 @@ out = []
 for v in VARIANTI:
     log = os.path.join(D, "out_thd_" + v, "thd_" + v + ".log")
     casi = tabelle(log)
-    if len(casi) != 5:
-        sys.exit("%s: %d casi invece di 5" % (log, len(casi)))
+    # L57b: sei casi, i cinque di L57a piu' 10 kHz a 0,2 V RMS (h5+ di V4)
+    if len(casi) != 6:
+        sys.exit("%s: %d casi invece di 6" % (log, len(casi)))
     agg = math.sqrt(max(rum[v] ** 2 - rum["senza"] ** 2, 0.0))
     e5 = math.sqrt(E5 ** 2 + (agg * G_MAX) ** 2)
+    # L57b: la CCIF (dist.py imd): le magnitudini assolute; i toni sono la 19a e la 20a armonica
+    # di 1 kHz, il prodotto la 1a. Tetto di V4: <= -110 dB contro un tono
+    lg = os.path.join(D, "out_imd_" + v, "imd_" + v + ".log")
+    (ci,) = tabelle(lg)
+    _, _, mvi = ci["_t"]["v(vsn)"]
+    _, _, moi = ci["_t"]["v(fix1)"]
+    if abs(mvi[20] / float(ci["ampin"]) - 1) > 0.01 or not 0.95 < moi[20] / mvi[20] < 1.0:
+        sys.exit("%s: toni %g / %g contro %s" % (lg, mvi[20], moi[20], ci["ampin"]))
+    ccif = db(moi[1] / moi[20])
+    out.append({"variante": v, "freq": "19k+20k", "livello": "ccif", "vout_pk": "%.4g" % moi[20],
+                "thd_pct": "", "pavimento_pct": "", "h2_db": "", "h3_db": "", "h5su_db": "",
+                "ccif_db": "%.1f" % ccif, "ccif_sorgente_db": "%.1f" % db(mvi[1] / mvi[20]),
+                "rumore_aout_uv": "%.4g" % rum[v], "rumore_aggiunto_uv": "%.3g" % agg,
+                "e5_stima_uv": "%.3f" % e5})
     for c in casi:
         tv, nv, mv = c["_t"]["v(vsn)"]
         to, no, mo = c["_t"]["v(fix1)"]
@@ -103,6 +117,7 @@ for v in VARIANTI:
         out.append({"variante": v, "freq": c["freq"], "livello": c["livello"],
                     "vout_pk": "%.4g" % mo[1], "thd_pct": "%.3g" % to, "pavimento_pct": "%.2g" % tv,
                     "h2_db": "%.1f" % db(no[2]), "h3_db": "%.1f" % db(no[3]), "h5su_db": "%.1f" % db(alte),
+                    "ccif_db": "", "ccif_sorgente_db": "",
                     "rumore_aout_uv": "%.4g" % rum[v], "rumore_aggiunto_uv": "%.3g" % agg,
                     "e5_stima_uv": "%.3f" % e5})
 p = os.path.join(D, "costo.csv")
@@ -112,4 +127,4 @@ with open(p, "w", newline="") as fh:
     w.writerows(out)
 for r in out:
     print("%(variante)-10s %(freq)6s %(livello)-2s thd %(thd_pct)9s %% (pav %(pavimento_pct)7s) h2 %(h2_db)7s h3 %(h3_db)7s h5+ %(h5su_db)7s"
-          " | rumore %(rumore_aout_uv)7s uV +%(rumore_aggiunto_uv)6s -> E5 %(e5_stima_uv)s uV" % r)
+          " ccif %(ccif_db)6s (sorg %(ccif_sorgente_db)6s) | rumore %(rumore_aout_uv)7s uV +%(rumore_aggiunto_uv)6s -> E5 %(e5_stima_uv)s uV" % r)

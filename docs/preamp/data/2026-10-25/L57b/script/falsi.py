@@ -10,6 +10,7 @@ Uso: /usr/bin/python3 falsi.py
 import os
 import re
 import subprocess
+import tempfile
 import sys
 
 D = os.path.dirname(os.path.abspath(__file__))
@@ -18,7 +19,7 @@ ROOT = os.path.abspath(os.path.join(LOTTO, "..", "..", "..", "..", ".."))
 NET = os.path.join(ROOT, "circuits", "preamp", "preamp_audio.net")
 CHK = os.path.join(ROOT, "scripts", "check_relay_safe_state.py")
 OUT = os.path.join(LOTTO, "falsi")
-os.makedirs(OUT, exist_ok=True)
+TMP = tempfile.mkdtemp(prefix="L57b_falsi_")   # i falsi generati: non versionati, si riscrivono
 base = open(NET).read()
 
 
@@ -55,7 +56,7 @@ prima = os.path.join(OUT, "prima_di_adr101.net")
 casi.append(("prima_di_adr101", "la netlist di main prima di L57b, senza limitatore",
              open(prima).read(), "una sola resistenza"))
 for nome, cosa, testo, atteso in casi:
-    p = os.path.join(OUT, nome + ".net")
+    p = prima if nome == "prima_di_adr101" else os.path.join(TMP, nome + ".net")
     if nome != "prima_di_adr101":
         open(p, "w").write(testo)
     r = subprocess.run(["/usr/bin/python3", CHK, p], capture_output=True, text=True)

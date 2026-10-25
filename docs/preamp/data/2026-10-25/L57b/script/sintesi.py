@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""L57a: la sintesi delle strade - per variante e rete, il caso peggiore in classe II contro i limiti.
+"""L57b (copia di L57a): la sintesi - per variante e rete, il caso peggiore in classe II contro i limiti.
 
-Legge i rca_spl.csv di rca/oggi (senza rimedio, rete nominale), rca/strade (le protezioni, rete
-nominale) e rca/reti (le stesse a rete -10 % e +10 %); con costo/costo.csv accanto.
+Legge i rca_spl.csv di rca/noto (il caso noto, rete nominale), rca/reti (il circuito «lim» e la
+capacita' raddoppiata «lim_2c», alle tre reti) e rca/mute (il mute inserito); con costo/costo.csv.
 
 Limiti: LSK489 gate-gate +/-30 V, gate-drain e gate-source 60 V, IG(F) 10 mA (datasheet p. 2);
-il 1N4148 (stand-in dei diodi) 200 mA continui; il tetto di 112,2 dB SPL (0,87 V, PR-23).
+il BAV199 IF 140 mA per diodo col doppio in uso, IFSM 4 A a 1 us (p. 2); il tetto di 112,2 dB SPL
+(0,87 V, PR-23).
 Al jack principale: «cima» = volume in cima, «k11» = la posizione d'ascolto del K11 (-29 dB);
 0 e +10 dB. Le fisse in dB sopra il picco del K11 a piena scala (3,8 V).
 
@@ -18,16 +19,9 @@ import re
 QUI = os.path.dirname(os.path.abspath(__file__))
 L57A = os.path.dirname(QUI)
 RCA = os.path.join(L57A, "rca")
-cartelle = [("senza", "1.0", os.path.join(RCA, "oggi", "out_senza"))]
-for d in sorted(os.listdir(os.path.join(RCA, "strade"))):
-    if d.startswith("out_"):
-        cartelle.append((d[4:], "1.0", os.path.join(RCA, "strade", d)))
-for d in sorted(os.listdir(os.path.join(RCA, "reti"))):
-    m = re.match(r"out_(.+)_rete(09|11)$", d)
-    if m:
-        cartelle.append((m.group(1), "0.9" if m.group(2) == "09" else "1.1", os.path.join(RCA, "reti", d)))
-# il mute inserito durante il gesto (genera.py --mute) e la variante di AN-015, alle tre reti
-for sotto in ("mute", "an015"):
+cartelle = [("noto", "1.0", os.path.join(RCA, "noto", "out_noto_r1k_lim5"))]
+# il circuito e la capacita' raddoppiata alle tre reti; il mute inserito durante il gesto
+for sotto in ("reti", "mute"):
     for d in sorted(os.listdir(os.path.join(RCA, sotto))):
         m = re.match(r"out_(.+)_rete(09|10|11)$", d)
         if m:
