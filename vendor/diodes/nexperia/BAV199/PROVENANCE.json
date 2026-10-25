@@ -1,0 +1,28 @@
+{
+  "part_name": "BAV199 (low-leakage double diode in series, SOT23)",
+  "vendor_name": "Nexperia B.V.",
+  "device_class": "diodes",
+  "product_page": "https://www.nexperia.com/product/BAV199",
+  "date_obtained": "2026-10-25",
+  "lotto": "L57b",
+  "obtained_by": "AI agent (bom-component-manager subagent) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "NOT FROM nexperia.com. Both assets.nexperia.com (datasheet and SPICE model) and www.nexperia.com answer HTTP 403 (Access Denied, an Akamai bot filter) to curl and to the WebFetch tool; I did not attempt to get around the filter. The datasheet was instead downloaded with curl from a third-party mirror, https://extranet.mandieselturbo.com/electronics/datasheets/Nexperia/BAV199/BAV199.pdf (MAN Energy Solutions / Everllence ECDB datasheet archive, which lists it as 'Current datasheet (2023-04-01)'). The PDF's own metadata says Author 'Nexperia BV', Creator 'Nexperia SSG plugin 3.1.0', CreationDate 2023-03-23, and its footer says 'Product data sheet, 1 April 2023', 9 pages. It is therefore a Nexperia-authored document, but byte-identity with what nexperia.com serves today is NOT verified, and nexperia.com may carry a newer revision (a search result lists a 2026-02-24 SPICE model date on the global product page; nexperia.cn lists the datasheet as 2023-04-03).",
+  "license_notes": "Manufacturer datasheet, redistributed here unmodified for engineering traceability only. Copyright remains Nexperia B.V.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "L57b / ADR-101: the two limiter diodes per channel at the input of block A (LSK489 gate, ~1 Mohm, ~68 pF). At rest each has ~5 V reverse across it, so reverse leakage (offset into the ~1 Mohm and a non-linear leak) and a voltage-dependent junction capacitance are what matter. BAV199 is the low-leakage series double diode (typ 3 pA at 75 V, 25 C, datasheet p. 3); the BAV99 has no typical leakage figure and 30 nA max at 25 V, 25 C (BAV199: 5 nA max at 75 V, 25 C).",
+  "files": [
+    {
+      "original_filename": "BAV199.pdf",
+      "role": "datasheet (Nexperia BAV199, 1 April 2023, 9 pages)",
+      "url": "https://extranet.mandieselturbo.com/electronics/datasheets/Nexperia/BAV199/BAV199.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 669108,
+      "pages": 9,
+      "sha256": "ab2f26d003e3c1d8f7e4e7ac674ae055849970bf7b392a7d5d31eca443aab9e2",
+      "local_filename": "BAV199.pdf",
+      "renamed": false
+    }
+  ],
+  "spice_model_status": "NOT OBTAINED. The official model is listed on the Nexperia product page ('BAV199 SPICE model'), URL pattern https://assets.nexperia.com/documents/spice-model/BAV199.txt (inferred from the pattern of sibling files such as BAV199QC.txt, not seen to resolve), but the host refuses automated downloads. No model of this part is in models/, and none was invented or fitted. To close: download the file in a browser, place it under vendor/diodes/nexperia/BAV199/ (note: Nexperia's own BAV199QC header says the package pinning does not match the SPICE pin order, so read the .SUBCKT line before wiring it), record its sha256 here, then add the models/ copy and a recipe to scripts/validate_models.py."
+}

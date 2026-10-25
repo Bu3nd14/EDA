@@ -82,6 +82,7 @@ import spice_export as sx  # noqa: E402
 import trim  # noqa: E402
 import gain_interlock  # noqa: E402
 import selector  # noqa: E402
+import input_limiter  # noqa: E402
 from gain_block import (  # noqa: E402
     gain_block, FP_R, FP_ELCO, REPO,
 )
@@ -171,7 +172,7 @@ def C(val, a, b, base, fp=FP_FILM_P15):
 
 
 def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole,
-            k_sel):
+            k_sel, vlim):
     """One complete channel. ch is "L" or "R"; base offsets the refs."""
     global _n
     # ---------------- BLOCK A: input buffer, gain 1 always -----------------
@@ -191,7 +192,8 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole,
     # docs/preamp/data/2026-10-06/L48a/dimensionamento/). ADR-064 (the user's
     # "Condensatore per ingresso", 2026-10-06), per input:
     #
-    #   IN<n> pin 1 --C_IN 1u--+-- K<12+n> NO (pole of this channel) -- COM = block A IN
+    #   IN<n> pin 1 --C_IN 1u--+-- K<12+n> NO (pole of this channel) -- COM = SELCOM
+    #                                     (SELCOM --1k + diodes, ADR-101-- block A IN)
     #        |                 |
     #     R_J 10M           R_SEL 470k
     #        |                 |
@@ -209,6 +211,14 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole,
     # R_SEL 470k: E3 = 470k || R_IN 1M, 108.2 kOhm minimum with 68 pF of
     # selector (>= 100 kOhm); 1M would give 112.5 kOhm and twice the leakage
     # step (303 uV at 1 V), ADR-064.
+    #
+    # ADR-101 (L57b, NC-059): the relays' COMs no longer go straight to block
+    # A's input. They meet on SELCOM, and 1 kOhm in series with a diode pair
+    # to +/-5 V shunt references (input_limiter.py) keep the LSK489 inside
+    # its limits when a cable is plugged in hot from a class II source. After
+    # R_SEL, so E3 is R_SEL || R_IN as before.
+    selcom = Net(f"{ch}_SELCOM")
+    input_limiter.limiter(base, selcom, a["IN"], *vlim)
     for n in range(4):
         jin = Part("Connector_Generic", "Conn_01x02", value=f"IN{n + 1}_{ch}",
                    footprint=FP_CONN2, ref=f"J{base + 1 + n}")
@@ -228,7 +238,7 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole,
         rj[1] += jk_in
         rj[2] += gnd
         # One pole of input n's relay per channel: de-energised, open.
-        k_sel[n][K_COM1 if k_pole == 0 else K_COM2] += a["IN"]
+        k_sel[n][K_COM1 if k_pole == 0 else K_COM2] += selcom
         k_sel[n][K_NO1 if k_pole == 0 else K_NO2] += sel
 
     # ---- volume harness (off-board balance + volume, F4, ADR-065) --------
@@ -557,10 +567,14 @@ if __name__ == "__main__":
         VCC_RLY, K_TRIM["RET"], (K_COIL_A, K_COIL_B, K_COM1, K_NO1, K_NC1,
                                  K_COM2, K_NO2, K_NC2))
 
+    # ADR-101 (L57b): the input limiter's two shunt references, shared by
+    # both channels (input_limiter.py).
+    VLIM = input_limiter.references(VP, VM, GND)
+
     chans = {}
     for ch, base, pole in (("L", 100, 0), ("R", 300, 1)):
         chans[ch] = channel(ch, base, VP, VM, GND, K_GAIN, K_GAIN10,
-                            mute_lists, K_TRIM, pole, K_SEL)
+                            mute_lists, K_TRIM, pole, K_SEL, VLIM)
 
     # Wire the mute contacts - ADR-044, geometry iii. mute_lists[i] holds, per
     # output pair, [cap_side_L, jack_L, cap_side_R, jack_R]; each jack node

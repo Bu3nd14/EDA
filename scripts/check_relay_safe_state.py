@@ -132,9 +132,12 @@ Asserted, by intent, per channel and per input n:
   - from that node exactly one capacitor to a node SEL with exactly one
     resistor to GND (R_SEL: the input's preamp side at 0 V, selected or not)
     and the NO throw of SEL<n>'s pole of this channel;
-  - every SEL pole of the channel has its COM on ONE node, which carries
-    R_IN = 1M to GND - block A's input - and its NC throw free: with the
-    coils de-energised no input reaches block A;
+  - every SEL pole of the channel has its COM on ONE node, and its NC throw
+    free: with the coils de-energised no input reaches block A. Since L57b
+    (ADR-101) that node carries only the COMs and the limiter's 1k, whose
+    far end carries R_IN = 1M to GND - block A's input - and the common pin
+    of the limiter's diode pair, its outer pins on two LM4040 shunts to GND
+    (+5 V cathode on its node, -5 V anode);
   - the knob (value INPUT, Switch:SW_Rotary_3x4), walked position by
     position from VRELAY with the mute relays both released and energised,
     feeds exactly the coil of SEL<position>, and every SEL coil returns on
@@ -1125,6 +1128,60 @@ def check_panel_leds(components, relays, by_role, pin_net, findings):
     return report
 
 
+# L57b, ADR-101: block A's input limiter (circuits/preamp/input_limiter.py).
+# The diode pair's pins READ FROM ITS DATASHEET, kept here as data like the
+# G6K map (vendor/diodes/nexperia/BAV199/BAV199.pdf p. 1, table 2): 1 = A1,
+# the lower diode's anode; 3 = K1/A2, the common node; 2 = K2, the upper
+# diode's cathode. The KiCad symbol names pins 1 / 2 the other way round:
+# numbers, not names. The shunt's K / A as LM4040DBZ-5 and SNOS633N p. 3.
+LIM_R_SER = "1k"
+LIM_DIODE = "BAV199"
+LIM_D_A, LIM_D_COM, LIM_D_K = "1", "3", "2"
+LIM_REF_PART = "LM4040DBZ-5"
+LIM_REF_K, LIM_REF_A = "1", "2"
+
+
+def check_limiter(ch, ain, components, pin_net, members, findings):
+    """The diode pair on block A's input and its two shunts; None if wrong."""
+    pairs = [r for r, pin in members.get(ain, ())
+             if components.get(r, {}).get("value") == LIM_DIODE
+             and pin == LIM_D_COM]
+    others = [r for r, pin in members.get(ain, ())
+              if components.get(r, {}).get("lib") == "Diode"
+              and r not in pairs]
+    if len(pairs) != 1 or others:
+        findings.append(
+            f"canale {ch}: sull'ingresso del blocco A ({ain}) serve un solo "
+            f"{LIM_DIODE} col piedino comune ({LIM_D_COM}) e nessun altro "
+            f"diodo (ADR-101); trovati {pairs} e {others}.")
+        return None
+    d = pairs[0]
+    up, low = pin_net.get((d, LIM_D_K)), pin_net.get((d, LIM_D_A))
+
+    def shunt(net, k_on):
+        """LM4040s with one pin on `net` and the other on GND, the right way."""
+        got = []
+        for r, pin in members.get(net, ()):
+            c = components.get(r, {})
+            if c.get("part") != LIM_REF_PART:
+                continue
+            far = LIM_REF_A if pin == LIM_REF_K else LIM_REF_K
+            if pin_net.get((r, far)) == "GND" and pin == k_on:
+                got.append(r)
+        return got
+
+    # VLIM_P: the shunt's cathode on it (+5 V); VLIM_M: its anode (-5 V).
+    sp, sm = shunt(up, LIM_REF_K), shunt(low, LIM_REF_A)
+    if len(sp) != 1 or len(sm) != 1 or up == low:
+        findings.append(
+            f"canale {ch}: {d} va dal riferimento negativo ({low}) al "
+            f"positivo ({up}): ciascuno vuole un {LIM_REF_PART} a shunt verso "
+            f"GND col verso giusto (+5 V catodo sul nodo, -5 V anodo); "
+            f"trovati {sp} e {sm} (ADR-101).")
+        return None
+    return f"{d} {low}({sm[0]})..{up}({sp[0]})"
+
+
 def check_input(components, relays, by_role, pin_net, findings):
     """No graduated mute (ADR-062); the selector by intent (ADR-064)."""
     report = []
@@ -1166,7 +1223,27 @@ def check_input(components, relays, by_role, pin_net, findings):
                 f"su {sorted(map(str, coms))}, non su un nodo solo: "
                 f"l'ingresso del blocco A e' uno.")
             continue
-        ain = coms.pop()
+        selcom = coms.pop()
+        # L57b, ADR-101 (NC-059): the COMs no longer sit on block A's input.
+        # From their node exactly one 1k (R_SER) to the input, and on the
+        # input the limiter's diode pair, its outer pins on two shunt
+        # references at +/-5 V. Without it a cable plugged in hot from a
+        # class II source takes the LSK489's gate-gate past its breakdown.
+        ser = [(r, pin) for r, pin in members.get(selcom, ())
+               if components.get(r, {}).get("part") == "R"
+               and components[r]["value"] == LIM_R_SER]
+        if len(ser) != 1 or len(members.get(selcom, ())) != N_INPUTS + 1:
+            findings.append(
+                f"canale {ch}: il nodo dei COM dei rele' SEL ({selcom}) deve "
+                f"portare i {N_INPUTS} COM e una sola resistenza da "
+                f"{LIM_R_SER} verso l'ingresso del blocco A (ADR-101, il "
+                f"limitatore); porta {sorted(members.get(selcom, ()))}.")
+            continue
+        r_ser = ser[0][0]
+        ain = other(*ser[0])
+        lim = check_limiter(ch, ain, components, pin_net, members, findings)
+        if lim is None:
+            continue
         r_in = [r for r in to_gnd(ain, "R") if components[r]["value"] == "1M"]
         if len(r_in) != 1:
             findings.append(
@@ -1231,7 +1308,8 @@ def check_input(components, relays, by_role, pin_net, findings):
             report.append(
                 f"ingresso {name}: {j} -> {c_in} {components[c_in]['value']}"
                 f" (R_J {','.join(r_j)}; R_SEL {','.join(r_sel)}) -> {k} NO, "
-                f"COM su {ain} con R_IN {r_in[0]}")
+                f"COM su {selcom} -> {r_ser} {LIM_R_SER} -> {ain} con R_IN "
+                f"{r_in[0]} e il limitatore {lim}")
 
     # The knob: position by position, exactly SEL<position> is fed, in mute
     # and out of it.

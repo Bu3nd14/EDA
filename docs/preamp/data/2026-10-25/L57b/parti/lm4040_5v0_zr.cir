@@ -1,0 +1,11 @@
+* L57b - LM4040 5.0 V model: dynamic impedance ZR at IR = 1 mA, f = 120 Hz, IAC = 0.1 IR
+* (datasheet SNOS633N p. 26: typ 0.5 ohm, max 1.1 ohm)
+.include /Users/roberto/EDA/.claude/worktrees/L57b/models/voltage_reference/lm4040_5v0_ngspice.lib
+Iref 0 vp DC 1m AC 100u
+X1 vp 0 LM4040_NB5P0 TOL=0
+.control
+set temp = 25
+ac lin 1 120 120
+print mag(v(vp))/100u
+.endc
+.end

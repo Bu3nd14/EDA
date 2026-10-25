@@ -1,0 +1,36 @@
+{
+  "part_name": "LM4040BIM3-5.0 (LM4040-N family, 2-terminal precision micropower shunt voltage reference, 5.0V nominal; model is grade B, +/-0.2% initial tolerance; SOT-23)",
+  "vendor_name": "Texas Instruments Incorporated",
+  "device_class": "voltage_reference",
+  "product_page": "https://www.ti.com/product/LM4040-N",
+  "date_obtained": "2026-10-25",
+  "lotto": "L57b",
+  "obtained_by": "AI agent (bom-component-manager subagent) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from ti.com (https://www.ti.com/lit/zip/snom508). The SPICE file is extracted unmodified from the ZIP. The datasheet is NOT duplicated here: it is the same SNOS633N document already frozen next to the 4.096 V model, at vendor/voltage_reference/ti/LM4040/lm4040.pdf (sha256 f3977fc3d89b4f25699e699ca2c89e0c00f45c84fc04e35692758b5390ac3880, 'SNOS633N - DECEMBER 1991 - REVISED AUGUST 2025'). NOTE: a fresh download of https://www.ti.com/lit/ds/symlink/lm4040-n.pdf on 2026-10-25 has a different hash (c06c6337438bd950ee514ddd863070ab505f5d90e2dabf9ffc4c4a0843058ff6, 1980953 bytes vs 1980947): TI has re-issued the file; the page numbers cited by L57b are those of the frozen copy.",
+  "license_notes": "Manufacturer SPICE model, redistributed here unmodified for engineering traceability only. Copyright remains Texas Instruments Incorporated.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "L57b / ADR-101: the +5 V and -5 V references of the input limiter (two diodes per channel toward the references, threshold ~+/-5.6 V) must be SHUNT references so they can absorb the diode current in the fault (RCA hot-plug, <= 1.1 mA per channel). LM4040-5.0: I_RMIN 54 uA typ / 74 uA max, 15 mA max reverse current, Z_R 0.5 ohm typ / 1.1 ohm max at 1 mA, stable with any capacitive load (datasheet p. 1, p. 26, p. 5-6, p. 40).",
+  "files": [
+    {
+      "original_filename": "LM4040_NB5P0_TRANS.lib",
+      "role": "SPICE model (PSpice transient transistor-level macromodel, Unencrypted), extracted unmodified from SNOM508.ZIP",
+      "url": "https://www.ti.com/lit/zip/snom508",
+      "literature_number": "SNOM508",
+      "served_content_type": "application/zip",
+      "bytes_zip": 1805,
+      "sha256_zip": "3e28d84e3f1f420f22b60b555215ed96fe4c66de935081f22ce517d44fc98bc6",
+      "bytes": 3919,
+      "sha256": "56c5fa10de473668e72f68819d973db68552e1cceaa2ec82051f38ada5bec278",
+      "local_filename": "LM4040_NB5P0_TRANS.lib",
+      "renamed": false,
+      "header_says": "'*LM4040_N / Part: LM4040_N / Date: 10APR2013 / Model Type: TRANSIENT / Simulator: PSPICE / Simulator Version: 16.0.0 / Datasheet: SNOS633G-MAY 2004-REVISED JULY 2012'. .SUBCKT LM4040_NB5P0 V+ V- PARAMS: TOL=0. Transistor-level, same topology as the 4.096 V model."
+    }
+  ],
+  "model_selection_note": "The TI product page lists, for 5.0 V, LM4040_NA5P0 (PSpice Transient, encrypted; TINA-TI Transient) and LM4040_NB5P0 / NC5P0 (Unencrypted PSpice Transient). There is no unencrypted A-grade (+/-0.1%) 5.0 V model; NB5P0 (grade B, +/-0.2%) is the tightest unencrypted one. The part to BUY may be A or B grade; the model is the same transistor-level topology with TOL selecting the feedback resistor among three fixed values (TOL=0 -> 162223.6 ohm).",
+  "spice_model_ngspice_verification": {
+    "encrypted": false,
+    "syntax_as_shipped": "Does not load unmodified in ngspice 47 (same three classes as the 4.096 V model: ' TC=0,0' on 22 elements, bare-value inductor L_Lx1, nested PSpice IF() in R_R19) and the comment line with the datasheet number contains two 0x96 bytes. Adaptation done in models/voltage_reference/lm4040_5v0_ngspice.lib (see its provenance sidecar), never here.",
+    "verdict": "USABLE after the adaptation, for the operating point and Z_R; NOT for I_RMIN (model knee ~34 uA vs datasheet 54 typ / 74 max uA) and not for noise (not modelled). Numbers in models/voltage_reference/lm4040_5v0_ngspice.provenance.json."
+  }
+}

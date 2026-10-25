@@ -1,0 +1,12 @@
+{
+  "canonical_file": "bav199_fit.lib",
+  "device_class": "diodes",
+  "origin": "vendor_derived",
+  "vendor_source_path": "vendor/diodes/onsemi/1N4148/1n914.lib",
+  "vendor_source_sha256": "558f99082a6a9197abf646fd9e54ac12836dcb2f580747c07f16434fc70670c5",
+  "date_created": "2026-10-25",
+  "author": "AI agent (bom-component-manager subagent, lotto L57b) on behalf of roberto.carmeli@gmail.com",
+  "changes": "NOT A MANUFACTURER MODEL. Written by hand from the .MODEL D1N914 of the onsemi 1N4148 file (frozen source above): IS=3.45e-09 RS=0.452422 IKF=0.0528 N=1.94 ISR=1.01e-09 NR=2.0 FC=0.5 TT=1.012e-8 BV=100 IBV=1e-05 EG=0.92 copied unchanged; the model renamed BAV199; the capacitance parameters replaced: CJO 8.68e-13 -> 1.85e-12, M 0.02504 -> 0.25, VJ 0.90906 -> 0.7, fitted to Fig. 5 of the Nexperia BAV199 datasheet (1 April 2023, p. 4, typical, per diode, 1 MHz, 25 C; vendor/diodes/nexperia/BAV199/BAV199.pdf), READ BY EYE from the plot (about 1.85 / 1.1 / 0.9 / 0.7 pF at 0 / 5 / 10 / 20 V). Header comment of our own.",
+  "reason": "L57b / ADR-101: input limiter diodes. Nexperia's own BAV199 SPICE model could not be downloaded (assets.nexperia.com and www.nexperia.com return HTTP 403 to automated clients, see vendor/diodes/nexperia/BAV199/PROVENANCE.json). This estimate lets the limiter be simulated for the capacitance seen by the input; it is to be REPLACED by the manufacturer's model when it is available.",
+  "notes": "Checked in ngspice 47 at 25 C (validate_models.py tb_bav199_fit, deck docs/preamp/data/2026-10-25/L57b/parti/bav199_fit.cir): V_F 0.635 V at 1 mA (datasheet max 0.9 V); I_R 3.9 nA at 5 V reverse; C_d 1.848 pF at 0 V and 1.095 pF at 5 V, 1 MHz. LEAKAGE IS THE 1N4148's (IS 3.45 nA, ISR 1.01 nA), an UPPER bound well above the BAV199 (typ 3 pA, max 5 nA at 75 V, 25 C, datasheet p. 3; the datasheet has no 5 V point), so the 3.9 nA passing its 5 nA check is by construction and says nothing about the real part: offsets computed with it are ceilings. V_F, RS and TT are the 1N4148's (BAV199 trr typ 0.8 us, not modelled). The capacitance values come from a plot read by eye, not from a table. No flicker noise, no temperature behaviour beyond EG."
+}

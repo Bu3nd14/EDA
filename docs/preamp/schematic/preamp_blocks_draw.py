@@ -109,7 +109,9 @@ ZIN = same(["R113", "R313"], "resistenza d'ingresso blocco A")
 # Il selettore (ADR-064, L48a): quattro ingressi per canale, ciascuno col suo
 # condensatore in serie, R_SEL a massa dal lato del preamp e R_J dal lato del
 # jack, e il NO di un rele' per ingresso (K13..K16, polo 1 = L, polo 2 = R)
-# col COM sul nodo di R_IN. Lo stesso, per intento e coi sabotaggi, il 2e.
+# col COM sul nodo di R_IN; da L57b (ADR-101) col COM sulla 1 kOhm del
+# limitatore, davanti al nodo di R_IN. Lo stesso, per intento e coi sabotaggi,
+# il 2e.
 _pins = {}
 for _chunk in re.split(r"\(net\s*\(code", _src.split("(nets", 1)[-1])[1:]:
     _nm = re.search(r'\(name "([^"]*)"\)', _chunk).group(1)
@@ -130,10 +132,23 @@ for _b, _rin, _com, _no in ((100, "R113", "3", "4"), (300, "R313", "6", "5")):
             f"R_IN (l'ingresso in continua di NC-040)")
         assert _pins[(_c, "2")] == _pins[(_rs, "1")] == _pins[(_k, _no)], (
             f"{_c}: il lato del preamp non porta {_rs} e il NO di {_k}")
-        assert _pins[(_k, _com)] == _pins[(_rin, "1")], (
-            f"{_k}: il COM non sta sul nodo di R_IN ({_pins[(_rin, '1')]})")
+        # L57b (ADR-101): il COM sta sul nodo della 1 kOhm del limitatore,
+        # il cui altro capo e' il nodo di R_IN, col comune del diodo doppio.
+        _rl, _dl = f"R{_b + 79}", f"D{_b + 79}"
+        assert _pins[(_k, _com)] == _pins[(_rl, "1")] != _pins[(_rin, "1")], (
+            f"{_k}: il COM non sta sul nodo di {_rl} (il limitatore, ADR-101)")
+        assert _pins[(_rl, "2")] == _pins[(_rin, "1")] == _pins[(_dl, "3")], (
+            f"{_rl} / {_dl}: il limitatore non sta sul nodo di R_IN")
 assert '(lib "Isolator")' not in _src, \
     "c'e' una parte della libreria Isolator: il mute graduale e' stato tolto (ADR-062)"
+# Il limitatore d'ingresso (ADR-101, L57b): la resistenza in serie, il diodo
+# doppio, i due riferimenti a shunt; i valori dalla netlist.
+R_LIM = same(["R179", "R379"], "resistenza del limitatore")
+D_LIM = same(["D179", "D379"], "diodo doppio del limitatore")
+REF_LIM = same(["U1", "U2"], "riferimenti del limitatore")
+assert {_pins[("D179", "1")], _pins[("D179", "2")]} == {"VLIM_M", "VLIM_P"} \
+    and _pins[("U1", "1")] == "VLIM_P" and _pins[("U2", "2")] == "VLIM_M", \
+    "il diodo doppio non va dai due riferimenti VLIM_M / VLIM_P"
 
 # Resistenze d'isolamento d'uscita, 3 per canale (47 Ohm, addendum di ADR-008;
 # da L17 le due delle fisse stanno dopo il proprio buffer, T5/ADR-023).
@@ -532,7 +547,14 @@ box(9.0, Y, 5.2, 2.7,
 # il blocco A stava il mute graduale (due LDR); ADR-062 l'ha tolto: il
 # selettore va dritto al blocco A, e il mute taglia coi soli rele' al jack.
 # Da L48a (ADR-064) ogni ingresso ha il suo condensatore prima del rele'.
-arrow(11.6, Y, 19.8, Y)
+# Da L57b (ADR-101) fra il selettore e il blocco A c'e' il limitatore: la
+# resistenza in serie e il diodo doppio verso i due riferimenti a +/-5 V,
+# comuni ai due canali.
+arrow(11.6, Y, 13.1, Y)
+box(15.7, Y, 5.0, 2.7,
+    ["LIMITATORE", f"{pretty(R_LIM, OHM)} + {D_LIM}",
+     f"a ±5 V, {REF_LIM}", "ADR-101"], head_size=10)
+arrow(18.2, Y, 19.8, Y)
 box(23.0, Y, 5.6, 3.4,
     ["BLOCCO A", "guadagno 1 (0 dB)", f"Zin {R_ZIN}",
      "coppia JFET cascodata"], head_size=11)
