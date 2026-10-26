@@ -286,7 +286,10 @@ ap.add_argument("--rk", type=float, default=None)
 # as every lot before; comparatori = the all-analog timer of TIMER_AN with the standby (K501 and
 # the front switch as today); diretto = the same timer without the standby: K501's contact always
 # closed (a mains switch, the bench's env), the front switch closed for good
-ap.add_argument("--timer", choices=("micro", "comparatori", "diretto"), default="micro")
+# L54b1: sorgente = the timer of psu.net itself (ADR-102, in the source since L54b1): no TIMER_AN,
+# its parts through the MAP like every other part. Refused on a netlist with the micro, and the
+# three modes above refused on a netlist with the timer (they would add TIMER_AN to it)
+ap.add_argument("--timer", choices=("micro", "comparatori", "diretto", "sorgente"), default="micro")
 # L54a: a mains factor on ANY sequence case (holes included), e.g. 0.9 / 1.1 (the case's own
 # "fattore", accensione_m10's, if any, is refused together with this)
 ap.add_argument("--rete", type=float, default=None)
@@ -397,6 +400,12 @@ def node(n):
 
 
 COMPS, PN = parse(ARG.net)
+# L54b1: the mode and the netlist must agree (see --timer)
+_HA_TIMER = any(c["part"] == "LM339" for c in COMPS.values())
+_HA_MICRO = any(c["part"].startswith("ATtiny") for c in COMPS.values())
+if (ARG.timer == "sorgente") != _HA_TIMER or (ARG.timer == "sorgente" and _HA_MICRO):
+    raise SystemExit("RIFIUTATO: --timer %s su %s (temporizzatore %s, micro %s)"
+                     % (ARG.timer, ARG.net, _HA_TIMER, _HA_MICRO))
 # L45d2b2b1: --valore REF=val[,REF=val]: a part's value instead of the netlist's (an option of
 # ADR-074 with R550 / R551 at another value); the part must exist
 for _x in (ARG.valore.split(",") if ARG.valore else []):
@@ -613,6 +622,13 @@ def element(ref, c):
         v, g = pn(ref, "8"), pn(ref, "4")
         return ["X%sa %s %s %s %s %s CMPOD" % (ref, pn(ref, "3"), pn(ref, "2"), pn(ref, "1"), v, g),
                 "X%sb %s %s %s %s %s CMPOD" % (ref, pn(ref, "5"), pn(ref, "6"), pn(ref, "7"), v, g)]
+    if part == "LM339":
+        # L54b1: the TLV1704 of ADR-102 on the LM339 symbol (SBOS589D p. 5): channels a-d =
+        # (+, -, out) 5 4 2, 7 6 1, 9 8 14, 11 10 13; V+ 3, V- 12. The same CMPOD as TIMER_AN's
+        v, g = pn(ref, "3"), pn(ref, "12")
+        return ["X%s%s %s %s %s %s %s CMPOD" % (ref, u, pn(ref, a), pn(ref, b), pn(ref, o), v, g)
+                for u, (a, b, o) in zip("abcd", (("5", "4", "2"), ("7", "6", "1"),
+                                                 ("9", "8", "14"), ("11", "10", "13")))]
     # L47c2a: MCP6004 (U511) and MCP4822 (U510) are gone (ADR-062); if either
     # came back it would fall to the refusal at the end
     if part.startswith("ATtiny"):
@@ -1364,6 +1380,20 @@ SONDE_AN = ["v(at_pg)", "v(at_pgt)", "v(at_mrq)", "v(at_on)", "v(at_mt)", "v(at_
             "v(at_md)", "v(at_prt)", "v(permit_t)", "v(vr_t)"]
 
 
+def sonde_seq():
+    """L54b1: SONDE, without the micro's nodes on the source (mute_g_in, adc_*: gone with it)."""
+    if ARG.timer != "sorgente":
+        return SONDE
+    # by name: k501_f and env are the bench's own nodes, not the netlist's (first deck: dropped)
+    via = {"v(mute_g_in)", "v(adc_sup_p)", "v(adc_sup_m)", "v(adc_sup_vr)", "v(adc_md)"}
+    return [s for s in SONDE if s not in via]
+
+
+def sonde_an():
+    """L54b1: SONDE_AN; on the source AT_ON is VRELAY_EN itself (in SONDE already)."""
+    return [s for s in SONDE_AN if not (ARG.timer == "sorgente" and s == "v(at_on)")]
+
+
 def seq_deck():
     c = CASI_SEQ[ARG.caso]
     if ARG.rete is not None:
@@ -1438,6 +1468,8 @@ def seq_deck():
         # no K501 without the standby: MAINS_REQ undriven (R528 holds it low), so its coil draws
         # nothing (first runs drove it: 29.5 mA on VRELAY_REG that the circuit would not have)
         righe += [r for r in TIMER_AN if not r.startswith(("XATmr ", "RATmr "))]
+    elif ARG.timer == "sorgente":
+        pass                # L54b1: the timer's parts are already in the deck, from psu.net
     else:
         righe += TIMER_AN
     righe += ["VIQ iq_mcu 0 pwl(%s)" % u["iq"]]
@@ -1459,9 +1491,12 @@ def seq_deck():
         if ARG.timer != "micro":
             # L54a: the analog timers hold PERMIT_REQ ~24 ms through AT_PRT as well - a second D in
             # series with C528's; the counterfactual removes both (first run: C3 passed without it)
-            k = [i for i, r in enumerate(righe) if r.startswith("CATprt ")]
-            assert len(k) == 1
-            righe[k[0]] = "CATprt at_prt rly_ret %s" % c["c528"]
+            # L54b1: found by its nodes (CATprt on the bench, C550 in the source)
+            k = [i for i, r in enumerate(righe)
+                 if r.startswith("C") and set(r.split()[1:3]) == {"at_prt", "rly_ret"}]
+            assert len(k) == 1, k
+            p = righe[k[0]].split()
+            righe[k[0]] = "%s %s %s %s" % (p[0], p[1], p[2], c["c528"])
     # L41c: U503's output shorted - a conductance from VRELAY_REG to the return,
     # 0 before, 10 S (0.1 ohm) from the case's instant (1 us edge)
     if c.get("corto") is not None:
@@ -1505,7 +1540,7 @@ def seq_deck():
         "tran 100u %.12g 0 20u uic" % c["tf"],
         "linearize",
         "wrdata tb_psu_seq_%s_g%d_out.txt %s" % (ARG.caso, ARG.giro, " ".join(
-            SONDE + sonde_guasto(c) + ([] if ARG.timer == "micro" else SONDE_AN)
+            sonde_seq() + sonde_guasto(c) + ([] if ARG.timer == "micro" else sonde_an())
             + (["v(t2_sec_a_e,t2_sec_b)", "i(vt2_sns)", "v(t1_sec_aa_e)", "i(vt1a_sns)",
                 "v(t1_sec_ab_e)", "i(vt1b_sns)"] if ARG.sonda_t2 else []))),
         ".endc", ".end"]
