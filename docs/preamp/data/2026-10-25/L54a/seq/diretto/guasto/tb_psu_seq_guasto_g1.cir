@@ -256,7 +256,7 @@ DATmd1 at_pg at_md DBAT54
 DATmd2 at_f at_md DBAT54
 DATmd3 at_t2s at_md DBAT54
 RATpg v5 at_pg 100k
-RATpgt v5 at_pgt 680k
+RATpgt v5 at_pgt 820k
 CATpgt at_pgt rly_ret 1u
 DATpgt at_pgt at_pg DBAT54
 XATmg at_pgt vref at_mrq v5 rly_ret CMPOD
@@ -279,8 +279,6 @@ DATma at_ma at_mt D1N914
 DATmb vr_g at_mt D1N914
 CATmt at_mt rly_ret 100n
 RATmt at_mt rly_ret 1MEG
-XATmr at_mt vref mains_req v5 rly_ret CMPOD
-RATmr v5 mains_req 22k
 RATt2s at_on at_t2s 2.7MEG
 CATt2s at_t2s rly_ret 1u
 DATt2s at_t2s at_on DBAT54
@@ -293,6 +291,8 @@ QATn at_bp at_bn rly_ret QNGEN
 RATbn at_bn rly_ret 100k
 QATp at_bn at_bp at_on QPGEN
 RATbp at_on at_bp 100k
+CATbn at_bn rly_ret 1n
+CATbp at_on at_bp 1n
 VIQ iq_mcu 0 pwl(0 0 1000 0)
 VENU502 en_u502 0 pwl(0 1 3 1 3.000001 0 1000 0)
 RLOADP vplus 0 49.4441
@@ -309,7 +309,7 @@ VGSW3 g_sw3 0 pwl(0 1 1000 1)
 BSW3 mute_sw rly_ret I = V(mute_sw,rly_ret)*V(g_sw3)
 VGFRONT g_front 0 pwl(0 1 1000 1)
 BFRONT front_sw rly_ret I = V(front_sw,rly_ret)*V(g_front)
-.options reltol=1e-4 abstol=1e-10 vntol=1e-6 temp=25 method=trap gmin=1e-8
+.options reltol=1e-4 abstol=1e-10 vntol=1e-6 temp=25 method=gear gmin=1e-10
 .control
 set numdgt=12
 set wr_singlescale

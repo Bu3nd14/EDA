@@ -1434,6 +1434,10 @@ def seq_deck():
             x = x.lower()
             righe += ["VSET_%s set_%s 0 pwl(%s)" % (x, x, u[x]),
                       "VDRV_%s drv_%s 0 pwl(%s)" % (x, x, DEF_DRV)]
+    elif ARG.timer == "diretto":
+        # no K501 without the standby: MAINS_REQ undriven (R528 holds it low), so its coil draws
+        # nothing (first runs drove it: 29.5 mA on VRELAY_REG that the circuit would not have)
+        righe += [r for r in TIMER_AN if not r.startswith(("XATmr ", "RATmr "))]
     else:
         righe += TIMER_AN
     righe += ["VIQ iq_mcu 0 pwl(%s)" % u["iq"]]
