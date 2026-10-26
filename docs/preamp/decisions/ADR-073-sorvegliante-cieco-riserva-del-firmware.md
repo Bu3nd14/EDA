@@ -1,6 +1,6 @@
 # ADR-073 — Il sorvegliante di un rail diventato cieco: accettata la riserva del firmware, che muta in 2,2 ms invece di 1 ms
 
-Data: 2026-10-14 · Stato: accettata
+Data: 2026-10-14 · Stato: superata da ADR-102 — il firmware esce; la riserva del sorvegliante cieco la fanno i comparatori del temporizzatore, in < 0,5 ms
 
 **Rapporti con le decisioni precedenti.**
 - È la **scelta 2** di `data/2026-10-14/L45d1/scelte_L45d2.pdf` (10 righe alte, L45c2).
