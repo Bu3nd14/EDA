@@ -40,10 +40,16 @@ def primo(t, cond, da=None):
 
 def caso(d):
     nome = os.path.basename(d.rstrip("/"))
-    fs = [f for f in os.listdir(d) if f.endswith("_g1_out.txt")]
-    assert len(fs) == 1, (d, fs)
-    if not os.path.exists(os.path.join(d, "ok.txt")):
+    pf = os.path.join(d, "punto_fisso.txt")
+    if os.path.exists(pf):
+        # the micro (corri_seq.sh): the fixed-point pass is the case
+        g = open(pf).read().strip()
+        fs = [f for f in os.listdir(d) if f.endswith("_g%s_out.txt" % g)]
+    elif os.path.exists(os.path.join(d, "ok.txt")):
+        fs = [f for f in os.listdir(d) if f.endswith("_g1_out.txt")]
+    else:
         return dict(caso=nome, esito="CORSA RIFIUTATA")
+    assert len(fs) == 1, (d, fs)
     w = leggi(os.path.join(d, fs[0]))
     t = w["time"]
     vr, mc, pc = w["v(vrelay)"], w["v(mute_cmd)"], w["v(permit_cmd)"]

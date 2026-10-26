@@ -294,6 +294,14 @@ ap.add_argument("--rete", type=float, default=None)
 # (the micro's preamble put it in MUSICA at 1.0 s): rails at ~1.4 s, then the 0.47 s of AT_PGT -
 # they run with 3.0; every micro deck keeps 2.0
 ap.add_argument("--tss", type=float, default=2.0)
+# L54a: also write T2's EMF and its sense current (L41b1's VT2_sns), for the standby power
+# read on a sequence deck; without it the decks are unchanged
+ap.add_argument("--sonda-t2", dest="sonda_t2", action="store_true")
+# L54a: where VRELAY comes from with --timer diretto. t2 = today's small transformer, switched with
+# the mains; t1 = no T2 (its EMF at 0): an auxiliary full-wave rectifier on T1's two secondaries
+# into RECT_V (two DBR diodes, the centre tap is GND), so that the coils keep their own reservoir
+# (C_V) and never draw from the audio rails' raw (ADR-048 point 3), and the mains detector reads T1
+ap.add_argument("--vrelay-da", dest="vrelay_da", choices=("t2", "t1"), default="t2")
 ARG = ap.parse_args()
 SERIE2 = set(ARG.serie2.split(",")) if ARG.serie2 else set()
 DOPPI = {}      # ref -> (node a, node b, mid): filled by element(), read by applica_guasto()
@@ -1012,6 +1020,14 @@ CASI_SEQ = {
     # L54a: the mains switched on at TE with everything cold (the power-up of --timer diretto,
     # and of the other two after a long blackout)
     "fredda": dict(front=1, sw3=1, fredda=True, tf=TE + 2.5, pre=None),
+    # L54a: the front switched on with U501 dead from the start (timer_spec.md 4.1: no rails within
+    # 2 s = GUASTO, K501 off); and a fault (U502 off at TE) reset from the front - off at TE + 0.5,
+    # on again at TE + 1.0 with U502 still dead: the power-up again, then the latch again
+    "accensione_u501": dict(front=[(0, 0), (TE, 0), (TE + 1e-6, 1)], sw3=1, tf=TE + 3.0, pre=None,
+                            spento={"U501": 1e-3}),
+    "fredda_u501": dict(front=1, sw3=1, fredda=True, tf=TE + 3.0, pre=None, spento={"U501": 1e-3}),
+    "ritenuta_frontale": dict(front=[(0, 1), (TE + 0.5, 1), (TE + 0.5 + 1e-6, 0), (TE + 1.0, 0),
+                                     (TE + 1.0 + 1e-6, 1)], sw3=1, u502=TE, tf=TE + 3.5, pre="musica"),
     # L30's counterfactual: no D (C528 = 10 pF), the mains gone
     "cf_nodelta": dict(front=1, sw3=1, buco=1000.0, tf=TE + 1.0, pre="musica", c528="10p"),
     # U503's output shorted to ground: C523 (on VRELAY_REG) goes with it
@@ -1280,8 +1296,8 @@ SONDE = ["v(front_in)", "v(mute_sw_in)", "v(mute_g_in)", "v(adc_sup_p)", "v(adc_
 #          nodes, high-impedance inputs). pa + rail, pb - rail, pc VRELAY_REG, pd the mains
 #          detector; pd's output reaches AT_PG, AT_F and AT_T2S through three Schottkys
 #          (one channel, three nodes).
-#   AT_PGT 680k / 1 uF from V5, emptied through a Schottky into AT_PG: power good for
-#          0.69 x 0.68 s = 0.47 s before the release (timer_spec.md 4.3 / 4.5: >= 100 ms at power-up,
+#   AT_PGT 820k / 1 uF from V5, emptied through a Schottky into AT_PG: power good for
+#          0.69 x 0.82 s = 0.57 s before the release (timer_spec.md 4.3 / 4.5: >= 100 ms at power-up,
 #          >= 500 ms after a hole - one delay for both, the longer one rounded).
 #   AT_MRQ 200k / 100 nF from V5 (the debounce: every input good for ~14 ms before it crosses
 #          VREF), emptied by: AT_PGT below VREF (mg), SW3 in mute (sw), AT_ON low (a Schottky).
@@ -1310,7 +1326,9 @@ TIMER_AN = [
     "RATmd v5 at_md 100k",
     "DATmd1 at_pg at_md DBAT54", "DATmd2 at_f at_md DBAT54", "DATmd3 at_t2s at_md DBAT54",
     "RATpg v5 at_pg 100k",
-    "RATpgt v5 at_pgt 680k", "CATpgt at_pgt rly_ret 1u", "DATpgt at_pgt at_pg DBAT54",
+    # 820k (first runs 680k: after a 20 ms hole the music came back 435 ms after the mains, under
+    # timer_spec.md 4.5's 500 ms)
+    "RATpgt v5 at_pgt 820k", "CATpgt at_pgt rly_ret 1u", "DATpgt at_pgt at_pg DBAT54",
     "XATmg at_pgt vref at_mrq v5 rly_ret CMPOD",
     "RATmrq v5 at_mrq 200k", "CATmrq at_mrq rly_ret 100n",
     "XATsw vref mute_sw_in at_mrq v5 rly_ret CMPOD",
@@ -1337,6 +1355,10 @@ TIMER_AN = [
     "RATfb at_f at_bn 47k",
     "QATn at_bp at_bn rly_ret QNGEN", "RATbn at_bn rly_ret 100k",
     "QATp at_bn at_bp at_on QPGEN", "RATbp at_on at_bp 100k",
+    # 1 nF base-emitter on each (first runs: every fault case stopped at the latch's edge,
+    # "Timestep too small" on at_bp / at_bn - the generic models have no capacitance, and the
+    # regeneration was instantaneous; on the board the same 1 nF keeps a dv/dt from tripping it)
+    "CATbn at_bn rly_ret 1n", "CATbp at_on at_bp 1n",
 ]
 SONDE_AN = ["v(at_pg)", "v(at_pgt)", "v(at_mrq)", "v(at_on)", "v(at_mt)", "v(at_t2s)", "v(at_f)",
             "v(at_md)", "v(at_prt)", "v(permit_t)", "v(vr_t)"]
@@ -1401,7 +1423,12 @@ def seq_deck():
               ("BENV1 env1 0 V = V(env)" if ARG.timer == "diretto" else
                "BENV1 env1 0 V = V(env)*0.5*(1+tanh((V(k501_f)-0.5)/0.02))")]
     righe += mains("env1", 15.0, 50, 0.08, "T1_SEC_A", "T1_SEC_B", True, "T1")
-    righe += mains("env", 12.0, 5, 0.20, "T2_SEC_A", "T2_SEC_B", False, "T2")
+    if ARG.vrelay_da == "t1":
+        assert ARG.timer == "diretto", "--vrelay-da t1 solo con --timer diretto"
+        righe += ["VENVZ envz 0 0"] + mains("envz", 12.0, 5, 0.20, "T2_SEC_A", "T2_SEC_B", False, "T2")
+        righe += ["DAUXa t1_sec_a rect_v DBR", "DAUXb t1_sec_b rect_v DBR"]
+    else:
+        righe += mains("env", 12.0, 5, 0.20, "T2_SEC_A", "T2_SEC_B", False, "T2")
     if ARG.timer == "micro":
         for x in MCU_OUT:
             x = x.lower()
@@ -1425,6 +1452,12 @@ def seq_deck():
         assert len(k) == 1
         p = righe[k[0]].split()
         righe[k[0]] = "CC528 %s %s %s" % (p[1], p[2], c["c528"])
+        if ARG.timer != "micro":
+            # L54a: the analog timers hold PERMIT_REQ ~24 ms through AT_PRT as well - a second D in
+            # series with C528's; the counterfactual removes both (first run: C3 passed without it)
+            k = [i for i, r in enumerate(righe) if r.startswith("CATprt ")]
+            assert len(k) == 1
+            righe[k[0]] = "CATprt at_prt rly_ret %s" % c["c528"]
     # L41c: U503's output shorted - a conductance from VRELAY_REG to the return,
     # 0 before, 10 S (0.1 ohm) from the case's instant (1 us edge)
     if c.get("corto") is not None:
@@ -1468,7 +1501,9 @@ def seq_deck():
         "tran 100u %.12g 0 20u uic" % c["tf"],
         "linearize",
         "wrdata tb_psu_seq_%s_g%d_out.txt %s" % (ARG.caso, ARG.giro, " ".join(
-            SONDE + sonde_guasto(c) + ([] if ARG.timer == "micro" else SONDE_AN))),
+            SONDE + sonde_guasto(c) + ([] if ARG.timer == "micro" else SONDE_AN)
+            + (["v(t2_sec_a_e,t2_sec_b)", "i(vt2_sns)", "v(t1_sec_aa_e)", "i(vt1a_sns)",
+                "v(t1_sec_ab_e)", "i(vt1b_sns)"] if ARG.sonda_t2 else []))),
         ".endc", ".end"]
     # the switch nodes of the timer deck are RSW3 / RFRONT: none here
     assert not any(r.startswith(("RSW3 ", "RFRONT ")) for r in righe)

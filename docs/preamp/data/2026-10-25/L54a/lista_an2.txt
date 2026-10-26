@@ -1,0 +1,24 @@
+f_u505a_cieco_gu501 fmea_comparatori comparatori --n2n7002 ds --tss 3.0
+f_u505b_cieco_gu502 fmea_comparatori comparatori --n2n7002 ds --tss 3.0
+f_u506b_cieco_gu503 fmea_comparatori comparatori --n2n7002 ds --tss 3.0
+f_c509_corto_muss fmea_comparatori comparatori --n2n7002 ds --tss 3.0
+f_c509_corto_musp10s fmea_comparatori comparatori --n2n7002 ds --tss 3.0
+f_k501_bobina_muss fmea_comparatori comparatori --n2n7002 ds --tss 3.0
+f_k501_bobina_musp10s fmea_comparatori comparatori --n2n7002 ds --tss 3.0
+f_u505a_cieco_gu501 fmea_diretto diretto --n2n7002 ds --tss 3.0
+f_u505b_cieco_gu502 fmea_diretto diretto --n2n7002 ds --tss 3.0
+f_u506b_cieco_gu503 fmea_diretto diretto --n2n7002 ds --tss 3.0
+f_c509_corto_muss fmea_diretto diretto --n2n7002 ds --tss 3.0
+f_c509_corto_musp10s fmea_diretto diretto --n2n7002 ds --tss 3.0
+accensione consumo_comparatori comparatori --n2n7002 ds --tss 3.0 --sonda-t2
+accensione consumo_comparatori_m10 comparatori --n2n7002 ds --tss 3.0 --sonda-t2 --rete 0.9
+accensione consumo_comparatori_p10 comparatori --n2n7002 ds --tss 3.0 --sonda-t2 --rete 1.1
+fredda consumo_diretto_t2 diretto --n2n7002 ds --tss 3.0 --sonda-t2
+fredda consumo_diretto_t2_p10 diretto --n2n7002 ds --tss 3.0 --sonda-t2 --rete 1.1
+fredda consumo_diretto_t1 diretto --n2n7002 ds --tss 3.0 --sonda-t2 --vrelay-da t1
+fredda consumo_diretto_t1_m10 diretto --n2n7002 ds --tss 3.0 --sonda-t2 --vrelay-da t1 --rete 0.9
+fredda consumo_diretto_t1_p10 diretto --n2n7002 ds --tss 3.0 --sonda-t2 --vrelay-da t1 --rete 1.1
+perdita diretto_t1 diretto --n2n7002 ds --tss 3.0 --vrelay-da t1
+perdita diretto_t1_m10 diretto --n2n7002 ds --tss 3.0 --vrelay-da t1 --rete 0.9
+buco200 diretto_t1 diretto --n2n7002 ds --tss 3.0 --vrelay-da t1
+guasto_u503 diretto_t1 diretto --n2n7002 ds --tss 3.0 --vrelay-da t1
