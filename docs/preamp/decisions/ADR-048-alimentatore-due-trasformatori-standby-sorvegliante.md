@@ -1,6 +1,6 @@
 # ADR-048 — L'alimentatore: due trasformatori standard, `VRELAY` a 12 V, standby con interruttore posteriore, sorvegliante a comparatore con rivelatore di rete, temporizzatore ibrido
 
-Data: 2026-09-26 · Stato: accettata
+Data: 2026-09-26 · Stato: accettata — il punto 6 (il temporizzatore ibrido col micro) è superato da ADR-102: il temporizzatore è a comparatori; il resto vale
 
 ## Contesto
 

@@ -1,44 +1,49 @@
-# Prompt per la sessione successiva — L54, il micro, lo standby e lo spegnimento morbido, riesaminati
+# Prompt per la sessione successiva — L54b, il temporizzatore a comparatori nel sorgente
 
-Nome della sessione: **hi-fi preamp L54** (la convenzione è in `CLAUDE.md`).
+Nome della sessione: **hi-fi preamp L54b** (la convenzione è in `CLAUDE.md`).
 
-> Prompt scritto alla chiusura di **L57b** (2026-10-25): il limitatore d'ingresso nel sorgente, NC-059
-> chiusa. L'ordine deciso con l'utente dopo L45d2b3b2a: L57 (fatto) → **L54** → L55 → L58 → L64 → L65 → G1.
+> Prompt scritto alla chiusura di **L54a** (2026-10-26): il riesame coi numeri, la scelta dell'utente
+> «Comparatori, con lo standby», ADR-102, NC-054 chiusa. L'ordine deciso con l'utente: L54 (L54a fatto)
+> → **L54b** → L55 → L58 → L64 → L65 → G1.
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L54**, e si ferma. Non iniziarne un secondo, salvo che l'utente lo
+LOTTI PICCOLI: questa sessione fa **L54b**, e si ferma. Non iniziarne un secondo, salvo che l'utente lo
 chieda esplicitamente nella sessione. Se si rivela più grande di una sessione, **dividilo con l'utente
-all'inizio** (è probabile: un confronto fra due architetture del temporizzatore, poi la scelta, poi
-l'eventuale sorgente).
+all'inizio** (è probabile: il sorgente e i controlli, poi le corse sul sorgente).
 
 ## Perché questo lotto
 
-**NC-054** (maggiore, prima di G1; decisione dell'utente in L52: «Accept, major, before G1» per il
-micro, «Accept, with the micro» per lo standby). ADR-048 scelse il temporizzatore col micro per due
-ragioni — il convertitore esponenziale delle fotoresistenze su sei decadi, tolto da ADR-062, e i «molti
-stati» —; nessuna ADR l'ha riesaminato dopo ADR-062. L'ordine di sicurezza è già in hardware (il Δ RC
-col comparatore, il sorvegliante sul gate del sink, i pull-down, ADR-049). Lo standby (con **NC-037**:
-≤ 0,5 W alla presa, la perdita a vuoto di T2 ≤ 0,40 W) e lo spegnimento morbido comprano l'interruttore
-frontale a bassa tensione e lo standby, non il silenzio: la perdita di rete dà già 39,2 nV al jack
-contro 33,9 nV dello spegnimento morbido (dossier §24).
+ADR-102: il micro U509 e il firmware escono dall'alimentatore; al loro posto un temporizzatore di
+dodici canali di comparatore (tre TLV1704), RC, diodi e una ritenuta a due transistor, provato solo sul
+banco di L54a (`data/2026-10-25/L54a/psu/genera_tb_psu.py`, la lista `TIMER_AN`, commentata riga per
+riga coi valori e le loro ragioni). Lo standby, K501, l'interruttore frontale, il sorvegliante su
+`MUTE_G`, Δ e Δ₂ (U508) e Q505 restano.
 
 ## Che cosa fare
 
-1. **Il confronto coi numeri** (NC-054, «Cosa serve per chiuderla»): il progetto di oggi contro un
-   temporizzatore tutto analogico coi comparatori che ci sono già, **con e senza lo standby**
-   (interruttore di rete diretto). Gli stati da coprire; PR-24 per costruzione; PR-20 e PR-23 sui casi
-   di L41c; il calore (~1 W); NC-037. Ogni opzione con le sue cifre contro i limiti, alle tre reti dove
-   la rete conta.
-2. **La scelta all'utente**, per nome e coi numeri; poi una ADR.
-3. Se la scelta cambia il circuito, il sorgente (`circuits/preamp/psu.py`, il firmware se resta), i
-   disegni, `run_tests.sh` — oppure un lotto dopo, deciso con l'utente all'inizio.
+1. **Il sorgente** (`circuits/preamp/psu.py`): il temporizzatore coi valori di `TIMER_AN`, ogni valore
+   col commento che punta ad ADR-102; fuori U509, C534, J515, R543–R547. Le reti per piedini prima e
+   dopo (limitations #74). Simboli: TLV1704 (verificare la libreria KiCad; altrimenti il quadruplo
+   più vicino, dichiarato), BC847 / BC857.
+2. **`firmware/preamp_timer/` fuori**, e con lui il 2k di `run_tests.sh`; il 2e (`check_relay_safe_state.py
+   --timer`, le regole T1–T5 che cercano il micro: limitations #68) riscritto per il temporizzatore
+   nuovo, con i suoi falsi; il controllo meccanico di J1–J4 invariato.
+3. **I disegni** dell'alimentatore e i loro controlli.
+4. **Il banco sul sorgente**: `genera_tb_psu.py` che legge il temporizzatore dalla netlist (non più da
+   `TIMER_AN`), il caso noto (le corse di L54a con `--timer comparatori` devono tornare), poi i casi di
+   L54a sul sorgente; i comparatori col **modello del costruttore** (`vendor/comparator/ti/TLV1702/
+   tlv1701.lib`) almeno sui casi della sicurezza, contro il comportamentale.
+5. **Lo standby** (NC-037): i pull-up delle uscite tenute basse in standby alimentati solo da acceso;
+   la cifra dal secondario di T2 alle tre reti, contro 130 mW di L54a.
+6. **La catena al jack** dello spegnimento dal frontale e della perdita di rete (il ponte di L41c),
+   contro 33,9 / 39,2 nV del dossier.
 
 ## Prima di tutto
 
-- `CLAUDE.md`, `docs/limitations.md` (in particolare **#67**, **#73–#76**), `AGENTS.md`.
-- `docs/preamp/STATE.md`: «In breve» e le voci di L57b e L57a.
-- **NC-054** e **NC-037** in `NONCOMPLIANCE.md`; ADR-046, ADR-048, ADR-049, ADR-062, ADR-094; il report
-  dell'architetto `reports/2026-10-12-L52-architetto-avversariale.md` (R3, R4); i casi di L41c.
+- `CLAUDE.md`, `docs/limitations.md` (in particolare **#67**, **#68**, **#73–#76**), `AGENTS.md`.
+- `docs/preamp/STATE.md`: «In breve» e la voce di L54a.
+- **ADR-102**; il report `reports/2026-10-26-L54a-micro-standby.md` (§1 gli stati, §8 per L54b); il
+  README di `data/2026-10-25/L54a/`.
 
 ## I vincoli
 
@@ -56,19 +61,19 @@ contro 33,9 nV dello spegnimento morbido (dossier §24).
 
 ## NON fa parte di questo lotto
 
-- Il dispositivo d'uscita (L55), la diagnosi (L58), il dossier (L64), la revisione (L65), G1.
-- Le righe della FMEA delle dieci parti del limitatore (L57b, §8 del report): vanno in L58 o nella
-  revisione, non qui.
+- Le righe della FMEA delle parti nuove del temporizzatore e la diagnosi in hardware (ADR-076,
+  ADR-078): L58.
+- Il dispositivo d'uscita (L55), il dossier (L64), la revisione (L65), G1.
 - Le decisioni prese non si riaprono, salvo che un «Da riaprire se» della loro ADR scatti. In quel caso
   si torna all'utente coi numeri.
 
 ## CHIUSURA
 
-1. `STATE.md` con L54 **fatto** nella tabella dei lotti (o le sue parti), e il prossimo (L55,
+1. `STATE.md` con L54b **fatto** nella tabella dei lotti (o le sue parti), e il prossimo (L55,
    dall'ordine deciso con l'utente).
 2. Riscrivi `docs/preamp/NEXT-SESSION.md` per il lotto successivo, con la riga «Nome della sessione:
    hi-fi preamp <lotto nuovo>» subito sotto il titolo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L54`.
+4. `/bin/zsh scripts/chunk_close.sh L54b`.
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**
