@@ -207,6 +207,10 @@ done
 # micro in reset or its pins high-impedance every relay it commands is at
 # rest, and the delays D and D2 are hardware. Made to fail on main's netlist
 # and on 8 sabotaged copies: docs/preamp/data/2026-09-26/L41b1/falsi/.
+# L54b1 (ADR-102): the micro is gone; the rules are rewritten for the
+# comparator timer - no micro, open-drain requests with pull-downs, the latch
+# - and made to fail on 17 sabotaged copies of the new psu.net:
+# docs/preamp/data/2026-10-26/L54b1/falsi/ (falsi.py, verdetti.txt).
 p="$ROOT/circuits/preamp/psu.net"
 if [ ! -f "$p" ]; then
     echo "   MISSING: circuits/preamp/psu.net" >&2
@@ -235,6 +239,8 @@ echo "-- 2j. the harness between the audio board and the supply board (L41a, ADR
 # J3 LDR_CMD is gone with the graduated mute, and must be on NEITHER board;
 # with 2e's "no cell at block A's input", 9 sabotages and main's netlists:
 # docs/preamp/data/2026-10-05/L47c1/falsi/ (falsi.py, verdetti.txt).
+# L54b1 (ADR-102): the requests from comparators, no micro - 5 sabotages
+# and main's netlists: docs/preamp/data/2026-10-26/L54b1/falsi/.
 hrn_fail=0
 a="$ROOT/circuits/preamp/preamp_audio.net"
 p="$ROOT/circuits/preamp/psu.net"
@@ -372,21 +378,8 @@ echo "$out"
 report "no canonical deck or generated block simulates a placeholder" $rc
 echo
 
-echo "-- 2k. the supply timer's firmware on the host (L41b2, ADR-049; L47c2a, ADR-062; L60b, ADR-081) --"
-# firmware/preamp_timer/src/timer_core.c is the timer's logic, no registers;
-# SPICE cannot simulate it, so it is proven here: one test per sequence of
-# the spec (the mute with the relays alone since L47c2a: the LDR law, its
-# calibration and the fade are gone), and the free pins of the micro held
-# against psu.net. With --falsi every one of the 19 deliberate defects
-# (FALSO_n) must make its own test fail - a test that cannot fail proves
-# nothing. Compiled with /usr/bin/clang into $SCRATCH/firmware.
-# Captured first, printed after: `cmd | tail` would report tail's status (2e).
-out=$(/bin/zsh "$ROOT/firmware/preamp_timer/test/run_host_tests.sh" \
-      --falsi "$SCRATCH/firmware_falsi.txt" 2>&1)
-rc=$?
-echo "$out" | grep -E '^(PASSA|FALLISCE|==|\[)|  FALLISCE' | sed 's/^/   /'
-report "timer firmware: host tests pass, 19 fakes fail" $rc
-echo
+# (2k, the supply timer's firmware on the host, went with the firmware in L54b1:
+# ADR-102 replaced the micro with comparators, which 2e and 2j check on psu.net.)
 
 echo "== run_tests.sh SUMMARY: $n_pass passed, $n_fail failed =="
 exit $fail
