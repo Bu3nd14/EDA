@@ -3,13 +3,15 @@
 Nome della sessione: **hi-fi preamp L54b** (la convenzione è in `CLAUDE.md`).
 
 > Prompt scritto alla chiusura di **L54a** (2026-10-26): il riesame coi numeri, la scelta dell'utente
-> «Comparatori, con lo standby», ADR-102, NC-054 chiusa. L'ordine deciso con l'utente: L54 (L54a fatto)
+> «Comparatori, con lo standby», ADR-102, NC-054 chiusa. Esteso dopo L54a col punto 7, la robustezza al
+> banco (richiesta dell'utente, 2026-10-26). L'ordine deciso con l'utente: L54 (L54a fatto)
 > → **L54b** → L55 → L58 → L64 → L65 → G1.
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
 LOTTI PICCOLI: questa sessione fa **L54b**, e si ferma. Non iniziarne un secondo, salvo che l'utente lo
 chieda esplicitamente nella sessione. Se si rivela più grande di una sessione, **dividilo con l'utente
-all'inizio** (è probabile: il sorgente e i controlli, poi le corse sul sorgente).
+all'inizio** (è probabile: il sorgente e i controlli, poi le corse sul sorgente e le prove di
+robustezza del punto 7).
 
 ## Perché questo lotto
 
@@ -36,7 +38,26 @@ riga coi valori e le loro ragioni). Lo standby, K501, l'interruttore frontale, i
 5. **Lo standby** (NC-037): i pull-up delle uscite tenute basse in standby alimentati solo da acceso;
    la cifra dal secondario di T2 alle tre reti, contro 130 mW di L54a.
 6. **La catena al jack** dello spegnimento dal frontale e della perdita di rete (il ponte di L41c),
-   contro 33,9 / 39,2 nV del dossier.
+   contro 33,9 / 39,2 nV del dossier, in dB SPL.
+7. **La robustezza del temporizzatore, al banco e non al prototipo** (richiesta dell'utente dopo L54a,
+   2026-10-26: «il prototipo è molto costoso, dobbiamo cercare di accorgerci al banco delle simulazioni
+   dei problemi, il primo prototipo deve essere usabile»; ADR-102 lasciava al prototipo l'immunità ai
+   disturbi). I criteri si scrivono prima delle corse; per ognuno: niente scatto a vuoto
+   dell'accensione, del mute o della ritenuta, e lo scatto quando deve:
+   - **la rete**: cali lenti (brown-out) a −15 / −20 / −30 % per 0,1–2 s; buchi di ½, 1, 3, 10 periodi;
+     una sovratensione +15 %; la rete che torna mentre i rail scendono; tutto alle tre reti;
+   - **i disturbi veloci**: fronti ripidi su `VRELAY_REG` e su V5 (K501 che chiude, i relè della scheda
+     audio che commutano, il carico di `VRELAY` a gradino): la ritenuta a due transistor non si innesca
+     da sola; il suo 1 nF base-emettitore dimensionato coi numeri, non a sentimento;
+   - **i rimbalzi** del frontale e di SW3 con forme di rimbalzo vere (treni di 1–5 ms);
+   - **le tolleranze**: un Monte Carlo sugli RC dei ritardi (resistenze ±1 %, condensatori secondo il
+     dielettrico, ±5 % C0G / ±20 % X7R con la tensione) e sulle soglie e gli offset dei comparatori:
+     ogni tempo nei suoi limiti (il permissivo ≥ 16,9 ms dopo il mute, la musica ≥ 500 ms dopo la
+     rete, K501 ≥ 50 ms dopo il permissivo, il timeout ~2 s, la ritenuta armata), col caso peggiore
+     dichiarato;
+   - **la temperatura** a 0 e 60 °C, coi transistor della ritenuta e i comparatori del costruttore;
+   - al prototipo resta solo ciò che non si simula (i disturbi irradiati, il layout), detto per nome.
+   Se una prova fallisce, il rimedio si porta all'utente coi numeri prima di cambiare il circuito.
 
 ## Prima di tutto
 
