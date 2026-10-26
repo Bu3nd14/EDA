@@ -784,17 +784,17 @@ if __name__ == "__main__":
                   (NV, VREF, AT_PG),          # VRELAY_REG below 11.0 V
                   (VREF, MD, AT_MD)))         # no half-wave for ~15 ms
     cap("100n", "C545", V5, RET)
-    res("100k", "R556", V5, AT_MD)
+    res("100k", "R569", V5, AT_MD)
     diode("BAT54", "D533", AT_PG, AT_MD)
     diode("BAT54", "D534", AT_F, AT_MD)
     diode("BAT54", "D535", AT_T2S, AT_MD)
-    res("100k", "R557", V5, AT_PG)
+    res("100k", "R570", V5, AT_PG)
     # The release after 0.69 x 820k x 1 uF = 0.57 s of power good, emptied at
     # once through a Schottky into AT_PG: >= 100 ms at power-up, >= 500 ms
     # after a mains hole - one delay for both. 820k, not 680k: with 680k the
     # music came back 435 ms after a 20 ms hole (L54a; 521 ms with 820k).
-    res("820k", "R558", V5, AT_PGT)
-    cap("1u", "C537", AT_PGT, RET, FP_C1206)
+    res("820k", "R571", V5, AT_PGT)
+    cap("1u", "C548", AT_PGT, RET, FP_C1206)
     diode("BAT54", "D536", AT_PGT, AT_PG)
 
     # The front switch and the mute switch (ADR-102 point 2): AT_MRQ, 200k /
@@ -812,14 +812,14 @@ if __name__ == "__main__":
                   (AT_MRQ, VREF, MUTE_REQ),
                   (AT_PRT, VREF, PERMIT_REQ)))
     cap("100n", "C546", V5, RET)
-    res("200k", "R559", V5, AT_MRQ)
-    cap("100n", "C538", AT_MRQ, RET, FP_C1206)
+    res("200k", "R572", V5, AT_MRQ)
+    cap("100n", "C549", AT_MRQ, RET, FP_C1206)
     diode("BAT54", "D537", AT_MRQ, AT_ON)
-    res("10k", "R560", V5, MUTE_REQ)
+    res("10k", "R573", V5, MUTE_REQ)
     diode("1N4148", "D538", AT_MRQ, AT_PRT)
-    res("4.7M", "R561", AT_PRT, RET)
-    cap("10n", "C539", AT_PRT, RET, FP_C1206)
-    res("10k", "R562", V5, PERMIT_REQ)
+    res("4.7M", "R574", AT_PRT, RET)
+    cap("10n", "C550", AT_PRT, RET, FP_C1206)
+    res("10k", "R575", V5, PERMIT_REQ)
 
     # AT_ON = VRELAY_EN, the front switch on: a 10k pull-up, sunk by the front
     # channel while FRONT_IN is above VREF (off). 10k, not 47k: against R527
@@ -843,19 +843,19 @@ if __name__ == "__main__":
                   (AT_T2S, VREF, AT_F),       # not armed
                   (VREF, AT_PG, AT_F)))       # power good
     cap("100n", "C547", V5, RET)
-    res("10k", "R563", V5, AT_ON)
-    res("1k", "R564", AT_ON, AT_MA)
+    res("10k", "R576", V5, AT_ON)
+    res("1k", "R577", AT_ON, AT_MA)
     diode("1N4148", "D539", AT_MA, AT_MT)
     diode("1N4148", "D540", VR_G, AT_MT)
-    cap("100n", "C540", AT_MT, RET, FP_C1206)
-    res("1M", "R565", AT_MT, RET)
-    res("22k", "R566", V5, MAINS_REQ)
-    res("2.7M", "R567", AT_ON, AT_T2S)
-    cap("1u", "C541", AT_T2S, RET, FP_C1206)
+    cap("100n", "C551", AT_MT, RET, FP_C1206)
+    res("1M", "R578", AT_MT, RET)
+    res("22k", "R579", V5, MAINS_REQ)
+    res("2.7M", "R580", AT_ON, AT_T2S)
+    cap("1u", "C552", AT_T2S, RET, FP_C1206)
     diode("BAT54", "D541", AT_T2S, AT_ON)
-    res("100k", "R568", V5, AT_F)
-    cap("330n", "C542", AT_F, RET, FP_C1206)
-    res("47k", "R569", AT_F, AT_BN)
+    res("100k", "R581", V5, AT_F)
+    cap("330n", "C553", AT_F, RET, FP_C1206)
+    res("47k", "R582", AT_F, AT_BN)
     # The latch (ADR-102 point 2; ADR-048 point 5): BC847 + BC857 as a
     # thyristor, its anode on AT_ON. Tripped, it holds AT_ON at ~0.8 V - mute,
     # VRELAY_EN and K501 down through D, D2 and AT_MT - until the front switch
@@ -863,18 +863,18 @@ if __name__ == "__main__":
     # fault case stopped on the latch's edge (L54a, "Timestep too small"); on
     # the board the same 1 nF keeps a dv/dt from tripping it (its size
     # against fast edges: L54b3).
-    q = part("Transistor_BJT", "BC847", "BC847", "Q507", FP_SOT23)
+    q = part("Transistor_BJT", "BC847", "BC847", "Q513", FP_SOT23)
     q[1] += AT_BN                  # B
     q[2] += RET                    # E
     q[3] += AT_BP                  # C
-    res("100k", "R570", AT_BN, RET)
-    cap("1n", "C543", AT_BN, RET)
-    q = part("Transistor_BJT", "BC857", "BC857", "Q508", FP_SOT23)
+    res("100k", "R583", AT_BN, RET)
+    cap("1n", "C554", AT_BN, RET)
+    q = part("Transistor_BJT", "BC857", "BC857", "Q514", FP_SOT23)
     q[1] += AT_BP                  # B
     q[2] += AT_ON                  # E
     q[3] += AT_BN                  # C
-    res("100k", "R571", AT_ON, AT_BP)
-    cap("1n", "C544", AT_ON, AT_BP)
+    res("100k", "R584", AT_ON, AT_BP)
+    cap("1n", "C555", AT_ON, AT_BP)
 
     # ================= the harnesses to the audio board (check_psu_harness.py)
     # J1 on seven pins since L60b (ADR-082 point 2, ADR-083): each rail and

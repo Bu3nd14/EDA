@@ -12,10 +12,10 @@ import sys
 from collections import Counter
 
 SINONIMI = {"at_on": "vrelay_en", "0": "gnd"}
-PARTI = ("U513", "U514", "U515", "R556", "R557", "R558", "R559", "R560", "R561", "R562", "R563",
-         "R564", "R565", "R566", "R567", "R568", "R569", "R570", "R571", "C537", "C538", "C539",
-         "C540", "C541", "C542", "C543", "C544", "D533", "D534", "D535", "D536", "D537", "D538",
-         "D539", "D540", "D541", "Q507", "Q508")
+PARTI = ("U513", "U514", "U515", "R569", "R570", "R571", "R572", "R573", "R574", "R575", "R576",
+         "R577", "R578", "R579", "R580", "R581", "R582", "R583", "R584", "C548", "C549", "C550",
+         "C551", "C552", "C553", "C554", "C555", "D533", "D534", "D535", "D536", "D537", "D538",
+         "D539", "D540", "D541", "Q513", "Q514")
 # i disaccoppiamenti dei tre TLV1704 non sono nel banco di L54a (il comparatore comportamentale
 # assorbe dal suo V5 da se'): si contano a parte
 DISACCOPPIAMENTI = ("C545", "C546", "C547")

@@ -85,7 +85,7 @@ def main(audio, psu):
         # T2: a quad op-amp (push-pull) in place of U514, same pinout
         ("2e_T2_operazionale_al_posto_U514", "2e", relib(tp, "U514", "Amplifier_Operational", "LM324"), 1),
         # T2: MAINS_REQ's pull-up from VRELAY_REG instead of V5: up with the timer dead
-        ("2e_T2_pullup_MAINS_REQ_da_VRELAY_REG", "2e", move(tp, "R566", "1", "VRELAY_REG"), 1),
+        ("2e_T2_pullup_MAINS_REQ_da_VRELAY_REG", "2e", move(tp, "R579", "1", "VRELAY_REG"), 1),
         # T3: no capacitor on PERMIT_T: no RC, no delay D
         ("2e_T3_senza_C_su_PERMIT_T", "2e", move(tp, "C528", "1", "RLY_RET"), 1),
         # T3b: PERMIT_REQ wired straight onto PERMIT_G, around the RC
@@ -97,15 +97,15 @@ def main(audio, psu):
         # T5: VR_T charged from VRELAY_EN only, not from PERMIT_T
         ("2e_T5_VR_T_non_da_PERMIT_T", "2e", move(tp, "D523", "2", "VE_A"), 1),
         # T6: the NPN's collector off the PNP's base: no thyristor
-        ("2e_T6_ritenuta_spezzata", "2e", move(tp, "Q507", "3", "RLY_RET"), 1),
+        ("2e_T6_ritenuta_spezzata", "2e", move(tp, "Q513", "3", "RLY_RET"), 1),
         # T6: the latch's anode on V5 instead of VRELAY_EN: tripped, it would hold nothing
-        ("2e_T6_anodo_su_V5", "2e", move(tp, "Q508", "2", "V5"), 1),
+        ("2e_T6_anodo_su_V5", "2e", move(tp, "Q514", "2", "V5"), 1),
         # T6: the NPN's 1 nF base-emitter gone (shorted out on RLY_RET)
-        ("2e_T6_senza_C_base_NPN", "2e", move(tp, "C543", "1", "RLY_RET"), 1),
+        ("2e_T6_senza_C_base_NPN", "2e", move(tp, "C554", "1", "RLY_RET"), 1),
         # T6: the PNP's 100k base-emitter gone
-        ("2e_T6_senza_R_base_PNP", "2e", move(tp, "R571", "2", "VRELAY_EN"), 1),
+        ("2e_T6_senza_R_base_PNP", "2e", move(tp, "R584", "2", "VRELAY_EN"), 1),
         # T6: the latch fed from MUTE_REQ (a request, a comparator output too) instead of AT_F
-        ("2e_T6_innesco_da_MUTE_REQ", "2e", move(tp, "R569", "1", "MUTE_REQ"), 1),
+        ("2e_T6_innesco_da_MUTE_REQ", "2e", move(tp, "R582", "1", "MUTE_REQ"), 1),
     ]
     esito, righe = 0, []
     for nome, chk, p, atteso in casi:
