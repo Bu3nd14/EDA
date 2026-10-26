@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-psu.py - the supply board: the second PCB of P4 (ADR-010, ADR-048; L41a, L41b1).
+psu.py - the supply board: the second PCB of P4 (ADR-010, ADR-048; L41a, L41b1, L54b1).
 
 Source of truth for the supply's topology (AGENTS.md rule 2), as
 preamp_audio.py is for the audio board. It realises P9 (ADR-046, as ADR-048
@@ -9,7 +9,7 @@ reads it) and the contracts written on the audio board next to J1 and J4.
 
     rear IEC module (fuse + DOUBLE-POLE switch: off = mains off everything)
       |
-      +-- F501 -- T2 (small toroid, ALWAYS on while the rear is on) -- D503 --+-- D504 -- C_V --[U503 12 V]-- VRELAY_REG -+-[U504 5 V]-[U512 5 V]-- V5 (logic, micro; ADR-094)
+      +-- F501 -- T2 (small toroid, ALWAYS on while the rear is on) -- D503 --+-- D504 -- C_V --[U503 12 V]-- VRELAY_REG -+-[U504 5 V]-[U512 5 V]-- V5 (logic, timer; ADR-094)
       |                                                                      |                                     +-[Q505]-- VRELAY (J1 pin 4, the audio board)
       |                                                                      +-- mains detector (Q504, U506 ch 1)
       +-- K501 (DPST, coil on VRELAY_REG) -- T1 (toroid 2x15 V 50 VA) -- D501 -+-- C501 -- R550 --[U501 TPS7A4701]-- VPLUS_REG --D515>-- C505 -- VPLUS
@@ -18,7 +18,7 @@ reads it) and the contracts written on the audio board next to J1 and J4.
     mains detector U506 A: no half-wave for ~15 ms        -> pull MUTE_G low: Q501 off, MUTE_CMD released (mute)
     VRELAY supervisor U506 B: VRELAY_REG < 11.0 V         /
 
-    the timer (L41b1, ADR-049): micro U509 -> MUTE_REQ, PERMIT_REQ, VRELAY_EN, MAINS_REQ
+    the timer (L54b1, ADR-102): comparators U513-U515 -> MUTE_REQ, PERMIT_REQ, VRELAY_EN, MAINS_REQ
       MUTE_REQ --R513-- MUTE_G (<= PERMIT_G by D522)                         -> Q501 -> MUTE_CMD
       MUTE_REQ, PERMIT_REQ --diodes--> PERMIT_T (RC, D) -> U508 A vs VREF -> PERMIT_G -> Q502 -> PERMIT_CMD
       PERMIT_T, VRELAY_EN  --diodes--> VR_T (RC, D + D2) -> U508 B vs VREF -> VR_G -> Q506 -> Q505 (VRELAY on)
@@ -42,24 +42,32 @@ WHAT L41a PUTS HERE (ADR-048)
 
 WHAT L41b1 PUTS HERE (ADR-048 point 6, ADR-049) - in place of J509 TIMER_IO
 ----------------------------------------------------------------------------
- - The microcontroller U509 (ATtiny3216) and its written specification,
-   firmware/preamp_timer/spec/timer_spec.md: the sequence is the firmware's
-   (L41b2), the ORDER is this hardware's.
+ - (Until L54b1: the microcontroller U509 (ATtiny3216) and its firmware,
+   firmware/preamp_timer/. ADR-102 replaced both with the comparator timer
+   below; the sequence it follows is still timer_spec.md's, kept in git
+   history and in L54a's report sec. 1.)
  - The hardware delay D: PERMIT_CMD is released no earlier than D after the
    mute request falls, and energised no later than MUTE_CMD, whatever the
-   micro does - reset (outputs tri-stated, DS40002205A sec. 16.3.1), stuck
-   high, stuck low, or a firmware that drops PERMIT_REQ first.
+   timer does - dead, stuck high, stuck low, or PERMIT_REQ dropped first.
  - VRELAY off the audio board in standby (NC-037): the high-side switch Q505
    between VRELAY_REG (U503's output) and VRELAY (J1 pin 4). The switch too
-   is held in hardware, D2 after PERMIT_G, so a micro that resets while the
-   music plays cannot drop every coil at once (L30's "no D" case, ~90 dB SPL).
+   is held in hardware, D2 after PERMIT_G, so a timer that drops everything
+   while the music plays cannot drop every coil at once (L30's "no D" case,
+   ~90 dB SPL).
+
+WHAT L54b1 PUTS HERE (ADR-102)
+------------------------------
+ - The timer: twelve open-drain comparator channels (three TLV1704), RC,
+   diodes and a two-transistor latch - power good, the debounce of the
+   front switch and SW3, K501's delay, the 2 s timeout and the latch after
+   a fault with the mains present. Its values are L54a's bench, unchanged.
  - (Until L47c1: the LDR drive of ADR-039 / ADR-049 - the dual DAC U510, two
    exponential converters, J3. ADR-062 removed the graduated mute, and the
    drive with it: the mute cuts with the audio board's jack relays alone.)
 
 WHAT IS DELIBERATELY NOT HERE
 -----------------------------
- - The firmware (L41b2): firmware/preamp_timer/, tested on the host.
+ - Any firmware: there is none since ADR-102.
  - The transformers themselves, the IEC module, the front power switch: they
    are chassis / panel parts, here as their harness headers (like SW1-SW3 on
    the audio board).
@@ -111,7 +119,8 @@ FP_C1206 = "Capacitor_SMD:C_1206_3216Metric"      # C0G 100 nF (C_T, C_T2)
 FP_SOT363 = "Package_TO_SOT_SMD:SOT-363_SC-70-6"
 FP_SOD323 = "Diode_SMD:D_SOD-323"
 FP_SOIC14 = "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm"
-FP_SOIC20W = "Package_SO:SOIC-20W_7.5x12.8mm_P1.27mm"
+# ADR-102: the TLV1704 comes only in the PW package (SBOS589D p. 1)
+FP_TSSOP14 = "Package_SO:TSSOP-14_4.4x5mm_P0.65mm"
 
 # ---- the numbers, each with the decision behind it ----------------------
 # ADR-046 / P9 (b): >= 1500 uF EFFECTIVE after each regulator; 2200 uF
@@ -177,9 +186,10 @@ R_T, C_T = "332k", "100n"
 R_T2, C_T2 = "1M", "100n"
 # MUTE_G's own rise lag: 10k (R513) x 22 nF = 0.22 ms, so PERMIT_G, which D522
 # already keeps above MUTE_G, leads it at the release (J4 contract: PERMIT_CMD
-# energised no later than MUTE_CMD). Its fall with the micro tri-stated goes
+# energised no later than MUTE_CMD). Its fall with MUTE_REQ released goes
 # through R513 + the 100k pull-down, || R514: 52k x 22n = 1.1 ms, which D
-# absorbs (the bench measures it, not this comment).
+# absorbs (the bench measures it, not this comment). Since ADR-102 MUTE_REQ
+# is a comparator's open-drain output that sinks it (mq): faster still.
 C_MUTE_G = "22n"
 
 
@@ -317,6 +327,8 @@ if __name__ == "__main__":
     # drops MAINS_REQ, the mute ordered (~16 dB SPL), Delta 17.2 ms. At regime 29.5 mA, 41 mW in
     # R552, the coil at 12 x 360 / 407 = 10.6 V (88 %). A 2 W axial as R550 (piste larghe): its
     # short-time overload against 2.7 W for 0.2 s is read at the part's choice (G2)
+    # ADR-102: the timer's latch drops MAINS_REQ in place of the firmware: R552 0.47 / 0.54 J
+    # (mains 0 / +10 %) on L54a's bench, against 0.49 / 0.56 with the micro
     MAINS_S = Net("MAINS_SINK")
     r = part("Device", "R", "47", "R552", FP_R_2W)
     r[1] += MAINS_D
@@ -391,6 +403,7 @@ if __name__ == "__main__":
     # rail 12 s: GUASTO at every power-up. Not 1 uF: ~9.6 mF downstream (C505, the audio board's
     # 800.8 uF and the eight 1000 uF cells) would put U501 in current limit, 1.0 A and 16 W.
     # The noise bound of ADR-020 is drawn at C_NR 1 uF (fig. 5-1): it still holds.
+    # ADR-102: the 2 s are the comparator timer's now (AT_T2S, 2.05 s on L54a's bench).
     cap("4.7u", "C507", NR_P, GND)
     cap("10u", "C509", RAW_PR, GND)
     cap("10u", "C511", VP_REG, GND)  # at the pin (ADR-093)
@@ -515,6 +528,8 @@ if __name__ == "__main__":
     # the three mains levels, the working one at 0.027 W. U512 runs in dropout, V5 ~4.98 V (650 mV
     # max at 250 mA, DS20005122B p4: ~16 mV at the logic's few mA); +2 uA in standby. ADR-075's
     # zener with a resettable fuse would take ~6 W for up to 0.2 s and not hold V5 under 6.0 V.
+    # ADR-102: the ATtiny is gone; the TLV1702 / TLV1704 on V5 take 40 V (SBOS589D 7.1). The two
+    # regulators stay: 12 V on V5 would still move every threshold and delay of the timer.
     V5_PRE = Net("V5_PRE")
     u = part("Regulator_Linear", "MCP1703Ax-500xxDB", "MCP1703A-5002",
              "U504", "Package_TO_SOT_SMD:SOT-223-3_TabPin2")
@@ -615,9 +630,10 @@ if __name__ == "__main__":
     cap("100n", "C519", V5, RET)
 
     # ================= the J4 commands (ADR-045, ADR-048 point 6, ADR-049)
-    # Every micro output that commands a relay has a pull-down: after a
-    # reset the ATtiny's outputs are tri-stated (DS40002205A sec. 16.3.1),
-    # and tri-stated must read as "at rest" (ADR-022 condition 1; 2e).
+    # Every timer output that commands a relay has a pull-down (ADR-049 point
+    # 7, kept by ADR-102): the timer's outputs are open-drain with pull-ups
+    # from V5, so with V5 gone they float, and floating must read as "at
+    # rest" (ADR-022 condition 1; 2e).
     res("100k", "R525", MUTE_REQ, RET)
     res("100k", "R526", PERMIT_REQ, RET)
     res("100k", "R527", VRELAY_EN, RET)
@@ -632,7 +648,7 @@ if __name__ == "__main__":
     # MUTE_G can never stand above PERMIT_G: a Schottky from MUTE_G to
     # PERMIT_G clamps it to PERMIT_G + ~0.3 V, below any 2N7002 threshold
     # while PERMIT_G is low. So the jack relays cannot be energised before
-    # the permissive, by any firmware (J4 contract, release).
+    # the permissive, whatever the timer does (J4 contract, release).
     d = part("Device", "D_Schottky", "BAT54", "D522", FP_SOD323)
     d[2] += MUTE_G                 # A
     d[1] += PERMIT_G               # K
@@ -665,7 +681,7 @@ if __name__ == "__main__":
     # ================= VRELAY to the audio board: the standby switch (NC-037)
     # VR_T is charged from PERMIT_T (one diode lower) and from VRELAY_EN, and
     # decays 3x slower than PERMIT_T: the switch opens D2 after PERMIT_G at
-    # the earliest. With the micro in reset while the music plays, the order
+    # the earliest. With the timer dropping everything while the music plays, the order
     # is MUTE_CMD, then PERMIT_CMD >= D later, then VRELAY >= D2 later.
     d = part("Device", "D", "1N4148", "D523", FP_DO35)
     d[2] += PERMIT_T
@@ -714,54 +730,151 @@ if __name__ == "__main__":
     res("1k", "R542", MUTE_SW, SW3_IN)
     cap("100n", "C533", SW3_IN, RET)
 
-    # ================= the micro (ADR-049; spec: firmware/preamp_timer/spec/)
-    # ATtiny3216 on V5: power-down 0.1 uA typ, 2 uA max at 25 C (DS40002205A
-    # Table 36-5). What it reads goes through 47k, so an unpowered or
-    # latched-up pin cannot load a supervisor node.
-    mcu = part("MCU_Microchip_ATtiny", "ATtiny3216-S", "ATtiny3216", "U509",
-               FP_SOIC20W)
-    mcu["1"] += V5
-    mcu["20"] += RET
-    cap("100n", "C534", V5, RET)
-    UPDI = Net("UPDI")
-    mcu["16"] += UPDI                  # PA0: UPDI, one-wire programming
-    header("UPDI", "J515", [UPDI, V5, RET])
-    # PA1 (17), PA3 (19), PA4 (2): the SPI to the LDR drive's DAC until
-    # L47c1; open since ADR-062 removed it (ERC lists them). PA1 read the
-    # DC detector's line DC_FLT in L45d2b1 (ADR-072, with D525-D527, R548,
-    # R549, C535); open again since L60b, the detector gone (ADR-081). The firmware
-    # (L47c2a, the user's choice) leaves every open pin an input with its
-    # digital input buffer disabled (ISC = INPUT_DISABLE, DS40002205A
-    # sec. 16.3.1): firmware/preamp_timer/spec/timer_spec.md sec. 2, checked
-    # against this netlist by the host test pin_liberi.
-    mcu["11"] += MUTE_REQ              # PB0
-    mcu["10"] += PERMIT_REQ            # PB1
-    mcu["9"] += MAINS_REQ              # PB2
-    mcu["8"] += VRELAY_EN              # PB3
-    mcu["12"] += FRONT_IN              # PC0
-    mcu["13"] += SW3_IN                # PC1
-    # PC3 (15) is spare, left open on purpose (ERC lists it); input buffer
-    # disabled like the others (L47c2a).
-    # The analog reads (ADC0: AIN2 PA2, AIN5-7 PA5-7, AIN8 PB5, AIN9 PB4):
-    # which supervisor fired, so the firmware can tell a mains hole the rails
-    # rode through from a fault with the mains present (ADR-048 point 5).
-    # PB4 (7) and PA2 (18) read the two LED currents of the LDR drive until
-    # L47c1; open since ADR-062 removed it, input buffer disabled (L47c2a).
-    # MUTE_G_IN (PC2) reads back the hardware's verdict through 1 M, not 47k:
-    # a firmware that turned PC2 into an output driven high would otherwise
-    # lift MUTE_G around MUTE_REQ. Through 1 M against MUTE_G's ~52k to RET it
-    # reaches ~0.25 V, below any 2N7002 threshold (2e, --timer, T2).
-    SUP_P_, SUP_M_, MD_ = NP, NM, MD
-    MG_IN = Net("MUTE_G_IN")
-    res("1M", "R543", MUTE_G, MG_IN)
-    mcu["14"] += MG_IN
-    for ref, src, pin, name in (("R544", SUP_P_, "3", "ADC_SUP_P"),
-                                ("R545", SUP_M_, "4", "ADC_SUP_M"),
-                                ("R546", NV, "5", "ADC_SUP_VR"),
-                                ("R547", MD_, "6", "ADC_MD")):
-        n = Net(name)
-        res("47k", ref, src, n)
-        mcu[pin] += n
+    # ================= the timer (ADR-102; L54a, L54b1)
+    # Twelve open-drain comparator channels in three TLV1704, RC, diodes and a
+    # two-transistor latch, on V5 and RLY_RET like U505-U508. They drive what
+    # the micro U509 drove (ADR-049, superseded at points 1-3 and 7):
+    # MUTE_REQ, PERMIT_REQ, MAINS_REQ, VRELAY_EN. The supervisor on MUTE_G, D
+    # and D2 (U508), the pull-downs R525-R528 and the sinks are not touched.
+    # Every value is L54a's bench (docs/preamp/data/2026-10-25/L54a/psu/
+    # genera_tb_psu.py, TIMER_AN), each with its reason there; the timings
+    # below are that bench's, at 25 C, with its behavioural comparator.
+    # A channel sinks its output when its - input is above its + input.
+    # The nets keep the bench's names (AT_*), except AT_ON, which IS VRELAY_EN
+    # here: the bench joined the two through 1 ohm only to probe both.
+    # Dielectrics: the timing capacitors are 1206, so that a C0G fits where
+    # the tolerance analysis (L54b3) asks for one; the values are ADR-102's.
+    AT_PG, AT_PGT, AT_MD = Net("AT_PG"), Net("AT_PGT"), Net("AT_MD")
+    AT_MRQ, AT_PRT = Net("AT_MRQ"), Net("AT_PRT")
+    AT_MA, AT_MT = Net("AT_MA"), Net("AT_MT")
+    AT_T2S, AT_F = Net("AT_T2S"), Net("AT_F")
+    AT_BN, AT_BP = Net("AT_BN"), Net("AT_BP")
+    AT_ON = VRELAY_EN
+
+    def quad(ref, chans):
+        # KiCad has no TLV1704: the LM339 symbol, pin for pin the TLV1704's
+        # PW package (SBOS589D p. 5: 1/2/14/13 outputs, 4-5 / 6-7 / 8-9 /
+        # 10-11 the inputs - / +, 3 V+, 12 V-), as the LM2903 stands for the
+        # TLV1702 on U505-U508. chans: (+, -, out) for channels 1-4.
+        u = part("Comparator", "LM339", "TLV1704 (quad, open-drain)", ref,
+                 FP_TSSOP14)
+        for (p, m, o), (pp, pm, po) in zip(chans, (("5", "4", "2"), ("7", "6", "1"),
+                                                   ("9", "8", "14"), ("11", "10", "13"))):
+            u[pp] += p
+            u[pm] += m
+            u[po] += o
+        u["3"] += V5
+        u["12"] += RET
+        return u
+
+    def diode(value, ref, a, k):
+        d = part("Device", "D_Schottky" if value == "BAT54" else "D", value, ref,
+                 FP_SOD323 if value == "BAT54" else FP_DO35)
+        d[2] += a                      # A
+        d[1] += k                      # K
+        return d
+
+    # Power good (ADR-102 point 2): the supervisor's four thresholds on four
+    # NEW channels, on the same divider nodes (high-impedance inputs): the
+    # + rail, the - rail, VRELAY_REG, and the mains detector. The detector's
+    # channel (AT_MD) reaches AT_PG, AT_F and AT_T2S through three Schottkys:
+    # one channel, three nodes.
+    quad("U513", ((NP, VREF, AT_PG),          # + rail below 13.55 V
+                  (VREF2, NM, AT_PG),         # |- rail| below 13.5 V
+                  (NV, VREF, AT_PG),          # VRELAY_REG below 11.0 V
+                  (VREF, MD, AT_MD)))         # no half-wave for ~15 ms
+    cap("100n", "C545", V5, RET)
+    res("100k", "R569", V5, AT_MD)
+    diode("BAT54", "D533", AT_PG, AT_MD)
+    diode("BAT54", "D534", AT_F, AT_MD)
+    diode("BAT54", "D535", AT_T2S, AT_MD)
+    res("100k", "R570", V5, AT_PG)
+    # The release after 0.69 x 820k x 1 uF = 0.57 s of power good, emptied at
+    # once through a Schottky into AT_PG: >= 100 ms at power-up, >= 500 ms
+    # after a mains hole - one delay for both. 820k, not 680k: with 680k the
+    # music came back 435 ms after a 20 ms hole (L54a; 521 ms with 820k).
+    res("820k", "R571", V5, AT_PGT)
+    cap("1u", "C548", AT_PGT, RET, FP_C1206)
+    diode("BAT54", "D536", AT_PGT, AT_PG)
+
+    # The front switch and the mute switch (ADR-102 point 2): AT_MRQ, 200k /
+    # 100 nF from V5, is the debounce - every input good for ~14 ms before it
+    # crosses VREF - and is emptied at once by power not yet good (mg), SW3 in
+    # mute (sw) and the front switch off (a Schottky to AT_ON). mq squares it
+    # into MUTE_REQ, mp into PERMIT_REQ, each with a 10k pull-up.
+    # PERMIT_REQ has its own channel: from MUTE_REQ alone, D522 held MUTE_G at
+    # PERMIT_G + 0.3 V, MUTE_REQ sat at 2.5 V through R513 and the permissive
+    # never came (L54a, first run). It falls ~24 ms after AT_MRQ (4.7M / 10 nF
+    # behind a diode, as the firmware's 20 ms): from AT_MRQ directly D was
+    # 15.4 ms, under 16.9 (L54a, second run).
+    quad("U514", ((AT_PGT, VREF, AT_MRQ),     # power good for 0.57 s
+                  (VREF, SW3_IN, AT_MRQ),     # SW3: mute
+                  (AT_MRQ, VREF, MUTE_REQ),
+                  (AT_PRT, VREF, PERMIT_REQ)))
+    cap("100n", "C546", V5, RET)
+    res("200k", "R572", V5, AT_MRQ)
+    cap("100n", "C549", AT_MRQ, RET, FP_C1206)
+    diode("BAT54", "D537", AT_MRQ, AT_ON)
+    res("10k", "R573", V5, MUTE_REQ)
+    diode("1N4148", "D538", AT_MRQ, AT_PRT)
+    res("4.7M", "R574", AT_PRT, RET)
+    cap("10n", "C550", AT_PRT, RET, FP_C1206)
+    res("10k", "R575", V5, PERMIT_REQ)
+
+    # AT_ON = VRELAY_EN, the front switch on: a 10k pull-up, sunk by the front
+    # channel while FRONT_IN is above VREF (off). 10k, not 47k: against R527
+    # (100k to RET) 47k left it at 3.3 V (L54a, first run). Through R535 and
+    # D524 into VR_T, as before.
+    # K501 (ADR-102 point 2): AT_MT, 1M / 100 nF, charged through diodes from
+    # AT_ON and from VR_G (R537's pull-up), squared by mr into MAINS_REQ (22k
+    # pull-up: MAINS_G ~3.8 V). With the front switch off it falls
+    # ~0.54 x 100 ms after VR_G: K501 ~84 ms after the permissive
+    # (ADR-046: >= 50 ms).
+    # Armed (ADR-102 point 2): AT_T2S, 2.7M / 1 uF from AT_ON, 1.87 s to VREF;
+    # emptied by the mains detector and by AT_ON low. "On, with the mains
+    # present for ~1.9 s": the 2 s timeout at power-up (2.05 s on the bench)
+    # and the latch's arming.
+    # The fault: AT_F, 100k / 330 nF from V5, emptied while not armed (fa),
+    # with the mains gone (AT_MD) or with power good (fc). High = a rail or
+    # VRELAY_REG out, the mains present, armed: through 47k into the latch's
+    # NPN base (~0.9 V, ~6.6 ms).
+    quad("U515", ((VREF, FRONT_IN, AT_ON),    # front switch off
+                  (AT_MT, VREF, MAINS_REQ),
+                  (AT_T2S, VREF, AT_F),       # not armed
+                  (VREF, AT_PG, AT_F)))       # power good
+    cap("100n", "C547", V5, RET)
+    res("10k", "R576", V5, AT_ON)
+    res("1k", "R577", AT_ON, AT_MA)
+    diode("1N4148", "D539", AT_MA, AT_MT)
+    diode("1N4148", "D540", VR_G, AT_MT)
+    cap("100n", "C551", AT_MT, RET, FP_C1206)
+    res("1M", "R578", AT_MT, RET)
+    res("22k", "R579", V5, MAINS_REQ)
+    res("2.7M", "R580", AT_ON, AT_T2S)
+    cap("1u", "C552", AT_T2S, RET, FP_C1206)
+    diode("BAT54", "D541", AT_T2S, AT_ON)
+    res("100k", "R581", V5, AT_F)
+    cap("330n", "C553", AT_F, RET, FP_C1206)
+    res("47k", "R582", AT_F, AT_BN)
+    # The latch (ADR-102 point 2; ADR-048 point 5): BC847 + BC857 as a
+    # thyristor, its anode on AT_ON. Tripped, it holds AT_ON at ~0.8 V - mute,
+    # VRELAY_EN and K501 down through D, D2 and AT_MT - until the front switch
+    # sinks AT_ON. 100k and 1 nF base-emitter on each: without the 1 nF every
+    # fault case stopped on the latch's edge (L54a, "Timestep too small"); on
+    # the board the same 1 nF keeps a dv/dt from tripping it (its size
+    # against fast edges: L54b3).
+    q = part("Transistor_BJT", "BC847", "BC847", "Q513", FP_SOT23)
+    q[1] += AT_BN                  # B
+    q[2] += RET                    # E
+    q[3] += AT_BP                  # C
+    res("100k", "R583", AT_BN, RET)
+    cap("1n", "C554", AT_BN, RET)
+    q = part("Transistor_BJT", "BC857", "BC857", "Q514", FP_SOT23)
+    q[1] += AT_BP                  # B
+    q[2] += AT_ON                  # E
+    q[3] += AT_BN                  # C
+    res("100k", "R584", AT_ON, AT_BP)
+    cap("1n", "C555", AT_ON, AT_BP)
 
     # ================= the harnesses to the audio board (check_psu_harness.py)
     # J1 on seven pins since L60b (ADR-082 point 2, ADR-083): each rail and
@@ -786,6 +899,8 @@ if __name__ == "__main__":
     # "error" is there; its ANY-OUT pins 11 and 12 are grounded: 22 warnings.
     # ADR-094 (L45d2b2b2): U512's ground pin on RLY_RET, "insufficient drive" as U504's: 23 warnings,
     # the same 2 "errors" (read from the run).
+    # ADR-102 (L54b1): the micro's ground and its six open pins go, the three TLV1704's V- pins on
+    # RLY_RET come, "insufficient drive" as U505's: 19 warnings, the same 2 "errors" (read from the run).
     try:
         ERC()
     except Exception as e:  # noqa: BLE001

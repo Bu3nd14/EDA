@@ -40,7 +40,9 @@ What is checked:
   4. (L41b1, ADR-049, NC-037) VRELAY is the DRAIN of a P-MOSFET - the
      standby switch - whose source is the OUT of a TPS7A4701; the timer's
      placeholder J509 TIMER_IO is gone, and the four requests (MUTE_REQ,
-     PERMIT_REQ, MAINS_REQ, VRELAY_EN) come from the microcontroller;
+     PERMIT_REQ, MAINS_REQ, VRELAY_EN) come from the timer: since L54b1
+     (ADR-102) each from a comparator's output, and no microcontroller is
+     on the board (the outputs' discipline is 2e's, --timer);
   5. (L47c1, ADR-062) no LDR_CMD harness on either board, and none of the
      nets that ran through it (LDR_S_A ... LDR_P_K).
 
@@ -64,8 +66,12 @@ RETIRED = {"LDR_CMD": ("LDR_S_A", "LDR_S_K", "LDR_P_A", "LDR_P_K")}
 # not in the list since L41b1: it comes through the standby switch (below).
 REG_OUT = {"VPLUS": "TPS7A4701", "VMINUS": "TPS7A3301"}
 SINKS = ("MUTE_CMD", "PERMIT_CMD")
-# L41b1: the timer's requests, each driven by a pin of the microcontroller.
-MCU_PART_PREFIX = "ATtiny"
+# L41b1: the timer's requests. L54b1 (ADR-102): each driven by a comparator
+# channel's output, no microcontroller on the board. The output pins of the
+# comparator symbols: LM2903 (the TLV1702) 1 and 7; LM339 (the TLV1704) 2, 1,
+# 14, 13.
+MCU_LIB_PREFIX = "MCU_"
+COMPARATOR_OUTS = {"LM2903": ("1", "7"), "LM339": ("2", "1", "14", "13")}
 REQUESTS = ("MUTE_REQ", "PERMIT_REQ", "MAINS_REQ", "VRELAY_EN")
 # The KiCad symbols' pin numbers (read from the symbol libraries in L41b1):
 # Transistor_FET 2N7002 / AO3401A: 1 G, 2 S, 3 D.
@@ -187,7 +193,7 @@ def check_psu(components, pin_net, findings):
 
 
 def check_timer(components, pin_net, findings):
-    """L41b1: the standby switch, the micro's requests."""
+    """L41b1: the standby switch; L54b1: the timer's requests."""
     # VRELAY: drain of a P-MOSFET whose source is a TPS7A4701's OUT
     sw = [r for (r, p) in pins_of_net(pin_net, "VRELAY")
           if components.get(r, {}).get("part") in P_MOSFETS and p == "3"]
@@ -206,17 +212,19 @@ def check_timer(components, pin_net, findings):
     # the placeholder is gone
     if any(c["value"] == "TIMER_IO" for c in components.values()):
         findings.append("psu: the placeholder TIMER_IO (J509) is still there")
-    # the micro drives the four requests
+    # L54b1 (ADR-102): no micro, and a comparator output on every request
     mcus = [r for r, c in components.items()
-            if c.get("part", "").startswith(MCU_PART_PREFIX)]
-    if len(mcus) != 1:
-        findings.append("psu: expected one %s* microcontroller, found %s"
-                        % (MCU_PART_PREFIX, mcus or "none"))
-    else:
-        for net in REQUESTS:
-            if not [p for (r, p) in pins_of_net(pin_net, net) if r == mcus[0]]:
-                findings.append("psu: %s is not driven by the micro %s"
-                                % (net, mcus[0]))
+            if c.get("lib", "").startswith(MCU_LIB_PREFIX)]
+    if mcus:
+        findings.append("psu: a microcontroller is on the board (%s): ADR-102 "
+                        "replaced it with the comparator timer" % ", ".join(sorted(mcus)))
+    for net in REQUESTS:
+        if net not in set(pin_net.values()):
+            findings.append("psu: the request %s is not on the board" % net)
+            continue
+        if not [r for (r, p) in pins_of_net(pin_net, net)
+                if p in COMPARATOR_OUTS.get(components.get(r, {}).get("part"), ())]:
+            findings.append("psu: %s is not driven by a comparator's output" % net)
 
 
 def check_retired(components, pin_net, board, findings):
@@ -257,8 +265,9 @@ def main(argv):
     print("OK: J1 POWER, J2 RLY_RET and J4 MUTE_TIMER agree pin by pin on "
           "both boards; the rails come from their regulators and the two "
           "commands from two low-side sinks to RLY_RET (ADR-045, ADR-048); "
-          "VRELAY through the standby switch, the requests from the micro "
-          "(ADR-049); no LDR_CMD harness on either board (ADR-062)")
+          "VRELAY through the standby switch, the requests from the "
+          "comparator timer, no micro (ADR-102); no LDR_CMD harness on "
+          "either board (ADR-062)")
     return 0
 
 

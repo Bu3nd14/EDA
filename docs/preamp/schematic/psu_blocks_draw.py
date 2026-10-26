@@ -4,7 +4,7 @@
 psu_blocks_draw.py - l'alimentatore del preamplificatore, a blocchi (L42b).
 
 DOCUMENTAZIONE DERIVATA, NON FONTE DI VERITA'.
-La topologia sta in circuits/preamp/psu.py (ADR-048, ADR-049). Questo file
+La topologia sta in circuits/preamp/psu.py (ADR-048, ADR-049, ADR-102). Questo file
 disegna soltanto. Se i due divergono, si corregge il disegno - o la topologia
 alla sua fonte - mai le asserzioni qui sotto.
 
@@ -58,7 +58,7 @@ _src = open(NETLIST, encoding="utf-8").read()
 COMP = {}
 for _m in re.finditer(r'\(comp\b.*?\(ref "([^"]+)"\).*?\(value "([^"]*)"\)'
                       r'.*?\(libsource\s*\(lib "([^"]*)"\)\s*\(part "([^"]*)"\)', _src, re.S):
-    COMP[_m.group(1)] = (_m.group(2), _m.group(4))
+    COMP[_m.group(1)] = (_m.group(2), _m.group(4), _m.group(3))      # value, part, library
 PIN = {}
 NETS = {}
 for _chunk in re.split(r"\(net\s*\(code", _src.split("(nets", 1)[-1])[1:]:
@@ -135,7 +135,7 @@ for _reg, _rail, _a, _k in (("U501", "VPLUS", "VPLUS_REG", "VPLUS"),
 assert PIN[("U503", "1")] == "VRELAY_REG" and PIN[("U504", "1")] == "VRELAY_REG", \
     "U503 non alimenta VRELAY_REG, o U504 (V5) non ne e' alimentato"
 # L45d2b2b2 (ADR-094): due MCP1703A in serie, U504 su V5_PRE e U512 da V5_PRE a V5 - uno in corto
-# fra ingresso e uscita lascia l'altro a regolare (il micro non vede i 12 V)
+# fra ingresso e uscita lascia l'altro a regolare (la logica non vede i 12 V)
 assert "U512" in COMP, "manca U512, il secondo regolatore a 5 V (ADR-094)"
 assert v("U512").startswith("MCP1703A-50"), f"U512 non e' il secondo 5 V: {v('U512')}"
 assert PIN[("U504", "3")] == "V5_PRE" and PIN[("U512", "1")] == "V5_PRE" and PIN[("U512", "3")] == "V5", \
@@ -193,8 +193,9 @@ RET = ("RLY_RET", "GND")                         # uniti da NT501 (la stella)
 def divider(node, top, bottom):
     """(r_alto, r_basso) del partitore su una net: il resistore dal nodo a
     `top` e quello dal nodo a una delle net di `bottom`. Sul nodo possono
-    stare altre cose (la rilettura del micro verso il suo ADC, 47k): non
-    contano, ma i due capi devono esserci ed essere unici."""
+    stare altre cose (fino a L54a la rilettura del micro, 47k; da L54b1 gli
+    ingressi del temporizzatore): non contano, ma i due capi devono esserci
+    ed essere unici."""
     rs = [r for r in COMP if COMP[r][1] == "R" and node in ends(r)]
     hi = [r for r in rs if ends(r) == {node, top}]
     lo = [r for r in rs if (ends(r) - {node}) & set(bottom)]
@@ -247,10 +248,14 @@ TAU_T = num(v(_rt_)) * num(v(_ct_))
 TAU_T2 = num(v(_rt2)) * num(v(_ct2))
 # D522: MUTE_G <= PERMIT_G (anodo su MUTE_G)
 assert PIN[("D522", "2")] == "MUTE_G" and PIN[("D522", "1")] == "PERMIT_G", "D522"
-# il micro: le quattro richieste escono da U509
-MCU = v("U509")
+# il temporizzatore (ADR-102, L54b1): nessun micro, e le quattro richieste escono dalle uscite dei
+# comparatori quadrupli (TLV1704 sul simbolo LM339: uscite 1, 2, 13, 14)
+assert not [r for r in COMP if COMP[r][2].startswith("MCU_")], "c'e' un micro: ADR-102 lo ha tolto"
+QUAD = sorted(r for r in COMP if COMP[r][1] == "LM339")
+assert QUAD and all(v(r).startswith("TLV1704") for r in QUAD), f"i comparatori quadrupli: {QUAD}"
 for _n in ("MUTE_REQ", "PERMIT_REQ", "MAINS_REQ", "VRELAY_EN"):
-    assert any(r == "U509" for (r, p), n in PIN.items() if n == _n), f"{_n} non esce da U509"
+    assert any(r in QUAD and p in ("1", "2", "13", "14") for (r, p), n in PIN.items() if n == _n), \
+        f"{_n} non esce da un comparatore del temporizzatore"
 
 # ---- niente pilota delle LDR (ADR-062, L47c1) ------------------------------
 # Da L41b1 a L47b2b1 qui stavano il DAC U510, i convertitori esponenziali (U511,
@@ -332,7 +337,7 @@ def dot(x, y, color=INK):
 txt((23.0, 33.2), "ALIMENTATORE — vista d'insieme (psu.py, seconda scheda)", size=17)
 txt((23.0, 32.3),
     "rail lineari, VRELAY da un trasformatore proprio, sorvegliante in hardware, "
-    "temporizzatore ibrido (ADR-048, ADR-049)", size=9.5, color=DIM)
+    "temporizzatore a comparatori (ADR-048, ADR-102)", size=9.5, color=DIM)
 txt((23.0, 31.55),
     "DIAGRAMMA A BLOCCHI — non è uno schematico. Cifre lette da psu.net o calcolate "
     "dai suoi valori; le cifre misurate stanno nel dossier.", size=8.5, color=AMBER)
@@ -370,7 +375,7 @@ txt((31.8, YT - 0.34), "bobine della scheda audio; staccata in standby (NC-037)"
     size=8, color=DIM, halign="left")
 wire(23.4, YT + 0.0, 23.4, YT + 1.6)
 arrow(23.4, YT + 1.6, 25.0, YT + 1.6)
-box(29.0, YT + 1.6, 8.0, 1.1, [f"U504 + U512 {v('U504')} in serie → V5 ({it(V_5, 1)} V): logica, micro"],
+box(29.0, YT + 1.6, 8.0, 1.1, [f"U504 + U512 {v('U504')} in serie → V5 ({it(V_5, 1)} V): la logica"],
     size=8.5, head_size=8.5)
 # il ramo di T1, dietro K501
 arrow(6.2, YB, 7.4, YB)
@@ -402,8 +407,8 @@ txt((23.0, 20.7), f"U502:{it(V_NEG_FB, 2)} V dal partitore di FB ({FB_TOP} / {FB
 # Pannello 2 - il sorvegliante e il temporizzatore
 # ---------------------------------------------------------------------------
 panel(0.4, 8.6, 45.6, 20.0, "2 — Sorvegliante e temporizzatore: l'ordine sta in hardware",
-      "i comparatori tirano MUTE_G a massa senza il firmware (ADR-048 p. 5); Δ e Δ₂ sono "
-      "RC su comparatori, qualunque cosa faccia il micro (ADR-049)")
+      "i comparatori tirano MUTE_G a massa in hardware (ADR-048 p. 5); Δ e Δ₂ sono "
+      "RC su comparatori, qualunque cosa faccia il temporizzatore (ADR-049, ADR-102)")
 YS = 16.0
 for i, (tit, sub) in enumerate((
         ("U505 A · rail +", f"scatta a {it(TRIP_P, 2)} V"),
@@ -416,7 +421,8 @@ for i, (tit, sub) in enumerate((
 wire(4.2, YS - 1.6, 24.0, YS - 1.6, color=RED)
 txt((14.1, YS - 2.0), f"open-drain su MUTE_G · riferimento U507 {v('U507')} ({it(V_REF, 1)} V)",
     size=8, color=RED)
-box(30.0, YS, 5.2, 1.7, [f"U509 {MCU}", "MUTE_REQ · PERMIT_REQ"], size=8.5, head_size=9.5)
+box(30.0, YS, 5.2, 1.7, [f"{QUAD[0]}–{QUAD[-1]} {len(QUAD)} × TLV1704", "MUTE_REQ · PERMIT_REQ"],
+    size=8.5, head_size=9.5)
 wire(30.0, YS - 0.85, 30.0, YS - 1.6)
 wire(24.0, YS - 1.6, 30.0, YS - 1.6)
 dot(24.0, YS - 1.6)

@@ -7,7 +7,7 @@ DERIVED DOCUMENTATION, NOT A SOURCE OF TRUTH. The topology lives in
 circuits/preamp/psu.py; this file only draws circuits/preamp/psu.net. If the two
 disagree, fix this drawing (or the topology at its source) - never the checks.
 
-Every one of the 133 parts is drawn, every pin the netlist connects is a
+Every one of the parts is drawn (166 since L54b1), every pin the netlist connects is a
 terminal, every unconnected pin of an integrated circuit carries its cross.
 How the drawing is kept honest is in sheet_kit.py: wires only between nodes of
 one net, no short in the picture, a name on every island of a net drawn in
@@ -25,7 +25,8 @@ Writes psu.svg, psu.pdf, psu.manifest.json next to this file.
 
 The page reads left to right as the energy flows (row 1: mains, the audio rails,
 VRELAY and the 5 V) and then as the control flows (row 2: reference, supervisor
-and mains detector; the micro; the hardware delays and the relay commands).
+and mains detector; the comparator timer, ADR-102; the hardware delays and the
+relay commands).
 Nets that run between panels travel BY NAME: the same name is the same net,
 and the kit refuses a name that is not the net's.
 """
@@ -140,6 +141,23 @@ g513b = to(g513, 0, -2.6)
 gnd(g513b)
 S.text((12.5, 63.6), "F501: valore da fissare sul datasheet di T2", size=FS - 1.0, color=DIM)
 S.text((12.5, 63.05), f"(nella netlist: «{v('F501')}»)", size=FS - 1.4, color=DIM)
+# the legend (L54b1: here, the timer took its place in panel 5)
+YL = 58.0
+S.text((1.6, YL + 1.6), "Legenda", size=FS + 0.5, halign="left")
+S.d.add(__import__("schemdraw").elements.Ground(lead=False).theta(0).at((2.4, YL + 0.4))
+        .color(GNDCOL).scale(0.85))
+S.text((3.4, YL + 0.2), "GND — la massa audio (rail, serbatoi, J1)", halign="left")
+S.d.add(__import__("schemdraw").elements.GroundSignal(lead=False).theta(0).at((2.4, YL - 1.2))
+        .color(RETCOL).scale(0.85))
+S.text((3.4, YL - 1.4), "RLY_RET — il ritorno delle bobine e della logica;", halign="left")
+S.text((3.4, YL - 2.1), "tocca GND solo in NT501", halign="left")
+S.text((2.4, YL - 3.4), "NOME", color=NETCOL)
+S.text((3.6, YL - 3.4), "una rete per nome: la stessa scritta", halign="left")
+S.text((3.6, YL - 4.1), "in due punti è un filo", halign="left")
+S.text((1.8, YL - 5.4), "×  piedino libero (nessuna rete nella netlist)", halign="left")
+S.text((1.8, YL - 6.6), "i punti di giunzione li mette il disegno", halign="left", color=DIM,
+       size=FS - 0.8)
+S.text((1.8, YL - 7.2), "dove si incontrano tre fili", halign="left", color=DIM, size=FS - 0.8)
 
 # =============================================================================
 # 2  THE AUDIO RAILS
@@ -361,7 +379,7 @@ ret(u12["2"])
 hang("C525", "V5", (101.6, YV))
 W(u12["3"], N("C525", "V5"))
 lab(to(N("C525", "V5"), 1.6, 0))
-S.text((94.6, YV - 3.6), "due regolatori in serie: un corto di U504 non porta 12 V al micro "
+S.text((94.6, YV - 3.6), "due regolatori in serie: un corto di U504 non porta 12 V alla logica "
        "(ADR-094)", size=FS - 1.0, color=DIM)
 S.text((100.4, YR - 7.8), "ANY-OUT a RLY_RET: " + " + ".join(p.replace(".", ",") for p in PROG3)
        + f" + 1,4 V = {it(VOUT3, 1)} V", size=FS - 1.0, color=DIM)
@@ -369,9 +387,10 @@ S.text((100.4, YR - 7.8), "ANY-OUT a RLY_RET: " + " + ".join(p.replace(".", ",")
 # =============================================================================
 # 4  REFERENCE, SUPERVISOR, MAINS DETECTOR
 # =============================================================================
-S.panel(0.8, 0.8, 46.0, 44.0, "4  Riferimento, sorvegliante, rivelatore di rete",
-        "quattro comparatori open-drain in OR su MUTE_G: il mute senza il firmware (ADR-048 p. 5)")
-XO, XB = 40.0, 42.4                 # comparator outputs, MUTE_G bus
+S.panel(0.8, 0.8, 38.0, 44.0, "4  Riferimento, sorvegliante, rivelatore di rete",
+        "quattro comparatori open-drain in OR su MUTE_G: il mute in hardware (ADR-048 p. 5)")
+# L54b1: 8 units narrower than L63a's - the micro's read-back resistors (R544-R547) are gone
+XO, XB = 33.6, 36.0                 # comparator outputs, MUTE_G bus
 cA = S.comparator("U505", "A", {"-": "2", "+": "3", "out": "1"}, (XO, 37.0), power=("8", "4"),
                   note=v("U505").split()[0])
 cB = S.comparator("U505", "B", {"-": "6", "+": "5", "out": "7"}, (XO, 29.0))
@@ -404,18 +423,13 @@ def divider(top_ref, bot_ref, mid_net, x, ymid, ytop, ybot, top_sym, bot_sym):
     bot_sym(N(bot_ref, bnet))
 
 
-def to_adc(ref, net, x, y):
-    adc = [n for (r, _), n in S.pin.items() if r == ref and n != net][0]
-    two(ref, {net: (x, y), adc: (x, y - 2.4)})
-    lab(N(ref, adc), "down")
-
-
-# row A - U505 A: VPLUS too low
+# row A - U505 A: VPLUS too low (its node is read by U513 too: pannello 5)
 yA = P(cA["+"])[1]
 divider("R506", "R507", "SUP_P", 20.0, yA, yA + 3.0, yA - 2.2, rail, ret)
 hang("C515", "SUP_P", (22.4, yA))
-to_adc("R544", "SUP_P", 24.8, yA)
-chain(N("R506", "SUP_P"), N("C515", "SUP_P"), N("R544", "SUP_P"), cA["+"])
+sp_l = node("sup_p_lbl", "SUP_P", (27.0, yA))
+chain(N("R506", "SUP_P"), N("C515", "SUP_P"), sp_l, cA["+"])
+lab(sp_l, "down")
 lab(to(cA["-"], -0.8, 0), "left")
 # row B - U505 B: VMINUS too low (its divider runs from VREF to VMINUS)
 yB = P(cB["-"])[1]
@@ -424,19 +438,23 @@ two("R509", {"SUP_M": (20.0, yB), "VMINUS": (20.0, yB - 2.8)})
 rail(N("R508", "VREF"))
 rail(N("R509", "VMINUS"), up=False)
 hang("C516", "SUP_M", (22.4, yB))
-to_adc("R545", "SUP_M", 24.8, yB)
-chain(N("R508", "SUP_M"), N("C516", "SUP_M"), N("R545", "SUP_M"), cB["-"])
+sm_l = node("sup_m_lbl", "SUP_M", (25.0, yB))
+chain(N("R508", "SUP_M"), N("C516", "SUP_M"), sm_l, cB["-"])
+lab(sm_l, "up")
 yBp = P(cB["+"])[1]
-two("R504", {"VREF": (31.0, yBp), "VREF_HALF": (33.6, yBp)})
-hang("R505", "VREF_HALF", (35.0, yBp), 2.2)
-chain(N("R504", "VREF_HALF"), N("R505", "VREF_HALF"), cB["+"])
+two("R504", {"VREF": (27.2, yBp), "VREF_HALF": (29.6, yBp)})
+hang("R505", "VREF_HALF", (29.6, yBp), 2.2, side="l")
+vh_l = node("vref_half_lbl", "VREF_HALF", (31.4, yBp))
+chain(N("R504", "VREF_HALF"), N("R505", "VREF_HALF"), vh_l, cB["+"])
+lab(vh_l, "down")
 lab(N("R504", "VREF"), "left")
 # row C - U506 B: VRELAY_REG too low
 yC = P(cC["+"])[1]
 divider("R522", "R523", "SUP_VR", 20.0, yC, yC + 3.0, yC - 2.8, rail, ret)
 hang("C526", "SUP_VR", (22.4, yC))
-to_adc("R546", "SUP_VR", 24.8, yC)
-chain(N("R522", "SUP_VR"), N("C526", "SUP_VR"), N("R546", "SUP_VR"), cC["+"])
+sv_l = node("sup_vr_lbl", "SUP_VR", (27.0, yC))
+chain(N("R522", "SUP_VR"), N("C526", "SUP_VR"), sv_l, cC["+"])
+lab(sv_l, "down")
 lab(to(cC["-"], -0.8, 0), "left")
 # row D - U506 A: no half-wave of the mains (the detector on T2's rectified secondary)
 yD = P(cD["-"])[1]
@@ -456,9 +474,10 @@ rail(N("R512", "V5"))
 mdn = node("md_c", "MD", (P(q504["C"])[0], ymd))
 W(q504["C"], mdn)
 hang("C518", "MD", (15.8, ymd))
-to_adc("R547", "MD", 18.2, ymd)
-chain(mdn, N("R555", "MD"), N("C518", "MD"), N("R547", "MD"))
-W(N("R547", "MD"), cD["-"], (34.6, ymd), (34.6, yD))
+md_l = node("md_lbl", "MD", (24.0, ymd))
+chain(mdn, N("R555", "MD"), N("C518", "MD"), md_l)
+W(md_l, cD["-"], (28.4, ymd), (28.4, yD))
+lab(md_l, "up")
 lab(to(cD["+"], -0.8, 0), "left")
 # the reference
 two("R503", {"V5": (7.0, 40.0), "VREF_R": (7.0, 37.4)})
@@ -488,68 +507,250 @@ S.text((2.0, yD - 4.35), "semionde MD sale verso V5 e U506 A tira giù MUTE_G",
        size=FS - 0.8, color=DIM, halign="left")
 
 # =============================================================================
-# 5  THE MICRO AND ITS INPUTS
+# 5  THE TIMER (ADR-102, L54b1): twelve comparator channels, RC, diodes, the latch
 # =============================================================================
-S.panel(46.0, 0.8, 77.0, 44.0, "5  Il temporizzatore: il micro e i suoi ingressi",
-        "la sequenza è del firmware (firmware/preamp_timer/), l'ordine è dell'hardware (pannello 6)")
-u9 = S.ic("U509", 58.0, 38.0, 9.0, 24.0,
-          {"1": ("t", 8.0), "20": ("b", 4.5),
-           "3": ("l", 2.0), "4": ("l", 3.0), "5": ("l", 4.0), "6": ("l", 5.0),
-           "14": ("l", 7.0), "12": ("l", 13.0), "13": ("l", 19.0),
-           "11": ("r", 2.0), "10": ("r", 4.0), "8": ("r", 6.0), "9": ("r", 8.0),
-           "16": ("r", 12.0)},
-          nc={"2": ("l", 21.0), "7": ("l", 22.0), "15": ("l", 23.0),
-              "17": ("r", 15.0), "18": ("r", 16.0), "19": ("r", 17.0)},
-          title=f"U509  {v('U509')}")
-v9 = to(u9["1"], 0, 1.4)
-rail(v9)
-hang("C534", "V5", (69.0, P(v9)[1]))
-W(v9, N("C534", "V5"))
-ret(u9["20"])
-for p in ("3", "4", "5", "6", "11", "10", "8", "9"):
-    lab(u9[p], "left" if p in ("3", "4", "5", "6") else "right")
-ymg = P(u9["14"])[1]
-two("R543", {"MUTE_G": (51.6, ymg), "MUTE_G_IN": (54.4, ymg)})
-W(N("R543", "MUTE_G_IN"), u9["14"])
-lab(N("R543", "MUTE_G"), "left")
-yfr = P(u9["12"])[1]
-j508 = S.conn("J508", 47.4, yfr + 0.55, ["1", "2"], side="r", title="interruttore frontale")
+S.panel(38.0, 0.8, 77.0, 44.0, "5  Il temporizzatore a comparatori (ADR-102)",
+        "tre TLV1704 open-drain: alimentazione buona, le richieste, K501, armato, il guasto e la "
+        "ritenuta; i valori sono quelli del banco di L54a")
+
+
+def cmp4(ref, unit, out_xy, power=False):
+    """One channel of a TLV1704 (LM339 symbol, SBOS589D p. 5): A 2 / -4 / +5, B 1 / -6 / +7,
+    C 14 / -8 / +9, D 13 / -10 / +11; V+ 3, V- 12 on the unit that carries them."""
+    pins = {"A": ("4", "5", "2"), "B": ("6", "7", "1"), "C": ("8", "9", "14"),
+            "D": ("10", "11", "13")}[unit]
+    return S.comparator(ref, unit, {"-": pins[0], "+": pins[1], "out": pins[2]}, out_xy,
+                        power=("3", "12") if power else None)
+
+
+def inputs(c, minus=True, plus=True):
+    """The inputs that arrive by name: a short stub and the net's label."""
+    for role, on in (("-", minus), ("+", plus)):
+        if on:
+            lab(to(c[role], -0.5, 0), "left")
+
+
+def quad_power(c, ref, cref, x_cap):
+    """V+ up to V5 with the quad's 100 nF beside it, V- to RLY_RET."""
+    vt = node(f"{ref}_v5", "V5", (P(c["V+"])[0], P(c["V+"])[1] + 1.3))
+    W(c["V+"], vt)
+    rail(vt)
+    two(cref, {"RLY_RET": (x_cap, P(vt)[1]), "V5": (x_cap + 1.8, P(vt)[1])}, side="t")
+    W(N(cref, "V5"), vt)
+    ret(N(cref, "RLY_RET"))
+    ret(c["V-"])
+
+
+# ---- column 1: U513, power good ----------------------------------------------------
+X1 = 38.6
+XO1, XB1 = X1 + 6.0, X1 + 8.4
+c13a = cmp4("U513", "A", (XO1, 37.4), power=True)          # + rail below 13.55 V
+c13b = cmp4("U513", "B", (XO1, 33.8))                      # |- rail| below 13.5 V
+c13c = cmp4("U513", "C", (XO1, 30.2))                      # VRELAY_REG below 11.0 V
+c13d = cmp4("U513", "D", (XO1, 22.6))                      # no half-wave for ~15 ms
+for c in (c13a, c13b, c13c, c13d):
+    inputs(c)
+quad_power(c13a, "U513", "C545", X1 + 1.0)
+two("R570", {"AT_PG": (XB1, 37.4), "V5": (XB1, 39.8)}, side="r")
+rail(N("R570", "V5"))
+W(c13a["out"], N("R570", "AT_PG"))
+pg_b = node("at_pg_b", "AT_PG", (XB1, 33.8))
+pg_c = node("at_pg_c", "AT_PG", (XB1, 30.2))
+pg_d = node("at_pg_d", "AT_PG", (XB1, 27.6))
+W(c13b["out"], pg_b)
+W(c13c["out"], pg_c)
+chain(N("R570", "AT_PG"), pg_b, pg_c, pg_d)
+lab(to(pg_d, -1.6, 0), "left")
+# AT_PGT: 820k / 1 uF, emptied into AT_PG through D536
+two("D536", {"AT_PGT": (XB1 + 2.6, 32.0), "AT_PG": (XB1, 32.0)}, side="t")
+two("R571", {"AT_PGT": (XB1 + 3.4, 32.0), "V5": (XB1 + 3.4, 34.6)}, side="r")
+rail(N("R571", "V5"))
+hang("C548", "AT_PGT", (XB1 + 3.4, 29.4), 2.0)
+chain(N("D536", "AT_PGT"), N("R571", "AT_PGT"))
+W(N("R571", "AT_PGT"), N("C548", "AT_PGT"))
+lab(to(N("C548", "AT_PGT"), 1.2, 0), "right")
+# AT_MD: the mains channel, into AT_PG / AT_F / AT_T2S through three Schottkys
+two("D533", {"AT_PG": (XB1, 27.6), "AT_MD": (XB1, 25.2)}, side="l")
+md_a = node("at_md_a", "AT_MD", (XB1, 22.6))
+W(N("D533", "AT_MD"), md_a)
+W(c13d["out"], md_a)
+two("R569", {"AT_MD": (XB1 + 1.8, 25.2), "V5": (XB1 + 1.8, 27.6)}, side="r")
+rail(N("R569", "V5"))
+W(N("D533", "AT_MD"), N("R569", "AT_MD"))
+md_b = node("at_md_b", "AT_MD", (XB1, 20.6))
+W(md_a, md_b)
+two("D534", {"AT_MD": (XB1 + 0.8, 20.6), "AT_F": (XB1 + 3.2, 20.6)}, side="t")
+two("D535", {"AT_MD": (XB1 + 0.8, 18.2), "AT_T2S": (XB1 + 3.2, 18.2)}, side="b")
+W(md_b, N("D534", "AT_MD"))
+W(md_b, N("D535", "AT_MD"), (XB1, 18.2))
+lab(N("D534", "AT_F"), "right")
+lab(N("D535", "AT_T2S"), "right")
+
+# ---- the front switch and SW3 (below column 1) ---------------------------------------
+yfr = 12.0
+j508 = S.conn("J508", 39.0, yfr + 0.55, ["1", "2"], side="r", title="frontale")
 ret(to(to(j508["2"], 0.8, 0), 0, -0.6))
-two("R518", {"V5": (50.2, yfr + 2.8), "FRONT_SW": (50.2, yfr)}, side="r")
+two("R518", {"V5": (41.8, yfr + 2.8), "FRONT_SW": (41.8, yfr)}, side="r")
 rail(N("R518", "V5"))
-two("R541", {"FRONT_SW": (51.4, yfr), "FRONT_IN": (53.8, yfr)}, side="b")
-hang("C532", "FRONT_IN", (55.4, yfr))
+two("R541", {"FRONT_SW": (43.0, yfr), "FRONT_IN": (45.4, yfr)}, side="b")
+hang("C532", "FRONT_IN", (46.8, yfr))
 chain(j508["1"], N("R518", "FRONT_SW"), N("R541", "FRONT_SW"))
-chain(N("R541", "FRONT_IN"), N("C532", "FRONT_IN"), u9["12"])
-ysw2 = P(u9["13"])[1]
-msw = node("mute_sw_in_lbl", "MUTE_SW", (49.8, ysw2))
+W(N("R541", "FRONT_IN"), N("C532", "FRONT_IN"))
+lab(to(N("C532", "FRONT_IN"), 1.0, 0), "right")
+ysw2 = 4.2
+msw = node("mute_sw_in_lbl", "MUTE_SW", (42.2, ysw2))
 lab(msw, "left")
-two("R517", {"V5": (50.8, ysw2 + 2.8), "MUTE_SW": (50.8, ysw2)}, side="l")
+two("R517", {"V5": (43.0, ysw2 + 2.8), "MUTE_SW": (43.0, ysw2)}, side="l")
 rail(N("R517", "V5"))
-two("R542", {"MUTE_SW": (51.6, ysw2), "MUTE_SW_IN": (54.0, ysw2)})
-hang("C533", "MUTE_SW_IN", (55.4, ysw2))
+two("R542", {"MUTE_SW": (43.8, ysw2), "MUTE_SW_IN": (46.2, ysw2)})
+hang("C533", "MUTE_SW_IN", (47.6, ysw2))
 chain(msw, N("R517", "MUTE_SW"), N("R542", "MUTE_SW"))
-chain(N("R542", "MUTE_SW_IN"), N("C533", "MUTE_SW_IN"), u9["13"])
-j515 = S.conn("J515", 73.0, P(u9["16"])[1] + 0.55, ["1", "2", "3"], side="l",
-              title="programmazione")
-W(u9["16"], j515["1"])
-u5v = to(j515["2"], -1.0, 0)
-lab(to(u5v, 0, -2.4), "down")
-ret(to(to(j515["3"], -0.5, 0), 0, -0.6))
-# the legend
-S.text((47.0, 9.6), "Legenda", size=FS + 0.5, halign="left")
-S.d.add(__import__("schemdraw").elements.Ground(lead=False).theta(0).at((48.0, 8.4))
-        .color(GNDCOL).scale(0.85))
-S.text((49.0, 8.2), "GND — la massa audio (rail, serbatoi, J1)", halign="left")
-S.d.add(__import__("schemdraw").elements.GroundSignal(lead=False).theta(0).at((48.0, 6.8))
-        .color(RETCOL).scale(0.85))
-S.text((49.0, 6.6), "RLY_RET — il ritorno delle bobine e della logica; tocca GND solo in NT501",
-       halign="left")
-S.text((48.0, 5.0), "NOME", color=NETCOL)
-S.text((49.0, 5.0), "una rete per nome: la stessa scritta in due punti è un filo", halign="left")
-S.text((47.4, 3.6), "×  piedino libero (nessuna rete nella netlist)", halign="left")
-S.text((47.4, 2.4), "i punti di giunzione li mette il disegno dove si incontrano tre fili",
-       halign="left", color=DIM, size=FS - 0.8)
+W(N("R542", "MUTE_SW_IN"), N("C533", "MUTE_SW_IN"))
+lab(to(N("C533", "MUTE_SW_IN"), 1.0, 0), "right")
+
+# ---- column 2: U514, the requests ------------------------------------------------------
+X2 = 52.6
+XO2, XB2 = X2 + 5.6, X2 + 8.0
+c14a = cmp4("U514", "A", (XO2, 37.4), power=True)          # mg: power good for 0.57 s
+c14b = cmp4("U514", "B", (XO2, 33.8))                      # sw: SW3 = mute
+c14c = cmp4("U514", "C", (XO2, 27.0))                      # mq -> MUTE_REQ
+c14d = cmp4("U514", "D", (XO2, 20.2))                      # mp -> PERMIT_REQ
+for c in (c14a, c14b, c14c, c14d):
+    inputs(c)
+quad_power(c14a, "U514", "C546", X2 + 0.8)
+two("R572", {"AT_MRQ": (XB2, 37.4), "V5": (XB2, 39.8)}, side="r")
+rail(N("R572", "V5"))
+W(c14a["out"], N("R572", "AT_MRQ"))
+mrq_b = node("at_mrq_b", "AT_MRQ", (XB2, 33.8))
+W(c14b["out"], mrq_b)
+mrq_l = node("at_mrq_l", "AT_MRQ", (XB2, 32.6))
+mrq_c = node("at_mrq_c", "AT_MRQ", (XB2, 31.6))
+chain(N("R572", "AT_MRQ"), mrq_b, mrq_l, mrq_c)
+lab(mrq_l, "left")
+hang("C549", "AT_MRQ", (XB2 + 1.6, 35.6), 2.0)
+W(node("at_mrq_cap", "AT_MRQ", (XB2, 35.6)), N("C549", "AT_MRQ"))
+two("D537", {"AT_MRQ": (XB2, 31.6), "VRELAY_EN": (XB2 + 2.4, 31.6)}, side="b")
+lab(N("D537", "VRELAY_EN"), "right")
+# MUTE_REQ
+two("R573", {"MUTE_REQ": (XB2, 27.0), "V5": (XB2, 29.4)}, side="r")
+rail(N("R573", "V5"))
+W(c14c["out"], N("R573", "MUTE_REQ"))
+lab(to(N("R573", "MUTE_REQ"), 0, -1.2), "right")
+# AT_PRT: D538 from AT_MRQ, 4.7M / 10 nF
+yprt = 23.6
+mrq_p = node("at_mrq_prt", "AT_MRQ", (X2 + 1.8, yprt))
+lab(mrq_p, "left")
+two("D538", {"AT_MRQ": (X2 + 2.2, yprt), "AT_PRT": (X2 + 4.6, yprt)}, side="t")
+W(mrq_p, N("D538", "AT_MRQ"))
+hang("R574", "AT_PRT", (X2 + 5.6, yprt), 2.0, side="r")
+hang("C550", "AT_PRT", (X2 + 8.2, yprt), 2.0, side="r")
+chain(N("D538", "AT_PRT"), N("R574", "AT_PRT"), N("C550", "AT_PRT"))
+lab(to(N("C550", "AT_PRT"), 0.8, 0), "right")
+# PERMIT_REQ
+two("R575", {"PERMIT_REQ": (XB2, 20.2), "V5": (XB2, 18.0)}, side="r")
+W(c14d["out"], N("R575", "PERMIT_REQ"))
+rail(N("R575", "V5"), up=False)
+lab(to(N("R575", "PERMIT_REQ"), 1.0, 0), "right")
+
+# ---- below column 2: K501's node and the arming -----------------------------------------
+# AT_MT: 1M / 100 nF, charged through D539 from VRELAY_EN (R577) and D540 from VR_G
+ymt = 13.6
+ven_m = node("vrelay_en_mt", "VRELAY_EN", (X2 + 0.8, ymt))
+lab(ven_m, "left")
+two("R577", {"VRELAY_EN": (X2 + 1.4, ymt), "AT_MA": (X2 + 3.8, ymt)})
+two("D539", {"AT_MA": (X2 + 4.2, ymt), "AT_MT": (X2 + 6.6, ymt)}, side="t")
+W(ven_m, N("R577", "VRELAY_EN"))
+W(N("R577", "AT_MA"), N("D539", "AT_MA"))
+vrg = node("vr_g_mt", "VR_G", (X2 + 0.8, ymt - 2.6))
+lab(vrg, "left")
+two("D540", {"VR_G": (X2 + 4.2, ymt - 2.6), "AT_MT": (X2 + 6.6, ymt - 2.6)}, side="b")
+W(vrg, N("D540", "VR_G"))
+mt_j = node("at_mt_j", "AT_MT", (X2 + 7.4, ymt))
+W(N("D539", "AT_MT"), mt_j)
+W(N("D540", "AT_MT"), mt_j, (X2 + 7.4, ymt - 2.6))
+hang("C551", "AT_MT", (X2 + 8.6, ymt), 2.0, side="r")
+hang("R578", "AT_MT", (X2 + 11.0, ymt), 2.0, side="r")
+chain(mt_j, N("C551", "AT_MT"), N("R578", "AT_MT"))
+lab(to(mt_j, 0, 1.0), "up")
+# AT_T2S: 2.7M / 1 uF from VRELAY_EN, D541 back into it
+yts = 5.4
+ven_t = node("vrelay_en_t2s", "VRELAY_EN", (X2 + 0.8, yts))
+lab(ven_t, "left")
+two("R580", {"VRELAY_EN": (X2 + 1.4, yts), "AT_T2S": (X2 + 3.8, yts)})
+W(ven_t, N("R580", "VRELAY_EN"))
+two("D541", {"AT_T2S": (X2 + 3.8, yts - 2.2), "VRELAY_EN": (X2 + 1.4, yts - 2.2)}, side="b")
+W(ven_t, N("D541", "VRELAY_EN"), (X2 + 0.8, yts - 2.2))
+ts_j = node("at_t2s_j", "AT_T2S", (X2 + 5.0, yts))
+W(N("R580", "AT_T2S"), ts_j)
+W(N("D541", "AT_T2S"), ts_j, (X2 + 5.0, yts - 2.2))
+hang("C552", "AT_T2S", (X2 + 6.4, yts), 2.0, side="r")
+W(ts_j, N("C552", "AT_T2S"))
+lab(to(N("C552", "AT_T2S"), 1.6, 0), "right")
+
+# ---- column 3: U515, the front switch, K501, the fault, the latch -----------------------
+X3 = 65.6
+XO3, XB3 = X3 + 5.4, X3 + 7.8
+c15a = cmp4("U515", "A", (XO3, 37.4), power=True)          # on: the front switch off
+c15b = cmp4("U515", "B", (XO3, 30.2))                      # mr -> MAINS_REQ
+c15c = cmp4("U515", "C", (XO3, 24.2))                      # fa: not armed
+c15d = cmp4("U515", "D", (XO3, 20.6))                      # fc: power good
+for c in (c15a, c15b, c15c, c15d):
+    inputs(c)
+quad_power(c15a, "U515", "C547", X3 + 0.8)
+two("R576", {"VRELAY_EN": (XB3, 37.4), "V5": (XB3, 39.8)}, side="r")
+rail(N("R576", "V5"))
+W(c15a["out"], N("R576", "VRELAY_EN"))
+lab(to(N("R576", "VRELAY_EN"), 0, -1.6), "right")
+two("R579", {"MAINS_REQ": (XB3, 30.2), "V5": (XB3, 32.6)}, side="r")
+rail(N("R579", "V5"))
+W(c15b["out"], N("R579", "MAINS_REQ"))
+lab(to(N("R579", "MAINS_REQ"), 0, -1.2), "right")
+# AT_F: 100k / 330 nF from V5, fa and fc sink it; into the latch through R582
+f_a = node("at_f_a", "AT_F", (XB3, 24.2))
+f_b = node("at_f_b", "AT_F", (XB3, 20.6))
+W(c15c["out"], f_a)
+W(c15d["out"], f_b)
+two("R581", {"AT_F": (XB3 + 1.6, 24.2), "V5": (XB3 + 1.6, 26.6)}, side="r")
+rail(N("R581", "V5"))
+W(f_a, N("R581", "AT_F"))
+W(f_a, f_b)
+f_c = node("at_f_c", "AT_F", (XB3, 17.6))
+W(f_b, f_c)
+hang("C553", "AT_F", (XB3 + 1.6, 17.6), 2.0, side="r")
+W(f_c, N("C553", "AT_F"))
+lab(f_c, "left")
+two("R582", {"AT_F": (XB3, 17.6), "AT_BN": (XB3, 15.0)}, side="l")
+# the latch (ADR-102 point 2): Q514 (PNP, its emitter the anode on VRELAY_EN) and Q513 (NPN,
+# its emitter the cathode on RLY_RET), each collector on the other's base
+q7 = S.trans("Q513", "npn", "collector", (67.8, 6.0), rev=True, label_side="l")
+q8 = S.trans("Q514", "pnp", "collector", (70.2, 7.0), label_side="r")
+bp = node("at_bp_j", "AT_BP", (P(q7["C"])[0], P(q8["B"])[1]))
+W(q7["C"], bp)
+W(bp, q8["B"])
+bn = node("at_bn_j", "AT_BN", (P(q8["C"])[0], P(q7["B"])[1]))
+W(q8["C"], bn)
+W(bn, q7["B"])
+ret(q7["E"])
+# AT_BN: from R582 down a vertical, R583 and C554 (base-emitter of Q513) off it
+bn_r = node("at_bn_r", "AT_BN", (XB3, P(bn)[1]))
+bn_1 = node("at_bn_1", "AT_BN", (XB3, 12.8))
+bn_2 = node("at_bn_2", "AT_BN", (XB3, 9.4))
+chain(N("R582", "AT_BN"), bn_1, bn_2, bn_r, bn)
+hang("R583", "AT_BN", (XB3 + 1.4, 12.8), 2.0, side="r")
+hang("C554", "AT_BN", (XB3 + 1.4, 9.4), 2.0, side="r")
+W(bn_1, N("R583", "AT_BN"))
+W(bn_2, N("C554", "AT_BN"))
+# VRELAY_EN over the latch: R584 and C555 (base-emitter of Q514) down to AT_BP
+yan = 10.6
+an = node("latch_anode", "VRELAY_EN", (P(q8["E"])[0], yan))
+W(q8["E"], an)
+two("R584", {"VRELAY_EN": (66.8, yan), "AT_BP": (66.8, P(bp)[1])}, side="r")
+two("C555", {"VRELAY_EN": (65.4, yan), "AT_BP": (65.4, P(bp)[1])}, side="l")
+chain(an, N("R584", "VRELAY_EN"), N("C555", "VRELAY_EN"))
+chain(bp, N("R584", "AT_BP"), N("C555", "AT_BP"))
+lab(to(an, 0, 0.6), "up")
+S.text((X3 + 5.6, 2.0), "la ritenuta: scattata tiene VRELAY_EN a ~0,8 V fino al frontale",
+       size=FS - 1.0, color=DIM)
 
 # =============================================================================
 # 6  THE HARDWARE DELAYS AND THE RELAY COMMANDS
@@ -696,6 +897,9 @@ S.text((100.8, 2.4), "MUTE_CMD e PERMIT_CMD: sink verso RLY_RET; la bobina del r
        "scheda audio, tra VRELAY e il sink", size=FS - 0.8, color=DIM)
 
 # =============================================================================
+if os.environ.get("PREVIEW_PNG"):
+    # L54b1: the preview BEFORE the checks too, so that a refused page can be looked at
+    S.d.save(os.environ["PREVIEW_PNG"], dpi=int(os.environ.get("PREVIEW_DPI", "150")))
 stats = S.finish(SVG, PDF, MANIFEST, png=os.environ.get("PREVIEW_PNG"),
                  png_dpi=int(os.environ.get("PREVIEW_DPI", "150")))
 print(f"SVG      -> {SVG}")
