@@ -282,6 +282,18 @@ ap.add_argument("--u504doppio", action="store_true")
 # L45d2b2b2: --rk 47 - a resistor between K501's coil (MAINS_COIL) and Q503's drain, outside the
 # flyback loop (coil + D505): it limits a shorted coil to VRELAY_REG / R. v(q503_rk) is the drain.
 ap.add_argument("--rk", type=float, default=None)
+# L54a (NC-054): who drives MUTE_REQ / MAINS_REQ / VRELAY_EN. micro = the firmware core (ponte.c),
+# as every lot before; comparatori = the all-analog timer of TIMER_AN with the standby (K501 and
+# the front switch as today); diretto = the same timer without the standby: K501's contact always
+# closed (a mains switch, the bench's env), the front switch closed for good
+ap.add_argument("--timer", choices=("micro", "comparatori", "diretto"), default="micro")
+# L54a: a mains factor on ANY sequence case (holes included), e.g. 0.9 / 1.1 (the case's own
+# "fattore", accensione_m10's, if any, is refused together with this)
+ap.add_argument("--rete", type=float, default=None)
+# L54a: the settling before the event (TSS = TE). The analog timers power up for real from t = 0
+# (the micro's preamble put it in MUSICA at 1.0 s): rails at ~1.4 s, then the 0.47 s of AT_PGT -
+# they run with 3.0; every micro deck keeps 2.0
+ap.add_argument("--tss", type=float, default=2.0)
 ARG = ap.parse_args()
 SERIE2 = set(ARG.serie2.split(",")) if ARG.serie2 else set()
 DOPPI = {}      # ref -> (node a, node b, mid): filled by element(), read by applica_guasto()
@@ -340,7 +352,7 @@ if "metodo_u503_min" in _C:
 # load before (265 / 265 / 42.4 mA); on any other it would be neither
 if ARG.carico == "l41a" and tuple(round(x * 1e4) for x in (I_PIU, I_MENO, I_RESTO)) != (2650, 2650, 424):
     raise SystemExit("RIFIUTATO: --carico l41a solo col carico di prima (265 / 265 / 42,4 mA)")
-TSS = 2.0               # s of settling before any event (C_RAW at ~0.27 A)
+TSS = ARG.tss           # s of settling before any event (C_RAW at ~0.27 A); 2.0 before L54a
 TE = TSS                # the event: a positive zero crossing of the mains
 
 # L47c2a: the LDR law (ADR-049) is gone with the drive (ADR-062).
@@ -601,7 +613,7 @@ def element(ref, c):
         for (r, p), n in sorted(PN.items()):
             if r != ref or p in ("1", "20"):
                 continue
-            if n in MCU_OUT:
+            if n in MCU_OUT and ARG.timer == "micro":
                 x = n.lower()
                 out.append("B%s_%s 0 %s I = V(drv_%s)*(V(set_%s)*V(%s,%s) - V(%s,%s))/50"
                            % (ref, p, x, x, x, v5, g, x, g))
@@ -997,6 +1009,9 @@ CASI_SEQ = {
                         **U503_NUM),
     "guasto_u503_min": dict(front=1, sw3=1, spento={"U503": TE}, tf=TE + 1.0, pre="musica",
                             angolo="min", **U503_NUM_MIN),
+    # L54a: the mains switched on at TE with everything cold (the power-up of --timer diretto,
+    # and of the other two after a long blackout)
+    "fredda": dict(front=1, sw3=1, fredda=True, tf=TE + 2.5, pre=None),
     # L30's counterfactual: no D (C528 = 10 pF), the mains gone
     "cf_nodelta": dict(front=1, sw3=1, buco=1000.0, tf=TE + 1.0, pre="musica", c528="10p"),
     # U503's output shorted to ground: C523 (on VRELAY_REG) goes with it
@@ -1256,15 +1271,97 @@ SONDE = ["v(front_in)", "v(mute_sw_in)", "v(mute_g_in)", "v(adc_sup_p)", "v(adc_
          "v(vr_g)", "v(mains_g)"]
 
 
+# ============================================================ L54a: the all-analog timer (NC-054)
+# Not in psu.py: a candidate, on the bench only. Every comparator is a TLV1702 / TLV1704 channel
+# (CMPOD: it sinks its output when inn > inp), on V5 and RLY_RET like U505-U508. The supervisor on
+# MUTE_G, D and D2 (U508), the pull-downs and the sinks are today's and are NOT touched: this
+# replaces only what U509 drives (MUTE_REQ, PERMIT_REQ, MAINS_REQ, VRELAY_EN).
+#   AT_PG  power good: the supervisor's four thresholds on four NEW channels (the same divider
+#          nodes, high-impedance inputs). pa + rail, pb - rail, pc VRELAY_REG, pd the mains
+#          detector; pd's output reaches AT_PG, AT_F and AT_T2S through three Schottkys
+#          (one channel, three nodes).
+#   AT_PGT 680k / 1 uF from V5, emptied through a Schottky into AT_PG: power good for
+#          0.69 x 0.68 s = 0.47 s before the release (timer_spec.md 4.3 / 4.5: >= 100 ms at power-up,
+#          >= 500 ms after a hole - one delay for both, the longer one rounded).
+#   AT_MRQ 200k / 100 nF from V5 (the debounce: every input good for ~14 ms before it crosses
+#          VREF), emptied by: AT_PGT below VREF (mg), SW3 in mute (sw), AT_ON low (a Schottky).
+#          mq squares it into MUTE_REQ, mp into PERMIT_REQ, 10k pull-up each.
+#   AT_ON  the front switch (on): 10k pull-up, sunk by the front comparator when FRONT_IN > VREF.
+#          It is VRELAY_EN (through R535 and D524 into VR_T, as today) and feeds AT_MT and AT_T2S.
+#   AT_MT  K501: 1M / 100 nF charged through diodes from AT_ON and from VR_G (pull-up R537),
+#          squared by mr into MAINS_REQ (22k pull-up: MAINS_G ~3.8 V). With the front off it
+#          falls ~0.54 x 100 ms after VR_G: K501 ~84 ms after PERMIT_CMD (ADR-046: >= 50 ms).
+#   AT_T2S armed: 2.7M / 1 uF from AT_ON, 1.87 s to VREF; emptied by the mains detector (pd) and
+#          by AT_ON low. "On, with the mains present for ~1.9 s" (timer_spec.md 4.1: no rails
+#          within 2 s = GUASTO; 4.5: a hole re-runs the power-up).
+#   AT_F   the fault: 100k / 330 nF from V5, emptied while not armed (fa), with the mains gone
+#          (pd) or the power good (fc). High = a rail or VRELAY_REG out, the mains present, armed:
+#          through 47k into the latch's NPN base (trips at ~0.9 V, ~6.6 ms).
+#   latch  BC847 + BC857 as a thyristor, its anode on AT_ON: tripped, it holds AT_ON at ~0.8 V
+#          (mute, VRELAY_EN and K501 down in D / D2 / D3) until the front switch sinks AT_ON
+#          (timer_spec.md 4.6, ADR-048 point 5). 100k base-emitter on each.
+# Channels: pa pb pc pd mg on sw mq mp mr fa fc = 12, three TLV1704.
+TIMER_AN = [
+    "* L54a all-analog timer (genera_tb_psu.py, TIMER_AN)",
+    "XATpa sup_p vref at_pg v5 rly_ret CMPOD",
+    "XATpb vref_half sup_m at_pg v5 rly_ret CMPOD",
+    "XATpc sup_vr vref at_pg v5 rly_ret CMPOD",
+    "XATpd vref md at_md v5 rly_ret CMPOD",
+    "RATmd v5 at_md 100k",
+    "DATmd1 at_pg at_md DBAT54", "DATmd2 at_f at_md DBAT54", "DATmd3 at_t2s at_md DBAT54",
+    "RATpg v5 at_pg 100k",
+    "RATpgt v5 at_pgt 680k", "CATpgt at_pgt rly_ret 1u", "DATpgt at_pgt at_pg DBAT54",
+    "XATmg at_pgt vref at_mrq v5 rly_ret CMPOD",
+    "RATmrq v5 at_mrq 200k", "CATmrq at_mrq rly_ret 100n",
+    "XATsw vref mute_sw_in at_mrq v5 rly_ret CMPOD",
+    "DATmon at_mrq at_on DBAT54",
+    "XATmq at_mrq vref mute_req v5 rly_ret CMPOD", "RATmq v5 mute_req 10k",
+    # mp: PERMIT_REQ from the same AT_MRQ (first run without it: D522 holds MUTE_G at PERMIT_G
+    # + 0.3 V, MUTE_G loads MUTE_REQ through R513 to 2.5 V, PERMIT_T stops at ~1.9 V < VREF, and
+    # the permissive - so the jacks - never come: the micro's 50-ohm pin had no such problem)
+    # and PERMIT_REQ falls ~24 ms after AT_MRQ (the firmware's 20 ms, timer_spec.md 4.2): AT_PRT
+    # holds it through a diode, 4.7M / 10 nF (second run: from AT_MRQ directly D was 15.4 ms,
+    # C3 out - PERMIT_T starts lower than with the micro's pin)
+    "DATprt at_mrq at_prt D1N914", "RATprt at_prt rly_ret 4.7MEG", "CATprt at_prt rly_ret 10n",
+    "XATmp at_prt vref permit_req v5 rly_ret CMPOD", "RATmp v5 permit_req 10k",
+    # 10k, not 47k: VRELAY_EN keeps R527 (100k) to RET, and 47k left AT_ON at 3.3 V (first run)
+    "XATon vref front_in at_on v5 rly_ret CMPOD", "RATon v5 at_on 10k",
+    "RATve at_on vrelay_en 1",
+    "RATma at_on at_ma 1k", "DATma at_ma at_mt D1N914", "DATmb vr_g at_mt D1N914",
+    "CATmt at_mt rly_ret 100n", "RATmt at_mt rly_ret 1MEG",
+    "XATmr at_mt vref mains_req v5 rly_ret CMPOD", "RATmr v5 mains_req 22k",
+    "RATt2s at_on at_t2s 2.7MEG", "CATt2s at_t2s rly_ret 1u", "DATt2s at_t2s at_on DBAT54",
+    "XATfa at_t2s vref at_f v5 rly_ret CMPOD",
+    "XATfc vref at_pg at_f v5 rly_ret CMPOD",
+    "RATf v5 at_f 100k", "CATf at_f rly_ret 330n",
+    "RATfb at_f at_bn 47k",
+    "QATn at_bp at_bn rly_ret QNGEN", "RATbn at_bn rly_ret 100k",
+    "QATp at_bn at_bp at_on QPGEN", "RATbp at_on at_bp 100k",
+]
+SONDE_AN = ["v(at_pg)", "v(at_pgt)", "v(at_mrq)", "v(at_on)", "v(at_mt)", "v(at_t2s)", "v(at_f)",
+            "v(at_md)", "v(at_prt)", "v(permit_t)", "v(vr_t)"]
+
+
 def seq_deck():
     c = CASI_SEQ[ARG.caso]
+    if ARG.rete is not None:
+        # L54a: the mains factor from the command line, on any case
+        assert not c.get("fattore"), "--rete su un caso che ha gia' il suo fattore"
+        c = dict(c, fattore=ARG.rete)
     # L41c: a corner case runs only with --angolo min (ANGOLO and VREF_SHUNT are
     # set from it at import), and a nominal case never with it
     if (c.get("angolo") == "min") != (ARG.angolo == "min"):
         raise SystemExit("caso %s: --angolo %s non e' il suo" % (ARG.caso, ARG.angolo))
-    u = uscite_core(ARG.uscite)
+    # L54a: with the analog timers there is no core: the micro is gone (no supply current either)
+    u = uscite_core(ARG.uscite) if ARG.timer == "micro" else {"iq": pwl((0, 0), (1000, 0))}
+    if ARG.timer == "diretto":
+        # no standby: the front switch is not an input any more (closed for good, its comparator
+        # idle); off = the mains switch, i.e. the bench's env
+        c = dict(c, front=1)
     righe = ["* L47c2a tb_psu seq %s (giro %d) - GENERATED by genera_tb_psu.py from %s and %s"
-             % (ARG.caso, ARG.giro, ARG.net, ARG.uscite),
+             % (ARG.caso, ARG.giro, ARG.net, ARG.uscite)
+             + ("" if ARG.timer == "micro" else " - L54a --timer %s%s" % (
+                 ARG.timer, "" if ARG.rete is None else " --rete %g" % ARG.rete)),
              MODELS.format(repo=REPO, vref=VREF_SHUNT)] + MODELLI_074
     for ref in sorted(COMPS):
         righe += al_piedino(ref, element(ref, COMPS[ref])) + serie(ref)
@@ -1275,7 +1372,10 @@ def seq_deck():
         if n.startswith(("AC_", "T1_PRI", "T2_PRI")):
             righe.append("R_float_%s %s 0 1G" % (n.lower(), node(n)))
     # the mains envelope: 1, or a hole
-    if c.get("buco", 0) >= 100:
+    if c.get("fredda"):
+        # L54a: a cold start - nothing powered (uic: every node at 0) until the mains arrive at TE
+        env = "0 0 %.12g 0 %.12g 1 1000 1" % (TE, TE + 1e-4)
+    elif c.get("buco", 0) >= 100:
         # L41c: the mains gone for good
         env = "0 1 %.12g 1 %.12g 0 1000 0" % (TE, TE + 1e-4)
     elif c.get("buco"):
@@ -1284,22 +1384,31 @@ def seq_deck():
     else:
         env = "0 1 1000 1"
     if c.get("fattore"):
-        # L45d2b2a: a mains factor on the whole envelope (only with no hole: asserted)
-        assert env == "0 1 1000 1", ARG.caso
-        env = "0 %g 1000 %g" % (c["fattore"], c["fattore"])
+        # L45d2b2a: a mains factor on the whole envelope. L54a: on any envelope (holes, cold
+        # start), each level times the factor; with no hole the string is L45d2b2a's, byte for byte
+        if env == "0 1 1000 1":
+            env = "0 %g 1000 %g" % (c["fattore"], c["fattore"])
+        else:
+            p_ = env.split()
+            env = " ".join(x if k % 2 == 0 else "%g" % (float(x) * c["fattore"])
+                           for k, x in enumerate(p_))
     righe += ["VENV env 0 pwl(%s)" % env]
     # K501's contact: its coil (A1 on VRELAY_REG, A2 on MAINS_D) above 8.4 V
     # through a 5 ms RC (ASSUMED operate time); the toroid's mains = env x contact
     a1, a2 = pn("K501", "A1"), pn("K501", "A2")
     righe += ["BK501 k501_in 0 V = 0.5*(1+tanh((V(%s,%s)-8.4)/0.2))" % (a1, a2),
               "RK501 k501_in k501_f 5k", "CK501 k501_f 0 1u",
-              "BENV1 env1 0 V = V(env)*0.5*(1+tanh((V(k501_f)-0.5)/0.02))"]
+              ("BENV1 env1 0 V = V(env)" if ARG.timer == "diretto" else
+               "BENV1 env1 0 V = V(env)*0.5*(1+tanh((V(k501_f)-0.5)/0.02))")]
     righe += mains("env1", 15.0, 50, 0.08, "T1_SEC_A", "T1_SEC_B", True, "T1")
     righe += mains("env", 12.0, 5, 0.20, "T2_SEC_A", "T2_SEC_B", False, "T2")
-    for x in MCU_OUT:
-        x = x.lower()
-        righe += ["VSET_%s set_%s 0 pwl(%s)" % (x, x, u[x]),
-                  "VDRV_%s drv_%s 0 pwl(%s)" % (x, x, DEF_DRV)]
+    if ARG.timer == "micro":
+        for x in MCU_OUT:
+            x = x.lower()
+            righe += ["VSET_%s set_%s 0 pwl(%s)" % (x, x, u[x]),
+                      "VDRV_%s drv_%s 0 pwl(%s)" % (x, x, DEF_DRV)]
+    else:
+        righe += TIMER_AN
     righe += ["VIQ iq_mcu 0 pwl(%s)" % u["iq"]]
     if c.get("u502") is not None:
         righe = [r for r in righe if not r.startswith("VENU502 ")]
@@ -1358,7 +1467,8 @@ def seq_deck():
         "option numdgt=12",
         "tran 100u %.12g 0 20u uic" % c["tf"],
         "linearize",
-        "wrdata tb_psu_seq_%s_g%d_out.txt %s" % (ARG.caso, ARG.giro, " ".join(SONDE + sonde_guasto(c))),
+        "wrdata tb_psu_seq_%s_g%d_out.txt %s" % (ARG.caso, ARG.giro, " ".join(
+            SONDE + sonde_guasto(c) + ([] if ARG.timer == "micro" else SONDE_AN))),
         ".endc", ".end"]
     # the switch nodes of the timer deck are RSW3 / RFRONT: none here
     assert not any(r.startswith(("RSW3 ", "RFRONT ")) for r in righe)
