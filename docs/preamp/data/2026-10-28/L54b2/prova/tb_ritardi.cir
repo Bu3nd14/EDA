@@ -1,0 +1,19 @@
+L54b2 prova: i ritardi del TLV1701 (TI, derivato) e di CMPTA (il tarato) sullo stesso passo fine
+* V5 5 V dietro 1 ohm, 10k a V5, IN- 1,25 V; IN+ 1,20 -> 1,35 V a 50 us (fronte di 1 us), -> 1,15 V
+* a 550 us: 100 mV di sovrapilotaggio come in SBOS589D. Passo massimo 5 ns.
+.include /Users/roberto/EDA/.claude/worktrees/L54b2/models/comparator/tlv1701_ngspice.lib
+.include ../psu/cmpta.lib
+vs vs 0 5
+rs vs v5 1
+c5 v5 0 100n
+vref ref 0 1.25
+vin inp 0 pwl(0 1.20 50u 1.20 51u 1.35 550u 1.35 551u 1.15 1m 1.15)
+xt inp ref v5 0 outt TLV1701
+rpt v5 outt 10k
+xc inp ref outc v5 0 CMPTA
+rpc v5 outc 10k
+.control
+tran 1n 1m 0 5n
+wrdata tb_ritardi.csv v(inp) v(outt) v(outc)
+.endc
+.end

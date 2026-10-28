@@ -1818,6 +1818,34 @@ def check_timer(components, pin_net):
         else:
             report.append("timer: ritenuta %s / %s, anodo %s, innesco da %s"
                           % (qn, qp, ep, ", ".join(sorted(feed & logic))))
+            # T6b (L54b2, ADR-103): with V5 at the comparators' 2.2 V minimum and every output
+            # open (the datasheet does not say what they do below it), the trigger node's pull-ups
+            # against its pull-down must keep the NPN base under 0.45 V (BC847 at ~60 C): without
+            # R585 the latch tripped at a cold power-up with the front on
+            def par(rs):
+                g = sum(1.0 / r for r in rs if r)
+                return 1.0 / g if g else None
+            def r_between(a, bset):
+                return par([_ohms(components[r]["value"]) for r, x, y in resistors
+                            if (x == a and y in bset) or (y == a and x in bset)])
+            rbe = r_between(bn, {en_})
+            for t in sorted(feed & logic):
+                rs = r_between(t, {bn})
+                rpu = r_between(t, {"V5"})
+                rpd = r_between(t, set(TIMER_RETURNS))
+                if not (rbe and rs and rpu):
+                    continue
+                vt = 2.2 if rpd is None else 2.2 * rpd / (rpu + rpd)
+                rth = rpu if rpd is None else par([rpu, rpd])
+                vb = vt * rbe / (rth + rs + rbe)
+                if vb > 0.45:
+                    findings.append("timer T6b: con V5 a 2,2 V e le uscite aperte %s arriva a "
+                                    "%.2f V e la base di %s a %.2f V (> 0,45): la ritenuta "
+                                    "scatterebbe all'accensione col frontale acceso (ADR-103)"
+                                    % (t, vt, qn, vb))
+                else:
+                    report.append("timer: innesco %s a %.2f V con V5 a 2,2 V, base di %s a "
+                                  "%.2f V (<= 0,45)" % (t, vt, qn, vb))
 
     # T2: each request at rest with the timer dead
     for n in requests:

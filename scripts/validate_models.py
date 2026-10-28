@@ -1539,6 +1539,87 @@ wrdata {csv} v(outa) v(outb) v(outc)
     return cir, csv, 3, check
 
 
+def tb_tlv1701(model_file):
+    """L54b2: TI's TLV1701 (the TLV1704's die), the faithful derivative and its variant
+    TLV1701_OC, in the circuit they sit in (limitations #76): V5 behind 1 ohm and 100 nF, the output
+    pulled up to V5 by 10k (R573), IN- at the 1.25 V reference. A ramp 1.20 -> 1.30 -> 1.20 V over
+    8 ms (the threshold both ways) and +-100 mV steps (the delays, SBOS589D at 100 mV overdrive:
+    tpHL 460 ns, tpLH 560 ns typical; VOS +-0.3 typ / +-2.5 mV max, the model 0.4 mV). The
+    faithful model alone cannot be taken through 2.19 V of supply (it stops there, limitations
+    #77): the variant does it, two channels in wired-OR on a V5 rising 0 -> 5 V in 2 ms."""
+    csv = os.path.join(SCRATCH_DIR, "comparator_tlv1701.csv")
+    cir = f"""* validate tlv1701_ngspice.lib (TLV1701 and TLV1701_OC in their circuit)
+.include {model_file}
+vin inp 0 pwl(0 1.20 4m 1.30 8m 1.20 9m 1.20 9.001m 1.35 9.5m 1.35 9.501m 1.15 10m 1.15)
+vref ref 0 1.25
+vsa sa 0 5
+rsa sa v5a 1
+c5a v5a 0 100n
+xf inp ref v5a 0 outf TLV1701
+rpf v5a outf 10k
+vsb sb 0 5
+rsb sb v5b 1
+c5b v5b 0 100n
+xo inp ref v5b 0 outo TLV1701_OC
+rpo v5b outo 10k
+vsr sr 0 pwl(0 0 2m 5 10m 5)
+rsr sr v5r 1
+c5r v5r 0 100n
+vlo lo 0 1.0
+vhi hi 0 1.5
+xr1 lo ref v5r 0 outr TLV1701_OC
+xr2 hi ref v5r 0 outr TLV1701_OC
+rpr v5r outr 10k
+rdr outr 0 100k
+.control
+tran 1u 10m 0 20u
+wrdata {csv} v(inp) v(outf) v(outo) i(vsa) i(vsb) v(v5r) v(outr)
+.endc
+.end
+"""
+
+    def cross(rows, key, t0, t1):
+        out = []
+        for a, b in zip(rows, rows[1:]):
+            if t0 <= a["x"] < t1 and (a[key] - 2.5) * (b[key] - 2.5) < 0:
+                f = (2.5 - a[key]) / (b[key] - a[key])
+                out.append((a["x"] + f * (b["x"] - a["x"]), a["y0"] + f * (b["y0"] - a["y0"]),
+                            b[key] > a[key]))
+        return out
+
+    def check(rows):
+        msgs, ok = [], True
+        for name, key, ikey in (("TLV1701", "y1", "y3"), ("TLV1701_OC", "y2", "y4")):
+            ramp = cross(rows, key, 0, 8.5e-3)
+            steps = cross(rows, key, 8.9e-3, 10e-3)
+            if len(ramp) != 2 or len(steps) != 2 or not ramp[0][2] or ramp[1][2]:
+                return False, f"{name}: {len(ramp)} crossings on the ramp, {len(steps)} on the steps (2 and 2 expected)"
+            thr = [(v - 1.25) * 1e3 for _, v, _ in ramp]
+            # the input edges are 1 us long: the crossing of the 1.2496 V threshold is at 1/3 of
+            # the rising one and 1/2 of the falling one
+            tplh = (steps[0][0] - 9.0003e-3) * 1e9
+            tphl = (steps[1][0] - 9.5005e-3) * 1e9
+            lo = [r for r in rows if 0.5e-3 < r["x"] < 1.5e-3]
+            hi = [r for r in rows if 3.5e-3 < r["x"] < 4.5e-3]
+            vol = sum(r[key] for r in lo) / len(lo)
+            iq = -sum(r[ikey] for r in hi) / len(hi) * 1e6
+            good = (all(abs(t + 0.4) <= 0.5 for t in thr) and 250 <= tplh <= 800 and 250 <= tphl <= 800
+                    and vol < 0.2 and 50 <= iq <= 60)
+            ok = ok and good
+            msgs.append(f"{name}: threshold {thr[0]:+.2f} / {thr[1]:+.2f} mV (model VOS -0.4), "
+                        f"tpLH {tplh:.0f} ns, tpHL {tphl:.0f} ns (SBOS589D 560 / 460 typ), "
+                        f"VOL {vol * 1e3:.0f} mV at 0.5 mA, Iq {iq:.1f} uA")
+        up = [r for r in rows if r["y5"] > 2.3]
+        dn = [r for r in rows if 0.9 < r["y5"] < 1.1]
+        good = bool(up) and bool(dn) and max(r["y6"] for r in up) < 0.2 and min(r["y6"] / r["y5"] for r in dn) > 0.85
+        ok = ok and good
+        msgs.append(f"TLV1701_OC wired-OR on a rising V5: open at V5 ~1 V (out/V5 >= "
+                    f"{min(r['y6'] / r['y5'] for r in dn) if dn else float('nan'):.3f}), sinking above 2.3 V "
+                    f"(max {max(r['y6'] for r in up) * 1e3 if up else float('nan'):.0f} mV)")
+        return ok, "; ".join(msgs)
+    return cir, csv, 7, check
+
+
 # ---------------------------------------------------------------------
 # L29b - the mute-graduale candidates (ADR-037, then ADR-038). Single op
 # with one instance per point: the VTL5C4 behavioural model does NOT
@@ -1870,6 +1951,8 @@ def build_registry():
     reg["subckt_generic/generic_transformer.lib"] = lambda p: tb_transformer(p)
     # L45d2b3a - TI's U501 model, run in ngspice (limitations #72).
     reg["ldo_regulator/tps7a4701_ngspice.lib"] = lambda p: tb_tps7a4701(p)
+    # L54b2 - TI's TLV1701 (the TLV1704's die) and its variant TLV1701_OC (limitations #77).
+    reg["comparator/tlv1701_ngspice.lib"] = lambda p: tb_tlv1701(p)
     return reg
 
 

@@ -837,7 +837,13 @@ if __name__ == "__main__":
     # The fault: AT_F, 100k / 330 nF from V5, emptied while not armed (fa),
     # with the mains gone (AT_MD) or with power good (fc). High = a rail or
     # VRELAY_REG out, the mains present, armed: through 47k into the latch's
-    # NPN base (~0.9 V, ~6.6 ms).
+    # NPN base. R585 (ADR-103) holds AT_F down while V5 comes up and the
+    # comparators' outputs may still be open (below their 2.2 V minimum the
+    # datasheet does not say what they do): without it AT_F followed V5 and
+    # tripped the latch at a cold power-up with the front on (the base at
+    # 1.03 V; with R585 0.30 V, L54b2). High, AT_F now tends to 1.24 V
+    # instead of 5 V: the latch trips ~2.7 ms later (K501 131.8 instead of
+    # 129.1 ms with the rail - fault on the bench).
     quad("U515", ((VREF, FRONT_IN, AT_ON),    # front switch off
                   (AT_MT, VREF, MAINS_REQ),
                   (AT_T2S, VREF, AT_F),       # not armed
@@ -855,6 +861,7 @@ if __name__ == "__main__":
     diode("BAT54", "D541", AT_T2S, AT_ON)
     res("100k", "R581", V5, AT_F)
     cap("330n", "C553", AT_F, RET, FP_C1206)
+    res("33k", "R585", AT_F, RET)  # ADR-103: AT_F low while V5 comes up
     res("47k", "R582", AT_F, AT_BN)
     # The latch (ADR-102 point 2; ADR-048 point 5): BC847 + BC857 as a
     # thyristor, its anode on AT_ON. Tripped, it holds AT_ON at ~0.8 V - mute,

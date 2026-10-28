@@ -1,0 +1,21 @@
+L54b2 prova: il TLV1701 del costruttore da solo, alimentato come nel temporizzatore
+* V5 = 5 V dietro 1 ohm (non una sorgente ideale sul piedino), uscita a 10 k verso V5 (R573),
+* IN- al riferimento 1,25 V; IN+ una rampa lenta 1,20 -> 1,30 -> 1,20 V (la soglia, i due sensi)
+* e poi un gradino di +-100 mV (i ritardi di propagazione).
+.include ../../../../../../models/comparator/tlv1701_ngspice.lib
+vs vs 0 5
+rs vs v5 1
+c5 v5 0 100n
+vref ref 0 1.25
+vin inp 0 pwl(0 1.20 4m 1.30 8m 1.20 9m 1.20 9.001m 1.35 9.5m 1.35 9.501m 1.15 10m 1.15)
+xu inp ref v5 0 out TLV1701
+rpu v5 out 10k
+.control
+op
+print v(out) v(v5) -i(vs)
+tran 1u 10m 0 20u
+wrdata prova/tb_tlv1701_solo.csv v(inp) v(out) i(vs)
+let nrows = length(time)
+print nrows
+.endc
+.end

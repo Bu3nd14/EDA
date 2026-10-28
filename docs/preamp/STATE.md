@@ -13,17 +13,41 @@ fino al 2026-10-26, con tutta la loro storia, sono in `STATE-STORIA.md`.
 
 | | |
 |---|---|
-| Ultimo aggiornamento | **2026-10-28** (dopo L54b1, su richiesta dell'utente: `STATE.md` ristrutturato da 6159 righe al solo stato vivo; il diario oltre le ultime tre voci e le sezioni non più vere al presente spostati parola per parola in `STATE-STORIA.md`; nessun circuito, nessuna voce aperta o chiusa) |
-| Ultimo lotto chiuso | **L54b1** — il temporizzatore a comparatori nel sorgente (2026-10-26). `circuits/preamp/psu.py` (U513–U515, C545–C555, R569–R584, D533–D541, Q513 / Q514; fuori U509, C534, J515, R543–R547), `firmware/` tolto, `check_relay_safe_state.py --timer` (T0–T6) e `check_psu_harness.py` riscritti, `psu_draw.py` / `psu_blocks_draw.py`, il banco `data/2026-10-26/L54b1/psu/genera_tb_psu.py --timer sorgente`. Report `reports/2026-10-26-L54b1-temporizzatore-sorgente.md` |
-| **Prossimo lotto** | **L54b2 — il temporizzatore sul sorgente: il modello del costruttore, lo standby, la catena al jack** (ADR-102; con NC-037; prompt in `NEXT-SESSION.md`): i comparatori col modello di TI contro il comportamentale sui casi della sicurezza, i pull-up delle uscite tenute basse alimentati solo da acceso, lo spegnimento al jack in dB SPL. Poi **L54b3**, la robustezza al banco (disturbi di rete, fronti veloci, rimbalzi, tolleranze, temperatura). Poi l'ordine deciso con l'utente verso G1 (dopo L45d2b3b2a): L55, L58, il dossier rigenerato una volta (**L64**), la revisione (**L65**), G1 |
-| Non conformità | **17 aperte, 1 bloccante** (L54b1, 2026-10-26: nessuna aperta o chiusa, NC-037 in L54b2). Il registro è `NONCOMPLIANCE.md` |
+| Ultimo aggiornamento | **2026-10-28** (L54b2: il modello di TI dei comparatori non passa l'accensione del banco, i comparatori tarati su di esso; R585 sull'innesco della ritenuta; lo standby com'è; la catena al jack in dB SPL; ADR-103; nessuna voce aperta o chiusa) |
+| Ultimo lotto chiuso | **L54b2** — il temporizzatore sul sorgente: i comparatori, l'innesco della ritenuta, lo standby, la catena al jack (2026-10-28). `models/comparator/` (il TLV1701 di TI per ngspice, `genera_tlv1701.py`, ricetta `tb_tlv1701`), `circuits/preamp/psu.py` (R585), `check_relay_safe_state.py` (T6b), `psu_draw.py`, il banco `data/2026-10-28/L54b2/psu/` (`--comparatore tarato`, `--rfpd`, `--standby`), il ponte `--passata-unica`. ADR-103. Report `reports/2026-10-28-L54b2-temporizzatore-sul-sorgente.md` |
+| **Prossimo lotto** | **L54b3 — la robustezza del temporizzatore al banco** (prompt in `NEXT-SESSION.md`): la rete sporca, i fronti veloci contro la ritenuta, i rimbalzi, il Monte Carlo sulle tolleranze, 0 / 60 °C, col comparatore tarato (ADR-103). Poi l'ordine deciso con l'utente verso G1: L55, L58, il dossier rigenerato una volta (**L64**), la revisione (**L65**), G1 |
+| Non conformità | **17 aperte, 1 bloccante** (L54b2, 2026-10-28: nessuna aperta o chiusa; NC-037 avanza, lo standby 116,1 / 130,1 / 144,2 mW per scelta dell'utente, la strada da 71,5 / 80,5 / 89,7 mW misurata). Il registro è `NONCOMPLIANCE.md` |
 | Le bloccanti | Per **G1**: **nessuna bloccante** (L54a, 2026-10-26); da chiudere prima di G1 per decisione dell'utente: **NC-055, NC-072** (maggiori) e NC-056 (minore) — NC-054 chiusa; NC-073 e NC-075 (maggiori) alla scelta della parte. Per **G2**: NC-044 (L50) |
-| Suite | `run_tests.sh` **14 passed / 0 failed** a fine L54b1 (2026-10-26, dal worktree; il blocco 2k del firmware è uscito col firmware; il 2e e il 2j col temporizzatore a comparatori; il 2d 166 su 166) |
+| Suite | `run_tests.sh` **14 passed / 0 failed** a fine L54b2 (2026-10-28, dal worktree; il 2d 167 su 167, il 2e con T6b); `validate_models.py` 69 / 69 (il TLV1701) |
 
 ## Diario degli ultimi lotti
 
 Le ultime tre voci. Le più vecchie sono in `STATE-STORIA.md`, nello stesso ordine (la più recente
 in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quella sezione.
+
+### L54b2 — il temporizzatore sul sorgente: i comparatori, l'innesco della ritenuta, lo standby, la catena al jack (2026-10-28)
+
+- **Il modello di TI del TLV1701** per ngspice (`models/comparator/`, generato dal file di
+  `vendor/`, ricetta `tb_tlv1701`): da solo torna col datasheet (tpLH 574 / tpHL 460 ns, soglia allo
+  scostamento di 0,4 mV) e col file di TI nel modo `psa`. Il «DO NOT USE» di L41a era la traduzione
+  degli interruttori di PSpice (limitations #77). Sul banco dell'alimentatore non passa
+  l'accensione: la scelta dell'utente, **«Comportamentale tarato»** (`CMPTA`, ADR-103).
+- **I casi della sicurezza**, tarato contro comportamentale sullo stesso sorgente, dodici e diciotto
+  canali: **tutti i verdetti uguali**; gli istanti fino a +0,3 ms (il guadagno) e +0,8 ms (un jack coi
+  diciotto canali), oltre il limite scritto: metà dalla resistenza d'uscita, provato.
+- **L'innesco della ritenuta all'accensione** (scoperto): con le uscite aperte sotto 2,2 V la
+  ritenuta scattava all'accensione a freddo col frontale acceso; il comportamentale lo nascondeva
+  con 0,1 V (limitations #78). **R585 33 kΩ** dall'innesco al ritorno, scelta dell'utente: la base a
+  0,30 V, la ritenuta 2,7 ms più tarda, R550 7,80 / 9,52 J (+1,9 %). Nel sorgente, nello schematico
+  (167 / 167), nel caso noto strutturale (48 / 48), nel controllo dei relè (T6b).
+- **Lo standby**: la strada che regge (5 V da acceso tenuti da K501) 71,5 / 80,5 / 89,7 mW; la scelta
+  dell'utente **«Lasciare com'è»**: 116,1 / 130,1 / 144,2 mW. NC-037 aperta.
+- **La catena al jack** (il ponte di L41c con `--passata-unica`): lo spegnimento dal frontale
+  −55,2 dB SPL, la perdita di rete −55,3 a rete 0 %, **+4,4 a −10 %** (i regolatori escono di
+  regolazione 2,4 ms prima dello stacco: la frase di ADR-102 sul rail non vale a −10 %). Tutto sotto
+  la soglia di V2. Le cifre del dossier (33,9 / 39,2 nV) erano già superate da L56: le rifà L64.
+- `run_tests.sh` 14 / 0, `validate_models.py` 69 / 69. Report
+  `reports/2026-10-28-L54b2-temporizzatore-sul-sorgente.md`; dati `data/2026-10-28/L54b2/`.
 
 ### L54b1 — il temporizzatore a comparatori nel sorgente (2026-10-26)
 
@@ -59,34 +83,6 @@ in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quel
   prototipo solo ciò che non si simula, detto per nome.
 - **Dopo**: **L54b**, il prompt di `NEXT-SESSION.md`.
 
-### L54a — il micro, lo standby e lo spegnimento morbido, riesaminati coi numeri (2026-10-25 / 26)
-
-Report `reports/2026-10-26-L54a-micro-standby.md`, dati `data/2026-10-25/L54a/` (README). Decisione
-**ADR-102**. Due sessioni (la prima interrotta al limite d'uso, ripresa dal ramo pushato).
-
-- **All'inizio**: L54 diviso dall'utente, **«Due parti»** — L54a i numeri, la scelta e l'ADR, L54b il
-  sorgente.
-- **Il banco**: quello dell'alimentatore di L45d2b3b1, copiato; il caso noto `f_d530_corto_muss` col deck
-  uguale salvo i percorsi e le uscite del firmware byte-identiche. Esteso con `--timer comparatori |
-  diretto` (il temporizzatore analogico `TIMER_AN`, solo sul banco), `--rete`, `--tss`, `--sonda-t2`,
-  `--vrelay-da t1` e i casi `fredda`, `accensione_u501`, `ritenuta_frontale`; i deck del micro non
-  cambiano.
-- **Il temporizzatore**: dodici canali di comparatore (alimentazione buona su quattro canali nuovi, il
-  rilascio dopo 0,57 s, il nodo filtrato del tasto e del frontale, `PERMIT_REQ` ~24 ms dopo, K501 ~84 ms
-  dopo il permissivo, l'armamento di ~1,9 s, la ritenuta a due transistor). Sei correzioni dalle corse
-  (README), fra cui un blocco reciproco con D522 che teneva i jack staccati.
-- **I numeri**: i jack uguali nelle tre opzioni (17,4 ms alla perdita di rete, alle tre reti); il
-  controfattuale senza Δ fallisce come deve; coi comparatori il sorvegliante cieco muta in < 0,5 ms (il
-  firmware 2,2), R550 7,7 / 9,3 J nel corto di C509 (il micro 7,2 / 8,8), R552 0,47 / 0,54 J, il timeout a
-  2,05 s, la ritenuta azzerata dal frontale; lo standby 117 / 130 / 145 mW (il micro ~76 / 85 / 95); in
-  musica −25 mW, telaio 57,2 °C. **Senza standby niente stacca il corto di C509**: R550 a 83–102 W.
-- **Una ricognizione** (agente di sola lettura) di quanto la FMEA chiedeva al firmware: staccare K501, la
-  ritenuta, buco contro guasto, il timeout, la riserva del sorvegliante cieco, la diagnosi di L58. La
-  diagnosi resta da fare in hardware in L58.
-- **La scelta dell'utente**: **«Comparatori, con lo standby»** fra quattro opzioni coi numeri. ADR-102;
-  ADR-048 p. 6 e ADR-049 (il micro) superate, ADR-073 superata. **NC-054 chiusa**; NC-037: T2 a vuoto
-  ≤ 0,35 W.
-- **Dopo**: **L54b — il temporizzatore a comparatori nel sorgente**, prompt in `NEXT-SESSION.md`.
 
 ## Come si lavora da qui: a lotti piccoli e pushati
 
@@ -258,8 +254,8 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L54a | **I numeri, la scelta, l'ADR** (NC-054). **Fatto** (2026-10-26): il banco dell'alimentatore di L45d2b3b1 col caso noto uguale; il temporizzatore a comparatori (`TIMER_AN`, dodici canali, la ritenuta a due transistor) con e senza lo standby, contro il micro, sui casi di L41c, della FMEA e del consumo, alle tre reti; la scelta dell'utente **«Comparatori, con lo standby»** (ADR-102); NC-054 chiusa, NC-037 a ≤ 0,35 W | M | NC-054, NC-037 | **fatto** |
 | L54b | **Il temporizzatore a comparatori nel sorgente** (ADR-102): `psu.py` coi valori di `TIMER_AN`, U509 / J515 / R543–R547 e `firmware/preamp_timer/` fuori, `run_tests.sh` (il 2e `--timer`, il test del firmware), i disegni; i casi di L54a rifatti sul sorgente col modello del costruttore dei comparatori, la catena al jack dello spegnimento; i pull-up dello standby (NC-037); **la robustezza al banco** (richiesta dell'utente dopo L54a: la rete sporca, i disturbi veloci, i rimbalzi, il Monte Carlo sulle tolleranze, 0 / 60 °C — il primo prototipo deve essere usabile) | M | NC-037 | diviso dall'utente all'inizio, «Tre parti»: L54b1, L54b2, L54b3 |
 | L54b1 | **Il sorgente, i guardiani, i disegni, il banco sul sorgente** (ADR-102). **Fatto** (2026-10-26): `psu.py` col temporizzatore (U513–U515, Q513 / Q514), il micro e il firmware fuori; `--timer` T0–T6 e il cablaggio, 23 falsi; lo schematico e il diagramma a blocchi; `genera_tb_psu.py --timer sorgente`, il caso noto torna (report `2026-10-26-L54b1-temporizzatore-sorgente.md`) | M | — | **fatto** |
-| L54b2 | **Il modello del costruttore, lo standby, la catena al jack** (ADR-102): i comparatori col modello di TI contro il comportamentale sui casi della sicurezza; i pull-up delle uscite tenute basse alimentati solo da acceso (contro 116,1 / 130,1 / 144,2 mW); lo spegnimento dal frontale e la perdita di rete al jack in dB SPL | M | NC-037 | da fare — **il prossimo**; prompt in `NEXT-SESSION.md` |
-| L54b3 | **La robustezza del temporizzatore al banco** (richiesta dell'utente dopo L54a): la rete sporca, i fronti veloci contro la ritenuta, i rimbalzi, il Monte Carlo sulle tolleranze, 0 / 60 °C; il testo del prompt nel report di L54b1, §«Per L54b3» | M | — | da fare — dopo L54b2 |
+| L54b2 | **Il modello del costruttore, lo standby, la catena al jack** (ADR-102) | M | NC-037 | **fatto** (2026-10-28): il TLV1701 di TI per ngspice torna da solo ma non passa l'accensione del banco, i comparatori tarati su di esso («Comportamentale tarato»), i casi della sicurezza coi verdetti uguali; R585 sull'innesco della ritenuta («Resistenza verso il ritorno»); lo standby com'è («Lasciare com'è»); la catena al jack −55,2 / −55,3 dB SPL, +4,4 a rete −10 %; ADR-103. Report `reports/2026-10-28-L54b2-temporizzatore-sul-sorgente.md` |
+| L54b3 | **La robustezza del temporizzatore al banco** (richiesta dell'utente dopo L54a): la rete sporca, i fronti veloci contro la ritenuta, i rimbalzi, il Monte Carlo sulle tolleranze, 0 / 60 °C; il testo del prompt nel report di L54b1, §«Per L54b3» | M | — | da fare — **il prossimo**; prompt in `NEXT-SESSION.md` |
 | L55 | **Il dispositivo d'uscita del blocco** (NC-056): un dispositivo di taglia driver col modello del costruttore contro il MJE15032/33 sul banco del blocco (V1, V4, PSRR, slew, calore), con T7 e T8 | M | NC-056 | da fare — dopo L54b3 e dopo L56 (tocca anche il VAS), prima di G1 |
 | L64 | **Il dossier rigenerato, una volta sola, quando il circuito smette di cambiare prima di G1** (decisione dell'utente dopo L45d2b3b2a, 2026-10-22, «si mi va bene»): `build_dossier.py` e le sue sezioni sul progetto di allora. L'ultimo è di L51 (2026-10-10); da lì non mostra l'inseguitore e l'aiuto dello specchio (L56), il rivelatore tolto e il condensatore della Stax (L60), i diodi del moltiplicatore e dei finali (L62, ADR-095), l'alimentatore di ADR-091…094, R153 sdoppiata (ADR-097), i rimedi del calore e i dissipatori (ADR-099), gli schematici completi (L63), la FMEA con le misure adottate (L45d2b3b3). Una rigenerazione intermedia solo se l'utente vuole guardare il progetto prima | M | — | da fare — dopo l'ultimo lotto che tocca il sorgente prima di G1 (L45d2b3b2b, L57, L54, L55, L58) e dopo L45d2b3b3 |
 | L65 | **La revisione del dossier rigenerato**, prima del gate (come L42 → L43 e L51 → L52): la forma — l'architetto avversariale cieco, la lettura dell'utente, o tutte e due — si decide con l'utente all'apertura | S/M | — | da fare — dopo L64, prima di G1 |

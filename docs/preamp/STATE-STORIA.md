@@ -18,6 +18,35 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L54a — il micro, lo standby e lo spegnimento morbido, riesaminati coi numeri (2026-10-25 / 26)
+
+Report `reports/2026-10-26-L54a-micro-standby.md`, dati `data/2026-10-25/L54a/` (README). Decisione
+**ADR-102**. Due sessioni (la prima interrotta al limite d'uso, ripresa dal ramo pushato).
+
+- **All'inizio**: L54 diviso dall'utente, **«Due parti»** — L54a i numeri, la scelta e l'ADR, L54b il
+  sorgente.
+- **Il banco**: quello dell'alimentatore di L45d2b3b1, copiato; il caso noto `f_d530_corto_muss` col deck
+  uguale salvo i percorsi e le uscite del firmware byte-identiche. Esteso con `--timer comparatori |
+  diretto` (il temporizzatore analogico `TIMER_AN`, solo sul banco), `--rete`, `--tss`, `--sonda-t2`,
+  `--vrelay-da t1` e i casi `fredda`, `accensione_u501`, `ritenuta_frontale`; i deck del micro non
+  cambiano.
+- **Il temporizzatore**: dodici canali di comparatore (alimentazione buona su quattro canali nuovi, il
+  rilascio dopo 0,57 s, il nodo filtrato del tasto e del frontale, `PERMIT_REQ` ~24 ms dopo, K501 ~84 ms
+  dopo il permissivo, l'armamento di ~1,9 s, la ritenuta a due transistor). Sei correzioni dalle corse
+  (README), fra cui un blocco reciproco con D522 che teneva i jack staccati.
+- **I numeri**: i jack uguali nelle tre opzioni (17,4 ms alla perdita di rete, alle tre reti); il
+  controfattuale senza Δ fallisce come deve; coi comparatori il sorvegliante cieco muta in < 0,5 ms (il
+  firmware 2,2), R550 7,7 / 9,3 J nel corto di C509 (il micro 7,2 / 8,8), R552 0,47 / 0,54 J, il timeout a
+  2,05 s, la ritenuta azzerata dal frontale; lo standby 117 / 130 / 145 mW (il micro ~76 / 85 / 95); in
+  musica −25 mW, telaio 57,2 °C. **Senza standby niente stacca il corto di C509**: R550 a 83–102 W.
+- **Una ricognizione** (agente di sola lettura) di quanto la FMEA chiedeva al firmware: staccare K501, la
+  ritenuta, buco contro guasto, il timeout, la riserva del sorvegliante cieco, la diagnosi di L58. La
+  diagnosi resta da fare in hardware in L58.
+- **La scelta dell'utente**: **«Comparatori, con lo standby»** fra quattro opzioni coi numeri. ADR-102;
+  ADR-048 p. 6 e ADR-049 (il micro) superate, ADR-073 superata. **NC-054 chiusa**; NC-037: T2 a vuoto
+  ≤ 0,35 W.
+- **Dopo**: **L54b — il temporizzatore a comparatori nel sorgente**, prompt in `NEXT-SESSION.md`.
+
 ### Dopo L57b — il modello del costruttore del BAV199 (2026-10-25)
 
 Report `reports/2026-10-25-dopo-L57b-modello-bav199.md`, dati `data/2026-10-25/dopo-L57b/` (README,

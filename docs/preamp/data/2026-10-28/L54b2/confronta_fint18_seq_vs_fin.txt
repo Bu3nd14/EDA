@@ -1,0 +1,26 @@
+accensione             ok   jack +0.00 gain +0.00 v106 +0.00 k501 +0.00 mus -2.30
+rilascio               ok   jack +0.00 gain +0.00 mus -0.10
+spegnimento_l          ok   jack +0.10 gain +0.10 v106 +0.00 k501 +0.50
+buco20                 NO   t_gain_ms 55.50 -> 55.80 ms (limite 0.28); t_mus_ms 541.30 -> 537.20 ms (limite 2.71)
+buco200                NO   t_gain_ms 55.50 -> 55.80 ms (limite 0.28)
+guasto                 NO   t_jack_ms 15.60 -> 15.80 ms (limite 0.10); t_gain_ms 53.70 -> 54.00 ms (limite 0.27)
+perdita                NO   t_gain_ms 55.50 -> 55.80 ms (limite 0.28)
+perdita_min            ok   jack +0.00 gain +0.20 v106 +0.00 k501 +0.10
+guasto_u501            NO   t_jack_ms 48.10 -> 48.60 ms (limite 0.24)
+guasto_u503            ok   jack +0.10 gain -0.10 v106 +0.00 k501 -0.10
+guasto_u503_min        NO   t_jack_ms 17.50 -> 17.70 ms (limite 0.10)
+cf_nodelta             ok   jack +0.10 gain +0.10 v106 +0.00 k501 +0.00
+fredda                 ok   jack +0.00 gain +0.00 v106 +0.00 k501 +0.00 mus -2.40
+accensione_u501        ok   jack +0.00 gain +0.00 v106 +0.00 k501 +0.00
+ritenuta_frontale      NO   t_jack_ms 15.60 -> 15.80 ms (limite 0.10); t_gain_ms 53.70 -> 54.00 ms (limite 0.27); vplus_end 11.184 -> 10.698
+fredda_u501            ok   jack +0.00 gain +0.00 v106 +0.00 k501 +0.00
+accensione             ok   jack +0.00 gain +0.00 v106 +0.00 k501 +0.00 mus -2.40
+accensione             ok   jack +0.00 gain +0.00 v106 +0.00 k501 +0.00 mus -2.40
+perdita                NO   t_gain_ms 55.40 -> 55.70 ms (limite 0.28)
+perdita                NO   t_gain_ms 55.60 -> 55.90 ms (limite 0.28)
+buco20                 NO   t_mus_ms 541.50 -> 537.50 ms (limite 2.71)
+buco20                 NO   t_gain_ms 55.60 -> 55.90 ms (limite 0.28); t_mus_ms 541.10 -> 537.00 ms (limite 2.71)
+buco200                NO   t_gain_ms 55.40 -> 55.70 ms (limite 0.28)
+buco200                NO   t_gain_ms 55.60 -> 55.90 ms (limite 0.28)
+
+il caso noto NON TORNA; scarto peggiore 2.08 del limite
