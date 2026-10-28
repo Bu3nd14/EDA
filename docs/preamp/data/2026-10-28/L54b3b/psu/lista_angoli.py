@@ -11,9 +11,9 @@ import os
 import sys
 
 PERDITE = {
-    0: "D538:5.5e-9,D535:2.9e-9,D536:2.9e-9,D541:2.9e-9,D533:0.4e-6,D534:0.4e-6,D537:0.4e-6",
-    25: "D538:25e-9,D535:5e-9,D536:5e-9,D541:5e-9,D533:2e-6,D534:2e-6,D537:2e-6",
-    60: "D538:210e-9,D535:11e-9,D536:11e-9,D541:11e-9,D533:19e-6,D534:19e-6,D537:19e-6",
+    0: "D538:5.5e-9,D535:2.9e-9,D536:2.9e-9,D541:2.9e-9,D533:0.4e-6,D534:2.9e-9,D537:0.4e-6",
+    25: "D538:25e-9,D535:5e-9,D536:5e-9,D541:5e-9,D533:2e-6,D534:5e-9,D537:2e-6",
+    60: "D538:210e-9,D535:11e-9,D536:11e-9,D541:11e-9,D533:19e-6,D534:11e-9,D537:19e-6",
 }
 BASE = "--n2n7002 ds --tss 3.0 --ritenuta costruttore --bat54 costruttore --sonde-piu"
 # corner name -> [(case, mains factors, comparator)]
@@ -32,13 +32,15 @@ CASI = {
 }
 m, ip = sys.argv[1], sys.argv[2]
 temps = [int(x) for x in (sys.argv[3] if len(sys.argv) > 3 else "0,25,60").split(",")]
+# [prefisso]: before the label (v_: the runs on the source after ADR-105)
+pre = sys.argv[4] if len(sys.argv) > 4 else ""
 for t in temps:
     for nome, usi in CASI.items():
         f = os.path.join(m, "toll_%s_t%d_%s.json" % (ip, t, nome))
         assert os.path.exists(f), f
         for caso, reti, cmp_ in usi:
             for r in reti:
-                et = "%s_t%d_%s%s%s" % (ip, t, nome, "" if r is None else "_m10" if r < 1 else "_p10",
+                et = "%s%s_t%d_%s%s%s" % (pre, ip, t, nome, "" if r is None else "_m10" if r < 1 else "_p10",
                                         "_22" if cmp_ == "tarato22" else "")
                 print("%s %s sorgente %s --comparatore %s --temp %d --perdita %s%s --toll %s"
                       % (caso, et, BASE, cmp_, t, PERDITE[t],
