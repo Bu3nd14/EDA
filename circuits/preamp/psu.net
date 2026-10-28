@@ -2,7 +2,7 @@
   (version "D")
   (design
     (source "psu.py")
-    (date "10/26/2026 11:57 AM")
+    (date "10/28/2026 12:07 PM")
     (tool "SKiDL (2.3.0)")
     (sheet
       (number 1)
@@ -13,7 +13,7 @@
         (company)
         (rev)
         (date)
-        (source "../../psu.py")
+        (source "../../../../../../.claude/jobs/185f13c2/tmp/skidl/psu.py")
         (comment
           (number "1")
           (value ""))
@@ -3739,6 +3739,30 @@
       (component_classes)
       (tstamps "004c6c29-8b1f-5c1d-ba4b-af6f07e16279"))
     (comp
+      (ref "R585")
+      (value "33k")
+      (description "Resistor")
+      (footprint "Resistor_SMD:R_0805_2012Metric")
+      (fields
+        (field
+          (name "Description") "Resistor")
+        (field
+          (name "Footprint") "Resistor_SMD:R_0805_2012Metric")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "R585")
+        (field
+          (name "SKiDL Line") "psu.py:198"))
+      (libsource
+        (lib "Device")
+        (part "R"))
+      (sheetpath
+        (names "/")
+        (tstamps "/"))
+      (component_classes)
+      (tstamps "4d008265-d228-5c53-90cb-19b210f382f1"))
+    (comp
       (ref "U501")
       (value "TPS7A4701 15.3V")
       (description "1A, Low-Noise Low-Dropout Voltage Regulator, 3-35V Input, Adjustable 1.4-34V Output, VQFN-20")
@@ -4121,6 +4145,10 @@
         (pintype "PASSIVE"))
       (node
         (ref "R582")
+        (pin "1")
+        (pintype "PASSIVE"))
+      (node
+        (ref "R585")
         (pin "1")
         (pintype "PASSIVE"))
       (node
@@ -5293,6 +5321,10 @@
         (pintype "PASSIVE"))
       (node
         (ref "R583")
+        (pin "2")
+        (pintype "PASSIVE"))
+      (node
+        (ref "R585")
         (pin "2")
         (pintype "PASSIVE"))
       (node

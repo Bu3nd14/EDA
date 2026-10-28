@@ -7,7 +7,7 @@ DERIVED DOCUMENTATION, NOT A SOURCE OF TRUTH. The topology lives in
 circuits/preamp/psu.py; this file only draws circuits/preamp/psu.net. If the two
 disagree, fix this drawing (or the topology at its source) - never the checks.
 
-Every one of the parts is drawn (166 since L54b1), every pin the netlist connects is a
+Every one of the parts is drawn (167 since L54b2), every pin the netlist connects is a
 terminal, every unconnected pin of an integrated circuit carries its cross.
 How the drawing is kept honest is in sheet_kit.py: wires only between nodes of
 one net, no short in the picture, a name on every island of a net drawn in
@@ -718,6 +718,9 @@ f_c = node("at_f_c", "AT_F", (XB3, 17.6))
 W(f_b, f_c)
 hang("C553", "AT_F", (XB3 + 1.6, 17.6), 2.0, side="r")
 W(f_c, N("C553", "AT_F"))
+# R585 (ADR-103): AT_F held down while V5 comes up
+hang("R585", "AT_F", (XB3 + 3.2, 20.6), 2.0, side="r")
+W(f_b, N("R585", "AT_F"))
 lab(f_c, "left")
 two("R582", {"AT_F": (XB3, 17.6), "AT_BN": (XB3, 15.0)}, side="l")
 # the latch (ADR-102 point 2): Q514 (PNP, its emitter the anode on VRELAY_EN) and Q513 (NPN,
