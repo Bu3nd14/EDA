@@ -299,12 +299,22 @@ ap.add_argument("--timer", choices=("micro", "comparatori", "diretto", "sorgente
 # calibrated on TI's model - the user's choice in L54b2, «Comportamentale tarato». Only with --timer
 # sorgente; comportamentale leaves the deck as it was
 ap.add_argument("--comparatore", choices=("comportamentale", "costruttore", "costruttore18",
-                                          "tarato", "tarato18"),
+                                          "tarato", "tarato18", "tarato22"),
                 default="comportamentale")
+# (tarato22: the twelve channels of U513-U515 with CMPTA22, CMPTA whose outputs come alive at the
+# TLV170x's 2.2 V minimum supply instead of 2.0 V - the worst power-up)
 # L54b2: a remedy on the bench, not in the source: a pull-down from AT_F (the latch's trigger node)
 # to RLY_RET, so that with the comparators' outputs open below their minimum supply (the calibrated
 # model; the datasheet does not say) AT_F cannot reach the latch's threshold while V5 comes up
 ap.add_argument("--rfpd", default=None)
+# L54b2: the standby options of NC-037 on the bench, not in the source. The pull-ups of the outputs
+# held low in standby (R573 MUTE_REQ, R575 PERMIT_REQ, R576 VRELAY_EN, R579 MAINS_REQ, and those that
+# follow: R524 PERMIT_G, R537 VR_G): v5on = from V5_ON, a P-MOS (AO3401A, MPGEN as Q505) from V5
+# with its gate on FRONT_SW (R518 to V5: off with the front open, on with it closed); alti = the
+# same at ten times the value, except R576 (L54a had to bring it to 10k: at 47k the node sat at
+# 3.3 V); v5on_alti = both
+ap.add_argument("--standby", choices=("oggi", "v5on", "alti", "v5on_alti"), default="oggi")
+STANDBY_PU = ("R573", "R575", "R576", "R579", "R524", "R537")
 # L54a: a mains factor on ANY sequence case (holes included), e.g. 0.9 / 1.1 (the case's own
 # "fattore", accensione_m10's, if any, is refused together with this)
 ap.add_argument("--rete", type=float, default=None)
@@ -642,7 +652,8 @@ def element(ref, c):
         # L54b1: the TLV1704 of ADR-102 on the LM339 symbol (SBOS589D p. 5): channels a-d =
         # (+, -, out) 5 4 2, 7 6 1, 9 8 14, 11 10 13; V+ 3, V- 12. The same CMPOD as TIMER_AN's
         v, g = pn(ref, "3"), pn(ref, "12")
-        m = {"comportamentale": "CMPOD", "tarato": "CMPTA", "tarato18": "CMPTA"}.get(ARG.comparatore, "CMPTI")
+        m = {"comportamentale": "CMPOD", "tarato": "CMPTA", "tarato18": "CMPTA",
+             "tarato22": "CMPTA22"}.get(ARG.comparatore, "CMPTI")
         return ["X%s%s %s %s %s %s %s %s" % (ref, u, pn(ref, a), pn(ref, b), pn(ref, o), v, g, m)
                 for u, (a, b, o) in zip("abcd", (("5", "4", "2"), ("7", "6", "1"),
                                                  ("9", "8", "14"), ("11", "10", "13")))]
@@ -1423,6 +1434,37 @@ def sonde_an():
     return [s for s in SONDE_AN if not (ARG.timer == "sorgente" and s == "v(at_on)")]
 
 
+def standby_righe():
+    """L54b2 --standby: the extra lines (the switch); the pull-ups' own lines are rewritten by
+    standby_sostituisci."""
+    return [] if ARG.standby == "oggi" else (
+        ["MSTBY v5_on %s %s %s MPGEN W=28000u L=1u" % (pn("R518", "2"), pn("R518", "1"), pn("R518", "1"))]
+        if ARG.standby.startswith("v5on") else [])
+
+
+def standby_sostituisci(righe):
+    if ARG.standby == "oggi":
+        return righe
+    assert ARG.timer == "sorgente", "--standby solo con --timer sorgente"
+    assert (pn("R518", "1"), pn("R518", "2")) == ("v5", "front_sw"), (pn("R518", "1"), pn("R518", "2"))
+    out, visti = [], set()
+    for r in righe:
+        p = r.split()
+        if p and p[0][1:] in STANDBY_PU and p[0].startswith("R"):
+            ref = p[0][1:]
+            assert p[1] == "v5", r
+            if ARG.standby.startswith("v5on"):
+                p[1] = "v5_on"
+            if ARG.standby.endswith("alti") and ref != "R576":
+                assert p[3].endswith("k"), r
+                p[3] = "%gk" % (float(p[3][:-1]) * 10)
+            r = " ".join(p)
+            visti.add(ref)
+        out.append(r)
+    assert visti == set(STANDBY_PU), visti
+    return out
+
+
 def seq_deck():
     c = CASI_SEQ[ARG.caso]
     if ARG.rete is not None:
@@ -1453,6 +1495,7 @@ def seq_deck():
         righe.append("RFPD %s %s %s" % (f, ret, ARG.rfpd))
     for ref in sorted(COMPS):
         righe += al_piedino(ref, element(ref, COMPS[ref])) + serie(ref)
+    righe = standby_sostituisci(righe) + standby_righe()   # L54b2 (no change with --standby oggi)
     righe += sonde_i_righe()           # L45d2b2b2 (empty outside the fault cases)
     # (CAP_AUDIO goes with the audio board's loads below, after the fault)
     righe += ["* L45d2b2a soft-start: " + s for s in SS_LOG]
