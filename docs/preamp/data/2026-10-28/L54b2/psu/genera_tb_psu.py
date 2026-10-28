@@ -294,9 +294,17 @@ ap.add_argument("--timer", choices=("micro", "comparatori", "diretto", "sorgente
 # named variant TLV1701_OC: limitations #77) instead of CMPOD, through the wrapper CMPTI with
 # CMPOD's pins (inp inn out vcc gnd), so that the instance names and the output token that modi.py
 # moves stay the same. costruttore = the twelve channels of U513-U515; costruttore18 = those and the
-# six of U505 / U506 / U508. Only with --timer sorgente; comportamentale leaves the deck as it was
-ap.add_argument("--comparatore", choices=("comportamentale", "costruttore", "costruttore18"),
+# six of U505 / U506 / U508. It does not get through the power-up on this bench (Timestep too small,
+# kept to show it). tarato / tarato18 = the same channels with CMPTA (psu/cmpta.lib), CMPOD
+# calibrated on TI's model - the user's choice in L54b2, «Comportamentale tarato». Only with --timer
+# sorgente; comportamentale leaves the deck as it was
+ap.add_argument("--comparatore", choices=("comportamentale", "costruttore", "costruttore18",
+                                          "tarato", "tarato18"),
                 default="comportamentale")
+# L54b2: a remedy on the bench, not in the source: a pull-down from AT_F (the latch's trigger node)
+# to RLY_RET, so that with the comparators' outputs open below their minimum supply (the calibrated
+# model; the datasheet does not say) AT_F cannot reach the latch's threshold while V5 comes up
+ap.add_argument("--rfpd", default=None)
 # L54a: a mains factor on ANY sequence case (holes included), e.g. 0.9 / 1.1 (the case's own
 # "fattore", accensione_m10's, if any, is refused together with this)
 ap.add_argument("--rete", type=float, default=None)
@@ -627,14 +635,14 @@ def element(ref, c):
                 "Q%sb %s %s %s %s" % (ref, pn(ref, "3"), pn(ref, "5"), pn(ref, "4"), mod)]
     if part == "LM2903":
         v, g = pn(ref, "8"), pn(ref, "4")
-        m = "CMPTI" if ARG.comparatore == "costruttore18" else "CMPOD"
+        m = {"costruttore18": "CMPTI", "tarato18": "CMPTA"}.get(ARG.comparatore, "CMPOD")
         return ["X%sa %s %s %s %s %s %s" % (ref, pn(ref, "3"), pn(ref, "2"), pn(ref, "1"), v, g, m),
                 "X%sb %s %s %s %s %s %s" % (ref, pn(ref, "5"), pn(ref, "6"), pn(ref, "7"), v, g, m)]
     if part == "LM339":
         # L54b1: the TLV1704 of ADR-102 on the LM339 symbol (SBOS589D p. 5): channels a-d =
         # (+, -, out) 5 4 2, 7 6 1, 9 8 14, 11 10 13; V+ 3, V- 12. The same CMPOD as TIMER_AN's
         v, g = pn(ref, "3"), pn(ref, "12")
-        m = "CMPOD" if ARG.comparatore == "comportamentale" else "CMPTI"
+        m = {"comportamentale": "CMPOD", "tarato": "CMPTA", "tarato18": "CMPTA"}.get(ARG.comparatore, "CMPTI")
         return ["X%s%s %s %s %s %s %s %s" % (ref, u, pn(ref, a), pn(ref, b), pn(ref, o), v, g, m)
                 for u, (a, b, o) in zip("abcd", (("5", "4", "2"), ("7", "6", "1"),
                                                  ("9", "8", "14"), ("11", "10", "13")))]
@@ -814,10 +822,13 @@ if any(c["part"] == "D_Schottky" and c["value"] == "SB340" for c in COMPS.values
 if ARG.comparatore != "comportamentale":
     if ARG.timer != "sorgente":
         raise SystemExit("RIFIUTATO: --comparatore %s solo con --timer sorgente" % ARG.comparatore)
-    MODELLI_074 += [".include %s/models/comparator/tlv1701_ngspice.lib" % REPO,
-                    ".subckt CMPTI inp inn out vcc gnd",
-                    "X1 inp inn vcc gnd out TLV1701_OC",
-                    ".ends"]
+    if ARG.comparatore.startswith("tarato"):
+        MODELLI_074.append(".include %s" % os.path.join(QUI, "cmpta.lib"))
+    else:
+        MODELLI_074 += [".include %s/models/comparator/tlv1701_ngspice.lib" % REPO,
+                        ".subckt CMPTI inp inn out vcc gnd",
+                        "X1 inp inn vcc gnd out TLV1701_OC",
+                        ".ends"]
 
 
 def mains(env, vn, va, reg, a, b, mid, tag):
@@ -1435,6 +1446,11 @@ def seq_deck():
              MODELS.format(repo=REPO, vref=VREF_SHUNT)] + MODELLI_074
     if ARG.comparatore != "comportamentale":
         righe.append("* L54b2 --comparatore %s" % ARG.comparatore)
+    if ARG.rfpd:
+        assert ARG.timer == "sorgente", "--rfpd solo con --timer sorgente"
+        f, ret = pn("R581", "2"), pn("C553", "2")
+        assert (f, ret) == ("at_f", "rly_ret"), (f, ret)
+        righe.append("RFPD %s %s %s" % (f, ret, ARG.rfpd))
     for ref in sorted(COMPS):
         righe += al_piedino(ref, element(ref, COMPS[ref])) + serie(ref)
     righe += sonde_i_righe()           # L45d2b2b2 (empty outside the fault cases)
