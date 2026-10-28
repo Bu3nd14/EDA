@@ -365,6 +365,10 @@ ap.add_argument("--bat54", choices=("generico", "costruttore"), default="generic
 #   while RAW_P, |RAW_M| or RAW_V is below its threshold - the latch only for a rail out WITH its
 #   raw present. The thresholds are ideal sources (the dividers and VREF's tolerance: L54b3b)
 ap.add_argument("--qualifica", default=None)
+# --bassa-perdita REF[,REF...]: a remedy on the bench: these diodes with Diodes Inc.'s BAV199 model
+#   (DI_BAV199, models/diodes/bav199.lib: IS 59 pA) - a low-leakage silicon diode on the megohm
+#   timing nodes in place of the BAT54 (the maker's BAT54 leaks ~0.65 uA into AT_T2S, README)
+ap.add_argument("--bassa-perdita", dest="bassa_perdita", default=None)
 ARG = ap.parse_args()
 SERIE2 = set(ARG.serie2.split(",")) if ARG.serie2 else set()
 DOPPI = {}      # ref -> (node a, node b, mid): filled by element(), read by applica_guasto()
@@ -1566,15 +1570,18 @@ def disturbo(righe, spec):
 
 SONDE_PIU = ["v(at_bn)", "v(at_bp)", "v(v5)", "v(raw_p)", "v(raw_m)", "v(raw_v)", "v(rect_v)"]
 # L54b3a --ritenuta / --bat54 costruttore: (the lines' model token -> the maker's model, the file)
-RITENUTA_COSTR = None
-BAT54_COSTR = None
+# Diodes Inc.'s models (Nexperia refused the download; data/2026-10-28/L54b3a/modelli.md):
+# BC847B / BC857B, the B group of the source's BC847 / BC857; BAT54 for every BAT54 of the timer
+RITENUTA_COSTR = ({"QNGEN": "DI_BC847B", "QPGEN": "DI_BC857B"},
+                  ["%s/models/bjt_npn/bc847b.lib" % REPO, "%s/models/bjt_pnp/bc857b.lib" % REPO])
+BAT54_COSTR = ({"DBAT54": "BAT54"}, ["%s/models/diodes/bat54.lib" % REPO])
 
 
 def l54b3a(righe, c):
     """L54b3a: the options that rewrite a finished deck. With none of them: righe unchanged."""
     nuovi = (ARG.disturbo, ARG.sonde_piu, ARG.ritenuta != "generico", ARG.bat54 != "generico",
              ARG.rete_forma, ARG.rimbalzo, ARG.durata is not None, ARG.passo_max != "20u",
-             ARG.qualifica)
+             ARG.qualifica, ARG.bassa_perdita)
     if not any(nuovi):
         return righe
     assert ARG.timer == "sorgente", "le opzioni di L54b3a solo con --timer sorgente"
@@ -1583,7 +1590,8 @@ def l54b3a(righe, c):
                                       ("rimbalzo", ARG.rimbalzo), ("durata", ARG.durata),
                                       ("passo-max", ARG.passo_max), ("ritenuta", ARG.ritenuta),
                                       ("bat54", ARG.bat54), ("sonde-piu", ARG.sonde_piu),
-                                      ("qualifica", ARG.qualifica))
+                                      ("qualifica", ARG.qualifica),
+                                      ("bassa-perdita", ARG.bassa_perdita))
         if v not in (None, False, "generico", "20u"))
     k_end = righe.index(".control")
     if ARG.qualifica:
@@ -1591,11 +1599,13 @@ def l54b3a(righe, c):
         m = "CMPTA" if ARG.comparatore.startswith("tarato") else "CMPOD"
         # a channel sinks its output when its - input is above its + input (CMPOD / CMPTA pins:
         # inp inn out vcc gnd)
-        righe[k_end:k_end] = [
-            "* L54b3a --qualifica %s (bench only)" % ARG.qualifica,
-            "VQTHP qth_p 0 %s" % q["p"], "XQP raw_p qth_p at_f v5 rly_ret %s" % m,
-            "VQTHM qth_m 0 -%s" % q["m"], "XQM qth_m raw_m at_f v5 rly_ret %s" % m,
-            "VQTHV qth_v rly_ret %s" % q["v"], "XQV raw_v qth_v at_f v5 rly_ret %s" % m]
+        # (each raw optional: v alone = the relays' raw only, which a short on the + rail's
+        # reservoir does not pull down)
+        righe[k_end:k_end] = (
+            ["* L54b3a --qualifica %s (bench only)" % ARG.qualifica]
+            + (["VQTHP qth_p 0 %s" % q["p"], "XQP raw_p qth_p at_f v5 rly_ret %s" % m] if "p" in q else [])
+            + (["VQTHM qth_m 0 -%s" % q["m"], "XQM qth_m raw_m at_f v5 rly_ret %s" % m] if "m" in q else [])
+            + (["VQTHV qth_v rly_ret %s" % q["v"], "XQV raw_v qth_v at_f v5 rly_ret %s" % m] if "v" in q else []))
         k_end = righe.index(".control")
     if ARG.disturbo:
         righe = disturbo(righe[:k_end], ARG.disturbo) + righe[k_end:]
@@ -1613,7 +1623,15 @@ def l54b3a(righe, c):
                 righe[i] = " ".join(p)
                 n += 1
         assert n, (pre, mappa)
-        righe.insert(1, ".include %s" % inc)
+        righe[1:1] = [".include %s" % x for x in inc]
+    if ARG.bassa_perdita:
+        for ref in ARG.bassa_perdita.split(","):
+            k = [i for i, r in enumerate(righe) if r.startswith("D%s " % ref)]
+            assert len(k) == 1, (ref, k)
+            p = righe[k[0]].split()
+            p[-1] = "DI_BAV199"
+            righe[k[0]] = " ".join(p)
+        righe.insert(1, ".include %s/models/diodes/bav199.lib" % REPO)
     if ARG.sonde_piu:
         k = righe.index("linearize")
         righe[k:k] = ["meas tran bn_max0 max v(at_bn) from=0.05 to=%.12g" % TE,
