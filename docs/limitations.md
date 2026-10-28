@@ -1578,3 +1578,45 @@ deck ridà main entro lo 0,1–1 %.
 cifra di datasheet (4,992 V dietro 1,1 Ω, la ZR massima). Nel limitatore conduce al più ~1 mA: 1 mV su
 5,6 V. Un modello di riferimento si prova nel circuito in cui sta, non solo con la sorgente della sua
 ricetta; e un deck che cambia si confronta coi numeri di prima, non col suo codice d'uscita.
+
+## 77. Il modello di TI del TLV1701 in ngspice: gli interruttori di PSpice tradotti al contrario, e un'accensione che non passa
+
+Visto in L54b2, il 2026-10-28 (`docs/preamp/data/2026-10-28/L54b2/prova/`, `models/comparator/
+genera_tlv1701.py`). Tre cose, tutte senza errore:
+
+- **La traduzione degli interruttori.** Un `VSWITCH` di PSpice va in modo continuo da Roff a Voff a
+  Ron a Von, in tutti e due gli ordini. La traduzione di L41a in un `SW` di ngspice (VT = (Von+Voff)/2,
+  VH = (Von−Voff)/2) dà un'**isteresi larga quanto l'escursione** del controllo (con un controllo 0–1 V
+  l'interruttore non commuta mai dentro l'escursione), e con **Von < Voff non inverte** l'interruttore
+  (`prova/tb_sw.cir`). Nel TLV1701 quattro interruttori su cinque sono così: con quella traduzione
+  l'uscita stava a metà alimentazione, il «DO NOT USE» di L41a. La traduzione giusta è l'`aswitch`
+  di XSPICE con gli stessi quattro valori (continuo, tutti e due gli ordini): con quello il derivato
+  ridà il file di TI non toccato col modo di compatibilità `psa`. Il derivato del TPS7A4701 (L45d2b3a)
+  ha due interruttori diretti: il senso è giusto, l'isteresi c'è dove PSpice non ne ha.
+- **La finestra d'alimentazione senza isteresi.** Il modello controlla l'alimentazione con un `IF`
+  netto a 2,19 V. Dietro una qualunque resistenza di sorgente, un'uscita che assorbe abbassa V5 sotto
+  la soglia, che spegne l'uscita, che rialza V5: ngspice resta fermo lì (2,196 ms, 1,4 GB e in
+  crescita, `prova/tb_tlv1701_rampa.cir`). Sul banco dell'alimentatore anche una variante con sette
+  ritocchi si ferma all'accensione (a 0,21 s, nello stadio d'uscita).
+- **Un dispositivo XSPICE cambia tutto il deck**: «Reducing trtol to 1 for xspice 'A' devices».
+
+**Regola operativa**: un `VSWITCH` di PSpice diventa un `aswitch` di XSPICE, non un `SW`; un modello
+del costruttore si prova anche **mentre la sua alimentazione sale da zero**, nel circuito in cui sta;
+un deck con un dispositivo XSPICE non è più lo stesso deck numerico di prima (trtol), e si confronta
+coi numeri. Sul banco dell'alimentatore i comparatori sono `CMPTA` (ADR-103), il comportamentale coi
+numeri del modello di TI.
+
+## 78. Il comparatore comportamentale assorbiva già sotto la sua alimentazione minima: nascondeva una ritenuta che scatta all'accensione
+
+Visto in L54b2, il 2026-10-28 (`docs/preamp/data/2026-10-28/L54b2/seq/rim_*`, ADR-103). `CMPOD`, il
+comparatore del banco dell'alimentatore, assorbe con una conduttanza proporzionale a
+`tanh((V(vcc)−2)/0.1)`: a 1,6 V di V5 ne assorbe già una frazione. Il nodo d'innesco della ritenuta
+(AT_F, 100 kΩ da V5) era tenuto basso da quella frazione, e all'accensione a freddo col frontale
+acceso la base di Q513 si fermava a 0,50 V, 0,1 V sotto l'innesco. Con le uscite aperte fino al
+minimo del datasheet (2,2 V; sotto, il datasheet non dice niente) la ritenuta scatta a ogni
+accensione e l'apparecchio resta spento. Niente dava errore: il caso noto di L54b1 tornava.
+
+**Regola operativa**: dove il datasheet non dice che cosa fa una parte (sotto la sua alimentazione
+minima, fuori dal modo comune), il banco prova i due estremi, non quello che il modello
+comportamentale fa per caso. Il controllo dei relè (T6b) vuole la base della ritenuta ≤ 0,45 V con V5
+a 2,2 V e ogni uscita aperta.
