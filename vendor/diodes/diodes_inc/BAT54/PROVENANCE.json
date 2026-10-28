@@ -1,0 +1,51 @@
+{
+  "vendor_name": "Diodes Incorporated",
+  "date_obtained": "2026-10-28",
+  "lotto": "L54b3a",
+  "obtained_by": "AI agent (Claude Sonnet 5.5, subagent of the L54b3a batch) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl from Diodes Incorporated's own host (www.diodes.com), not from a distributor or a mirror, byte for byte as served. The /spice/download/<id>/<name> route selects the file by the NUMERIC ID: the name in the URL is not checked (ID 2541 with the name BC847B.spice.txt returned the MMBT5551 model). The ID of each file was therefore confirmed by its served Content-Type name (name=\"<PART>.spice.txt\") and by reading the first lines of the file.",
+  "license_notes": "Manufacturer datasheet and manufacturer-published SPICE model, redistributed here unmodified for engineering traceability only. Copyright remains Diodes Incorporated. The model file carries the vendor's own AS-IS warranty disclaimer, reproduced unaltered.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_not_nexperia": "Nexperia was the first choice and publishes SPICE models for these types (its product pages list a BC847 SPICE model dated 2024-04-05 and a BAT54 SPICE model dated 2020-08-25, per search-result snippets, not seen by me). It could not be used: assets.nexperia.com (tried: /documents/spice-model/BC847.txt and BC847B.txt; assets.nexperia.cn/.../BAT54.txt) answers HTTP 403 'Access Denied' (Akamai) to curl, and www.nexperia.com / www.nexperia.cn product pages answer 403 to the WebFetch tool. I did not try to get around the filter (same finding as vendor/diodes/nexperia/BAV199/PROVENANCE.json). onsemi's route https://www.onsemi.com/download/models/lib/bc847b.lib returned HTTP 200 text/html of 304530 bytes, i.e. a web page, not a model (the soft-404 already recorded for 2n5551); nothing was kept. Diodes Incorporated publishes a model and the datasheet for each of the same types, so Diodes' own files are used, one manufacturer per device.",
+  "part_name": "BAT54 (single Schottky barrier diode, 30 V, 200 mA, SOT23)",
+  "device_class": "diodes",
+  "product_page": "https://www.diodes.com/part/view/BAT54 (not fetched by me: diodes.com HTML pages answer 403 to automated clients)",
+  "files": [
+    {
+      "original_filename": "BAT54.spice.txt",
+      "role": "spice_model",
+      "url": "https://www.diodes.com/spice/download/510/BAT54.spice.txt",
+      "served_content_type": "text/plain; name=\"BAT54.spice.txt\"",
+      "bytes": 1485,
+      "sha256": "a1d142e1f32ea55aca3aa434897a3b648266f58b91745aa79579640b52eccd03",
+      "local_filename": "BAT54.spice.txt",
+      "renamed": false
+    },
+    {
+      "original_filename": "BAT54_A_C_S.pdf (renamed to carry the document number)",
+      "role": "datasheet",
+      "url": "https://www.diodes.com/assets/Datasheets/BAT54_A_C_S.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 502635,
+      "sha256": "50b04e4e17bcf5db62164f6e5422e91546d0cace0ab2efed61660c3044b4fef0",
+      "local_filename": "BAT54_A_C_S_DS11005.pdf",
+      "renamed": true
+    }
+  ],
+  "why_this_part": "L54b3a: the supply bench needs the Schottky's capacitance and its reverse leakage versus temperature (the 60 C part).",
+  "model_declared_metadata": "'*ZETEX BAT54 Spice Model v1.0 Last Revised 25/04/00'. A model written by Zetex in 2000 (Zetex became part of Diodes Incorporated in 2008); the file carries no Diodes DATE/VERSION.",
+  "model_name": "BAT54 (.MODEL BAT54 D ...)",
+  "model_parameters": "IS=649n N=1.04 RS=2.09 IKF=20m XTI=2 EG=0.58 CJO=12.4p M=0.381 VJ=0.391 BV=50 IBV=100u ISR=431n NR=4.99",
+  "vendor_file_defect": "None blocking: the .MODEL lines carry leading blanks and the continuation lines are indented; ngspice 47 parses them and shows every parameter in its device dump, no warning.",
+  "datasheet_limits_read": {
+    "document": "DS11005 Rev. 34-2, November 2023, Electrical Characteristics p. 2, Figures p. 3",
+    "VF_max_mV": "240 at 0.1 mA, 320 at 1 mA, 400 at 10 mA, 500 at 30 mA, 800 at 100 mA (no min or typ)",
+    "IR_max": "2.0 uA at VR = 25 V, 25 C",
+    "CT_max": "10 pF at VR = 1 V, f = 1 MHz (Fig. 3: typical curve, ~9.3 pF at 1 V, ~2.6 pF at 25 V, read by eye)",
+    "IR_vs_T": "Fig. 2 p. 3, typical curves at 0/25/75/125 C, read by eye at VR = 25 V: 0.2 / 5.2 / 72 uA at 25 / 75 / 125 C",
+    "VRRM": "30 V",
+    "IO": "200 mA"
+  },
+  "lifecycle": "ACTIVE by the datasheet (BAT54-7-F and -13-F in the ordering table, no obsolescence marking). Stock and price: not verified at any distributor in this task."
+}

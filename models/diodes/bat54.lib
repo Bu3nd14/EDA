@@ -1,0 +1,44 @@
+* BAT54 - Schottky barrier diode, SOT23, Diodes Incorporated (30 V, 200 mA)
+* Model: the manufacturer's own file, BAT54.spice.txt (a Zetex model, v1.0, last
+*   revised 25/04/00), served at https://www.diodes.com/spice/download/510/BAT54.spice.txt
+*   obtained 2026-10-28; vendor original frozen at vendor/diodes/diodes_inc/BAT54/BAT54.spice.txt
+*   (sha256 a1d142e1f32ea55aca3aa434897a3b648266f58b91745aa79579640b52eccd03).
+* Datasheet checked against: DS11005 Rev. 34-2 (Nov. 2023), vendor/diodes/diodes_inc/BAT54/BAT54_A_C_S_DS11005.pdf.
+* Instantiate: Dxxx anode cathode BAT54      (model name BAT54, as served)
+*
+* Verdict against the datasheet (scripts/validate_models.py, set temp = 25):
+*   V_F 141/208/301/385/584 mV at 0.1/1/10/30/100 mA against max 240/320/400/500/800: inside.
+*   I_R 0.763 uA at V_R = 25 V, 25 C against max 2 uA: inside, but 3.7x the typical curve (Fig. 2, ~0.2 uA).
+*   C_T 7.63 pF at V_R = 1 V against max 10 pF (Fig. 3 typical read ~9.3 pF: 18% low); 2.53 pF at 25 V (fig. ~2.6).
+*   I_R(T): 0.76 / 7.07 / 17.3 / 226 uA at 25 / 60 / 75 / 125 C. The temperature rise (x9.3 from 25 to 60 C)
+*   follows Fig. 2 (x9.5) but the whole curve sits ~3.4x above the typical one: the leakage is IS = 649 nA, flat
+*   in V_R, with XTI = 2, EG = 0.58. Use it as a bounded estimate (typical x3.4), not as the typical part.
+* Not modelled / to know: no KF/AF; IKF, ISR, NR are used by ngspice's diode model and appear in its dump;
+* leakage does not rise with V_R as Fig. 2 does. Vendor disclaimer follows unaltered.
+*
+* ----- vendor file follows (CRLF line endings kept; header above is LF) -----
+* DIODES INCORPORATED AND ITS AFFILIATED COMPANIES AND SUBSIDIARIES (COLLECTIVELY, "DIODES") 
+* PROVIDE THESE SPICE MODELS AND DATA (COLLECTIVELY, THE "SM DATA") "AS IS" AND WITHOUT ANY 
+* REPRESENTATIONS OR WARRANTIES, EXPRESS OR IMPLIED, INCLUDING ANY WARRANTY OF MERCHANTABILITY 
+* OR FITNESS FOR A PARTICULAR PURPOSE, ANY WARRANTY ARISING FROM COURSE OF DEALING OR COURSE OF 
+* PERFORMANCE, OR ANY WARRANTY THAT ACCESS TO OR OPERATION OF THE SM DATA WILL BE UNINTERRUPTED, 
+* OR THAT THE SM DATA OR ANY SIMULATION USING THE SM DATA WILL BE ERROR FREE. TO THE MAXIMUM 
+* EXTENT PERMITTED BY LAW, IN NO EVENT WILL DIODES BE LIABLE FOR ANY DIRECT OR INDIRECT, 
+* SPECIAL, INCIDENTAL, PUNITIVE OR CONSEQUENTIAL DAMAGES ARISING OUT OF OR IN CONNECTION WITH 
+* THE PRODUCTION OR USE OF SM DATA, HOWEVER CAUSED AND UNDER WHATEVER CAUSE OF ACTION OR THEORY 
+* OF LIABILITY BROUGHT (INCLUDING, WITHOUT LIMITATION, UNDER ANY CONTRACT, NEGLIGENCE OR OTHER 
+* TORT THEORY OF LIABILITY), EVEN IF DIODES HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES, 
+* AND DIODES' TOTAL LIABILITY (WHETHER IN CONTRACT, TORT OR OTHERWISE) WITH REGARD TO THE SM 
+* DATA WILL NOT, IN THE AGGREGATE, EXCEED ANY SUMS PAID BY YOU TO DIODES FOR THE SM DATA.
+
+
+
+*ZETEX BAT54 Spice Model v1.0 Last Revised 25/04/00
+    *
+    .MODEL BAT54 D Is=649e-9 N=1.04 RS=2.09 IKF=20e-3
+    +XTI=2 EG=0.58 
+    +CJO=12.4e-12 M=0.381 VJ=0.391
+    +BV=50 IBV=100e-6 ISR=431e-9 NR=4.99
+    *
+    *$
+    *

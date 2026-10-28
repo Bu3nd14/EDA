@@ -1,0 +1,46 @@
+{
+  "vendor_name": "Diodes Incorporated",
+  "date_obtained": "2026-10-28",
+  "lotto": "L54b3a",
+  "obtained_by": "AI agent (Claude Sonnet 5.5, subagent of the L54b3a batch) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl from Diodes Incorporated's own host (www.diodes.com), not from a distributor or a mirror, byte for byte as served. The /spice/download/<id>/<name> route selects the file by the NUMERIC ID: the name in the URL is not checked (ID 2541 with the name BC847B.spice.txt returned the MMBT5551 model). The ID of each file was therefore confirmed by its served Content-Type name (name=\"<PART>.spice.txt\") and by reading the first lines of the file.",
+  "license_notes": "Manufacturer datasheet and manufacturer-published SPICE model, redistributed here unmodified for engineering traceability only. Copyright remains Diodes Incorporated. The model file carries the vendor's own AS-IS warranty disclaimer, reproduced unaltered.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_not_nexperia": "Nexperia was the first choice and publishes SPICE models for these types (its product pages list a BC847 SPICE model dated 2024-04-05 and a BAT54 SPICE model dated 2020-08-25, per search-result snippets, not seen by me). It could not be used: assets.nexperia.com (tried: /documents/spice-model/BC847.txt and BC847B.txt; assets.nexperia.cn/.../BAT54.txt) answers HTTP 403 'Access Denied' (Akamai) to curl, and www.nexperia.com / www.nexperia.cn product pages answer 403 to the WebFetch tool. I did not try to get around the filter (same finding as vendor/diodes/nexperia/BAV199/PROVENANCE.json). onsemi's route https://www.onsemi.com/download/models/lib/bc847b.lib returned HTTP 200 text/html of 304530 bytes, i.e. a web page, not a model (the soft-404 already recorded for 2n5551); nothing was kept. Diodes Incorporated publishes a model and the datasheet for each of the same types, so Diodes' own files are used, one manufacturer per device.",
+  "part_name": "BC857A (PNP small-signal transistor, -45 V, -100 mA, SOT23, hFE group A)",
+  "device_class": "bjt_pnp",
+  "product_page": "https://www.diodes.com/part/view/BC857A (not fetched by me: diodes.com HTML pages answer 403 to automated clients)",
+  "files": [
+    {
+      "original_filename": "BC857A.spice.txt",
+      "role": "spice_model",
+      "url": "https://www.diodes.com/spice/download/2923/BC857A.spice.txt",
+      "served_content_type": "text/plain; name=\"BC857A.spice.txt\"",
+      "bytes": 1579,
+      "sha256": "1ac7a2bf9f1bc8a081da52579d39b8f8c91c7eb0f0fe18dca342e03c561bcda1",
+      "local_filename": "BC857A.spice.txt",
+      "renamed": false
+    }
+  ],
+  "datasheet": "Shared with the B grade, kept once: vendor/bjt_pnp/diodes_inc/BC857B/BC856A-BC858C_DS11207.pdf. Source https://www.diodes.com/assets/Datasheets/BC856A-BC858C.pdf (serves DS11207 Rev. 28-2, 'BC856A - BC858C', May 2025, 7 pages, the ordering table marks BC857A/B/C 'Active').",
+  "why_this_part": "L54b3a: the PNP of the supply bench's two-transistor latch needs a model with real capacitances. BC857B is the part the BOM names; A and C are the other groups.",
+  "model_declared_metadata": "*SRC=BC857A;DI_BC857A;BJTs PNP; Si;  45.0V  0.100A  250MHz   Diodes Inc. BJTs. No DATE or VERSION line.",
+  "model_name": "DI_BC857A",
+  "vendor_file_defect": "None found: ngspice 47 loads the file with no error and no warning.",
+  "datasheet_limits_read": {
+    "document": "DS11207 Rev. 28-2, May 2025, Electrical Characteristics p. 4",
+    "hFE_IC_2mA_VCE_5V": {
+      "A": "125 min / 180 typ / 250 max",
+      "B": "220 / 290 / 475",
+      "C": "420 / 520 / 800"
+    },
+    "VBE_on": "-600 min / -650 typ / -750 max mV at IC = -2 mA, VCE = -5 V; -820 mV max at -10 mA",
+    "Cobo": "3 pF TYPICAL (no min or max) at VCB = -10 V, f = 1 MHz",
+    "Cibo": "NOT GIVEN in the datasheet",
+    "fT": "100 min / 200 typ MHz at VCE = -5 V, IC = -10 mA, f = 100 MHz",
+    "VCEO": "-45 V",
+    "IC": "-100 mA continuous"
+  },
+  "lifecycle": "ACTIVE by the datasheet's ordering table (BC857A/B/C-7-F listed 'Active'). Stock and price: not verified at any distributor in this task."
+}

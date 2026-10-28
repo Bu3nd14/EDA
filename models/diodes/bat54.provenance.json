@@ -1,0 +1,12 @@
+{
+  "canonical_file": "bat54.lib",
+  "device_class": "diodes",
+  "origin": "vendor_derived",
+  "vendor_source_path": "vendor/diodes/diodes_inc/BAT54/BAT54.spice.txt",
+  "vendor_source_sha256": "a1d142e1f32ea55aca3aa434897a3b648266f58b91745aa79579640b52eccd03",
+  "date_created": "2026-10-28",
+  "author": "AI agent (Claude Sonnet 5.5, subagent of the L54b3a batch) on behalf of roberto.carmeli@gmail.com",
+  "changes": "NOTHING WAS CHANGED in the vendor text. The file was appended byte for byte (CRLF included, and the vendor's own leading blanks on the .MODEL lines) below a header of our own (LF), which adds comment lines only. Verifiable: the non-comment lines of this file and of the vendor file are identical. The model name 'BAT54' is as served. ngspice 47 prints no warning; the device dump shows IS, N, RS, IKF, XTI, EG, CJO, M, VJ, BV, IBV, ISR, NR with the vendor's values.",
+  "reason": "L54b3a: the supply bench needs the Schottky's capacitance and, above all, its reverse leakage as a function of temperature (the 60 C part). Manufacturer's model of the type the BOM names.",
+  "notes": "Manufacturer (Zetex, now Diodes) model of 2000, locked by tb_bat54. Leakage is 3.4x the typical curve of the current datasheet at every temperature (0.76 uA vs 0.2 uA at 25 C; 7.1 uA vs 1.9 uA at 60 C) but inside the 2 uA maximum at 25 C; its temperature slope matches Fig. 2 (x9.3 vs x9.5 from 25 to 60 C). Fig. 2 values are read by eye from the typical curves (+-25%). Nexperia, the first choice, refuses automated downloads (HTTP 403, Akamai); see vendor/diodes/diodes_inc/BAT54/PROVENANCE.json."
+}

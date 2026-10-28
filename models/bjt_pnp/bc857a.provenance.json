@@ -1,0 +1,12 @@
+{
+  "canonical_file": "bc857a.lib",
+  "device_class": "bjt_pnp",
+  "origin": "vendor_derived",
+  "vendor_source_path": "vendor/bjt_pnp/diodes_inc/BC857A/BC857A.spice.txt",
+  "vendor_source_sha256": "1ac7a2bf9f1bc8a081da52579d39b8f8c91c7eb0f0fe18dca342e03c561bcda1",
+  "date_created": "2026-10-28",
+  "author": "AI agent (Claude Sonnet 5.5, subagent of the L54b3a batch) on behalf of roberto.carmeli@gmail.com",
+  "changes": "NOTHING WAS CHANGED in the vendor text. The file was appended byte for byte (CRLF included) below a header of our own (LF), which adds comment lines only. Verifiable: the non-comment lines of this file and of the vendor file are identical. The model name 'DI_BC857A' is as served. ngspice 47 loads it with no warning on any parameter (checked with 'ngspice -b' and the device dump: QUASIMOD/RCO/VO/GAMMA are not used by this file; IS, BF, VAF, IKF, ISE, NE, BR, NR, VAR, IKR, RE, RB, RC, XTB, CJE, VJE, MJE, CJC, VJC, MJC, TF, TR, EG all appear in the dump with the vendor's values).",
+  "reason": "L54b3a: the supply bench had generic transistors with no capacitances and has to decide whether a fast edge trips a two-transistor latch with 1 nF across a base-emitter. This is the manufacturer's model of the type the BOM names (BC857A, Diodes Incorporated), replacing the generic .model.",
+  "notes": "Manufacturer model, locked by a recipe in scripts/validate_models.py (tb_bc857a). hFE 232.9 at IC = -2 mA, VCE = -5 V against 125..250 (typ 180): INSIDE, 6.9% under the ceiling. |VBE| 678.1 mV (window 600..750). Nexperia, whose model was the first choice, refuses automated downloads (HTTP 403, Akamai) on assets.nexperia.com and www.nexperia.com, so Diodes Incorporated's own model was used; see vendor/bjt_pnp/diodes_inc/BC857A/PROVENANCE.json. The vendor's CJE differs by 2x between the B model and its A/C siblings in both polarities (BC847: A 26.8 pF, B 13.3 pF, C 26.8 pF; BC857: A 13.3 pF, B 26.9 pF, C 13.3 pF), so no C_ibo/CJE figure from this family is reliable to better than a factor of 2. No KF/AF: no 1/f noise."
+}

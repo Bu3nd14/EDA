@@ -360,6 +360,11 @@ ap.add_argument("--passo-max", dest="passo_max", default="20u")
 # --ritenuta / --bat54: the latch's BC847 / BC857 and the timer's BAT54 with the makers' models
 ap.add_argument("--ritenuta", choices=("generico", "costruttore"), default="generico")
 ap.add_argument("--bat54", choices=("generico", "costruttore"), default="generico")
+# --qualifica p:<V>,m:<V>,v:<V>: a remedy on the bench, not in the source (the slow sags trip the
+#   latch, README): three more comparator channels (the model of --comparatore) that empty AT_F
+#   while RAW_P, |RAW_M| or RAW_V is below its threshold - the latch only for a rail out WITH its
+#   raw present. The thresholds are ideal sources (the dividers and VREF's tolerance: L54b3b)
+ap.add_argument("--qualifica", default=None)
 ARG = ap.parse_args()
 SERIE2 = set(ARG.serie2.split(",")) if ARG.serie2 else set()
 DOPPI = {}      # ref -> (node a, node b, mid): filled by element(), read by applica_guasto()
@@ -1058,6 +1063,9 @@ CASI_SEQ = {
     # from MUTO: SW3 to music at TE (L47c2a: no fade, MUSICA 10 ms after the
     # relays; 0.5 s shows the coils settled)
     "rilascio": dict(front=1, sw3=[(0, 0), (TE, 0), (TE + 1e-6, 1)], tf=TE + 0.5, pre="muto"),
+    # L54b3a: from MUSICA, SW3 to mute at TE (the insertion from the switch; the fault cases' ins
+    # event as a plain sequence case, for the bounces)
+    "inserimento": dict(front=1, sw3=[(0, 1), (TE, 1), (TE + 1e-6, 0)], tf=TE + 0.5, pre="musica"),
     # L47c2a: "inversione" is gone - the insertion is not reversible (ADR-062)
     # from MUSICA: the front switched off at TE (L47c2a: MUTE_REQ at ~TE + 27
     # ms, MAINS_REQ ~100 ms later; to TE + 0.4 s, K501 open and the rails
@@ -1565,7 +1573,8 @@ BAT54_COSTR = None
 def l54b3a(righe, c):
     """L54b3a: the options that rewrite a finished deck. With none of them: righe unchanged."""
     nuovi = (ARG.disturbo, ARG.sonde_piu, ARG.ritenuta != "generico", ARG.bat54 != "generico",
-             ARG.rete_forma, ARG.rimbalzo, ARG.durata is not None, ARG.passo_max != "20u")
+             ARG.rete_forma, ARG.rimbalzo, ARG.durata is not None, ARG.passo_max != "20u",
+             ARG.qualifica)
     if not any(nuovi):
         return righe
     assert ARG.timer == "sorgente", "le opzioni di L54b3a solo con --timer sorgente"
@@ -1573,9 +1582,21 @@ def l54b3a(righe, c):
         "%s=%s" % (k, v) for k, v in (("rete-forma", ARG.rete_forma), ("disturbo", ARG.disturbo),
                                       ("rimbalzo", ARG.rimbalzo), ("durata", ARG.durata),
                                       ("passo-max", ARG.passo_max), ("ritenuta", ARG.ritenuta),
-                                      ("bat54", ARG.bat54), ("sonde-piu", ARG.sonde_piu))
+                                      ("bat54", ARG.bat54), ("sonde-piu", ARG.sonde_piu),
+                                      ("qualifica", ARG.qualifica))
         if v not in (None, False, "generico", "20u"))
     k_end = righe.index(".control")
+    if ARG.qualifica:
+        q = dict(x.split(":") for x in ARG.qualifica.split(","))
+        m = "CMPTA" if ARG.comparatore.startswith("tarato") else "CMPOD"
+        # a channel sinks its output when its - input is above its + input (CMPOD / CMPTA pins:
+        # inp inn out vcc gnd)
+        righe[k_end:k_end] = [
+            "* L54b3a --qualifica %s (bench only)" % ARG.qualifica,
+            "VQTHP qth_p 0 %s" % q["p"], "XQP raw_p qth_p at_f v5 rly_ret %s" % m,
+            "VQTHM qth_m 0 -%s" % q["m"], "XQM qth_m raw_m at_f v5 rly_ret %s" % m,
+            "VQTHV qth_v rly_ret %s" % q["v"], "XQV raw_v qth_v at_f v5 rly_ret %s" % m]
+        k_end = righe.index(".control")
     if ARG.disturbo:
         righe = disturbo(righe[:k_end], ARG.disturbo) + righe[k_end:]
     for scelta, sost, pre in ((ARG.ritenuta, RITENUTA_COSTR, ("QQ513 ", "QQ514 ")),
