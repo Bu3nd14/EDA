@@ -19,7 +19,8 @@ ciclo di vita e non per fase:
 
 | Percorso | Tipo | Regola |
 |---|---|---|
-| `docs/preamp/STATE.md` | vivo | Il punto di ripresa. Sempre vero al presente |
+| `docs/preamp/STATE.md` | vivo | Il punto di ripresa. Sempre vero al presente, e corto: le celle di «In breve» si sostituiscono, il diario tiene le ultime tre voci |
+| `docs/preamp/STATE-STORIA.md` | storia | Le voci di diario uscite da `STATE.md` e le sue sezioni non più vere al presente, parola per parola. Solo in aggiunta |
 | `docs/preamp/PRB.md` | vivo | **Il contratto con l'utente**: 30 voci di al più tre righe, firmate (ADR-053). Sta sopra `REQUIREMENTS.md`; ingresso di ogni revisione. Cambiarlo vuole una ADR |
 | `docs/preamp/REQUIREMENTS.md` | vivo | Requisiti congelati: *come si misura* il PRB; ogni modifica sostanziale vuole una ADR |
 | `docs/preamp/decisions/ADR-*.md` | **immutabile** | Mai riscritte. Una decisione superata si supera con una ADR nuova |
