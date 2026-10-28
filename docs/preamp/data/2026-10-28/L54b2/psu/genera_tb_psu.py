@@ -313,7 +313,11 @@ ap.add_argument("--rfpd", default=None)
 # with its gate on FRONT_SW (R518 to V5: off with the front open, on with it closed); alti = the
 # same at ten times the value, except R576 (L54a had to bring it to 10k: at 47k the node sat at
 # 3.3 V); v5on_alti = both
-ap.add_argument("--standby", choices=("oggi", "v5on", "alti", "v5on_alti"), default="oggi")
+# v5on_mr = V5_ON on while the front is closed OR MAINS_REQ is high (K501 closed): the gate pulled up
+# to V5 by 100k, down by the front through a BAT54 or by a 2N7002 on MAINS_REQ, so that the
+# switch-off from the front keeps its order (v5on alone drops every request at once: K501 at 19 ms
+# instead of 123); R579 stays on V5 (MAINS_REQ must be able to rise for V5_ON to hold)
+ap.add_argument("--standby", choices=("oggi", "v5on", "alti", "v5on_alti", "v5on_mr"), default="oggi")
 STANDBY_PU = ("R573", "R575", "R576", "R579", "R524", "R537")
 # L54a: a mains factor on ANY sequence case (holes included), e.g. 0.9 / 1.1 (the case's own
 # "fattore", accensione_m10's, if any, is refused together with this)
@@ -1437,6 +1441,12 @@ def sonde_an():
 def standby_righe():
     """L54b2 --standby: the extra lines (the switch); the pull-ups' own lines are rewritten by
     standby_sostituisci."""
+    if ARG.standby == "v5on_mr":
+        v5, fsw = pn("R518", "1"), pn("R518", "2")
+        return ["MSTBY v5_on g_stby %s %s MPGEN W=28000u L=1u" % (v5, v5),
+                "RSTBY %s g_stby 100k" % v5,
+                "DSTBY g_stby %s DBAT54" % fsw,
+                "MSTBN g_stby mains_req rly_ret rly_ret MNGEN W=%s L=1u" % W_2N7002]
     return [] if ARG.standby == "oggi" else (
         ["MSTBY v5_on %s %s %s MPGEN W=28000u L=1u" % (pn("R518", "2"), pn("R518", "1"), pn("R518", "1"))]
         if ARG.standby.startswith("v5on") else [])
@@ -1453,7 +1463,7 @@ def standby_sostituisci(righe):
         if p and p[0][1:] in STANDBY_PU and p[0].startswith("R"):
             ref = p[0][1:]
             assert p[1] == "v5", r
-            if ARG.standby.startswith("v5on"):
+            if ARG.standby.startswith("v5on") and not (ARG.standby == "v5on_mr" and ref == "R579"):
                 p[1] = "v5_on"
             if ARG.standby.endswith("alti") and ref != "R576":
                 assert p[3].endswith("k"), r
