@@ -1620,3 +1620,30 @@ accensione e l'apparecchio resta spento. Niente dava errore: il caso noto di L54
 minima, fuori dal modo comune), il banco prova i due estremi, non quello che il modello
 comportamentale fa per caso. Il controllo dei relè (T6b) vuole la base della ritenuta ≤ 0,45 V con V5
 a 2,2 V e ogni uscita aperta.
+
+## 79. Il BAT54 generico del banco perdeva 20 nA: su un nodo da 2,7 MΩ quello del costruttore fa scattare la ritenuta a ogni accensione
+
+Visto in L54b3a, il 2026-10-28 (`docs/preamp/data/2026-10-28/L54b3a/seq/prova_solo_d/`, ADR-104). Il
+banco dell'alimentatore aveva per il BAT54 `DBAT54 D(Is=2e-8 N=1.05 Rs=1)`: 20 nA di perdita, e nessuna
+dipendenza dalla tensione inversa. Il modello di Diodes Inc. (`models/diodes/bat54.lib`, IS 649 nA) perde
+~0,65 µA, 3,4 volte la curva tipica ma dentro il massimo del datasheet (2 µA a 25 V e 25 °C); a 60 °C la
+curva tipica sale di ~9,5 volte. Due BAT54 polarizzati in inversa verso AT_T2S (2,7 MΩ / 1 µF) aggiungono
+~1,3 µA alla corrente di carica di ~1,2 µA: il nodo dei 2 s si arma a 1,07 s, prima che i rail siano su,
+e la ritenuta scatta a ogni accensione. Niente dava errore: i casi noti tornavano col modello generico.
+
+**Regola operativa**: un nodo di temporizzazione sopra ~100 kΩ si prova con la perdita **massima** del
+datasheet dei diodi e delle parti che lo toccano, alla temperatura più alta, non con un modello generico;
+e una parte nuova su un nodo così si sceglie per la sua perdita.
+
+## 80. I regolatori del banco dell'alimentatore sono ideali: un gradino di carico non fa nessun fronte, e i transistor generici non hanno capacità
+
+Visto in L54b3a, il 2026-10-28. `REGP` / `REGM` / `REGPSS` regolano con una transconduttanza di 1000 S e
+nessuna banda: un gradino di carico su V5 o su `VRELAY_REG` non muove la tensione, e un banco che cerca
+«il fronte più ripido sulla linea» non lo trova. In più `QNGEN` / `QPGEN` non hanno capacità: un dv/dt non
+può far scattare la ritenuta a due transistor (1 V in 10 ns su V5: 6 mV sulla base). Il fronte si inietta
+(`--disturbo`, una tensione in serie all'uscita del regolatore) e la sua ampiezza si prende dai datasheet
+(TPS7A4701, figura 5-19: ~10 mV per 835 mA); la ritenuta si prova coi transistor del costruttore
+(`--ritenuta costruttore`, Cobo 3 pF come il datasheet).
+
+**Regola operativa**: sul banco dell'alimentatore una prova di disturbi veloci inietta il disturbo e usa
+parti con le loro capacità; un «nessuno scatto» coi modelli generici non dice niente.

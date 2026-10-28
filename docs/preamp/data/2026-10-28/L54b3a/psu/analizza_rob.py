@@ -44,7 +44,7 @@ def meas(d):
     for f in os.listdir(d):
         if f.endswith("_g1.log"):
             for r in open(os.path.join(d, f), errors="replace"):
-                m = re.match(r"\s*(bn_max0|bn_max|on_min)\s*=\s*([-+0-9.eE]+)", r)
+                m = re.match(r"\s*(bn_max0|bn_max|on_min|x_max|x_min)\s*=\s*([-+0-9.eE]+)", r)
                 if m:
                     out[m.group(1)] = round(float(m.group(2)), 4)
     return out
@@ -127,7 +127,7 @@ def caso(d):
 
 CAMPI = ["caso", "musica_TE", "C2", "C3", "r41", "s41", "t_jack_ms", "t_gain_ms", "t_v106_ms",
          "t_k501_ms", "t_mus_ms", "n_giu", "n_su", "n_k501", "t_rit_ms", "dmus_ms", "mus_end",
-         "k501_end", "vplus_end", "ritenuta", "bn_max0", "bn_max", "on_min", "rawv_max",
+         "k501_end", "vplus_end", "ritenuta", "bn_max0", "bn_max", "on_min", "x_max", "x_min", "rawv_max",
          "rawp_max", "rawm_min", "v5_min", "esito"]
 
 

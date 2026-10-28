@@ -1559,7 +1559,22 @@ def rimbalzo(v, ms, seme):
 
 
 def disturbo(righe, spec):
-    """L54b3a --disturbo: a pulse in series with regulator REF's output."""
+    """L54b3a --disturbo: a pulse in series with regulator REF's output; or, with
+    nodo:<net>:<element+element...>:<V>:<edge>:<width>:<t0>, in series with the named elements'
+    terminals on <net> only (the edge as those parts see it, past the node's decoupling: the
+    regulator's form does not reach the node - the bulk capacitors hold it and the bench's
+    regulators only source, README)."""
+    if spec.startswith("nodo:"):
+        _, net, els, amp, tr, w, t0 = spec.split(":")
+        amp, tr, w, t0 = float(amp), float(tr), float(w), TE + float(t0)
+        for el in els.split("+"):
+            k = [i for i, r in enumerate(righe) if r.split()[:1] == [el]]
+            assert len(k) == 1, (el, k)
+            p = righe[k[0]].split()
+            assert net in p[1:3], (el, net, p)
+            righe[k[0]] = " ".join([p[0]] + [net + "_x" if x == net else x for x in p[1:3]] + p[3:])
+        return righe + ["VDIST %s_x %s pwl(%s)" % (net, net, pwl(
+            (0, 0), (t0, 0), (t0 + tr, amp), (t0 + tr + w, amp), (t0 + 2 * tr + w, 0), (1000, 0)))]
     ref, amp, tr, w, t0 = spec.split(":")
     amp, tr, w, t0 = float(amp), float(tr), float(w), TE + float(t0)
     k = [i for i, r in enumerate(righe) if r.startswith("X%s " % ref)]
@@ -1640,6 +1655,11 @@ def l54b3a(righe, c):
         righe[k:k] = ["meas tran bn_max0 max v(at_bn) from=0.05 to=%.12g" % TE,
                       "meas tran bn_max max v(at_bn) from=%.12g to=%.12g" % (TE, c["tf"]),
                       "meas tran on_min min v(vrelay_en) from=%.12g to=%.12g" % (TE, c["tf"])]
+        if ARG.disturbo and ARG.disturbo.startswith("nodo:"):
+            # the pulse itself, as the parts see it: the run proves it arrived
+            x = ARG.disturbo.split(":")[1] + "_x"
+            righe[k:k] = ["meas tran x_max max v(%s) from=%.12g to=%.12g" % (x, TE, c["tf"]),
+                          "meas tran x_min min v(%s) from=%.12g to=%.12g" % (x, TE, c["tf"])]
     k = [i for i, r in enumerate(righe) if r.startswith("wrdata ")][0]
     p = righe[k].split()
     righe[k] = " ".join(p[:2] + [x for j, x in enumerate(p[2:]) if x not in p[2:2 + j]])
