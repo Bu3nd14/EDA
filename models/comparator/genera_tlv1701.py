@@ -162,8 +162,10 @@ def block(name):
 #       with the output open below it the loop "enabled -> the output sinks 0.5 mA -> V5 drops
 #       through its source resistance -> disabled" has no fixed point and ngspice stops at
 #       2.1907 ms all the same (prova/tb_tlv1701_rampa_oc.cir, 1.5 GB). In its place CMPOD's own
-#       supply behaviour, smooth: the output behind a switch open below 1.9 V and closed above
-#       2.1 V of supply (CMPOD: tanh at 2 V +- 0.1 V);
+#       supply behaviour, smooth: the output behind a conductance of 1 S above ~2.1 V of supply
+#       and ~0 below ~1.9 V (CMPOD's tanh at 2 V, 0.1 V wide). Written as a B source: an XSPICE
+#       aswitch in the same place put the step at ~10 ns whenever the output was open (422 277
+#       points in 10 ms against 2 269, prova/tb_tlv1701_solo_oc.cir);
 #    d. the 55 uA of I_IS only with the supply up, as CMPOD (> 1 V), not from a dead V5
 #       (limitations #73).
 #    So the comparison with CMPOD on the bench is of what the model adds - the thresholds and the
@@ -180,13 +182,44 @@ top_oc, n2 = re.subn(r"(?m)^X_U5 N21237 INRANGE 0 (.*) OUT Output_Stage$",
                      r"X_U5 N21237 0 0 \1 OUTI Output_Stage_OC", top_oc)
 top_oc, n3 = re.subn(r"(?m)^X_U7 N21237 0 V\+_BUFFER V-_BUFFER Supply_Enable$",
                      "V_ENOC N21237 0 0\n"
-                     "A_UVOC %vd(VP VM) %gd(OUTI OUT) _UVOC\n"
-                     ".MODEL _UVOC aswitch(cntl_off=1.9 cntl_on=2.1 r_off=1e12 r_on=1m log=TRUE)", top_oc)
+                     "B_UVOC OUTI OUT I = V(OUTI,OUT)*(1e-12 + 0.5*(1+tanh((V(VP,VM)-2)/0.1)))",
+                     top_oc)
 top_oc, n4 = re.subn(r"(?m)^I_IS N843683 VM DC 55u$",
                      "B_ISOC N843683 VM I = 55u*0.5*(1+tanh((V(VP,VM)-1)/0.05))", top_oc)
 stage_oc, n5 = re.subn(r"^\.SUBCKT Output_Stage ", ".SUBCKT Output_Stage_OC ", stage, flags=re.M)
 stage_oc, n6 = re.subn(r"(?m)^X_SMID .*\n", "", stage_oc)
-count("variante OC", n1 + n2 + n3 + n4 + n5 + n6, 6)
+#    e. the input decision (HPA_COMPHYS: EOUT = IF(INP > INN, VDD, VSS)) is a step: on the bench,
+#       with an input moving slowly through the reference while the timer powers up, ngspice stops
+#       on it ("Timestep too small ... xu515d.x1.x_u3.eout", 42.8 ms into perdita,
+#       seq/costruttore/perdita). In the variant it is a tanh 0.1 mV wide - a finite gain, under
+#       the model's own 0.4 mV of offset and ten times sharper than CMPOD's 1 mV. VH is 0 in this
+#       model (VHYS on node 0), so INNNEW is INN either way.
+comp = block("HPA_COMPHYS")
+comp_oc, n7 = re.subn(r"^\.SUBCKT HPA_COMPHYS ", ".SUBCKT HPA_COMPHYS_OC ", comp, flags=re.M)
+comp_oc, n8 = re.subn(r"(?m)^EOUT OUT 0 VALUE = .*$",
+                      "EOUT OUT 0 VALUE = { V(VSS) + (V(VDD)-V(VSS))*0.5*(1+tanh((V(INP)-V(INNNEW))/1e-4)) }",
+                      comp_oc)
+top_oc, n9 = re.subn(r"(?m)^(X_U3 .* 0) HPA_COMPHYS$", r"\1 HPA_COMPHYS_OC", top_oc)
+#    f. the decision held at VSS while the supply is under ~1.5 V (tanh at 1.5 V, 0.1 V wide; 1
+#       above 2.1 V, where (c) lets the output act): with the tanh of (e) alone ngspice still
+#       stopped 42.757 ms into perdita, U515D flipping with V5 at ~1 mV, every node of the model
+#       at the level of the noise (prova/diag: V5 86 uV -> 0.54 mV, IN- crossing IN+ at 0.37 mV).
+#       Nothing the circuit sees depends on it: the output is open there. A 10 ns pole on the
+#       decision (C1 10 nF) did not help and is not used.
+comp_oc, n10 = re.subn(r"\*0\.5\*\(1\+tanh\(\(V\(INP\)-V\(INNNEW\)\)/1e-4\)\) \}",
+                       "*0.5*(1+tanh((V(INP)-V(INNNEW))/1e-4))*0.5*(1+tanh((V(VDD,VSS)-1.5)/0.1)) }",
+                       comp_oc)
+#    g. the output stage's level shifter (DIGLEVSHIFT: IF(V(1) < 1, V+ - 1, V+), the control of
+#       the output switch) as a tanh 50 mV wide around the same 1 V: with (f) ngspice stopped next
+#       at 0.21 s of perdita on its branch (V_V1)
+shift = block("DIGLEVSHIFT")
+shift_oc, n11 = re.subn(r"^\.SUBCKT DIGLEVSHIFT ", ".SUBCKT DIGLEVSHIFT_OC ", shift, flags=re.M)
+shift_oc, n12 = re.subn(r"(?m)^E1 3 0 VALUE = \{ \(\(V\(1\) < 1\) \? \(V\(VSS_NEW\)\) : \(V\(VDD_NEW\)\)\) \}$",
+                        "E1 3 0 VALUE = { V(VSS_NEW) + (V(VDD_NEW)-V(VSS_NEW))*0.5*(1+tanh((V(1)-1)/0.05)) }",
+                        shift_oc)
+stage_oc, n13 = re.subn(r"(?m)^(X_U3 .*) DIGLEVSHIFT$", r"\1 DIGLEVSHIFT_OC", stage_oc)
+count("variante OC", n1 + n2 + n3 + n4 + n5 + n6 + n7 + n8 + n9 + n10 + n11 + n12 + n13, 13)
+stage_oc = stage_oc + "\n*$\n" + comp_oc + "\n*$\n" + shift_oc
 variant = ("\n*$\n* --- TLV1701_OC: the named variant of genera_tlv1701.py, patch 7 (not TI's) ---\n"
            + top_oc + "\n*$\n" + stage_oc + "\n")
 
