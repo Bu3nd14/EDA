@@ -76,10 +76,10 @@ letteratura:
   `models/`, `docs/limitations.md`.
 
 **Non leggere** in fase 1 `docs/preamp/NONCOMPLIANCE.md`, `docs/preamp/STATE.md`,
-`docs/preamp/NEXT-SESSION.md` e `docs/preamp/reports/`: contengono le revisioni precedenti, e
+`docs/preamp/STATE-STORIA.md`, `docs/preamp/NEXT-SESSION.md` e `docs/preamp/reports/`: contengono le revisioni precedenti, e
 leggerle prima ti farebbe trovare quello che altri hanno già trovato invece di quello che c'è.
 
-**Fase 2**, solo a rilievi scritti: leggi `NONCOMPLIANCE.md` e il diario di `STATE.md`, e segna
+**Fase 2**, solo a rilievi scritti: leggi `NONCOMPLIANCE.md` e il diario di `STATE.md` e di `STATE-STORIA.md`, e segna
 ogni rilievo come **nuovo**, **già noto (NC-0xx)** o **già deciso (ADR-0xx)**, dicendo se la
 decisione ti convince. Non togli né ammorbidisci un rilievo della fase 1 dopo aver letto la
 fase 2: al più aggiungi la nota.
