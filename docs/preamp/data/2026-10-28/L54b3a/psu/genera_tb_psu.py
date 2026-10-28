@@ -641,7 +641,10 @@ def element(ref, c):
             m = "%s_m" % ref.lower()
             DOPPI[ref] = (node(PN[(ref, "2")]), node(PN[(ref, "1")]), m)
             return ["D%s %s %s D1N914" % (ref, pn(ref, "2"), m), "D%sB %s %s D1N914" % (ref, m, pn(ref, "1"))]
-        return ["D%s %s %s D1N914" % (ref, pn(ref, "2"), pn(ref, "1"))]
+        # L54b3a (ADR-104): the BAS416 low-leakage diode with Diodes Inc.'s BAV199 model (the
+        # same kind of low-leakage junction; the BAS416's own model is not in the repo: declared)
+        return ["D%s %s %s %s" % (ref, pn(ref, "2"), pn(ref, "1"),
+                                  "DI_BAV199" if val == "BAS416" else "D1N914")]
     if part == "D_Schottky":
         mod = "DBAT54" if val == "BAT54" else "DSCH"
         if val == "SB340":
@@ -766,6 +769,7 @@ VREF_SHUNT = 2.505 if ARG.angolo == "min" else 2.500
 
 MODELS = r"""
 .include {repo}/models/diodes/1n4148.lib
+.include {repo}/models/diodes/bav199.lib
 .include {repo}/models/mosfet_n/generic_nmos.lib
 .include {repo}/models/mosfet_p/generic_pmos.lib
 .include {repo}/models/bjt_npn/generic_npn.lib
@@ -1631,7 +1635,6 @@ def l54b3a(righe, c):
             p = righe[k[0]].split()
             p[-1] = "DI_BAV199"
             righe[k[0]] = " ".join(p)
-        righe.insert(1, ".include %s/models/diodes/bav199.lib" % REPO)
     if ARG.sonde_piu:
         k = righe.index("linearize")
         righe[k:k] = ["meas tran bn_max0 max v(at_bn) from=0.05 to=%.12g" % TE,
