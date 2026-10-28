@@ -1,0 +1,25 @@
+L54b2 prova: il senso degli interruttori SW di ngspice coi parametri di un VSWITCH PSpice
+* A: VSWITCH Voff=0 Von=1 tradotto come L41a      -> VT=0.5 VH=+0.5 (isteresi larga quanto l'escursione)
+* B: VSWITCH Voff=1 Von=0 tradotto come L41a      -> VT=0.5 VH=-0.5
+* C: VT=0.5 VH=0 RON=1 ROFF=1e6                   -> diretto, senza isteresi
+* D: VT=0.5 VH=0 RON=1e6 ROFF=1                   -> invertito, senza isteresi (RON e ROFF scambiati)
+vc c 0 0
+va a 0 1
+sa a 0 c 0 swa
+vb b 0 1
+sb b 0 c 0 swb
+vcc cc 0 1
+sc cc 0 c 0 swc
+vd d 0 1
+sd d 0 c 0 swd
+.model swa sw(vt=0.5 vh=0.5 ron=1 roff=1e6)
+.model swb sw(vt=0.5 vh=-0.5 ron=1 roff=1e6)
+.model swc sw(vt=0.5 vh=0 ron=1 roff=1e6)
+.model swd sw(vt=0.5 vh=0 ron=1e6 roff=1)
+.control
+dc vc -0.5 1.5 0.1
+wrdata prova/tb_sw.csv i(va) i(vb) i(vcc) i(vd)
+dc vc 1.5 -0.5 -0.1
+wrdata prova/tb_sw_giu.csv i(va) i(vb) i(vcc) i(vd)
+.endc
+.end

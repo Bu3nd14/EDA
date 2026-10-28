@@ -1,0 +1,21 @@
+L54b2 prova: due TLV1701 in OR cablato dietro 10 k, V5 che sale da 0, poi V5 spento
+* Canale A: IN+ < IN- (vuole l'uscita bassa); canale B: IN+ > IN- (uscita aperta).
+* V5: 0 -> 5 V in 5 ms (passa per 2,19 V, il minimo del modello), tiene, poi da 20 ms scende a 0
+* in 5 ms (un'uscita aperta-collettore non sa dare corrente: ogni volt sopra 0 con l'uscita
+* bassa voluta è dell'uscita a metà alimentazione del modello).
+.include ../../../../../../models/comparator/tlv1701_ngspice.lib
+vs vs 0 pwl(0 0 5m 5 20m 5 25m 0 30m 0)
+rs vs v5 1
+c5 v5 0 100n
+vref ref 0 1.25
+vlo lo 0 1.0
+vhi hi 0 1.5
+xa lo ref v5 0 out TLV1701
+xb hi ref v5 0 out TLV1701
+rpu v5 out 10k
+rpd out 0 100k
+.control
+tran 10u 30m 0 10u
+wrdata prova/tb_tlv1701_rampa.csv v(v5) v(out) i(vs)
+.endc
+.end
