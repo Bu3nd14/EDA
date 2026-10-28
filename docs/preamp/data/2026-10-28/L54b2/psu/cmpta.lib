@@ -20,3 +20,14 @@ Bs out gnd I = V(out,gnd)/150 * 0.5*(1+tanh((V(c,gnd)-0.5)/0.02))
 Rleak out gnd 1G
 Bq vcc gnd I = 55u*(V(vcc,gnd)>1)
 .ends
+* CMPTA22: the same with the outputs coming alive at 2.2 V instead of 2.0 V: the TLV170x's minimum
+* supply (SBOS589D 2.2 V; below it the datasheet does not say what the output does). The worst case
+* of the power-up with the outputs open below the minimum.
+.subckt CMPTA22 inp inn out vcc gnd
+Bu u gnd V = 0.5*(1+tanh((V(inn)-V(inp)-0.4m)/0.1m)) * 0.5*(1+tanh((V(vcc,gnd)-2.2)/0.1))
+R1 u c 1k
+C1 c gnd 745p
+Bs out gnd I = V(out,gnd)/150 * 0.5*(1+tanh((V(c,gnd)-0.5)/0.02))
+Rleak out gnd 1G
+Bq vcc gnd I = 55u*(V(vcc,gnd)>1)
+.ends
