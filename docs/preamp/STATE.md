@@ -13,17 +13,42 @@ fino al 2026-10-26, con tutta la loro storia, sono in `STATE-STORIA.md`.
 
 | | |
 |---|---|
-| Ultimo aggiornamento | **2026-10-28** (L54b2: il modello di TI dei comparatori non passa l'accensione del banco, i comparatori tarati su di esso; R585 sull'innesco della ritenuta; lo standby com'è; la catena al jack in dB SPL; ADR-103; nessuna voce aperta o chiusa) |
-| Ultimo lotto chiuso | **L54b2** — il temporizzatore sul sorgente: i comparatori, l'innesco della ritenuta, lo standby, la catena al jack (2026-10-28). `models/comparator/` (il TLV1701 di TI per ngspice, `genera_tlv1701.py`, ricetta `tb_tlv1701`), `circuits/preamp/psu.py` (R585), `check_relay_safe_state.py` (T6b), `psu_draw.py`, il banco `data/2026-10-28/L54b2/psu/` (`--comparatore tarato`, `--rfpd`, `--standby`), il ponte `--passata-unica`. ADR-103. Report `reports/2026-10-28-L54b2-temporizzatore-sul-sorgente.md` |
-| **Prossimo lotto** | **L54b3 — la robustezza del temporizzatore al banco** (prompt in `NEXT-SESSION.md`): la rete sporca, i fronti veloci contro la ritenuta, i rimbalzi, il Monte Carlo sulle tolleranze, 0 / 60 °C, col comparatore tarato (ADR-103). Poi l'ordine deciso con l'utente verso G1: L55, L58, il dossier rigenerato una volta (**L64**), la revisione (**L65**), G1 |
-| Non conformità | **17 aperte, 1 bloccante** (L54b2, 2026-10-28: nessuna aperta o chiusa; NC-037 avanza, lo standby 116,1 / 130,1 / 144,2 mW per scelta dell'utente, la strada da 71,5 / 80,5 / 89,7 mW misurata). Il registro è `NONCOMPLIANCE.md` |
+| Ultimo aggiornamento | **2026-10-28** (L54b3a: i modelli del costruttore della ritenuta e dei BAT54; il BAT54 del costruttore faceva scattare la ritenuta a ogni accensione, D535 / D536 / D541 a bassa perdita e R571 1 MΩ; i cali lenti lasciati alla ritenuta; buchi, sovratensione, rimbalzi e fronti veloci passano; ADR-104; nessuna voce aperta o chiusa) |
+| Ultimo lotto chiuso | **L54b3a** — la robustezza del temporizzatore al banco, prima parte: i modelli del costruttore, la rete sporca, i fronti veloci, i rimbalzi (2026-10-28). `models/` (BC847A/B/C, BC857A/B/C, BAT54 di Diodes Inc., sette ricette), `circuits/preamp/psu.py` (D535 / D536 / D541 BAS416, R571 1M), `psu_draw.py`, il banco `data/2026-10-28/L54b3a/psu/` (`--rete-forma`, `--disturbo nodo:`, `--rimbalzo`, `--ritenuta` / `--bat54 costruttore`, `--qualifica`, `--bassa-perdita`, `analizza_rob.py`), limitations #79 / #80. ADR-104. Report `reports/2026-10-28-L54b3a-robustezza-rete-fronti-rimbalzi.md` |
+| **Prossimo lotto** | **L54b3b — le tolleranze e la temperatura del temporizzatore** (prompt in `NEXT-SESSION.md`): il Monte Carlo e il caso peggiore sugli RC e sui comparatori, 0 / 60 °C coi modelli del costruttore (la perdita dei diodi sui nodi da megaohm), l'accensione a freddo col tarato a 2,2 V, la perdita a −10 %. Poi l'ordine deciso con l'utente verso G1: L55, L58, il dossier rigenerato una volta (**L64**), la revisione (**L65**), G1 |
+| Non conformità | **17 aperte, 1 bloccante** (L54b3a, 2026-10-28: nessuna aperta o chiusa). Il registro è `NONCOMPLIANCE.md` |
 | Le bloccanti | Per **G1**: **nessuna bloccante** (L54a, 2026-10-26); da chiudere prima di G1 per decisione dell'utente: **NC-055, NC-072** (maggiori) e NC-056 (minore) — NC-054 chiusa; NC-073 e NC-075 (maggiori) alla scelta della parte. Per **G2**: NC-044 (L50) |
-| Suite | `run_tests.sh` **14 passed / 0 failed** a fine L54b2 (2026-10-28, dal worktree; il 2d 167 su 167, il 2e con T6b); `validate_models.py` 69 / 69 (il TLV1701) |
+| Suite | `run_tests.sh` **14 passed / 0 failed** a fine L54b3a (2026-10-28, dal worktree); `validate_models.py` 83 / 83 (i sette modelli di Diodes Inc.), `--check-provenance` 39 / 39 |
 
 ## Diario degli ultimi lotti
 
 Le ultime tre voci. Le più vecchie sono in `STATE-STORIA.md`, nello stesso ordine (la più recente
 in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quella sezione.
+
+### L54b3a — la robustezza del temporizzatore al banco: i modelli del costruttore, la rete sporca, i fronti veloci, i rimbalzi (2026-10-28)
+
+- **L54b3 diviso dall'utente all'inizio**, «Due parti»: L54b3a questa (a 25 °C), L54b3b le tolleranze e
+  la temperatura.
+- **I modelli del costruttore**: BC847A/B/C, BC857A/B/C, BAT54 di **Diodes Inc.** (Nexperia rifiuta lo
+  scaricamento), `validate_models.py` 83 / 83. I transistor da soli ridanno L54b2; **il BAT54 del
+  costruttore** (perdita ~0,65 µA, dentro il massimo di 2 µA) su AT_T2S armava la ritenuta a 1,07 s
+  invece di ~1,9 s: **scattava a ogni accensione** (limitations #79). La scelta dell'utente, **«Diodi a
+  bassa perdita, R571 1 MΩ»**: D535 / D536 / D541 BAS416, R571 1M; la musica dopo un buco di 20 ms a
+  559 ms (461 con R571 820 kΩ).
+- **La rete sporca** (60 corse, criteri scritti prima): buchi da ½ a 15 periodi, il ritorno durante la
+  discesa, +15 % (grezzo 26,7 V contro 36), i cali all'accensione passano; **i cali lenti** che portano i
+  regolatori fuori con la rete presente spengono l'apparecchio in **14 casi su 27** (la ritenuta). La
+  soglia sui tre grezzi perde lo scatto col corto davanti al regolatore +; quella sul grezzo dei relè ne
+  riprende 12 su 14. La scelta dell'utente, **«Lasciare com'è»**. (La domanda diceva 16 e «14 su 16»:
+  ricontati, 14 e 12 su 14.)
+- **Il sorgente nuovo**, la lista della sicurezza di L54b2 coi modelli del costruttore: nessun verdetto
+  cambia in 31 righe. **I rimbalzi** (36 treni da 1–5 ms): come la transizione pulita. **I fronti
+  veloci**: la prima iniezione non arrivava al nodo (limitations #80); quella ai terminali delle parti sì:
+  ±5 V in 10 ns su V5 portano la base di Q513 a 130 mV senza condensatori, 8,4 mV con l'1 nF (innesco
+  ~0,45 V): l'1 nF resta. Il passo di 5 µs ridà tutto identico.
+- ADR-104. `run_tests.sh` 14 / 0. Report `reports/2026-10-28-L54b3a-robustezza-rete-fronti-rimbalzi.md`;
+  dati `data/2026-10-28/L54b3a/`.
+- **Dopo**: **L54b3b**, il prompt di `NEXT-SESSION.md`.
 
 ### L54b2 — il temporizzatore sul sorgente: i comparatori, l'innesco della ritenuta, lo standby, la catena al jack (2026-10-28)
 
@@ -71,17 +96,6 @@ in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quel
   non si rifanno: ≤ 0,9 mW, nessuna decisione ne dipende).
 - `run_tests.sh` 14 / 0. Report `reports/2026-10-26-L54b1-temporizzatore-sorgente.md`.
 - **Dopo**: **L54b2**, il prompt di `NEXT-SESSION.md`.
-
-### Dopo L54a — la robustezza al banco nel prompt di L54b (2026-10-26)
-
-- **L'utente**: «il prototipo è molto costoso, dobbiamo cercare di accorgerci al banco delle simulazioni
-  dei problemi, il primo prototipo deve essere usabile» (dopo che ADR-102 e il report di L54a lasciavano
-  al prototipo l'immunità ai disturbi del temporizzatore). Poi «si concordo» alla proposta.
-- **Cambiato**: solo `NEXT-SESSION.md`, punto 7 di L54b: la rete sporca (cali lenti, buchi da ½ a 10
-  periodi, sovratensione, ritorno durante la discesa), i fronti veloci su `VRELAY_REG` e V5 contro la
-  ritenuta, i rimbalzi veri, il Monte Carlo sulle tolleranze degli RC e dei comparatori, 0 / 60 °C; al
-  prototipo solo ciò che non si simula, detto per nome.
-- **Dopo**: **L54b**, il prompt di `NEXT-SESSION.md`.
 
 
 ## Come si lavora da qui: a lotti piccoli e pushati
@@ -255,7 +269,9 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L54b | **Il temporizzatore a comparatori nel sorgente** (ADR-102): `psu.py` coi valori di `TIMER_AN`, U509 / J515 / R543–R547 e `firmware/preamp_timer/` fuori, `run_tests.sh` (il 2e `--timer`, il test del firmware), i disegni; i casi di L54a rifatti sul sorgente col modello del costruttore dei comparatori, la catena al jack dello spegnimento; i pull-up dello standby (NC-037); **la robustezza al banco** (richiesta dell'utente dopo L54a: la rete sporca, i disturbi veloci, i rimbalzi, il Monte Carlo sulle tolleranze, 0 / 60 °C — il primo prototipo deve essere usabile) | M | NC-037 | diviso dall'utente all'inizio, «Tre parti»: L54b1, L54b2, L54b3 |
 | L54b1 | **Il sorgente, i guardiani, i disegni, il banco sul sorgente** (ADR-102). **Fatto** (2026-10-26): `psu.py` col temporizzatore (U513–U515, Q513 / Q514), il micro e il firmware fuori; `--timer` T0–T6 e il cablaggio, 23 falsi; lo schematico e il diagramma a blocchi; `genera_tb_psu.py --timer sorgente`, il caso noto torna (report `2026-10-26-L54b1-temporizzatore-sorgente.md`) | M | — | **fatto** |
 | L54b2 | **Il modello del costruttore, lo standby, la catena al jack** (ADR-102) | M | NC-037 | **fatto** (2026-10-28): il TLV1701 di TI per ngspice torna da solo ma non passa l'accensione del banco, i comparatori tarati su di esso («Comportamentale tarato»), i casi della sicurezza coi verdetti uguali; R585 sull'innesco della ritenuta («Resistenza verso il ritorno»); lo standby com'è («Lasciare com'è»); la catena al jack −55,2 / −55,3 dB SPL, +4,4 a rete −10 %; ADR-103. Report `reports/2026-10-28-L54b2-temporizzatore-sul-sorgente.md` |
-| L54b3 | **La robustezza del temporizzatore al banco** (richiesta dell'utente dopo L54a): la rete sporca, i fronti veloci contro la ritenuta, i rimbalzi, il Monte Carlo sulle tolleranze, 0 / 60 °C; il testo del prompt nel report di L54b1, §«Per L54b3» | M | — | da fare — **il prossimo**; prompt in `NEXT-SESSION.md` |
+| L54b3 | **La robustezza del temporizzatore al banco** (richiesta dell'utente dopo L54a): la rete sporca, i fronti veloci contro la ritenuta, i rimbalzi, il Monte Carlo sulle tolleranze, 0 / 60 °C; il testo del prompt nel report di L54b1, §«Per L54b3» | M | — | diviso dall'utente all'inizio, «Due parti»: L54b3a, L54b3b |
+| L54b3a | **I modelli del costruttore, la rete sporca, i fronti veloci, i rimbalzi** (a 25 °C) | M | — | **fatto** (2026-10-28): BC847 / BC857 / BAT54 di Diodes Inc.; il BAT54 del costruttore faceva scattare la ritenuta a ogni accensione → D535 / D536 / D541 BAS416, R571 1 MΩ («Diodi a bassa perdita, R571 1 MΩ»); i cali lenti spengono l'apparecchio in 14 casi su 27 («Lasciare com'è»); buchi, sovratensione, rimbalzi, fronti (la base ≤ 8,4 mV con l'1 nF) passano; ADR-104. Report `reports/2026-10-28-L54b3a-robustezza-rete-fronti-rimbalzi.md` |
+| L54b3b | **Le tolleranze e la temperatura**: il Monte Carlo e il caso peggiore sugli RC e sui comparatori, 0 / 60 °C coi modelli del costruttore, l'accensione a freddo col tarato a 2,2 V, la perdita a −10 % | M | — | da fare — **il prossimo**; prompt in `NEXT-SESSION.md` |
 | L55 | **Il dispositivo d'uscita del blocco** (NC-056): un dispositivo di taglia driver col modello del costruttore contro il MJE15032/33 sul banco del blocco (V1, V4, PSRR, slew, calore), con T7 e T8 | M | NC-056 | da fare — dopo L54b3 e dopo L56 (tocca anche il VAS), prima di G1 |
 | L64 | **Il dossier rigenerato, una volta sola, quando il circuito smette di cambiare prima di G1** (decisione dell'utente dopo L45d2b3b2a, 2026-10-22, «si mi va bene»): `build_dossier.py` e le sue sezioni sul progetto di allora. L'ultimo è di L51 (2026-10-10); da lì non mostra l'inseguitore e l'aiuto dello specchio (L56), il rivelatore tolto e il condensatore della Stax (L60), i diodi del moltiplicatore e dei finali (L62, ADR-095), l'alimentatore di ADR-091…094, R153 sdoppiata (ADR-097), i rimedi del calore e i dissipatori (ADR-099), gli schematici completi (L63), la FMEA con le misure adottate (L45d2b3b3). Una rigenerazione intermedia solo se l'utente vuole guardare il progetto prima | M | — | da fare — dopo l'ultimo lotto che tocca il sorgente prima di G1 (L45d2b3b2b, L57, L54, L55, L58) e dopo L45d2b3b3 |
 | L65 | **La revisione del dossier rigenerato**, prima del gate (come L42 → L43 e L51 → L52): la forma — l'architetto avversariale cieco, la lettura dell'utente, o tutte e due — si decide con l'utente all'apertura | S/M | — | da fare — dopo L64, prima di G1 |

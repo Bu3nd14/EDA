@@ -821,6 +821,388 @@ def tb_mmbt5551(model_file):
         ft_locked=175.683e6, cobo_locked=2.2207e-12, cobo_max=6e-12)
 
 
+# ---------------------------------------------------------------------
+# L54b3a - BC847A/B/C, BC857A/B/C (Diodes Inc.) and BAT54 (Diodes Inc.).
+# Datasheets DS11108 Rev. 28-2 (BC846A-BC848C, May 2025, Electrical
+# Characteristics on p. 4), DS11207 Rev. 28-2 (BC856A-BC858C, May 2025,
+# p. 4) and DS11005 Rev. 34-2 (BAT54/A/C/S, November 2023, p. 2-3).
+# The point of the import is the CAPACITANCES: the bench had generic
+# transistors with none, and has to decide whether a fast edge trips a
+# two-transistor latch with 1 nF across a base-emitter.
+# ---------------------------------------------------------------------
+
+def _bc_deck(model_file, model_name, csv_base, sign, ib_ft, full):
+    """The BC84x/BC85x deck. `sign` +1 NPN, -1 PNP. Conditions are the
+    datasheet's: set temp = 25 (not ngspice's 27).
+
+      Q1  hFE and VBE(on) at |VCE| = 5 V, swept base voltage (read at IC = 2 mA)
+      Q2  fT at |VCE| = 5 V, FIXED base current that gives IC = 10 mA
+      Q3  C_obo at |VCB| = 10 V, emitter open (1 T-ohm to ground)
+      Q4  C_ibo at |VEB| = 0.5 V reverse, collector open (1 T-ohm to ground)
+
+    The datasheets give NO C_ibo (DS11108/DS11207 list C_obo only): the
+    C_ibo reading is a MODEL value, locked as such, with no datasheet number
+    to compare it to. The A/C grades only get Q1 (hFE).
+    """
+    op_csv = os.path.join(SCRATCH_DIR, csv_base + "_op.csv")
+    hfe_csv = os.path.join(SCRATCH_DIR, csv_base + "_hfe.csv")
+    ac_csv = os.path.join(SCRATCH_DIR, csv_base + "_ac.csv")
+    v5, v10 = 5.0 * sign, 10.0 * sign
+    vb_start, vb_stop, vb_step = 0.45 * sign, 0.85 * sign, 0.0002 * sign
+    ib_nodes = "b2 0" if sign < 0 else "0 b2"
+    cir = f"""* validate {csv_base}.lib - {model_name} at the datasheet's own conditions
+.include {model_file}
+Q1 c1 b1 0 {model_name}
+Vc1 c1 0 DC {v5}
+Vb1 b1 0 DC {0.6 * sign}
+"""
+    if full:
+        cir += f"""Q2 c2 b2 0 {model_name}
+Vc2 c2 0 DC {v5}
+Ib2 {ib_nodes} DC {ib_ft:.9g} AC 1
+Q3 c3 0 e3 {model_name}
+Re3 e3 0 1T
+Vc3 c3 0 DC {v10} AC 1
+Q4 c4 b4 0 {model_name}
+Rc4 c4 0 1T
+Vb4 b4 0 DC {-0.5 * sign} AC 1
+"""
+    # `save` must list @q1[ic] @q1[ib] for the sweep AND the branch currents
+    # of the AC run: once there is an explicit save list, anything not on it
+    # is not recorded (the same trap as _tb_diodes_bjt; limitations.md #10).
+    cir += ".control\nset temp = 25\n"
+    if full:
+        cir += f"""save @q1[ic] @q1[ib] @q2[ic] i(Vc2) i(Vc3) i(Vb4)
+op
+wrdata {op_csv} @q2[ic]
+destroy all
+"""
+    else:
+        cir += "save @q1[ic] @q1[ib]\n"
+    cir += f"""dc Vb1 {vb_start} {vb_stop} {vb_step}
+wrdata {hfe_csv} @q1[ic] @q1[ib]
+destroy all
+"""
+    if full:
+        cir += f"""ac dec 2 1meg 100meg
+let hfe = mag(i(Vc2))
+let cre = real(i(Vc3))
+let cim = imag(i(Vc3))
+let ere = real(i(Vb4))
+let eim = imag(i(Vb4))
+wrdata {ac_csv} hfe cre cim ere eim
+destroy all
+"""
+    cir += ".endc\n.end\n"
+    if full:
+        return cir, [op_csv, hfe_csv, ac_csv], [1, 2, 5]
+    return cir, hfe_csv, 2
+
+
+def _vbe_at(rows, target):
+    """|VBE| at a target IC (x of the DC sweep is the base voltage),
+    interpolated between the bracketing samples."""
+    prev = None
+    for r in rows:
+        ic = abs(r["y0"])
+        if prev is not None and prev[0] < target <= ic:
+            ic0, v0 = prev
+            f = (target - ic0) / (ic - ic0)
+            return abs(v0 + f * (r["x"] - v0))
+        prev = (ic, r["x"])
+    return None
+
+
+def _tb_bc(model_file, model_name, csv_base, sign, hfe_window, hfe_locked,
+           full=False, ib_ft=None, vbe_window=None, vbe_locked=None,
+           vbe_inside=True, cobo_locked=None, cibo_locked=None, ft_locked=None):
+    TOL_PCT = 0.5   # a changed digit moves these by far more than 0.5%
+    if full:
+        cir, csvs, ncols = _bc_deck(model_file, model_name, csv_base, sign, ib_ft, True)
+    else:
+        cir, csvs, ncols = _bc_deck(model_file, model_name, csv_base, sign, None, False)
+
+    def check(sets):
+        problems, report = [], []
+        if full:
+            op_rows, hfe_rows, ac_rows = sets
+        else:
+            hfe_rows = sets
+        if len(hfe_rows) < 1500:
+            return False, f"expected the full Vb sweep, got {len(hfe_rows)} rows"
+        hfe = _interp_hfe(hfe_rows, 2e-3)
+        if hfe is None:
+            return False, "IC never reached 2 mA in the sweep"
+        hmin, hmax = hfe_window
+        if not (hmin <= hfe <= hmax):
+            problems.append(f"hFE={hfe:.2f} at IC=2mA, VCE=5V is outside the "
+                            f"datasheet window [{hmin:.0f}, {hmax:.0f}]")
+        if abs(hfe - hfe_locked) / hfe_locked * 100 > TOL_PCT:
+            problems.append(f"hFE={hfe:.2f} has moved from the value L54b3a "
+                            f"measured ({hfe_locked}) by more than {TOL_PCT}%")
+        report.append(f"hFE@2mA={hfe:.1f} (window {hmin:.0f}..{hmax:.0f})")
+        if not full:
+            return (not problems), ("; ".join(problems) if problems else
+                                    ", ".join(report) + " - inside the datasheet window")
+
+        if len(op_rows) != 1:
+            return False, f"expected one op row, got {len(op_rows)}"
+        ic_ft = abs(op_rows[0]["y0"])
+        if abs(ic_ft - 10e-3) / 10e-3 > 0.002:
+            problems.append(f"the fT bias is off: IC = {ic_ft * 1e3:.4f} mA where the "
+                            f"datasheet specifies 10 mA")
+
+        vbe = _vbe_at(hfe_rows, 2e-3)
+        vmin, vmax = vbe_window
+        inside = vmin <= vbe <= vmax
+        # The verdict is asserted AS a verdict (README of models/): a model
+        # that is OUTSIDE the window is locked as outside, and the recipe
+        # fails if that changes in either direction.
+        if inside != vbe_inside:
+            problems.append(f"VBE(on)={vbe * 1e3:.1f}mV at IC=2mA: window "
+                            f"[{vmin * 1e3:.0f}, {vmax * 1e3:.0f}]mV, verdict "
+                            f"{'inside' if inside else 'OUTSIDE'} but "
+                            f"{'inside' if vbe_inside else 'OUTSIDE'} was locked")
+        if abs(vbe - vbe_locked) > 1e-3:
+            problems.append(f"VBE(on)={vbe * 1e3:.2f}mV has moved from "
+                            f"{vbe_locked * 1e3:.2f}mV by more than 1mV")
+        report.append(f"VBE(on)@2mA={vbe * 1e3:.1f}mV (window {vmin * 1e3:.0f}..{vmax * 1e3:.0f}, "
+                      f"{'inside' if inside else 'OUTSIDE by %+.1fmV, locked as a deviation' % ((vbe - vmax) * 1e3)})")
+
+        if len(ac_rows) < 3:
+            return False, f"expected the AC sweep, got {len(ac_rows)} rows"
+        r100 = _row_at(ac_rows, 100e6)
+        ft = r100["x"] * r100["y0"]
+        if ft < 100e6:
+            problems.append(f"fT={ft / 1e6:.1f}MHz is below the datasheet minimum 100MHz")
+        if abs(ft - ft_locked) / ft_locked * 100 > TOL_PCT:
+            problems.append(f"fT={ft / 1e6:.2f}MHz has moved from {ft_locked / 1e6:.2f}MHz "
+                            f"by more than {TOL_PCT}%")
+        report.append(f"fT@10mA,5V={ft / 1e6:.0f}MHz (min 100)")
+
+        r1 = _row_at(ac_rows, 1e6)
+        cobo, rat_o = _cap_from(r1, "y1", "y2")
+        cibo, rat_i = _cap_from(r1, "y3", "y4")
+        if max(rat_o, rat_i) > 0.05:
+            problems.append(f"a capacitance reading is not capacitive: "
+                            f"|Re/Im| = {max(rat_o, rat_i):.3g}")
+        # datasheet: C_obo TYP 3 pF, no min or max. The model must sit near
+        # the typical figure; a looser bound than the locks below.
+        if abs(cobo / 3e-12 - 1) > 0.15:
+            problems.append(f"C_obo={cobo * 1e12:.3f}pF is not within 15% of the "
+                            f"datasheet typical 3 pF")
+        if abs(cobo - cobo_locked) / cobo_locked * 100 > TOL_PCT:
+            problems.append(f"C_obo={cobo * 1e12:.4f}pF has moved from "
+                            f"{cobo_locked * 1e12:.4f}pF by more than {TOL_PCT}%")
+        if abs(cibo - cibo_locked) / cibo_locked * 100 > TOL_PCT:
+            problems.append(f"C_ibo={cibo * 1e12:.4f}pF has moved from "
+                            f"{cibo_locked * 1e12:.4f}pF by more than {TOL_PCT}%")
+        report.append(f"C_obo@10V={cobo * 1e12:.2f}pF (typ 3), "
+                      f"C_ibo@0.5V={cibo * 1e12:.2f}pF (datasheet silent)")
+        if problems:
+            return False, "; ".join(problems)
+        return True, ", ".join(report)
+    return cir, csvs, ncols, check
+
+
+# Locks measured in L54b3a (ngspice 47, set temp = 25). IB_FT: the base
+# current that gives IC = 10.000 mA at VCE = 5 V with the model AS FROZEN
+# (calibrated to 0.00001%); the op check in the recipe refuses if that stops
+# being true. Windows (min, max), datasheet p. 4:
+#   DC current gain at IC = 2 mA, VCE = 5 V: BC847A 110..220, B 200..450,
+#   C 420..800 (typ 180/290/520); BC857A 125..250, B 220..475, C 420..800.
+#   VBE(on) at IC = 2 mA, VCE = 5 V: BC847 580..700 mV (typ 660);
+#   BC857 600..750 mV (typ 650, magnitudes).
+IB_FT_BC847B, IB_FT_BC857B = 3.35070513e-5, 3.40502983e-5
+
+
+def tb_bc847a(model_file):
+    return _tb_bc(model_file, "DI_BC847A", "bjt_npn_bc847a", +1,
+                  hfe_window=(110.0, 220.0), hfe_locked=210.201)
+
+
+def tb_bc847b(model_file):
+    """BC847B, Diodes Inc. DS11108 Rev. 28-2 p. 4. hFE 239.4 inside 200..450
+    (typ 290, the model is 17% under typical). VBE(on) 708.4 mV is OUTSIDE
+    the datasheet maximum of 700 mV (typ 660): +8.4 mV over the ceiling and
+    +48 mV over typical, because the B model's IS (3.75 fA) is 2.7x lower
+    than the A and C models' (10.2 fA, whose VBE is 678 mV). Locked as a
+    deviation, not hidden. C_obo 3.000 pF at 10 V against typ 3 pF; the
+    datasheet gives no C_ibo, the 11.02 pF at 0.5 V reverse is the model's
+    (CJE 13.3 pF) and nothing more."""
+    return _tb_bc(model_file, "DI_BC847B", "bjt_npn_bc847b", +1,
+                  hfe_window=(200.0, 450.0), hfe_locked=239.410,
+                  full=True, ib_ft=IB_FT_BC847B,
+                  vbe_window=(0.580, 0.700), vbe_locked=0.708386, vbe_inside=False,
+                  cobo_locked=2.9997e-12, cibo_locked=11.0194e-12, ft_locked=253.78e6)
+
+
+def tb_bc847c(model_file):
+    return _tb_bc(model_file, "DI_BC847C", "bjt_npn_bc847c", +1,
+                  hfe_window=(420.0, 800.0), hfe_locked=761.857)
+
+
+def tb_bc857a(model_file):
+    return _tb_bc(model_file, "DI_BC857A", "bjt_pnp_bc857a", -1,
+                  hfe_window=(125.0, 250.0), hfe_locked=232.853)
+
+
+def tb_bc857b(model_file):
+    """BC857B, Diodes Inc. DS11207 Rev. 28-2 p. 4. hFE 308.2 inside 220..475
+    (typ 290); VBE(on) 694.8 mV inside 600..750; fT 186 MHz (min 100, typ
+    200); C_obo 3.000 pF against typ 3 pF; C_ibo 22.29 pF is the model's
+    (CJE 26.9 pF), the datasheet is silent."""
+    return _tb_bc(model_file, "DI_BC857B", "bjt_pnp_bc857b", -1,
+                  hfe_window=(220.0, 475.0), hfe_locked=308.185,
+                  full=True, ib_ft=IB_FT_BC857B,
+                  vbe_window=(0.600, 0.750), vbe_locked=0.694757, vbe_inside=True,
+                  cobo_locked=2.9997e-12, cibo_locked=22.2874e-12, ft_locked=186.23e6)
+
+
+def tb_bc857c(model_file):
+    return _tb_bc(model_file, "DI_BC857C", "bjt_pnp_bc857c", -1,
+                  hfe_window=(420.0, 800.0), hfe_locked=793.492)
+
+
+def tb_bat54(model_file):
+    """BAT54, Diodes Inc. (the model is Zetex's, v1.0 of 25/04/00).
+    Datasheet DS11005 Rev. 34-2, Nov. 2023:
+
+      V_F  max @ 0.1/1/10/30/100 mA   240/320/400/500/800 mV   (p. 2)
+      I_R  max @ V_R = 25 V, 25 C     2.0 uA                   (p. 2)
+      C_T  max @ V_R = 1 V, 1 MHz     10 pF                    (p. 2); Fig. 3
+           p. 3 typical, read by eye: ~9.3 pF at 1 V, ~2.6 pF at 25 V
+      I_R(T) at V_R = 25 V, Fig. 2 p. 3, TYPICAL curves read by eye (+-25%):
+           25 C 0.2 uA, 75 C 5.2 uA, 125 C 72 uA; 60 C is not drawn and is
+           interpolated log-linearly between the 25 C and 75 C curves: 1.9 uA.
+
+    THE MODEL'S LEAKAGE IS NOT THE TYPICAL CURVE. It is IS = 649 nA, flat in
+    V_R, so at 25 V and 25 C it reads 0.76 uA: 3.7x the typical curve, 2.6x
+    under the 2 uA maximum. Its TEMPERATURE dependence does track the figure
+    (60 C / 25 C = 9.3 against 9.5 from the figure; XTI = 2, EG = 0.58 give
+    a x9.3 rise for the 35 C), so the model sits a roughly constant 3.4x above
+    the typical curve at every temperature. At 60 C that is 7.1 uA against
+    1.9 uA typical-by-eye and ~18 uA if the 2 uA maximum is scaled by the
+    figure's own 60 C / 25 C ratio: the model is bracketed between the two.
+    The recipe asserts the bracket and the ratio, and locks the numbers.
+    """
+    vf_csv = os.path.join(SCRATCH_DIR, "diodes_bat54_vf.csv")
+    ir_csvs = [os.path.join(SCRATCH_DIR, f"diodes_bat54_ir{t}.csv") for t in (25, 60, 75, 125)]
+    ac_csv = os.path.join(SCRATCH_DIR, "diodes_bat54_ac.csv")
+    cir = f"""* validate bat54.lib - BAT54 at the datasheet's own conditions
+.include {model_file}
+I1 0 a1 0.1m
+D1 a1 0 BAT54
+I2 0 a2 1m
+D2 a2 0 BAT54
+I3 0 a3 10m
+D3 a3 0 BAT54
+I4 0 a4 30m
+D4 a4 0 BAT54
+I5 0 a5 100m
+D5 a5 0 BAT54
+Vr 0 r DC 25
+D6 r 0 BAT54
+Vc1 k1 0 DC 1 AC 1
+D7 0 k1 BAT54
+Vc25 k25 0 DC 25 AC 1
+D8 0 k25 BAT54
+.control
+save v(a1) v(a2) v(a3) v(a4) v(a5) i(Vr) i(Vc1) i(Vc25)
+set temp = 25
+op
+wrdata {vf_csv} v(a1) v(a2) v(a3) v(a4) v(a5)
+wrdata {ir_csvs[0]} i(Vr)
+destroy all
+"""
+    for t, path in zip((60, 75, 125), ir_csvs[1:]):
+        cir += f"""set temp = {t}
+save i(Vr)
+op
+wrdata {path} i(Vr)
+destroy all
+"""
+    cir += f"""set temp = 25
+save i(Vc1) i(Vc25)
+ac lin 1 1meg 1meg
+let a1 = real(i(Vc1))
+let b1 = imag(i(Vc1))
+let a25 = real(i(Vc25))
+let b25 = imag(i(Vc25))
+wrdata {ac_csv} a1 b1 a25 b25
+destroy all
+.endc
+.end
+"""
+    VF_MAX = (0.240, 0.320, 0.400, 0.500, 0.800)
+    VF_LOCKED = (0.140872, 0.208374, 0.301282, 0.384881, 0.583821)
+    IR_LOCKED = {25: 7.62559e-7, 60: 7.07423e-6, 75: 1.73196e-5, 125: 2.26376e-4}
+    IR25_MAX = 2.0e-6
+    # Fig. 2 p. 3, typical curves at V_R = 25 V, read by eye (+-25%).
+    FIG_IR = {25: 0.205e-6, 60: 1.94e-6, 75: 5.2e-6, 125: 72e-6}
+    CT1_LOCKED, CT25_LOCKED = 7.6309e-12, 2.5273e-12
+
+    def check(sets):
+        vf_rows, r25, r60, r75, r125, ac_rows = sets
+        problems, report = [], []
+        vf = [vf_rows[0][f"y{i}"] for i in range(5)]
+        for v, vmax, vl, ia in zip(vf, VF_MAX, VF_LOCKED, ("0.1", "1", "10", "30", "100")):
+            if v > vmax:
+                problems.append(f"V_F@{ia}mA={v * 1e3:.1f}mV exceeds the datasheet maximum {vmax * 1e3:.0f}mV")
+            if abs(v - vl) > 1e-3:
+                problems.append(f"V_F@{ia}mA={v * 1e3:.2f}mV has moved from {vl * 1e3:.2f}mV by more than 1mV")
+        report.append("V_F@0.1/1/10/30/100mA=" + "/".join(f"{v * 1e3:.0f}" for v in vf)
+                      + "mV (max 240/320/400/500/800)")
+        ir = {}
+        for t, rows in ((25, r25), (60, r60), (75, r75), (125, r125)):
+            if len(rows) != 1:
+                return False, f"expected one IR row at {t} C, got {len(rows)}"
+            ir[t] = abs(rows[0]["y0"])
+            if abs(ir[t] - IR_LOCKED[t]) / IR_LOCKED[t] * 100 > 0.5:
+                problems.append(f"I_R({t}C)={ir[t] * 1e6:.4f}uA has moved from "
+                                f"{IR_LOCKED[t] * 1e6:.4f}uA by more than 0.5%")
+        if ir[25] > IR25_MAX:
+            problems.append(f"I_R(25V,25C)={ir[25] * 1e6:.3f}uA exceeds the datasheet maximum 2uA")
+        # the figure is typical: the model must sit ABOVE it (leakage is
+        # never modelled below the typical curve here) and below the
+        # maximum scaled by the figure's own temperature ratio
+        ratio_fig = FIG_IR[60] / FIG_IR[25]
+        ir60_max = IR25_MAX * ratio_fig
+        if not (FIG_IR[60] <= ir[60] <= ir60_max):
+            problems.append(f"I_R(60C)={ir[60] * 1e6:.2f}uA is outside the bracket "
+                            f"[{FIG_IR[60] * 1e6:.1f} (typical by eye), {ir60_max * 1e6:.0f} (2uA max x figure ratio)]uA")
+        ratio = ir[60] / ir[25]
+        if abs(ratio / ratio_fig - 1) > 0.30:
+            problems.append(f"I_R(60C)/I_R(25C)={ratio:.2f} is not within 30% of the figure's {ratio_fig:.2f}")
+        ratio125 = ir[125] / ir[25]
+        ratio125_fig = FIG_IR[125] / FIG_IR[25]
+        if abs(ratio125 / ratio125_fig - 1) > 0.30:
+            problems.append(f"I_R(125C)/I_R(25C)={ratio125:.0f} is not within 30% of the figure's {ratio125_fig:.0f}")
+        report.append(f"I_R@25V 25/60/75/125C={ir[25] * 1e6:.2f}/{ir[60] * 1e6:.2f}/"
+                      f"{ir[75] * 1e6:.1f}/{ir[125] * 1e6:.0f}uA (max 2uA at 25C; fig. typ "
+                      f"0.2/1.9/5.2/72uA, model {ir[25] / FIG_IR[25]:.1f}x typical at 25C, "
+                      f"{ir[60] / FIG_IR[60]:.1f}x at 60C)")
+        if len(ac_rows) != 1:
+            return False, f"expected one AC row, got {len(ac_rows)}"
+        c1, rat1 = _cap_from(ac_rows[0], "y0", "y1")
+        c25, rat25 = _cap_from(ac_rows[0], "y2", "y3")
+        if max(rat1, rat25) > 0.05:
+            problems.append("the C_T reading is not capacitive")
+        if c1 > 10e-12:
+            problems.append(f"C_T(1V)={c1 * 1e12:.3f}pF exceeds the datasheet maximum 10pF")
+        if abs(c1 / 9.3e-12 - 1) > 0.25:
+            problems.append(f"C_T(1V)={c1 * 1e12:.3f}pF is not within 25% of the Fig. 3 reading 9.3pF")
+        if abs(c25 / 2.6e-12 - 1) > 0.25:
+            problems.append(f"C_T(25V)={c25 * 1e12:.3f}pF is not within 25% of the Fig. 3 reading 2.6pF")
+        if abs(c1 - CT1_LOCKED) / CT1_LOCKED * 100 > 0.5 or abs(c25 - CT25_LOCKED) / CT25_LOCKED * 100 > 0.5:
+            problems.append(f"C_T has moved from the locked {CT1_LOCKED * 1e12:.4f}/{CT25_LOCKED * 1e12:.4f}pF")
+        report.append(f"C_T@1V/25V={c1 * 1e12:.2f}/{c25 * 1e12:.2f}pF (max 10 at 1V; fig. ~9.3/~2.6)")
+        if problems:
+            return False, "; ".join(problems)
+        return True, ", ".join(report)
+    return cir, [vf_csv] + ir_csvs + [ac_csv], [5, 1, 1, 1, 1, 4], check
+
+
 # L46a locks for the ZXT pair. ib: the base current that gives IC = 50 mA at
 # VCE = 10 V with the model as frozen. hfe points: (IC, locked, datasheet min).
 IB_FT_ZXTN, IB_FT_ZXTP = 102.789e-6, 88.8475e-6
@@ -1953,6 +2335,14 @@ def build_registry():
     reg["ldo_regulator/tps7a4701_ngspice.lib"] = lambda p: tb_tps7a4701(p)
     # L54b2 - TI's TLV1701 (the TLV1704's die) and its variant TLV1701_OC (limitations #77).
     reg["comparator/tlv1701_ngspice.lib"] = lambda p: tb_tlv1701(p)
+    # L54b3a - the latch transistors and the Schottky of the supply bench: Diodes Inc. models.
+    reg["bjt_npn/bc847a.lib"] = lambda p: tb_bc847a(p)
+    reg["bjt_npn/bc847b.lib"] = lambda p: tb_bc847b(p)
+    reg["bjt_npn/bc847c.lib"] = lambda p: tb_bc847c(p)
+    reg["bjt_pnp/bc857a.lib"] = lambda p: tb_bc857a(p)
+    reg["bjt_pnp/bc857b.lib"] = lambda p: tb_bc857b(p)
+    reg["bjt_pnp/bc857c.lib"] = lambda p: tb_bc857c(p)
+    reg["diodes/bat54.lib"] = lambda p: tb_bat54(p)
     return reg
 
 

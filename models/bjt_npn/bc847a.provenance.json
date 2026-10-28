@@ -1,0 +1,12 @@
+{
+  "canonical_file": "bc847a.lib",
+  "device_class": "bjt_npn",
+  "origin": "vendor_derived",
+  "vendor_source_path": "vendor/bjt_npn/diodes_inc/BC847A/BC847A.spice.txt",
+  "vendor_source_sha256": "24e6fdec1c7093d497f6571dbf2af1c542b7f46b120ce21626c63bd8598013a6",
+  "date_created": "2026-10-28",
+  "author": "AI agent (Claude Sonnet 5.5, subagent of the L54b3a batch) on behalf of roberto.carmeli@gmail.com",
+  "changes": "ONE LINE. The vendor file has a bare 'BJTs' line (line 18: the wrapped tail of the '*SRC=' comment, missing its '*'). ngspice 47 reads a line starting with B as a behavioural source and exits 1 with 'mal formed B source instance: bjts'. In this copy that line is '*BJTs'. Everything else is the vendor file byte for byte, CRLF included, appended below a header of our own (LF); the header adds comment lines only. Verifiable: the non-comment lines of this file and of the vendor file differ in exactly that one line ('BJTs' present in the vendor file, absent here); the .MODEL text and the model name DI_BC847A are untouched. The PNP twins BC857A/BC857C do not have this defect.",
+  "reason": "L54b3a: the supply bench had generic transistors with no capacitances and has to decide whether a fast edge trips a two-transistor latch with 1 nF across a base-emitter. This is the manufacturer's model of the type the BOM names (BC847A, Diodes Incorporated), replacing the generic .model.",
+  "notes": "Manufacturer model, locked by a recipe in scripts/validate_models.py (tb_bc847a). hFE 210.2 at IC = 2 mA, VCE = 5 V against 110..220 (typ 180): INSIDE, 4.5% under the ceiling. VBE(on) 678.5 mV against 580..700 (typ 660): inside. Capacitances and fT are not locked on the A grade (hFE only); see bc847b.lib. Nexperia, whose model was the first choice, refuses automated downloads (HTTP 403, Akamai) on assets.nexperia.com and www.nexperia.com, so Diodes Incorporated's own model was used; see vendor/bjt_npn/diodes_inc/BC847A/PROVENANCE.json. The vendor's CJE differs by 2x between the B model and its A/C siblings in both polarities (BC847: A 26.8 pF, B 13.3 pF, C 26.8 pF; BC857: A 13.3 pF, B 26.9 pF, C 13.3 pF), so no C_ibo/CJE figure from this family is reliable to better than a factor of 2. No KF/AF: no 1/f noise."
+}

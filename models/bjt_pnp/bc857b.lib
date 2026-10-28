@@ -1,0 +1,38 @@
+* BC857B - PNP small-signal transistor, SOT23, Diodes Incorporated (45 V, 100 mA)
+* Model: the manufacturer's own file, BC857B.spice.txt, served at
+*   https://www.diodes.com/spice/download/2926/BC857B.spice.txt
+*   obtained 2026-10-28; vendor original frozen at
+*   vendor/bjt_pnp/diodes_inc/BC857B/BC857B.spice.txt (sha256 787162cbf5b920781160cf86c0f9fdd5a1f35f9a5522b2168c4a3fe02d14e298).
+* Datasheet checked against: DS11207 Rev. 28-2, vendor/bjt_pnp/diodes_inc/BC857B/BC856A-BC858C_DS11207.pdf.
+* Instantiate: Qxxx C B E DI_BC857B    (pin order collector, base, emitter; no substrate node)
+* Model name: DI_BC857B   (NOT BC857B: the vendor's .MODEL carries the DI_ prefix)
+*
+* Verdict against the datasheet (scripts/validate_models.py, set temp = 25):
+*   hFE 308.2 at IC = -2 mA, VCE = -5 V against 220..475 (typ 290): inside. |VBE| 694.8 mV against 600..750 (typ 650): inside. fT 186.2 MHz at IC = -10 mA, VCE = -5 V against min 100 / typ 200: inside. C_obo 3.000 pF at VCB = -10 V against typ 3 pF. C_ibo 22.29 pF at VEB = 0.5 V reverse is the model's own: the datasheet gives none.
+* Not modelled / to know: no KF/AF (no 1/f noise); XTI is not given and takes
+* ngspice's default 3; the model has no DATE or VERSION line. Vendor disclaimer
+* (AS IS, no warranty) follows unaltered in the vendor block below.
+*
+* ----- vendor file follows (CRLF line endings kept; header above is LF) -----
+* DIODES INCORPORATED AND ITS AFFILIATED COMPANIES AND SUBSIDIARIES (COLLECTIVELY, "DIODES") 
+* PROVIDE THESE SPICE MODELS AND DATA (COLLECTIVELY, THE "SM DATA") "AS IS" AND WITHOUT ANY 
+* REPRESENTATIONS OR WARRANTIES, EXPRESS OR IMPLIED, INCLUDING ANY WARRANTY OF MERCHANTABILITY 
+* OR FITNESS FOR A PARTICULAR PURPOSE, ANY WARRANTY ARISING FROM COURSE OF DEALING OR COURSE OF 
+* PERFORMANCE, OR ANY WARRANTY THAT ACCESS TO OR OPERATION OF THE SM DATA WILL BE UNINTERRUPTED, 
+* OR THAT THE SM DATA OR ANY SIMULATION USING THE SM DATA WILL BE ERROR FREE. TO THE MAXIMUM 
+* EXTENT PERMITTED BY LAW, IN NO EVENT WILL DIODES BE LIABLE FOR ANY DIRECT OR INDIRECT, 
+* SPECIAL, INCIDENTAL, PUNITIVE OR CONSEQUENTIAL DAMAGES ARISING OUT OF OR IN CONNECTION WITH 
+* THE PRODUCTION OR USE OF SM DATA, HOWEVER CAUSED AND UNDER WHATEVER CAUSE OF ACTION OR THEORY 
+* OF LIABILITY BROUGHT (INCLUDING, WITHOUT LIMITATION, UNDER ANY CONTRACT, NEGLIGENCE OR OTHER 
+* TORT THEORY OF LIABILITY), EVEN IF DIODES HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES, 
+* AND DIODES' TOTAL LIABILITY (WHETHER IN CONTRACT, TORT OR OTHERWISE) WITH REGARD TO THE SM 
+* DATA WILL NOT, IN THE AGGREGATE, EXCEED ANY SUMS PAID BY YOU TO DIODES FOR THE SM DATA.
+
+
+
+*SRC=BC857B;DI_BC857B;BJTs PNP; Si;  45.0V  0.100A  200MHz   Diodes, Inc. transistor
+.MODEL DI_BC857B  PNP (IS=5.51f NF=1.00 BF=424 VAF=121
++ IKF=36.4m ISE=2.35p NE=2.00 BR=4.00 NR=1.00
++ VAR=20.0 IKR=90.0m RE=0.765 RB=3.06 RC=0.306
++ XTB=1.5 CJE=26.9p VJE=1.10 MJE=0.500 CJC=8.67p VJC=0.300
++ MJC=0.300 TF=700p TR=121n EG=1.12 )

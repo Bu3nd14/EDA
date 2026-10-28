@@ -1,32 +1,35 @@
-# Prompt per la sessione successiva — L54b3, la robustezza del temporizzatore al banco
+# Prompt per la sessione successiva — L54b3b, le tolleranze e la temperatura del temporizzatore
 
-Nome della sessione: **hi-fi preamp L54b3** (la convenzione è in `CLAUDE.md`).
+Nome della sessione: **hi-fi preamp L54b3b** (la convenzione è in `CLAUDE.md`).
 
-> Prompt scritto alla chiusura della seconda parte di L54b (2026-10-28). L54b è stato diviso
-> dall'utente all'inizio, «Tre parti»: la prima (il sorgente, i guardiani, i disegni, il banco sul
-> sorgente) e la seconda (i comparatori, l'innesco della ritenuta, lo standby, la catena al jack) sono
-> fatte; questa è la terza. L'ordine deciso con l'utente: L54b3 → L55 → L58 → L64 → L65 → G1.
+> Prompt scritto alla chiusura della prima parte di L54b3 (2026-10-28). L54b3 è stato diviso
+> dall'utente all'inizio, «Due parti»: la prima (i modelli del costruttore, la rete sporca, i fronti
+> veloci, i rimbalzi, a 25 °C) è fatta; questa è la seconda. L'ordine deciso con l'utente: L54b3b → L55 →
+> L58 → L64 → L65 → G1.
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Il lavoro è organizzato in
-LOTTI PICCOLI: questa sessione fa **L54b3**, e si ferma. Non iniziarne un secondo, salvo che l'utente
+LOTTI PICCOLI: questa sessione fa **L54b3b**, e si ferma. Non iniziarne un secondo, salvo che l'utente
 lo chieda esplicitamente nella sessione.
 
 ## Dove siamo
 
 Il temporizzatore di ADR-102 è nel sorgente (`circuits/preamp/psu.py`, U513–U515, la ritenuta Q513 /
-Q514), con **R585** di ADR-103 (33 kΩ dall'innesco della ritenuta, AT_F, al ritorno: all'accensione
-a freddo col frontale acceso le uscite dei comparatori sotto 2,2 V possono essere aperte, e senza
-R585 la ritenuta scattava). Il banco è `data/2026-10-28/L54b2/psu/genera_tb_psu.py` (README della
-cartella): `--timer sorgente`, e per ADR-103 i comparatori **tarati** sul modello di TI
-(`--comparatore tarato`, `CMPTA` in `psu/cmpta.lib`; `tarato18` anche U505–U508; `tarato22` con le
-uscite vive solo a 2,2 V, il caso peggiore dell'accensione). Il modello di TI stesso
-(`models/comparator/tlv1701_ngspice.lib`) torna col datasheet da solo ma non passa l'accensione del
-banco (limitations #77): non si riprova. I casi di L54b2 sul sorgente — `an_fin_*` (comportamentale),
-`an_fint_*` (tarato) — sono il punto di partenza: **non vanno rifatti qui**.
+Q514, R585 di ADR-103) con **ADR-104**: D535 / D541 (su AT_T2S, 2,7 MΩ) e D536 (su AT_PGT) sono BAS416 a
+bassa perdita, R571 1 MΩ; i cali lenti di rete che portano i regolatori fuori regolazione lasciano
+scattare la ritenuta (scelta dell'utente, «Lasciare com'è»). Il banco è
+`data/2026-10-28/L54b3a/psu/genera_tb_psu.py` (README della cartella): `--timer sorgente --comparatore
+tarato`, e coi modelli del costruttore **`--ritenuta costruttore --bat54 costruttore`** (BC847B / BC857B /
+BAT54 di Diodes Inc., `models/`); il BAS416 è sul banco il modello BAV199 di Diodes Inc. (dichiarato). Le
+opzioni di quel banco: `--rete-forma`, `--disturbo nodo:…`, `--rimbalzo`, `--durata`, `--passo-max`,
+`--sonde-piu` (la base della ritenuta e tre `.meas`), `--valore`, `--qualifica`, `--bassa-perdita`;
+l'analisi `psu/analizza_rob.py`; il confronto con la lista della sicurezza `psu/confronta_serie.sh`. Le
+serie `n_` (la lista della sicurezza di L54b2 sul sorgente di oggi, coi modelli del costruttore:
+`an_n_seq.csv`, `an_n_fmea.csv`) sono **il caso nominale** da cui partire: non si rifanno.
 
 ## Che cosa fare
 
-Il punto 7 del prompt di L54b (richiesta dell'utente dopo L54a, 2026-10-26), parola per parola:
+Il punto 7 del prompt di L54b (richiesta dell'utente dopo L54a, 2026-10-26), parola per parola; la prima
+parte ha fatto la rete, i fronti veloci e i rimbalzi, questa fa **le tolleranze e la temperatura**:
 
 > 7. **La robustezza del temporizzatore, al banco e non al prototipo** (richiesta dell'utente dopo L54a,
 >    2026-10-26: «il prototipo è molto costoso, dobbiamo cercare di accorgerci al banco delle simulazioni
@@ -48,22 +51,32 @@ Il punto 7 del prompt di L54b (richiesta dell'utente dopo L54a, 2026-10-26), par
 >    - al prototipo resta solo ciò che non si simula (i disturbi irradiati, il layout), detto per nome.
 >    Se una prova fallisce, il rimedio si porta all'utente coi numeri prima di cambiare il circuito.
 
-Nel sorgente i due 1 nF base-emettitore della ritenuta sono C554 (Q513) e C555 (Q514). «I comparatori
-del costruttore» sono, per ADR-103, il tarato `CMPTA`. In più, da L54b2:
+«I comparatori del costruttore» sono, per ADR-103, il tarato `CMPTA` (non ha temperatura: lo scostamento
+e la sua deriva si prendono dal datasheet SBOS589D e si mettono come parametri per canale). Il banco ha
+`temp=25` fisso: serve un'opzione `--temp`, e va detto che cosa segue la temperatura (i modelli di Diodes
+Inc. sì: XTB, EG, XTI; i regolatori e il riferimento comportamentali no). In più, dalla prima parte:
 
-- **l'accensione a freddo col frontale acceso** fra i casi, col tarato a 2,2 V: la base di Q513 deve
-  restare ≤ 0,45 V anche a 60 °C e col Monte Carlo (oggi 0,30 V a 25 °C; il «Da riaprire se» di
-  ADR-103);
+- **la perdita dei diodi a 60 °C** sui nodi ad alta impedenza: AT_PRT (4,7 MΩ / 10 nF, **D538 1N4148**:
+  la sua perdita a 60 °C accorcia il ritardo del permissivo, C3), AT_T2S e AT_PGT coi BAS416, e i BAT54
+  rimasti (D533, D534, D537, su nodi da ≤ 200 kΩ); la perdita del BAT54 del modello è ~3,4 volte la
+  tipica e cresce ~9,5 volte da 25 a 60 °C (`data/2026-10-28/L54b3a/modelli.md`): con la perdita
+  **massima** del datasheet, non la tipica (limitations #79);
+- **la musica dopo un buco di 20 ms**: 559 ms a 25 °C, il margine di ADR-104 (≥ 500) sotto le tolleranze
+  e la temperatura (il «Da riaprire se» di ADR-104);
+- **i gruppi di hFE** (BC847A/C, BC857A/C sono in `models/`) e la VBE del BC847B del modello (708 mV a
+  2 mA, oltre il massimo di 700 del datasheet);
+- **l'accensione a freddo col frontale acceso** col tarato a 2,2 V (`--comparatore tarato22`): la base
+  di Q513 ≤ 0,45 V anche a 60 °C e col Monte Carlo (il «Da riaprire se» di ADR-103);
 - **la perdita di rete a −10 %**: i regolatori escono di regolazione 2,4 ms prima dello stacco del jack
-  (+4,4 dB SPL, sotto la soglia di V2): le tolleranze non devono farlo crescere oltre il criterio.
+  (+4,4 dB SPL, L54b2): le tolleranze non devono farlo crescere oltre il criterio.
 
 ## Prima di tutto
 
-- `CLAUDE.md`, `docs/limitations.md` (in particolare **#72**, **#75**, **#76**, **#77**, **#78**),
+- `CLAUDE.md`, `docs/limitations.md` (in particolare **#75**, **#77**, **#78**, **#79**, **#80**),
   `AGENTS.md`.
-- `docs/preamp/STATE.md`: «In breve» e la voce di L54b2.
-- **ADR-102**, **ADR-103**; il report `reports/2026-10-28-L54b2-temporizzatore-sul-sorgente.md`; i
-  README di `data/2026-10-28/L54b2/` e `data/2026-10-26/L54b1/`.
+- `docs/preamp/STATE.md`: «In breve» e la voce della prima parte di L54b3.
+- **ADR-102**, **ADR-103**, **ADR-104**; il report `reports/2026-10-28-L54b3a-robustezza-rete-fronti-
+  rimbalzi.md`; i README di `data/2026-10-28/L54b3a/` e `data/2026-10-28/L54b2/`.
 
 ## I vincoli
 
@@ -73,30 +86,33 @@ del costruttore» sono, per ADR-103, il tarato `CMPTA`. In più, da L54b2:
   su file); `sed` con valori calcolati; un titolo di PR con l'apostrofo (il corpo su file,
   `--body-file`); un `git` con `-C` dentro un comando composto. Comandi semplici, **percorsi
   assoluti**, script scritti con Write, Edit per i testi.
-- Il banco di L54b2 col comparatore comportamentale e senza opzioni è il deck di L54b1 più R585; per
-  rifare L54b1 serve `--net data/2026-10-28/L54b2/psu_prima.net`.
-- Le corse: la memoria (limitations #75) decide il parallelo (una corsa di sequenza col tarato è
-  ~0,45 GB e ~15 s); commit e push prima di una lista lunga; le forme d'onda grandi non si committano.
+- Le corse: la memoria (limitations #75) decide il parallelo (una corsa coi modelli del costruttore è
+  ~0,45 GB e 15–40 s; sei in parallelo hanno retto); commit e push prima di una lista lunga. **Le forme
+  d'onda non si committano e `.gitignore` non le esclude**: `git add … ":(exclude)*_out.txt"`. Un Monte
+  Carlo di centinaia di corse cancella le forme d'onda dopo l'analisi.
+- Un disturbo o un parametro nuovo si prova prima su un caso di cui si sa la risposta, e ogni corsa
+  deve poter mostrare che il disturbo è arrivato (la lezione dei fronti, limitations #80).
 - Le domande all'utente si fanno per nome, senza sigle (al più fra parentesi); i colpi al jack in dB
   SPL; ogni opzione con la sua cifra contro il limite della parte, alle tre reti dove la rete conta.
+  **Le cifre di una domanda si ricontano dai CSV prima di farla** (nella prima parte una domanda ha
+  portato 16 invece di 14).
 
 ## NON fa parte di questo lotto
 
-- Le righe della FMEA delle parti nuove (R585 compresa) e la diagnosi in hardware (ADR-076, ADR-078):
-  L58.
+- Le righe della FMEA delle parti nuove (R585, i BAS416) e la diagnosi in hardware (ADR-076, ADR-078):
+  L58. La conferma del BAS416 alla distinta: L58.
 - Il dispositivo d'uscita (L55), il dossier (L64), la revisione (L65), G1.
-- Lo standby: la scelta di ADR-103 («Lasciare com'è») non si riapre, salvo che il suo «Da riaprire se»
-  scatti.
-- Le decisioni prese non si riaprono, salvo che un «Da riaprire se» della loro ADR scatti.
+- I cali lenti di rete (ADR-104, «Lasciare com'è») e lo standby (ADR-103) non si riaprono, salvo che un
+  loro «Da riaprire se» scatti.
 
 ## CHIUSURA
 
-1. `STATE.md` con L54b3 **fatto** nella tabella dei lotti, e il prossimo (L55); le celle di «In
+1. `STATE.md` con L54b3b **fatto** nella tabella dei lotti, e il prossimo (L55); le celle di «In
    breve» sostituite, la voce di diario, la più vecchia delle tre in cima al diario di
    `STATE-STORIA.md` (la regola 7 di «Le regole»).
 2. Riscrivi `docs/preamp/NEXT-SESSION.md` per il lotto successivo, con la riga «Nome della sessione:
    hi-fi preamp <lotto>» subito sotto il titolo.
 3. Commit, push, PR.
-4. `/bin/zsh scripts/chunk_close.sh L54b3`.
+4. `/bin/zsh scripts/chunk_close.sh L54b3b`.
 5. Rimuovi il worktree coi comandi che lo script stampa.
 6. **Fermati.**

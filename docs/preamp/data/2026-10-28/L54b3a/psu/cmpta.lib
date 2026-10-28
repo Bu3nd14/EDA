@@ -1,0 +1,33 @@
+* L54b2: CMPTA - the bench's CMPOD calibrated on TI's TLV1701 model (not TI's model: the user's
+* choice in L54b2, "Comportamentale tarato"). The numbers are those measured on the derivative
+* models/comparator/tlv1701_ngspice.lib in its circuit (validate_models.py tb_tlv1701,
+* prova/tb_ritardi.cir):
+*   threshold at -0.4 mV (the model's V_VOS on IN+), the decision a tanh 0.1 mV wide;
+*   delays: TI's model 460 ns high-to-low and 574 ns low-to-high at 100 mV of overdrive and a 10k
+*   pull-up, 5 ns step (SBOS589D 460 / 560). One pole of 745 ns on the decision and the output
+*   switched at half of it give both: with a 10k pull-up and 150 ohm the output crosses 2.5 V at
+*   0.458 of the delayed decision, 0.612 tau going in and 0.781 tau coming out (456 / 582 ns
+*   for 745 ns). (Two delay lines in its place chattered on a slow ramp with the bench's 20 us
+*   step; a sink proportional to the decision crossed 2.5 V at ~1.5 % of it, moving the threshold
+*   by ~1 mV: prova/, the earlier versions.)
+*   the output 150 ohm when sinking (75 mV at 0.5 mA); 55 uA; CMPOD's supply gate at 2 V.
+* Pins as CMPOD: inp inn out vcc gnd (it sinks out when inn > inp - 0.4 mV).
+.subckt CMPTA inp inn out vcc gnd
+Bu u gnd V = 0.5*(1+tanh((V(inn)-V(inp)-0.4m)/0.1m)) * 0.5*(1+tanh((V(vcc,gnd)-2)/0.1))
+R1 u c 1k
+C1 c gnd 745p
+Bs out gnd I = V(out,gnd)/150 * 0.5*(1+tanh((V(c,gnd)-0.5)/0.02))
+Rleak out gnd 1G
+Bq vcc gnd I = 55u*(V(vcc,gnd)>1)
+.ends
+* CMPTA22: the same with the outputs coming alive at 2.2 V instead of 2.0 V: the TLV170x's minimum
+* supply (SBOS589D 2.2 V; below it the datasheet does not say what the output does). The worst case
+* of the power-up with the outputs open below the minimum.
+.subckt CMPTA22 inp inn out vcc gnd
+Bu u gnd V = 0.5*(1+tanh((V(inn)-V(inp)-0.4m)/0.1m)) * 0.5*(1+tanh((V(vcc,gnd)-2.2)/0.1))
+R1 u c 1k
+C1 c gnd 745p
+Bs out gnd I = V(out,gnd)/150 * 0.5*(1+tanh((V(c,gnd)-0.5)/0.02))
+Rleak out gnd 1G
+Bq vcc gnd I = 55u*(V(vcc,gnd)>1)
+.ends

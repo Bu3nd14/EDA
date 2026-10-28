@@ -1,0 +1,12 @@
+{
+  "canonical_file": "bc847b.lib",
+  "device_class": "bjt_npn",
+  "origin": "vendor_derived",
+  "vendor_source_path": "vendor/bjt_npn/diodes_inc/BC847B/BC847B.spice.txt",
+  "vendor_source_sha256": "4c76c834b75d643ddb6f2aedc3c335dc601aebfd4ec04dbefcc2251f22ad3398",
+  "date_created": "2026-10-28",
+  "author": "AI agent (Claude Sonnet 5.5, subagent of the L54b3a batch) on behalf of roberto.carmeli@gmail.com",
+  "changes": "NOTHING WAS CHANGED in the vendor text. The file was appended byte for byte (CRLF included) below a header of our own (LF), which adds comment lines only. Verifiable: the non-comment lines of this file and of the vendor file are identical. The model name 'DI_BC847B' is as served. ngspice 47 loads it with no warning on any parameter (checked with 'ngspice -b' and the device dump: QUASIMOD/RCO/VO/GAMMA are not used by this file; IS, BF, VAF, IKF, ISE, NE, BR, NR, VAR, IKR, RE, RB, RC, XTB, CJE, VJE, MJE, CJC, VJC, MJC, TF, TR, EG all appear in the dump with the vendor's values).",
+  "reason": "L54b3a: the supply bench had generic transistors with no capacitances and has to decide whether a fast edge trips a two-transistor latch with 1 nF across a base-emitter. This is the manufacturer's model of the type the BOM names (BC847B, Diodes Incorporated), replacing the generic .model.",
+  "notes": "Manufacturer model, locked by a recipe in scripts/validate_models.py (tb_bc847b). hFE 239.4 at IC = 2 mA, VCE = 5 V against 200..450 (typ 290): inside, 17% under typical. VBE(on) 708.4 mV against 580..700 (typ 660): OUTSIDE, +8.4 mV over the ceiling and +48 mV over typical (IS = 3.75 fA here against 10.2 fA in the A and C models). fT 253.8 MHz at IC = 10 mA, VCE = 5 V against min 100 / typ 300: inside. C_obo 3.000 pF at VCB = 10 V against typ 3 pF. C_ibo 11.02 pF at VEB = 0.5 V reverse is the model's own: the datasheet gives none. Nexperia, whose model was the first choice, refuses automated downloads (HTTP 403, Akamai) on assets.nexperia.com and www.nexperia.com, so Diodes Incorporated's own model was used; see vendor/bjt_npn/diodes_inc/BC847B/PROVENANCE.json. The vendor's CJE differs by 2x between the B model and its A/C siblings in both polarities (BC847: A 26.8 pF, B 13.3 pF, C 26.8 pF; BC857: A 13.3 pF, B 26.9 pF, C 13.3 pF), so no C_ibo/CJE figure from this family is reliable to better than a factor of 2. No KF/AF: no 1/f noise."
+}

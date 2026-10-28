@@ -1,0 +1,14 @@
+# L45d2b2a - the audio board's load on the supply bench, today's block (L60d1's redundancy and R153,
+# L62b's four diodes). Read by psu/genera_tb_psu.py.
+# The rails: 8 x |i(vpp)| and 8 x |i(vmm)| of tb_op on the block of L62b
+# (data/2026-10-19/L62b/regressione/dopo/tb_op/tb_op.log: -3.79216e-02, 3.894243e-02 A).
+# L56 / L45d2b1 had 303.76 / 311.928 (the copy in controllo/ ran with them: k1, k2).
+# The rest of VRELAY: unchanged from L51b (L47c2a's 42.4 mA plus the selector's coil, 9.1 mA); the
+# mute coils are in the generator (R_MUTECOIL, K3 IM06TS since ADR-085).
+i_piu_mA   303.373
+i_meno_mA  311.539
+resto_mA   51.5
+# The method of the two U503-off sequence cases: gear, as in L51b. On this load
+# guasto_u503_min needs the other method on some passes: psu/corri_seq.sh retries a pass once
+# with the other method on "Timestep too small" alone, and says so in ripiego_g<N>.txt.
+metodo_u503 gear

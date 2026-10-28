@@ -18,6 +18,17 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### Dopo L54a — la robustezza al banco nel prompt di L54b (2026-10-26)
+
+- **L'utente**: «il prototipo è molto costoso, dobbiamo cercare di accorgerci al banco delle simulazioni
+  dei problemi, il primo prototipo deve essere usabile» (dopo che ADR-102 e il report di L54a lasciavano
+  al prototipo l'immunità ai disturbi del temporizzatore). Poi «si concordo» alla proposta.
+- **Cambiato**: solo `NEXT-SESSION.md`, punto 7 di L54b: la rete sporca (cali lenti, buchi da ½ a 10
+  periodi, sovratensione, ritorno durante la discesa), i fronti veloci su `VRELAY_REG` e V5 contro la
+  ritenuta, i rimbalzi veri, il Monte Carlo sulle tolleranze degli RC e dei comparatori, 0 / 60 °C; al
+  prototipo solo ciò che non si simula, detto per nome.
+- **Dopo**: **L54b**, il prompt di `NEXT-SESSION.md`.
+
 ### L54a — il micro, lo standby e lo spegnimento morbido, riesaminati coi numeri (2026-10-25 / 26)
 
 Report `reports/2026-10-26-L54a-micro-standby.md`, dati `data/2026-10-25/L54a/` (README). Decisione

@@ -768,8 +768,9 @@ if __name__ == "__main__":
         return u
 
     def diode(value, ref, a, k):
+        # ADR-104: BAS416, a low-leakage silicon diode (SOD-323) on the megohm nodes
         d = part("Device", "D_Schottky" if value == "BAT54" else "D", value, ref,
-                 FP_SOD323 if value == "BAT54" else FP_DO35)
+                 FP_SOD323 if value in ("BAT54", "BAS416") else FP_DO35)
         d[2] += a                      # A
         d[1] += k                      # K
         return d
@@ -787,15 +788,22 @@ if __name__ == "__main__":
     res("100k", "R569", V5, AT_MD)
     diode("BAT54", "D533", AT_PG, AT_MD)
     diode("BAT54", "D534", AT_F, AT_MD)
-    diode("BAT54", "D535", AT_T2S, AT_MD)
+    # ADR-104: D535 / D541 into AT_T2S (2.7M) and D536 into AT_PGT (1M) are BAS416, low-leakage
+    # silicon: the maker's BAT54 model leaks ~0.65 uA (2 uA max at 25 C, Diodes DS11005), which armed
+    # AT_T2S at 1.07 s instead of ~1.9 s, before the rails were up: the latch tripped at every
+    # power-up (L54b3a)
+    diode("BAS416", "D535", AT_T2S, AT_MD)
     res("100k", "R570", V5, AT_PG)
-    # The release after 0.69 x 820k x 1 uF = 0.57 s of power good, emptied at
-    # once through a Schottky into AT_PG: >= 100 ms at power-up, >= 500 ms
-    # after a mains hole - one delay for both. 820k, not 680k: with 680k the
-    # music came back 435 ms after a 20 ms hole (L54a; 521 ms with 820k).
-    res("820k", "R571", V5, AT_PGT)
+    # The release after power good (0.57 s with 820k, L54a), emptied at once
+    # through a diode into AT_PG: >= 100 ms at power-up, >= 500 ms after a
+    # mains hole - one delay for both. 820k, not 680k: with 680k the music
+    # came back 435 ms after a 20 ms hole (L54a; 521 ms with 820k).
+    # ADR-104: 1M with the low-leakage D536 (its higher VF starts AT_PGT
+    # higher): 559 ms after a 20 ms hole with the makers' models (L54b3a;
+    # 461 ms with 820k)
+    res("1M", "R571", V5, AT_PGT)
     cap("1u", "C548", AT_PGT, RET, FP_C1206)
-    diode("BAT54", "D536", AT_PGT, AT_PG)
+    diode("BAS416", "D536", AT_PGT, AT_PG)
 
     # The front switch and the mute switch (ADR-102 point 2): AT_MRQ, 200k /
     # 100 nF from V5, is the debounce - every input good for ~14 ms before it
@@ -858,7 +866,7 @@ if __name__ == "__main__":
     res("22k", "R579", V5, MAINS_REQ)
     res("2.7M", "R580", AT_ON, AT_T2S)
     cap("1u", "C552", AT_T2S, RET, FP_C1206)
-    diode("BAT54", "D541", AT_T2S, AT_ON)
+    diode("BAS416", "D541", AT_T2S, AT_ON)   # ADR-104 (see D535)
     res("100k", "R581", V5, AT_F)
     cap("330n", "C553", AT_F, RET, FP_C1206)
     res("33k", "R585", AT_F, RET)  # ADR-103: AT_F low while V5 comes up
