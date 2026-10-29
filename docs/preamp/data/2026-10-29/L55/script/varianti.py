@@ -30,7 +30,14 @@ SRC = os.path.join(ROOT, "spice", "preamp", "gain_block_flat.inc")
 # I candidati: (lib NPN, lib PNP, modello NPN, modello PNP, R128 tarata).
 # L'include sta nel .inc con un percorso relativo alla cartella inc/
 # (run_simulation.sh risolve @REPO@ solo nel deck), come i ZXT di L46a.
-CANDIDATI = {}
+CANDIDATI = {
+    # onsemi MJE243G / MJE253G, TO-225 (modelli/README.md). R128: prima lo spazzolamento sulla
+    # corrente di riposo (la Vbe del candidato e' 55 / 83 mV sopra quella dei MJE a 20 mA).
+    # Tarata: 1,78k da' 20,75 / 20,70 mA (il MJE di oggi 20,45 / 20,56), 1,74k 20,08 / 20,03: la piu'
+    # vicina sopra, per il margine di classe A (run/punto_di_lavoro.csv).
+    "mje24x": ("mje243.lib", "mje253.lib", "Qmje243", "Qmje253", "1.78k",
+               ("1.69k", "1.74k", "1.78k", "1.82k", "1.87k", "1.91k"), ("330p", "220p")),
+}
 
 
 def miller(c):
@@ -57,6 +64,23 @@ for nome, (nl, pl, nm, pm, rbb, sweep, cms) in CANDIDATI.items():
     VARIANTI[nome] = finale(nl, pl, nm, pm, rbb)
     for cm in cms:
         VARIANTI["%s_cm%s" % (nome, cm)] = finale(nl, pl, nm, pm, rbb) + miller(cm)
+
+
+def fermo(npn_lib, pnp_lib, npn_mod, pnp_mod, rbb=None):
+    """Le copie di banco con le capacita' di giunzione ferme a TNOM (script/modelli_banco.py: il
+    VJC del MJE253 del costruttore va sotto zero sopra ~35 C, vj_temperatura.py). Percorso relativo
+    alla cartella inc/."""
+    m = [("add", ".include ../modelli_banco/%s" % npn_lib),
+         ("add", ".include ../modelli_banco/%s" % pnp_lib),
+         ("set", "Q132", "Q132 VPLUS NBN NEN %s" % npn_mod),
+         ("set", "Q133", "Q133 VMINUS NBP NEP %s" % pnp_mod)]
+    return m + ([("set", "R128", "R128 NX NBB %s" % rbb)] if rbb else [])
+
+
+# Il caso noto del congelamento: il MJE di oggi con le capacita' ferme, contro `mje`
+VARIANTI["mje_fz"] = fermo("mje15032_fermo.lib", "mje15033_fermo.lib", "Qmje15032F", "Qmje15033F")
+VARIANTI["mje24x_fz"] = fermo("mje243_fermo.lib", "mje253_fermo.lib", "Qmje243F", "Qmje253F", "1.78k")
+VARIANTI["mje24x_cm330p_fz"] = VARIANTI["mje24x_fz"] + miller("330p")
 
 
 def applica(nome, mods):

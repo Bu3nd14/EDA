@@ -67,6 +67,14 @@ RJA_NUDO, RJC_MJE, RJA_DISS = 62.5, 2.5, 2.5 + 2.0 + 20.0
 # i candidati con le cifre del loro datasheet e del loro dissipatore (data/2026-10-29/L55/modelli/).
 # Un modello che non sta qui ferma il banco, come prima (sys.exit in tj()).
 FINALI = {"Qmje15032": (RJA_NUDO, RJC_MJE, RJA_DISS), "Qmje15033": (RJA_NUDO, RJC_MJE, RJA_DISS)}
+# MJE243G / MJE253G, TO-225 (onsemi MJE243/D Rev. 17): R_thJA 83,4, R_thJC 8,34 C/W (massimi); col
+# Boyd TV4 21 C/W (la cifra del distributore: la curva del costruttore NON letta, modelli/README.md)
+# + 2 C/W d'interfaccia (IPOTESI, come ADR-099): 31,34 C/W.
+RJC_243 = 8.34
+FINALI["Qmje243"] = FINALI["Qmje253"] = (83.4, RJC_243, RJC_243 + 2.0 + 21.0)
+# Le copie di banco con le capacita' ferme a TNOM (modelli_banco.py): lo stesso contenitore
+for _n in ("Qmje15032", "Qmje15033", "Qmje243", "Qmje253"):
+    FINALI[_n + "F"] = FINALI[_n]
 RC_LS350 = 231.405      # models/bjt_pnp/ls350.lib
 R107 = [150.7, 144, 137, 130.2, 123.3, 116.4, 109.6]
 
