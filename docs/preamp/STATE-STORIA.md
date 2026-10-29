@@ -18,6 +18,30 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L54b2 — il temporizzatore sul sorgente: i comparatori, l'innesco della ritenuta, lo standby, la catena al jack (2026-10-28)
+
+- **Il modello di TI del TLV1701** per ngspice (`models/comparator/`, generato dal file di
+  `vendor/`, ricetta `tb_tlv1701`): da solo torna col datasheet (tpLH 574 / tpHL 460 ns, soglia allo
+  scostamento di 0,4 mV) e col file di TI nel modo `psa`. Il «DO NOT USE» di L41a era la traduzione
+  degli interruttori di PSpice (limitations #77). Sul banco dell'alimentatore non passa
+  l'accensione: la scelta dell'utente, **«Comportamentale tarato»** (`CMPTA`, ADR-103).
+- **I casi della sicurezza**, tarato contro comportamentale sullo stesso sorgente, dodici e diciotto
+  canali: **tutti i verdetti uguali**; gli istanti fino a +0,3 ms (il guadagno) e +0,8 ms (un jack coi
+  diciotto canali), oltre il limite scritto: metà dalla resistenza d'uscita, provato.
+- **L'innesco della ritenuta all'accensione** (scoperto): con le uscite aperte sotto 2,2 V la
+  ritenuta scattava all'accensione a freddo col frontale acceso; il comportamentale lo nascondeva
+  con 0,1 V (limitations #78). **R585 33 kΩ** dall'innesco al ritorno, scelta dell'utente: la base a
+  0,30 V, la ritenuta 2,7 ms più tarda, R550 7,80 / 9,52 J (+1,9 %). Nel sorgente, nello schematico
+  (167 / 167), nel caso noto strutturale (48 / 48), nel controllo dei relè (T6b).
+- **Lo standby**: la strada che regge (5 V da acceso tenuti da K501) 71,5 / 80,5 / 89,7 mW; la scelta
+  dell'utente **«Lasciare com'è»**: 116,1 / 130,1 / 144,2 mW. NC-037 aperta.
+- **La catena al jack** (il ponte di L41c con `--passata-unica`): lo spegnimento dal frontale
+  −55,2 dB SPL, la perdita di rete −55,3 a rete 0 %, **+4,4 a −10 %** (i regolatori escono di
+  regolazione 2,4 ms prima dello stacco: la frase di ADR-102 sul rail non vale a −10 %). Tutto sotto
+  la soglia di V2. Le cifre del dossier (33,9 / 39,2 nV) erano già superate da L56: le rifà L64.
+- `run_tests.sh` 14 / 0, `validate_models.py` 69 / 69. Report
+  `reports/2026-10-28-L54b2-temporizzatore-sul-sorgente.md`; dati `data/2026-10-28/L54b2/`.
+
 ### L54b1 — il temporizzatore a comparatori nel sorgente (2026-10-26)
 
 - **L54b diviso dall'utente all'inizio**, «Tre parti»: L54b1 il sorgente, i guardiani, i disegni e il

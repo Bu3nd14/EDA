@@ -13,17 +13,38 @@ fino al 2026-10-26, con tutta la loro storia, sono in `STATE-STORIA.md`.
 
 | | |
 |---|---|
-| Ultimo aggiornamento | **2026-10-28** (L54b3b: le tolleranze e la temperatura del temporizzatore; a 60 °C la perdita di D534 faceva scattare la ritenuta all'accensione a freddo, a 0 °C la musica dopo un buco di 20 ms a 491 ms nell'angolo peggiore; D534 a bassa perdita, R571 1,1 MΩ, i condensatori dei ritardi C0G; i 69 angoli passano; ADR-105; nessuna voce aperta o chiusa) |
-| Ultimo lotto chiuso | **L54b3b** — le tolleranze e la temperatura del temporizzatore (2026-10-28). `circuits/preamp/psu.py` (D534 BAS416, R571 1.1M, i dieci condensatori dei ritardi dichiarati C0G), il banco `data/2026-10-28/L54b3b/psu/` (`--temp`, `--toll` con `CMPTAV`, `--perdita`, `--ritenuta costruttoreA / C`; `campioni_mc.py`, `regressione.py`, `angoli.sh`, `analizza_mc.py`, `verdetti_angoli.py`, `--metodo trap8`), limitations #81. ADR-105. Report `reports/2026-10-28-L54b3b-tolleranze-temperatura.md` |
-| **Prossimo lotto** | **L55 — il dispositivo d'uscita del blocco** (NC-056; prompt in `NEXT-SESSION.md`). Poi l'ordine deciso con l'utente verso G1: L58, il dossier rigenerato una volta (**L64**), la revisione (**L65**), G1 |
-| Non conformità | **17 aperte, 1 bloccante** (L54b3b, 2026-10-28: nessuna aperta o chiusa). Il registro è `NONCOMPLIANCE.md` |
-| Le bloccanti | Per **G1**: **nessuna bloccante** (L54a, 2026-10-26); da chiudere prima di G1 per decisione dell'utente: **NC-055, NC-072** (maggiori) e NC-056 (minore) — NC-054 chiusa; NC-073 e NC-075 (maggiori) alla scelta della parte. Per **G2**: NC-044 (L50) |
-| Suite | `run_tests.sh` **14 passed / 0 failed** a fine L54b3b (2026-10-28, dal worktree; `psu.net` con D534 BAS416 e R571 1.1M, lo schematico 167 / 167 col manifesto versionato, T6b la base a 0,32 V); `validate_models.py` 83 / 83 |
+| Ultimo aggiornamento | **2026-10-29** (L55: il dispositivo d'uscita del blocco; l'onsemi MJE243G / MJE253G contro il MJE sul banco del blocco, tutte e tre le opzioni dentro ogni limite, «MJE as it is», ADR-106; **chiusa NC-056**, **aperta NC-076** — il VAS a 126 °C col finale NPN in corto base-emettitore; il circuito non cambia) |
+| Ultimo lotto chiuso | **L55** — il dispositivo d'uscita del blocco (2026-10-29). Nessun sorgente cambiato; `models/bjt_npn/mje243.lib`, `models/bjt_pnp/mje253.lib` col congelamento in `vendor/` e la ricetta `_tb_mje24x`; il banco `data/2026-10-29/L55/` (freddo, a caldo con `FINALI` per modello e le capacità ferme di `modelli_banco/`, guasti dei finali e P7, `tabella_opzioni.py`), limitations #82, #83. ADR-106. Report `reports/2026-10-29-L55-dispositivo-uscita.md` |
+| **Prossimo lotto** | **L58 — la diagnosi e la distinta dell'alimentatore** (prompt in `NEXT-SESSION.md`). Poi verso G1: **L66** (NC-076, il VAS a 126 °C; posizione proposta in L55, da confermare), il dossier rigenerato una volta (**L64**), la revisione (**L65**), G1 |
+| Non conformità | **17 aperte, 1 bloccante** (L55, 2026-10-29: chiusa NC-056, aperta NC-076). Il registro è `NONCOMPLIANCE.md` |
+| Le bloccanti | Per **G1**: **nessuna bloccante** (L54a, 2026-10-26); da chiudere prima di G1 per decisione dell'utente: **NC-055, NC-072, NC-076** (maggiori) — NC-054 e NC-056 chiuse; NC-073 e NC-075 (maggiori) alla scelta della parte. Per **G2**: NC-044 (L50) |
+| Suite | `run_tests.sh` **14 passed / 0 failed** a fine L55 (2026-10-29, dal worktree; il sorgente di L54b3b); `validate_models.py` **89 / 89** (le ricette del MJE243 / MJE253), `--check-provenance` 41 / 41 |
 
 ## Diario degli ultimi lotti
 
 Le ultime tre voci. Le più vecchie sono in `STATE-STORIA.md`, nello stesso ordine (la più recente
 in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quella sezione.
+
+### L55 — il dispositivo d'uscita del blocco (2026-10-29)
+
+- **Il candidato** (`bom-component-manager`, `data/2026-10-29/L55/modelli/README.md`): il solo driver di
+  taglia intermedia che regge T7 + T8 con le scorte è l'**onsemi MJE243G / MJE253G** (TO-225), modelli
+  onsemi in `models/`, ricetta `_tb_mje24x`, `validate_models.py` **89 / 89**. A 20 mA la Cpi 1,7 / 2,2 nF
+  contro 8,1 / 7,8, la f_T 61–88 MHz contro 12. I Toshiba sono «Not Recommended for New Design».
+- **I casi noti**: il banco freddo (L46a) ridà la sua storia (V1 64,92°; le cifre attese in `CRITERI.md`
+  erano della regressione dei 21 deck, corrette prima delle corse dei candidati); il banco a caldo e
+  quello dei guasti ridanno L45d2b3b2b2 alla cifra (465 celle, 0 diverse; 99 / 95 °C).
+- **Il modello del MJE253 non vale sopra ~35 °C** (VJC 0,033 V, limitations #82): la `tran` a caldo non
+  parte; le cifre a caldo con le capacità ferme a TNOM, provate sul MJE (identiche). E limitations #83.
+- **Le tre opzioni, tutte dentro ogni limite**: margine 64,9 / 69,8 / 67,7° (MJE / candidato 470 pF /
+  330 pF; 220 pF fuori, 59,5°), distorsione a caldo 0,000726 / 0,000719 / 0,000604 %, intermodulazione
+  −131,7 / −132,2 / −137,0 dB, i finali nei corti 99 / 113 / 113 °C (il TV4 a 21 °C/W solo dal
+  distributore). La scelta dell'utente, **«MJE as it is»**: ADR-106, **NC-056 chiusa**, il circuito non cambia.
+- **Trovato**: col finale NPN in corto base-emettitore il VAS a **126 °C** con 60 °C d'aria (P7 125), sul
+  blocco di oggi; la riga della FMEA diceva 115 dal blocco di prima di ADR-099. «New entry, major, before
+  G1»: **NC-076 aperta**, a un lotto suo (L66).
+- Report `reports/2026-10-29-L55-dispositivo-uscita.md`; dati `data/2026-10-29/L55/`.
+- **Dopo**: **L58**, il prompt di `NEXT-SESSION.md`.
 
 ### L54b3b — le tolleranze e la temperatura del temporizzatore (2026-10-28)
 
@@ -73,30 +94,6 @@ in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quel
 - ADR-104. `run_tests.sh` 14 / 0. Report `reports/2026-10-28-L54b3a-robustezza-rete-fronti-rimbalzi.md`;
   dati `data/2026-10-28/L54b3a/`.
 - **Dopo**: **L54b3b**, il prompt di `NEXT-SESSION.md`.
-
-### L54b2 — il temporizzatore sul sorgente: i comparatori, l'innesco della ritenuta, lo standby, la catena al jack (2026-10-28)
-
-- **Il modello di TI del TLV1701** per ngspice (`models/comparator/`, generato dal file di
-  `vendor/`, ricetta `tb_tlv1701`): da solo torna col datasheet (tpLH 574 / tpHL 460 ns, soglia allo
-  scostamento di 0,4 mV) e col file di TI nel modo `psa`. Il «DO NOT USE» di L41a era la traduzione
-  degli interruttori di PSpice (limitations #77). Sul banco dell'alimentatore non passa
-  l'accensione: la scelta dell'utente, **«Comportamentale tarato»** (`CMPTA`, ADR-103).
-- **I casi della sicurezza**, tarato contro comportamentale sullo stesso sorgente, dodici e diciotto
-  canali: **tutti i verdetti uguali**; gli istanti fino a +0,3 ms (il guadagno) e +0,8 ms (un jack coi
-  diciotto canali), oltre il limite scritto: metà dalla resistenza d'uscita, provato.
-- **L'innesco della ritenuta all'accensione** (scoperto): con le uscite aperte sotto 2,2 V la
-  ritenuta scattava all'accensione a freddo col frontale acceso; il comportamentale lo nascondeva
-  con 0,1 V (limitations #78). **R585 33 kΩ** dall'innesco al ritorno, scelta dell'utente: la base a
-  0,30 V, la ritenuta 2,7 ms più tarda, R550 7,80 / 9,52 J (+1,9 %). Nel sorgente, nello schematico
-  (167 / 167), nel caso noto strutturale (48 / 48), nel controllo dei relè (T6b).
-- **Lo standby**: la strada che regge (5 V da acceso tenuti da K501) 71,5 / 80,5 / 89,7 mW; la scelta
-  dell'utente **«Lasciare com'è»**: 116,1 / 130,1 / 144,2 mW. NC-037 aperta.
-- **La catena al jack** (il ponte di L41c con `--passata-unica`): lo spegnimento dal frontale
-  −55,2 dB SPL, la perdita di rete −55,3 a rete 0 %, **+4,4 a −10 %** (i regolatori escono di
-  regolazione 2,4 ms prima dello stacco: la frase di ADR-102 sul rail non vale a −10 %). Tutto sotto
-  la soglia di V2. Le cifre del dossier (33,9 / 39,2 nV) erano già superate da L56: le rifà L64.
-- `run_tests.sh` 14 / 0, `validate_models.py` 69 / 69. Report
-  `reports/2026-10-28-L54b2-temporizzatore-sul-sorgente.md`; dati `data/2026-10-28/L54b2/`.
 
 
 ## Come si lavora da qui: a lotti piccoli e pushati
@@ -273,10 +270,11 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L54b3 | **La robustezza del temporizzatore al banco** (richiesta dell'utente dopo L54a): la rete sporca, i fronti veloci contro la ritenuta, i rimbalzi, il Monte Carlo sulle tolleranze, 0 / 60 °C; il testo del prompt nel report di L54b1, §«Per L54b3» | M | — | diviso dall'utente all'inizio, «Due parti»: L54b3a, L54b3b |
 | L54b3a | **I modelli del costruttore, la rete sporca, i fronti veloci, i rimbalzi** (a 25 °C) | M | — | **fatto** (2026-10-28): BC847 / BC857 / BAT54 di Diodes Inc.; il BAT54 del costruttore faceva scattare la ritenuta a ogni accensione → D535 / D536 / D541 BAS416, R571 1 MΩ («Diodi a bassa perdita, R571 1 MΩ»); i cali lenti spengono l'apparecchio in 14 casi su 27 («Lasciare com'è»); buchi, sovratensione, rimbalzi, fronti (la base ≤ 8,4 mV con l'1 nF) passano; ADR-104. Report `reports/2026-10-28-L54b3a-robustezza-rete-fronti-rimbalzi.md` |
 | L54b3b | **Le tolleranze e la temperatura**: il Monte Carlo e il caso peggiore sugli RC e sui comparatori, 0 / 60 °C coi modelli del costruttore, l'accensione a freddo col tarato a 2,2 V, la perdita a −10 % | M | — | **fatto** (2026-10-28): un Monte Carlo di 700 corse, la regressione e 69 angoli a 0 / 25 / 60 °C; a 60 °C la perdita di D534 faceva scattare la ritenuta all'accensione a freddo → «Solo D534 a bassa perdita» (0,27 V); a 0 °C la musica dopo un buco a 491 ms → «R571 a 1,1 MΩ» (537 ms); «Tutti C0G»; ADR-105. Report `reports/2026-10-28-L54b3b-tolleranze-temperatura.md` |
-| L55 | **Il dispositivo d'uscita del blocco** (NC-056): un dispositivo di taglia driver col modello del costruttore contro il MJE15032/33 sul banco del blocco (V1, V4, PSRR, slew, calore), con T7 e T8 | M | NC-056 | da fare — **il prossimo**; prompt in `NEXT-SESSION.md` (dopo L54b3 e dopo L56, tocca anche il VAS; prima di G1) |
-| L64 | **Il dossier rigenerato, una volta sola, quando il circuito smette di cambiare prima di G1** (decisione dell'utente dopo L45d2b3b2a, 2026-10-22, «si mi va bene»): `build_dossier.py` e le sue sezioni sul progetto di allora. L'ultimo è di L51 (2026-10-10); da lì non mostra l'inseguitore e l'aiuto dello specchio (L56), il rivelatore tolto e il condensatore della Stax (L60), i diodi del moltiplicatore e dei finali (L62, ADR-095), l'alimentatore di ADR-091…094, R153 sdoppiata (ADR-097), i rimedi del calore e i dissipatori (ADR-099), gli schematici completi (L63), la FMEA con le misure adottate (L45d2b3b3). Una rigenerazione intermedia solo se l'utente vuole guardare il progetto prima | M | — | da fare — dopo l'ultimo lotto che tocca il sorgente prima di G1 (L45d2b3b2b, L57, L54, L55, L58) e dopo L45d2b3b3 |
+| L55 | **Il dispositivo d'uscita del blocco** (NC-056): un dispositivo di taglia driver col modello del costruttore contro il MJE15032/33 sul banco del blocco (V1, V4, PSRR, slew, calore), con T7 e T8 | M | **NC-056** chiusa; **NC-076** aperta | **fatto** (2026-10-29): l'onsemi MJE243G / MJE253G (TO-225), l'unico che regge T7 + T8, sui banchi freddo, a caldo e dei guasti coi casi noti; tutte e tre le opzioni dentro ogni limite; «MJE as it is», ADR-106; il modello del MJE253 non vale sopra ~35 °C (limitations #82, #83); col finale NPN in corto base-emettitore il VAS a 126 °C (NC-076). Report `reports/2026-10-29-L55-dispositivo-uscita.md` |
+| L66 | **Il VAS a 126 °C e i modi fuori dai quindici** (NC-076, maggiore, prima di G1 per decisione dell'utente in L55): il meccanismo (perché col finale NPN in corto base-emettitore il VAS porta 0,53 W), i modi del blocco fuori dai quindici di ADR-099 rifatti sul sorgente col banco del calore di L55 / L45d2b3b2b2, il rimedio misurato con l'utente (per esempio più rame sotto il VAS o il limite del VAS di ADR-099), la riga della FMEA rifatta; se cambia il circuito: sorgente, netlist, disegni, `run_tests.sh`, regressione | M | **NC-076** | da fare — dopo L58, prima di L64 (posizione proposta in L55, da confermare con l'utente) |
+| L64 | **Il dossier rigenerato, una volta sola, quando il circuito smette di cambiare prima di G1** (decisione dell'utente dopo L45d2b3b2a, 2026-10-22, «si mi va bene»): `build_dossier.py` e le sue sezioni sul progetto di allora. L'ultimo è di L51 (2026-10-10); da lì non mostra l'inseguitore e l'aiuto dello specchio (L56), il rivelatore tolto e il condensatore della Stax (L60), i diodi del moltiplicatore e dei finali (L62, ADR-095), l'alimentatore di ADR-091…094, R153 sdoppiata (ADR-097), i rimedi del calore e i dissipatori (ADR-099), gli schematici completi (L63), la FMEA con le misure adottate (L45d2b3b3). Una rigenerazione intermedia solo se l'utente vuole guardare il progetto prima | M | — | da fare — dopo l'ultimo lotto che tocca il sorgente prima di G1 (L58, L66) |
 | L65 | **La revisione del dossier rigenerato**, prima del gate (come L42 → L43 e L51 → L52): la forma — l'architetto avversariale cieco, la lettura dell'utente, o tutte e due — si decide con l'utente all'apertura | S/M | — | da fare — dopo L64, prima di G1 |
-| G1 | **Il congelamento della topologia**: `design-reviewer` al gate, offline su `main`, sul dossier di L64 e sui dati misurati, con gli esiti di L65 trattati; riesegue le verifiche da sé; il prodotto è un report datato con le non conformità che apre (`AGENTS.md`) | M | nessuna bloccante per G1 dopo L56 (NC-060 chiusa); da chiudere prima per decisione dell'utente: NC-042, NC-054, NC-055, NC-059 (maggiori), NC-056 (minore) | da fare — dopo L45, L57, L54, L55, L58, L64, L65 |
+| G1 | **Il congelamento della topologia**: `design-reviewer` al gate, offline su `main`, sul dossier di L64 e sui dati misurati, con gli esiti di L65 trattati; riesegue le verifiche da sé; il prodotto è un report datato con le non conformità che apre (`AGENTS.md`) | M | nessuna bloccante per G1 dopo L56 (NC-060 chiusa); da chiudere prima per decisione dell'utente: NC-055, NC-072, NC-076 (maggiori) — NC-042, NC-054, NC-056, NC-059 chiuse | da fare — dopo L58, L66, L64, L65 |
 | L45 | **La FMEA della scheda audio** (richiesta dell'utente in L43a, 2026-09-27): ogni guasto singolo della scheda audio (dispositivi d'uscita in corto o aperti, bobine e contatti dei relè, condensatori d'uscita, firmware delle LDR) col suo effetto al jack principale e alle fisse in dB SPL contro il tetto di non-danno; i casi che lo superano, simulati. Poi la decisione dell'utente su un rivelatore di continua che comandi il sink di `MUTE_CMD`, e su un tetto per le fisse; con NC-046 (la metrica delle fisse in cuffia) | M | **NC-042**, NC-046 | **diviso** in L45a, L45b, L45c, L45d (decisione dell'utente all'inizio, 2026-10-13: «Quattro parti», dopo aver allargato il lotto: «ritengo necessario fare la FMEA anche dell'alimentatore e della parte controlli»); **prima di G1** (L52) |
 | L45a | **I guasti del blocco di guadagno**: ogni guasto singolo di un dispositivo o di un passivo del blocco, nelle quattro posizioni del canale (blocco A, buffer delle due fisse, blocco B), col suo effetto al jack principale e alle fisse in dB SPL contro il tetto di non-danno; un banco del canale con la geometria iii e il guasto introdotto durante l'ascolto; i casi che superano il tetto, simulati; il calore dei casi che restano accesi. Non cambia il circuito | M | **NC-042** | **fatto** (2026-10-13): 112 modi simulati; oltre il tetto 51 / 50 / 51 / 53 per posizione; il rivelatore di continua non abbassa il picco (mute a 0,1–10 ms dal guasto, 14,8–14,9 V); a mute inserito 7,3 mV al rilascio; 26 modi con un secondo guasto per calore; limitations #58. Report `reports/2026-10-13-L45a-fmea-blocco.md` |
 | L45b | **I guasti dei controlli**: i relè (selettore, guadagno e il suo ritegno, trim e permesso, mute; bobine e contatti saldati, aperti, che rimbalzano), i piloti delle bobine, i commutatori, i LED che devono dire lo stato vero (PR-17, PR-18), i 4,7 µF e C_T 10 µF in corto o aperti, `MUTE_CMD` e `PERMIT_CMD` dal micro, il firmware (le LDR non ci sono più, ADR-062) | M | **NC-042** | **fatto** (2026-10-13): 78 modi dei controlli, nessun guasto ordinario oltre 9,5 mV al jack; oltre il tetto solo l'isolamento bobina–contatti (sul mute 12 V permanenti sul jack); i latenti del mute allo spegnimento 1,6–10,5 V, 14–348 ms (a L45c); il blocco di L45a a vuoto: 257 modi su 544 fuori da P10, il rivelatore ideale li porta a 0,2–10,1 ms. Report `reports/2026-10-13-L45b-fmea-controlli.md` |
