@@ -116,6 +116,11 @@ FP_TB3 = ("TerminalBlock_Phoenix:"
           "TerminalBlock_Phoenix_MKDS-1,5-3-5.08_1x03_P5.08mm_Horizontal")
 FP_HDR = "Connector_PinHeader_2.54mm:PinHeader_1x{n:02d}_P2.54mm_Vertical"
 FP_C1206 = "Capacitor_SMD:C_1206_3216Metric"      # C0G 100 nF (C_T, C_T2)
+# ADR-108 (L58a): no C0G 1 uF exists in any SMD case, nor 330 nF below 2220. C548 / C552 are
+# 1 uF +-5 % polypropylene film, through-hole (TDK B32672L2105J003, 15 mm pitch, 18 x 11 mm);
+# C553 is C0G in 2220 (KEMET C2220C334J5GACTU). Values unchanged: L54b3b's corners stand
+FP_FILM_P15 = "Capacitor_THT:C_Rect_L18.0mm_W11.0mm_P15.00mm_FKS3_FKP3"
+FP_C2220 = "Capacitor_SMD:C_2220_5750Metric"
 FP_SOT363 = "Package_TO_SOT_SMD:SOT-363_SC-70-6"
 FP_SOD323 = "Diode_SMD:D_SOD-323"
 FP_SOIC14 = "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm"
@@ -178,7 +183,9 @@ C_VR_HOLD = "2200u"
 #   D = R_T C_T ln(4.55 / 2.5) = 332k x 100n x 0.599 = 19.9 ms; 17.2 ms with
 #   C_T -5 %, R_T -1 %, V5 at 4.90 V and a 0.55 V diode. C_T is C0G: an X7R
 #   would lose tens of percent to bias and ageing, and D with it. ADR-105: C_T2,
-#   C_MD and C_MUTE_G (C529, C518, C527) are C0G too, as every timing capacitor.
+#   C_MD and C_MUTE_G (C529, C518, C527) are C0G too, as every timing capacitor
+#   (ADR-108: C548 / C552 polypropylene film, the only 1 uF; C518 in 1206, C0G
+#   100 nF does not exist in 0805).
 R_T, C_T = "332k", "100n"
 # D2 (ADR-049): the audio board's VRELAY stays on >= D2 after PERMIT_G falls.
 # VR_T charges from PERMIT_T one diode lower, and decays 3x slower:
@@ -623,7 +630,7 @@ if __name__ == "__main__":
     MD_R = Net("MD_R")
     res(R_MD_HALF, "R512", V5, MD_R)
     res(R_MD_HALF, "R555", MD_R, MD)
-    cap(C_MD, "C518", MD, RET)
+    cap(C_MD, "C518", MD, RET, FP_C1206)   # ADR-108: C0G 100 nF only from 1206 up
     cmp2 = part("Comparator", "LM2903", "TLV1702 (dual, open-drain)", "U506",
                 FP_SOIC8)
     cmp2["3"] += VREF      # A +
@@ -762,6 +769,8 @@ if __name__ == "__main__":
     # C551, C552, C553 here, and C518, C527, C528, C529 above. In X7R (+-20 %, the
     # DC bias, the ageing) C548 took the music after a 20 ms hole under 400 ms,
     # and C551 / C529 put K501 43 ms after the permissive (>= 50 ms, ADR-046).
+    # ADR-108 (L58a): C548 / C552 are polypropylene film (no C0G 1 uF exists), C553
+    # C0G in 2220; the values, and with them the corners of L54b3b, are unchanged.
     AT_PG, AT_PGT, AT_MD = Net("AT_PG"), Net("AT_PGT"), Net("AT_MD")
     AT_MRQ, AT_PRT = Net("AT_MRQ"), Net("AT_PRT")
     AT_MA, AT_MT = Net("AT_MA"), Net("AT_MT")
@@ -828,7 +837,7 @@ if __name__ == "__main__":
     # gave 491 ms with 1M; 538 ms with 1.1M (579 ms at 60 C, 613 nominal at 25 C). The music after
     # a power-up from the front comes 60 ms later (1209 instead of 1150 ms, L54b3b)
     res("1.1M", "R571", V5, AT_PGT)
-    cap("1u", "C548", AT_PGT, RET, FP_C1206)
+    cap("1u", "C548", AT_PGT, RET, FP_FILM_P15)   # ADR-108: PP film
     diode("BAS416", "D536", AT_PGT, AT_PG)
 
     # The front switch and the mute switch (ADR-102 point 2): AT_MRQ, 200k /
@@ -891,10 +900,10 @@ if __name__ == "__main__":
     res("1M", "R578", AT_MT, RET)
     res("22k", "R579", V5, MAINS_REQ)
     res("2.7M", "R580", AT_ON, AT_T2S)
-    cap("1u", "C552", AT_T2S, RET, FP_C1206)
+    cap("1u", "C552", AT_T2S, RET, FP_FILM_P15)   # ADR-108: PP film
     diode("BAS416", "D541", AT_T2S, AT_ON)   # ADR-104 (see D535)
     res("100k", "R581", V5, AT_F)
-    cap("330n", "C553", AT_F, RET, FP_C1206)
+    cap("330n", "C553", AT_F, RET, FP_C2220)      # ADR-108: C0G only from 2220
     res("33k", "R585", AT_F, RET)  # ADR-103: AT_F low while V5 comes up
     res("47k", "R582", AT_F, AT_BN)
     # The latch (ADR-102 point 2; ADR-048 point 5): BC847 + BC857 as a
