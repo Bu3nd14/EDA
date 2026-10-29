@@ -291,6 +291,12 @@ for k, (riso, cap, rbc, rbl, jk, relay, name) in {
     W(jn, jj["1"])
     gnd(to(jj["2"], 0, -0.7))
 chain(aout, fins[1], fins[0])
+# L58a: the block outputs named here too, their test points are drawn in panel 10 (ADR-107)
+lab(fins[1], "left")
+for k, riso in ((1, "R161"), (2, "R164")):
+    fo = node(f"f{k}_out_lab", f"F{k}L_OUT", (37.0, YF[k]))
+    W(fo, N(riso, f"F{k}L_OUT"))
+    lab(fo, "down", 2.0)
 # the trim: the ladder and pole 1 of K7 / K8 (trim.py, ADR-027); K7 reset = 0 dB
 two("R901", {AOUT: (31.6, YA), "L_TAP6": (31.6, YA - 2.4)}, side="l")
 two("R902", {"L_TAP6": (31.6, YA - 2.4), "L_TAP12": (31.6, YA - 4.8)}, side="l")
@@ -319,6 +325,9 @@ W(attw, boxB["IN"])
 # the main output (ADR-044: 47 ohm, cap, bleeds on both sides, the mute changeover)
 two("R261", {"BL_OUT": (57.6, 90.2), "L_MAIN_A": (60.0, 90.2)})
 W(boxB["OUT"], N("R261", "BL_OUT"))
+blo = node("bl_out_lab", "BL_OUT", (56.7, 90.2))     # L58a: TP201 is in panel 10
+W(blo, N("R261", "BL_OUT"))
+lab(blo, "up", 1.4)
 two("C262", {"L_MAIN_A": (61.0, 90.2), "L_MAINC": (63.4, 90.2)})
 W(N("R261", "L_MAIN_A"), N("C262", "L_MAIN_A"))
 hang("R264", "L_MAINC", (64.6, 90.2), 2.2)
@@ -850,6 +859,23 @@ S.text((89.4, 14.0), "×  contatto o piedino libero (nessuna rete nella netlist)
 S.text((89.4, 12.8), "relè disegnati a riposo; i bistabili in reset (R), S = set", halign="left")
 S.text((89.4, 11.6), "i punti di giunzione li mette il disegno dove si incontrano tre fili",
        halign="left", color=DIM, size=FS - 0.8)
+
+# =============================================================================
+# the test points (ADR-107, L58a): in panel 10's free corner, read by name. On the
+# board each signal sits next to its reference: the rails next to GND at J1, VRELAY
+# and the relay commands next to RLY_RET (TP5 at J1 / J2, TP9 at J4), each block's
+# output next to the block's own GND test point.
+# =============================================================================
+S.text((131.0, 23.4), "Test point (ADR-107): sulla scheda ciascuno accanto al suo "
+       "riferimento (GND, RLY_RET; la massa del proprio blocco)", size=FS - 1.0, color=DIM,
+       halign="left")
+for col, refs in ((133.4, ["TP1", "TP2", "TP3", "TP4", "TP5", "TP6", "TP7", "TP8", "TP9"]),
+                  (147.4, ["TP101", "TP102", "TP201", "TP202", "TP501", "TP502", "TP601",
+                           "TP602"]),
+                  (161.4, ["TP301", "TP302", "TP401", "TP402", "TP701", "TP702", "TP801",
+                           "TP802"])):
+    for i, ref in enumerate(refs):
+        S.testpoint(ref, (col, 22.2 - 0.9 * i))
 
 # =============================================================================
 try:

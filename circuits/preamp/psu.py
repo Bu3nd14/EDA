@@ -221,6 +221,19 @@ def header(value, ref, nets, fp=None):
     return j
 
 
+# ADR-107 (L58a): the bench test points, as on the audio board (preamp_audio.py
+# FP_TP / TP()): Keystone 5000-series loop, KiCad TestPoint symbol, value
+# "TP_<net>" - never a harness value, check_psu_harness.py finds the harnesses
+# by value. Low voltage only: nothing on the mains side.
+FP_TP = "TestPoint:TestPoint_Keystone_5000-5004_Miniature"
+
+
+def testpoint(name, net, ref):
+    t = part("Connector", "TestPoint", "TP_" + name, ref, FP_TP)
+    t[1] += net
+    return t
+
+
 def sink(ref, drain, gate, ret, clamp_to, rclamp, dref, dref2, zref):
     """Low-side N-MOSFET for a relay coil command, with a diode + zener clamp.
 
@@ -911,6 +924,28 @@ if __name__ == "__main__":
     header("POWER", "J1", [VP, VP, GND, GND, VM, VM, VRELAY])
     header("RLY_RET", "J2", [RET])
     header("MUTE_TIMER", "J4", [MUTE_CMD, PERMIT_CMD, MUTE_SW])
+
+    # ADR-107 (L58a): the test points. The rails and VRELAY at the harness
+    # (TP1... on the audio board read the other end of the same wires);
+    # VRELAY_REG before the standby switch Q505; V5 and the timer's outputs;
+    # the relay commands, gate and coil side. The logic and the coils return
+    # to RLY_RET, not GND (NT501 the only point where they touch): each group
+    # has the reference it is read against, next to it.
+    for name, net, ref in (("VPLUS", VP, "TP501"), ("VMINUS", VM, "TP502"),
+                           ("GND", GND, "TP503"), ("VRELAY", VRELAY, "TP504"),
+                           ("VRELAY_REG", VREG, "TP505"),
+                           ("RLY_RET", RET, "TP506"),
+                           ("V5", V5, "TP507"), ("MUTE_G", MUTE_G, "TP508"),
+                           ("PERMIT_G", PERMIT_G, "TP509"),
+                           ("PERMIT_T", PERMIT_T, "TP510"),
+                           ("RLY_RET", RET, "TP511"),
+                           ("MUTE_CMD", MUTE_CMD, "TP512"),
+                           ("PERMIT_CMD", PERMIT_CMD, "TP513"),
+                           ("MAINS_G", MAINS_G, "TP514"),
+                           ("MAINS_COIL", MAINS_D, "TP515"),
+                           ("VR_G", VR_G, "TP516"),
+                           ("RLY_RET", RET, "TP517")):
+        testpoint(name, net, ref)
 
     # ERC, explained (L41a): "POWER-OUT connected to POWER-OUT" on VPLUS and
     # VRELAY_REG is the KiCad symbol's two OUT pins (1, 20) of ONE TPS7A4701,

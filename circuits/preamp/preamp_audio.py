@@ -171,6 +171,23 @@ def C(val, a, b, base, fp=FP_FILM_P15):
     return c
 
 
+# ADR-107 (L58a): the bench test points. A Keystone 5000-series miniature loop
+# (red 5000 on a signal, black 5001 on its reference), the KiCad TestPoint
+# symbol and not Conn_01x01: check_relay_safe_state.py reads a Connector_Generic
+# pin 1 as a jack. The value is "TP_<net>", never a harness value (POWER,
+# RLY_RET, MUTE_TIMER: check_psu_harness.py finds the harnesses by value). Not
+# in spice_export: the decks do not change. Each signal test point has its
+# reference test point next to it, a G2 placement constraint (ADR-107's table).
+FP_TP = "TestPoint:TestPoint_Keystone_5000-5004_Miniature"
+
+
+def TP(name, net, ref):
+    t = Part("Connector", "TestPoint", value=f"TP_{name}", footprint=FP_TP,
+             ref=ref)
+    t[1] += net
+    return t
+
+
 def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole,
             k_sel, vlim):
     """One complete channel. ch is "L" or "R"; base offsets the refs."""
@@ -286,12 +303,14 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole,
     # connector each 47 ohm dissipates up to 0.155 W (tb_mute_corto.cir),
     # so rate it >= 0.16 W at 60 C.
     # The Stax's cap is 1u since L60c2: ADR-081 point 1, placed by ADR-084.
+    fixed = []    # the two buffers, for their test points (ADR-107)
     for k, (name, cval) in enumerate((("SINGXER", "4.7u"), ("STAX", "1u"))):
         # Refs 500/600 (L) and 700/800 (R): 1xx-4xx are blocks A and B.
         # The passives below keep the channel's own numbering (R161-R166,
         # R361-R366), which is what preamp_blocks_draw.py reads.
         f = gain_block(tag=f"F{k + 1}{ch}", base=base + 400 + 100 * k,
                        switchable=False, r_in=None, vp=vp, vm=vm, gnd=gnd)
+        fixed.append(f)
         # The buffer's input joins block A's output, BEFORE the trim: the
         # fixed outputs are a faithful copy of the source (ADR-027). NOTE on
         # the NAME of that node in the netlist: SKiDL picks one of the merged
@@ -441,6 +460,15 @@ def channel(ch, base, vp, vm, gnd, k_gain, k_gain10, k_mute, k_trim, k_pole,
     k_gain[K_NO1 if k_pole == 0 else K_NO2] += gnd
     k_gain10[K_COM1 if k_pole == 0 else K_COM2] += b["RG10"]
     k_gain10[K_NO1 if k_pole == 0 else K_NO2] += gnd
+
+    # ADR-107 (L58a): each block's output and the ground next to it, on the
+    # block's own hundreds (TP101 / TP102 block AL ... TP801 / TP802 F2R).
+    # Block A's output is the net SKiDL may name F1x_IN (limitations #74).
+    for blk, out, tbase in ((a, "A", base), (b, "B", base + 100),
+                            (fixed[0], "F1", base + 400),
+                            (fixed[1], "F2", base + 500)):
+        TP(f"{out}{ch}_OUT", blk["OUT"], f"TP{tbase + 1}")
+        TP("GND", gnd, f"TP{tbase + 2}")
     return a, b
 
 
@@ -723,6 +751,19 @@ if __name__ == "__main__":
     pc[5] += VM
     pc[6] += VM
     pc[7] += VCC_RLY
+
+    # ADR-107 (L58a): the harness end of this board, to read what arrives
+    # against what the supply board sends (TP501... there). Rails against GND
+    # next to J1; VRELAY and the relay commands against RLY_RET, the coils'
+    # return, next to J1 / J2 and next to J4.
+    for name, net, ref in (("VPLUS", VP, "TP1"), ("VMINUS", VM, "TP2"),
+                           ("GND", GND, "TP3"), ("VRELAY", VCC_RLY, "TP4"),
+                           ("RLY_RET", K_TRIM["RET"], "TP5"),
+                           ("MUTE_CMD", MUTE_CMD, "TP6"),
+                           ("PERMIT_CMD", PERMIT_CMD, "TP7"),
+                           ("MUTE_SW", MUTE_SW, "TP8"),
+                           ("RLY_RET", K_TRIM["RET"], "TP9")):
+        TP(name, net, ref)
 
     try:
         ERC()
