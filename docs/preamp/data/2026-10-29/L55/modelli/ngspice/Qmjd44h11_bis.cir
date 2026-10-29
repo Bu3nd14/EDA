@@ -1,0 +1,11 @@
+* L55 op Qmjd44h11
+.include /Users/roberto/EDA/.claude/worktrees/L55/docs/preamp/data/2026-10-29/L55/modelli/scartati/mjd44h11.lib
+Q1 c b 0 Qmjd44h11
+Vc c 0 DC 15.0
+Ib 0 b DC 6.10495513467e-05
+.control
+set temp = 25
+op
+print @q1[ic] @q1[ib] @q1[cpi] @q1[cmu] @q1[gm] @q1[vbe]
+.endc
+.end

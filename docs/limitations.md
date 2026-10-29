@@ -1664,3 +1664,36 @@ i file la manca: `ripiego.txt` non la contiene.
 e un margine su un nodo da megaohm misurato col ripiego si confronta col metodo `gear` sullo stesso
 caso dove `gear` finisce (`--metodo trap8` di `genera_tb_psu.py` di L54b3b). Lo stesso vale per una
 corsa interrotta a metà: un log senza errori non vuol dire una corsa finita.
+
+## 82. Il modello onsemi del MJE253 ha VJC = 0,033 V: sopra ~35 °C la capacità base-collettore non è definita e la `tran` non parte
+
+Visto in L55, il 2026-10-29 (`docs/preamp/data/2026-10-29/L55/`, README, «Il modello del MJE253 a
+caldo»). Col blocco a ogni giunzione alla sua temperatura (`temp=` di istanza, il metodo di L56) i 40 deck
+del candidato MJE243G / MJE253G si fermano tutti al primo punto della `tran`: «Timestep too small;
+initial timepoint: trouble with lsk489a-instance jq110a». L'`op` prima converge, e il dispositivo nominato
+nell'errore è un altro. Lo stesso con `dtemp=` e con `method=gear`; passa togliendo la temperatura ai soli
+due finali. La causa: ngspice scala VJ con la temperatura (SPICE3, `bjttemp.c`), e da 0,0329 V a 27 °C
+il VJC del MJE253 va a −0,0065 V a 36,5 °C e −0,104 V a 60 °C (`script/vj_temperatura.py`); la capacità
+CJ / (1 − V/VJ)^MJ non è più definita. Il MJE243 (VJC 0,40 V) e il MJE15032 (0,60) restano positivi
+fino a 125 °C. A 27 °C il modello è sano e ridà la C_ob del datasheet. Vale anche per un `.temp` globale
+sopra ~35 °C.
+
+**Regola operativa**: un modello del costruttore con un VJ sotto ~0,2 V si prova con la `tran` alla
+temperatura più alta del banco prima di fidarsene; la tabella di `vj_temperatura.py` lo dice in un
+secondo. Il rimedio di banco, dichiarato, è una copia del modello con `TLEVC=1 CTE=0 CTC=0 CTS=0 TVJE=0
+TVJC=0 TVJS=0` accodato (le capacità ferme ai valori di TNOM, il resto del modello segue la temperatura;
+`script/modelli_banco.py`), provata prima sul caso noto: sul MJE, col congelamento e senza, le cifre a
+caldo sono identiche all'ultima cifra stampata. La copia sta nella cartella del banco, mai in `models/`.
+
+## 83. Un emettitore su 1 TΩ nella ricetta di un modello: l'`op` non converge, ngspice ripiega sulla `tran` e la misura esce sbagliata senza errore
+
+Visto in L55, il 2026-10-29 (`docs/preamp/data/2026-10-29/L55/modelli/README.md`, «Un risultato di
+metodo»). La prima lettura della C_obo del MJE243 con l'emettitore aperto su 1 TΩ, come nelle ricette
+dei ZXT di `validate_models.py`, dava 24,7 pF e IC = 123 mA dove la polarizzazione era per 100 mA: gmin e
+source stepping falliscono, ngspice ripiega su un'analisi transitoria e stampa lo stesso una soluzione.
+Con 1 GΩ converge subito e dà 29,15 pF, il valore teorico (74,4 pF · (1 + 10/0,4)^−0,287) e quello della
+curva del datasheet (~30 pF). Il PNP e i ZXT non ne soffrono.
+
+**Regola operativa**: una ricetta che misura una capacità o un parametro a un punto di lavoro controlla
+prima la corrente di quel punto (il controllo di IC della ricetta del MJE243 è ciò che l'ha trovato), e
+un terminale «aperto» si chiude su 1 GΩ, non su 1 TΩ.

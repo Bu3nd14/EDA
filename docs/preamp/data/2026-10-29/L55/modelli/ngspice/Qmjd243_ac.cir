@@ -1,0 +1,12 @@
+* L55 fT Qmjd243
+.include /Users/roberto/EDA/.claude/worktrees/L55/docs/preamp/data/2026-10-29/L55/modelli/scartati/mjd243.lib
+Q1 c b 0 Qmjd243
+Vc c 0 DC 15.0
+Ib 0 b DC 2.52076533649e-05 AC 1
+.control
+set temp = 25
+ac dec 50 100k 5g
+let hfe = mag(i(Vc))
+wrdata /Users/roberto/EDA/.claude/worktrees/L55/docs/preamp/data/2026-10-29/L55/modelli/ngspice/Qmjd243_ac.csv hfe
+.endc
+.end

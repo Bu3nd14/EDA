@@ -1,0 +1,11 @@
+* L55 op Qmje253
+.include /Users/roberto/EDA/.claude/worktrees/L55/vendor/bjt_pnp/onsemi/MJE253/mje253.lib
+Q1 c b 0 Qmje253
+Vc c 0 DC -15.0
+Ib b 0 DC 9.55523532997e-05
+.control
+set temp = 25
+op
+print @q1[ic] @q1[ib] @q1[cpi] @q1[cmu] @q1[gm] @q1[vbe]
+.endc
+.end

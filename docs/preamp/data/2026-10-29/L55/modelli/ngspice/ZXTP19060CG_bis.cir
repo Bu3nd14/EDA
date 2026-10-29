@@ -1,0 +1,11 @@
+* L55 op ZXTP19060CG
+.include /Users/roberto/EDA/.claude/worktrees/L55/docs/preamp/data/2026-10-29/L55/modelli/scartati/ZXTP19060CG.spice.txt
+Q1 c b 0 ZXTP19060CG
+Vc c 0 DC -15.0
+Ib b 0 DC 4.59883613801e-05
+.control
+set temp = 25
+op
+print @q1[ic] @q1[ib] @q1[cpi] @q1[cmu] @q1[gm] @q1[vbe]
+.endc
+.end

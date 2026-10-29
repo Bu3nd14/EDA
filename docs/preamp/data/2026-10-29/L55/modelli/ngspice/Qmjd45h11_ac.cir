@@ -1,0 +1,12 @@
+* L55 fT Qmjd45h11
+.include /Users/roberto/EDA/.claude/worktrees/L55/docs/preamp/data/2026-10-29/L55/modelli/scartati/mjd45h11.lib
+Q1 c b 0 Qmjd45h11
+Vc c 0 DC -15.0
+Ib b 0 DC 7.40995239065e-05 AC 1
+.control
+set temp = 25
+ac dec 50 100k 5g
+let hfe = mag(i(Vc))
+wrdata /Users/roberto/EDA/.claude/worktrees/L55/docs/preamp/data/2026-10-29/L55/modelli/ngspice/Qmjd45h11_ac.csv hfe
+.endc
+.end

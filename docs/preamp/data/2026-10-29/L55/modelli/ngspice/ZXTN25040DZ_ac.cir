@@ -1,0 +1,12 @@
+* L55 fT ZXTN25040DZ
+.include /Users/roberto/EDA/.claude/worktrees/L55/vendor/bjt_npn/diodes_inc/ZXTN25040DZ/ZXTN25040DZ.spice.txt
+Q1 c b 0 ZXTN25040DZ
+Vc c 0 DC 15.0
+Ib 0 b DC 3.92476971467e-05 AC 1
+.control
+set temp = 25
+ac dec 50 100k 5g
+let hfe = mag(i(Vc))
+wrdata /Users/roberto/EDA/.claude/worktrees/L55/docs/preamp/data/2026-10-29/L55/modelli/ngspice/ZXTN25040DZ_ac.csv hfe
+.endc
+.end

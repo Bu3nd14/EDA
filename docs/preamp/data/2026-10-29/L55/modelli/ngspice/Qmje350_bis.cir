@@ -1,0 +1,11 @@
+* L55 op Qmje350
+.include /Users/roberto/EDA/.claude/worktrees/L55/docs/preamp/data/2026-10-29/L55/modelli/scartati/mje350.lib
+Q1 c b 0 Qmje350
+Vc c 0 DC -15.0
+Ib b 0 DC 0.000172132104912
+.control
+set temp = 25
+op
+print @q1[ic] @q1[ib] @q1[cpi] @q1[cmu] @q1[gm] @q1[vbe]
+.endc
+.end
