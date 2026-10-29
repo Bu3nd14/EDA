@@ -1,0 +1,18 @@
+* L54b3b: CMPTAV - CMPTA (cmpta.lib, ADR-103) with three parameters, for the tolerances:
+*   VOS  the threshold: it sinks out when inn > inp - VOS... written as CMPTA's, V(inn)-V(inp)-VOS:
+*        0.4m is CMPTA's (TI's model's V_VOS). The TLV1702 / TLV1704 (SBOS589D 7.6): +-3.5 mV max
+*        at 2.2 V, +-2.5 mV at 36 V, +-5.5 mV over -40..125 C; drift +-20 uV/C max;
+*   IB   a current drawn from EACH input (positive = into the pin), present while the supply is up:
+*        15 nA max, 20 nA over temperature (SBOS589D 7.6); one figure for every channel;
+*   VON  the supply at which the output comes alive: 2.0 V (CMPTA) or 2.2 V (CMPTA22).
+* With VOS=0.4m IB=0 VON=2 it is CMPTA (the IB sources carry 0 A).
+.subckt CMPTAV inp inn out vcc gnd VOS=0.4m IB=0 VON=2
+Bu u gnd V = 0.5*(1+tanh((V(inn)-V(inp)-{VOS})/0.1m)) * 0.5*(1+tanh((V(vcc,gnd)-{VON})/0.1))
+R1 u c 1k
+C1 c gnd 745p
+Bs out gnd I = V(out,gnd)/150 * 0.5*(1+tanh((V(c,gnd)-0.5)/0.02))
+Rleak out gnd 1G
+Bq vcc gnd I = 55u*(V(vcc,gnd)>1)
+Bbp inp gnd I = {IB}*0.5*(1+tanh((V(vcc,gnd)-1)/0.1))
+Bbn inn gnd I = {IB}*0.5*(1+tanh((V(vcc,gnd)-1)/0.1))
+.ends
