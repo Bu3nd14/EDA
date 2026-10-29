@@ -1,0 +1,11 @@
+* L55 op ZXTP25040DZ
+.include /Users/roberto/EDA/.claude/worktrees/L55/vendor/bjt_pnp/diodes_inc/ZXTP25040DZ/ZXTP25040DZ.spice.txt
+Q1 c b 0 ZXTP25040DZ
+Vc c 0 DC -15.0
+Ib b 0 DC 3.02568819487e-05
+.control
+set temp = 25
+op
+print @q1[ic] @q1[ib] @q1[cpi] @q1[cmu] @q1[gm] @q1[vbe]
+.endc
+.end

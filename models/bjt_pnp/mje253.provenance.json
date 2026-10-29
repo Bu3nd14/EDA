@@ -1,0 +1,12 @@
+{
+  "canonical_file": "mje253.lib",
+  "device_class": "bjt_pnp",
+  "origin": "vendor_derived",
+  "vendor_source_path": "vendor/bjt_pnp/onsemi/MJE253/mje253.lib",
+  "vendor_source_sha256": "c8d9964157d8352dd0624aa4aa8b9a6f518fb8efa37253e568f2ce9dcfc20ed3",
+  "date_created": "2026-10-29",
+  "author": "AI agent (Claude Sonnet 5.5, sourcing agent, L55) on behalf of roberto.carmeli@gmail.com",
+  "changes": "NOTHING OF THE VENDOR TEXT WAS CHANGED. Same method as models/bjt_npn/mje243.lib: our header (LF), the manufacturer's file byte-for-byte (996 bytes, CRLF), then a comment block and ONE line '+ KF=1e-13 AF=1.4' (ADR-057) overriding the vendor's KF=0 AF=1. Model name left as served (Qmje253). Assembled in binary by docs/preamp/data/2026-10-29/L55/modelli/costruisci_modelli.py, which asserts the vendor bytes are present unchanged. Mixed line endings on purpose (limitations #39).",
+  "reason": "NC-056 (L55), T7 (ADR-016). Candidate driver-sized PNP for the Class A emitter follower of the gain block, in place of the MJE15033. Not yet used by any circuit.",
+  "notes": "INSIDE every published window of onsemi MJE243/D Rev. 17 (the same document covers the pair), ngspice 47, set temp = 25: hFE 45.106 at 200 mA / |VCE| 1 V (40 min, 180 max: only 12.8 % above the minimum, a low-gain model, BF = 54), 23.658 at 1 A (15 min); fT 59.896 MHz at 100 mA, 10 V, ftest 10 MHz (40 min); C_ob 19.695 pF at 10 V, 0.1 MHz (50 max; Fig. 7 ~17 pF). Locked +-0.5 % by tb_mje253(). At the follower point (20 mA, |VCE| 15 V): hFE 209, Vbe 0.626 V, Cpi 2.19 nF, Cmu 14.6 pF, fT 61 MHz (unity); the MJE15033: hFE 237, Vbe 0.543 V, Cpi 7.81 nF, Cmu 64 pF, fT 12 MHz. VJC = 0.0329 V in the vendor card (left as served): the collector-base capacitance collapses with reverse bias faster than a usual junction; trust it near 10 V (the datasheet point), not near 0 V. Written by a contractor (MODPEX / Symmetry Design Systems, Jan 22 2003, PSpice), distributed by onsemi. Flicker bound of ADR-057 appended (a bound, not a fit). Orderable part: MJE253G (Active on onsemi's page, 2026-10-29); the bare MJE253 is Obsolete."
+}

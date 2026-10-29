@@ -1,0 +1,64 @@
+{
+  "part_name": "MJE253G (PNP complementary silicon power plastic transistor, TO-225, 100 V / 4.0 A / 15 W at TC = 25 C)",
+  "vendor_name": "onsemi (Semiconductor Components Industries, LLC)",
+  "device_class": "bjt_pnp",
+  "product_page": "https://www.onsemi.com/products/discrete-power-modules/general-purpose-and-low-vcesat-transistors/mje253",
+  "date_obtained": "2026-10-29",
+  "lotto": "L55",
+  "obtained_by": "AI agent (Claude Sonnet 5.5, sourcing agent, L55) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from onsemi's own host, not from a distributor and not from a mirror. Byte-for-byte as served.",
+  "license_notes": "Manufacturer-distributed SPICE model, redistributed here unmodified for engineering traceability only. The file carries its own Symmetry Design Systems copyright notice, reproduced unaltered.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "NC-056 (L55): the PNP half of the candidate driver-sized pair that would replace the MJE15033 (circuits/preamp/gain_block.py:717-718). See vendor/bjt_npn/onsemi/MJE243/PROVENANCE.json for the vetting.",
+  "files": [
+    {
+      "original_filename": "mje253.lib",
+      "role": "spice_model",
+      "url": "https://www.onsemi.com/download/models/lib/mje253.lib",
+      "served_content_type": "application/octet-stream",
+      "bytes": 996,
+      "sha256": "c8d9964157d8352dd0624aa4aa8b9a6f518fb8efa37253e568f2ce9dcfc20ed3",
+      "local_filename": "mje253.lib",
+      "renamed": false,
+      "line_endings": "CRLF (as served). Do not open and re-save: limitations #39."
+    }
+  ],
+  "datasheet_is_frozen_elsewhere": {
+    "path": "vendor/bjt_npn/onsemi/MJE243/mje243-d.pdf",
+    "sha256": "4b9218b7250079d75d5792d78df0b6370b2a8e0d6e095925fb21ded93395ea7c",
+    "url": "https://www.onsemi.com/download/data-sheet/pdf/mje243-d.pdf",
+    "why": "onsemi publishes ONE datasheet for the pair (MJE243/D, December 2024 Rev. 17, title 'MJE243G (NPN), MJE253G (PNP)'). Frozen once under the part whose number the document bears. The product page of the MJE253 links the same file (data-document-id 21082, href /download/data-sheet/pdf/mje243-d.pdf); /download/data-sheet/pdf/mje253-d.pdf answers 302."
+  },
+  "how_the_model_url_was_found": "Pattern of limitations #18 / L24, /download/models/lib/mje253.lib: 200, application/octet-stream, 996 bytes (not the 303722-byte soft 404). The header was then read (limitations #20): '.MODEL Qmje253 pnp' - the right part and polarity.",
+  "limits_read_with_their_conditions": {
+    "note": "Same table as the NPN (same document, rendered pages 2 and 4 checked). Conditions that matter here: hFE 40 min / 180 max at 200 mA, VCE 1 V (the PNP model sits at 45.1, 12.8 % above the minimum); fT 40 MHz min at 100 mA, 10 V, ftest 10 MHz; C_ob 50 pF max at 10 V, 0.1 MHz (Fig. 7: PNP ~17 pF); V_CEO 100 V; V_EBO 7.0 V; R_thJC 8.34 C/W, R_thJA 83.4 C/W, TJ max 150 C. Nothing is specified at the follower's 20 mA.",
+    "package": "TO-225, tab = collector (not isolated)."
+  },
+  "lifecycle": {
+    "status": "ACTIVE for MJE253G; OBSOLETE for the bare MJE253.",
+    "verbatim_from_manufacturer": "onsemi's product page embeds a JSON-LD itemProductList. Read 2026-10-29: MJE253G -> itemCondition 'Active', availability 'available', price 0.2808 USD (tier not stated); MJE253 -> itemCondition 'Obsolete', availability 'unavailable', price 0.0. The page header badge reads 'Active'. The page title is 'MJE253: 4.0 A, 100 V PNP Bipolar Power Transistor'.",
+    "source": "https://www.onsemi.com/products/discrete-power-modules/general-purpose-and-low-vcesat-transistors/mje253"
+  },
+  "spice_model": {
+    "status": "FOUND, served by the manufacturer, and PROVEN to load and run in ngspice 47 (no warnings).",
+    "model_name": "Qmje253",
+    "model_count_in_file": 1,
+    "authorship_declared_in_the_file": "Same MODPEX / Symmetry Design Systems header as the NPN, 'Model generated on Jan 22, 03', PSpice format.",
+    "no_flicker_noise": "KF=0 AF=1; the ADR-057 bound is appended in models/.",
+    "oddity_left_as_served": "VJC = 0.0329 V (a usual junction has 0.4-0.75 V): the collector-base capacitance collapses with reverse bias faster than a normal junction. At VCB = 10 V the model reproduces the datasheet (C_ob 19.7 pF against ~17 pF in Fig. 7). BF = 54: a low-gain PNP."
+  },
+  "datasheet_cross_check_L55": {
+    "method": "ngspice 47, set temp = 25, |VCE| and |IC| at the datasheet's own conditions. Recipe tb_mje253() in scripts/validate_models.py; values locked +-0.5 %.",
+    "hFE_IC_200mA_VCE_1V": "45.106 against 40 min / 180 max. Inside (by 12.8 %).",
+    "hFE_IC_1A_VCE_1V": "23.658 against 15 min. Inside.",
+    "fT_IC_100mA_VCE_10V_ftest_10MHz": "59.896 MHz against 40 MHz min. Inside.",
+    "C_ob_VCB_10V_0.1MHz": "19.695 pF against 50 pF max (Fig. 7 typical ~17 pF). Inside.",
+    "verdict": "INSIDE every published window.",
+    "at_the_follower_point_IC_20mA_VCE_15V": "hFE 209, Vbe 0.626 V, gm 761 mS, Cpi 2.19 nF, Cmu 14.6 pF, fT (unity) 61.2 MHz."
+  },
+  "what_was_NOT_verified": {
+    "stock_and_price": "Not at Mouser or DigiKey. findchips.com aggregation 2026-10-29 for the stock; onsemi JSON-LD for the price.",
+    "datasheet_for_this_half_separately": "There is none: one document covers both."
+  }
+}

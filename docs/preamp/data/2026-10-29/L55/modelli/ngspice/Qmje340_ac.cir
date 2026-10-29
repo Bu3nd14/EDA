@@ -1,0 +1,12 @@
+* L55 fT Qmje340
+.include /Users/roberto/EDA/.claude/worktrees/L55/docs/preamp/data/2026-10-29/L55/modelli/scartati/mje340.lib
+Q1 c b 0 Qmje340
+Vc c 0 DC 15.0
+Ib 0 b DC 0.000301074072261 AC 1
+.control
+set temp = 25
+ac dec 50 100k 5g
+let hfe = mag(i(Vc))
+wrdata /Users/roberto/EDA/.claude/worktrees/L55/docs/preamp/data/2026-10-29/L55/modelli/ngspice/Qmje340_ac.csv hfe
+.endc
+.end

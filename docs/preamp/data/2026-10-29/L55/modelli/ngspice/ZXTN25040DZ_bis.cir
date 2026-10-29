@@ -1,0 +1,11 @@
+* L55 op ZXTN25040DZ
+.include /Users/roberto/EDA/.claude/worktrees/L55/vendor/bjt_npn/diodes_inc/ZXTN25040DZ/ZXTN25040DZ.spice.txt
+Q1 c b 0 ZXTN25040DZ
+Vc c 0 DC 15.0
+Ib 0 b DC 3.92476971467e-05
+.control
+set temp = 25
+op
+print @q1[ic] @q1[ib] @q1[cpi] @q1[cmu] @q1[gm] @q1[vbe]
+.endc
+.end

@@ -1,0 +1,12 @@
+* L55 fT FZT651
+.include /Users/roberto/EDA/.claude/worktrees/L55/docs/preamp/data/2026-10-29/L55/modelli/scartati/FZT651.spice.txt
+Q1 c b 0 FZT651
+Vc c 0 DC 15.0
+Ib 0 b DC 8.14218971211e-05 AC 1
+.control
+set temp = 25
+ac dec 50 100k 5g
+let hfe = mag(i(Vc))
+wrdata /Users/roberto/EDA/.claude/worktrees/L55/docs/preamp/data/2026-10-29/L55/modelli/ngspice/FZT651_ac.csv hfe
+.endc
+.end

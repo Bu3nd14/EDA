@@ -1348,6 +1348,185 @@ def tb_zxtp25040dz(model_file):
         cobo_locked=COBO_ZXTP, cobo_max=None)
 
 
+# L55 (NC-056) locks for the MJE243/MJE253 pair. ib: the base current that
+# gives IC = 100 mA at |VCE| = 10 V with the model as frozen (datasheet fT
+# row). hfe points: (IC, locked, datasheet min, datasheet max or None).
+IB_FT_MJE243, IB_FT_MJE253 = 360.053405e-6, 671.934669e-6
+HFE_MJE243 = [(0.2, 131.128, 40.0, 180.0), (1.0, 56.914, 15.0, None)]
+HFE_MJE253 = [(0.2, 45.106, 40.0, 180.0), (1.0, 23.658, 15.0, None)]
+FT_MJE243, FT_MJE253 = 59.933e6, 59.896e6
+COBO_MJE243, COBO_MJE253 = 29.1536e-12, 19.6952e-12
+# The datasheet points the frozen model is declared OUTSIDE of (a lock that
+# also fails when a declared deviation disappears, or a new one appears).
+# L55 measured NONE for either half: the pair sits inside every published
+# window (hFE 40-180 at 200 mA, 15 min at 1 A, fT 40 MHz min, Cob 50 pF max).
+OUTSIDE_MJE243 = set()
+OUTSIDE_MJE253 = set()
+
+
+def _tb_mje24x(model_file, model_name, csv_base, sign, ib_ft, hfe_points,
+               ft_locked, cobo_locked, outside):
+    """Shared body of tb_mje243() and tb_mje253(), the driver-sized
+    complementary pair L55 measured as the alternative to the MJE15032/33
+    (NC-056). One onsemi datasheet covers both (MJE243/D, December 2024
+    Rev. 17). Its conditions, read from the rendered page 2 and not from
+    pdftotext (limitations #19):
+      hFE   IC = 200 mA, VCE = 1 V:  40 min / 180 max;  IC = 1 A: 15 min
+      fT    IC = 100 mA, VCE = 10 V, ftest = 10 MHz: 40 MHz min
+            (fT = |hfe| x ftest, a gain-bandwidth product AT 10 MHz, not the
+            unity crossing - the MJE15032 recipe's lesson, #NC-025)
+      C_ob  VCB = 10 V, IE = 0, f = 0.1 MHz: 50 pF max
+
+    C_ob IS READ WITH THE EMITTER ON 1 GOHM, NOT 1 TOHM as in _tb_zxt(): with
+    1 TOhm ngspice 47 cannot find the operating point of the MJE243 NPN
+    (dynamic and true gmin stepping and source stepping all fail), falls back
+    to a transient op, and the deck then returns a WRONG op for Q2 as well
+    (IC = 123 mA where the bias is set for 100 mA) and a C_ob 14 % low
+    (25.2 pF against 29.15 pF: the textbook CJC (1+10/0.4)^-0.287 gives
+    29.2). With 1 GOhm the op converges directly. The IC check below is what
+    caught it.
+
+    Structure of _tb_zxt(): three devices, three operating points. The fT
+    bias is a hard-coded base current and the op row must give 100 mA or the
+    recipe refuses. Values are locked to +-0.5 %. A datasheet point the model
+    misses is not hidden: `outside` names the points that ARE outside (by
+    label, e.g. 'hFE@0.2A') and the recipe fails if that set changes in
+    either direction.
+    """
+    op_csv = os.path.join(SCRATCH_DIR, csv_base + "_op.csv")
+    hfe_csv = os.path.join(SCRATCH_DIR, csv_base + "_hfe.csv")
+    ac_csv = os.path.join(SCRATCH_DIR, csv_base + "_ac.csv")
+    v1, v10 = 1.0 * sign, 10.0 * sign
+    vb_start, vb_stop, vb_step = 0.45 * sign, 1.40 * sign, 0.0002 * sign
+    ib_nodes = "b2 0" if sign < 0 else "0 b2"
+    cir = f"""* validate {csv_base}.lib - {model_name} at the datasheet's own conditions
+.include {model_file}
+Q1 c1 b1 0 {model_name}
+Vc1 c1 0 DC {v1}
+Vb1 b1 0 DC {0.6 * sign}
+Q2 c2 b2 0 {model_name}
+Vc2 c2 0 DC {v10}
+Ib2 {ib_nodes} DC {ib_ft:.9g} AC 1
+Q3 c3 0 e3 {model_name}
+Re3 e3 0 1G
+Vc3 c3 0 DC {v10} AC 1
+.control
+set temp = 25
+save @q1[ic] @q1[ib] @q2[ic] i(Vc2) i(Vc3)
+op
+wrdata {op_csv} @q2[ic]
+destroy all
+dc Vb1 {vb_start} {vb_stop} {vb_step}
+wrdata {hfe_csv} @q1[ic] @q1[ib]
+destroy all
+ac dec 1 100k 10meg
+let hfe = mag(i(Vc2))
+let cre = real(i(Vc3))
+let cim = imag(i(Vc3))
+wrdata {ac_csv} hfe cre cim
+destroy all
+.endc
+.end
+"""
+    TOL_PCT = 0.5
+    FT_MIN, COBO_MAX = 40e6, 50e-12
+
+    def check(sets):
+        op_rows, hfe_rows, ac_rows = sets
+        problems, report, seen_outside = [], [], set()
+
+        if len(op_rows) != 1:
+            return False, f"expected one op row, got {len(op_rows)}"
+        ic_ft = abs(op_rows[0]["y0"])
+        if abs(ic_ft - 100e-3) / 100e-3 > 0.001:
+            problems.append(
+                f"the fT bias is off: IC = {ic_ft * 1e3:.4f} mA where the "
+                f"datasheet specifies 100 mA")
+
+        if len(hfe_rows) < 4000:
+            return False, f"expected the full Vb sweep, got {len(hfe_rows)} rows"
+        for target, locked, minimum, maximum in hfe_points:
+            label = f"hFE@{target:g}A"
+            hfe = _interp_hfe(hfe_rows, target)
+            if hfe is None:
+                problems.append(f"IC never reached {target:g} A in the sweep")
+                continue
+            if abs(hfe - locked) / max(locked, 1e-30) * 100 > TOL_PCT:
+                problems.append(
+                    f"hFE={hfe:.3f} at IC={target:g}A has moved from the value "
+                    f"L55 measured ({locked}) by more than {TOL_PCT}%")
+            mark = ""
+            if hfe < minimum:
+                mark = f" BELOW its {minimum:g} minimum"
+                seen_outside.add(label)
+            elif maximum is not None and hfe > maximum:
+                mark = f" ABOVE its {maximum:g} maximum"
+                seen_outside.add(label)
+            report.append(f"{label}={hfe:.1f}{mark}")
+
+        if len(ac_rows) != 3:
+            return False, f"expected the 3-point AC sweep, got {len(ac_rows)} rows"
+        r10 = _row_at(ac_rows, 10e6)
+        ft = r10["x"] * r10["y0"]
+        if abs(ft - ft_locked) / max(ft_locked, 1e-30) * 100 > TOL_PCT:
+            problems.append(
+                f"fT={ft / 1e6:.3f}MHz has moved from the value L55 measured "
+                f"({ft_locked / 1e6:.3f}MHz) by more than {TOL_PCT}%")
+        mark = ""
+        if ft < FT_MIN:
+            mark = " BELOW its 40MHz minimum"
+            seen_outside.add("fT")
+        report.append(f"fT={ft / 1e6:.3f}MHz at 10MHz{mark}")
+
+        r1 = _row_at(ac_rows, 100e3)
+        cobo, ratio = _cap_from(r1, "y1", "y2")
+        if ratio > 0.05:
+            problems.append(
+                f"the C_obo reading is not capacitive: |Re/Im| = {ratio:.3g}")
+        if abs(cobo - cobo_locked) / max(cobo_locked, 1e-30) * 100 > TOL_PCT:
+            problems.append(
+                f"C_ob={cobo * 1e12:.4f}pF has moved from the value L55 "
+                f"measured ({cobo_locked * 1e12:.4f}pF) by more than {TOL_PCT}%")
+        mark = ""
+        if cobo > COBO_MAX:
+            mark = " ABOVE its 50pF maximum"
+            seen_outside.add("Cob")
+        report.append(f"C_ob={cobo * 1e12:.3f}pF at 0.1MHz{mark}")
+
+        if seen_outside != set(outside):
+            problems.append(
+                f"the set of datasheet points the model is outside of is "
+                f"{sorted(seen_outside)}, declared {sorted(outside)}")
+        if problems:
+            return False, "; ".join(problems)
+        declared = (f"; declared outside the datasheet: {sorted(outside)}"
+                    if outside else "; inside every published window")
+        return True, ", ".join(report) + declared + ", IC verified to 100.0 mA"
+    return cir, [op_csv, hfe_csv, ac_csv], [1, 2, 3], check
+
+
+def tb_mje243(model_file):
+    """REGRESSION LOCK on the L55 cross-check of the MJE243 (onsemi
+    MJE243/D Rev. 17, Dec 2024), the NPN of the driver-sized pair measured
+    against the MJE15032 for NC-056. Datasheet: hFE 40-180 at 200 mA and
+    15 min at 1 A (VCE 1 V); fT 40 MHz min at 100 mA, 10 V, ftest 10 MHz;
+    C_ob 50 pF max at 10 V, 0.1 MHz."""
+    return _tb_mje24x(
+        model_file, "Qmje243", "bjt_npn_mje243", +1,
+        ib_ft=IB_FT_MJE243, hfe_points=HFE_MJE243, ft_locked=FT_MJE243,
+        cobo_locked=COBO_MJE243, outside=OUTSIDE_MJE243)
+
+
+def tb_mje253(model_file):
+    """REGRESSION LOCK on the L55 cross-check of the MJE253 (onsemi
+    MJE243/D Rev. 17, Dec 2024), the PNP of the pair. Same datasheet, same
+    conditions, mirrored."""
+    return _tb_mje24x(
+        model_file, "Qmje253", "bjt_pnp_mje253", -1,
+        ib_ft=IB_FT_MJE253, hfe_points=HFE_MJE253, ft_locked=FT_MJE253,
+        cobo_locked=COBO_MJE253, outside=OUTSIDE_MJE253)
+
+
 def _tb_mje(model_file, model_name, csv_base, sign, ib_ft, hfe_points,
             ft_locked):
     """Shared body of tb_mje15032() and tb_mje15033(), the two halves of
@@ -2221,6 +2400,9 @@ FLICKER = {
     "bjt_npn/mmbt5551.lib": ("MMBT5551", +1, 0.62, 0.56),
     "bjt_npn/mje15032.lib": ("Qmje15032", +1, 0.46, 0.40),
     "bjt_pnp/mje15033.lib": ("Qmje15033", -1, 0.46, 0.40),
+    # L55 (NC-056): the driver-sized pair, same declared bound (ADR-057).
+    "bjt_npn/mje243.lib": ("Qmje243", +1, 0.46, 0.40),
+    "bjt_pnp/mje253.lib": ("Qmje253", -1, 0.46, 0.40),
 }
 
 
@@ -2323,6 +2505,9 @@ def build_registry():
     # L46a - the faster output pair measured against the MJE15032/33.
     reg["bjt_npn/zxtn25040dz.lib"] = lambda p: tb_zxtn25040dz(p)
     reg["bjt_pnp/zxtp25040dz.lib"] = lambda p: tb_zxtp25040dz(p)
+    # L55 (NC-056) - the driver-sized complementary pair, onsemi MJE243/MJE253.
+    reg["bjt_npn/mje243.lib"] = lambda p: tb_mje243(p)
+    reg["bjt_pnp/mje253.lib"] = lambda p: tb_mje253(p)
     # L57b - TI LM4040 5.0 V shunt reference (ADR-101 limiter rails).
     reg["voltage_reference/lm4040_5v0_ngspice.lib"] = lambda p: tb_lm4040_5v0(p)
     # Dopo L57b - BAV199, Diodes Incorporated's model (the user's file).

@@ -1,0 +1,81 @@
+{
+  "part_name": "MJE243G (NPN complementary silicon power plastic transistor, TO-225, 100 V / 4.0 A / 15 W at TC = 25 C)",
+  "vendor_name": "onsemi (Semiconductor Components Industries, LLC)",
+  "device_class": "bjt_npn",
+  "product_page": "https://www.onsemi.com/products/discrete-power-modules/general-purpose-and-low-vcesat-transistors/mje243",
+  "date_obtained": "2026-10-29",
+  "lotto": "L55",
+  "obtained_by": "AI agent (Claude Sonnet 5.5, sourcing agent, L55) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from onsemi's own host, not from a distributor and not from a mirror. Byte-for-byte as served.",
+  "license_notes": "Manufacturer datasheet and manufacturer-distributed SPICE model, redistributed here unmodified for engineering traceability only. Copyright of the datasheet remains Semiconductor Components Industries, LLC; the model file carries its own Symmetry Design Systems copyright notice, reproduced unaltered.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "why_this_part": "NC-056 (L55): candidate driver-sized replacement for the MJE15032 in the Class A emitter follower of the gain block (circuits/preamp/gain_block.py:717-718). The MJE15032 model has CJE = 3.06 nF; this model has CJE = 220 pF, and at the follower's 20 mA the model's Cpi is 1.70 nF against 8.09 nF. Chosen after the vetting recorded in docs/preamp/data/2026-10-29/L55/modelli/README.md: it is the only candidate that passed T7 (manufacturer-served model), T8 (Active on the manufacturer's page), real franchised stock for BOTH polarities, a model that is physical at 20 mA, and a thermal path with a stocked heat sink. The other candidates fail at least one of these (README table).",
+  "files": [
+    {
+      "original_filename": "mje243.lib",
+      "role": "spice_model",
+      "url": "https://www.onsemi.com/download/models/lib/mje243.lib",
+      "served_content_type": "application/octet-stream",
+      "bytes": 994,
+      "sha256": "b1aeaa297930d7579c598984705a190f9b2f8e2445fd94e0afac8cd77cda8d1c",
+      "local_filename": "mje243.lib",
+      "renamed": false,
+      "line_endings": "CRLF (as served). Do not open and re-save: limitations #39."
+    },
+    {
+      "original_filename": "mje243-d.pdf",
+      "role": "datasheet",
+      "url": "https://www.onsemi.com/download/data-sheet/pdf/mje243-d.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 301730,
+      "pages": 7,
+      "sha256": "4b9218b7250079d75d5792d78df0b6370b2a8e0d6e095925fb21ded93395ea7c",
+      "local_filename": "mje243-d.pdf",
+      "renamed": false,
+      "covers_both_parts": "ONE document for BOTH MJE243G (NPN) and MJE253G (PNP): its title is 'MJE243G (NPN), MJE253G (PNP)', publication order number MJE243/D. Frozen once, here. vendor/bjt_pnp/onsemi/MJE253/PROVENANCE.json points at this path. https://www.onsemi.com/download/data-sheet/pdf/mje253-d.pdf answers HTTP 302 (no such file)."
+    }
+  ],
+  "how_the_model_url_was_found": "The pattern of limitations #18 / L24: /download/models/lib/<lowercase part>.lib. Checked as the limitation asks - Content-Type application/octet-stream and 994 bytes (the soft-404 is 303722 bytes of text/html) - and then the file was opened and its header read (limitations #20): '.MODEL Qmje243 npn', the right part and polarity. The file declares no package.",
+  "revision_note": "Read from the document footer: 'December, 2024 - Rev. 17', publication order number MJE243/D (copyright line 2014). PDF CreationDate 16 Dec 2024. Model: 'Model generated on Jan 22, 03', PSpice format, MODPEX / Symmetry Design Systems (the same contractor as the MJE15032 model).",
+  "limits_read_with_their_conditions": {
+    "reading_method": "pdftotext for the layout, then the RENDERED page 2 and 4 (pdftocairo -r 110) looked at for every row, because limitations #19 says onsemi PDFs lose the micro prefix. The rendered rows agree with the extraction on every value quoted below.",
+    "V_CEO": "100 V MINIMUM (V_CEO(sus), IC = 10 mA, IB = 0). Maximum ratings: VCEO 100 V, VCB 100 V, VEB (= V_EBO) 7.0 V, IC 4.0 A continuous / 8.0 A peak, IB 1.0 A. Against +/-15 V rails (30 V) 3.3x; against +/-20 V (40 V, regulator short) 2.5x.",
+    "V_EBO": "7.0 V (Maximum ratings 'Emitter-Base Voltage VEB 7.0 Vdc'; I_EBO max 0.1 uA at 7.0 V). With a 1N4148 in antiparallel on the base-emitter (ADR-095) the reverse base-emitter voltage is held near 0.7 V, 10x inside.",
+    "hFE": "40 min / 180 max at IC = 200 mA, VCE = 1.0 V; 15 min at IC = 1.0 A. NOTHING is specified at the follower's 20 mA: the design point is 10x below the lowest specified current (as for the MJE15032, which was 34x below). Fig. 8 shows the typical curve down to 40 mA.",
+    "fT": "40 MHz MIN at IC = 100 mA, VCE = 10 V, ftest = 10 MHz (fT = |hfe| x ftest). Not specified at 20 mA.",
+    "C_ob": "50 pF MAX at VCB = 10 V, IE = 0, f = 0.1 MHz. Fig. 7 gives the typical curve: NPN ~30 pF at 10 V (~20 pF at 30 V), PNP ~17 pF at 10 V.",
+    "P_D": "15 W at TC = 25 C (derate 120 mW/C); 1.5 W at TA = 25 C (derate 12 mW/C).",
+    "thermal": "R_thJC 8.34 C/W MAX; R_thJA 83.4 C/W MAX (free air, no heat sink); TJ max +150 C (operating range -65 to +150).",
+    "package": "TO-225 (CASE 77-09, Issue AD, 25 Mar 2015). Pin 1 emitter, pin 2 and the tab (pin 4) collector, pin 3 base: THE TAB IS THE COLLECTOR and is not isolated. Body D 10.6-11.1 mm, E 7.4-7.8 mm, A 2.4-3.0 mm, mounting hole P 2.9-3.3 mm, Q 3.8-4.2 mm."
+  },
+  "lifecycle": {
+    "status": "ACTIVE for the Pb-free OPN MJE243G; OBSOLETE for the bare MJE243 - read from the MANUFACTURER, which is what T8 requires.",
+    "verbatim_from_manufacturer": "onsemi's own product page embeds a JSON-LD itemProductList. Read on 2026-10-29: MJE243G -> itemCondition 'Active', availability 'available', price 0.2808 USD (tier not stated); MJE243 -> itemCondition 'Obsolete', availability 'unavailable', price 0.0. The page header badge reads 'Active'. The page's text defines the other states ('Last Shipments', 'Lifetime', 'Obsolete') and none of them is attached to MJE243G.",
+    "consequence_for_this_project": "The orderable device is MJE243G, never the bare MJE243 (the same trap as MJE15032 / MJE15032G, L24).",
+    "cross_check": "The datasheet (Rev. 17, December 2024) lists only MJE243G and MJE253G in ORDERING INFORMATION and carries no 'DISCONTINUED' banner (compare the frozen 2N5551 datasheet, which has one).",
+    "source": "https://www.onsemi.com/products/discrete-power-modules/general-purpose-and-low-vcesat-transistors/mje243"
+  },
+  "spice_model": {
+    "status": "FOUND, served by the manufacturer, and PROVEN to load and run in ngspice 47 (no warnings).",
+    "model_name": "Qmje243",
+    "model_count_in_file": 1,
+    "authorship_declared_in_the_file": "'Model Generated by MODPEX / Copyright(c) Symmetry Design Systems', 'Model generated on Jan 22, 03', 'MODEL FORMAT: PSpice'. Authored by a modelling contractor, distributed by the manufacturer - what ADR-016 freezes.",
+    "no_flicker_noise": "KF=0 AF=1. Since ADR-057 the model in models/ carries a declared upper bound appended outside the vendor block.",
+    "ngspice_note": "ngspice 47 cannot find the op of a deck with this model, base grounded, collector at 10 V and the emitter on 1 TOhm (all gmin and source stepping fail, a transient op is used and gives a wrong point). With 1 GOhm it converges. The validation recipe uses 1 GOhm; see tb_mje243() in scripts/validate_models.py."
+  },
+  "datasheet_cross_check_L55": {
+    "method": "ngspice 47, set temp = 25, the datasheet's own conditions. Recipe tb_mje243() in scripts/validate_models.py; values locked +-0.5 %.",
+    "hFE_IC_200mA_VCE_1V": "131.128 against 40 min / 180 max. Inside.",
+    "hFE_IC_1A_VCE_1V": "56.914 against 15 min. Inside.",
+    "fT_IC_100mA_VCE_10V_ftest_10MHz": "59.933 MHz against 40 MHz min. Inside.",
+    "C_ob_VCB_10V_0.1MHz": "29.154 pF against 50 pF max (Fig. 7 typical ~30 pF). Inside.",
+    "verdict": "INSIDE every published window.",
+    "at_the_follower_point_IC_20mA_VCE_15V": "hFE 377, Vbe 0.626 V, gm 720 mS, Cpi 1.70 nF, Cmu 21.1 pF, fT (unity) 87.7 MHz. docs/preamp/data/2026-10-29/L55/modelli/misure.txt."
+  },
+  "what_was_NOT_verified": {
+    "stock_and_price": "Not at Mouser or DigiKey (bot-walled / not reached). The figures in the L55 README come from findchips.com aggregation, 2026-10-29, and from onsemi's own JSON-LD price.",
+    "heat_sink_curve": "No manufacturer thermal curve of any TO-225 heat sink could be read (Mouser and Boyd documents did not download); see the README.",
+    "absolute_rating_pdf_pages_3_to_7": "Read for the thermal values, the capacitance and hFE figures and the package outline; the switching and SOA graphs were not used."
+  }
+}

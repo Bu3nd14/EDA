@@ -1,0 +1,13 @@
+* L55 Cobo ZXTP25040DZ
+.include /Users/roberto/EDA/.claude/worktrees/L55/vendor/bjt_pnp/diodes_inc/ZXTP25040DZ/ZXTP25040DZ.spice.txt
+Q3 c3 0 e3 ZXTP25040DZ
+Re3 e3 0 1G
+Vc3 c3 0 DC -10.0 AC 1
+.control
+set temp = 25
+ac lin 1 100k 100k
+let cre = real(i(Vc3))
+let cim = imag(i(Vc3))
+wrdata /Users/roberto/EDA/.claude/worktrees/L55/docs/preamp/data/2026-10-29/L55/modelli/ngspice/ZXTP25040DZ_cobo.csv cre cim
+.endc
+.end
