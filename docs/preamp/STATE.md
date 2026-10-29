@@ -13,17 +13,41 @@ fino al 2026-10-26, con tutta la loro storia, sono in `STATE-STORIA.md`.
 
 | | |
 |---|---|
-| Ultimo aggiornamento | **2026-10-28** (L54b3a: i modelli del costruttore della ritenuta e dei BAT54; il BAT54 del costruttore faceva scattare la ritenuta a ogni accensione, D535 / D536 / D541 a bassa perdita e R571 1 MΩ; i cali lenti lasciati alla ritenuta; buchi, sovratensione, rimbalzi e fronti veloci passano; ADR-104; nessuna voce aperta o chiusa) |
-| Ultimo lotto chiuso | **L54b3a** — la robustezza del temporizzatore al banco, prima parte: i modelli del costruttore, la rete sporca, i fronti veloci, i rimbalzi (2026-10-28). `models/` (BC847A/B/C, BC857A/B/C, BAT54 di Diodes Inc., sette ricette), `circuits/preamp/psu.py` (D535 / D536 / D541 BAS416, R571 1M), `psu_draw.py`, il banco `data/2026-10-28/L54b3a/psu/` (`--rete-forma`, `--disturbo nodo:`, `--rimbalzo`, `--ritenuta` / `--bat54 costruttore`, `--qualifica`, `--bassa-perdita`, `analizza_rob.py`), limitations #79 / #80. ADR-104. Report `reports/2026-10-28-L54b3a-robustezza-rete-fronti-rimbalzi.md` |
-| **Prossimo lotto** | **L54b3b — le tolleranze e la temperatura del temporizzatore** (prompt in `NEXT-SESSION.md`): il Monte Carlo e il caso peggiore sugli RC e sui comparatori, 0 / 60 °C coi modelli del costruttore (la perdita dei diodi sui nodi da megaohm), l'accensione a freddo col tarato a 2,2 V, la perdita a −10 %. Poi l'ordine deciso con l'utente verso G1: L55, L58, il dossier rigenerato una volta (**L64**), la revisione (**L65**), G1 |
-| Non conformità | **17 aperte, 1 bloccante** (L54b3a, 2026-10-28: nessuna aperta o chiusa). Il registro è `NONCOMPLIANCE.md` |
+| Ultimo aggiornamento | **2026-10-28** (L54b3b: le tolleranze e la temperatura del temporizzatore; a 60 °C la perdita di D534 faceva scattare la ritenuta all'accensione a freddo, a 0 °C la musica dopo un buco di 20 ms a 491 ms nell'angolo peggiore; D534 a bassa perdita, R571 1,1 MΩ, i condensatori dei ritardi C0G; i 69 angoli passano; ADR-105; nessuna voce aperta o chiusa) |
+| Ultimo lotto chiuso | **L54b3b** — le tolleranze e la temperatura del temporizzatore (2026-10-28). `circuits/preamp/psu.py` (D534 BAS416, R571 1.1M, i dieci condensatori dei ritardi dichiarati C0G), il banco `data/2026-10-28/L54b3b/psu/` (`--temp`, `--toll` con `CMPTAV`, `--perdita`, `--ritenuta costruttoreA / C`; `campioni_mc.py`, `regressione.py`, `angoli.sh`, `analizza_mc.py`, `verdetti_angoli.py`, `--metodo trap8`), limitations #81. ADR-105. Report `reports/2026-10-28-L54b3b-tolleranze-temperatura.md` |
+| **Prossimo lotto** | **L55 — il dispositivo d'uscita del blocco** (NC-056; prompt in `NEXT-SESSION.md`). Poi l'ordine deciso con l'utente verso G1: L58, il dossier rigenerato una volta (**L64**), la revisione (**L65**), G1 |
+| Non conformità | **17 aperte, 1 bloccante** (L54b3b, 2026-10-28: nessuna aperta o chiusa). Il registro è `NONCOMPLIANCE.md` |
 | Le bloccanti | Per **G1**: **nessuna bloccante** (L54a, 2026-10-26); da chiudere prima di G1 per decisione dell'utente: **NC-055, NC-072** (maggiori) e NC-056 (minore) — NC-054 chiusa; NC-073 e NC-075 (maggiori) alla scelta della parte. Per **G2**: NC-044 (L50) |
-| Suite | `run_tests.sh` **14 passed / 0 failed** a fine L54b3a (2026-10-28, dal worktree); `validate_models.py` 83 / 83 (i sette modelli di Diodes Inc.), `--check-provenance` 39 / 39 |
+| Suite | `run_tests.sh` **14 passed / 0 failed** a fine L54b3b (2026-10-28, dal worktree; `psu.net` con D534 BAS416 e R571 1.1M, lo schematico 167 / 167 col manifesto versionato, T6b la base a 0,32 V); `validate_models.py` 83 / 83 |
 
 ## Diario degli ultimi lotti
 
 Le ultime tre voci. Le più vecchie sono in `STATE-STORIA.md`, nello stesso ordine (la più recente
 in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quella sezione.
+
+### L54b3b — le tolleranze e la temperatura del temporizzatore (2026-10-28)
+
+- **Il banco**: `--temp`, `--toll` (le R / C, VREF, lo scostamento dei diciotto canali di comparatore e
+  la loro corrente d'ingresso come `CMPTAV`), `--perdita` (la perdita massima del datasheet di un
+  diodo), i gruppi di hFE A / C; inerti quando assenti, ognuna provata su un caso noto.
+- **Il Monte Carlo a 25 °C**, 700 corse coi condensatori in C0G: nessun verdetto diverso dal nominale,
+  la musica dopo un buco di 20 ms al peggio 532 ms. La regressione dei margini (residui ≤ 0,75 ms) e
+  **gli angoli peggiori** a 0 / 25 / 60 °C, alle tre reti, con la perdita massima dei diodi.
+- **Tre prove fallite**, le scelte dell'utente: a 60 °C la perdita di D534 (BAT54, ~19 µA) faceva
+  scattare la ritenuta all'accensione a freddo col frontale acceso, anche coi valori nominali (la base
+  a 0,88 V) → **«Solo D534 a bassa perdita»** (0,27 V; i tre BAT54 a bassa perdita portavano la musica
+  dopo il buco a 461 ms); a 0 °C la musica dopo il buco a 491 ms nell'angolo → **«R571 a 1,1 MΩ»**
+  (537 ms; all'accensione +60 ms); in X7R K501 43 ms dopo il permissivo → **«Tutti C0G»**.
+- **Sul sorgente nuovo**: i 69 angoli passano (il minimo: la musica 537,1 ms, il permissivo 31,4 ms,
+  K501 63,8 ms, la base 0,311 V); la lista della sicurezza con gli stessi verdetti a 0 / 25 / 60 °C; i
+  gruppi di hFE come il B; il passo di 5 µs identico. A 60 °C la musica dopo il rilascio del tasto del
+  mute a 7,7 ms invece di 18,1 (D537, nel «Da riaprire se»).
+- **Il ripiego numerico a 0 °C** (117 corse su 135, `trap` e `gmin` 1e-8) accorcia i ritardi dei nodi
+  da megaohm: a 25 °C la musica dopo il buco −6 ms, l'armamento −165 ms contro il metodo normale; le
+  cifre a 0 °C stanno per difetto (limitations #81). Il controllo col metodo normale senza tetto non è
+  finito in una notte (il Mac in sleep): fermato, rifatto a 25 °C (2026-10-29).
+- ADR-105. Report `reports/2026-10-28-L54b3b-tolleranze-temperatura.md`; dati `data/2026-10-28/L54b3b/`.
+- **Dopo**: **L55**, il prompt di `NEXT-SESSION.md`.
 
 ### L54b3a — la robustezza del temporizzatore al banco: i modelli del costruttore, la rete sporca, i fronti veloci, i rimbalzi (2026-10-28)
 
@@ -73,29 +97,6 @@ in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quel
   la soglia di V2. Le cifre del dossier (33,9 / 39,2 nV) erano già superate da L56: le rifà L64.
 - `run_tests.sh` 14 / 0, `validate_models.py` 69 / 69. Report
   `reports/2026-10-28-L54b2-temporizzatore-sul-sorgente.md`; dati `data/2026-10-28/L54b2/`.
-
-### L54b1 — il temporizzatore a comparatori nel sorgente (2026-10-26)
-
-- **L54b diviso dall'utente all'inizio**, «Tre parti»: L54b1 il sorgente, i guardiani, i disegni e il
-  banco col suo caso noto; L54b2 il modello del costruttore, lo standby, la catena al jack; L54b3 la
-  robustezza al banco.
-- **Il sorgente**: `psu.py` ha il temporizzatore di ADR-102 coi valori di `TIMER_AN` (U513–U515
-  TLV1704 sul simbolo LM339, piedino per piedino; 16 resistenze, 11 condensatori, 9 diodi, la ritenuta
-  Q513 / Q514); fuori U509, C534, J515, R543–R547. I numeri nuovi sono mai usati sulla scheda
-  (`riferimenti_storici.py`: i primi scelti erano del pilota delle fotoresistenze). Caso noto
-  strutturale 47 / 47; reti per piedini invariate; ERC 19 avvisi e i 2 «errori» noti.
-- **Il firmware è uscito** (`firmware/preamp_timer/`, il 2k). **I guardiani**: `--timer` T0–T6 (nessun
-  micro, richieste open-drain con pull-down, la ritenuta a tiristore), il cablaggio dalle uscite dei
-  comparatori; 23 falsi su 23.
-- **I disegni**: il pannello 5 dello schematico è il temporizzatore, 166 / 166 contro la netlist; il
-  diagramma a blocchi senza micro.
-- **Il banco** `--timer sorgente`, criteri scritti prima: 21 / 24 sequenze e 7 / 7 guasti identici,
-  le altre 3 a 0,1 ms (un campione: a 10 µs i due deck sono uguali — il mio limite di 0,05 ms era sotto
-  la risoluzione); R550 7,651 / 9,347 J, R552 0,473 / 0,539 J; standby **116,1 / 130,1 / 144,2 mW**,
-  uguale al deck di L54a rifatto oggi (le cifre ±10 % stampate da L54a e in ADR-102, 116,7 / 145,1,
-  non si rifanno: ≤ 0,9 mW, nessuna decisione ne dipende).
-- `run_tests.sh` 14 / 0. Report `reports/2026-10-26-L54b1-temporizzatore-sorgente.md`.
-- **Dopo**: **L54b2**, il prompt di `NEXT-SESSION.md`.
 
 
 ## Come si lavora da qui: a lotti piccoli e pushati
@@ -271,8 +272,8 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L54b2 | **Il modello del costruttore, lo standby, la catena al jack** (ADR-102) | M | NC-037 | **fatto** (2026-10-28): il TLV1701 di TI per ngspice torna da solo ma non passa l'accensione del banco, i comparatori tarati su di esso («Comportamentale tarato»), i casi della sicurezza coi verdetti uguali; R585 sull'innesco della ritenuta («Resistenza verso il ritorno»); lo standby com'è («Lasciare com'è»); la catena al jack −55,2 / −55,3 dB SPL, +4,4 a rete −10 %; ADR-103. Report `reports/2026-10-28-L54b2-temporizzatore-sul-sorgente.md` |
 | L54b3 | **La robustezza del temporizzatore al banco** (richiesta dell'utente dopo L54a): la rete sporca, i fronti veloci contro la ritenuta, i rimbalzi, il Monte Carlo sulle tolleranze, 0 / 60 °C; il testo del prompt nel report di L54b1, §«Per L54b3» | M | — | diviso dall'utente all'inizio, «Due parti»: L54b3a, L54b3b |
 | L54b3a | **I modelli del costruttore, la rete sporca, i fronti veloci, i rimbalzi** (a 25 °C) | M | — | **fatto** (2026-10-28): BC847 / BC857 / BAT54 di Diodes Inc.; il BAT54 del costruttore faceva scattare la ritenuta a ogni accensione → D535 / D536 / D541 BAS416, R571 1 MΩ («Diodi a bassa perdita, R571 1 MΩ»); i cali lenti spengono l'apparecchio in 14 casi su 27 («Lasciare com'è»); buchi, sovratensione, rimbalzi, fronti (la base ≤ 8,4 mV con l'1 nF) passano; ADR-104. Report `reports/2026-10-28-L54b3a-robustezza-rete-fronti-rimbalzi.md` |
-| L54b3b | **Le tolleranze e la temperatura**: il Monte Carlo e il caso peggiore sugli RC e sui comparatori, 0 / 60 °C coi modelli del costruttore, l'accensione a freddo col tarato a 2,2 V, la perdita a −10 % | M | — | da fare — **il prossimo**; prompt in `NEXT-SESSION.md` |
-| L55 | **Il dispositivo d'uscita del blocco** (NC-056): un dispositivo di taglia driver col modello del costruttore contro il MJE15032/33 sul banco del blocco (V1, V4, PSRR, slew, calore), con T7 e T8 | M | NC-056 | da fare — dopo L54b3 e dopo L56 (tocca anche il VAS), prima di G1 |
+| L54b3b | **Le tolleranze e la temperatura**: il Monte Carlo e il caso peggiore sugli RC e sui comparatori, 0 / 60 °C coi modelli del costruttore, l'accensione a freddo col tarato a 2,2 V, la perdita a −10 % | M | — | **fatto** (2026-10-28): un Monte Carlo di 700 corse, la regressione e 69 angoli a 0 / 25 / 60 °C; a 60 °C la perdita di D534 faceva scattare la ritenuta all'accensione a freddo → «Solo D534 a bassa perdita» (0,27 V); a 0 °C la musica dopo un buco a 491 ms → «R571 a 1,1 MΩ» (537 ms); «Tutti C0G»; ADR-105. Report `reports/2026-10-28-L54b3b-tolleranze-temperatura.md` |
+| L55 | **Il dispositivo d'uscita del blocco** (NC-056): un dispositivo di taglia driver col modello del costruttore contro il MJE15032/33 sul banco del blocco (V1, V4, PSRR, slew, calore), con T7 e T8 | M | NC-056 | da fare — **il prossimo**; prompt in `NEXT-SESSION.md` (dopo L54b3 e dopo L56, tocca anche il VAS; prima di G1) |
 | L64 | **Il dossier rigenerato, una volta sola, quando il circuito smette di cambiare prima di G1** (decisione dell'utente dopo L45d2b3b2a, 2026-10-22, «si mi va bene»): `build_dossier.py` e le sue sezioni sul progetto di allora. L'ultimo è di L51 (2026-10-10); da lì non mostra l'inseguitore e l'aiuto dello specchio (L56), il rivelatore tolto e il condensatore della Stax (L60), i diodi del moltiplicatore e dei finali (L62, ADR-095), l'alimentatore di ADR-091…094, R153 sdoppiata (ADR-097), i rimedi del calore e i dissipatori (ADR-099), gli schematici completi (L63), la FMEA con le misure adottate (L45d2b3b3). Una rigenerazione intermedia solo se l'utente vuole guardare il progetto prima | M | — | da fare — dopo l'ultimo lotto che tocca il sorgente prima di G1 (L45d2b3b2b, L57, L54, L55, L58) e dopo L45d2b3b3 |
 | L65 | **La revisione del dossier rigenerato**, prima del gate (come L42 → L43 e L51 → L52): la forma — l'architetto avversariale cieco, la lettura dell'utente, o tutte e due — si decide con l'utente all'apertura | S/M | — | da fare — dopo L64, prima di G1 |
 | G1 | **Il congelamento della topologia**: `design-reviewer` al gate, offline su `main`, sul dossier di L64 e sui dati misurati, con gli esiti di L65 trattati; riesegue le verifiche da sé; il prodotto è un report datato con le non conformità che apre (`AGENTS.md`) | M | nessuna bloccante per G1 dopo L56 (NC-060 chiusa); da chiudere prima per decisione dell'utente: NC-042, NC-054, NC-055, NC-059 (maggiori), NC-056 (minore) | da fare — dopo L45, L57, L54, L55, L58, L64, L65 |

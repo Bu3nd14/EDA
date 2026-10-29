@@ -18,6 +18,29 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L54b1 — il temporizzatore a comparatori nel sorgente (2026-10-26)
+
+- **L54b diviso dall'utente all'inizio**, «Tre parti»: L54b1 il sorgente, i guardiani, i disegni e il
+  banco col suo caso noto; L54b2 il modello del costruttore, lo standby, la catena al jack; L54b3 la
+  robustezza al banco.
+- **Il sorgente**: `psu.py` ha il temporizzatore di ADR-102 coi valori di `TIMER_AN` (U513–U515
+  TLV1704 sul simbolo LM339, piedino per piedino; 16 resistenze, 11 condensatori, 9 diodi, la ritenuta
+  Q513 / Q514); fuori U509, C534, J515, R543–R547. I numeri nuovi sono mai usati sulla scheda
+  (`riferimenti_storici.py`: i primi scelti erano del pilota delle fotoresistenze). Caso noto
+  strutturale 47 / 47; reti per piedini invariate; ERC 19 avvisi e i 2 «errori» noti.
+- **Il firmware è uscito** (`firmware/preamp_timer/`, il 2k). **I guardiani**: `--timer` T0–T6 (nessun
+  micro, richieste open-drain con pull-down, la ritenuta a tiristore), il cablaggio dalle uscite dei
+  comparatori; 23 falsi su 23.
+- **I disegni**: il pannello 5 dello schematico è il temporizzatore, 166 / 166 contro la netlist; il
+  diagramma a blocchi senza micro.
+- **Il banco** `--timer sorgente`, criteri scritti prima: 21 / 24 sequenze e 7 / 7 guasti identici,
+  le altre 3 a 0,1 ms (un campione: a 10 µs i due deck sono uguali — il mio limite di 0,05 ms era sotto
+  la risoluzione); R550 7,651 / 9,347 J, R552 0,473 / 0,539 J; standby **116,1 / 130,1 / 144,2 mW**,
+  uguale al deck di L54a rifatto oggi (le cifre ±10 % stampate da L54a e in ADR-102, 116,7 / 145,1,
+  non si rifanno: ≤ 0,9 mW, nessuna decisione ne dipende).
+- `run_tests.sh` 14 / 0. Report `reports/2026-10-26-L54b1-temporizzatore-sorgente.md`.
+- **Dopo**: **L54b2**, il prompt di `NEXT-SESSION.md`.
+
 ### Dopo L54a — la robustezza al banco nel prompt di L54b (2026-10-26)
 
 - **L'utente**: «il prototipo è molto costoso, dobbiamo cercare di accorgerci al banco delle simulazioni

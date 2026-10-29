@@ -177,7 +177,8 @@ C_VR_HOLD = "2200u"
 # releases PERMIT_G while it is above VREF = 2.5 V:
 #   D = R_T C_T ln(4.55 / 2.5) = 332k x 100n x 0.599 = 19.9 ms; 17.2 ms with
 #   C_T -5 %, R_T -1 %, V5 at 4.90 V and a 0.55 V diode. C_T is C0G: an X7R
-#   would lose tens of percent to bias and ageing, and D with it.
+#   would lose tens of percent to bias and ageing, and D with it. ADR-105: C_T2,
+#   C_MD and C_MUTE_G (C529, C518, C527) are C0G too, as every timing capacitor.
 R_T, C_T = "332k", "100n"
 # D2 (ADR-049): the audio board's VRELAY stays on >= D2 after PERMIT_G falls.
 # VR_T charges from PERMIT_T one diode lower, and decays 3x slower:
@@ -744,6 +745,10 @@ if __name__ == "__main__":
     # here: the bench joined the two through 1 ohm only to probe both.
     # Dielectrics: the timing capacitors are 1206, so that a C0G fits where
     # the tolerance analysis (L54b3) asks for one; the values are ADR-102's.
+    # ADR-105 (L54b3b): EVERY timing capacitor is C0G (+-5 %) - C548, C549, C550,
+    # C551, C552, C553 here, and C518, C527, C528, C529 above. In X7R (+-20 %, the
+    # DC bias, the ageing) C548 took the music after a 20 ms hole under 400 ms,
+    # and C551 / C529 put K501 43 ms after the permissive (>= 50 ms, ADR-046).
     AT_PG, AT_PGT, AT_MD = Net("AT_PG"), Net("AT_PGT"), Net("AT_MD")
     AT_MRQ, AT_PRT = Net("AT_MRQ"), Net("AT_PRT")
     AT_MA, AT_MT = Net("AT_MA"), Net("AT_MT")
@@ -778,8 +783,8 @@ if __name__ == "__main__":
     # Power good (ADR-102 point 2): the supervisor's four thresholds on four
     # NEW channels, on the same divider nodes (high-impedance inputs): the
     # + rail, the - rail, VRELAY_REG, and the mains detector. The detector's
-    # channel (AT_MD) reaches AT_PG, AT_F and AT_T2S through three Schottkys:
-    # one channel, three nodes.
+    # channel (AT_MD) reaches AT_PG, AT_F and AT_T2S through three diodes
+    # (a Schottky; two low-leakage since ADR-104 / ADR-105): one channel, three nodes.
     quad("U513", ((NP, VREF, AT_PG),          # + rail below 13.55 V
                   (VREF2, NM, AT_PG),         # |- rail| below 13.5 V
                   (NV, VREF, AT_PG),          # VRELAY_REG below 11.0 V
@@ -787,7 +792,12 @@ if __name__ == "__main__":
     cap("100n", "C545", V5, RET)
     res("100k", "R569", V5, AT_MD)
     diode("BAT54", "D533", AT_PG, AT_MD)
-    diode("BAT54", "D534", AT_F, AT_MD)
+    # ADR-105: BAS416, low-leakage. Reverse-biased from AT_MD (100k to V5) into the latch's
+    # trigger AT_F (33k to RET) at a cold power-up: a BAT54 at its datasheet maximum at 60 C
+    # (~19 uA, DS11005 x 9.5) put the NPN base at 0.88 V and tripped the latch (L54b3b; 0.27 V
+    # with the BAS416). D533 and D537 stay BAT54: their leakage goes into nodes a comparator
+    # holds low, and a BAS416 on D533 took the music after a 20 ms hole to 461 ms at 60 C
+    diode("BAS416", "D534", AT_F, AT_MD)
     # ADR-104: D535 / D541 into AT_T2S (2.7M) and D536 into AT_PGT (1M) are BAS416, low-leakage
     # silicon: the maker's BAT54 model leaks ~0.65 uA (2 uA max at 25 C, Diodes DS11005), which armed
     # AT_T2S at 1.07 s instead of ~1.9 s, before the rails were up: the latch tripped at every
@@ -801,7 +811,10 @@ if __name__ == "__main__":
     # ADR-104: 1M with the low-leakage D536 (its higher VF starts AT_PGT
     # higher): 559 ms after a 20 ms hole with the makers' models (L54b3a;
     # 461 ms with 820k)
-    res("1M", "R571", V5, AT_PGT)
+    # ADR-105: 1.1M. With the tolerances (C0G, comparator offsets, VREF) the worst corner at 0 C
+    # gave 491 ms with 1M; 538 ms with 1.1M (579 ms at 60 C, 613 nominal at 25 C). The music after
+    # a power-up from the front comes 60 ms later (1209 instead of 1150 ms, L54b3b)
+    res("1.1M", "R571", V5, AT_PGT)
     cap("1u", "C548", AT_PGT, RET, FP_C1206)
     diode("BAS416", "D536", AT_PGT, AT_PG)
 
