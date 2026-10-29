@@ -1000,6 +1000,21 @@ class Sheet:
             self.text(((x0 + x1) / 2, y0 - 0.4), sub, size=self.fs - 0.8, color=DIM)
         return out
 
+    def testpoint(self, ref, xy, length=1.0):
+        """A test point (ADR-107, L58a): an open ring with its reference on the left
+        and a stub to the right ending in its net's label - the net is read by name.
+        The value, "TP_<net>", is not printed: the label already says it."""
+        value, lib, part = self._part(ref)
+        assert part == "TestPoint", f"{ref} non e' un test point ({part})"
+        assert set(symbol_pins(lib, part)) == {"1"}, f"{ref}: un solo piedino"
+        x, y = xy
+        r = 0.22
+        self.d.add(elm.Dot(radius=r, open=True).at(_p((x, y))))
+        self.bodies.append(("rect", (x - r, y - r, x + r, y + r), ref))
+        self.text((x - r - 0.15, y), self.show(ref), size=self.fs - 0.5, halign="right")
+        n = self.term(ref, "1", (x + r, y))
+        return self.label(n, "right", length)
+
     def bridge(self, ref, c, r=1.4, label_side="l"):
         """A bridge drawn diode by diode: + (pin 1) on top, - (pin 4) at the
         bottom, ~ (pins 2, 3) left and right. The four cathodes of the + corner

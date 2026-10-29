@@ -116,6 +116,11 @@ FP_TB3 = ("TerminalBlock_Phoenix:"
           "TerminalBlock_Phoenix_MKDS-1,5-3-5.08_1x03_P5.08mm_Horizontal")
 FP_HDR = "Connector_PinHeader_2.54mm:PinHeader_1x{n:02d}_P2.54mm_Vertical"
 FP_C1206 = "Capacitor_SMD:C_1206_3216Metric"      # C0G 100 nF (C_T, C_T2)
+# ADR-108 (L58a): no C0G 1 uF exists in any SMD case, nor 330 nF below 2220. C548 / C552 are
+# 1 uF +-5 % polypropylene film, through-hole (TDK B32672L2105J003, 15 mm pitch, 18 x 11 mm);
+# C553 is C0G in 2220 (KEMET C2220C334J5GACTU). Values unchanged: L54b3b's corners stand
+FP_FILM_P15 = "Capacitor_THT:C_Rect_L18.0mm_W11.0mm_P15.00mm_FKS3_FKP3"
+FP_C2220 = "Capacitor_SMD:C_2220_5750Metric"
 FP_SOT363 = "Package_TO_SOT_SMD:SOT-363_SC-70-6"
 FP_SOD323 = "Diode_SMD:D_SOD-323"
 FP_SOIC14 = "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm"
@@ -178,7 +183,9 @@ C_VR_HOLD = "2200u"
 #   D = R_T C_T ln(4.55 / 2.5) = 332k x 100n x 0.599 = 19.9 ms; 17.2 ms with
 #   C_T -5 %, R_T -1 %, V5 at 4.90 V and a 0.55 V diode. C_T is C0G: an X7R
 #   would lose tens of percent to bias and ageing, and D with it. ADR-105: C_T2,
-#   C_MD and C_MUTE_G (C529, C518, C527) are C0G too, as every timing capacitor.
+#   C_MD and C_MUTE_G (C529, C518, C527) are C0G too, as every timing capacitor
+#   (ADR-108: C548 / C552 polypropylene film, the only 1 uF; C518 in 1206, C0G
+#   100 nF does not exist in 0805).
 R_T, C_T = "332k", "100n"
 # D2 (ADR-049): the audio board's VRELAY stays on >= D2 after PERMIT_G falls.
 # VR_T charges from PERMIT_T one diode lower, and decays 3x slower:
@@ -219,6 +226,19 @@ def header(value, ref, nets, fp=None):
     for i, n in enumerate(nets, 1):
         j[i] += n
     return j
+
+
+# ADR-107 (L58a): the bench test points, as on the audio board (preamp_audio.py
+# FP_TP / TP()): Keystone 5000-series loop, KiCad TestPoint symbol, value
+# "TP_<net>" - never a harness value, check_psu_harness.py finds the harnesses
+# by value. Low voltage only: nothing on the mains side.
+FP_TP = "TestPoint:TestPoint_Keystone_5000-5004_Miniature"
+
+
+def testpoint(name, net, ref):
+    t = part("Connector", "TestPoint", "TP_" + name, ref, FP_TP)
+    t[1] += net
+    return t
 
 
 def sink(ref, drain, gate, ret, clamp_to, rclamp, dref, dref2, zref):
@@ -610,7 +630,7 @@ if __name__ == "__main__":
     MD_R = Net("MD_R")
     res(R_MD_HALF, "R512", V5, MD_R)
     res(R_MD_HALF, "R555", MD_R, MD)
-    cap(C_MD, "C518", MD, RET)
+    cap(C_MD, "C518", MD, RET, FP_C1206)   # ADR-108: C0G 100 nF only from 1206 up
     cmp2 = part("Comparator", "LM2903", "TLV1702 (dual, open-drain)", "U506",
                 FP_SOIC8)
     cmp2["3"] += VREF      # A +
@@ -749,6 +769,8 @@ if __name__ == "__main__":
     # C551, C552, C553 here, and C518, C527, C528, C529 above. In X7R (+-20 %, the
     # DC bias, the ageing) C548 took the music after a 20 ms hole under 400 ms,
     # and C551 / C529 put K501 43 ms after the permissive (>= 50 ms, ADR-046).
+    # ADR-108 (L58a): C548 / C552 are polypropylene film (no C0G 1 uF exists), C553
+    # C0G in 2220; the values, and with them the corners of L54b3b, are unchanged.
     AT_PG, AT_PGT, AT_MD = Net("AT_PG"), Net("AT_PGT"), Net("AT_MD")
     AT_MRQ, AT_PRT = Net("AT_MRQ"), Net("AT_PRT")
     AT_MA, AT_MT = Net("AT_MA"), Net("AT_MT")
@@ -815,7 +837,7 @@ if __name__ == "__main__":
     # gave 491 ms with 1M; 538 ms with 1.1M (579 ms at 60 C, 613 nominal at 25 C). The music after
     # a power-up from the front comes 60 ms later (1209 instead of 1150 ms, L54b3b)
     res("1.1M", "R571", V5, AT_PGT)
-    cap("1u", "C548", AT_PGT, RET, FP_C1206)
+    cap("1u", "C548", AT_PGT, RET, FP_FILM_P15)   # ADR-108: PP film
     diode("BAS416", "D536", AT_PGT, AT_PG)
 
     # The front switch and the mute switch (ADR-102 point 2): AT_MRQ, 200k /
@@ -878,10 +900,10 @@ if __name__ == "__main__":
     res("1M", "R578", AT_MT, RET)
     res("22k", "R579", V5, MAINS_REQ)
     res("2.7M", "R580", AT_ON, AT_T2S)
-    cap("1u", "C552", AT_T2S, RET, FP_C1206)
+    cap("1u", "C552", AT_T2S, RET, FP_FILM_P15)   # ADR-108: PP film
     diode("BAS416", "D541", AT_T2S, AT_ON)   # ADR-104 (see D535)
     res("100k", "R581", V5, AT_F)
-    cap("330n", "C553", AT_F, RET, FP_C1206)
+    cap("330n", "C553", AT_F, RET, FP_C2220)      # ADR-108: C0G only from 2220
     res("33k", "R585", AT_F, RET)  # ADR-103: AT_F low while V5 comes up
     res("47k", "R582", AT_F, AT_BN)
     # The latch (ADR-102 point 2; ADR-048 point 5): BC847 + BC857 as a
@@ -911,6 +933,28 @@ if __name__ == "__main__":
     header("POWER", "J1", [VP, VP, GND, GND, VM, VM, VRELAY])
     header("RLY_RET", "J2", [RET])
     header("MUTE_TIMER", "J4", [MUTE_CMD, PERMIT_CMD, MUTE_SW])
+
+    # ADR-107 (L58a): the test points. The rails and VRELAY at the harness
+    # (TP1... on the audio board read the other end of the same wires);
+    # VRELAY_REG before the standby switch Q505; V5 and the timer's outputs;
+    # the relay commands, gate and coil side. The logic and the coils return
+    # to RLY_RET, not GND (NT501 the only point where they touch): each group
+    # has the reference it is read against, next to it.
+    for name, net, ref in (("VPLUS", VP, "TP501"), ("VMINUS", VM, "TP502"),
+                           ("GND", GND, "TP503"), ("VRELAY", VRELAY, "TP504"),
+                           ("VRELAY_REG", VREG, "TP505"),
+                           ("RLY_RET", RET, "TP506"),
+                           ("V5", V5, "TP507"), ("MUTE_G", MUTE_G, "TP508"),
+                           ("PERMIT_G", PERMIT_G, "TP509"),
+                           ("PERMIT_T", PERMIT_T, "TP510"),
+                           ("RLY_RET", RET, "TP511"),
+                           ("MUTE_CMD", MUTE_CMD, "TP512"),
+                           ("PERMIT_CMD", PERMIT_CMD, "TP513"),
+                           ("MAINS_G", MAINS_G, "TP514"),
+                           ("MAINS_COIL", MAINS_D, "TP515"),
+                           ("VR_G", VR_G, "TP516"),
+                           ("RLY_RET", RET, "TP517")):
+        testpoint(name, net, ref)
 
     # ERC, explained (L41a): "POWER-OUT connected to POWER-OUT" on VPLUS and
     # VRELAY_REG is the KiCad symbol's two OUT pins (1, 20) of ONE TPS7A4701,

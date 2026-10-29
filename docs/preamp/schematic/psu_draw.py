@@ -799,7 +799,10 @@ cE = S.comparator("U508", "A", {"-": "2", "+": "3", "out": "1"}, (100.6, ypt + 0
 assert abs(P(cE["+"])[1] - ypt) < 1e-3
 pt_in = node("permit_t_in", "PERMIT_T", (P(cE["+"])[0] - 0.6, P(cE["+"])[1]))
 two("D523", {"PERMIT_T": (96.6, ypt), "VR_T": (96.6, ypt - 4.4)}, side="l")
-chain(ptj, N("C528", "PERMIT_T"), N("R534", "PERMIT_T"), N("D523", "PERMIT_T"))
+# L58a: named here too, since its test point TP510 is drawn apart (ADR-107)
+ptl = node("permit_t_lab", "PERMIT_T", (92.7, ypt))
+chain(ptj, N("C528", "PERMIT_T"), ptl, N("R534", "PERMIT_T"), N("D523", "PERMIT_T"))
+lab(ptl, "up")
 W(N("D523", "PERMIT_T"), cE["+"])
 lab(to(cE["-"], -0.8, 0), "up")
 v8 = node("u508_v5", "V5", (P(cE["V+"])[0], ypt + 4.2))
@@ -878,7 +881,10 @@ hang("R528", "MAINS_REQ", (101.6, yg), 2.2, side="l")
 two("R520", {"MAINS_REQ": (102.6, yg), "MAINS_G": (105.2, yg)})
 hang("R521", "MAINS_G", (106.6, yg), 2.2)
 chain(mrq, N("R528", "MAINS_REQ"), N("R520", "MAINS_REQ"))
-chain(N("R520", "MAINS_G"), N("R521", "MAINS_G"), q503["G"])
+# L58a: MAINS_G and MAINS_COIL named, their test points TP514 / TP515 are drawn apart
+mgl = node("mains_g_lab", "MAINS_G", (105.9, yg))
+chain(N("R520", "MAINS_G"), mgl, N("R521", "MAINS_G"), q503["G"])
+lab(mgl, "up")
 two("R552", {"MAINS_SINK": (110.4, YQ + 0.8), "MAINS_COIL": (110.4, YQ + 3.2)})
 W(q503["D"], N("R552", "MAINS_SINK"))
 S.relay_coil("K501", (110.4, YQ + 7.6), (110.4, YQ + 4.4), side="l",
@@ -888,6 +894,7 @@ chain(N("R552", "MAINS_COIL"), mc, T("K501", "A2"))
 two("D505", {"MAINS_COIL": (112.6, YQ + 3.8), "MAINS_COIL_D": (112.6, YQ + 5.8)})
 two("D532", {"MAINS_COIL_D": (112.6, YQ + 5.8), "VRELAY_REG": (112.6, YQ + 7.8)})
 W(mc, N("D505", "MAINS_COIL"))
+lab(to(N("D505", "MAINS_COIL"), 0.8, 0))
 vrk = node("vrelay_reg_k501", "VRELAY_REG", (110.4, YQ + 8.4))
 W(T("K501", "A1"), vrk)
 W(N("D532", "VRELAY_REG"), vrk, (112.6, YQ + 8.4))
@@ -898,6 +905,19 @@ for p in ("1", "2", "3"):
     lab(j4[p], "left")
 S.text((100.8, 2.4), "MUTE_CMD e PERMIT_CMD: sink verso RLY_RET; la bobina del relè è sulla "
        "scheda audio, tra VRELAY e il sink", size=FS - 0.8, color=DIM)
+
+# =============================================================================
+# the test points (ADR-107, L58a): in panel 2's free corner, read by name; on the
+# board each group sits next to its reference (GND for the rails, RLY_RET for the rest)
+# =============================================================================
+S.text((64.0, 53.9), "Test point (ADR-107): sulla scheda accanto al loro riferimento",
+       size=FS - 1.0, color=DIM, halign="left")
+for i, ref in enumerate(["TP501", "TP502", "TP503", "TP504", "TP505", "TP506", "TP507",
+                         "TP508", "TP509"]):
+    S.testpoint(ref, (65.6, 52.9 - 0.9 * i))
+for i, ref in enumerate(["TP510", "TP511", "TP512", "TP513", "TP514", "TP515", "TP516",
+                         "TP517"]):
+    S.testpoint(ref, (73.0, 52.9 - 0.9 * i))
 
 # =============================================================================
 if os.environ.get("PREVIEW_PNG"):

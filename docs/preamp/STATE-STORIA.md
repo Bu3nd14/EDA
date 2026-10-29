@@ -18,6 +18,31 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L54b3a — la robustezza del temporizzatore al banco: i modelli del costruttore, la rete sporca, i fronti veloci, i rimbalzi (2026-10-28)
+
+- **L54b3 diviso dall'utente all'inizio**, «Due parti»: L54b3a questa (a 25 °C), L54b3b le tolleranze e
+  la temperatura.
+- **I modelli del costruttore**: BC847A/B/C, BC857A/B/C, BAT54 di **Diodes Inc.** (Nexperia rifiuta lo
+  scaricamento), `validate_models.py` 83 / 83. I transistor da soli ridanno L54b2; **il BAT54 del
+  costruttore** (perdita ~0,65 µA, dentro il massimo di 2 µA) su AT_T2S armava la ritenuta a 1,07 s
+  invece di ~1,9 s: **scattava a ogni accensione** (limitations #79). La scelta dell'utente, **«Diodi a
+  bassa perdita, R571 1 MΩ»**: D535 / D536 / D541 BAS416, R571 1M; la musica dopo un buco di 20 ms a
+  559 ms (461 con R571 820 kΩ).
+- **La rete sporca** (60 corse, criteri scritti prima): buchi da ½ a 15 periodi, il ritorno durante la
+  discesa, +15 % (grezzo 26,7 V contro 36), i cali all'accensione passano; **i cali lenti** che portano i
+  regolatori fuori con la rete presente spengono l'apparecchio in **14 casi su 27** (la ritenuta). La
+  soglia sui tre grezzi perde lo scatto col corto davanti al regolatore +; quella sul grezzo dei relè ne
+  riprende 12 su 14. La scelta dell'utente, **«Lasciare com'è»**. (La domanda diceva 16 e «14 su 16»:
+  ricontati, 14 e 12 su 14.)
+- **Il sorgente nuovo**, la lista della sicurezza di L54b2 coi modelli del costruttore: nessun verdetto
+  cambia in 31 righe. **I rimbalzi** (36 treni da 1–5 ms): come la transizione pulita. **I fronti
+  veloci**: la prima iniezione non arrivava al nodo (limitations #80); quella ai terminali delle parti sì:
+  ±5 V in 10 ns su V5 portano la base di Q513 a 130 mV senza condensatori, 8,4 mV con l'1 nF (innesco
+  ~0,45 V): l'1 nF resta. Il passo di 5 µs ridà tutto identico.
+- ADR-104. `run_tests.sh` 14 / 0. Report `reports/2026-10-28-L54b3a-robustezza-rete-fronti-rimbalzi.md`;
+  dati `data/2026-10-28/L54b3a/`.
+- **Dopo**: **L54b3b**, il prompt di `NEXT-SESSION.md`.
+
 ### L54b2 — il temporizzatore sul sorgente: i comparatori, l'innesco della ritenuta, lo standby, la catena al jack (2026-10-28)
 
 - **Il modello di TI del TLV1701** per ngspice (`models/comparator/`, generato dal file di
