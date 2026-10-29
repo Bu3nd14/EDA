@@ -387,6 +387,9 @@ ap.add_argument("--toll", default=None)
 #   (tanh of the reverse voltage, 50 mV): the datasheet's maximum at the temperature, on top of the
 #   model's own leakage (declared: an excess)
 ap.add_argument("--perdita", default=None)
+# --metodo trap8: the transient's method forced to trap + gmin 1e-8 (corri_an.sh's fallback, L56),
+#   to compare it with gear on a case where gear ends (every 0 C run fell back to it)
+ap.add_argument("--metodo", choices=("trap8",), default=None)
 ARG = ap.parse_args()
 import json  # noqa: E402
 TOLL = json.load(open(ARG.toll)) if ARG.toll else None
@@ -1714,6 +1717,8 @@ def seq_deck():
     c = CASI_SEQ[ARG.caso]
     if ARG.durata is not None:
         c = dict(c, tf=TE + ARG.durata)        # L54b3a
+    if ARG.metodo == "trap8":
+        c = dict(c, metodo="trap", gmin="1e-8")   # L54b3b
     if ARG.rimbalzo:
         q, ms, seme = ARG.rimbalzo.split(":")   # L54b3a
         c = dict(c, **{q: rimbalzo(c[q], float(ms), int(seme))})

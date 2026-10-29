@@ -76,6 +76,11 @@ dopo l'alimentazione buona, la base 0,311 V; il timeout scatta con un rail morto
 lista della sicurezza (31 casi) a 25 °C ha i verdetti e gli istanti di sicurezza di L54b3a (la sola
 musica +54–60 ms, R571); a 0 e 60 °C gli stessi verdetti. I gruppi di hFE A / C come il B.
 
+Le cifre a 0 °C sono del ripiego numerico del banco (`trap`, `gmin` 1e-8: 117 corse su 135), che
+accorcia i ritardi dei nodi da megaohm: sullo stesso angolo a 25 °C la musica dopo il buco 560,9 ms col
+ripiego contro 566,9 col metodo normale (limitations #81). Stanno quindi per difetto nel verso dei
+limiti.
+
 ## Alternative scartate
 
 - **I tre BAT54 a bassa perdita**: la musica dopo il buco a 461 ms a 60 °C.

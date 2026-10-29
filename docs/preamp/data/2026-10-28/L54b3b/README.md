@@ -94,10 +94,23 @@ Se una prova fallisce, il rimedio si porta all'utente coi numeri prima di cambia
 Le cartelle sono `seq/<etichetta>/<caso>`; le forme d'onda cancellate dopo l'analisi. Nessuna corsa
 finita in errore. **Il ripiego numerico**: a 25 e 60 °C nessuno; **a 0 °C 117 corse su 135** hanno
 superato col metodo `gear` il tetto di 300 s di `corri_an.sh` e sono state rifatte col ripiego del banco
-(`trap`, `gmin` 1e-8, L56; `ripiego.txt` nella cartella della corsa). **IN SOSPESO (2026-10-28 sera)**:
-il confronto `psu/num_t0.sh`, la musica dopo il buco nell'angolo a 0 °C e un guasto col metodo `gear`
-senza tetto (`seq/numgear_*`), contro le stesse corse col ripiego (`seq/v_c0g_t0_dmus/buco20`, 537,7 ms;
-`seq/v_c0g_t0_dperm_gu/guasto`). Finché non torna, le cifre a 0 °C sono del ripiego.
+(`trap`, `gmin` 1e-8, L56; `ripiego.txt` nella cartella della corsa).
+
+**Il ripiego, confrontato** (`lista_metodo.txt`, `an_metodo.csv`, 2026-10-29). Col metodo `gear` senza
+tetto (`psu/num_t0.sh`) le due corse a 0 °C non finivano in 9 ore: fermate, nessun risultato. Il
+confronto si è fatto dove `gear` finisce, forzando il ripiego (`--metodo trap8`) a 25 °C:
+
+| | `gear` | ripiego |
+|---|---|---|
+| la musica dopo il buco, l'angolo peggiore | 566,9 ms | **560,9 ms** |
+| l'accensione nominale: la musica / l'armamento | 1209,3 / 2173 ms | 1202,3 / **2008,7 ms** |
+| il guasto: il jack, V+ < 10,6 V, il guadagno, K501 | 15,6 / 428,5 / 52,9 / 129,1 ms | 15,6 / 428,5 / 51,7 / 127,0 ms |
+
+e a 0 °C l'angolo della musica col passo di 5 µs: **537,7 ms come a 20 µs**. **Il ripiego accorcia i
+ritardi dei nodi da megaohm**: `gmin` 1e-8 mette 100 MΩ su ogni giunzione, una perdita in più su AT_T2S
+(2,7 MΩ) e AT_PGT (1,1 MΩ). Le cifre a 0 °C stanno quindi per difetto nel verso dei limiti (la musica
+dopo il buco ~6 ms più tarda col metodo normale); l'armamento anticipa, ma il suo margine sull'
+alimentazione buona a 0 °C resta ≥ 723 ms. Nessun verdetto del lotto cambia (limitations #81).
 
 ### Il Monte Carlo a 25 °C (`an_mc25.csv`, `mc25/`, 700 corse; prima di ADR-105)
 

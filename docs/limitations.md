@@ -1647,3 +1647,20 @@ può far scattare la ritenuta a due transistor (1 V in 10 ns su V5: 6 mV sulla b
 
 **Regola operativa**: sul banco dell'alimentatore una prova di disturbi veloci inietta il disturbo e usa
 parti con le loro capacità; un «nessuno scatto» coi modelli generici non dice niente.
+
+## 81. Il ripiego numerico del banco dell'alimentatore (`trap`, `gmin` 1e-8) accorcia i ritardi dei nodi da megaohm, e a 0 °C scatta quasi sempre
+
+Visto in L54b3b, il 2026-10-29 (`docs/preamp/data/2026-10-28/L54b3b/`, README, «Il ripiego,
+confrontato»). `corri_an.sh` rifà col metodo `trap` e `gmin` 1e-8 una corsa che col metodo `gear`
+supera i 300 s; lo scrive solo in `ripiego.txt`, e `ok.txt` c'è lo stesso. A 0 °C è successo a 117 corse
+su 135 (a 25 e 60 °C a nessuna); `gear` senza tetto non finiva in 9 ore. `gmin` 1e-8 mette 100 MΩ in
+parallelo a ogni giunzione: sui nodi del temporizzatore da 1–2,7 MΩ è una perdita in più. Sullo stesso
+caso a 25 °C, il ripiego contro `gear`: l'armamento della ritenuta 2008,7 contro 2173 ms (−165), la
+musica dopo un buco nell'angolo peggiore 560,9 contro 566,9 ms; i tempi dei nodi a bassa impedenza
+(il jack, il rail) uguali. Niente dava errore. E un controllo che cerchi la parola «ripiego» dentro
+i file la manca: `ripiego.txt` non la contiene.
+
+**Regola operativa**: una lista di corse si conta coi file `ripiego.txt` (`find … -name ripiego.txt`),
+e un margine su un nodo da megaohm misurato col ripiego si confronta col metodo `gear` sullo stesso
+caso dove `gear` finisce (`--metodo trap8` di `genera_tb_psu.py` di L54b3b). Lo stesso vale per una
+corsa interrotta a metà: un log senza errori non vuol dire una corsa finita.

@@ -41,6 +41,13 @@ modello è lineare, il circuito no. La temperatura entra nei modelli a giunzione
 coefficiente dell'LM4040, delle R, dei condensatori); la perdita dei diodi al massimo del datasheet
 alla temperatura, sommata a quella del modello (per eccesso, dichiarato).
 
+**Il ripiego numerico a 0 °C** (limitations #81): 117 corse a 0 °C su 135 sono girate col ripiego del
+banco (`trap`, `gmin` 1e-8). Confrontato col metodo normale dove questo finisce (25 °C), accorcia i
+ritardi dei nodi da megaohm (la musica dopo il buco −6 ms, l'armamento −165 ms) e lascia uguali gli
+altri; a 0 °C il passo di 5 µs ridà 537,7 ms. Le cifre a 0 °C stanno per difetto, nel verso dei limiti.
+(Un primo controllo col metodo normale senza tetto non è finito in 9 ore, la notte col Mac in sleep:
+fermato, nessun risultato.)
+
 ## 2. Le prove fallite e le scelte
 
 Le tabelle sono in ADR-105 («Perché») e nel README («Gli esiti»). La diagnosi della ritenuta a 60 °C ha

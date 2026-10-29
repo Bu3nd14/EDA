@@ -14,7 +14,7 @@ fino al 2026-10-26, con tutta la loro storia, sono in `STATE-STORIA.md`.
 | | |
 |---|---|
 | Ultimo aggiornamento | **2026-10-28** (L54b3b: le tolleranze e la temperatura del temporizzatore; a 60 °C la perdita di D534 faceva scattare la ritenuta all'accensione a freddo, a 0 °C la musica dopo un buco di 20 ms a 491 ms nell'angolo peggiore; D534 a bassa perdita, R571 1,1 MΩ, i condensatori dei ritardi C0G; i 69 angoli passano; ADR-105; nessuna voce aperta o chiusa) |
-| Ultimo lotto chiuso | **L54b3b** — le tolleranze e la temperatura del temporizzatore (2026-10-28). `circuits/preamp/psu.py` (D534 BAS416, R571 1.1M, i dieci condensatori dei ritardi dichiarati C0G), il banco `data/2026-10-28/L54b3b/psu/` (`--temp`, `--toll` con `CMPTAV`, `--perdita`, `--ritenuta costruttoreA / C`; `campioni_mc.py`, `regressione.py`, `angoli.sh`, `analizza_mc.py`, `verdetti_angoli.py`). ADR-105. Report `reports/2026-10-28-L54b3b-tolleranze-temperatura.md` |
+| Ultimo lotto chiuso | **L54b3b** — le tolleranze e la temperatura del temporizzatore (2026-10-28). `circuits/preamp/psu.py` (D534 BAS416, R571 1.1M, i dieci condensatori dei ritardi dichiarati C0G), il banco `data/2026-10-28/L54b3b/psu/` (`--temp`, `--toll` con `CMPTAV`, `--perdita`, `--ritenuta costruttoreA / C`; `campioni_mc.py`, `regressione.py`, `angoli.sh`, `analizza_mc.py`, `verdetti_angoli.py`, `--metodo trap8`), limitations #81. ADR-105. Report `reports/2026-10-28-L54b3b-tolleranze-temperatura.md` |
 | **Prossimo lotto** | **L55 — il dispositivo d'uscita del blocco** (NC-056; prompt in `NEXT-SESSION.md`). Poi l'ordine deciso con l'utente verso G1: L58, il dossier rigenerato una volta (**L64**), la revisione (**L65**), G1 |
 | Non conformità | **17 aperte, 1 bloccante** (L54b3b, 2026-10-28: nessuna aperta o chiusa). Il registro è `NONCOMPLIANCE.md` |
 | Le bloccanti | Per **G1**: **nessuna bloccante** (L54a, 2026-10-26); da chiudere prima di G1 per decisione dell'utente: **NC-055, NC-072** (maggiori) e NC-056 (minore) — NC-054 chiusa; NC-073 e NC-075 (maggiori) alla scelta della parte. Per **G2**: NC-044 (L50) |
@@ -42,6 +42,10 @@ in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quel
   K501 63,8 ms, la base 0,311 V); la lista della sicurezza con gli stessi verdetti a 0 / 25 / 60 °C; i
   gruppi di hFE come il B; il passo di 5 µs identico. A 60 °C la musica dopo il rilascio del tasto del
   mute a 7,7 ms invece di 18,1 (D537, nel «Da riaprire se»).
+- **Il ripiego numerico a 0 °C** (117 corse su 135, `trap` e `gmin` 1e-8) accorcia i ritardi dei nodi
+  da megaohm: a 25 °C la musica dopo il buco −6 ms, l'armamento −165 ms contro il metodo normale; le
+  cifre a 0 °C stanno per difetto (limitations #81). Il controllo col metodo normale senza tetto non è
+  finito in una notte (il Mac in sleep): fermato, rifatto a 25 °C (2026-10-29).
 - ADR-105. Report `reports/2026-10-28-L54b3b-tolleranze-temperatura.md`; dati `data/2026-10-28/L54b3b/`.
 - **Dopo**: **L55**, il prompt di `NEXT-SESSION.md`.
 
