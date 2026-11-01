@@ -33,7 +33,11 @@ T0_ON = 0.1                        # L29c's T0_ON: the rails start here in the V
 
 CASI = {"l58_base_acc": "l58b_base/accensione",
         "l58_q501c_acc": "l58b/f_q501_corto_accs",
-        "l58_q501gd_acc": "l58b/f_q501_gd_accs"}
+        "l58_q501gd_acc": "l58b/f_q501_gd_accs",
+        # the mains at -10 / +10 % (lista_rete.txt, --rete 0.9 / 1.1 on the sequence runs)
+        "l58_base_m10": "l58b_base_m10/accensione", "l58_base_p10": "l58b_base_p10/accensione",
+        "l58_q501c_m10": "l58b_m10/f_q501_corto_accs", "l58_q501c_p10": "l58b_p10/f_q501_corto_accs",
+        "l58_q501gd_m10": "l58b_m10/f_q501_gd_accs", "l58_q501gd_p10": "l58b_p10/f_q501_gd_accs"}
 
 
 def leggi(path):
