@@ -183,8 +183,12 @@ assert v(R_SER["U501"]) == v(R_SER["U502"]), "le resistenze davanti ai regolator
 # U505, U506 A e B: le quattro uscite open-drain sul gate del sink di MUTE_CMD
 for _p in (("U505", "1"), ("U505", "7"), ("U506", "1"), ("U506", "7")):
     assert PIN[_p] == "MUTE_G", f"{_p[0]} pin {_p[1]} non tira MUTE_G"
-assert PIN[("Q501", "1")] == "MUTE_G" and PIN[("Q501", "3")] == "MUTE_CMD" \
-    and PIN[("J4", "1")] == "MUTE_CMD", "il sink di MUTE_CMD"
+# ADR-110 (L58b): il sink di MUTE_CMD e' Q501 in serie a Q509, i gate da MUTE_G attraverso R586 (1 MOhm,
+# sopra) e R587 (10 kOhm, sotto)
+assert PIN[("Q501", "3")] == "MUTE_CMD" and PIN[("Q501", "2")] == PIN[("Q509", "3")] \
+    and PIN[("Q509", "2")] == "RLY_RET" and PIN[("J4", "1")] == "MUTE_CMD", "il sink di MUTE_CMD"
+assert ends("R586") == {"MUTE_G", PIN[("Q501", "1")]} and v("R586") == "1M", "R586: 1 MOhm da MUTE_G al gate di Q501"
+assert ends("R587") == {"MUTE_G", PIN[("Q509", "1")]} and v("R587") == "10k", "R587: 10 kOhm da MUTE_G al gate di Q509"
 
 
 RET = ("RLY_RET", "GND")                         # uniti da NT501 (la stella)
@@ -427,7 +431,7 @@ wire(30.0, YS - 0.85, 30.0, YS - 1.6)
 wire(24.0, YS - 1.6, 30.0, YS - 1.6)
 dot(24.0, YS - 1.6)
 arrow(24.0, YS - 1.6, 24.0, 13.2, color=RED)
-box(24.0, 12.4, 5.2, 1.6, ["MUTE_G → Q501", "MUTE_CMD → J4 pin 1"], color=RED,
+box(24.0, 12.4, 5.2, 1.6, ["MUTE_G → Q501 + Q509", "MUTE_CMD → J4 pin 1"], color=RED,
     size=8.5, head_size=9.5)
 txt((24.0, 11.2), "D522: MUTE_G ≤ PERMIT_G", size=8, color=DIM)
 box(35.8, 13.8, 7.6, 1.7, [f"Δ: U508 A su PERMIT_T", f"τ = {v(_rt_)} × {v(_ct_)} = "

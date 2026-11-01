@@ -241,8 +241,18 @@ def testpoint(name, net, ref):
     return t
 
 
-def sink(ref, drain, gate, ret, clamp_to, rclamp, dref, dref2, zref):
+def sink(ref, drain, gate, ret, clamp_to, rclamp, dref, dref2, zref, serie=None):
     """Low-side N-MOSFET for a relay coil command, with a diode + zener clamp.
+
+    ADR-110 (L58b, ADR-076): serie = (ref2, rtop, rbot) makes it TWO 2N7002 in series - `ref` on top
+    (drain on the coil node), `ref2` below (source on ret) - each gate from `gate` through its OWN
+    resistor: 1 MOhm on top (rtop), 10 kOhm below (rbot). A short of either (drain-source, or the top
+    one's gate-drain) leaves the other to release the coils: the mute that does not insert needs
+    two faults. The 1 MOhm is what makes the top gate-drain short harmless: with 10 kOhm the coils'
+    current came back into MUTE_G through it (~5.6 V) and held the lower one on, the jack at 50 ms
+    after the gain (data/2026-11-01/L58b/, lista_serie.txt). Its delay is NOT in the bench's
+    MOSFET (no capacitances): <= ~0.2 ms from the datasheet's Ciss <= 50 pF and the Miller charge,
+    and only when the top one turns off alone (the lower one already shorted).
 
     The clamp (diode then 24 V zener to VRELAY) and not a plain flyback diode:
     a diode across the coil stretches the release, and ADR-045 / L30 rest on
@@ -257,9 +267,22 @@ def sink(ref, drain, gate, ret, clamp_to, rclamp, dref, dref2, zref):
     blocking: 0 mA. The clamp rises one diode, ~12 + 25.6 + 1.7 = 39.3 V at the worst.
     """
     q = part("Transistor_FET", "2N7002", "2N7002", ref, FP_SOT23)
-    q[1] += gate
-    q[2] += ret
-    q[3] += drain
+    if serie:
+        ref2, rtop, rbot = serie
+        mid, g1, g2 = Net(ref + "_MID"), Net(ref + "_G"), Net(ref2 + "_G")
+        res("1M", rtop, gate, g1)      # ADR-110: 1 MOhm, not 10k (see the docstring)
+        res("10k", rbot, gate, g2)     # ADR-110
+        q[1] += g1
+        q[2] += mid
+        q[3] += drain
+        q2 = part("Transistor_FET", "2N7002", "2N7002", ref2, FP_SOT23)
+        q2[1] += g2
+        q2[2] += ret
+        q2[3] += mid
+    else:
+        q[1] += gate
+        q[2] += ret
+        q[3] += drain
     d = part("Device", "D", "1N4148", dref, FP_DO35)
     d[2] += drain                  # A
     m = Net(rclamp + "_D")
@@ -665,7 +688,9 @@ if __name__ == "__main__":
     res("10k", "R513", MUTE_REQ, MUTE_G)
     res("100k", "R514", MUTE_G, RET)
     cap(C_MUTE_G, "C527", MUTE_G, RET)
-    sink("Q501", MUTE_CMD, MUTE_G, RET, VRELAY, "CLAMP_MUTE", "D506", "D530", "D507")
+    # ADR-110 (L58b): Q501 doubled in series with Q509, gates through R586 (1M) / R587 (10k)
+    sink("Q501", MUTE_CMD, MUTE_G, RET, VRELAY, "CLAMP_MUTE", "D506", "D530", "D507",
+         serie=("Q509", "R586", "R587"))
     # MUTE_G can never stand above PERMIT_G: a Schottky from MUTE_G to
     # PERMIT_G clamps it to PERMIT_G + ~0.3 V, below any 2N7002 threshold
     # while PERMIT_G is low. So the jack relays cannot be energised before

@@ -849,10 +849,29 @@ S.text((97.0, yvt - 3.4), f"τ di Δ = R534 · C528 = {it(TAU_T * 1e3, 1)} ms;  
 YQ = 12.6
 
 
-def sink(qref, x, gate_net, drain_net, clamp=None):
+def sink(qref, x, gate_net, drain_net, clamp=None, serie=None):
     q = S.nmos(qref, (x, YQ), gate="left", label_side="r")
-    lab(q["G"], "left")
-    ret(q["S"])
+    if serie:
+        # ADR-110 (L58b): two 2N7002 in series, each gate from gate_net through its own resistor
+        # (the top one 1 MOhm, R586; the lower one 10 kOhm, R587); the lower one's drain on the
+        # top one's source (Q501_MID)
+        q2ref, rtop, rbot = serie
+        gx, gy = P(q["G"])
+        g1 = [n for (r, _), n in S.pin.items() if r == rtop and n != gate_net][0]
+        two(rtop, {gate_net: (gx - 2.8, gy), g1: (gx - 0.4, gy)})
+        W(N(rtop, g1), q["G"])
+        lab(N(rtop, gate_net), "left")
+        q2 = S.nmos(q2ref, (x, P(q["S"])[1] - 1.2), gate="left", label_side="r")
+        W(q["S"], q2["D"])
+        gx2, gy2 = P(q2["G"])
+        g2 = [n for (r, _), n in S.pin.items() if r == rbot and n != gate_net][0]
+        two(rbot, {gate_net: (gx2 - 2.8, gy2), g2: (gx2 - 0.4, gy2)})
+        W(N(rbot, g2), q2["G"])
+        lab(N(rbot, gate_net), "left")
+        ret(q2["S"])
+    else:
+        lab(q["G"], "left")
+        ret(q["S"])
     top = to(q["D"], 0, 2.2)
     if clamp:
         d1, d2, z = clamp
@@ -869,7 +888,7 @@ def sink(qref, x, gate_net, drain_net, clamp=None):
     return q
 
 
-sink("Q501", 86.0, "MUTE_G", "MUTE_CMD", clamp=("D506", "D530", "D507"))
+sink("Q501", 86.0, "MUTE_G", "MUTE_CMD", clamp=("D506", "D530", "D507"), serie=("Q509", "R586", "R587"))
 sink("Q502", 95.0, "PERMIT_G", "PERMIT_CMD", clamp=("D508", "D531", "D509"))
 # the mains relay: MAINS_REQ -> Q503 -> R552 -> the coil of K501
 q503 = S.nmos("Q503", (110.4, YQ), gate="left", label_side="r")

@@ -35,7 +35,8 @@ What is checked:
      their name says - VPLUS / VMINUS on the OUT pin of a TPS7A4701 /
      TPS7A3301 (or, ADR-093, behind one Schottky in series from that OUT,
      the right way round), MUTE_CMD and PERMIT_CMD each on the DRAIN of its own
-     N-MOSFET whose source is RLY_RET, MUTE_SW pulled to a logic rail, and
+     N-MOSFET whose source is RLY_RET (ADR-110: or whose source is the drain of
+     ONE more N-MOSFET with its source on RLY_RET), MUTE_SW pulled to a logic rail, and
      every TPS7A's thermal pad on its GND;
   4. (L41b1, ADR-049, NC-037) VRELAY is the DRAIN of a P-MOSFET - the
      standby switch - whose source is the OUT of a TPS7A4701; the timer's
@@ -177,6 +178,17 @@ def check_psu(components, pin_net, findings):
                 if components.get(r, {}).get("lib") == "Transistor_FET"
                 and p == "3"]
         good = [r for r in fets if pin_net.get((r, "2")) == "RLY_RET"]
+        # ADR-110 (L58b): or through a SECOND N-MOSFET in series - the drain one's source is the
+        # drain of exactly one other N-MOSFET, whose source is RLY_RET (Q501 + Q509 on MUTE_CMD)
+        for r in fets:
+            mid = pin_net.get((r, "2"))
+            if mid in ("RLY_RET", None):
+                continue
+            low = [x for (x, p) in pins_of_net(pin_net, mid)
+                   if components.get(x, {}).get("lib") == "Transistor_FET" and p == "3"
+                   and pin_net.get((x, "2")) == "RLY_RET"]
+            if len(low) == 1:
+                good.append(r)
         if len(good) != 1:
             findings.append("psu: %s must be the drain of exactly one "
                             "N-MOSFET with its source on RLY_RET, found %s"

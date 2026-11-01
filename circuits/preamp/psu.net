@@ -2,7 +2,7 @@
   (version "D")
   (design
     (source "psu.py")
-    (date "10/29/2026 05:21 PM")
+    (date "11/01/2026 11:00 PM")
     (tool "SKiDL (2.3.0)")
     (sheet
       (number 1)
@@ -13,7 +13,7 @@
         (company)
         (rev)
         (date)
-        (source "../../psu.py")
+        (source "psu.py")
         (comment
           (number "1")
           (value ""))
@@ -2275,6 +2275,30 @@
       (component_classes)
       (tstamps "9536951e-03fc-5545-8366-96b55304da5e"))
     (comp
+      (ref "Q509")
+      (value "2N7002")
+      (description "0.115A Id, 60V Vds, N-Channel MOSFET, SOT-23")
+      (footprint "Package_TO_SOT_SMD:SOT-23")
+      (fields
+        (field
+          (name "Description") "0.115A Id, 60V Vds, N-Channel MOSFET, SOT-23")
+        (field
+          (name "Footprint") "Package_TO_SOT_SMD:SOT-23")
+        (field
+          (name "Datasheet") "https://www.onsemi.com/pub/Collateral/NDS7002A-D.PDF")
+        (field
+          (name "SKiDL Tag") "Q509")
+        (field
+          (name "SKiDL Line") "psu.py:206"))
+      (libsource
+        (lib "Transistor_FET")
+        (part "2N7002"))
+      (sheetpath
+        (names "/")
+        (tstamps "/"))
+      (component_classes)
+      (tstamps "c72bb1c0-e9bb-55ef-8510-862b5e19eb76"))
+    (comp
       (ref "Q513")
       (value "BC847")
       (description "0.1A Ic, 45V Vce, NPN Transistor, SOT-23")
@@ -3763,6 +3787,54 @@
       (component_classes)
       (tstamps "4d008265-d228-5c53-90cb-19b210f382f1"))
     (comp
+      (ref "R586")
+      (value "1M")
+      (description "Resistor")
+      (footprint "Resistor_SMD:R_0805_2012Metric")
+      (fields
+        (field
+          (name "Description") "Resistor")
+        (field
+          (name "Footprint") "Resistor_SMD:R_0805_2012Metric")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "R586")
+        (field
+          (name "SKiDL Line") "psu.py:206"))
+      (libsource
+        (lib "Device")
+        (part "R"))
+      (sheetpath
+        (names "/")
+        (tstamps "/"))
+      (component_classes)
+      (tstamps "8b3e8829-940c-5bcc-b92c-283bd321989c"))
+    (comp
+      (ref "R587")
+      (value "10k")
+      (description "Resistor")
+      (footprint "Resistor_SMD:R_0805_2012Metric")
+      (fields
+        (field
+          (name "Description") "Resistor")
+        (field
+          (name "Footprint") "Resistor_SMD:R_0805_2012Metric")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "R587")
+        (field
+          (name "SKiDL Line") "psu.py:206"))
+      (libsource
+        (lib "Device")
+        (part "R"))
+      (sheetpath
+        (names "/")
+        (tstamps "/"))
+      (component_classes)
+      (tstamps "2ff4738c-a0c9-548c-b581-dd6f7679107f"))
+    (comp
       (ref "TP501")
       (value "TP_VPLUS")
       (description "test point")
@@ -5140,15 +5212,19 @@
         (pin "2")
         (pintype "PASSIVE"))
       (node
-        (ref "Q501")
-        (pin "1")
-        (pintype "INPUT"))
-      (node
         (ref "R513")
         (pin "2")
         (pintype "PASSIVE"))
       (node
         (ref "R514")
+        (pin "1")
+        (pintype "PASSIVE"))
+      (node
+        (ref "R586")
+        (pin "1")
+        (pintype "PASSIVE"))
+      (node
+        (ref "R587")
         (pin "1")
         (pintype "PASSIVE"))
       (node
@@ -5389,6 +5465,42 @@
         (pintype "PASSIVE")))
     (net
       (code 45)
+      (name "Q501_G")
+      (class "Default")
+      (node
+        (ref "Q501")
+        (pin "1")
+        (pintype "INPUT"))
+      (node
+        (ref "R586")
+        (pin "2")
+        (pintype "PASSIVE")))
+    (net
+      (code 46)
+      (name "Q501_MID")
+      (class "Default")
+      (node
+        (ref "Q501")
+        (pin "2")
+        (pintype "PASSIVE"))
+      (node
+        (ref "Q509")
+        (pin "3")
+        (pintype "PASSIVE")))
+    (net
+      (code 47)
+      (name "Q509_G")
+      (class "Default")
+      (node
+        (ref "Q509")
+        (pin "1")
+        (pintype "INPUT"))
+      (node
+        (ref "R587")
+        (pin "2")
+        (pintype "PASSIVE")))
+    (net
+      (code 48)
       (name "RAW_M")
       (class "Default")
       (node
@@ -5404,7 +5516,7 @@
         (pin "2")
         (pintype "PASSIVE")))
     (net
-      (code 46)
+      (code 49)
       (name "RAW_MR")
       (class "Default")
       (node
@@ -5436,7 +5548,7 @@
         (pin "16")
         (pintype "PASSIVE")))
     (net
-      (code 47)
+      (code 50)
       (name "RAW_P")
       (class "Default")
       (node
@@ -5452,7 +5564,7 @@
         (pin "1")
         (pintype "PASSIVE")))
     (net
-      (code 48)
+      (code 51)
       (name "RAW_PR")
       (class "Default")
       (node
@@ -5484,7 +5596,7 @@
         (pin "16")
         (pintype "PASSIVE")))
     (net
-      (code 49)
+      (code 52)
       (name "RAW_V")
       (class "Default")
       (node
@@ -5516,7 +5628,7 @@
         (pin "16")
         (pintype "PASSIVE")))
     (net
-      (code 50)
+      (code 53)
       (name "RECT_V")
       (class "Default")
       (node
@@ -5532,7 +5644,7 @@
         (pin "1")
         (pintype "PASSIVE")))
     (net
-      (code 51)
+      (code 54)
       (name "RLY_RET")
       (class "Default")
       (node
@@ -5672,10 +5784,6 @@
         (pin "1")
         (pintype "PASSIVE"))
       (node
-        (ref "Q501")
-        (pin "2")
-        (pintype "PASSIVE"))
-      (node
         (ref "Q502")
         (pin "2")
         (pintype "PASSIVE"))
@@ -5689,6 +5797,10 @@
         (pintype "PASSIVE"))
       (node
         (ref "Q506")
+        (pin "2")
+        (pintype "PASSIVE"))
+      (node
+        (ref "Q509")
         (pin "2")
         (pintype "PASSIVE"))
       (node
@@ -5840,7 +5952,7 @@
         (pin "12")
         (pintype "POWER-IN")))
     (net
-      (code 52)
+      (code 55)
       (name "SUP_M")
       (class "Default")
       (node
@@ -5864,7 +5976,7 @@
         (pin "6")
         (pintype "INPUT")))
     (net
-      (code 53)
+      (code 56)
       (name "SUP_P")
       (class "Default")
       (node
@@ -5888,7 +6000,7 @@
         (pin "5")
         (pintype "INPUT")))
     (net
-      (code 54)
+      (code 57)
       (name "SUP_VR")
       (class "Default")
       (node
@@ -5912,7 +6024,7 @@
         (pin "9")
         (pintype "INPUT")))
     (net
-      (code 55)
+      (code 58)
       (name "SW_D")
       (class "Default")
       (node
@@ -5924,7 +6036,7 @@
         (pin "1")
         (pintype "PASSIVE")))
     (net
-      (code 56)
+      (code 59)
       (name "SW_G")
       (class "Default")
       (node
@@ -5944,7 +6056,7 @@
         (pin "1")
         (pintype "PASSIVE")))
     (net
-      (code 57)
+      (code 60)
       (name "T1_PRI_L")
       (class "Default")
       (node
@@ -5956,7 +6068,7 @@
         (pin "14")
         (pintype "PASSIVE")))
     (net
-      (code 58)
+      (code 61)
       (name "T1_PRI_N")
       (class "Default")
       (node
@@ -5968,7 +6080,7 @@
         (pin "24")
         (pintype "PASSIVE")))
     (net
-      (code 59)
+      (code 62)
       (name "T1_SEC_A")
       (class "Default")
       (node
@@ -5980,7 +6092,7 @@
         (pin "1")
         (pintype "PASSIVE")))
     (net
-      (code 60)
+      (code 63)
       (name "T1_SEC_B")
       (class "Default")
       (node
@@ -5992,7 +6104,7 @@
         (pin "3")
         (pintype "PASSIVE")))
     (net
-      (code 61)
+      (code 64)
       (name "T2_PRI_L")
       (class "Default")
       (node
@@ -6004,7 +6116,7 @@
         (pin "1")
         (pintype "PASSIVE")))
     (net
-      (code 62)
+      (code 65)
       (name "T2_SEC_A")
       (class "Default")
       (node
@@ -6016,7 +6128,7 @@
         (pin "1")
         (pintype "PASSIVE")))
     (net
-      (code 63)
+      (code 66)
       (name "T2_SEC_B")
       (class "Default")
       (node
@@ -6028,7 +6140,7 @@
         (pin "2")
         (pintype "PASSIVE")))
     (net
-      (code 64)
+      (code 67)
       (name "V5")
       (class "Default")
       (node
@@ -6152,7 +6264,7 @@
         (pin "3")
         (pintype "POWER-IN")))
     (net
-      (code 65)
+      (code 68)
       (name "V5_PRE")
       (class "Default")
       (node
@@ -6168,7 +6280,7 @@
         (pin "1")
         (pintype "POWER-IN")))
     (net
-      (code 66)
+      (code 69)
       (name "VE_A")
       (class "Default")
       (node
@@ -6180,7 +6292,7 @@
         (pin "2")
         (pintype "PASSIVE")))
     (net
-      (code 67)
+      (code 70)
       (name "VMINUS")
       (class "Default")
       (node
@@ -6208,7 +6320,7 @@
         (pin "1")
         (pintype "PASSIVE")))
     (net
-      (code 68)
+      (code 71)
       (name "VMINUS_REG")
       (class "Default")
       (node
@@ -6244,7 +6356,7 @@
         (pin "20")
         (pintype "PASSIVE")))
     (net
-      (code 69)
+      (code 72)
       (name "VPLUS")
       (class "Default")
       (node
@@ -6272,7 +6384,7 @@
         (pin "1")
         (pintype "PASSIVE")))
     (net
-      (code 70)
+      (code 73)
       (name "VPLUS_REG")
       (class "Default")
       (node
@@ -6304,7 +6416,7 @@
         (pin "3")
         (pintype "INPUT")))
     (net
-      (code 71)
+      (code 74)
       (name "VREF")
       (class "Default")
       (node
@@ -6392,7 +6504,7 @@
         (pin "8")
         (pintype "INPUT")))
     (net
-      (code 72)
+      (code 75)
       (name "VREF_HALF")
       (class "Default")
       (node
@@ -6412,7 +6524,7 @@
         (pin "7")
         (pintype "INPUT")))
     (net
-      (code 73)
+      (code 76)
       (name "VREF_R")
       (class "Default")
       (node
@@ -6424,7 +6536,7 @@
         (pin "1")
         (pintype "PASSIVE")))
     (net
-      (code 74)
+      (code 77)
       (name "VRELAY")
       (class "Default")
       (node
@@ -6448,7 +6560,7 @@
         (pin "1")
         (pintype "PASSIVE")))
     (net
-      (code 75)
+      (code 78)
       (name "VRELAY_EN")
       (class "Default")
       (node
@@ -6496,7 +6608,7 @@
         (pin "2")
         (pintype "OPEN-COLLECTOR")))
     (net
-      (code 76)
+      (code 79)
       (name "VRELAY_REG")
       (class "Default")
       (node
@@ -6556,7 +6668,7 @@
         (pin "1")
         (pintype "POWER-IN")))
     (net
-      (code 77)
+      (code 80)
       (name "VR_G")
       (class "Default")
       (node
@@ -6584,7 +6696,7 @@
         (pin "7")
         (pintype "OPEN-COLLECTOR")))
     (net
-      (code 78)
+      (code 81)
       (name "VR_T")
       (class "Default")
       (node
