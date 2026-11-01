@@ -586,3 +586,16 @@ RIGHE_L58B = [
 for _b, _r, _m, _p, _w in RIGHE_L58B:
     for _e in EVENTI_L58B:
         SIMULATI.append(("%s_%s" % (_b, _e), _r, _m, _p, _w))
+
+# ---- L58b: the series pair measured for the user (genera_tb_psu.py --q501serie): Q501 on top (drain on
+# MUTE_CMD, gate g501a), Q509 below (source on RLY_RET, gate g501b), middle n501m. Each mode of
+# either, latent from t = 0, against the same events. Only with --q501serie (the nodes exist only there)
+RIGHE_SERIE = [
+    ("f_q501a_corto", "Q501", "corto D-S (in serie)", ("corto", "mute_cmd", "n501m"), "resta Q509"),
+    ("f_q501a_gd", "Q501", "corto G-D (in serie)", ("corto", "g501a", "mute_cmd"), "resta Q509"),
+    ("f_q509_corto", "Q509", "corto D-S (in serie)", ("corto", "n501m", "rly_ret"), "resta Q501"),
+    ("f_q509_gd", "Q509", "corto G-D (in serie)", ("corto", "g501b", "n501m"), "resta Q501"),
+]
+for _b, _r, _m, _p, _w in RIGHE_SERIE:
+    for _e in EVENTI_L58B:
+        SIMULATI.append(("%s_%s" % (_b, _e), _r, _m, _p, _w))

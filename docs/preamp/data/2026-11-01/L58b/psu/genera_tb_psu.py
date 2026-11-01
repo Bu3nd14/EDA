@@ -322,6 +322,8 @@ STANDBY_PU = ("R573", "R575", "R576", "R579", "R524", "R537")
 # L54a: a mains factor on ANY sequence case (holes included), e.g. 0.9 / 1.1 (the case's own
 # "fattore", accensione_m10's, if any, is refused together with this)
 ap.add_argument("--rete", type=float, default=None)
+# L58b: Q501 doubled in series (Q501 + Q509), each gate through its own resistor of this value (ohm)
+ap.add_argument("--q501serie", type=float, default=None)
 # L54a: the settling before the event (TSS = TE). The analog timers power up for real from t = 0
 # (the micro's preamble put it in MUSICA at 1.0 s): rails at ~1.4 s, then the 0.47 s of AT_PGT -
 # they run with 3.0; every micro deck keeps 2.0
@@ -709,6 +711,16 @@ def element(ref, c):
                                                        "MDMN6075 W=1u" if MOS.get(ref) == "DMN6075S"
                                                        else "MNGEN W=%s" % W_2N7002),
                     "RRK %s q503_rk %g" % (pn(ref, "3"), ARG.rk)]
+        if ref == "Q501" and ARG.q501serie:
+            # L58b: the variant measured for the user (ADR-076's redundancy, the half that costs two
+            # parts): Q501 (top, drain on MUTE_CMD) and Q509 (bottom, source on RLY_RET) in series,
+            # each gate from MUTE_G through its OWN resistor, so that a gate-drain short of either
+            # cannot hold the coils through the other's gate. Middle node n501m
+            d, g, s = pn(ref, "3"), pn(ref, "1"), pn(ref, "2")
+            return ["MQ501 %s g501a n501m n501m MNGEN W=%s L=1u" % (d, W_2N7002),
+                    "MQ509 n501m g501b %s %s MNGEN W=%s L=1u" % (s, s, W_2N7002),
+                    "RQ501G %s g501a %g" % (g, ARG.q501serie),
+                    "RQ509G %s g501b %g" % (g, ARG.q501serie)]
         if MOS.get(ref) == "DMN6075S":
             return ["M%s %s %s %s %s MDMN6075 W=1u L=1u" % (ref, pn(ref, "3"), pn(ref, "1"),
                                                            pn(ref, "2"), pn(ref, "2"))]
