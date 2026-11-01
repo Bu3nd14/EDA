@@ -1697,3 +1697,32 @@ curva del datasheet (~30 pF). Il PNP e i ZXT non ne soffrono.
 **Regola operativa**: una ricetta che misura una capacità o un parametro a un punto di lavoro controlla
 prima la corrente di quel punto (il controllo di IC della ricetta del MJE243 è ciò che l'ha trovato), e
 un terminale «aperto» si chiude su 1 GΩ, non su 1 TΩ.
+
+## 84. Una parte nuova nel sorgente rompe ogni copia di un banco che legge la netlist intera: il `TestPoint` andava mappato a mano
+
+Visto in L58a, il 2026-10-29. ADR-107 ha messo i test point (`Connector:TestPoint`, TP501–TP517) in
+`psu.py`. `genera_tb_psu.py` traduce **ogni** parte della netlist dell'alimentatore in righe SPICE e
+rifiuta quelle che non conosce («part … not in the map - refusing»): la copia di L54b3b, sulla netlist
+nuova, non parte più. Qui il rifiuto è rumoroso, ed è il comportamento giusto; ma ogni lotto copia il
+banco nella sua cartella, e le copie dei lotti precedenti restano ferme alla mappa di allora. Un banco
+che invece **salti** in silenzio le parti sconosciute toglierebbe dal deck una parte vera senza dirlo.
+
+**Regola operativa**: una parte nuova nel sorgente si mappa nel generatore del lotto che la usa, con
+una riga che dice perché non simula niente (`if part == "TestPoint": return []`, copia di L58a). Un
+generatore sulla netlist intera rifiuta le parti sconosciute, non le salta. Chi riprende un banco di un
+lotto precedente lo prova sulla netlist di oggi prima di correre una lista.
+
+## 85. `analizza_mc.py` arma la ritenuta all'istante zero di un'accensione a freddo quando il deck sonda anche VREF
+
+Visto in L58a2, il 2026-11-01 (`docs/preamp/data/2026-10-29/L58a/`, report di L58a). `t_arm_ms` è il
+primo campione dopo TE con `v(at_t2s) > v(vref)`, o `> 2,5 V` se VREF non è fra le sonde. I deck con un
+guasto del temporizzatore (`sonde_guasto`) sondano VREF, la base no. All'accensione a freddo i due nodi
+partono da 0 V e al campione dopo TE AT_T2S sta sopra VREF di qualche nanovolt (3,1338e-11 contro
+3,1331e-11 V): `t_arm_ms` 0,1, `arm_pg_ms` −1383,5 ms, «la ritenuta armata prima dell'alimentazione
+buona», in otto casi su otto. La salita vera (`psu/armo.py`, come attraversamento di 2,5 V dal basso) è
+quella della base entro 0,1 ms (2431,1 ms, `arm_pg_ms` +1047,5), salvo D536 che sposta
+l'alimentazione buona.
+
+**Regola operativa**: un istante «primo campione con A > B» vale solo dove B è già al suo valore; fra
+due nodi fermi a 0 V si misura come attraversamento di una soglia fissa, dal basso. E un caso che
+cambia l'insieme delle sonde rispetto alla sua base si confronta con la stessa definizione.
