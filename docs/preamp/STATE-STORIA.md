@@ -18,6 +18,30 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L54b3b — le tolleranze e la temperatura del temporizzatore (2026-10-28)
+
+- **Il banco**: `--temp`, `--toll` (le R / C, VREF, lo scostamento dei diciotto canali di comparatore e
+  la loro corrente d'ingresso come `CMPTAV`), `--perdita` (la perdita massima del datasheet di un
+  diodo), i gruppi di hFE A / C; inerti quando assenti, ognuna provata su un caso noto.
+- **Il Monte Carlo a 25 °C**, 700 corse coi condensatori in C0G: nessun verdetto diverso dal nominale,
+  la musica dopo un buco di 20 ms al peggio 532 ms. La regressione dei margini (residui ≤ 0,75 ms) e
+  **gli angoli peggiori** a 0 / 25 / 60 °C, alle tre reti, con la perdita massima dei diodi.
+- **Tre prove fallite**, le scelte dell'utente: a 60 °C la perdita di D534 (BAT54, ~19 µA) faceva
+  scattare la ritenuta all'accensione a freddo col frontale acceso, anche coi valori nominali (la base
+  a 0,88 V) → **«Solo D534 a bassa perdita»** (0,27 V; i tre BAT54 a bassa perdita portavano la musica
+  dopo il buco a 461 ms); a 0 °C la musica dopo il buco a 491 ms nell'angolo → **«R571 a 1,1 MΩ»**
+  (537 ms; all'accensione +60 ms); in X7R K501 43 ms dopo il permissivo → **«Tutti C0G»**.
+- **Sul sorgente nuovo**: i 69 angoli passano (il minimo: la musica 537,1 ms, il permissivo 31,4 ms,
+  K501 63,8 ms, la base 0,311 V); la lista della sicurezza con gli stessi verdetti a 0 / 25 / 60 °C; i
+  gruppi di hFE come il B; il passo di 5 µs identico. A 60 °C la musica dopo il rilascio del tasto del
+  mute a 7,7 ms invece di 18,1 (D537, nel «Da riaprire se»).
+- **Il ripiego numerico a 0 °C** (117 corse su 135, `trap` e `gmin` 1e-8) accorcia i ritardi dei nodi
+  da megaohm: a 25 °C la musica dopo il buco −6 ms, l'armamento −165 ms contro il metodo normale; le
+  cifre a 0 °C stanno per difetto (limitations #81). Il controllo col metodo normale senza tetto non è
+  finito in una notte (il Mac in sleep): fermato, rifatto a 25 °C (2026-10-29).
+- ADR-105. Report `reports/2026-10-28-L54b3b-tolleranze-temperatura.md`; dati `data/2026-10-28/L54b3b/`.
+- **Dopo**: **L55**, il prompt di `NEXT-SESSION.md`.
+
 ### L54b3a — la robustezza del temporizzatore al banco: i modelli del costruttore, la rete sporca, i fronti veloci, i rimbalzi (2026-10-28)
 
 - **L54b3 diviso dall'utente all'inizio**, «Due parti»: L54b3a questa (a 25 °C), L54b3b le tolleranze e

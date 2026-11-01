@@ -13,17 +13,36 @@ fino al 2026-10-26, con tutta la loro storia, sono in `STATE-STORIA.md`.
 
 | | |
 |---|---|
-| Ultimo aggiornamento | **2026-10-29** (L58a1: i test point sulle due schede, ADR-107; nessun C0G da 1 µF esiste a montaggio superficiale: C548 / C552 in film di polipropilene a foro, C553 in 2220, C518 in 1206, ADR-108 — scelte dell'utente, valori invariati; la distinta del BAS416 e dei condensatori dei ritardi. L58 diviso dall'utente in L58a / L58b, e L58a chiuso a metà per il budget: le righe della FMEA restano a L58a2) |
-| Ultimo lotto chiuso | **L58a1** — i test point e la distinta del temporizzatore (2026-10-29). Sorgente: `preamp_audio.py` (TP1–TP9, TP101…TP802), `psu.py` (TP501–TP517, le impronte di C518 / C548 / C552 / C553); disegni con `sheet_kit.testpoint()`; `data/2026-10-29/L58a/` (`distinta/README.md`, il banco `psu/` pronto per la FMEA). ADR-107, ADR-108 |
-| **Prossimo lotto** | **L58a2 — le righe della FMEA di R585 e dei BAS416** (prompt in `NEXT-SESSION.md`; il banco è pronto, le prove sul caso noto corse e non ancora lette). Poi **L58b** (l'autodiagnosi), **L66** (NC-076; posizione confermata dall'utente il 2026-10-29: dopo L58, prima di L64), **L64**, **L65**, G1 |
-| Non conformità | **17 aperte, 1 bloccante** (L55, 2026-10-29: chiusa NC-056, aperta NC-076). Il registro è `NONCOMPLIANCE.md` |
+| Ultimo aggiornamento | **2026-11-01** (L58a2: le righe della FMEA di R585 e dei quattro BAS416, 112 corse senza ripiego; quattordici righe a priorità bassa, una alta — **R585 in corto rende cieca la ritenuta**, il «Da riaprire se» di ADR-102: **accettata dall'utente**, P9 (e), ADR-109, **NC-077 minore**; D536 guasto anticipa la musica, 2,6–2,7 µV al jack, ~2 dB SPL) |
+| Ultimo lotto chiuso | **L58a2** — le righe della FMEA delle parti nuove del temporizzatore (2026-11-01). `data/2026-10-29/L58a/` (`fmea_alimentatore.csv`, `an_l58a.csv`, `confronto_l58a.csv`, le prove di R585, `v2/` per D536); report `reports/2026-10-29-L58a-test-point-fmea-distinta.md`; ADR-109; limitations #84, #85 |
+| **Prossimo lotto** | **L58b — l'autodiagnosi** (prompt in `NEXT-SESSION.md`). Poi **L66** (NC-076), **L64**, **L65**, G1 |
+| Non conformità | **18 aperte, 1 bloccante** (L58a2, 2026-11-01: aperta NC-077, minore). Il registro è `NONCOMPLIANCE.md` |
 | Le bloccanti | Per **G1**: **nessuna bloccante** (L54a, 2026-10-26); da chiudere prima di G1 per decisione dell'utente: **NC-055, NC-072, NC-076** (maggiori) — NC-054 e NC-056 chiuse; NC-073 e NC-075 (maggiori) alla scelta della parte. Per **G2**: NC-044 (L50) |
-| Suite | `run_tests.sh` **14 passed / 0 failed** a fine L58a1 (2026-10-29, dal worktree; il sorgente coi test point e ADR-108); `validate_models.py` **89 / 89**, `--check-provenance` 41 / 41 |
+| Suite | `run_tests.sh` alla chiusura di L58a2 (2026-11-01, da `chunk_close.sh`); il sorgente non è cambiato da L58a1 (14 passed / 0 failed); `validate_models.py` **89 / 89** |
 
 ## Diario degli ultimi lotti
 
 Le ultime tre voci. Le più vecchie sono in `STATE-STORIA.md`, nello stesso ordine (la più recente
 in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quella sezione.
+
+### L58a2 — le righe della FMEA delle parti nuove del temporizzatore (2026-11-01)
+
+- **Le prove sul caso noto** rifatte (le forme d'onda di L58a1 erano perse col worktree): la base come
+  `v_sorgente` di L54b3b (1209,3 / 2045,6 ms), R585 aperta 0,898 V (ADR-103). **La lista**: 112 corse,
+  nessun ripiego, nessuna rifiutata; i criteri scritti di L54b3b (`psu/confronta_l58a.py`).
+- **Quindici righe** (`fmea_alimentatore.csv`), ogni modo sotto 1 FIT: quattordici a priorità bassa —
+  i corti di D534 / D535 / D541 e le perdite di D535 / D541 non fanno accendere (nessun colpo); D536
+  guasto anticipa la musica (all'alimentazione buona; dopo un buco 21–79 ms contro ≥ 500), al jack
+  **2,6–2,7 µV, ~2 dB SPL** (V2 con le rampe vere, `v2/`); D541 aperto solo margine (0,54 V).
+- **R585 in corto**: la ritenuta cieca, K501 resta chiuso dopo un guasto di rail (il jack muto come
+  oggi): il «Da riaprire se» di ADR-102. Provati 2 × 16,5 / 3 × 11 / 3 × 12 / 2 × 33 kΩ (falliscono) e
+  **4 × 10 kΩ** (regge agli angoli, rete ±10 %, 0 / 60 °C). La scelta dell'utente: **«Accettarlo,
+  dichiarato»**, **«Minore»**: ADR-109, P9 (e), **NC-077**.
+- **Trovati**: limitations #84 (una parte nuova rompe le copie di un banco sulla netlist intera) e #85
+  (`analizza_mc.py` arma la ritenuta all'istante zero di un'accensione a freddo quando il deck sonda
+  VREF: −1383,5 ms in otto casi, artefatto).
+- Report `reports/2026-10-29-L58a-test-point-fmea-distinta.md` (anche L58a1).
+- **Dopo**: **L58b**, il prompt di `NEXT-SESSION.md`.
 
 ### L58a1 — i test point e la distinta del temporizzatore (2026-10-29)
 
@@ -67,30 +86,6 @@ in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quel
   G1»: **NC-076 aperta**, a un lotto suo (L66).
 - Report `reports/2026-10-29-L55-dispositivo-uscita.md`; dati `data/2026-10-29/L55/`.
 - **Dopo**: **L58**, il prompt di `NEXT-SESSION.md`.
-
-### L54b3b — le tolleranze e la temperatura del temporizzatore (2026-10-28)
-
-- **Il banco**: `--temp`, `--toll` (le R / C, VREF, lo scostamento dei diciotto canali di comparatore e
-  la loro corrente d'ingresso come `CMPTAV`), `--perdita` (la perdita massima del datasheet di un
-  diodo), i gruppi di hFE A / C; inerti quando assenti, ognuna provata su un caso noto.
-- **Il Monte Carlo a 25 °C**, 700 corse coi condensatori in C0G: nessun verdetto diverso dal nominale,
-  la musica dopo un buco di 20 ms al peggio 532 ms. La regressione dei margini (residui ≤ 0,75 ms) e
-  **gli angoli peggiori** a 0 / 25 / 60 °C, alle tre reti, con la perdita massima dei diodi.
-- **Tre prove fallite**, le scelte dell'utente: a 60 °C la perdita di D534 (BAT54, ~19 µA) faceva
-  scattare la ritenuta all'accensione a freddo col frontale acceso, anche coi valori nominali (la base
-  a 0,88 V) → **«Solo D534 a bassa perdita»** (0,27 V; i tre BAT54 a bassa perdita portavano la musica
-  dopo il buco a 461 ms); a 0 °C la musica dopo il buco a 491 ms nell'angolo → **«R571 a 1,1 MΩ»**
-  (537 ms; all'accensione +60 ms); in X7R K501 43 ms dopo il permissivo → **«Tutti C0G»**.
-- **Sul sorgente nuovo**: i 69 angoli passano (il minimo: la musica 537,1 ms, il permissivo 31,4 ms,
-  K501 63,8 ms, la base 0,311 V); la lista della sicurezza con gli stessi verdetti a 0 / 25 / 60 °C; i
-  gruppi di hFE come il B; il passo di 5 µs identico. A 60 °C la musica dopo il rilascio del tasto del
-  mute a 7,7 ms invece di 18,1 (D537, nel «Da riaprire se»).
-- **Il ripiego numerico a 0 °C** (117 corse su 135, `trap` e `gmin` 1e-8) accorcia i ritardi dei nodi
-  da megaohm: a 25 °C la musica dopo il buco −6 ms, l'armamento −165 ms contro il metodo normale; le
-  cifre a 0 °C stanno per difetto (limitations #81). Il controllo col metodo normale senza tetto non è
-  finito in una notte (il Mac in sleep): fermato, rifatto a 25 °C (2026-10-29).
-- ADR-105. Report `reports/2026-10-28-L54b3b-tolleranze-temperatura.md`; dati `data/2026-10-28/L54b3b/`.
-- **Dopo**: **L55**, il prompt di `NEXT-SESSION.md`.
 
 ## Come si lavora da qui: a lotti piccoli e pushati
 
@@ -298,8 +293,8 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L45d2b3b3 | **La sintesi**: le colonne dopo il rimedio di ADR-070 (gravità, probabilità, priorità) su `data/2026-10-22/L45d2b3b1/righe_b1.csv` e sulle righe del calore del blocco del sorgente (`data/2026-10-23/L45d2b3b2b2/sintesi_sorg.csv`), coi modi delle parti nuove; NC-042 chiusa se i numeri lo permettono | S/M | **NC-042** | **fatto** (2026-10-24): le regole provate sulle colonne pubblicate (0 diverse, 506 col sabotaggio); la Stax delle parti di ADR-099 corsa (il blocco al rail 115,5–124,0 ms); 539 righe, alte 100 → 26, medie 56 → 71, ognuna con la sua destinazione; R550 / R551 in corto a NC-072 («Nel rame del layout»); **NC-042 chiusa** («Chiudere, residui alle loro voci», ADR-100). Report `reports/2026-10-24-L45d2b3b3-sintesi-fmea.md` |
 | L58 | **La diagnosi: test point e autodiagnosi** (richiesta dell'utente dopo L45d1, 2026-10-14: «post chiusura della FMEA mettiamo un lotto per la creazione di test point per diagnosi (o altri meccanismi di diagnosi/auto diagnosi)»). Due metà: (a) **i test point** sulle due schede per la diagnosi al banco e la riparazione: i rail e `VRELAY` dai due lati del cablaggio, V5, `MUTE_G` / `PERMIT_G` / `PERMIT_T`, l'uscita di ogni blocco, i comandi dei relè, con la massa vicina; (b) **l'autodiagnosi**: che cosa il circuito o il firmware può vedere da sé dei guasti latenti della FMEA (24 righe alte latenti in `scelte_L45d2.pdf`: i sorveglianti ciechi, il mute che non si inserisce, il NO di mute saldato, Δ perso a ogni mute, il moltiplicatore di Vbe che scalda in silenzio) e come lo dice (un LED, un codice, il mute tenuto). Ingresso: le scelte di L45d2 che l'utente manda qui. **Mandate qui da L45d2a** (2026-10-14): il mute che non si inserisce, che il firmware rivela leggendo il comando del mute e staccando la linea dei relè con Q505 (ADR-076); il degrado silenzioso di 28 guasti del blocco dentro P10 (ADR-071); lo standby con la linea dei relè o il toroidale accesi per guasto (ADR-078); il rivelatore di continua cieco, un guasto latente nuovo (ADR-072). Non mandati: l'autotest dei sorveglianti (ADR-073, accettata la riserva del firmware) e il controllo di Δ (ADR-077, accettato). Con L54 (il micro e lo standby riesaminati: l'autodiagnosi dipende da quale micro resta). **L54a: il micro esce** (ADR-102): quello che ADR-076 / ADR-078 davano al firmware si fa in hardware (per esempio un canale di comparatore sul comando del mute verso la ritenuta) o torna all'utente; l'autotest dei sorveglianti non serve più (la riserva è hardware, < 0,5 ms). Se serve, una voce del PRB con la sua ADR. Se cambia il circuito: sorgente, netlist, disegno, `run_tests.sh`, regressione | M | NC-042 (i latenti), NC-054 | **diviso dall'utente** (2026-10-29, «Due sessioni»): L58a / L58b, sotto |
 | L58a1 | **I test point e la distinta del temporizzatore**: i test point delle due schede (ADR-107); la distinta del BAS416 e dei condensatori dei ritardi, e il film di polipropilene per C548 / C552 (ADR-108); il banco della FMEA pronto. La prima metà di L58a, chiusa per il budget su richiesta dell'utente | S/M | — | **fatto** (2026-10-29): `data/2026-10-29/L58a/`; ADR-107, ADR-108; `run_tests.sh` 14 / 0 |
-| L58a2 | **Le righe della FMEA di R585 e dei BAS416** (D534 / D535 / D536 / D541) nella forma di ADR-070: aperti, in corto, la perdita (1 µA, ipotesi), la deriva di R585, contro i sette eventi del temporizzatore; sul banco di `data/2026-10-29/L58a/psu/`. Se un guasto singolo toglie il mute o la ritenuta: il «Da riaprire se» di ADR-102, all'utente | S/M | NC-042 | da fare — prossimo |
-| L58b | **L'autodiagnosi**: che cosa il circuito vede da sé dei guasti latenti mandati a L58 (ADR-071, ADR-076, ADR-078, ADR-100); il micro è uscito (ADR-102), quindi in hardware o all'utente | M | NC-042, NC-054 | da fare — dopo L58a2, **prima di G1** |
+| L58a2 | **Le righe della FMEA di R585 e dei BAS416** (D534 / D535 / D536 / D541) nella forma di ADR-070: aperti, in corto, la perdita (1 µA, ipotesi), la deriva di R585, contro i sette eventi del temporizzatore; sul banco di `data/2026-10-29/L58a/psu/`. Se un guasto singolo toglie il mute o la ritenuta: il «Da riaprire se» di ADR-102, all'utente | S/M | NC-042 | **fatto** (2026-11-01): 112 corse, 15 righe; R585 in corto accettata (ADR-109, NC-077 minore); report `reports/2026-10-29-L58a-test-point-fmea-distinta.md` |
+| L58b | **L'autodiagnosi**: che cosa il circuito vede da sé dei guasti latenti mandati a L58 (ADR-071, ADR-076, ADR-078, ADR-100); il micro è uscito (ADR-102), quindi in hardware o all'utente | M | NC-042, NC-054 | da fare — **prossimo**, **prima di G1** |
 | L59 | **La revisione avversariale del rivelatore di continua** (richiesta dell'utente dopo L45d2b1, 2026-10-14: «non sono certo che il rilevatore di continua sia OK, un segnale sotto i 16Hz é un input assolutamente plausibile, modifica il piano per far rivedere il rilevatore di continua all'avversariale come prossima cosa»). `adversarial-architect` alla cieca su ADR-072, ADR-079, `dc_detector.py` e i dati di L45d2b1: il principio della persistenza, la soglia e il tempo contro la musica e contro P10, l'alimentazione, la linea e la ritenuta, le alternative; **il confronto con la letteratura, cercando online** (richiesta dell'utente: i rivelatori dei finali e dei preamp, l'energia sotto i 20 Hz di musica e sorgenti, le soglie degli altri), con le fonti citate; un report datato di rilievi; poi gli esiti con l'utente (come L43a, L52), con ADR nuove se cambia una decisione. Il circuito non cambia in questo lotto | S/M | NC-042 | **fatto** (2026-10-15): 7 rilievi, aperte NC-064 e NC-065 (bloccanti) e NC-066…068 (minori); ADR-080, la presa differenziale; la proposta di un altro modello e quattro idee dell'utente messe a confronto. Report `reports/2026-10-15-L59-architetto-avversariale.md`, esiti `reports/2026-10-15-L59-esiti-architetto.md` |
 | L61 | **Le Stax: vanno protette, e come** (lotto piccolo, richiesta dell'utente dopo L59, 2026-10-15: «il nodo sono le STAX, non voglio romperle, pensiamo come proteggere le STAX e capiamo se é davvero necessario, in un lotto dedicato, piccolo. Se non serve proteggerle il rilevatore cade, se troviamo una soluzione per una sola uscita magari riduciamo complessitá»). Dai documenti in rete: l'ingresso della SRM-T1 e del Singxer SA-1, in continua o in alternata, le loro protezioni, un criterio di danno per le cuffie elettrostatiche; le strade per la sola fissa 2 (il condensatore d'uscita al limite di E9, τ ≥ 37 ms → ~105 ms sopra 0,87 V a calcolo; un differenziale solo su F2); l'esito con l'utente: restringere PR-30 alla catena nota (il rivelatore cade), ridurre L60, o tenerlo. Il circuito non cambia | S | NC-064, NC-065 | **fatto** (2026-10-15): la SRM-T1 in continua e senza protezione, il Singxer con protezione dichiarata; l'utente: «Condensatore 1 µF» e PR-30 per la catena di oggi, «Firmo così» → **ADR-081**; il rivelatore cade. Report `reports/2026-10-15-L61-stax.md` |
 | L60 | **Il rivelatore esce e la Stax ha il suo condensatore** (riscritto da L61, ADR-081, 2026-10-15; era «il rivelatore differenziale», ADR-080, superata). Prima, con l'utente, le scelte 6, 8, 9 e 10 di ADR-072 che il rivelatore copriva; poi togliere il rivelatore (`dc_detector.py`, `DC_FLT` su J4 pin 4, D525–D527, PA1 e spec 4.9 nel firmware); il condensatore d'uscita della fissa 2 a 1 µF; E9, P10 col carico della Stax (≤ 125 ms), V2 e l'inserimento a caldo rifatti su quell'uscita. Sorgente, netlist, disegni, firmware, `run_tests.sh` | M | **NC-064**, **NC-065**, NC-066, NC-067, NC-068, NC-042 | **diviso** dall'utente all'inizio in tre parti («Tre parti», 2026-10-15): L60a, L60b, L60c |
