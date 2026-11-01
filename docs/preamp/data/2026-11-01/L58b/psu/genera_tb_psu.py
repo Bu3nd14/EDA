@@ -323,7 +323,7 @@ STANDBY_PU = ("R573", "R575", "R576", "R579", "R524", "R537")
 # "fattore", accensione_m10's, if any, is refused together with this)
 ap.add_argument("--rete", type=float, default=None)
 # L58b: Q501 doubled in series (Q501 + Q509), each gate through its own resistor of this value (ohm)
-ap.add_argument("--q501serie", type=float, default=None)
+ap.add_argument("--q501serie", default=None)   # "<R>" on both gates, or "<R_sopra>:<R_sotto>" (ohm)
 # L54a: the settling before the event (TSS = TE). The analog timers power up for real from t = 0
 # (the micro's preamble put it in MUSICA at 1.0 s): rails at ~1.4 s, then the 0.47 s of AT_PGT -
 # they run with 3.0; every micro deck keeps 2.0
@@ -719,8 +719,8 @@ def element(ref, c):
             d, g, s = pn(ref, "3"), pn(ref, "1"), pn(ref, "2")
             return ["MQ501 %s g501a n501m n501m MNGEN W=%s L=1u" % (d, W_2N7002),
                     "MQ509 n501m g501b %s %s MNGEN W=%s L=1u" % (s, s, W_2N7002),
-                    "RQ501G %s g501a %g" % (g, ARG.q501serie),
-                    "RQ509G %s g501b %g" % (g, ARG.q501serie)]
+                    "RQ501G %s g501a %g" % (g, float(ARG.q501serie.split(":")[0])),
+                    "RQ509G %s g501b %g" % (g, float(ARG.q501serie.split(":")[-1]))]
         if MOS.get(ref) == "DMN6075S":
             return ["M%s %s %s %s %s MDMN6075 W=1u L=1u" % (ref, pn(ref, "3"), pn(ref, "1"),
                                                            pn(ref, "2"), pn(ref, "2"))]

@@ -599,3 +599,12 @@ RIGHE_SERIE = [
 for _b, _r, _m, _p, _w in RIGHE_SERIE:
     for _e in EVENTI_L58B:
         SIMULATI.append(("%s_%s" % (_b, _e), _r, _m, _p, _w))
+# the pair's two new gate resistors, open (a short of either needs a second fault to matter: with 0 ohm
+# the gate is on MUTE_G, as today's Q501)
+RIGHE_SERIE_R = [
+    ("f_rq501g_aperto", "RQ501G", "aperto", ("aperto", [("RQ501G", 1)]), "il gate di sopra flottante"),
+    ("f_rq509g_aperto", "RQ509G", "aperto", ("aperto", [("RQ509G", 1)]), "il gate di sotto flottante"),
+]
+for _b, _r, _m, _p, _w in RIGHE_SERIE_R:
+    for _e in EVENTI_L58B:
+        SIMULATI.append(("%s_%s" % (_b, _e), _r, _m, _p, _w))
