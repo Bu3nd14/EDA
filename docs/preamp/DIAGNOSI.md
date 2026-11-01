@@ -38,9 +38,9 @@ chiuso (i finali alla loro temperatura). Il tester in continua.
 
 | Blocco | Test point d'uscita | Le due 22 Ω |
 |---|---|---|
-| A sinistro (principale) | TP101 | R134, R135 |
+| A sinistro (ingresso, verso F1 / F2) | TP101 | R134, R135 |
 | A destro | TP301 | R334, R335 |
-| B sinistro | TP201 | R233, R234 |
+| B sinistro (principale) | TP201 | R233, R234 |
 | B destro | TP401 | R433, R434 |
 | F1 sinistro (Singxer) | TP501 | R533, R534 |
 | F1 destro | TP701 | R733, R734 |
