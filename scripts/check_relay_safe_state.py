@@ -1531,7 +1531,11 @@ def check(components, pin_net):
 #       T3 / T6 in silence (limitations #68);
 #   T1. every relay-command N-MOSFET (a 2N7002 whose drain is a coil command
 #       or the standby switch's gate drive) has a resistor from its gate to
-#       its source: a dead driver leaves it off;
+#       its source: a dead driver leaves it off. ADR-110 (L58b): a command may
+#       be a series PAIR of 2N7002 (Q501 + Q509 on MUTE_CMD), each gate from
+#       one common drive net through its own resistor, the top one >= 1 MOhm;
+#       for T1-T5 the pair's gate is that drive net (MUTE_G). Made to fail on
+#       docs/preamp/data/2026-11-01/L58b/falsi/ (29 cases, L54b1's 24 too);
 #   T2. each request exists and carries a resistor to RLY_RET / GND, and is
 #       driven only by OPEN-DRAIN comparator outputs (and the latch, T6):
 #       every other pin on it is a resistor, capacitor or diode. With V5 gone
@@ -1648,6 +1652,7 @@ def _series_r(components, pin_net, start, goal, stop):
 
 
 COMMAND_MAX_OHMS = 1e6
+SERIE_TOP_MIN_OHMS = 1e6        # ADR-110: the top gate resistor of a series pair
 
 
 def check_timer(components, pin_net):
@@ -1685,6 +1690,38 @@ def check_timer(components, pin_net):
         findings.append("timer: nessun MOSFET di comando trovato - il controllo "
                         "non puo' passare alla cieca")
         return findings, report
+    # ADR-110 (L58b): a command may be TWO 2N7002 in series - the top one's drain on the coil
+    # command, its source the drain of the lower one, whose source is on a return - each gate fed
+    # from ONE common drive net through its own resistor (MUTE_G -> R586 1M -> Q501, R587 10k ->
+    # Q509). The pair is one command: its "gate" for T1-T5 is the common drive net, and the lower
+    # FET is recognised through it. The top resistor must be >= 1 MOhm (SERIE_TOP_MIN_OHMS): with
+    # 10k a gate-drain short of the top FET fed the coils' current back into the drive net and held
+    # the lower one on (data/2026-11-01/L58b/, the jack 40 ms late, after the gain).
+    for q in sorted(set(nfets) - set(cmd)):
+        mid, src, glo = pin_net.get((q, "3")), pin_net.get((q, "2")), pin_net.get((q, "1"))
+        tops = [p for p, (g, s, d) in cmd.items() if s == mid]
+        if src not in TIMER_RETURNS or len(tops) != 1:
+            continue
+        top = tops[0]
+        gup, _, dtop = cmd[top]
+        rup = [(r, b if a == gup else a) for r, a, b in resistors if gup in (a, b)]
+        rlo = [(r, b if a == glo else a) for r, a, b in resistors if glo in (a, b)]
+        common = [(ru, rl, n) for ru, n in rup for rl, m in rlo if n == m
+                  and n not in TIMER_SUPPLIES and n not in TIMER_RETURNS]
+        if len(common) != 1:
+            findings.append("timer: %s in serie sotto %s (%s), ma i due gate non hanno un solo "
+                            "nodo di pilotaggio comune (%s)" % (q, top, dtop, common or "nessuno"))
+            continue
+        ru, rl, drive = common[0]
+        if (_ohms(components[ru]["value"]) or 0) < SERIE_TOP_MIN_OHMS:
+            findings.append("timer: %s, il gate di sopra in serie su %s, ha %s (%s) contro >= 1 MOhm: "
+                            "un corto gate-drain rimanderebbe la corrente delle bobine su %s "
+                            "(ADR-110)" % (top, dtop, ru, components[ru]["value"], drive))
+        cmd[top] = (drive, src, dtop)
+        cmd[q] = (drive, src, dtop)
+        report.append("timer: %s + %s in serie su %s, gate da %s (%s %s, %s %s)"
+                      % (top, q, dtop, drive, ru, components[ru]["value"], rl,
+                         components[rl]["value"]))
     # L45d2b2b2: every 2N7002 of the board is a command FET. One the rule above no longer
     # recognises (its drain moved behind a part) must not drop out of T1-T3 silently
     for q in sorted(set(nfets) - set(cmd)):

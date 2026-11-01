@@ -18,6 +18,27 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L55 — il dispositivo d'uscita del blocco (2026-10-29)
+
+- **Il candidato** (`bom-component-manager`, `data/2026-10-29/L55/modelli/README.md`): il solo driver di
+  taglia intermedia che regge T7 + T8 con le scorte è l'**onsemi MJE243G / MJE253G** (TO-225), modelli
+  onsemi in `models/`, ricetta `_tb_mje24x`, `validate_models.py` **89 / 89**. A 20 mA la Cpi 1,7 / 2,2 nF
+  contro 8,1 / 7,8, la f_T 61–88 MHz contro 12. I Toshiba sono «Not Recommended for New Design».
+- **I casi noti**: il banco freddo (L46a) ridà la sua storia (V1 64,92°; le cifre attese in `CRITERI.md`
+  erano della regressione dei 21 deck, corrette prima delle corse dei candidati); il banco a caldo e
+  quello dei guasti ridanno L45d2b3b2b2 alla cifra (465 celle, 0 diverse; 99 / 95 °C).
+- **Il modello del MJE253 non vale sopra ~35 °C** (VJC 0,033 V, limitations #82): la `tran` a caldo non
+  parte; le cifre a caldo con le capacità ferme a TNOM, provate sul MJE (identiche). E limitations #83.
+- **Le tre opzioni, tutte dentro ogni limite**: margine 64,9 / 69,8 / 67,7° (MJE / candidato 470 pF /
+  330 pF; 220 pF fuori, 59,5°), distorsione a caldo 0,000726 / 0,000719 / 0,000604 %, intermodulazione
+  −131,7 / −132,2 / −137,0 dB, i finali nei corti 99 / 113 / 113 °C (il TV4 a 21 °C/W solo dal
+  distributore). La scelta dell'utente, **«MJE as it is»**: ADR-106, **NC-056 chiusa**, il circuito non cambia.
+- **Trovato**: col finale NPN in corto base-emettitore il VAS a **126 °C** con 60 °C d'aria (P7 125), sul
+  blocco di oggi; la riga della FMEA diceva 115 dal blocco di prima di ADR-099. «New entry, major, before
+  G1»: **NC-076 aperta**, a un lotto suo (L66).
+- Report `reports/2026-10-29-L55-dispositivo-uscita.md`; dati `data/2026-10-29/L55/`.
+- **Dopo**: **L58**, il prompt di `NEXT-SESSION.md`.
+
 ### L54b3b — le tolleranze e la temperatura del temporizzatore (2026-10-28)
 
 - **Il banco**: `--temp`, `--toll` (le R / C, VREF, lo scostamento dei diciotto canali di comparatore e
