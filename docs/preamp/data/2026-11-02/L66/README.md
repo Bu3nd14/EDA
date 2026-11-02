@@ -31,7 +31,9 @@ Rigenerando `genera.py sorg` oggi si otterrebbe il sorgente nuovo: per questo, d
 - **R120 in corto** (limitations #75): nella lista lunga a 2,3 s le cinque corse si sono fermate oltre
   un'ora di CPU ciascuna. Le ho fermate a mano (rc 143 in `run/esiti.tsv`): **errore mio**, perché la #75
   dice di correrle da sole e corte. Rifatte a 0,6 s (`genera.py corta`, `dopo` per il sorgente nuovo),
-  in serie, ~25 min l'una, sotto 1 GB.
+  in serie, ~25 min l'una, sotto 1 GB. Sul sorgente nuovo tutte e cinque (le ultime tre in parallelo,
+  ~0,12 GB l'una): Tj 80–84 °C sul VAS, 127,8 dB SPL alla principale (la FMEA: 86 °C, 127,3). Sul blocco di
+  prima fatte A, F1 e F2, poi fermate perche' superate dal sorgente nuovo (`confronto.csv` le da' «non finite»).
 - **La Stax** (`p10_stax.csv`): Q132_be e D158_cc 114,3 ms, 120,0 col condensatore a +5 % (P10: 150).
 - **Le varianti** (`calore_lim34.csv`, `calore_lim365.csv`, `*t60.csv` coi dispositivi a 60 °C):
 

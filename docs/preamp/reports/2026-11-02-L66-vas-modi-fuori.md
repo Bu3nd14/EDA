@@ -47,7 +47,8 @@ ADR-097 / ADR-099):
 
 **R120 in corto** (limitations #75): l'avevo lasciato nella lista lunga a 2,3 s. Le cinque corse si
 sono fermate a oltre un'ora di CPU ciascuna e le ho fermate a mano, sotto 1 GB, senza danni. È un errore
-mio: la #75 dice di correrle da sole e corte. Sono state rifatte a 0,6 s, in serie (~25 min l'una).
+mio: la #75 dice di correrle da sole e corte. Sono state rifatte a 0,6 s (~25–35 min l'una, sotto 1 GB). Sul
+sorgente nuovo: 80–84 °C sul VAS, 127,8 dB SPL alla principale (la FMEA: 86 °C, 127,3).
 
 ## 3. La Stax (`p10_stax.csv`)
 
