@@ -43,8 +43,12 @@ for n in ("oggi_avv", "caldo_t27_rame", "caldo_t27_minima", "caldo_t57_rame", "c
 FREQ = {1000: ("4e-07", "0.004"), 10000: ("4e-08", "0.0022"), 20000: ("2e-08", "0.0021")}
 MODI = {0: ("1G", "1G", 1.0), 3: ("0.1", "1G", 1.4202), 10: ("0.1", "0.1", 3.1523)}
 # L56: cima e meta. L67: m10 e m20, partitore lineare equivalente (att = 10^(-dB/20) su 10 kOhm)
+# m10 a 6,8 k / 3,2 k (-9,9 dB) e non 6837,72 / 3162,28 (-10,0): col valore esatto l'op del caso
+# +10 dB a 2 V non converge (gmin e source stepping falliti, #57) e il transitorio parte da uno stato
+# che non lascia passare il segnale (4,8 uV alla principale); spostato dello 0,6 % converge al primo
+# gmin stepping (prova in L67, README). E' fortuna numerica, non il circuito.
 VOL = {"cima": ("1m", "10k", 1.0), "meta": ("5k", "5k", 0.5),
-       "m10": ("6837.72", "3162.28", 0.316228), "m20": ("9000", "1000", 0.1)}
+       "m10": ("6800", "3200", 0.32), "m20": ("9000", "1000", 0.1)}
 LIV = {"lo": 0.282843, "hi": 2.82843}
 
 TESTA = """{nome} - L67: V4 sulla catena, tre uscite, {f} Hz, blocco {blocco} (NC-055)
@@ -134,6 +138,25 @@ fourier {f} v(vsn) v(bout) v(f1out) v(f2out)
 destroy all
 """
 
+import csv  # noqa: E402
+import re  # noqa: E402
+
+
+def nodeset(inc_path):
+    """`.nodeset` per le quattro istanze, dal punto di lavoro del blocco di oggi da solo
+    (../op_oggi.csv, script/op_blocco.py). Solo i nodi che esistono nel blocco incluso. Senza, col
+    blocco di oggi a 27 gradi l'op della catena non converge in nessun caso e la corsa misura una
+    catena spenta (README). Un nodeset guida solo la ricerca: l'op convergente e' lo stesso."""
+    testo = open(inc_path).read().lower()
+    righe = []
+    for r in csv.DictReader(open(os.path.join(os.path.dirname(BASE), "op_oggi.csv"))):
+        if not re.search(r"(?<![a-z0-9_])%s(?![a-z0-9_])" % re.escape(r["nodo"]), testo):
+            continue
+        for x in ("xa", "xb", "xf1", "xf2"):
+            righe.append(".nodeset v(%s.%s)=%s" % (x, r["nodo"], r["v"]))
+    return "\n".join(righe) + "\n"
+
+
 blocchi = sys.argv[1:]
 if not blocchi or any(b not in BLOCCHI for b in blocchi):
     raise SystemExit("uso: genera.py <blocco>... con blocco fra %s" % ", ".join(BLOCCHI))
@@ -154,7 +177,7 @@ for blocco in blocchi:
             # i blocchi caldi a 57: l'aria a 57 per cio' che non ha temp= (i diodi, come il deck di
             # v4caldo.py di L66, che porta `.temp 57`); a 27 niente, come L56
             temp = ".temp 57\n" if blocco.startswith("caldo_t57") else ""
-            s = TESTA.format(nome=nome, f=f, blocco=blocco, inc=inc, temp=temp)
+            s = TESTA.format(nome=nome, f=f, blocco=blocco, inc=inc, temp=temp + nodeset(os.path.join(ROOT, inc)))
             for rs in ("1.5", "2500"):
                 for vol, (rh, rl, att) in VOL.items():
                     if (vol in ("m10", "m20")) != vb:
