@@ -6,7 +6,12 @@ Uso: genera.py elenco          -> stampa i modi del blocco e la loro divisione, 
      genera.py noto            -> deck/lista_noto.txt   (il caso noto)
      genera.py fuori           -> deck/lista_fuori.txt  (i modi da rifare, senza R120_cc)
      genera.py corta           -> deck/lista_corta.txt  (R120_cc a 0,6 s, da solo: limitations #75)
+     genera.py dopo            -> deck/lista_dopo.txt   (tutti i modi, senza R120_cc, sul sorgente
+                                  DOPO ADR-111: la variante «dopo»; e lista_dopo_corta.txt)
      genera.py <nome> <modo>.. -> deck/lista_<nome>.txt (una lista a mano, sulla variante sorg)
+
+La variante «sorg» e' il sorgente com'era all'inizio di L66 (ADR-099): rigenerata dopo ADR-111
+diventerebbe il sorgente nuovo, quindi dopo ADR-111 si usa «dopo» e «sorg» resta quella committata.
 
 Il banco e' quello di L45d2b3b2b2 (il suo genera.py caricato per percorso, e attraverso lui
 L45d2b3b2a, L45d2b3b1, L62b e il canale di L45a), coi percorsi puntati a QUESTA cartella, come in
@@ -45,8 +50,7 @@ LENTI = ("R120_cc",)
 T_CORTA = 0.6
 
 
-def prepara():
-    v = "sorg"
+def prepara(v="sorg"):
     g2a.prepara(v, None, (), NUOVE)
     for f in ("gain_block.subckt", "gain_block_flat.inc"):
         if open(os.path.join(L, "varianti", v, f)).read() != open(os.path.join(g2a.SP, f)).read():
@@ -88,6 +92,12 @@ if __name__ == "__main__":
     a = sys.argv[1:]
     if not a:
         sys.exit(__doc__)
+    if a == ["dopo"]:
+        prepara("dopo")
+        tutti, _, _ = divisione()
+        lista("dopo", "dopo", [m for m in tutti if m not in LENTI])
+        lista("dopo", "dopo_corta", list(LENTI), tfine=T_CORTA)
+        sys.exit(0)
     v = prepara()
     tutti, nuove, fuori = divisione()
     if a == ["elenco"]:
