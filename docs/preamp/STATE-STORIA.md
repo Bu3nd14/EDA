@@ -18,6 +18,25 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L58a2 — le righe della FMEA delle parti nuove del temporizzatore (2026-11-01)
+
+- **Le prove sul caso noto** rifatte (le forme d'onda di L58a1 erano perse col worktree): la base come
+  `v_sorgente` di L54b3b (1209,3 / 2045,6 ms), R585 aperta 0,898 V (ADR-103). **La lista**: 112 corse,
+  nessun ripiego, nessuna rifiutata; i criteri scritti di L54b3b (`psu/confronta_l58a.py`).
+- **Quindici righe** (`fmea_alimentatore.csv`), ogni modo sotto 1 FIT: quattordici a priorità bassa —
+  i corti di D534 / D535 / D541 e le perdite di D535 / D541 non fanno accendere (nessun colpo); D536
+  guasto anticipa la musica (all'alimentazione buona; dopo un buco 21–79 ms contro ≥ 500), al jack
+  **2,6–2,7 µV, ~2 dB SPL** (V2 con le rampe vere, `v2/`); D541 aperto solo margine (0,54 V).
+- **R585 in corto**: la ritenuta cieca, K501 resta chiuso dopo un guasto di rail (il jack muto come
+  oggi): il «Da riaprire se» di ADR-102. Provati 2 × 16,5 / 3 × 11 / 3 × 12 / 2 × 33 kΩ (falliscono) e
+  **4 × 10 kΩ** (regge agli angoli, rete ±10 %, 0 / 60 °C). La scelta dell'utente: **«Accettarlo,
+  dichiarato»**, **«Minore»**: ADR-109, P9 (e), **NC-077**.
+- **Trovati**: limitations #84 (una parte nuova rompe le copie di un banco sulla netlist intera) e #85
+  (`analizza_mc.py` arma la ritenuta all'istante zero di un'accensione a freddo quando il deck sonda
+  VREF: −1383,5 ms in otto casi, artefatto).
+- Report `reports/2026-10-29-L58a-test-point-fmea-distinta.md` (anche L58a1).
+- **Dopo**: **L58b**, il prompt di `NEXT-SESSION.md`.
+
 ### L58a1 — i test point e la distinta del temporizzatore (2026-10-29)
 
 - **L58 diviso dall'utente all'inizio** («Due sessioni»): L58a i test point, la FMEA e la distinta

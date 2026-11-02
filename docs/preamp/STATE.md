@@ -13,17 +13,38 @@ fino al 2026-10-26, con tutta la loro storia, sono in `STATE-STORIA.md`.
 
 | | |
 |---|---|
-| Ultimo aggiornamento | **2026-11-02** (L66: il VAS col finale NPN in corto base-emettitore — il meccanismo misurato, il limitatore di ADR-099 ferma il VAS a ~20 mA e l'uscita va al rail; **il limitatore a 36,5 + 18,7 Ω** nel sorgente, ADR-111, il VAS a 120–121 °C; i 91 modi fuori dai quindici e le 145 righe del blocco nella FMEA rifatti sul sorgente, nessuno oltre P7 o P10; aggiunto **L67**, la distorsione delle istanze a guadagno unitario, per richiesta dell'utente) |
-| Ultimo lotto chiuso | **L66** — il VAS a 126 °C e i modi fuori dai quindici (2026-11-02). `data/2026-11-02/L66/` (README, `meccanismo.csv`, `confronto.csv`, `fmea_l66.csv`, `p10_stax.csv`, `sintesi_caldo.csv`); report `reports/2026-11-02-L66-vas-modi-fuori.md`; ADR-111 |
-| **Prossimo lotto** | **L67 — la distorsione delle istanze a guadagno unitario sulla catena** (NC-055; prompt in `NEXT-SESSION.md`). Poi **L64**, **L65**, G1 |
-| Non conformità | **17 aperte, 1 bloccante** (L66, 2026-11-02: **chiusa NC-076**, il limitatore del VAS a 36,5 + 18,7 Ω, ADR-111). Il registro è `NONCOMPLIANCE.md` |
-| Le bloccanti | Per **G1**: **nessuna bloccante** (L54a, 2026-10-26); da chiudere prima di G1 per decisione dell'utente: **NC-055** (L67) e **NC-072** (maggiori) — NC-054, NC-056 e NC-076 chiuse; NC-073 e NC-075 (maggiori) alla scelta della parte. Per **G2**: NC-044 (L50) |
-| Suite | `run_tests.sh` alla chiusura di L66 (2026-11-02, da `chunk_close.sh`); dal worktree **14 passed / 0 failed** col sorgente nuovo (R123 36,5, R192 18,7; le reti con gli stessi piedini, una rinominata, AL_OUT → F2L_IN, il sinonimo in `audio_draw.py`); `validate_models.py` **89 / 89** |
+| Ultimo aggiornamento | **2026-11-02** (L67: la distorsione delle istanze a guadagno unitario sulla catena — la sorgente 60 su 60 dentro, le fisse e l'intermodulazione dentro, la principale fuori con V4 letto alla lettera per la seconda armonica del blocco prima del volume al suo livello; **«Ogni blocco al suo livello»**, ADR-112, **NC-055 chiusa**; il circuito non cambia; i `.nodeset` della catena, limitations #86) |
+| Ultimo lotto chiuso | **L67** — la distorsione delle istanze a guadagno unitario sulla catena (2026-11-02). `data/2026-11-02/L67/` (README, `sintesi_catena.csv`, `sintesi_rs.csv`, `imd_catena.csv`, `verifica_livello.csv`); report `reports/2026-11-02-L67-catena-guadagno-unitario.md`; ADR-112 |
+| **Prossimo lotto** | **L64 — il dossier rigenerato, una volta sola, prima di G1** (prompt in `NEXT-SESSION.md`). Poi **L65**, G1 |
+| Non conformità | **16 aperte, 1 bloccante** (L67, 2026-11-02: **chiusa NC-055**, ogni blocco al suo livello, ADR-112). Il registro è `NONCOMPLIANCE.md` |
+| Le bloccanti | Per **G1**: **nessuna bloccante** (L54a, 2026-10-26); da chiudere prima di G1 per decisione dell'utente: **NC-072** (maggiore, il rame del layout) — NC-054, NC-055, NC-056 e NC-076 chiuse; NC-073 e NC-075 (maggiori) alla scelta della parte. Per **G2**: NC-044 (L50) |
+| Suite | `run_tests.sh` alla chiusura di L67 (2026-11-02, dal worktree): **14 passed / 0 failed**, `validate_models.py` PASS; il circuito non è cambiato da L66 |
 
 ## Diario degli ultimi lotti
 
 Le ultime tre voci. Le più vecchie sono in `STATE-STORIA.md`, nello stesso ordine (la più recente
 in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quella sezione.
+
+### L67 — la distorsione delle istanze a guadagno unitario sulla catena (2026-11-02)
+
+- **I banchi di L56** (la catena di un canale, la sorgente) col blocco come argomento; per il caldo i blocchi
+  di L66 (`v4caldo.py`) avvolti in un subckt. **I casi noti**: la catena di L56 sul blocco di allora 224 celle
+  su 224 (una h5+ a −187 dB di un decimo), la sorgente 80 su 80, il blocco caldo nel subckt le 48 THD di L66,
+  il blocco di oggi avvolto 336 su 336.
+- **Il punto di lavoro della catena** (limitations #86): col blocco di oggi a 27 °C l'op a quattro istanze non
+  convergeva in nessuno dei 68 casi, e la corsa misurava una catena spenta (VPF 4,9 V, 4 A dal +15 V). I
+  `.nodeset` dal blocco da solo: 0 casi non conversi. Trovato dal controllo del livello al jack.
+- **La sorgente**: 60 su 60 dentro, margine 2,7 dB. **La catena con V4 alla lettera**: le fisse dentro (≥ 2,5
+  dB); la principale col volume a metà fuori in 2 casi su 56 a 27 °C (identici a L56) e 3 con l'aria a 57 °C
+  (−3,1 dB); col volume a −10 / −20 dB fino a −14,2 dB: la seconda armonica del blocco prima del volume al
+  suo livello, a 40 kHz, ≤ 13 dB SPL. **L'intermodulazione** sulla catena: 0 su 78 fuori, ≥ 10,8 dB.
+- **Le opzioni coi numeri**; R_F adattata esclusa dai dati (nessun minimo a R_F). La scelta dell'utente:
+  **«Ogni blocco al suo livello»** (ADR-112, **NC-055 chiusa**): tetto(L) = 0,001 % × L / 0,2 V, la
+  principale contro il livello più alto lungo il percorso; 0 su 42 fuori per blocco, margine ≥ 1,3 dB. V4 in
+  `REQUIREMENTS.md` aggiornato. Il circuito non cambia; `run_tests.sh` 14 / 0.
+- **Errori corretti prima delle cifre**: i casi del volume basso mescolati ai deck di L56 (spostati in deck a
+  parte), il livello del blocco A moltiplicato per il guadagno del modo.
+- **Dopo**: **L64**, il prompt di `NEXT-SESSION.md`.
 
 ### L66 — il VAS a 126 °C e i modi fuori dai quindici (2026-11-02)
 
@@ -75,25 +96,6 @@ in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quel
   `reports/2026-11-01-L58b-autodiagnosi.md`. Il PDF di `DIAGNOSI.md` all'utente
   (`~/Documents/Preamp-DIAGNOSI.pdf`, richiesta in sessione).
 - **Dopo**: **L66**, il prompt di `NEXT-SESSION.md`.
-
-### L58a2 — le righe della FMEA delle parti nuove del temporizzatore (2026-11-01)
-
-- **Le prove sul caso noto** rifatte (le forme d'onda di L58a1 erano perse col worktree): la base come
-  `v_sorgente` di L54b3b (1209,3 / 2045,6 ms), R585 aperta 0,898 V (ADR-103). **La lista**: 112 corse,
-  nessun ripiego, nessuna rifiutata; i criteri scritti di L54b3b (`psu/confronta_l58a.py`).
-- **Quindici righe** (`fmea_alimentatore.csv`), ogni modo sotto 1 FIT: quattordici a priorità bassa —
-  i corti di D534 / D535 / D541 e le perdite di D535 / D541 non fanno accendere (nessun colpo); D536
-  guasto anticipa la musica (all'alimentazione buona; dopo un buco 21–79 ms contro ≥ 500), al jack
-  **2,6–2,7 µV, ~2 dB SPL** (V2 con le rampe vere, `v2/`); D541 aperto solo margine (0,54 V).
-- **R585 in corto**: la ritenuta cieca, K501 resta chiuso dopo un guasto di rail (il jack muto come
-  oggi): il «Da riaprire se» di ADR-102. Provati 2 × 16,5 / 3 × 11 / 3 × 12 / 2 × 33 kΩ (falliscono) e
-  **4 × 10 kΩ** (regge agli angoli, rete ±10 %, 0 / 60 °C). La scelta dell'utente: **«Accettarlo,
-  dichiarato»**, **«Minore»**: ADR-109, P9 (e), **NC-077**.
-- **Trovati**: limitations #84 (una parte nuova rompe le copie di un banco sulla netlist intera) e #85
-  (`analizza_mc.py` arma la ritenuta all'istante zero di un'accensione a freddo quando il deck sonda
-  VREF: −1383,5 ms in otto casi, artefatto).
-- Report `reports/2026-10-29-L58a-test-point-fmea-distinta.md` (anche L58a1).
-- **Dopo**: **L58b**, il prompt di `NEXT-SESSION.md`.
 
 ## Come si lavora da qui: a lotti piccoli e pushati
 
@@ -271,10 +273,10 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L54b3b | **Le tolleranze e la temperatura**: il Monte Carlo e il caso peggiore sugli RC e sui comparatori, 0 / 60 °C coi modelli del costruttore, l'accensione a freddo col tarato a 2,2 V, la perdita a −10 % | M | — | **fatto** (2026-10-28): un Monte Carlo di 700 corse, la regressione e 69 angoli a 0 / 25 / 60 °C; a 60 °C la perdita di D534 faceva scattare la ritenuta all'accensione a freddo → «Solo D534 a bassa perdita» (0,27 V); a 0 °C la musica dopo un buco a 491 ms → «R571 a 1,1 MΩ» (537 ms); «Tutti C0G»; ADR-105. Report `reports/2026-10-28-L54b3b-tolleranze-temperatura.md` |
 | L55 | **Il dispositivo d'uscita del blocco** (NC-056): un dispositivo di taglia driver col modello del costruttore contro il MJE15032/33 sul banco del blocco (V1, V4, PSRR, slew, calore), con T7 e T8 | M | **NC-056** chiusa; **NC-076** aperta | **fatto** (2026-10-29): l'onsemi MJE243G / MJE253G (TO-225), l'unico che regge T7 + T8, sui banchi freddo, a caldo e dei guasti coi casi noti; tutte e tre le opzioni dentro ogni limite; «MJE as it is», ADR-106; il modello del MJE253 non vale sopra ~35 °C (limitations #82, #83); col finale NPN in corto base-emettitore il VAS a 126 °C (NC-076). Report `reports/2026-10-29-L55-dispositivo-uscita.md` |
 | L66 | **Il VAS a 126 °C e i modi fuori dai quindici** (NC-076, maggiore, prima di G1 per decisione dell'utente in L55): il meccanismo (perché col finale NPN in corto base-emettitore il VAS porta 0,53 W), i modi del blocco fuori dai quindici di ADR-099 rifatti sul sorgente col banco del calore di L55 / L45d2b3b2b2, il rimedio misurato con l'utente (per esempio più rame sotto il VAS o il limite del VAS di ADR-099), la riga della FMEA rifatta; se cambia il circuito: sorgente, netlist, disegni, `run_tests.sh`, regressione | M | **NC-076** | **fatto** (2026-11-02) — il meccanismo misurato (il limitatore di ADR-099 ferma il VAS a ~20 mA, l'uscita al rail); i 91 modi fuori dai quindici sul sorgente (D158 in corto lo stesso guasto); **«Limitatore 36,5 + 18,7 Ω»**, ADR-111, il VAS a 120–121 °C; la FMEA del blocco rifatta, 145 righe, nessuna oltre P7 o P10. Report `reports/2026-11-02-L66-vas-modi-fuori.md` |
-| L67 | **La distorsione delle istanze a guadagno unitario sulla catena** (NC-055, maggiore, prima di G1; il lotto chiesto dall'utente in L66, 2026-11-02, «prima di L64»): i due casi della catena fuori da V4 in L56 (la principale col volume a metà, 0 e +3 dB, 20 kHz, 0,2 V, sorgente 2,5 kΩ: 0,00133 / 0,00106 %) rifatti sul blocco di oggi (ADR-099, ADR-111), a 27 °C e a caldo; se restano fuori, il rimedio (per esempio il cascode pilotato o R_F adattata) scelto dall'utente coi numeri | M | **NC-055** | da fare — **prossimo**, prima di L64 |
-| L64 | **Il dossier rigenerato, una volta sola, quando il circuito smette di cambiare prima di G1** (decisione dell'utente dopo L45d2b3b2a, 2026-10-22, «si mi va bene»): `build_dossier.py` e le sue sezioni sul progetto di allora. L'ultimo è di L51 (2026-10-10); da lì non mostra l'inseguitore e l'aiuto dello specchio (L56), il rivelatore tolto e il condensatore della Stax (L60), i diodi del moltiplicatore e dei finali (L62, ADR-095), l'alimentatore di ADR-091…094, R153 sdoppiata (ADR-097), i rimedi del calore e i dissipatori (ADR-099), gli schematici completi (L63), la FMEA con le misure adottate (L45d2b3b3). Una rigenerazione intermedia solo se l'utente vuole guardare il progetto prima | M | — | da fare — dopo l'ultimo lotto che tocca il sorgente prima di G1 (L58, L66, L67) |
+| L67 | **La distorsione delle istanze a guadagno unitario sulla catena** (NC-055, maggiore, prima di G1; il lotto chiesto dall'utente in L66, 2026-11-02, «prima di L64»): i due casi della catena fuori da V4 in L56 (la principale col volume a metà, 0 e +3 dB, 20 kHz, 0,2 V, sorgente 2,5 kΩ: 0,00133 / 0,00106 %) rifatti sul blocco di oggi (ADR-099, ADR-111), a 27 °C e a caldo; se restano fuori, il rimedio (per esempio il cascode pilotato o R_F adattata) scelto dall'utente coi numeri | M | **NC-055** | **fatto** (2026-11-02): la sorgente 60 su 60 dentro; la catena col blocco di oggi a 27 °C e a caldo (i `.nodeset`, limitations #86): le fisse e l'intermodulazione dentro, la principale fuori con V4 alla lettera (fino a 3,1 dB col volume a metà, 14,2 col volume basso); **«Ogni blocco al suo livello»**, ADR-112, 0 su 42 fuori per blocco; il circuito non cambia. Report `reports/2026-11-02-L67-catena-guadagno-unitario.md` |
+| L64 | **Il dossier rigenerato, una volta sola, quando il circuito smette di cambiare prima di G1** (decisione dell'utente dopo L45d2b3b2a, 2026-10-22, «si mi va bene»): `build_dossier.py` e le sue sezioni sul progetto di allora. L'ultimo è di L51 (2026-10-10); da lì non mostra l'inseguitore e l'aiuto dello specchio (L56), il rivelatore tolto e il condensatore della Stax (L60), i diodi del moltiplicatore e dei finali (L62, ADR-095), l'alimentatore di ADR-091…094, R153 sdoppiata (ADR-097), i rimedi del calore e i dissipatori (ADR-099), gli schematici completi (L63), la FMEA con le misure adottate (L45d2b3b3). Una rigenerazione intermedia solo se l'utente vuole guardare il progetto prima | M | — | da fare — **prossimo**: L58, L66 e L67 chiusi, il circuito non cambia più prima di G1 |
 | L65 | **La revisione del dossier rigenerato**, prima del gate (come L42 → L43 e L51 → L52): la forma — l'architetto avversariale cieco, la lettura dell'utente, o tutte e due — si decide con l'utente all'apertura | S/M | — | da fare — dopo L64, prima di G1 |
-| G1 | **Il congelamento della topologia**: `design-reviewer` al gate, offline su `main`, sul dossier di L64 e sui dati misurati, con gli esiti di L65 trattati; riesegue le verifiche da sé; il prodotto è un report datato con le non conformità che apre (`AGENTS.md`) | M | nessuna bloccante per G1 dopo L56 (NC-060 chiusa); da chiudere prima per decisione dell'utente: NC-055, NC-072, NC-076 (maggiori) — NC-042, NC-054, NC-056, NC-059 chiuse | da fare — dopo L58, L66, L64, L65 |
+| G1 | **Il congelamento della topologia**: `design-reviewer` al gate, offline su `main`, sul dossier di L64 e sui dati misurati, con gli esiti di L65 trattati; riesegue le verifiche da sé; il prodotto è un report datato con le non conformità che apre (`AGENTS.md`) | M | nessuna bloccante per G1 dopo L56 (NC-060 chiusa); da chiudere prima per decisione dell'utente: NC-072 (maggiore, il rame del layout) — NC-042, NC-054, NC-055, NC-056, NC-059, NC-076 chiuse | da fare — dopo L64, L65 |
 | L45 | **La FMEA della scheda audio** (richiesta dell'utente in L43a, 2026-09-27): ogni guasto singolo della scheda audio (dispositivi d'uscita in corto o aperti, bobine e contatti dei relè, condensatori d'uscita, firmware delle LDR) col suo effetto al jack principale e alle fisse in dB SPL contro il tetto di non-danno; i casi che lo superano, simulati. Poi la decisione dell'utente su un rivelatore di continua che comandi il sink di `MUTE_CMD`, e su un tetto per le fisse; con NC-046 (la metrica delle fisse in cuffia) | M | **NC-042**, NC-046 | **diviso** in L45a, L45b, L45c, L45d (decisione dell'utente all'inizio, 2026-10-13: «Quattro parti», dopo aver allargato il lotto: «ritengo necessario fare la FMEA anche dell'alimentatore e della parte controlli»); **prima di G1** (L52) |
 | L45a | **I guasti del blocco di guadagno**: ogni guasto singolo di un dispositivo o di un passivo del blocco, nelle quattro posizioni del canale (blocco A, buffer delle due fisse, blocco B), col suo effetto al jack principale e alle fisse in dB SPL contro il tetto di non-danno; un banco del canale con la geometria iii e il guasto introdotto durante l'ascolto; i casi che superano il tetto, simulati; il calore dei casi che restano accesi. Non cambia il circuito | M | **NC-042** | **fatto** (2026-10-13): 112 modi simulati; oltre il tetto 51 / 50 / 51 / 53 per posizione; il rivelatore di continua non abbassa il picco (mute a 0,1–10 ms dal guasto, 14,8–14,9 V); a mute inserito 7,3 mV al rilascio; 26 modi con un secondo guasto per calore; limitations #58. Report `reports/2026-10-13-L45a-fmea-blocco.md` |
 | L45b | **I guasti dei controlli**: i relè (selettore, guadagno e il suo ritegno, trim e permesso, mute; bobine e contatti saldati, aperti, che rimbalzano), i piloti delle bobine, i commutatori, i LED che devono dire lo stato vero (PR-17, PR-18), i 4,7 µF e C_T 10 µF in corto o aperti, `MUTE_CMD` e `PERMIT_CMD` dal micro, il firmware (le LDR non ci sono più, ADR-062) | M | **NC-042** | **fatto** (2026-10-13): 78 modi dei controlli, nessun guasto ordinario oltre 9,5 mV al jack; oltre il tetto solo l'isolamento bobina–contatti (sul mute 12 V permanenti sul jack); i latenti del mute allo spegnimento 1,6–10,5 V, 14–348 ms (a L45c); il blocco di L45a a vuoto: 257 modi su 544 fuori da P10, il rivelatore ideale li porta a 0,2–10,1 ms. Report `reports/2026-10-13-L45b-fmea-controlli.md` |
