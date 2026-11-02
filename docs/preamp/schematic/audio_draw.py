@@ -70,7 +70,9 @@ T, P, FS = S.T, S.P, S.fs
 # L_FIXJACK2 / R_FIXJACK2, with the same pins (data/2026-10-22/L45d2b3b1/script/nomi_reti.py;
 # limitations #74). The page asks for a net by the name it was drawn with; if the netlist has
 # the other name instead, that one is used. Never both, never neither.
-SINONIMI = {"AL_OUT": "F1L_IN", "L_FIXOUT2": "L_FIXJACK2", "R_FIXOUT2": "R_FIXJACK2",
+# L66: block A's output feeds both fixed buffers, and SKiDL has also kept F2L_IN (same pins,
+# nomi_reti.py): a name may have more than one synonym (a tuple), still exactly one must exist.
+SINONIMI = {"AL_OUT": ("F1L_IN", "F2L_IN"), "L_FIXOUT2": "L_FIXJACK2", "R_FIXOUT2": "R_FIXJACK2",
             "L_ATT_W": "BL_IN",     # L45d2b3b2b1: the 40 parts of ADR-099 renamed it
             # dopo L57b: input_limiter.py edited (comments and the SPICE model name only) and
             # SKiDL picked the other name of two more joined pairs, same pins
@@ -79,8 +81,9 @@ SINONIMI = {"AL_OUT": "F1L_IN", "L_FIXOUT2": "L_FIXJACK2", "R_FIXOUT2": "R_FIXJA
 
 def rete(n):
     """A net of the page by its drawn name, or by its declared synonym (exactly one exists)."""
-    alt = SINONIMI.get(n)
-    ci = [x for x in (n, alt) if x and x in S.nets]
+    alt = SINONIMI.get(n, ())
+    alt = (alt,) if isinstance(alt, str) else alt
+    ci = [x for x in (n,) + tuple(alt) if x in S.nets]
     assert len(ci) == 1, f"rete {n}: nella netlist {ci or 'nessuna'} (sinonimi {SINONIMI})"
     return ci[0]
 

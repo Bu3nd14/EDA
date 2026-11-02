@@ -1,0 +1,44 @@
+op_p2 - L56: lim365--sot223--diss, Tj del passo 1, aria 57, minima
+* generato da L56/script/caldo.py
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/docs/preamp/data/2026-11-02/L66/inc/lim365--sot223--diss__t57_minima_p1.inc
+
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+VS VSN 0 DC 0
+RSRC VSN IN 2500
+CSTRAY RG 0 15p
+CSTRAY10 RG10 0 15p
+RRG RG 0 1G
+RRG10 RG10 0 1G
+RISO OUT OUTA 47
+COUT OUTA JACK 4.7u
+RBLEED JACK 0 220k
+RLOAD JACK 0 10k
+.temp 57
+.options reltol=1e-6 abstol=1e-15 vntol=1e-9
+.nodeset v(d1n)=9.252129 v(d2n)=9.252232 v(fb)=-0.0025246 v(g1)=2.508454e-08 v(g2)=-0.0025246 v(in)=2.411743e-08
+.nodeset v(jack)=0 v(nbb)=-0.263014 v(nbn)=0.9501691 v(nbp)=-0.94193 v(ncasc)=9.88859 v(nen)=0.4780507
+.nodeset v(nep)=-0.4831 v(nfc)=-9.89949 v(nfcr)=-12.4497 v(nhc)=-13.7919 v(nhi)=13.09262 v(nme1)=14.36158
+.nodeset v(nme2)=14.36147 v(nmirc)=13.22234 v(nmiri)=13.71108 v(nref)=-13.7373 v(nrefh)=-6.86867 v(nrefm)=-14.3687
+.nodeset v(ntcx)=-4.52828 v(nte)=-14.3937 v(nvb)=13.64381 v(nve)=14.26314 v(nvle)=-14.4191 v(nvs)=14.45879
+.nodeset v(nx)=0.9520639 v(nxd1)=0.4783438 v(nxd2)=0.004623725 v(nxd3)=-0.469096 v(ny)=-0.942816 v(out)=-0.00252463
+.nodeset v(outa)=-0.00252463 v(rg)=-0.00252459 v(rg10)=-0.0025246 v(s1)=0.08229161 v(s2)=0.08161082 v(src)=-0.137584
+.nodeset v(vpf)=14.84068 v(vsn)=0
+
+.control
+option itl1=1000
+set temp = 57
+op
+echo "L56_OP2 ta=57"
+print all
+print @jq110a[id] @jq110b[id] @q106[ic] @q117[ic] @q118[ic] @q121a[ic] @q121b[ic] @q122[ic] @q125[ic] @q127[ic] @q132[ic] @q133[ic] @q146[ic] @q148[ic] @q193[ic]
+destroy all
+.endc
+.end
