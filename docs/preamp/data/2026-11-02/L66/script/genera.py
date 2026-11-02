@@ -1,0 +1,116 @@
+#!/usr/bin/env python3
+"""L66 (NC-076, ADR-099, ADR-100): i modi del blocco FUORI dai quindici di ADR-099, rifatti sul blocco
+del SORGENTE col banco del calore. Solo stdlib, /usr/bin/python3 -I.
+
+Uso: genera.py elenco          -> stampa i modi del blocco e la loro divisione, non scrive deck
+     genera.py noto            -> deck/lista_noto.txt   (il caso noto)
+     genera.py fuori           -> deck/lista_fuori.txt  (i modi da rifare, senza R120_cc)
+     genera.py corta           -> deck/lista_corta.txt  (R120_cc a 0,6 s, da solo: limitations #75)
+     genera.py dopo            -> deck/lista_dopo.txt   (tutti i modi, senza R120_cc, sul sorgente
+                                  DOPO ADR-111: la variante «dopo»; e lista_dopo_corta.txt)
+     genera.py <nome> <modo>.. -> deck/lista_<nome>.txt (una lista a mano, sulla variante sorg)
+
+La variante «sorg» e' il sorgente com'era all'inizio di L66 (ADR-099): rigenerata dopo ADR-111
+diventerebbe il sorgente nuovo, quindi dopo ADR-111 si usa «dopo» e «sorg» resta quella committata.
+
+Il banco e' quello di L45d2b3b2b2 (il suo genera.py caricato per percorso, e attraverso lui
+L45d2b3b2a, L45d2b3b1, L62b e il canale di L45a), coi percorsi puntati a QUESTA cartella, come in
+L58b. La variante «sorg» e' il blocco di spice/preamp/ byte per byte (rifiutato altrimenti).
+
+Il caso noto: rif, Q132_ce, R126_cc (calore_sorg.csv di L45d2b3b2b2 e di L58b) e Q132_be (la riga di
+calore_fmje.csv di L55: 126 C), nelle cinque posizioni.
+I modi da rifare: tutti quelli che il canale (gc.modi()) da' sul blocco del sorgente, tolti i quindici
+di ADR-099, i modi delle cinque parti nuove (L45d2b3b2b2) e i 28 di ADR-071 (L58b): questi tre gruppi
+sono gia' stati corsi sul sorgente.
+"""
+import importlib.util
+import os
+import sys
+
+QUI = os.path.dirname(os.path.abspath(__file__))
+L = os.path.dirname(QUI)
+DATA = os.path.abspath(os.path.join(L, "..", ".."))
+_spec = importlib.util.spec_from_file_location(
+    "genera_l45d2b3b2b2", os.path.join(DATA, "2026-10-23", "L45d2b3b2b2", "script", "genera.py"))
+gs = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(gs)
+g2a, g62, gc = gs.g2a, gs.g62, gs.gc
+g2a.L = L
+g62.L62A = L
+g62.REL = os.path.relpath(L, g62.ROOT)
+NUOVE = gs.NUOVE
+
+VENTOTTO = ("C104_cc Q132_be Q133_be Q132_ae Q133_ae Q125_be Q117_ce Q118_ce Q127_ce Q148_be C105_cc "
+            "C137_cc R115_ap R130_ap R131_ap R134_ap R147_ap D102_cc D103_cc R143_ap R111_cc R112_cc "
+            "R123_cc R128_cc R134_cc R135_cc R136_cc R144_cc").split()
+NOTI = ("Q132_ce", "R126_cc", "Q132_be")
+# limitations #75: R120 in corto su 2,3 s non finisce (in L66 le cinque corse ferme da oltre un'ora di
+# CPU, fermate a mano); si corre a 0,6 s (il guasto a 0,3 s), da solo, come L45a e L45d2b3b1.
+LENTI = ("R120_cc",)
+T_CORTA = 0.6
+
+
+def prepara(v="sorg"):
+    g2a.prepara(v, None, (), NUOVE)
+    for f in ("gain_block.subckt", "gain_block_flat.inc"):
+        if open(os.path.join(L, "varianti", v, f)).read() != open(os.path.join(g2a.SP, f)).read():
+            sys.exit("RIFIUTATO: varianti/%s/%s non e' il blocco del sorgente" % (v, f))
+    return v
+
+
+def divisione():
+    tutti = [m for m, _, _, _, _ in gc.modi() if m not in gc.RAIL_A_MASSA]
+    nuove = [m for m, nome, _, _, _ in gc.modi() if nome in NUOVE]
+    gia = set(g2a.QUINDICI) | set(nuove) | set(VENTOTTO)
+    fuori = [m for m in tutti if m not in gia and m not in LENTI]
+    return tutti, nuove, fuori
+
+
+def lista(v, nome, modi, tfine=None):
+    corpo = {r.split()[0] for r in gc.righe_subckt() if r.split()}
+    if any(m.rsplit("_", 1)[0] not in corpo for m in modi):
+        sys.exit("RIFIUTATO: un modo su una parte che il blocco non ha")
+    g2a.esistono(modi)
+    righe = []
+    for pos, gain in g62.POSIZIONI:
+        # la corsa corta non riscrive i rif (a 2,3 s): solo i suoi modi
+        for m in ([] if tfine is not None else ["rif"]) + list(modi):
+            if m == "rif" or (pos, gain) in g2a.posizioni_di(m):
+                orig = gc.deck_tr
+                if tfine is not None:
+                    gc.deck_tr = lambda *x, **k: orig(*x, tfine=tfine, **k)
+                try:
+                    righe.append(g2a.un_deck(v, pos, gain, m, NUOVE))
+                finally:
+                    gc.deck_tr = orig
+    gc.SUBCKT = os.path.join(g2a.SP, "gain_block.subckt")
+    g2a.scrivi(os.path.join(L, "deck", "lista_%s.txt" % nome), "\n".join(righe) + "\n")
+    print("%s: %d deck" % (nome, len(righe)))
+
+
+if __name__ == "__main__":
+    a = sys.argv[1:]
+    if not a:
+        sys.exit(__doc__)
+    if a == ["dopo"]:
+        prepara("dopo")
+        tutti, _, _ = divisione()
+        lista("dopo", "dopo", [m for m in tutti if m not in LENTI])
+        lista("dopo", "dopo_corta", list(LENTI), tfine=T_CORTA)
+        sys.exit(0)
+    v = prepara()
+    tutti, nuove, fuori = divisione()
+    if a == ["elenco"]:
+        print("tutti %d, nuove %d, quindici %d, ventotto %d, fuori %d"
+              % (len(tutti), len(nuove), len(g2a.QUINDICI), len(VENTOTTO), len(fuori)))
+        print(" ".join(fuori))
+        assenti = [m for m in list(g2a.QUINDICI) + VENTOTTO if m not in tutti]
+        print("assenti dal canale:", assenti)
+    elif a == ["noto"]:
+        lista(v, "noto", NOTI)
+    elif a == ["fuori"]:
+        lista(v, "fuori", fuori)
+    elif a == ["corta"]:
+        lista(v, "corta", [m for m in LENTI], tfine=T_CORTA)
+    else:
+        lista(v, a[0], a[1:])

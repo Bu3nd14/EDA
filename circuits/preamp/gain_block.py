@@ -595,9 +595,19 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # P7's 125. At rest it is off: 0.35 V on the 33, 0.06 / 0.9 / 7.5 uA at
     # 27 / 60 / 90 C against the VAS's 83 uA of base current (L45d2b3b2a,
     # op_caldo.csv). Phase margin 43.1 -> 43.6 deg on the variant.
+    # ADR-111 (L66, NC-076): the tap moved, 36.5 Ohm here + 18.7 Ohm (R192),
+    # still 55 Ohm in all. With the output NPN's base-emitter shorted (or its
+    # diode D158, ADR-095) the VAS must hold the output alone against the PNP
+    # and the 33 Ohm limit (~20 mA, ~27 V across it: 0.53 W) let it reach 126 C;
+    # with 36.5 it is 120-121 C, the four faults above 118-119 C (were 123-124).
+    # The output still goes to the rail in that fault (Stax 114-120 ms, P10).
+    # Cost (data/2026-11-02/L66/): at rest 0.39 V on the 36.5, the limiter
+    # takes 0.25 / 3.3 / 23 uA at 27 / 60 / 90 C (op_caldo.csv); CCIF IMD at
+    # 57 C air -131.7 -> -131.0 dB, THD at 20 kHz unchanged (sintesi_caldo.csv);
+    # minimum phase margin 43.33 -> 43.26 deg (sintesi_regressione.csv).
     NVE, NVS = n("NVE"), n("NVS")       # VAS emitter / the limiter's tap
     Q("pnp", "DZT5401", "MMBT5401", NX, NVB, NVE, fp=FP_SOT223)
-    R("33", VPF, NVS)
+    R("36.5", VPF, NVS)                 # ADR-111 (was 33, ADR-099)
 
     # Miller compensation - the dominant pole of the whole amplifier.
     # MUST be C0G/NP0: it sees ~13 V of DC bias and carries the entire
@@ -934,7 +944,7 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     i[0] = base + 89
     R("10k", NHC, VM)                   # the helper's collector resistor
     R("3.40k", NREFH, NREF)             # the reference resistor's twin
-    R("22", NVS, NVE)                   # the VAS degeneration's second part
+    R("18.7", NVS, NVE)                 # the VAS degeneration's second part (ADR-111; was 22)
     Q("pnp", "MMBT5401", "MMBT5401", NVB, NVS, VPF)   # the VAS current limit
     # The tail's collector resistor. BOM: >= 0.5 W at 60 C - it takes 0.236 W
     # with R107 shorted (L45d2b3b2a, nuove_max_rv2.csv), 94 % of a 0207's

@@ -1,54 +1,59 @@
-# Prompt per la sessione successiva — L66, il VAS a 126 °C e i modi fuori dai quindici
+# Prompt per la sessione successiva — L67, la distorsione delle istanze a guadagno unitario sulla catena
 
-Nome della sessione: **hi-fi preamp L66** (la convenzione è in `CLAUDE.md`).
+Nome della sessione: **hi-fi preamp L67** (la convenzione è in `CLAUDE.md`).
 
-> Prompt scritto alla chiusura di L58b (2026-11-01). L58 è chiuso (L58a1, L58a2, L58b). L'ordine verso
-> G1, confermato dall'utente: **L66** → L64 → L65 → G1.
+> Prompt scritto alla chiusura del lotto del VAS a 126 °C (2026-11-02, NC-076 chiusa, ADR-111). L67 l'ha
+> chiesto l'utente in quella sessione: «creare un lotto prima di L64 per la distorsione delle catene a
+> guadagno unitario». L'ordine verso G1: **L67** → L64 → L65 → G1.
 
-Riprendo il progetto del preamplificatore hi-fi in questo repository. Questa sessione fa **L66**, e si
+Riprendo il progetto del preamplificatore hi-fi in questo repository. Questa sessione fa **L67**, e si
 ferma.
 
 ## Che cosa fare
 
-**NC-076** (maggiore, prima di G1). Col finale NPN in corto base-emettitore (Q132_be) il VAS Q122 porta
-0,53 W e arriva a **126 °C** con 60 °C d'aria, contro P7 125. La riga della FMEA diceva 115 °C, dal
-blocco di prima di ADR-099. In L58b lo stesso modo, sullo stesso banco, porta **l'uscita del blocco al
-rail** (−13,6 V): non è il degrado silenzioso che la riga di ADR-071 diceva.
+**NC-055** (maggiore, prima di G1). È la distorsione delle istanze a guadagno unitario, con la sorgente
+peggiore e sulla catena. In L56 la sorgente reggeva (20 su 20, margine 2,7 dB); sulla catena **54 casi su
+56** erano dentro. Fuori restavano la **principale col volume a metà, 0 e +3 dB, 20 kHz, 0,2 V, sorgente
+2,5 kΩ**: 0,00133 / 0,00106 % contro 0,001. Da allora il blocco è cambiato: ADR-097, ADR-099 (i rimedi
+del calore, i dissipatori) e ADR-111 (il limitatore del VAS a 36,5 + 18,7 Ω).
 
 1. **Leggi prima**:
-   - la riga di L66 e la voce di L55 in `STATE-STORIA.md`;
-   - NC-076 in `NONCOMPLIANCE.md`, con l'aggiornamento di L58b;
-   - ADR-068, ADR-097, ADR-099, ADR-100;
-   - `data/2026-10-29/L55/` (README, `calore_fmje.csv`, `fmea_correzione.csv`) e
-     `data/2026-11-01/L58b/censimento_blocco.csv`.
-2. **Il meccanismo, misurato**: perché in quel modo il VAS porta 0,53 W, e perché l'uscita va al rail.
-3. **I modi del blocco fuori dai quindici di ADR-099**, rifatti sul sorgente col banco del calore.
-   - Il banco: L45d2b3b2b2; L55 e L58b lo hanno usato col caso noto.
-   - In L58b `data/2026-11-01/L58b/script/genera.py` lo carica per percorso e prende una lista di modi:
-     è il punto di partenza.
-   - Vanno cercati: quali modi sono cambiati dopo i rimedi di ADR-097 / ADR-099, e se qualcuno esce da
-     P7 o da P10.
-4. **Il rimedio, con l'utente, coi numeri**. Per esempio più rame sotto il VAS, o il limite del VAS di
-   ADR-099. Ogni opzione verificata sui limiti a rete ±10 %, con 60 °C d'aria.
-5. **La riga della FMEA rifatta**, e quella di Q132_be anche in `fmea_l58b.csv`, che oggi rimanda a NC-076.
-6. **Se il circuito cambia**:
-   - sorgente (`circuits/preamp/gain_block.py`), netlist, disegni (il blocco e la scheda audio);
-   - i casi noti del banco;
-   - `run_tests.sh`, la regressione;
-   - le righe del blocco di `fmea_l58b.csv`, da rileggere: il «Da riaprire se» di ADR-110.
+   - NC-055 in `NONCOMPLIANCE.md`, con gli avanzamenti di L53 e L56;
+   - ADR-014, ADR-055, ADR-065, ADR-099, ADR-111;
+   - `data/2026-10-12/L56/` (README, `rs/`, `catena/`) e `data/2026-10-12/L53/` (`rs/`, `catena/`);
+   - `data/2026-11-02/L66/README.md` (il banco di V4 a caldo e le varianti del blocco).
+2. **Il caso noto prima di ogni numero nuovo**: il banco della catena di L56 sul blocco di allora deve
+   ridare le sue cifre (i due casi fuori, 0,00133 / 0,00106 %).
+3. **La catena e la sorgente rifatte sul blocco di oggi** (`spice/preamp/`), a 27 °C e a caldo (ogni
+   giunzione alla sua temperatura, il metodo di `v4caldo.py`). Tutte e tre le uscite, il carico di V4.
+4. **Se un caso resta fuori**: il rimedio con l'utente, coi numeri. Per esempio il cascode pilotato o R_F
+   adattata (le strade dell'architetto in L52), oppure un'accettazione dichiarata. Ogni opzione col suo
+   costo sugli altri requisiti (margine di fase, rumore, P7).
+5. **Se il circuito cambia**:
+   - sorgente, netlist, disegni;
+   - i casi noti dei banchi;
+   - `run_tests.sh` e la regressione;
+   - le righe della FMEA del blocco (`data/2026-11-02/L66/fmea_l66.csv`) da rileggere.
 
 ## I vincoli
 
-- Quelli di L58: comandi semplici, percorsi assoluti, script scritti con Write, `git add` un percorso alla
-  volta, le forme d'onda non si committano, commit e push prima di ogni lista lunga.
-- Le domande all'utente per nome, i colpi al jack in dB SPL. Prima di chiedere una conferma su un colpo,
-  ricordargli i dB.
-- Il controllo del worktree rifiuta i comandi composti (pipe con variabili, heredoc con git, percorsi con
-  spazi): scriverli in uno script.
+- Quelli di L58 e del lotto del VAS:
+  - comandi semplici, percorsi assoluti, script scritti con Write;
+  - `git add` un percorso alla volta;
+  - commit e push prima di ogni lista lunga.
+- **Le forme d'onda e le corse grezze non si committano**: prima di ogni `git add` di una cartella dati,
+  `.gitignore` deve coprire `run/` e le cartelle delle corse (`regressione/*/*/`). Nel lotto del VAS ~260
+  MB sono finiti sul ramo per questo.
+- **I casi lenti si corrono da soli e corti** (limitations #75: R120 in corto a 0,6 s, mai in una lista
+  con `-P`).
+- Le domande all'utente si fanno per nome; i colpi al jack in dB SPL; le distorsioni in dB contro il
+  tetto.
+- Il controllo del worktree rifiuta i comandi composti (cicli, pipe con variabili, heredoc con git,
+  `xargs` con `find`): scriverli in uno script.
 
 ## CHIUSURA
 
-1. `STATE.md`: L66 **fatto**, il prossimo **L64**; In breve; diario (la più vecchia delle tre in
-   `STATE-STORIA.md`).
+1. `STATE.md`: L67 **fatto**, il prossimo **L64**; le celle di In breve; il diario (la voce più vecchia
+   delle tre va in `STATE-STORIA.md`).
 2. Riscrivi questo file per L64 («Nome della sessione: hi-fi preamp L64»).
-3. Commit, push, PR; `/bin/zsh scripts/chunk_close.sh L66`; rimuovi il worktree; fermati.
+3. Commit, push, PR; `/bin/zsh scripts/chunk_close.sh L67`; rimuovi il worktree; fermati.
