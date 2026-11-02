@@ -1726,3 +1726,22 @@ l'alimentazione buona.
 **Regola operativa**: un istante «primo campione con A > B» vale solo dove B è già al suo valore; fra
 due nodi fermi a 0 V si misura come attraversamento di una soglia fissa, dal basso. E un caso che
 cambia l'insieme delle sonde rispetto alla sua base si confronta con la stessa definizione.
+
+## 86. Una catena di quattro blocchi coi condensatori grossi: l'`op` non converge, ngspice ripiega sul transitorio e misura una catena spenta
+
+Visto in L67, il 2026-11-02 (`docs/preamp/data/2026-11-02/L67/README.md`, «Il punto di lavoro della
+catena»). Il banco della catena di un canale (quattro istanze del blocco, ciascuna con la cella RC di
+ADR-056: 10 Ω e C145 da 1000 µF, τ 10 ms) col blocco di oggi a 27 °C: gmin e source stepping
+falliscono in **68 casi su 68**. ngspice ripiega sul «Transient op», che finisce «successfully», ma ne
+esce coi condensatori grossi scarichi. La corsa di 2–4 ms misura allora una catena non ancora accesa:
+VPF a 4,9 V invece di 14,8, 4 A dal +15 V, la principale a pochi µV. Lo stesso banco col blocco di L56
+converge sempre, il blocco di oggi da solo converge sempre, e a 57 °C converge. È fortuna numerica.
+Il controllo del livello al jack di `leggi_catena.py` (5 %) l'ha fermato; un lettore che legge solo
+il rapporto fra le armoniche, come la THD, non l'avrebbe visto.
+
+**Regola operativa**: un deck con più istanze di un circuito retroazionato e condensatori grossi
+fissa il punto di partenza con `.nodeset` per ogni istanza, presi dall'`op` del circuito da solo
+(`L67/script/op_blocco.py`, i nodi interni come `v(xa.<nodo>)`). Un `.nodeset` guida solo la
+ricerca: dove l'`op` converge comunque, la soluzione resta la stessa (la catena di L56 coi nodeset ridà
+224 celle su 224, una h5+ a −187 dB di un decimo). Il lettore rifiuta il caso con «source stepping
+failed» prima dell'`echo` del caso, perché la corsa sta prima dell'etichetta, e controlla il livello.

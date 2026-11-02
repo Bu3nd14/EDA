@@ -1,51 +1,58 @@
-# Prompt per la sessione successiva — L67, la distorsione delle istanze a guadagno unitario sulla catena
+# Prompt per la sessione successiva — L64, il dossier rigenerato una volta sola prima di G1
 
-Nome della sessione: **hi-fi preamp L67** (la convenzione è in `CLAUDE.md`).
+Nome della sessione: **hi-fi preamp L64** (la convenzione è in `CLAUDE.md`).
 
-> Prompt scritto alla chiusura del lotto del VAS a 126 °C (2026-11-02, NC-076 chiusa, ADR-111). L67 l'ha
-> chiesto l'utente in quella sessione: «creare un lotto prima di L64 per la distorsione delle catene a
-> guadagno unitario». L'ordine verso G1: **L67** → L64 → L65 → G1.
+> Prompt scritto alla chiusura del lotto della catena a guadagno unitario (2026-11-02, NC-055 chiusa,
+> ADR-112: ogni blocco si giudica al livello a cui lavora; il circuito non è cambiato). Con quel lotto
+> si chiude l'ultimo lavoro sul sorgente prima di G1. L'ordine verso G1: **L64** → L65 → G1.
 
-Riprendo il progetto del preamplificatore hi-fi in questo repository. Questa sessione fa **L67**, e si
+Riprendo il progetto del preamplificatore hi-fi in questo repository. Questa sessione fa **L64**, e si
 ferma.
 
 ## Che cosa fare
 
-**NC-055** (maggiore, prima di G1). È la distorsione delle istanze a guadagno unitario, con la sorgente
-peggiore e sulla catena. In L56 la sorgente reggeva (20 su 20, margine 2,7 dB); sulla catena **54 casi su
-56** erano dentro. Fuori restavano la **principale col volume a metà, 0 e +3 dB, 20 kHz, 0,2 V, sorgente
-2,5 kΩ**: 0,00133 / 0,00106 % contro 0,001. Da allora il blocco è cambiato: ADR-097, ADR-099 (i rimedi
-del calore, i dissipatori) e ADR-111 (il limitatore del VAS a 36,5 + 18,7 Ω).
+**Il dossier rigenerato, una volta sola, adesso che il circuito smette di cambiare** (decisione
+dell'utente dopo L45d2b3b2a, 2026-10-22, «si mi va bene»). L'ultimo dossier è di L51 (2026-10-10). Da lì
+non mostra l'inseguitore e l'aiuto dello specchio (L56), il rivelatore tolto e il condensatore della
+Stax (L60), i diodi del moltiplicatore e dei finali (L62, ADR-095), l'alimentatore di ADR-091…094, R153
+sdoppiata (ADR-097), i rimedi del calore e i dissipatori (ADR-099), il limitatore del VAS (ADR-111), gli
+schematici completi (L63), la FMEA con le misure adottate, l'autodiagnosi (ADR-110, `DIAGNOSI.md`), la
+catena a guadagno unitario e V4 sulla catena (ADR-112).
 
 1. **Leggi prima**:
-   - NC-055 in `NONCOMPLIANCE.md`, con gli avanzamenti di L53 e L56;
-   - ADR-014, ADR-055, ADR-065, ADR-099, ADR-111;
-   - `data/2026-10-12/L56/` (README, `rs/`, `catena/`) e `data/2026-10-12/L53/` (`rs/`, `catena/`);
-   - `data/2026-11-02/L66/README.md` (il banco di V4 a caldo e le varianti del blocco).
-2. **Il caso noto prima di ogni numero nuovo**: il banco della catena di L56 sul blocco di allora deve
-   ridare le sue cifre (i due casi fuori, 0,00133 / 0,00106 %).
-3. **La catena e la sorgente rifatte sul blocco di oggi** (`spice/preamp/`), a 27 °C e a caldo (ogni
-   giunzione alla sua temperatura, il metodo di `v4caldo.py`). Tutte e tre le uscite, il carico di V4.
-4. **Se un caso resta fuori**: il rimedio con l'utente, coi numeri. Per esempio il cascode pilotato o R_F
-   adattata (le strade dell'architetto in L52), oppure un'accettazione dichiarata. Ogni opzione col suo
-   costo sugli altri requisiti (margine di fase, rumore, P7).
-5. **Se il circuito cambia**:
-   - sorgente, netlist, disegni;
-   - i casi noti dei banchi;
-   - `run_tests.sh` e la regressione;
-   - le righe della FMEA del blocco (`data/2026-11-02/L66/fmea_l66.csv`) da rileggere.
+   - la riga di L64 nella tabella dei lotti di `STATE.md`;
+   - `docs/preamp/dossier/build_dossier.py`: la regola «nessuna cifra scritta a mano», le due strade per
+     ogni numero, il rifiuto sui dati dei segnaposto;
+   - i report di L51, l'ultima rigenerazione (`reports/2026-10-09-L51a-dossier-scheda-audio.md`,
+     `2026-10-09-L51b-dossier-alimentatore.md`, `2026-10-10-L51c-dossier-schede.md`): com'era diviso il
+     lavoro, che cosa ha rifiutato il generatore;
+   - in `STATE-STORIA.md`, la sezione sul dossier («si rigenera come lotto, come ingresso di una
+     revisione»).
+2. **Il generatore sul progetto di oggi, prima di ogni sezione nuova**: `build_dossier.py` com'è deve
+   girare sui dati che cita, oppure rifiutare con una ragione. Ogni rifiuto si legge: dice quale dato è
+   vecchio o mancante.
+3. **Le sezioni nuove**, ognuna coi suoi numeri letti dai file versionati sotto `docs/preamp/data/` e
+   passati per una seconda strada. Le cifre del blocco sono quelle a caldo (ogni giunzione alla sua
+   temperatura), dove esistono.
+4. **Se il lavoro è più grande di una sessione**: dividilo con l'utente all'inizio, come L51 («Tre
+   parti»), coi nomi delle parti.
+5. **La consegna**: il dossier in PDF all'utente (vedi la memoria «Consegne in PDF»), un file per
+   documento.
 
 ## I vincoli
 
-- Quelli di L58 e del lotto del VAS:
+- **Il dossier ha un solo lettore, l'utente**: niente avvisi di obsolescenza, si rigenera come lotto. E
+  **non si taglia**: tutto il progetto di oggi, anche sotto pressione di tempo.
+- **Il circuito non cambia in questo lotto.** Se una sezione scopre un difetto, si apre una non
+  conformità e si porta all'utente; non si corregge il sorgente qui.
+- Quelli di L58 e dei lotti dopo:
   - comandi semplici, percorsi assoluti, script scritti con Write;
   - `git add` un percorso alla volta;
   - commit e push prima di ogni lista lunga.
 - **Le forme d'onda e le corse grezze non si committano**: prima di ogni `git add` di una cartella dati,
-  `.gitignore` deve coprire `run/` e le cartelle delle corse (`regressione/*/*/`). Nel lotto del VAS ~260
-  MB sono finiti sul ramo per questo.
-- **I casi lenti si corrono da soli e corti** (limitations #75: R120 in corto a 0,6 s, mai in una lista
-  con `-P`).
+  `.gitignore` deve coprire `run/` e le cartelle delle corse.
+- **Una catena di più blocchi** vuole i `.nodeset` dal blocco da solo (limitations #86), se il dossier
+  rifà una corsa sulla catena.
 - Le domande all'utente si fanno per nome; i colpi al jack in dB SPL; le distorsioni in dB contro il
   tetto.
 - Il controllo del worktree rifiuta i comandi composti (cicli, pipe con variabili, heredoc con git,
@@ -53,7 +60,9 @@ del calore, i dissipatori) e ADR-111 (il limitatore del VAS a 36,5 + 18,7 Ω).
 
 ## CHIUSURA
 
-1. `STATE.md`: L67 **fatto**, il prossimo **L64**; le celle di In breve; il diario (la voce più vecchia
+1. `STATE.md`: L64 **fatto**, il prossimo **L65**; le celle di In breve; il diario (la voce più vecchia
    delle tre va in `STATE-STORIA.md`).
-2. Riscrivi questo file per L64 («Nome della sessione: hi-fi preamp L64»).
-3. Commit, push, PR; `/bin/zsh scripts/chunk_close.sh L67`; rimuovi il worktree; fermati.
+2. Riscrivi questo file per L65 («Nome della sessione: hi-fi preamp L65»): la forma della revisione
+   (l'architetto avversariale cieco, la lettura dell'utente, o tutte e due) si decide con l'utente
+   all'apertura.
+3. Commit, push, PR; `/bin/zsh scripts/chunk_close.sh L64`; rimuovi il worktree; fermati.
