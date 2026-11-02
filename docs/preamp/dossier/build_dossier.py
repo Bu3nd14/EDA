@@ -188,15 +188,30 @@ L48B = os.path.join(DATAROOT, "2026-10-07", "L48b")
 L48BR = os.path.join(L48B, "regressione", "dopo")
 L48A = os.path.join(DATAROOT, "2026-10-06", "L48a")
 L47C2B1 = os.path.join(DATAROOT, "2026-10-05", "L47c2b1")
+# L64a: la scheda audio di oggi, dopo L66 (ADR-111) e L67 (il circuito non cambia). La prima
+# strada e' la ricorsa del 2026-11-02 (L64a/dopo); la seconda, le misure della regressione di
+# L66 sulla variante lim365 (il sorgente di oggi: blocco uguale a meno dei commenti), il deck del
+# mute di L66 ricorso (L64a/l66_mute), e per selettore e copie col bilanciamento gli stessi
+# deck col blocco della variante di L66 (L64a/seconda). Il mute: la matrice di V2 intera
+# ricorsa oggi (L64a/v2), contro L60d2. Il volume: gli scatti di L48b sul circuito di oggi
+# (L64a/scatti). I falsi del 2e di L48a e L48b, ricorsi sulla netlist di oggi.
+L64A = os.path.join(DATAROOT, "2026-11-02", "L64a")
+L64D = os.path.join(L64A, "dopo")
+L66 = os.path.join(DATAROOT, "2026-11-02", "L66")
+L67 = os.path.join(DATAROOT, "2026-11-02", "L67")
+L60D2 = os.path.join(DATAROOT, "2026-10-19", "L60d2")
 # Il giorno del circuito di oggi: nessun dato della scheda audio da prima, tranne
 # questi, ciascuno con la sua ragione.
-AUDIO_DA = "2026-10-07"
+AUDIO_DA = "2026-11-02"
 AUDIO_PERMESSI = {
-    os.path.join(L36, "corsa"): "la corsa al rilascio di L36 simula soli bobine e contatti, e "
-                                "gain_interlock.py non è cambiato dopo L35",
-    os.path.join(L48A, "misure", "tb_f1_selettore"): "la seconda strada del selettore: L48b "
-                                                     "non l’ha ricorso, e non tocca l’ingresso",
-    os.path.join(L48A, "falsi"): "i falsi del 2e di L48a, sulla netlist del selettore",
+    # L64a: la ragione di L51a («gain_interlock.py non è cambiato dopo L35») era falsa: L41a
+    # (ADR-048) ha portato le bobine a 12 V e la resistenza dei LED a 4,99 k. La corsa di L36 ha
+    # bobine da 5 V (237 ohm); quello che prova e' di struttura: col polo ponte la bobina non
+    # perde mai l'alimentazione, qualunque siano R e L, che la corsa spazza.
+    os.path.join(L36, "corsa"): "la corsa al rilascio di L36 simula soli bobine e contatti; le "
+                                "bobine erano da 5 V e oggi sono da 12 V (ADR-048), ma quello che "
+                                "la corsa prova è di struttura: col polo ponte la bobina non perde "
+                                "mai l’alimentazione, per ogni resistenza e induttanza spazzata",
 }
 # L51c: la distorsione del blocco di oggi (l'utente, 2026-10-10: «Rifarla e mostrarla»). La
 # prima strada e' la corsa del 2026-10-10 col banco di L46b (genera.py, esegui.sh,
@@ -763,51 +778,128 @@ def _results(path):
     return out
 
 
+# L64a: le misure dei log lette come le legge la regressione di L66 (misure() di
+# data/2026-10-22/L45d2b3b1/script/misure_regressione.py, scritta di nuovo qui): le righe
+# «nome = valore» con un nome a inizio riga, la k-esima ripetizione di un nome chiamata nome#k.
+_MISURA = re.compile(r"^([A-Za-z_@][^\s=]*)\s+=\s+([-+]?[0-9.]+(?:[eE][-+]?[0-9]+)?)", re.M)
+
+
+def misure_log(path):
+    out, visti = {}, {}
+    with open(path, errors="replace") as f:
+        for nome, val in _MISURA.findall(f.read()):
+            k = visti.get(nome, 0)
+            visti[nome] = k + 1
+            out["%s#%d" % (nome, k) if k else nome] = float(val)
+    return out
+
+
+def _senza_commenti(path, swap=None):
+    righe = []
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for ln in f:
+            s = ln.rstrip("\n")
+            if swap:
+                s = s.replace(swap, "@REPO@/spice/preamp/")
+            if s.strip() and not s.lstrip().startswith("*"):
+                righe.append(re.sub(r"\s+;.*$", "", s))
+    return righe
+
+
 def seconda_strada():
-    """L51a, la seconda strada dei deck della scheda audio: gli stessi deck corsi da
-    L48b il 2026-10-07, in un altro worktree, sullo stesso circuito (dopo L48b,
-    c098be70, circuito, deck e modelli non sono cambiati); il selettore contro la
-    corsa di L48a (L48b non l'ha ricorso); le due copie col bilanciamento contro le
-    loro uscite di L48b. Ogni riga di risultato dei log coincide; ogni CSV della
-    seconda strada, byte per byte. Un deck senza ne' righe ne' tabelle non ha
-    questa strada, e si dice."""
-    coppie = [(os.path.join(L51, d), sa(L48BR, d), d + ".log", d + ".log")
-              for d in sorted(os.listdir(sa(L48BR))) if os.path.isdir(os.path.join(L48BR, d))]
-    coppie += [(os.path.join(L51, "tb_f1_selettore"), sa(L48A, "misure", "tb_f1_selettore"),
-                "tb_f1_selettore.log", "tb_f1_selettore.log")]
-    for b, d48 in (("tb_e5_bilanciamento", "e5_bilanciamento"),
-                   ("tb_loop_bilanciamento", "v1_bilanciamento")):
-        coppie.append((os.path.join(L51, "bilanciamento", b), sa(L48B, d48, "out"),
-                       b + ".log", b + ".log"))
-    out = {"decks": [], "n_res": 0, "n_tab": 0, "senza": []}
-    for oggi, prima, lo, lp in coppie:
-        b = os.path.basename(oggi)
+    """L64a, la seconda strada dei deck della scheda audio, sul circuito di oggi.
+      a. il blocco della variante lim365 di L66 (varianti/lim365/) uguale, a meno dei
+         commenti, a spice/preamp/gain_block_flat.inc e gain_block.subckt di oggi; i deck
+         di L66 (regressione/deck_lim365/) uguali a quelli di oggi a meno del percorso del
+         blocco, dei commenti e delle righe save (tb_mute_corto: anche delle sue .meas ed echo
+         delle potenze, che hanno gli stessi nomi di quelle di oggi);
+      b. i 20 deck veloci tranne tb_mute_corto: ogni misura dei log di oggi, alla sesta cifra,
+         uguale alla colonna lim365 di L66/regressione/misure_lim365.csv, e nessuna misura da
+         una parte sola;
+      c. tb_mute_corto: il deck di L66 ricorso oggi (L64a/l66_mute) ridà tutte le sue misure di
+         misure_lim365.csv, e i suoi CSV versionati sono quelli di oggi (byte per byte; la
+         tabella delle potenze riga per riga: L66 accoda una riga in piu' per caso);
+      d. il selettore e le due copie col bilanciamento, gli stessi deck col blocco della
+         variante di L66 (L64a/seconda): ogni riga di risultato dei log, ogni CSV byte per byte.
+    """
+    out = {"decks": [], "n_res": 0, "n_tab": 0, "senza": [], "n_mis": 0, "n_mute": 0}
+    var = "@REPO@/docs/preamp/data/2026-11-02/L66/varianti/lim365/"
+    for f in ("gain_block_flat.inc", "gain_block.subckt"):
+        if (_senza_commenti(os.path.join(REPO, "spice", "preamp", f))
+                != _senza_commenti(sa(L66, "varianti", "lim365", f))):
+            refuse(f"il blocco della variante lim365 di L66 ({f}) non e' quello di oggi")
+    d66 = sa(L66, "regressione", "deck_lim365")
+    for d in sorted(os.listdir(d66)):
+        oggi = _senza_commenti(os.path.join(TB, d))
+        loro = _senza_commenti(os.path.join(d66, d), swap=var)
+        manca = [x for x in oggi if x not in loro]
+        extra = [x for x in loro if x not in oggi]
+        ok_extra = all(x.startswith("save ") or (d == "tb_mute_corto.cir" and (
+            x.lstrip().startswith(("meas tran pp_", "meas tran px_", "echo "))))
+                       for x in extra)
+        if manca or not ok_extra:
+            refuse(f"{d}: il deck di oggi non e' quello della regressione di L66 "
+                   f"({len(manca)} righe solo oggi)")
+    ref = {}
+    for r in _csv(sa(L66, "regressione", "misure_lim365.csv")):
+        if r["lim365"] != "":
+            ref.setdefault(r["deck"], {})[r["misura"]] = r["lim365"]
+    for deck in sorted(ref):
+        if deck == "tb_mute_corto":
+            continue
+        log = os.path.join(sa(L64D, deck), deck + ".log")
+        m = misure_log(log)
+        mine = {k: "%.6g" % v for k, v in m.items()}
+        if set(mine) != set(ref[deck]):
+            refuse(f"{deck}: misure solo oggi {len(set(mine) - set(ref[deck]))}, solo in L66 "
+                   f"{len(set(ref[deck]) - set(mine))}")
+        diverse = [k for k in ref[deck] if k in mine and mine[k] != ref[deck][k]]
+        if diverse:
+            k = diverse[0]
+            refuse(f"{deck}: {len(diverse)} misure diverse da L66 alla sesta cifra, la prima "
+                   f"{k} {mine[k]} contro {ref[deck][k]}")
+        out["n_mis"] += len(ref[deck])
+        out["decks"].append((deck, len(ref[deck]), 0, rel(os.path.join(L66, "regressione"))))
+    # c. tb_mute_corto
+    dm = sa(L64A, "l66_mute")
+    m = misure_log(os.path.join(dm, "tb_mute_corto.log"))
+    rm = ref.get("tb_mute_corto", {})
+    if not rm or any("%.6g" % m.get(k, float("nan")) != v for k, v in rm.items()):
+        refuse("tb_mute_corto: il deck di L66 ricorso oggi non ridà misure_lim365.csv")
+    out["n_mute"] = len(rm)
+    tabs = sorted(f for f in os.listdir(dm) if f.endswith(".csv"))
+    for t_ in tabs:
+        a_, b_ = os.path.join(L64D, "tb_mute_corto", t_), os.path.join(dm, t_)
+        if t_ == "tb_mute_corto_parti.csv":
+            with open(a_) as fa, open(b_) as fb:
+                ra = fa.read().split("\n")
+                rb = [r for r in fb.read().split("\n") if r.count(",") == ra[0].count(",")]
+            # l'intestazione di L66 ha 14 colonne: rb sono le sole righe di dati a 24
+            if not rb or ra[1:-1] != rb:
+                refuse("tb_mute_corto_parti.csv: le righe di oggi non sono quelle di L66")
+        else:
+            stessi_byte(f"tb_mute_corto/{t_}", a_, b_)
+    out["decks"].append(("tb_mute_corto", len(rm), len(tabs), rel(dm)))
+    out["n_tab"] += len(tabs)
+    # d. selettore e bilanciamento contro il blocco di L66
+    coppie = [(os.path.join(L64D, "tb_f1_selettore"), sa(L64A, "seconda", "tb_f1_selettore"),
+               "tb_f1_selettore")]
+    for b_ in ("tb_e5_bilanciamento", "tb_loop_bilanciamento"):
+        coppie.append((os.path.join(L64D, "bilanciamento", b_), sa(L64A, "seconda", b_), b_))
+    for oggi, prima, b_ in coppie:
         if not os.path.isdir(oggi):
-            refuse(f"{b}: manca la corsa di oggi in {rel(oggi)}")
+            refuse(f"{b_}: manca la corsa di oggi in {rel(oggi)}")
             continue
-        a, c = _results(os.path.join(oggi, lo)), _results(os.path.join(prima, lp))
-        if [k for k, _ in a] != [k for k, _ in c]:
-            refuse(f"{b}: le righe di risultato di oggi e di {rel(prima)} non hanno gli stessi "
-                   f"nomi nello stesso ordine ({len(a)} contro {len(c)})")
-            continue
-        worst = 0.0
-        for (k, x), (_, y) in zip(a, c):
-            den = abs(y) if abs(y) > 1e-30 else 1.0
-            worst = max(worst, abs(x - y) / den)
-        if not worst <= 1e-9:
-            refuse(f"{b}: oggi e {rel(prima)} differiscono fino a {worst:.2e} (relativo)")
+        x, y = _results(os.path.join(oggi, b_ + ".log")), _results(os.path.join(prima, b_ + ".log"))
+        if x != y:
+            refuse(f"{b_}: le righe di risultato di oggi e di {rel(prima)} non coincidono")
         tabs = sorted(f for f in os.listdir(prima) if f.endswith(".csv"))
-        for t in tabs:
-            if not os.path.isfile(os.path.join(oggi, t)):
-                refuse(f"{b}/{t}: la corsa di oggi non ha la tabella")
-                continue
-            stessi_byte(f"{b}/{t}", os.path.join(oggi, t), os.path.join(prima, t))
-        out["n_res"] += len(a)
+        for t_ in tabs:
+            stessi_byte(f"{b_}/{t_}", os.path.join(oggi, t_), os.path.join(prima, t_))
+        out["n_res"] += len(x)
         out["n_tab"] += len(tabs)
-        out["decks"].append((b, len(a), len(tabs), rel(prima)))
-        if not a and not tabs:
-            out["senza"].append(b)
-    out["spliced"] = sum(len(v) for p, v in _SPLICED.items() if p.startswith(L51))
+        out["decks"].append((b_, len(x), len(tabs), rel(prima)))
+    out["spliced"] = sum(len(v) for p_, v in _SPLICED.items() if p_.startswith(L64D))
     return out
 
 
@@ -818,7 +910,7 @@ AC_ORDER = [(m, r) for m in MODES for r in RS_AC]
 
 def measure_response():
     """Risposta in frequenza, tb_ac di L27: 3 modi x 4 sorgenti."""
-    d = sa(L51, "tb_ac")
+    d = sa(L64D, "tb_ac")
     log = os.path.join(d, "tb_ac.log")
     keys = {k: log_print(log, k) for k in ("g1k", "g20", "g20k", "g100k")}
     for nm, lst in keys.items():
@@ -872,7 +964,7 @@ def measure_v1():
     4,7 nF; blocco A col cablaggio <= 1 nF."""
     v = {}
     # --- blocco B, col trim (L16): sorgenti fino a (10 k + 442)/4 = 2,611 k
-    d = sa(L51, "tb_loop")
+    d = sa(L64D, "tb_loop")
     tab = _loop_table(d, "tb_loop_margini.csv", 660, "tb_loop.log")
     v["B_dir"] = d
     B = {}
@@ -916,7 +1008,7 @@ def measure_v1():
     v["bode_dir"] = d
 
     # --- blocco A (L16): senza trim e col partitore, scala 2 (845/464/464)
-    d = sa(L51, "tb_loop_blockA")
+    d = sa(L64D, "tb_loop_blockA")
     base = load_table(os.path.join(d, "tb_loop_blockA.csv"), 32)
     trim = load_table(os.path.join(d, "tb_loop_blockA_trim.csv"), 96)
     log = os.path.join(d, "tb_loop_blockA.log")
@@ -933,7 +1025,7 @@ def measure_v1():
     v["A_dir"] = d
 
     # --- buffer delle fisse (L27)
-    d = sa(L51, "tb_loop_bufferfissa")
+    d = sa(L64D, "tb_loop_bufferfissa")
     tab = _loop_table(d, "tb_loop_bufferfissa.csv", 44, "tb_loop_bufferfissa.log")
     v["F"] = min([r for r in tab if r["pos"] == "1"], key=pm)
     v["Fn"] = min([r for r in tab if r["pos"] == "2"], key=pm)
@@ -969,7 +1061,7 @@ ZSIG_FRAC = 0.5
 
 def measure_zout(resp):
     """Le curve di Zout: tb_zout_psrr_noise corretto in L13 (sorgente spenta)."""
-    d = zout_src(L51, "tb_zout_psrr_noise")
+    d = zout_src(L64D, "tb_zout_psrr_noise")
     log = os.path.join(d, "tb_zout_psrr_noise.log")
     n_err = count_errors(log)
     if n_err:
@@ -1012,7 +1104,7 @@ def _markers(log, pat):
 
 def measure_e4(z):
     """E4 sulle tre uscite e a manopola che gira: tb_e4_uscite di L13."""
-    d = zout_src(L51, "tb_e4_uscite")
+    d = zout_src(L64D, "tb_e4_uscite")
     log = os.path.join(d, "tb_e4_uscite.log")
     n_err = count_errors(log)
     if n_err:
@@ -1101,7 +1193,7 @@ PSRR_ORDER = [("p", m) for m in MODES] + [("m", m) for m in MODES]
 
 
 def measure_psrr():
-    d = sa(L51, "tb_zout_psrr_noise")
+    d = sa(L64D, "tb_zout_psrr_noise")
     log = os.path.join(d, "tb_zout_psrr_noise.log")
     keys = ("p100", "p1k", "p10k", "p100k")
     lv = {k: log_print(log, k) for k in keys}
@@ -1131,7 +1223,7 @@ def integrate_noise(f, s):
 def measure_noise():
     """E5 del blocco: spettri integrati contro `onoise_total` stampato."""
     out = {}
-    d = sa(L51, "tb_zout_psrr_noise")
+    d = sa(L64D, "tb_zout_psrr_noise")
     tot = log_print(os.path.join(d, "tb_zout_psrr_noise.log"), "onoise_total")
     if len(tot) != 5:
         refuse(f"tb_zout_psrr_noise.log: attese 5 occorrenze di onoise_total, trovate {len(tot)}")
@@ -1148,7 +1240,7 @@ def measure_noise():
     out["zout"] = zp
     out["zout_dir"] = d
 
-    d = sa(L51, "tb_noise_breakdown")
+    d = sa(L64D, "tb_noise_breakdown")
     tot = log_print(os.path.join(d, "tb_noise_breakdown.log"), "onoise_total")
     if len(tot) != 5:
         refuse(f"tb_noise_breakdown.log: attese 5 occorrenze di onoise_total, trovate {len(tot)}")
@@ -1170,7 +1262,7 @@ def measure_noise():
 
 def measure_trim():
     """ADR-027: attenuazione, E3 al connettore, E5 della catena (tb_trim di L16)."""
-    d = sa(L51, "tb_trim")
+    d = sa(L64D, "tb_trim")
     log = os.path.join(d, "tb_trim.log")
     e3 = load_table(os.path.join(d, "tb_trim_e3.csv"), 24)
     for col, k in (("zmin_ohm", "zmin"), ("z20_ohm", "z20"), ("z1k_ohm", "z1k"),
@@ -1224,7 +1316,7 @@ def measure_headroom(trim):
     M1: limite lineare (uscita ai bordi della finestra all'1 %, bordo minore,
     come seno RMS) contro 2,7 V RMS x guadagno misurato x attenuazione del
     trim misurata. M2 (ADR-015) e M3 (dossier fino a L32) sono etichettate."""
-    d = sa(L51, "tb_dc_headroom")
+    d = sa(L64D, "tb_dc_headroom")
     names = {"0db": "tb_dc_headroom.csv", "3db": "tb_dc_headroom_3db.csv",
              "10db": "tb_dc_headroom_10db.csv"}
     att = {"0": 0.0, "6": trim["att"]["6"], "12": trim["att"]["12"]}
@@ -1279,7 +1371,7 @@ def measure_headroom(trim):
 
 def measure_counterfactual():
     """I tre stati del controfattuale di ADR-004. col1 = v(OUT), col3 = v(FB)."""
-    d = sa(L51, "tb_switch_v2_counterfactual")
+    d = sa(L64D, "tb_switch_v2_counterfactual")
     files = [("A", "contatto CHIUSO, R_f = 1,50 kΩ", "tb_switch_v2_counterfactual.csv"),
              ("B", "contatto APERTO, R_f = 1e12 Ω", "tb_switch_v2_counterfactual_open.csv"),
              ("C", "richiuso, controprova di B", "tb_switch_v2_counterfactual_reclosed.csv")]
@@ -1307,7 +1399,7 @@ V2_WINDOWS = [("regime_0db", "s0", "regime a 0 dB"), ("regime_3db", "s3", "regim
 
 def measure_v2():
     """V2: le finestre di tb_switch_v2 contro l'inviluppo del regime a +10 dB."""
-    d = sa(L51, "tb_switch_v2")
+    d = sa(L64D, "tb_switch_v2")
     log = os.path.join(d, "tb_switch_v2.log")
     tab = load_table(os.path.join(d, "tb_switch_v2_finestre.csv"), len(V2_WINDOWS))
     rows = []
@@ -1337,7 +1429,7 @@ def measure_v2():
 def measure_v3():
     """V3, tb_v3_overload: v(SRCN), v(OUT), v(JACK), v(NX). Il deck non fa
     `print`: questi numeri hanno solo il CSV, e la pagina lo dice."""
-    d = sa(L51, "tb_v3_overload")
+    d = sa(L64D, "tb_v3_overload")
     rows = load_csv(os.path.join(d, "tb_v3_overload.csv"))
     vout = [r[3] for r in rows]
     return {"dir": d, "vmax": max(vout), "vmin": min(vout), "jack_end": rows[-1][5],
@@ -1352,7 +1444,7 @@ LISTEN = {"0": {"A", "F1", "F2", "B"}, "1": set(), "2": {"A", "F2", "B"},
 
 def measure_p7():
     """P7 (ADR-021): MJE peggiore per blocco e modo, Tj = 60 °C + P·RθJA."""
-    d = sa(L51, "tb_mute_corto")
+    d = sa(L64D, "tb_mute_corto")
     log = os.path.join(d, "tb_mute_corto.log")
     tab = load_table(os.path.join(d, "tb_mute_corto_regime.csv"), 600)
     cross_table("tb_mute_corto_regime.csv [p_q132]", tab, "p_q132", log_meas(log, "pq132"))
@@ -1379,7 +1471,7 @@ def measure_p7():
 
 def measure_oppoint():
     """Punti di lavoro dal log di tb_op di L27."""
-    d = sa(L51, "tb_op")
+    d = sa(L64D, "tb_op")
     rails, cur = {}, {}
     with open(os.path.join(d, "tb_op.log")) as f:
         lines = [ln.rstrip("\n") for ln in f]
@@ -1587,7 +1679,7 @@ def measure_e3e5():
     """E3 ed E5 sull'ingresso di oggi (tb_e3_e5.cir, L48a e L48b): la rete di ADR-064
     (R_J, C_IN, R_SEL, il contatto del selettore) davanti al blocco A, E3 letta al
     jack, C_T e il bilanciamento al centro nella catena (ADR-065)."""
-    d = sa(L51, "tb_e3_e5")
+    d = sa(L64D, "tb_e3_e5")
     log = os.path.join(d, "tb_e3_e5.log")
     e3 = load_table(os.path.join(d, "tb_e3_e5_e3.csv"), 9)
     e5 = load_table(os.path.join(d, "tb_e3_e5_e5.csv"), 36)
@@ -1670,13 +1762,17 @@ def measure_interlock():
 
     # --- i falsi del 2e di oggi: L48a (il selettore) e L48b (il volume, col 2f).
     # Ogni riga dice se il controllo cade come deve; la netlist vera passa.
+    # L64a: gli script dei falsi di L48a e L48b ricorsi oggi sulla netlist di oggi
+    # (L64a/falsi_l48a, falsi_l48b). Il caso «main» di L48b (la netlist di prima di L48b) esce:
+    # sul sorgente di oggi il 2f si ferma prima, su R179 del limitatore d'ingresso (ADR-101);
+    # lo stesso difetto sulla netlist di oggi e' ct_cortocircuitato_L / _R. Restano 7.
     fz = {}
     for lot, root, attesi, pat, cade in (
-            ("L48a", L48A, 10, r"^(\d+) falsi su (\d+) cadono per il motivo giusto; controlli OK$",
-             r"^CADE\s+rc=1"),
-            ("L48b", L48B, 8, r"^(\d+) falsi su (\d+) cadono dove devono; netlist vera passa$",
+            ("L48a", "falsi_l48a", 10,
+             r"^(\d+) falsi su (\d+) cadono per il motivo giusto; controlli OK$", r"^CADE\s+rc=1"),
+            ("L48b", "falsi_l48b", 7, r"^(\d+) falsi su (\d+) cadono dove devono; netlist vera passa$",
              r"^\S+\s+2e rc=1 CADE COME DEVE")):
-        d = sa(root, "falsi")
+        d = sa(L64A, root)
         with open(os.path.join(d, "verdetti.txt")) as f:
             vt = f.read()
         m = re.search(pat, vt, re.M)
@@ -1702,7 +1798,7 @@ def measure_selector():
     """F1 sul banco (tb_f1_selettore.cir, L48a, ADR-064): il cambio d'ingresso fra due
     sorgenti a continue diverse, picco dello scostamento in su e in giu' sul jack fisso
     e sul principale. modo 99 e' il controfattuale (l'ingresso di prima di L48a)."""
-    d = sa(L51, "tb_f1_selettore")
+    d = sa(L64D, "tb_f1_selettore")
     log = os.path.join(d, "tb_f1_selettore.log")
     tab = load_table(os.path.join(d, "f1_selettore.csv"), 24)
     for col, k in (("jf_su_uv", "fu"), ("jf_giu_uv", "fd"), ("jm_su_uv", "mu"), ("jm_giu_uv", "md")):
@@ -1740,7 +1836,7 @@ def measure_volume(e3e5):
     (le copie dei deck canonici di L48b, ricorse oggi); gli scatti del cursore sul banco
     di L48b, analizza.py rieseguito contro sintesi.csv e sintesi.txt."""
     out = {}
-    d = sa(L51, "bilanciamento", "tb_e5_bilanciamento")
+    d = sa(L64D, "bilanciamento", "tb_e5_bilanciamento")
     log = os.path.join(d, "tb_e5_bilanciamento.log")
     e5 = load_table(os.path.join(d, "tb_e3_e5_e5.csv"), 36)
     cross_table("tb_e5_bilanciamento [onoise_uv]", e5, "onoise_uv", log_print(log, "onu"))
@@ -1748,7 +1844,7 @@ def measure_volume(e3e5):
     out["e5_girato"] = max(num(r, "onoise_uv") for r in e5)
     out["e5_centro"] = e3e5["e5max"]
 
-    d = sa(L51, "bilanciamento", "tb_loop_bilanciamento")
+    d = sa(L64D, "bilanciamento", "tb_loop_bilanciamento")
     tab = _loop_table(d, "tb_loop_margini.csv", 528, "tb_loop_bilanciamento.log")
     out["v1_dir"] = d
     out["v1"] = []
@@ -3149,7 +3245,7 @@ def build_page(M, inline=False):
       'richiede <strong>46 dB di attenuazione</strong>, causa misurabile della mancanza '
       'di dinamica lamentata. La topologia canonica è in <code>circuits/preamp/</code>; i '
       'banchi di prova in <code>spice/preamp/tb/</code>; i dati dei deck in '
-      f'<code>{rel(L51)}/</code>, corsi oggi sul circuito di <code>main</code>; quelli del '
+      f'<code>{rel(L64D)}/</code>, corsi oggi sul circuito di <code>main</code>; quelli del '
       'mute, del volume e dell&rsquo;interblocco nelle cartelle dei loro lotti, nominate sotto '
       'ogni sezione.</p>')
 
@@ -3165,11 +3261,15 @@ def build_page(M, inline=False):
       '<code>meas</code> dello stesso log, e una cella vuota è un rifiuto; la cifra di '
       'headroom contro lo script di L16 che l&rsquo;ha scelta. Se una strada diverge, il '
       'generatore rifiuta di produrre la pagina.</p>')
-    A(f'<p class="meta"><strong>La seconda corsa.</strong> Gli stessi {len(l2["decks"])} deck '
-      'sono stati corsi da L48b il 2026-10-07, in un altro worktree, sullo stesso circuito '
-      f'(<code>{rel(L48BR)}/</code>; il selettore da L48a): le {l2["n_res"]} righe di '
-      f'risultato dei log coincidono una per una, e le {l2["n_tab"]} tabelle coincidono byte '
-      'per byte. '
+    A(f'<p class="meta"><strong>La seconda strada.</strong> Il blocco di oggi è quello che L66 '
+      'ha corso e misurato come variante prima di portarlo nel sorgente (ADR-111), e i deck sono '
+      f'i suoi: le {l2["n_mis"]} misure dei log dei 20 deck veloci coincidono alla sesta cifra con '
+      f'quelle della regressione di L66 (<code>{rel(os.path.join(L66, "regressione"))}/</code>); il '
+      f'deck del mute di L66, ricorso oggi, ridà le sue {l2["n_mute"]} misure e le tabelle di oggi. '
+      'Il selettore e le due copie col bilanciamento non hanno una corsa precedente sul circuito '
+      'di oggi: la loro seconda strada sono gli stessi deck col blocco preso dai file della '
+      f'variante di L66, e le {l2["n_res"]} righe di risultato coincidono una per una; in tutto '
+      f'{l2["n_tab"]} tabelle coincidono byte per byte. '
       + (f'Senza questa strada: {", ".join(l2["senza"])}, che non stampa risultati né tiene '
          'tabelle. ' if l2["senza"] else '')
       + ((f'{l2["spliced"]} <code>print</code> spezzate nei log da una Note del gmin stepping '
@@ -3273,7 +3373,7 @@ def build_page(M, inline=False):
 
     # --- 4 risposta ---
     A(h2("s4"))
-    A(prov_line("tb_ac.cir", sa(L51, "tb_ac")))
+    A(prov_line("tb_ac.cir", sa(L64D, "tb_ac")))
     A(figure("fig_response.svg", "Risposta in frequenza"))
     A('<div class="tablewrap"><table><tr><th>Curva</th><th class="num">20 Hz</th>'
       '<th class="num">1 kHz</th><th class="num">20 kHz</th><th class="num">100 kHz</th></tr>')
@@ -3570,7 +3670,7 @@ def build_page(M, inline=False):
 
     # --- 9 PSRR ---
     A(h2("s9"))
-    A(prov_line("tb_zout_psrr_noise.cir", sa(L51, "tb_zout_psrr_noise")))
+    A(prov_line("tb_zout_psrr_noise.cir", sa(L64D, "tb_zout_psrr_noise")))
     A(figure("fig_psrr.svg", "PSRR"))
     A('<div class="tablewrap"><table><tr><th>Rail e modo</th><th class="num">100 Hz</th>'
       '<th class="num">1 kHz</th><th class="num">10 kHz</th><th class="num">100 kHz</th></tr>')
@@ -4695,10 +4795,11 @@ def main():
     v1, hr, trim, mu, ee = M["v1"], M["hr"], M["trim"], M["mute"], M["e3e5"]
     summary = {
         "parti": list(PARTI),
-        "dati": [rel(L51), rel(mu["mat_dir"]), rel(mu["src_dir"]), rel(M["il"]["corsa_dir"]),
+        "dati": [rel(L64D), rel(mu["mat_dir"]), rel(mu["src_dir"]), rel(M["il"]["corsa_dir"]),
                  rel(M["vol"]["scatti_dir"])],
         "controlli_incrociati": "tutti superati",
-        "seconda_corsa_L48b": {"deck": len(M["l2"]["decks"]), "righe": M["l2"]["n_res"],
+        "seconda_strada_L66": {"deck": len(M["l2"]["decks"]), "misure": M["l2"]["n_mis"],
+                               "misure_mute": M["l2"]["n_mute"], "righe": M["l2"]["n_res"],
                                "tabelle": M["l2"]["n_tab"]},
         "guadagno_1kHz_dB": {m: M["resp"][(m, "1.5")]["g1k"] for m in MODES},
         "adr014_scarto_20kHz_rif_1kHz_dB_peggiore": max(adr014(M["resp"])[0].values(), key=abs),
