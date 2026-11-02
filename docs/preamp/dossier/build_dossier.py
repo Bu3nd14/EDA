@@ -1584,10 +1584,13 @@ def v2_verdetti(man_path, ana_path):
 
 
 def measure_mute():
-    """Il mute coi soli rele' (ADR-062, ADR-063, ADR-044), dalla matrice di L48b."""
+    """Il mute coi soli rele' (ADR-062, ADR-063, ADR-044). L64a: la matrice intera ricorsa il
+    2026-11-02 sul circuito di oggi (L64a/v2); 22 celle della dispersione coi .nodeset del blocco
+    da solo (limitations #86, la prova in L64a/prova_nodeset). Seconda strada: la matrice di
+    L60d2 sul blocco di allora, cella per cella (gli stessi esiti, gli scarti si scrivono)."""
     out = {}
-    # --- 1. la matrice di L48b: verdetto.csv contro il ricalcolo
-    d = sa(L48B, "v2", "matrice")
+    # --- 1. la matrice di oggi: verdetto.csv contro il ricalcolo
+    d = sa(L64A, "v2")
     man_f, ana_f = os.path.join(d, "manifest_finale.csv"), os.path.join(d, "analisi.csv")
     mine, escluse = v2_verdetti(man_f, ana_f)
     # il manifesto finale e' quello delle corse meno la sola corsa esclusa, dichiarata
@@ -1595,14 +1598,14 @@ def measure_mute():
     fin = {r["cella"]: r for r in _csv(man_f)}
     via = sorted(set(sel) - set(fin))
     if set(fin) - set(sel) or any(sel[c]["file"] != V2_ESCLUSA + ".dat" for c in via):
-        refuse(f"L48b manifest_finale.csv non e' manifest_sel.csv meno {V2_ESCLUSA}: {via}")
+        refuse(f"L64a V2 manifest_finale.csv non e' manifest_sel.csv meno {V2_ESCLUSA}: {via}")
     theirs = _csv(os.path.join(d, "verdetto.csv"))
     if len(theirs) != len(mine):
-        refuse(f"L48b verdetto.csv: {len(theirs)} righe, il ricalcolo ne da' {len(mine)}")
+        refuse(f"L64a V2 verdetto.csv: {len(theirs)} righe, il ricalcolo ne da' {len(mine)}")
     for t in theirs:
         m = mine.get((t["cella"], t["grandezza"]))
         if m is None:
-            refuse(f"L48b verdetto.csv: {t['cella']} {t['grandezza']} non viene dal ricalcolo")
+            refuse(f"L64a V2 verdetto.csv: {t['cella']} {t['grandezza']} non viene dal ricalcolo")
             continue
         if m["dich"]:
             ok_s = t["soglia"] == "-" and t["esito"] == "dichiarato"
@@ -1610,7 +1613,7 @@ def measure_mute():
             ok_s = (abs(float(t["soglia"]) - V2_SOGLIA[t["grandezza"]]) <= 1e-12
                     and (t["esito"] == "regge") == m["ok"])
         if not ok_s or t["uscita"] != m["uscita"] or float(t["picco"]) != m["v"]:
-            refuse(f"L48b verdetto.csv: {t['cella']} {t['grandezza']} scritto {t['picco']} "
+            refuse(f"L64a V2 verdetto.csv: {t['cella']} {t['grandezza']} scritto {t['picco']} "
                    f"{t['uscita']} {t['esito']}, ricalcolato {m['v']} {m['uscita']} "
                    f"{'dichiarato' if m['dich'] else ('regge' if m['ok'] else 'NON REGGE')}")
     giud = [m for m in mine.values() if not m["dich"]]
@@ -1627,36 +1630,45 @@ def measure_mute():
             row[lab] = max(cand, key=lambda m: m["v"]) if cand else None
         rows.append(row)
     if sum(r["n"] for r in rows) != len(giud):
-        refuse(f"L48b: {len(giud)} verdetti, i gruppi 1-6 ne contano {sum(r['n'] for r in rows)}")
+        refuse(f"L64a V2: {len(giud)} verdetti, i gruppi 1-6 ne contano {sum(r['n'] for r in rows)}")
     out["rows"] = rows
 
-    # --- 2. le celle peggiori, rifatte oggi sul deck versionato (L51a)
+    # --- 2. il deck e le corse; la seconda strada, L60d2
     stessi_byte("il deck V2 rigenerato oggi dal sorgente",
-                sa(L51M, "tb_v2_casopeggiore_generato.cir"),
+                sa(L64A, "mute", "tb_v2_casopeggiore_generato.cir"),
                 os.path.join(TB, "tb_v2_casopeggiore.cir"))
-    dc = sa(L51M, "corse")
-    corse = [c.strip() for c in open(os.path.join(dc, "corse_sel.txt")) if c.strip()]
-    tempi = {ln.split()[0]: ln.split()[1] for ln in open(os.path.join(dc, "tempi.txt")) if ln.strip()}
-    male = [c for c in corse if tempi.get(c) != "rc=0"]
+    corse = [c.strip() for c in open(os.path.join(d, "corse_sel.txt")) if c.strip()]
+    tempi = {}
+    for ln in open(os.path.join(d, "tempi.txt")):
+        x = ln.split()
+        if len(x) >= 2 and (x[1] == "rc=0" or x[0] not in tempi):
+            tempi[x[0]] = (x[1], " ".join(x[4:]))
+    male = [c for c in corse if tempi.get(c, ("",))[0] != "rc=0" and c != V2_ESCLUSA]
     if male:
-        refuse(f"L51a mute: corse non finite con rc=0: {male}")
-    today = _csv(os.path.join(dc, "analisi.csv"))
-    celle = {r["cella"] for r in _csv(os.path.join(dc, "manifest_sel.csv"))}
-    key = lambda a: (a["cella"], a["grandezza"], a["uscita"], a["t_picco_s"], a["picco_V"])  # noqa: E731
-    a_oggi = sorted(key(a) for a in today)
-    a_48 = sorted(key(a) for a in _csv(ana_f) if a["cella"] in celle)
-    if a_oggi != a_48:
-        diff = sorted(set(a_oggi) ^ set(a_48))
-        refuse(f"L51a mute analisi.csv: {len(diff)} righe diverse da L48b sulle stesse celle, "
-               f"la prima {diff[0] if diff else '(conteggi diversi)'}")
-    # i peggiori della tabella sopra 1 µV, e quali hanno i dati rifatti oggi
-    oggi_celle = {a["cella"] for a in today}
-    peg = [(r["gruppo"], lab, r[lab]["src"], r[lab]["v"]) for r in rows
-           for lab, _, _ in V2_COLONNE if r[lab] is not None and r[lab]["v"] >= 1e-6]
-    rifatte = [p for p in peg if p[2] in oggi_celle]
-    out.update(src_dir=dc, src_corse=len(corse), src_righe=len(today),
-               src_celle=len(celle), peg=peg, rifatte=rifatte,
-               non_rifatte=[p for p in peg if p[2] not in oggi_celle])
+        refuse(f"L64a V2: corse non finite con rc=0: {male[:5]}{' ...' if len(male) > 5 else ''}")
+    with open(os.path.join(d, "guardia.txt")) as f:
+        g = f.read()
+    m_ = re.search(r"guardia: esce (\d+)", g)
+    if not m_ or int(m_.group(1)) > 1:
+        refuse(f"L64a V2: la guardia di L47b2b1 rifiuta {m_.group(1) if m_ else '?'} corse "
+               f"(attesa al piu' {V2_ESCLUSA})")
+    nb = sorted(c for c, (rc, nota) in tempi.items() if rc == "rc=0" and "nodeset_blocco" in nota)
+    out.update(src_dir=d, src_corse=len(corse), nodeset=nb)
+    v60 = {(r["cella"], r["grandezza"]): r for r in _csv(vecchio(L60D2, "v2", "verdetto.csv"))}
+    cambi, scarto = [], 0.0
+    for t_ in theirs:
+        o = v60.get((t_["cella"], t_["grandezza"]))
+        if o is None:
+            cambi.append(f"{t_['cella']} {t_['grandezza']} non c'e' in L60d2")
+            continue
+        if o["esito"] != t_["esito"]:
+            cambi.append(f"{t_['cella']} {t_['grandezza']}: {o['esito']} -> {t_['esito']}")
+        a_, b_ = float(t_["picco"]), float(o["picco"])
+        if t_["esito"] != "dichiarato" and max(a_, b_) >= 1e-6:
+            scarto = max(scarto, abs(db20(a_ / b_)) if min(a_, b_) > 0 else float("inf"))
+    out.update(l60d2_cambi=cambi, l60d2_scarto_db=scarto, l60d2_n=len(v60))
+    if cambi:
+        refuse(f"L64a V2 contro L60d2: {len(cambi)} esiti diversi, il primo {cambi[0]}")
 
     # --- 3. il clic del taglio, dichiarato (ADR-062): clic.csv contro analisi.csv
     clic = _csv(os.path.join(d, "clic.csv"))
@@ -1670,20 +1682,23 @@ def measure_mute():
         for lab, cc, col in (("c2_V", c, "c2_V"), ("altro_c2_V", altra, "altro_c2_V")):
             a = ana.get((cc, g, usc[r["uscita"]]))
             if a is None or not abs(float(r[col]) - float(a["picco_V"])) <= 5e-4 * float(a["picco_V"]):
-                refuse(f"L48b clic.csv: {r['uscita']} {r['tono']} {r['evento']} {lab} {r[col]}, "
+                refuse(f"L64a V2 clic.csv: {r['uscita']} {r['tono']} {r['evento']} {lab} {r[col]}, "
                        f"analisi.csv {a['picco_V'] if a else 'manca'} ({cc} {g})")
         if f and not abs(f["db"](float(r["c2_V"])) - float(r["dB_SPL_1m"])) <= 0.051:
-            refuse(f"L48b clic.csv: {r['uscita']} {r['tono']} {r['evento']} {r['dB_SPL_1m']} dB SPL, "
+            refuse(f"L64a V2 clic.csv: {r['uscita']} {r['tono']} {r['evento']} {r['dB_SPL_1m']} dB SPL, "
                    f"la catena di NC-028 da' {f['db'](float(r['c2_V'])):.2f}")
     if len(clic) != 18:
-        refuse(f"L48b clic.csv: {len(clic)} righe, la tabella intera ne ha 18")
+        refuse(f"L64a V2 clic.csv: {len(clic)} righe, la tabella intera ne ha 18")
     out["clic"] = sorted(clic, key=lambda r: -float(r["c2_V"]))
 
     # --- 4. il gruppo 6 col difetto noto del banco tolto (VOSB = 0, limitations #44)
-    vz = [a for a in _csv(os.path.join(sa(L48B, "v2", "sonda_vosb"), "analisi.csv"))
+    with open(sa(L64A, "v2", "sonda_vosb", "alter.txt")) as f:
+        if [ln.strip().endswith(":1") for ln in f if ln.strip()] != [True, True]:
+            refuse("L64a sonda_vosb: alter vosb dc = 0 non e' in tutte e due le corse")
+    vz = [a for a in _csv(os.path.join(sa(L64A, "v2", "sonda_vosb"), "analisi.csv"))
           if a["cella"] == "vol_g10_iii" and a["grandezza"] == "A_ins"]
     if len({a["uscita"] for a in vz}) != 3:
-        refuse("L48b sonda_vosb: attese le tre uscite di vol_g10_iii A_ins")
+        refuse("L64a sonda_vosb: attese le tre uscite di vol_g10_iii A_ins")
     out["vosb0"] = max(float(a["picco_V"]) for a in vz) if vz else float("nan")
     return out
 
@@ -4132,10 +4147,7 @@ def build_page(M, inline=False):
     # --- il mute ---
     A(h2("smute"))
     A(prov_line("tb_v2_casopeggiore.cir", mu["mat_dir"],
-                note=f" &middot; la matrice di L48b, {mu['n_corse']} corse"))
-    A(prov_line("tb_v2_casopeggiore.cir", mu["src_dir"],
-                note=f" &middot; le celle peggiori e i loro riferimenti, {mu['src_corse']} corse "
-                     "rifatte oggi"))
+                note=f" &middot; la matrice intera, {mu['n_corse']} corse, ricorsa il 2026-11-02"))
     A('<p>Il mute taglia coi soli relè al jack (ADR-062, PR-21): con la musica il silenzio '
       'arriva di colpo, e al rilascio la musica torna di colpo al livello di prima. Un relè per '
       'uscita, geometria iii (ADR-044): comune sul lato del condensatore, NO sul jack, NC a '
@@ -4172,15 +4184,13 @@ def build_page(M, inline=False):
       'quello morbido dell&rsquo;alimentatore), e '
       + ", ".join(f'<code>{html_escape(c)}</code>' for c in mu["via"])
       + ' manca dal manifesto finale perché la corsa abortisce. '
-      f'Rifatte oggi sul deck versionato, {mu["src_corse"]} corse e {mu["src_celle"]} celle: '
-      f'le {mu["src_righe"]} righe dell&rsquo;analisi coincidono con quelle di L48b. Dei '
-      f'{len(mu["peg"])} peggiori della tabella sopra 1 µV ne hanno i dati rifatti '
-      f'{len(mu["rifatte"])}'
-      + ((': non rifatti ' + ", ".join(f'{lab} del gruppo {gr} (<code>{html_escape(c)}</code>)'
-                                       for gr, lab, c, _ in mu["non_rifatte"])
-          + ', corse a 20 kHz che in L48b hanno richiesto da sette a oltre quaranta ore, e '
-          'restano a una sola strada') if mu["non_rifatte"] else '')
-      + '. Il deck rigenerato oggi dal sorgente è uguale byte per byte a quello versionato.</p>')
+      f'La seconda strada è la matrice di L60d2, corsa il 2026-10-19 sul blocco di allora: '
+      f'gli esiti coincidono uno per uno, e dove il picco supera 1 µV si sposta al più di '
+      f'{fx(mu["l60d2_scarto_db"], 2)} dB. '
+      f'{len(mu["nodeset"])} celle della dispersione non trovano il punto di lavoro sul blocco di '
+      'oggi, in nessuna delle tre prove del banco: sono corse col punto di partenza del blocco da '
+      'solo (limitations #86), che non cambia la soluzione dove il punto di lavoro si trova anche '
+      'senza (provato su tre celle: le grandezze di V2 si spostano al più di 0,64 µV)'      + '. Il deck rigenerato oggi dal sorgente è uguale byte per byte a quello versionato.</p>')
     A(f'<p>Il gruppo 6, lo scatto del volume nel banco di V2, porta il difetto noto del banco '
       '(l&rsquo;offset del primo stadio davanti a R<sub>IN</sub>, limitations #44): con '
       f'quell&rsquo;offset tolto lo stesso evento vale {uv(mu["vosb0"])}.</p>')
