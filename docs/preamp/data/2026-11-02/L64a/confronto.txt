@@ -1,0 +1,18 @@
+deck tb_mute_corto.cir: le righe di oggi tutte nel deck di L66, che ne ha 9 in piu' (save, .meas ed echo delle potenze); confronto in confronta_mute.py
+blocco gain_block_flat.inc: la variante lim365 di L66 uguale a quello di oggi (67 righe, a meno dei commenti)
+blocco gain_block.subckt: la variante lim365 di L66 uguale a quello di oggi (69 righe, a meno dei commenti)
+misure dei 20 deck (tutti tranne tb_mute_corto): 10503 su 10503 uguali a 6 cifre alla corsa di L66 (lim365); 0 solo in L66, 0 solo oggi
+selettore contro dopo-L57b: 0 file su 1 uguali byte per byte
+   CAMBIA f1_selettore.csv: jf_giu_uv 79.2, jf_su_uv 0.000258, jm_giu_uv 77.8, jm_su_uv 0.000244
+E5 col bilanciamento contro L48b: 0 file su 2 uguali byte per byte
+   CAMBIA tb_e3_e5_e3.csv: z1k_ohm 0.000297, z20_ohm 0.00031, z20k_ohm 0.0417, zmin_ohm 0.0417
+   CAMBIA tb_e3_e5_e5.csv: onoise_uv 0.0423
+V1 col bilanciamento contro L48b: 0 file su 1 uguali byte per byte
+   CAMBIA tb_loop_margini.csv: fcross_hz 0.073, pm_deg 0.0343, tdb_10hz 0.308
+selettore contro lo stesso deck col blocco di L66: 1 file su 1 uguali byte per byte
+E5 col bilanciamento contro il blocco di L66: 2 file su 2 uguali byte per byte
+V1 col bilanciamento contro il blocco di L66: 1 file su 1 uguali byte per byte
+24 deck corsi; deck con rc != 0: nessuno
+tb_mute_corto, il deck di L66 ricorso oggi: 32200 misure su 32200 di misure_lim365.csv uguali a 6 cifre; misure nella ricorsa 32200
+tb_mute_corto, i CSV di oggi contro la ricorsa del deck di L66: 6 su 6 uguali (byte per byte, tb_mute_corto_parti.csv riga per riga)
+   tb_mute_corto_parti.csv: le 600 righe di oggi uguali, nell'ordine, alle righe a 24 colonne della ricorsa di L66 (che ne accoda 600 a 14 colonne)

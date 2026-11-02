@@ -1,6 +1,6 @@
 # ADR-089 — I guasti del blocco sulla Stax col limite all'inseguitore: più lunghi, accettati sotto il tetto
 
-Data: 2026-10-19 · Stato: accettata
+Data: 2026-10-19 · Stato: accettata — confermata dopo il cambio di R153 (ADR-098)
 
 **Rapporti con le decisioni precedenti.**
 - **Applica ADR-086** (la ridondanza nel blocco, il tetto della Stax a 150 ms) e **ADR-087** (R153,

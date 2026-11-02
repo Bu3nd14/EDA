@@ -1,6 +1,6 @@
 # ADR-082 — Le scelte che il rivelatore copriva: il condensatore della Stax dopo il relè, due pin per i rail, il condensatore in corto accettato, il moltiplicatore in SOT-223
 
-Data: 2026-10-15 · Stato: accettata
+Data: 2026-10-15 · Stato: accettata — il condensatore della Stax non va dopo il relè: resta prima, come prevedeva la riserva di questa decisione (ADR-084); il resto vale
 
 **Rapporti con le decisioni precedenti.**
 - **Supera ADR-072 nelle scelte 6, 8, 9 e 10** di `data/2026-10-14/L45d1/scelte_L45d2.pdf`, che

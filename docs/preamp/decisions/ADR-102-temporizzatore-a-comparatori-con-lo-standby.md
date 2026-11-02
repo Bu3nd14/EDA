@@ -1,6 +1,6 @@
 # ADR-102 — Il temporizzatore dell'alimentatore a comparatori, con lo standby: il micro e il firmware escono
 
-Data: 2026-10-26 · Stato: accettata
+Data: 2026-10-26 · Stato: accettata — completata dalle decisioni sul temporizzatore che seguono: la taratura dei comparatori e R585 (ADR-103), i diodi a bassa perdita e R571 (ADR-104, ADR-105), i condensatori dei ritardi (ADR-105, ADR-108)
 
 **Rapporti con le decisioni precedenti.**
 - **Chiude NC-054** (maggiore, prima di G1): il confronto coi numeri chiesto da L52 (rilievi R3, R4
