@@ -76,68 +76,68 @@ RLDFIX2 FIX2JACK 0 50k
 set noaskquit
 option itl1=1000
 save v(mainjack) v(fix1jack) v(fix2jack) v(outa) v(outf1) v(outf2) v(outb) i(vpp) i(vmm) @q.xa.q106[p] @q.xa.q117[p] @q.xa.q118[p] @q.xa.q121a[p] @q.xa.q121b[p] @q.xa.q122[p] @q.xa.q125[p] @q.xa.q127[p] @q.xa.q132[p] @q.xa.q133[p] @q.xa.q146[p] @q.xa.q148[p] @q.xa.q193[p] @r.xa.r101[p] @r.xa.r107[p] @r.xa.r108[p] @r.xa.r109[p] @r.xa.r111[p] @r.xa.r112[p] @r.xa.r113[p] @r.xa.r114[p] @r.xa.r115[p] @r.xa.r119[p] @r.xa.r120[p] @r.xa.r123[p] @r.xa.r126[p] @r.xa.r128[p] @r.xa.r129[p] @r.xa.r130[p] @r.xa.r131[p] @r.xa.r134[p] @r.xa.r135[p] @r.xa.r136[p] @r.xa.r138[p] @r.xa.r143[p] @r.xa.r144[p] @r.xa.r147[p] @r.xa.r149[p] @r.xa.r150[p] @r.xa.r151[p] @r.xa.r152[p] @r.xa.r153[p] @r.xa.r160[p] @r.xa.r190[p] @r.xa.r191[p] @r.xa.r192[p] @r.xa.r194[p] @j.xa.jq110a[id] @j.xa.jq110b[id] v(xa.d1n) v(xa.s1) v(xa.d2n) v(xa.s2) @d.xa.d102[p] @d.xa.d103[p] @d.xa.d154[p] @d.xa.d155[p] @d.xa.d156[p] @d.xa.d157[p] @d.xa.d158[p] @d.xa.d159[p]
-tran 1u 2.3 0 50u
+tran 1u 0.6 0 50u
 wrdata R120_cc.dat v(mainjack) v(fix1jack) v(fix2jack) v(outa) v(outf1) v(outf2) v(outb) i(vpp) i(vmm)
-meas tran p_q106 AVG @q.xa.q106[p] from=2.29 to=2.3
-meas tran p_q117 AVG @q.xa.q117[p] from=2.29 to=2.3
-meas tran p_q118 AVG @q.xa.q118[p] from=2.29 to=2.3
-meas tran p_q121a AVG @q.xa.q121a[p] from=2.29 to=2.3
-meas tran p_q121b AVG @q.xa.q121b[p] from=2.29 to=2.3
-meas tran p_q122 AVG @q.xa.q122[p] from=2.29 to=2.3
-meas tran p_q125 AVG @q.xa.q125[p] from=2.29 to=2.3
-meas tran p_q127 AVG @q.xa.q127[p] from=2.29 to=2.3
-meas tran p_q132 AVG @q.xa.q132[p] from=2.29 to=2.3
-meas tran p_q133 AVG @q.xa.q133[p] from=2.29 to=2.3
-meas tran p_q146 AVG @q.xa.q146[p] from=2.29 to=2.3
-meas tran p_q148 AVG @q.xa.q148[p] from=2.29 to=2.3
-meas tran p_q193 AVG @q.xa.q193[p] from=2.29 to=2.3
-meas tran p_r101 AVG @r.xa.r101[p] from=2.29 to=2.3
-meas tran p_r107 AVG @r.xa.r107[p] from=2.29 to=2.3
-meas tran p_r108 AVG @r.xa.r108[p] from=2.29 to=2.3
-meas tran p_r109 AVG @r.xa.r109[p] from=2.29 to=2.3
-meas tran p_r111 AVG @r.xa.r111[p] from=2.29 to=2.3
-meas tran p_r112 AVG @r.xa.r112[p] from=2.29 to=2.3
-meas tran p_r113 AVG @r.xa.r113[p] from=2.29 to=2.3
-meas tran p_r114 AVG @r.xa.r114[p] from=2.29 to=2.3
-meas tran p_r115 AVG @r.xa.r115[p] from=2.29 to=2.3
-meas tran p_r119 AVG @r.xa.r119[p] from=2.29 to=2.3
-meas tran p_r120 AVG @r.xa.r120[p] from=2.29 to=2.3
-meas tran p_r123 AVG @r.xa.r123[p] from=2.29 to=2.3
-meas tran p_r126 AVG @r.xa.r126[p] from=2.29 to=2.3
-meas tran p_r128 AVG @r.xa.r128[p] from=2.29 to=2.3
-meas tran p_r129 AVG @r.xa.r129[p] from=2.29 to=2.3
-meas tran p_r130 AVG @r.xa.r130[p] from=2.29 to=2.3
-meas tran p_r131 AVG @r.xa.r131[p] from=2.29 to=2.3
-meas tran p_r134 AVG @r.xa.r134[p] from=2.29 to=2.3
-meas tran p_r135 AVG @r.xa.r135[p] from=2.29 to=2.3
-meas tran p_r136 AVG @r.xa.r136[p] from=2.29 to=2.3
-meas tran p_r138 AVG @r.xa.r138[p] from=2.29 to=2.3
-meas tran p_r143 AVG @r.xa.r143[p] from=2.29 to=2.3
-meas tran p_r144 AVG @r.xa.r144[p] from=2.29 to=2.3
-meas tran p_r147 AVG @r.xa.r147[p] from=2.29 to=2.3
-meas tran p_r149 AVG @r.xa.r149[p] from=2.29 to=2.3
-meas tran p_r150 AVG @r.xa.r150[p] from=2.29 to=2.3
-meas tran p_r151 AVG @r.xa.r151[p] from=2.29 to=2.3
-meas tran p_r152 AVG @r.xa.r152[p] from=2.29 to=2.3
-meas tran p_r153 AVG @r.xa.r153[p] from=2.29 to=2.3
-meas tran p_r160 AVG @r.xa.r160[p] from=2.29 to=2.3
-meas tran p_r190 AVG @r.xa.r190[p] from=2.29 to=2.3
-meas tran p_r191 AVG @r.xa.r191[p] from=2.29 to=2.3
-meas tran p_r192 AVG @r.xa.r192[p] from=2.29 to=2.3
-meas tran p_r194 AVG @r.xa.r194[p] from=2.29 to=2.3
+meas tran p_q106 AVG @q.xa.q106[p] from=0.59 to=0.6
+meas tran p_q117 AVG @q.xa.q117[p] from=0.59 to=0.6
+meas tran p_q118 AVG @q.xa.q118[p] from=0.59 to=0.6
+meas tran p_q121a AVG @q.xa.q121a[p] from=0.59 to=0.6
+meas tran p_q121b AVG @q.xa.q121b[p] from=0.59 to=0.6
+meas tran p_q122 AVG @q.xa.q122[p] from=0.59 to=0.6
+meas tran p_q125 AVG @q.xa.q125[p] from=0.59 to=0.6
+meas tran p_q127 AVG @q.xa.q127[p] from=0.59 to=0.6
+meas tran p_q132 AVG @q.xa.q132[p] from=0.59 to=0.6
+meas tran p_q133 AVG @q.xa.q133[p] from=0.59 to=0.6
+meas tran p_q146 AVG @q.xa.q146[p] from=0.59 to=0.6
+meas tran p_q148 AVG @q.xa.q148[p] from=0.59 to=0.6
+meas tran p_q193 AVG @q.xa.q193[p] from=0.59 to=0.6
+meas tran p_r101 AVG @r.xa.r101[p] from=0.59 to=0.6
+meas tran p_r107 AVG @r.xa.r107[p] from=0.59 to=0.6
+meas tran p_r108 AVG @r.xa.r108[p] from=0.59 to=0.6
+meas tran p_r109 AVG @r.xa.r109[p] from=0.59 to=0.6
+meas tran p_r111 AVG @r.xa.r111[p] from=0.59 to=0.6
+meas tran p_r112 AVG @r.xa.r112[p] from=0.59 to=0.6
+meas tran p_r113 AVG @r.xa.r113[p] from=0.59 to=0.6
+meas tran p_r114 AVG @r.xa.r114[p] from=0.59 to=0.6
+meas tran p_r115 AVG @r.xa.r115[p] from=0.59 to=0.6
+meas tran p_r119 AVG @r.xa.r119[p] from=0.59 to=0.6
+meas tran p_r120 AVG @r.xa.r120[p] from=0.59 to=0.6
+meas tran p_r123 AVG @r.xa.r123[p] from=0.59 to=0.6
+meas tran p_r126 AVG @r.xa.r126[p] from=0.59 to=0.6
+meas tran p_r128 AVG @r.xa.r128[p] from=0.59 to=0.6
+meas tran p_r129 AVG @r.xa.r129[p] from=0.59 to=0.6
+meas tran p_r130 AVG @r.xa.r130[p] from=0.59 to=0.6
+meas tran p_r131 AVG @r.xa.r131[p] from=0.59 to=0.6
+meas tran p_r134 AVG @r.xa.r134[p] from=0.59 to=0.6
+meas tran p_r135 AVG @r.xa.r135[p] from=0.59 to=0.6
+meas tran p_r136 AVG @r.xa.r136[p] from=0.59 to=0.6
+meas tran p_r138 AVG @r.xa.r138[p] from=0.59 to=0.6
+meas tran p_r143 AVG @r.xa.r143[p] from=0.59 to=0.6
+meas tran p_r144 AVG @r.xa.r144[p] from=0.59 to=0.6
+meas tran p_r147 AVG @r.xa.r147[p] from=0.59 to=0.6
+meas tran p_r149 AVG @r.xa.r149[p] from=0.59 to=0.6
+meas tran p_r150 AVG @r.xa.r150[p] from=0.59 to=0.6
+meas tran p_r151 AVG @r.xa.r151[p] from=0.59 to=0.6
+meas tran p_r152 AVG @r.xa.r152[p] from=0.59 to=0.6
+meas tran p_r153 AVG @r.xa.r153[p] from=0.59 to=0.6
+meas tran p_r160 AVG @r.xa.r160[p] from=0.59 to=0.6
+meas tran p_r190 AVG @r.xa.r190[p] from=0.59 to=0.6
+meas tran p_r191 AVG @r.xa.r191[p] from=0.59 to=0.6
+meas tran p_r192 AVG @r.xa.r192[p] from=0.59 to=0.6
+meas tran p_r194 AVG @r.xa.r194[p] from=0.59 to=0.6
 let pja = @j.xa.jq110a[id] * (v(xa.d1n) - v(xa.s1))
 let pjb = @j.xa.jq110b[id] * (v(xa.d2n) - v(xa.s2))
-meas tran p_jq110a AVG pja from=2.29 to=2.3
-meas tran p_jq110b AVG pjb from=2.29 to=2.3
-meas tran out_avg AVG v(outa) from=2.29 to=2.3
-meas tran out_max MAX v(outa) from=2.29 to=2.3
-meas tran out_min MIN v(outa) from=2.29 to=2.3
-meas tran ipp_avg AVG i(vpp) from=2.29 to=2.3
-meas tran ipp_max MAX i(vpp) from=2.29 to=2.3
-meas tran ipp_min MIN i(vpp) from=2.29 to=2.3
-meas tran imm_avg AVG i(vmm) from=2.29 to=2.3
-meas tran imm_max MAX i(vmm) from=2.29 to=2.3
-meas tran imm_min MIN i(vmm) from=2.29 to=2.3
+meas tran p_jq110a AVG pja from=0.59 to=0.6
+meas tran p_jq110b AVG pjb from=0.59 to=0.6
+meas tran out_avg AVG v(outa) from=0.59 to=0.6
+meas tran out_max MAX v(outa) from=0.59 to=0.6
+meas tran out_min MIN v(outa) from=0.59 to=0.6
+meas tran ipp_avg AVG i(vpp) from=0.59 to=0.6
+meas tran ipp_max MAX i(vpp) from=0.59 to=0.6
+meas tran ipp_min MIN i(vpp) from=0.59 to=0.6
+meas tran imm_avg AVG i(vmm) from=0.59 to=0.6
+meas tran imm_max MAX i(vmm) from=0.59 to=0.6
+meas tran imm_min MIN i(vmm) from=0.59 to=0.6
 echo "grandezza,valore" > R120_cc_fine.csv
 echo "p_q106,$&p_q106" >> R120_cc_fine.csv
 echo "p_q117,$&p_q117" >> R120_cc_fine.csv
@@ -197,21 +197,21 @@ echo "ipp_min,$&ipp_min" >> R120_cc_fine.csv
 echo "imm_avg,$&imm_avg" >> R120_cc_fine.csv
 echo "imm_max,$&imm_max" >> R120_cc_fine.csv
 echo "imm_min,$&imm_min" >> R120_cc_fine.csv
-meas tran p_d102 AVG @d.xa.d102[p] from=2.29 to=2.3
+meas tran p_d102 AVG @d.xa.d102[p] from=0.59 to=0.6
 echo "p_d102,$&p_d102" >> R120_cc_fine.csv
-meas tran p_d103 AVG @d.xa.d103[p] from=2.29 to=2.3
+meas tran p_d103 AVG @d.xa.d103[p] from=0.59 to=0.6
 echo "p_d103,$&p_d103" >> R120_cc_fine.csv
-meas tran p_d154 AVG @d.xa.d154[p] from=2.29 to=2.3
+meas tran p_d154 AVG @d.xa.d154[p] from=0.59 to=0.6
 echo "p_d154,$&p_d154" >> R120_cc_fine.csv
-meas tran p_d155 AVG @d.xa.d155[p] from=2.29 to=2.3
+meas tran p_d155 AVG @d.xa.d155[p] from=0.59 to=0.6
 echo "p_d155,$&p_d155" >> R120_cc_fine.csv
-meas tran p_d156 AVG @d.xa.d156[p] from=2.29 to=2.3
+meas tran p_d156 AVG @d.xa.d156[p] from=0.59 to=0.6
 echo "p_d156,$&p_d156" >> R120_cc_fine.csv
-meas tran p_d157 AVG @d.xa.d157[p] from=2.29 to=2.3
+meas tran p_d157 AVG @d.xa.d157[p] from=0.59 to=0.6
 echo "p_d157,$&p_d157" >> R120_cc_fine.csv
-meas tran p_d158 AVG @d.xa.d158[p] from=2.29 to=2.3
+meas tran p_d158 AVG @d.xa.d158[p] from=0.59 to=0.6
 echo "p_d158,$&p_d158" >> R120_cc_fine.csv
-meas tran p_d159 AVG @d.xa.d159[p] from=2.29 to=2.3
+meas tran p_d159 AVG @d.xa.d159[p] from=0.59 to=0.6
 echo "p_d159,$&p_d159" >> R120_cc_fine.csv
 quit
 .endc
