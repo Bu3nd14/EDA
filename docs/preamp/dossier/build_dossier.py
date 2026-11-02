@@ -247,7 +247,9 @@ IMMAGINI = {
 
 # Le parti della pagina: la scheda audio (L51a), l'alimentatore (L51b), le schede di prova
 # (L51c). Con tutte e tre il generatore scrive accanto a se'.
-PARTI = ("audio", "alimentatore", "schede")
+# L64a: la prima delle tre parti di L64 (l'utente, 2026-11-02: «Three parts, like last time»);
+# finche' non ci sono tutte, il generatore scrive solo --standalone fuori dal repo.
+PARTI = ("audio",)
 PARTI_TUTTE = ("audio", "alimentatore", "schede")
 
 MODES = ("0db", "3db", "10db")
@@ -258,7 +260,11 @@ PM_MIN = 60.0          # V1, ADR-019
 E5_MAX = 10.0          # µV, E5
 E6 = 2.7               # V RMS, E6 (FiiO K11 a fondo scala)
 TA = 60.0              # °C nel telaio, ADR-021
-RTH_MJE = 62.5         # °C/W, RθJA MJE15032/33 TO-220, ADR-021
+RTH_MJE = 62.5         # °C/W, RθJA MJE15032/33 TO-220 senza dissipatore, ADR-021
+# L64a: da ADR-099 i finali hanno il dissipatore a clip Ohmite WA-T220-101E: 20 °C/W a 1 W
+# (la cifra peggiore della curva del costruttore) + 2,5 °C/W giunzione-case + 2 °C/W
+# d'interfaccia (ipotesi dichiarata in ADR-099) = 24,5 °C/W
+RTH_MJE_DISS = 20.0 + 2.5 + 2.0
 TJ_MAX = 125.0         # °C, P7
 
 sys.path.insert(0, HERE)
@@ -304,7 +310,7 @@ def sa(root, *parts):
     if m and m.group(1) < AUDIO_DA and not any(
             p == k or p.startswith(k + os.sep) for k in AUDIO_PERMESSI):
         raise SystemExit(f"RIFIUTATO: {rel(p)} e' del {m.group(1)}, prima del circuito di oggi "
-                         f"({AUDIO_DA}, L48b), e non e' fra le eccezioni dichiarate. "
+                         f"({AUDIO_DA}, L66 e L67), e non e' fra le eccezioni dichiarate. "
                          "Nessun file e' stato scritto.")
     return p
 
@@ -1458,7 +1464,7 @@ def measure_p7():
                 continue
             w = max(rows, key=lambda r: max(num(r, "p_q132"), num(r, "p_q133")))
             p = max(num(w, "p_q132"), num(w, "p_q133"))
-            worst[(blk, m)] = {"p": p, "tj": TA + p * RTH_MJE, "caso": w["caso"],
+            worst[(blk, m)] = {"p": p, "tj": TA + p * RTH_MJE_DISS, "caso": w["caso"],
                                "f": w["f_hz"]}
     classA = lambda r: num(r, "icmin_q132") > 0 and num(r, "icmax_q133") < 0  # noqa: E731
     listen = [r for r in tab if r["blk"] in LISTEN.get(r["caso"], set())]
@@ -1856,7 +1862,7 @@ def measure_volume(e3e5):
 
     # gli scatti: analizza.py su copie dei CSV, in una cartella temporanea
     import tempfile
-    dz = sa(L48B, "scatti")
+    dz = sa(L64A, "scatti")
     tmp = tempfile.mkdtemp(prefix="l51a_scatti_")
     os.mkdir(os.path.join(tmp, "deck"))
     shutil.copy(tool(dz, "analizza.py"), tmp)
@@ -1882,6 +1888,31 @@ def measure_volume(e3e5):
                           if r["var"] == "0" and r["evento"] in ("1", "2")) * 1e-6
     out["trim_max"] = max(float(r["peggiore_uv"]) for r in tri) * 1e-6
     out["n_fin"] = len(fin)
+    # L64a, la seconda strada: lo stesso banco di L48b (prima del limitatore d'ingresso e dei
+    # cambi del blocco; la continua propria del blocco A era -6,62 mV, oggi -2,89), riga per
+    # riga sulle varianti 0 e 4: entro l'1 % dove il gradino supera 100 uV, entro 1 uV dove
+    # sta al pavimento del metodo
+    key = lambda r: (r["var"], r["evento"], r["guad_db"] if "guad_db" in r else r.get("g"),  # noqa: E731
+                     r.get("modo"))
+    l48 = {key(r): r for r in _csv(vecchio(L48B, "scatti", "sintesi.csv")) if r["var"] in ("0", "4")}
+    rel_max, abs_max, n2 = 0.0, 0.0, 0
+    for r in rows:
+        if r["var"] not in ("0", "4"):
+            continue
+        s = l48.get(key(r))
+        if s is None:
+            refuse(f"scatti: la riga {key(r)} non c'e' in L48b")
+            continue
+        a_, b_ = float(r["peggiore_uv"]), float(s["peggiore_uv"])
+        n2 += 1
+        if max(a_, b_) >= 100:
+            rel_max = max(rel_max, abs(a_ - b_) / b_)
+        else:
+            abs_max = max(abs_max, abs(a_ - b_))
+    if not (rel_max <= 0.01 and abs_max <= 1.0) or n2 != len(l48):
+        refuse(f"scatti contro L48b: {n2} righe su {len(l48)}, scarto {rel_max:.2%} sopra 100 uV, "
+               f"{abs_max:.3f} uV sotto")
+    out.update(l48b_rel=rel_max, l48b_abs_uv=abs_max, l48b_n=n2)
     return out
 
 
@@ -1905,11 +1936,22 @@ def v4_soglie():
 
 
 def measure_distortion():
-    """V4 sul blocco di oggi (L51c). Tre strade: la THD che ngspice stampa nel log, caso per
-    caso, contro il CSV di leggi_four.py; il CSV contro quello di L46b sulla variante scelta
-    (le colonne di DIST_UGUALI uguali alla cifra); il blocco corso uguale al
-    gain_block_flat.inc di oggi, e i deck uguali a quelli di L46b a meno del blocco incluso."""
-    inc = sa(L51CD, "inc", "oggi.inc")
+    """V4 sul blocco di oggi, in tre parti (L64a).
+      1. il blocco a 27 °C col banco di L46b, ricorso oggi (L64a/distorsione, come L51c): il
+         blocco corso uguale a gain_block_flat.inc di oggi; i deck uguali a quelli di L46b a meno
+         del blocco incluso; la THD che ngspice stampa nel log contro il CSV di leggi_four.py,
+         caso per caso. La seconda strada e' la corsa di L51c sullo stesso banco col blocco di
+         allora: gli scarti si pubblicano, non si chiede l'uguaglianza (il blocco e' cambiato);
+      2. il blocco a caldo, ogni giunzione alla sua temperatura (L66, la variante lim365 che e'
+         il sorgente di oggi): L66/sintesi_caldo.csv contro le 48 THD del deck di L66 che L67 ha
+         rifatto (L67/noto_caldo.csv, colonna thd_piatto_pct), massimo per condizione e livello;
+      3. la catena (L67, ADR-112): ogni blocco al suo livello, tetto(L) = 0,001 % x L / 0,2 V con
+         L = max(livello del blocco A, livello alla principale), scritto di nuovo qui e applicato
+         ai catena_<blocco>.csv, contro verifica_livello.csv riga per riga; l'intermodulazione
+         sulla catena (imd_catena.csv) contro il tetto di V4 letto da REQUIREMENTS.md.
+    I tetti di V4 sono letti da REQUIREMENTS.md."""
+    dd = sa(L64A, "distorsione")
+    inc = sa(dd, "inc", "oggi.inc")
     with open(inc) as f:
         head, body = f.read().split("\n", 1)
     with open(os.path.join(REPO, "spice", "preamp", "gain_block_flat.inc")) as f:
@@ -1917,22 +1959,22 @@ def measure_distortion():
             refuse(f"{rel(inc)}: non e' spice/preamp/gain_block_flat.inc di oggi con una riga di "
                    "commento in testa: il blocco corso non e' quello del sorgente")
     for d in DIST_DECKS:
-        stesso_deck(f"distorsione, {d}", sa(L51CD, "deck", "oggi", d + ".cir"),
+        stesso_deck(f"distorsione, {d}", sa(dd, "deck", "oggi", d + ".cir"),
                     vecchio(L46B, "deck", L46B_VAR, d + ".cir"),
                     swap=(("variante oggi", "variante " + L46B_VAR),
-                          ("data/2026-10-10/L51c/distorsione/inc/oggi.inc",
+                          ("data/2026-11-02/L64a/distorsione/inc/oggi.inc",
                            f"data/2026-10-01/L46b/inc/{L46B_VAR}.inc")))
     esiti = {}
-    with open(sa(L51CD, "run", "esiti.tsv")) as f:
+    with open(sa(dd, "run", "esiti.tsv")) as f:
         for ln in f:
             c = ln.rstrip("\n").split("\t")
             if len(c) == 4 and c[0] == "oggi":
                 esiti[c[1]] = c[2]
-    rows = rows_of(sa(L51CD, "run", "oggi", "distorsione.csv"))
+    rows = rows_of(sa(dd, "run", "oggi", "distorsione.csv"))
     for d in DIST_DECKS:
         if esiti.get(d) != "0":
             refuse(f"distorsione, {d}: run_simulation.sh ha dato rc {esiti.get(d)} (esiti.tsv)")
-        log = sa(L51CD, "run", "oggi", d, d + ".log")
+        log = sa(dd, "run", "oggi", d, d + ".log")
         log_pulito(log)
         if d == "imd":
             continue
@@ -1945,36 +1987,96 @@ def measure_distortion():
             refuse(f"distorsione, {d}: {len(casi)} casi e {len(thd)} THD di v(out) nel log, "
                    "invece di 6 e 6")
             continue
-        for (modo, liv), t in zip(casi, thd):
+        for (modo, liv), t_ in zip(casi, thd):
             r = [x for x in rows if x["deck"] == d and x["modo"] == modo and x["livello"] == liv]
-            if len(r) != 1 or not math.isclose(float(r[0]["thd_pct"]), float(t), rel_tol=1e-3):
-                refuse(f"distorsione, {d} modo {modo} {liv}: la THD del log ({t} %) non e' quella "
+            if len(r) != 1 or not math.isclose(float(r[0]["thd_pct"]), float(t_), rel_tol=1e-3):
+                refuse(f"distorsione, {d} modo {modo} {liv}: la THD del log ({t_} %) non e' quella "
                        f"del CSV ({r[0]['thd_pct'] if len(r) == 1 else 'assente'})")
+    # la seconda strada: L51c, lo stesso banco col blocco del 2026-10-10; gli scarti in dB
     old = {(r["deck"], r["modo"], r["livello"]): r
-           for r in rows_of(vecchio(L46B, "run", L46B_VAR, "distorsione.csv"))}
+           for r in rows_of(vecchio(L51CD, "run", "oggi", "distorsione.csv"))}
     new = {(r["deck"], r["modo"], r["livello"]): r for r in rows}
     if set(old) != set(new) or len(new) != 24:
-        refuse(f"distorsione: {len(new)} casi oggi, {len(old)} in L46b, non gli stessi 24")
-    for k in sorted(set(old) & set(new)):
-        for c in DIST_UGUALI:
-            if new[k][c] != old[k][c]:
-                refuse(f"distorsione, {' '.join(k)}: {c} {new[k][c]} oggi, {old[k][c]} in L46b")
+        refuse(f"distorsione: {len(new)} casi oggi, {len(old)} in L51c, non gli stessi 24")
+    scarto_thd = max((abs(db20(float(new[k]["thd_pct"]) / float(old[k]["thd_pct"])))
+                      for k in new if k in old and new[k]["thd_pct"] and old[k]["thd_pct"]),
+                     default=float("nan"))
+    scarto_imd = max((abs(float(new[k]["imd_d2_db"]) - float(old[k]["imd_d2_db"]))
+                      for k in new if k in old and new[k]["imd_d2_db"] and old[k]["imd_d2_db"]),
+                     default=float("nan"))
 
-    def mx(col, deck, liv):
-        v = [float(r[col]) for r in rows if r["livello"] == liv and r["deck"].startswith(deck)
+    def mx(col, deck, liv, rr=rows):
+        v = [float(r[col]) for r in rr if r["livello"] == liv and r["deck"].startswith(deck)
              and r[col] != ""]
         return max(v) if v else float("nan")
-    out = {"dir": L51CD, "rows": rows, "soglie": v4_soglie(),
+    out = {"dir": dd, "rows": rows, "soglie": v4_soglie(),
            "thd_lo": {f: mx("thd_pct", f"thd_{f}", "lo") for f in ("1k", "10k", "20k")},
            "h5_lo": mx("h5su_db", "thd", "lo"), "imd_lo": mx("imd_d2_db", "imd", "lo"),
            "thd_hi_20k": mx("thd_pct", "thd_20k", "hi"), "imd_hi": mx("imd_d2_db", "imd", "hi"),
-           # floor: le armoniche dalla 5a oggi e in L46b, che non coincidono alla cifra
-           "h5_lo_l46b": max(float(r["h5su_db"]) for r in old.values()
-                             if r["livello"] == "lo" and r["deck"].startswith("thd"))}
+           "h5_lo_l46b": mx("h5su_db", "thd", "lo", list(old.values())),
+           "l51c_dir": L51CD, "scarto_thd_db": scarto_thd, "scarto_imd_db": scarto_imd,
+           "thd_20k_l51c": mx("thd_pct", "thd_20k", "lo", list(old.values()))}
     s = out["soglie"]
     out["ok"] = {"thd20_lo": out["thd_lo"]["20k"] <= s["thd20_lo"],
-                 "h5": out["h5_lo"] <= s["h5"] and out["h5_lo_l46b"] <= s["h5"],
+                 "h5": out["h5_lo"] <= s["h5"],
                  "imd": out["imd_lo"] <= s["imd"], "thd20_hi": out["thd_hi_20k"] <= s["thd20_hi"]}
+
+    # 2. a caldo (L66), contro le 48 THD rifatte da L67
+    sc = [r for r in _csv(sa(L66, "sintesi_caldo.csv")) if r["spec"] == "lim365--sot223--diss"]
+    noto = _csv(sa(L67, "noto_caldo.csv"))
+    caldo = []
+    for r in sc:
+        nn = [x for x in noto if x["cond"] == r["cond"]]
+        if len(nn) != 12:
+            refuse(f"L67/noto_caldo.csv: {len(nn)} casi per {r['cond']}, attesi 12")
+            continue
+        for liv, col in (("lo", "thd_lo_max_pct"), ("hi", "thd_hi_max_pct")):
+            m = max(float(x["thd_piatto_pct"]) for x in nn if f"livello={liv}" in x["caso"])
+            if "%.3g" % m != "%.3g" % float(r[col]):
+                refuse(f"a caldo, {r['cond']} {liv}: L66 scrive {r[col]} %, le THD rifatte da L67 "
+                       f"danno {m:.6g} %")
+            if any(float(x["diff_rel"]) != 0 for x in nn):
+                refuse(f"L67/noto_caldo.csv: il blocco avvolto non ridà L66 in {r['cond']}")
+        caldo.append({"cond": r["cond"], "fuori": int(r["thd_fuori"]),
+                      "margine": float(r["thd_margine_min_dB"]), "thd_lo": float(r["thd_lo_max_pct"]),
+                      "thd_hi": float(r["thd_hi_max_pct"]), "imd": float(r["imd_lo_max_dB"])})
+    if len(caldo) != 4:
+        refuse(f"L66/sintesi_caldo.csv: {len(caldo)} condizioni per lim365, attese 4")
+    out["caldo"] = caldo
+    out["caldo_dir"] = L66
+
+    # 3. la catena (L67, ADR-112)
+    liv_main = {"lo": 0.2, "hi": 2.0}
+    ver = _csv(sa(L67, "verifica_livello.csv"))
+    blocchi = sorted({r["blocco"] for r in ver})
+    cat = {}
+    for bl in blocchi:
+        mine = []
+        for r in _csv(sa(L67, f"catena_{bl}.csv")):
+            if r["freq"] != "20000":
+                continue
+            L_ = max(float(r["livello_A_V"]), liv_main[r["livello"]])
+            tetto = s["thd20_lo"] * L_ / 0.2
+            mine.append((r["griglia"], r["uscita"], r["livello"], r["modo"], r["vol"], r["rs"],
+                         20 * math.log10(tetto / float(r["thd_pct"])), r["verdetto"]))
+        theirs = [(r["griglia"], r["uscita"], r["livello"], r["modo"], r["vol"], r["rs"],
+                   float(r["margine_dB"]), r["verdetto_v4"]) for r in ver if r["blocco"] == bl]
+        if len(mine) != len(theirs) or any(
+                a_[:6] != b_[:6] or abs(a_[6] - b_[6]) > 0.051 or a_[7] != b_[7]
+                for a_, b_ in zip(mine, theirs)):
+            refuse(f"L67, la catena {bl}: la regola di ADR-112 rifatta qui non ridà verifica_livello.csv")
+        cat[bl] = {"n": len(mine), "fuori": sum(1 for x in mine if x[6] < 0),
+                   "margine": min(x[6] for x in mine),
+                   "fuori_v4": sum(1 for x in mine if x[7] != "dentro")}
+    out["catena"] = cat
+    imd = _csv(sa(L67, "imd_catena.csv"))
+    for r in imd:
+        if abs((s["imd"] - float(r["imd_d2_db"])) - float(r["margine_dB"])) > 0.051:
+            refuse(f"L67/imd_catena.csv: margine {r['margine_dB']} dB, il tetto di V4 da' "
+                   f"{s['imd'] - float(r['imd_d2_db']):.1f}")
+    out["imd_catena"] = {"n": len(imd), "fuori": sum(1 for r in imd if r["verdetto"] != "dentro"),
+                         "margine": min(float(r["margine_dB"]) for r in imd)}
+    out["catena_dir"] = L67
     # V1 sulla dispersione di I_DSS del blocco scelto (L46b): per «Cosa non dice»
     idss = [r for r in rows_of(vecchio(L46B, "idss.csv")) if r["variante"] == L46B_VAR]
     out["v1_idss"] = (min(float(idss[0][c]) for c in ("B_pubbl_min", "A_pubbl_min", "buf_pubbl_min"))
@@ -3524,10 +3626,10 @@ def build_page(M, inline=False):
 
     # --- il volume col bilanciamento ---
     A(h2("svol"))
-    A(prov_line("tb_e5_bilanciamento.cir", vol["e5_dir"], deckdir=sa(L48B, "e5_bilanciamento"),
+    A(prov_line("tb_e5_bilanciamento.cir", vol["e5_dir"], deckdir=sa(L64A, "bilanciamento"),
                 note=" &middot; <strong>copia del deck</strong> col bilanciamento girato di 3 dB "
                      "(L48b), ricorsa oggi"))
-    A(prov_line("tb_loop_bilanciamento.cir", vol["v1_dir"], deckdir=sa(L48B, "v1_bilanciamento"),
+    A(prov_line("tb_loop_bilanciamento.cir", vol["v1_dir"], deckdir=sa(L64A, "bilanciamento"),
                 note=" &middot; <strong>copia di tb_loop.cir</strong> con le sorgenti del "
                      "bilanciamento (L48b), ricorsa oggi"))
     A('<p>Il volume è un potenziometro, non più un attenuatore a scatti, con un bilanciamento '
@@ -4756,8 +4858,8 @@ def main():
     M["decks"] = ([os.path.join(TB, d) for d in DECKS]
                   + [os.path.join(TB, "tb_v2_casopeggiore.cir"), os.path.join(TB, "tb_e3_e5.cir"),
                      os.path.join(TB, "tb_f1_selettore.cir"),
-                     os.path.join(L48B, "e5_bilanciamento", "tb_e5_bilanciamento.cir"),
-                     os.path.join(L48B, "v1_bilanciamento", "tb_loop_bilanciamento.cir")]
+                     os.path.join(L64A, "bilanciamento", "tb_e5_bilanciamento.cir"),
+                     os.path.join(L64A, "bilanciamento", "tb_loop_bilanciamento.cir")]
                   + [os.path.join(L51CD, "deck", "oggi", d + ".cir") for d in DIST_DECKS])
     for deck in M["decks"]:
         provenance(deck)
