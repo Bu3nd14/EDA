@@ -18,6 +18,28 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L58a1 — i test point e la distinta del temporizzatore (2026-10-29)
+
+- **L58 diviso dall'utente all'inizio** («Due sessioni»): L58a i test point, la FMEA e la distinta
+  dell'alimentatore; L58b l'autodiagnosi. **L66 dopo L58, prima di L64**, confermato. A metà di L58a
+  l'utente ha chiesto di mettere in sicurezza il lavoro (il budget settimanale): chiuso come **L58a1**,
+  le righe della FMEA a **L58a2**.
+- **I test point** (ADR-107): `Connector:TestPoint`, anello Keystone 5000; audio TP1–TP9 al cablaggio
+  e una coppia uscita / massa per blocco; alimentatore TP501–TP517 (rail, VRELAY dai due lati di Q505,
+  V5, MUTE_G / PERMIT_G / PERMIT_T, i comandi dei relè, RLY_RET). Non nei deck. ERC come prima; i
+  disegni verificati nei due sensi. Sulla scheda audio 5 reti cambiano nome a ogni rigenerazione, coi
+  piedini uguali: lo fa anche il sorgente di prima (limitations #74), coperto dai sinonimi del disegno.
+- **La distinta** (`data/2026-10-29/L58a/distinta/README.md`): BAS416,115 in produzione, LCSC 14 080
+  pz, perdita max 5 nA; VF a 1 mA 0,9 V, sul limite e letta solo su riassunti. **Nessun C0G da 1 µF a
+  montaggio superficiale** (il «Da riaprire se» di ADR-105): l'utente ha scelto **C548 / C552 in film
+  di polipropilene a foro** (TDK B32672L2105J003), **C553 in C0G 2220, C518 in C0G 1206** (ADR-108);
+  valori invariati, gli angoli di L54b3b restano.
+- **Il banco della FMEA** (`data/2026-10-29/L58a/psu/`): la copia di L54b3b con TestPoint mappato a
+  niente, i sette eventi del temporizzatore come guasti latenti, R585 e i quattro BAS416 aperti / in
+  corto in `modi.py`, la perdita (1 µA, ipotesi dichiarata) e la deriva di R585 in `lista_l58a.py`. Le
+  quattro prove sul caso noto (`lista_prova.txt`) sono corse (rc 0) e **non ancora lette**.
+- **Dopo**: **L58a2**, il prompt di `NEXT-SESSION.md`.
+
 ### L55 — il dispositivo d'uscita del blocco (2026-10-29)
 
 - **Il candidato** (`bom-component-manager`, `data/2026-10-29/L55/modelli/README.md`): il solo driver di
