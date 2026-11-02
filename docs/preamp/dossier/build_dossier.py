@@ -212,6 +212,14 @@ AUDIO_PERMESSI = {
                                 "bobine erano da 5 V e oggi sono da 12 V (ADR-048), ma quello che "
                                 "la corsa prova è di struttura: col polo ponte la bobina non perde "
                                 "mai l’alimentazione, per ogni resistenza e induttanza spazzata",
+    # L64a: il limitatore d'ingresso (ADR-101) non e' cambiato dopo «dopo L57b»
+    # (circuits/preamp/input_limiter.py e il subckt: ultimo commit 539970c28)
+    os.path.join(DATAROOT, "2026-10-25", "dopo-L57b"): "il limitatore d’ingresso (ADR-101) non è "
+        "cambiato dopo; il suo costo in distorsione è misurato sul blocco di allora",
+    # L64a: la Stax, i modi che il limitatore del VAS di ADR-111 non tocca; L66 ha ricorso quelli
+    # che tocca, e i Q132 / Q133 ce ridanno L45d2b3b2b2 alla cifra
+    os.path.join(DATAROOT, "2026-10-24", "L45d2b3b3"): "i guasti sulla Stax che il limitatore del "
+        "VAS (ADR-111) non tocca; quelli che tocca li ha ricorsi L66",
 }
 # L51c: la distorsione del blocco di oggi (l'utente, 2026-10-10: «Rifarla e mostrarla»). La
 # prima strada e' la corsa del 2026-10-10 col banco di L46b (genera.py, esegui.sh,
@@ -2086,6 +2094,114 @@ def measure_distortion():
     return out
 
 
+# ------------------------------------------- le sezioni nuove di L64a -----
+RTH_VAS = 125.0        # °C/W, il VAS in SOT-223 (ADR-068), la cifra dei banchi del calore di L66
+
+
+def p10_soglia_ms():
+    """Il tetto di P10 sulla Stax, letto da REQUIREMENTS.md (ADR-086), non scritto qui."""
+    with open(os.path.join(REPO, "docs", "preamp", "REQUIREMENTS.md")) as f:
+        r = [ln for ln in f if ln.startswith("| P10 |")]
+    m = re.search(r"al più \*\*(\d+) ms\*\*", r[0]) if len(r) == 1 else None
+    if not m:
+        refuse("REQUIREMENTS.md: non trovo il tetto di P10 in ms")
+        return float("nan")
+    return float(m.group(1))
+
+
+def measure_limitatore():
+    """Il limitatore d'ingresso (ADR-101, «dopo L57b»): l'RCA collegato a caldo e il costo.
+    Seconda strada: le cifre di THD ed E5 di sintesi.csv uguali a quelle di costo/costo.csv."""
+    d = sa(DATAROOT, "2026-10-25", "dopo-L57b")
+    rows = _csv(os.path.join(d, "sintesi.csv"))
+    lim = [r for r in rows if r["variante"] == "lim"]
+    mute = [r for r in rows if r["variante"] == "mute_lim"]
+    if len(lim) != 3 or len(mute) != 3:
+        refuse("dopo-L57b/sintesi.csv: attese tre reti per lim e per mute_lim")
+        return {}
+    costo = _csv(os.path.join(d, "costo", "costo.csv"))
+
+    def c(var, f, liv, col):
+        r = [x for x in costo if x["variante"] == var and x["freq"] == f and x["livello"] == liv]
+        return float(r[0][col]) if len(r) == 1 and r[0][col] else float("nan")
+    for r in lim:
+        for col, f, liv, cc in (("thd20k_02v_pct", "20000", "lo", "thd_pct"),
+                                ("thd20k_2v_pct", "20000", "hi", "thd_pct"),
+                                ("e5_stima_uv", "1000", "lo", "e5_stima_uv")):
+            if float(r[col]) != c("lim", f, liv, cc):
+                refuse(f"dopo-L57b: {col} {r[col]} in sintesi.csv, {c('lim', f, liv, cc)} in costo.csv")
+    w = max(lim, key=lambda r: float(r["ain_pk_v"]))
+    return {"dir": d, "ain": float(w["ain_pk_v"]), "gg_m": min(float(r["gg_margine_v"]) for r in lim),
+            "gd_m": min(float(r["gd_margine_v"]) for r in lim),
+            "k11_0": max(float(r["k11_0db_dbspl"]) for r in lim),
+            "k11_10": max(float(r["k11_10db_dbspl"]) for r in lim),
+            "mute_0": max(float(r["k11_0db_dbspl"]) for r in mute),
+            "mute_10": max(float(r["k11_10db_dbspl"]) for r in mute),
+            "thd_senza": c("senza", "20000", "lo", "thd_pct"), "thd_lim": c("lim", "20000", "lo", "thd_pct"),
+            "e5_senza": c("senza", "1000", "lo", "e5_stima_uv"), "e5_lim": c("lim", "1000", "lo", "e5_stima_uv")}
+
+
+def measure_guasti_blocco():
+    """I guasti del blocco sul sorgente di oggi, col dissipatore sui finali (L66, calore_dopo.csv:
+    714 modi, quattro posizioni). Seconda strada: la temperatura dei finali e del VAS rifatta qui
+    dalla potenza, 60 °C d'aria, RTH_MJE_DISS e RTH_VAS, entro l'arrotondamento al grado."""
+    rows = _csv(sa(L66, "calore_dopo.csv"))
+    male = 0
+    for r in rows:
+        for dev, rth in (("q132", RTH_MJE_DISS), ("q133", RTH_MJE_DISS)):
+            if abs(TA + float(r[f"P_{dev}_W"]) * rth - float(r[f"Tj_{dev}_60"])) > 0.6:
+                male += 1
+        if float(r["Tj_max_60"]) < TA + float(r["P_q122_W"]) * RTH_VAS - 0.6:
+            male += 1
+    if male:
+        refuse(f"L66/calore_dopo.csv: {male} temperature non tornano dalla potenza")
+    w = max(rows, key=lambda r: float(r["Tj_max_60"]))
+    fin = max(rows, key=lambda r: max(float(r["Tj_q132_60"]), float(r["Tj_q133_60"])))
+    oltre = [r for r in rows if float(r["Tj_max_60"]) > TJ_MAX]
+    tj = _csv(sa(L66, "tj", "lim365--sot223--diss.csv"))
+    # le righe di nota del file (Tj = «coda=...») non sono temperature
+    riposo = {(r["aria"], r["variante"], r["disp"]): float(r["Tj"]) for r in tj
+              if re.fullmatch(r"[-+0-9.eE]+", r["Tj"] or "")}
+    return {"dir": L66, "n": len(rows), "w": w, "tjmax": float(w["Tj_max_60"]),
+            "fin": fin, "fin_tj": max(float(fin["Tj_q132_60"]), float(fin["Tj_q133_60"])),
+            "oltre": len(oltre), "oltre_flag": sum(1 for r in rows if r["oltre_i_limiti_60C"]),
+            # le parti oltre i loro limiti (non le giunzioni): C145 in corto, NC-075
+            "oltre_txt": sorted({(r["modo"], r["oltre_i_limiti_60C"]) for r in rows
+                                 if r["oltre_i_limiti_60C"]}),
+            "riposo_fin_57": max(v for (a, v_, d), v in riposo.items()
+                                 if a == "57" and d.upper() in ("Q132", "Q133")),
+            "riposo_max_57": max(v for (a, v_, d), v in riposo.items() if a == "57")}
+
+
+def measure_stax():
+    """La Stax (fissa 2) contro P10 (ADR-086), il tetto letto da REQUIREMENTS.md: il tempo sopra
+    0,87 V sul jack della Stax (fix2_sopra_ms). I modi che il limitatore di ADR-111 tocca, sul
+    sorgente di oggi (L66/p10_stax.csv); gli altri modi nuovi di L45d2b3b3. La colonna «p10»
+    dei CSV e' giudicata contro 100 ms (LIMITE_P10_MS di L45b, prima di ADR-086): non si legge.
+    Seconda strada: fix2_sopra_ms <= fix2_ultimo_ms riga per riga, e p10_sopra_ms_max >= ogni
+    colonna _sopra_ms."""
+    soglia = p10_soglia_ms()
+    out = {"soglia": soglia, "parti": []}
+    for lab, path in (("oggi (L66)", sa(L66, "p10_stax.csv")),
+                      ("modi nuovi (L45d2b3b3)", sa(DATAROOT, "2026-10-24", "L45d2b3b3",
+                                                     "p10_stax_nuove.csv")),
+                      ("controllo (L45d2b3b3)", sa(DATAROOT, "2026-10-24", "L45d2b3b3",
+                                                    "p10_stax_controllo.csv"))):
+        rows = _csv(path)
+        for r in rows:
+            s_ = [float(r[k]) for k in ("main_sopra_ms", "fix1_sopra_ms", "fix2_sopra_ms")]
+            if float(r["fix2_sopra_ms"]) > float(r["fix2_ultimo_ms"]) + 0.05 or \
+                    abs(float(r["p10_sopra_ms_max"]) - max(s_)) > 0.05:
+                refuse(f"{rel(path)}: {r['modo']}, i tempi sopra 0,87 V non tornano")
+        w = max(rows, key=lambda r: float(r["fix2_sopra_ms"]))
+        out["parti"].append({"lab": lab, "path": path, "n": len(rows),
+                             "fuori": sum(1 for r in rows if float(r["fix2_sopra_ms"]) > soglia),
+                             "max": float(w["fix2_sopra_ms"]), "modo": w["modo"]})
+    out["max"] = max(x["max"] for x in out["parti"])
+    return out
+
+
+
 # I report delle schede di prova: i vincoli per il progetto stanno li', in un elenco numerato
 # col titolo in grassetto. Si leggono, non si riscrivono (sono testo, non numeri dei JSON).
 L49A_REPORT = os.path.join(REPO, "docs", "preamp", "reports", "2026-10-09-L49a-scheda-audio-prova.md")
@@ -3151,6 +3267,7 @@ SECTIONS_TUTTE = (
     ("s0", "Il contratto: il Product Requirements Book", "audio"),
     ("s1", "Il blocco di guadagno", "audio"), ("s2", "Il preamplificatore intero", "audio"),
     ("ssel", "Il selettore d&rsquo;ingresso: F1", "audio"),
+    ("slim", "Il limitatore d&rsquo;ingresso", "audio"),
     ("s3", "Punti di lavoro", "audio"), ("s4", "Risposta in frequenza", "audio"),
     ("s5", "Stabilità: la matrice V1", "audio"),
     ("s6", "Il trim e l&rsquo;impedenza d&rsquo;ingresso", "audio"),
@@ -3163,6 +3280,8 @@ SECTIONS_TUTTE = (
     ("smute", "Il mute: i relè al jack, V2", "audio"),
     ("sint", "Il guadagno interbloccato e i comandi", "audio"),
     ("s12", "Sovraccarico e corto: V3, P7", "audio"),
+    ("sprot", "Il blocco di oggi: i guasti e il calore", "audio"),
+    ("sstax", "La Stax: il condensatore e i guasti lunghi, P10", "audio"),
     ("sheat", "Il calore del telaio", "alimentatore"),
     ("spsu", "L&rsquo;alimentatore: schema e decisioni", "alimentatore"),
     ("spow", "Potenza, rail e VRELAY", "alimentatore"),
@@ -3450,6 +3569,31 @@ def build_page(M, inline=False):
     A('</table></div>')
 
     # --- 3 punti di lavoro ---
+    # --- il limitatore d'ingresso (L64a: ADR-101, «dopo L57b») ---
+    li = M["lim"]
+    A(h2("slim"))
+    A(f'<p class="prov">Dati <code>{html_escape(rel(li["dir"]))}/</code> &middot; il limitatore non è '
+      'cambiato dopo (ADR-101; il modello del BAV199 è del costruttore, Diodes Incorporated)</p>')
+    A('<p>Fra il contatto del selettore e il gate del blocco A ci sono 1 kΩ in serie e una coppia '
+      'di diodi BAV199 verso due riferimenti a ±5 V (ADR-101): un cavo RCA collegato a caldo, o una '
+      'sorgente guasta, non porta il gate oltre quello che il JFET regge.</p>')
+    A('<div class="tablewrap"><table><tr><th>Grandezza</th><th class="num">Valore</th></tr>')
+    A(f'<tr><td>picco sul gate, RCA collegato a caldo (reti −10 / 0 / +10 %)</td><td class="num">'
+      f'{fx(li["ain"], 1)} V</td></tr>')
+    A(f'<tr><td>margine sul massimo gate-gate del JFET</td><td class="num">{fx(li["gg_m"], 1)} V</td></tr>')
+    A(f'<tr><td>margine sul massimo gate-drain</td><td class="num">{fx(li["gd_m"], 1)} V</td></tr>')
+    A(f'<tr><td>il colpo alla principale, 0 / +10 dB</td><td class="num">{fx(li["k11_0"], 1)} / '
+      f'{fx(li["k11_10"], 1)} dB SPL</td></tr>')
+    A(f'<tr><td>lo stesso col mute inserito</td><td class="num">{fx(li["mute_0"], 1)} / '
+      f'{fx(li["mute_10"], 1)} dB SPL</td></tr>')
+    A('</table></div>')
+    A(f'<p>Il costo nel suono, sul blocco del giorno della prova: la THD a 20 kHz, 0,2 V, passa da '
+      f'{pct(li["thd_senza"])} a {pct(li["thd_lim"])} % ({fx(db20(li["thd_lim"] / li["thd_senza"]), 1)} dB), '
+      f'e il rumore stimato al jack da {fx(li["e5_senza"], 2)} a {fx(li["e5_lim"], 2)} µV. Per questo il '
+      'manuale chiede di collegare i cavi d&rsquo;ingresso col mute inserito.</p>')
+    A('<p class="meta">Seconda strada: le cifre di THD e di rumore della sintesi tornano, rete per '
+      'rete, nella tabella del costo dello stesso lotto.</p>')
+
     A(h2("s3"))
     A(prov_line("tb_op.cir", op["dir"]))
     A('<p>Corrente dai rail e punto di lavoro di ogni dispositivo attivo, a ingresso a '
@@ -3855,7 +3999,8 @@ def build_page(M, inline=False):
       'blocco di guadagno da solo nei tre modi, sorgente 2,5 kΩ, carico 47 Ω + 4,7 µF + 10 kΩ, '
       'a due livelli d&rsquo;uscita: 0,2 V RMS, il livello musicale scelto dall&rsquo;utente '
       '(&minus;20 dB), e 2 V RMS, la prova di stress. È stato corso di nuovo il '
-      '2026-10-10 sul blocco che il sorgente genera oggi.</p>')
+      '2026-11-02 sul blocco che il sorgente genera oggi, a 27 °C uniformi; le cifre a caldo e '
+      'quelle sulla catena sono sotto.</p>')
     A('<div class="tablewrap"><table><tr><th>Clausola</th><th class="num">Tetto</th>'
       '<th class="num">Il blocco di oggi, il peggiore sui tre modi</th><th>Esito</th></tr>')
     for k, lab, val, tet in (
@@ -3886,13 +4031,60 @@ def build_page(M, inline=False):
     A('</table></div>')
     A(f'<p class="meta">Tre controlli. La THD che ngspice stampa nel log, caso per caso, coincide '
       'con la tabella di <code>leggi_four.py</code>. Il blocco corso è '
-      '<code>spice/preamp/gain_block_flat.inc</code> di oggi, rigenerato dal sorgente e uguale '
-      'byte per byte, e i deck sono quelli di L46b a meno del blocco incluso. Le 24 righe '
-      f'coincidono alla cifra con quelle della variante scelta in L46b (<code>{html_escape(rel(os.path.join(L46B, "run", L46B_VAR)))}/</code>) '
-      'su ampiezza, THD, seconda e terza armonica e i due prodotti '
-      'd&rsquo;intermodulazione; cambiano solo il pavimento numerico e le armoniche sotto '
-      f'~&minus;190 dB, il fondo del metodo (dalla 5ª in su, {fx(dist["h5_lo"], 1)} dB oggi, '
-      f'{fx(dist["h5_lo_l46b"], 1)} dB in L46b).</p>')
+      '<code>spice/preamp/gain_block_flat.inc</code> di oggi, uguale byte per byte, e i deck sono '
+      'quelli di L46b a meno del blocco incluso. La seconda strada è la corsa di L51c sullo stesso '
+      f'banco col blocco del 2026-10-10 (<code>{html_escape(rel(os.path.join(dist["l51c_dir"], "run", "oggi")))}/</code>): '
+      'il blocco è cambiato, quindi le cifre non coincidono e lo scarto si scrive. La THD a 20 kHz, '
+      f'0,2 V, era {pct(dist["thd_20k_l51c"])} % ed è {pct(dist["thd_lo"]["20k"])} %; '
+      f'fra i 24 casi la THD si sposta al più di {fx(dist["scarto_thd_db"], 1)} dB e '
+      f'l&rsquo;intermodulazione al più di {fx(dist["scarto_imd_db"], 1)} dB.</p>')
+    A('<h3>A caldo: ogni giunzione alla sua temperatura</h3>')
+    A(f'<p class="prov">Dati <code>{html_escape(rel(os.path.join(dist["caldo_dir"], "sintesi_caldo.csv")))}</code> '
+      '(L66, la variante che ADR-111 ha portato nel sorgente)</p>')
+    A('<p>Lo stesso banco col blocco a caldo: ogni dispositivo alla temperatura che raggiunge '
+      'col proprio calore, a 27 °C e a 57 °C d&rsquo;aria, col rame del layout o col rame minimo. '
+      'Il tetto della THD a 20 kHz è quello di V4 al livello del caso.</p>')
+    A('<div class="tablewrap"><table><tr><th>Aria, rame</th><th class="num">Fuori</th>'
+      '<th class="num">Margine minimo</th><th class="num">THD 20 kHz, 0,2 V</th>'
+      '<th class="num">THD 20 kHz, 2 V</th><th class="num">Intermodulazione</th></tr>')
+    for c in dist["caldo"]:
+        aria, rame = c["cond"].split("_")
+        A(f'<tr><td>{aria[1:]} °C, {"rame del layout" if rame == "rame" else "rame minimo"}</td>'
+          f'<td class="num">{c["fuori"]} su 12</td><td class="num">{fx(c["margine"], 1)} dB</td>'
+          f'<td class="num">{pct(c["thd_lo"])} %</td><td class="num">{pct(c["thd_hi"])} %</td>'
+          f'<td class="num">{fx(c["imd"], 1)} dB</td></tr>')
+    A('</table></div>')
+    A('<p class="meta">Seconda strada: le 48 THD del deck di L66 rifatte da L67 col blocco avvolto '
+      f'in un sottocircuito (<code>{html_escape(rel(os.path.join(dist["catena_dir"], "noto_caldo.csv")))}</code>) '
+      'ridanno i massimi di questa tabella alla cifra.</p>')
+    A('<h3>Sulla catena: ogni blocco al suo livello</h3>')
+    A(f'<p class="prov">Dati <code>{html_escape(rel(dist["catena_dir"]))}/</code> (L67, ADR-112)</p>')
+    cg = dist["catena"]
+    A('<p>Il blocco da solo non dice tutto: sulla catena di un canale il blocco prima del volume '
+      'lavora al livello della sorgente, che può essere più alto di quello all&rsquo;uscita. Per '
+      'decisione dell&rsquo;utente (ADR-112, «Ogni blocco al suo livello») la THD a 20 kHz si '
+      'giudica al livello a cui ogni blocco lavora: il tetto scala da '
+      f'{pct(ds["thd20_lo"], tetto=True)} % a 0,2 V a {pct(ds["thd20_lo"] * 10, tetto=True)} % a 2 V, '
+      'e alla principale vale il livello più alto lungo il percorso.</p>')
+    A('<div class="tablewrap"><table><tr><th>Il blocco, la temperatura</th><th class="num">Casi</th>'
+      '<th class="num">Fuori, ogni blocco al suo livello</th><th class="num">Margine minimo</th>'
+      '<th class="num">Fuori, V4 letto alla lettera</th></tr>')
+    nomi = {"l56": "il blocco di L56", "oggi": "il blocco di oggi, 27 °C",
+            "caldo_t27_rame": "a caldo, 27 °C, rame del layout", "caldo_t27_minima": "a caldo, 27 °C, rame minimo",
+            "caldo_t57_rame": "a caldo, 57 °C, rame del layout", "caldo_t57_minima": "a caldo, 57 °C, rame minimo"}
+    for k in ("oggi", "caldo_t27_rame", "caldo_t27_minima", "caldo_t57_rame", "caldo_t57_minima", "l56"):
+        if k in cg:
+            x = cg[k]
+            A(f'<tr><td>{nomi[k]}</td><td class="num">{x["n"]}</td><td class="num">{x["fuori"]}</td>'
+              f'<td class="num">{fx(x["margine"], 1)} dB</td><td class="num">{x["fuori_v4"]}</td></tr>')
+    A('</table></div>')
+    ic = dist["imd_catena"]
+    A(f'<p>L&rsquo;intermodulazione sulla catena: <strong>{ic["fuori"]} casi su {ic["n"]}</strong> '
+      f'oltre il tetto di {fx(ds["imd"], 0)} dB, margine minimo {fx(ic["margine"], 1)} dB.</p>')
+    A('<p class="meta">Seconda strada: la regola di ADR-112 è scritta di nuovo in questo generatore '
+      'e applicata alle corse della catena; dà, riga per riga, i margini e i verdetti di '
+      '<code>verifica_livello.csv</code>. I margini dell&rsquo;intermodulazione tornano dal tetto '
+      'letto in <code>REQUIREMENTS.md</code>.</p>')
     A('<div class="note"><strong>Cifre di modello, non misure.</strong> I dispositivi usano i '
       f'modelli del costruttore ({sez("s15")}); dove la misura sul prototipo diverge, vale la '
       'misura. Il banco è il blocco da solo: il selettore, il trim, il volume e i buffer delle '
@@ -4075,7 +4267,9 @@ def build_page(M, inline=False):
     A('<h3>P7: ogni uscita regge un corto, il mute si tiene a tempo indefinito</h3>')
     A(prov_line("tb_mute_corto.cir", p7["dir"]))
     A(f'<p>Criterio di ADR-021: Tj = {it(TA, 3)} °C + P<sub>media</sub> · R<sub>θJA</sub> ≤ '
-      f'{it(TJ_MAX, 3)} °C, con R<sub>θJA</sub> = {it(RTH_MJE, 3)} °C/W per i MJE in TO-220. '
+      f'{it(TJ_MAX, 3)} °C, con R<sub>θJA</sub> = {it(RTH_MJE_DISS, 3)} °C/W per i MJE col '
+      'dissipatore di ADR-099 (20 °C/W del dissipatore a 1 W, 2,5 giunzione-case, 2 '
+      f'd&rsquo;interfaccia, ipotesi; senza dissipatore sarebbero {it(RTH_MJE, 3)}). '
       'Casi: normale, mute, corto su ciascuna uscita, apparecchio spento su una fissa; '
       'manopola e ampiezza spazzate, 1 kHz e 20 kHz. Il dispositivo d&rsquo;uscita peggiore '
       'per blocco e modo:</p>')
@@ -4092,6 +4286,62 @@ def build_page(M, inline=False):
       f'{p7["n_listen"]}</strong> ne escono. La 47 Ω dell&rsquo;uscita principale dissipa al '
       f'massimo {it(p7["rsep"]["0"], 3)} / {it(p7["rsep"]["3"], 3)} / {it(p7["rsep"]["10"], 3)} W '
       'a 0 / +3 / +10 dB, e va dimensionata di conseguenza.</p>')
+
+    # --- il blocco di oggi: i guasti e il calore (L64a: L66, ADR-099, ADR-111) ---
+    gb = M["gb"]
+    A(h2("sprot"))
+    A(f'<p class="prov">Dati <code>{html_escape(rel(os.path.join(gb["dir"], "calore_dopo.csv")))}</code> '
+      '(L66, sul sorgente di oggi)</p>')
+    A('<p>Da L51 il blocco è cambiato per i suoi guasti, non per il suono: l&rsquo;inseguitore '
+      'davanti al VAS con la sua resistenza (ADR-067, ADR-087), quattro diodi di riserva al '
+      'moltiplicatore e un diodo sulla base di ciascun finale (ADR-090, ADR-095), R153 sdoppiata '
+      '(ADR-097), quattro rimedi del calore e un dissipatore sui finali (ADR-099), e il limitatore '
+      'del VAS a 36,5 + 18,7 Ω (ADR-111). Ogni guasto singolo di ogni parte del blocco, in ognuna '
+      f'delle posizioni, è stato simulato col blocco di oggi: <strong>{gb["n"]} modi</strong>.</p>')
+    w = gb["w"]
+    A('<div class="tablewrap"><table><tr><th>Con 60 °C d&rsquo;aria</th><th class="num">Valore</th>'
+      '<th>Esito</th></tr>')
+    A(f'<tr><td>la giunzione più calda, su tutti i modi ({html_escape(w["Tj_max_disp_60"].upper())}, '
+      f'{html_escape(w["modo"])}, blocco {html_escape(w["posizione"])})</td>'
+      f'<td class="num">{fx(gb["tjmax"], 0)} °C</td>{verdict(gb["tjmax"] <= TJ_MAX)}</tr>')
+    A(f'<tr><td>il finale più caldo, col dissipatore ({html_escape(gb["fin"]["modo"])})</td>'
+      f'<td class="num">{fx(gb["fin_tj"], 0)} °C</td>{verdict(gb["fin_tj"] <= TJ_MAX)}</tr>')
+    A(f'<tr><td>modi oltre {it(TJ_MAX, 3)} °C (P7)</td><td class="num">{gb["oltre"]}</td>'
+      f'{verdict(gb["oltre"] == 0)}</tr>')
+    A(f'<tr><td>a riposo, 57 °C d&rsquo;aria: il finale / la giunzione più calda</td>'
+      f'<td class="num">{fx(gb["riposo_fin_57"], 1)} / {fx(gb["riposo_max_57"], 1)} °C</td><td></td></tr>')
+    A('</table></div>')
+    if gb["oltre_txt"]:
+        modi = sorted({m for m, _ in gb["oltre_txt"]})
+        A(f'<p>Oltre i loro limiti vanno parti che non sono giunzioni, in {gb["oltre_flag"]} modi '
+          f'({html_escape(", ".join(modi))}): '
+          + "; ".join(html_escape(x) for x in sorted({f for _, f in gb["oltre_txt"]}))
+          + '. È la non conformità NC-075, aperta, che si chiude con la scelta della parte.</p>')
+    A(f'<p class="meta">Seconda strada: la temperatura dei finali e del VAS rifatta qui dalla potenza '
+      f'di ogni modo ({it(TA, 3)} °C + P · {it(RTH_MJE_DISS, 3)} °C/W per i finali, '
+      f'{it(RTH_VAS, 3)} °C/W per il VAS) torna, al grado, quella del file.</p>')
+
+    # --- la Stax (L64a: ADR-081, ADR-085, ADR-086, P10) ---
+    st = M["stax"]
+    A(h2("sstax"))
+    A('<p>La fissa 2 alimenta le cuffie elettrostatiche Stax: il suo condensatore d&rsquo;uscita è '
+      'da 1 µF film (ADR-081), prima del relè di mute (ADR-084), e il relè ha l&rsquo;isolamento '
+      'supplementare fra bobina e contatti (ADR-085). Un guasto singolo della scheda audio '
+      f'mentre si ascolta può tenere il jack sopra 0,87 V al più <strong>{fx(st["soglia"], 0)} ms</strong> '
+      '(P10, ADR-086), col carico della Stax.</p>')
+    A('<div class="tablewrap"><table><tr><th>I guasti</th><th class="num">Modi</th>'
+      '<th class="num">Il più lungo sulla Stax</th><th>Esito</th></tr>')
+    for x in st["parti"]:
+        A(f'<tr><td>{html_escape(x["lab"])}: <code>{html_escape(rel(x["path"]))}</code></td>'
+          f'<td class="num">{x["n"]}</td><td class="num">{fx(x["max"], 1)} ms '
+          f'({html_escape(x["modo"])})</td>{verdict(x["fuori"] == 0)}</tr>')
+    A('</table></div>')
+    A('<p class="meta">I modi che il limitatore del VAS tocca sono ricorsi sul sorgente di oggi; gli '
+      'altri vengono dal lotto che li ha introdotti, prima del limitatore. La colonna «p10» di '
+      'quei file è giudicata contro 100 ms, una soglia di prima di ADR-086: qui il tetto è letto '
+      'da <code>REQUIREMENTS.md</code>. Seconda strada: per ogni riga il tempo sopra la soglia non '
+      'supera l&rsquo;ultimo istante sopra la soglia, e il massimo delle tre uscite è quello '
+      'dichiarato.</p>')
 
     if psu:
         heat = M["heat"]
@@ -4849,6 +5099,7 @@ def main():
     M["hr"] = measure_headroom(M["trim"])
     M["l2"] = seconda_strada()
     M["dist"] = measure_distortion()
+    M.update({"lim": measure_limitatore(), "gb": measure_guasti_blocco(), "stax": measure_stax()})
     if "schede" in PARTI:
         M["brd"] = measure_boards()
     if "alimentatore" in PARTI:
