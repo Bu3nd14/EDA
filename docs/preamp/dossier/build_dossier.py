@@ -686,7 +686,8 @@ def _models_in(path):
 def _resolve_include(arg):
     if arg.startswith("@REPO@/"):
         return arg[len("@REPO@/"):]
-    for root in ("spice/", "models/"):
+    # L64b: anche le librerie di un lotto (il comparatore tarato di L54b2, psu/cmpta.lib, ADR-103)
+    for root in ("spice/", "models/", "docs/preamp/data/"):
         k = arg.find("/" + root)
         if os.path.isabs(arg) and k >= 0:
             return arg[k + 1:]
@@ -2963,8 +2964,15 @@ def measure_diag(an, cs):
             if col.endswith("_ms") and a and b and abs(float(a) - float(b)) <= 0.1 + 1e-9:
                 continue
             diff.append((col, a, b))
+        # il genere: come sano; il solo K501 spostato (lo stacco del toroidale, non la sicurezza); il
+        # mute che resta inserito (la musica non arriva o non c'e' all'evento); altro
+        cols = {d[0] for d in diff}
+        muto = any((col == "mus_end" and a == "0") or (col == "musica_TE" and a == "0") or
+                   (col == "t_mus_ms" and not a) for col, a, b in diff)
+        genere = ("sano" if not diff else "k501" if cols == {"t_k501_ms"} else
+                  "muto" if muto else "altro")
         righe.append({"caso": k, "guasto": m.group(1), "evento": m.group(2), "lab": lab,
-                      "diff": diff, "cens": cs["rows"].get(k, {})})
+                      "diff": diff, "genere": genere, "cens": cs["rows"].get(k, {})})
     return righe
 
 
@@ -4496,7 +4504,8 @@ def build_page(M, inline=False):
             s = (r.get(k) or "").strip()
             if not s:
                 return "&mdash;"
-            v = ("&gt; " + it(float(s[1:]), 4)) if s.startswith(">") else it(float(s), 4)
+            # -0.0 (lo zero col segno di un CSV) e' zero
+            v = ("&gt; " + it(float(s[1:]), 4)) if s.startswith(">") else it(float(s) + 0.0, 4)
             return v.replace("-", "&minus;") + (f" {u}" if u else "")
 
         today = pw["oggi"]
@@ -4556,11 +4565,17 @@ def build_page(M, inline=False):
           'condensatori dei ritardi in C0G e in film</td>'
           f'<td class="num">la musica {it(min(v for (c, k), (v, s_, ok) in vtd.items() if c == "mus" and v is not None), 4)} '
           f'ms dopo un buco di 20 ms (≥ {fx(st["mus"], 0)}), la peggiore delle tre reti</td></tr>')
+        cop = [r for r in dg if r["guasto"].startswith(("f_q50", "f_rq50")) and "q503" not in r["guasto"]
+               and "q505" not in r["guasto"] and "q506" not in r["guasto"]]
+        dk501 = max((abs(float(a) - float(b)) for r in cop if r["genere"] == "k501"
+                     for col, a, b in r["diff"]), default=0.0)
         A(f'<tr><td>ADR-110</td><td>la coppia Q501 + Q509 in serie sul mute, la procedura '
           'col tester (<code>DIAGNOSI.md</code>)</td>'
-          f'<td class="num">{sum(1 for r in dg if r["guasto"].startswith(("f_q50", "f_rq50")) and not r["diff"])} '
-          f'su {sum(1 for r in dg if r["guasto"].startswith(("f_q50", "f_rq50")))} guasti singoli della '
-          f'coppia come la coppia sana ({sez("sdiag")})</td></tr>')
+          f'<td class="num">{len(cop)} corse dei guasti singoli della coppia alle tre reti: '
+          f'{sum(r["genere"] == "sano" for r in cop)} come la coppia sana, '
+          f'{sum(r["genere"] == "k501" for r in cop)} col solo K501 spostato (al più '
+          f'{it(dk501, 2)} ms), {sum(r["genere"] == "muto" for r in cop)} col mute che resta inserito, '
+          f'{sum(r["genere"] == "altro" for r in cop)} altro ({sez("sdiag")})</td></tr>')
         A('</table></div>')
 
         # --- potenza ---
@@ -4660,10 +4675,14 @@ def build_page(M, inline=False):
               f'<td>{names.get(k, html_escape(k)).replace("V5", des("V5"))}</td>'
               f'<td class="num">{num_c(a)}</td><td class="num"><strong>{num_c(b)}</strong></td></tr>')
         A('</table></div>')
-        A(f'<p>Le cause si leggono. Lo Schottky dopo il regolatore porta i rail da 15,000 / −15,052 V a '
-          f'{cella(rn, "vplus")} / {cella(rn, "vminus")} V. La 4,7 Ω e la partenza morbida rallentano '
-          'la discesa dei rail alla perdita di rete (i tempi a 13,5 e 10,6 V salgono). A rete −10 % la '
-          f'tenuta di <code>VRELAY_REG</code> passa da {it(vr_m10_51, 4)} a <strong>{it(vr_m10, 4)} '
+        p51, pog = pw["l51b"].get("perdita_rete_m10", {}), today.get("perdita_rete_m10", {})
+        A(f'<p>Una causa è certa: lo Schottky dopo il regolatore, con la tensione impostata 0,3 V più su '
+          f'(ADR-093), porta i rail a regime da 15,000 / −15,052 V a {cella(rn, "vplus")} / '
+          f'{cella(rn, "vminus")} V. Le altre si leggono, non si spiegano qui: alla perdita di rete a −10 % '
+          f'il rail + arriva a 13,5 V più tardi ({cella(p51, "t_p135_ms")} → {cella(pog, "t_p135_ms", "ms")}) '
+          f'e il rail − più presto ({cella(p51, "t_m135_ms")} → {cella(pog, "t_m135_ms", "ms")}); in ogni '
+          'caso il mute è rilasciato decine di millisecondi prima. La tenuta di <code>VRELAY_REG</code> '
+          f'a rete −10 %, quella che P9 giudica, passa da {it(vr_m10_51, 4)} a <strong>{it(vr_m10, 4)} '
           f'ms</strong>, contro ≥ {fx(p9["vrelay_ms"], 0)}.</p>')
 
         # --- sorvegliante ---
@@ -4690,7 +4709,11 @@ def build_page(M, inline=False):
                 refuse(f"an_l64b.csv: manca oggi/{c}")
                 continue
             cr = {k: r[k] for k in ("C2", "C3", "r41", "s41")}
-            if c == "cf_nodelta":
+            if c == "corto_u503":
+                # ADR-051: il corto della linea a 12 V dei relè, accettato sotto il tetto
+                esito = ('<td class="na">nessun verdetto: decisione dell&rsquo;utente (ADR-051), '
+                         f'{sum(v == "1" for v in cr.values())} su 4</td>')
+            elif c == "cf_nodelta":
                 ok = cr["C3"] == "0" and cr["r41"] == "0"
                 esito = (f'<td class="{"ok" if ok else "no"}">'
                          f'{"C3 e r41 cadono, come devono" if ok else "NON cade"}</td>')
@@ -4706,8 +4729,12 @@ def build_page(M, inline=False):
           'alimentazione e si apre per prima, e il margine di ADR-046 (K501 ≥ '
           f'{fx(st["k501"], 0)} ms dopo il permissivo) vale per lo spegnimento dal frontale, '
           f'{cella(sl, "k_perm_ms", "ms")}.</p>')
-        fm = [k for k in sorted(an) if k.startswith("oggi/f_u50") or k.startswith("oggi/f_c509")
-              or k.startswith("oggi/f_k501")]
+        # i sette guasti della FMEA di L54b3b (lista_v25.txt); quelli dello standby di L58b (U508 B
+        # e gli altri) stanno nell'autodiagnosi
+        fm = [k for k in sorted(an) if k.startswith(("oggi/f_u505", "oggi/f_u506", "oggi/f_c509",
+                                                      "oggi/f_k501"))]
+        if len(fm) != 7:
+            refuse(f"i guasti del temporizzatore di L54b3b: {len(fm)} corse, attese 7")
         A('<h3>I guasti del temporizzatore (L54b3b)</h3>')
         A('<div class="tablewrap"><table><tr><th>Guasto e evento</th><th class="num">jack</th>'
           '<th class="num">guadagno</th><th class="num">la musica</th><th>ritenuta</th><th>K501 alla fine</th></tr>')
@@ -4777,7 +4804,7 @@ def build_page(M, inline=False):
           f'{fx(sb["m10"]["t2"], 1)} / {fx(sb["nom"]["t2"], 1)} / {fx(sb["p10"]["t2"], 1)} mW dal suo '
           'secondario (rete −10 % / nominale / +10 %, la media su 2,5–3,0 s di una corsa '
           f'd&rsquo;accensione prima del frontale). L54b2, sul sorgente di prima di ADR-104, 105 e 110, '
-          f'dava {" / ".join(fx(x, 1) for x in (sb["l54b2"][1], sb["l54b2"][0], sb["l54b2"][2]))} mW. '
+          f'dava {" / ".join(fx(x, 1) for x in sb["l54b2"])} mW (lo stesso ordine delle reti). '
           'Le perdite a vuoto del trasformatore non sono qui: si leggono sul pezzo.</p>')
 
         # --- autodiagnosi ---
@@ -4815,8 +4842,8 @@ def build_page(M, inline=False):
           'ed è quello che la procedura cerca. Le righe dello standby (Q505, Q506, R540, R536, R537, '
           'U508 B, Q503) cambiano lo standby a regime, non le sequenze: il censimento qui sotto.</p>')
         A('<div class="tablewrap"><table><tr><th>Corsa</th><th class="num">VRELAY alla scheda in standby</th>'
-          '<th class="num">LED</th><th>K501 in standby</th><th class="num">le bobine del mute</th>'
-          '<th class="num">la musica</th></tr>')
+          '<th class="num">LED</th><th>K501 in standby</th><th class="num">la musica (le bobine del mute)</th>'
+          '<th class="num">i rail partono</th></tr>')
         for k, r in sorted(cs["rows"].items()):
             if not (k.endswith("_accs") or k == "oggi/accensione") or "q501" in k or "q509" in k:
                 continue

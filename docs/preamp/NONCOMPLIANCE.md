@@ -4243,6 +4243,13 @@ invariato e con la sola `RMUTECOIL` cambiata (`data/2026-10-15/L60c2/rete/`): l'
 (48,3 / 121,7 / 195,4 ms), col K3 nuovo `VRELAY_REG` ≥ 11,4 V per **46,4 / 119,7 / 193,3 ms** a rete
 −10 / nom / +10 %, 21 ms sopra P9. Resta aperta: il carico non è congelato.
 
+**L64b (2026-11-03).** Il banco della rete di L51b sull'alimentatore di oggi (il temporizzatore a
+comparatori, ADR-102; la partenza morbida, la 4,7 Ω, lo Schottky, i 5 V in serie, la coppia del mute:
+ADR-091…094, 110), col carico di oggi (`tb_op` di L64a, il selettore, le bobine di K3 IM06TS;
+`data/2026-11-03/L64b/rete/analisi.csv`, il deck rigenerato dal dossier): `VRELAY_REG` ≥ 11,4 V per
+**50,3 / 109,6 / 169,1 ms** a rete −10 / nom / +10 %, 25 ms sopra P9. Resta aperta: il carico si
+congela a G2.
+
 ### NC-051 — Il commento di `C_VRELAY` in `psu.py` cita le tenute superate di L41a
 
 | | |

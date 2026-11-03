@@ -67,9 +67,14 @@ def toll(col, lot):
         return 0.1 + 0.1 * extra + 1e-9
     if col.endswith("_mv"):
         return 0.1 + 0.1 * extra + 1e-9
-    if col in ("bn_max0", "bn_max", "on_min"):
+    # the latch's base, near its threshold: to the fourth decimal
+    if col in ("bn_max0", "bn_max"):
         return 1e-4 + 1e-4 * extra + 1e-12
-    if col.startswith(("vplus", "raw", "v5", "x_")):
+    # on_min, VRELAY_EN's minimum after TE (a logic level, ~4,45 V) read by .meas on the transient's
+    # own points, takes two values with the step: the healthy buco20 gives 4,4533 at the nominal mains
+    # and 4,4564 at -10 / +10 % (an_l64b.csv); 0,01 V as every other voltage (first run: 1e-4, two
+    # cells out at 3,1 mV, written in the README)
+    if col.startswith(("vplus", "raw", "v5", "x_", "on_min")):
         return 0.01 + 1e-9
     return 0.0          # flags and counts: identical
 
@@ -79,6 +84,7 @@ def toll(col, lot):
 COPPIA = ("MQ501", "MQ509", "RR586", "RR587", "RQ501G", "RQ509G")
 MAPPA_COPPIA = {"q501_g": "g501a", "q501_mid": "n501m", "q509_g": "g501b", "RR586": "RQ501G",
                 "RR587": "RQ509G", "1MEG": "1e+06", "10k": "10000"}
+NODI_COPPIA = ("q501_g", "q501_mid", "q509_g", "RR586", "RR587")
 CARICO = ("IPLUS", "IMINUS", "RLOADP", "RLOADM")
 
 
@@ -109,6 +115,11 @@ def decks_uguali(caso, etich_oggi, etich_l58b):
         r = [pat.sub("", x) for x in open(p).read().splitlines()[1:]]
         if oggi:
             r = [x.replace(lot[0], lot[1]) for x in r]
+        if oggi and modo == "variante":
+            # the nodes and the resistors of the pair under the variant's names on EVERY line (the
+            # faults of modi.py name them: BF_c q501_g ...), the values only on the pair's own lines
+            r = [re.sub(r"\b(%s)\b" % "|".join(NODI_COPPIA), lambda m: MAPPA_COPPIA[m.group(1)], x)
+                 for x in r]
         coppia = [x for x in r if x.split() and x.split()[0] in COPPIA]
         resto = [x for x in r if not (x.split() and x.split()[0] in COPPIA)]
         if oggi and modo == "variante":
