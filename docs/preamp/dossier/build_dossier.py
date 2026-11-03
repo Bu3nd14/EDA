@@ -38,36 +38,40 @@ export_fab.sh sulla DRC:
   6. (L42a) l'interblocco: la corsa di L36 ricontata da corsa.csv contro
      sintesi.txt; il 2e rieseguito sulla netlist di oggi; da L51a i falsi sono
      quelli di L48a e L48b (il 2e di oggi), non piu' quelli di L35 e L36;
-  7. (L42a; in L51a esce dalla pagina, in L51b torna rifatto) il calore: il
-     deck del calore rigenerato dal deck della rete di oggi e uguale a quello
-     corso, stima_telaio_l51b.py rieseguito contro il suo .txt, il bilancio dei
-     secondari che torna, la scheda audio contro tb_op e contro il banco.
+  7. (L42a; in L51a esce dalla pagina, in L51b torna rifatto, in L64b sull'alimentatore di
+     oggi) il calore: il deck del calore rigenerato dal deck della rete di oggi e uguale a
+     quello corso, stima_telaio_l64b.py rieseguito contro il suo .txt, il bilancio dei
+     secondari che torna (con le 4,7 ohm e gli SB340), la scheda audio contro tb_op, contro il
+     banco del calore e contro i rail del banco della rete.
 
-L42b, riscritto in L51b: l'alimentatore, la seconda scheda. La prima strada
-e' la ricorsa del 2026-10-09 col carico di oggi (data/2026-10-09/L51b: i rail
-di tb_op di L51a, la bobina del selettore di L48a); la seconda, gli stessi
-script col carico di prima (L51b-prima), che ridanno L47c2a e L47c2b2 byte per
-byte. ps() rifiuta come prima strada ogni dato di prima del 2026-10-09; i lotti
-si rileggono solo da vecchio(). Ogni log si legge prima dei suoi dati
-(limitations #33-#36), e ogni deck rigenerato oggi da psu.net deve essere
-quello corso, a meno dei percorsi del worktree.
-  8. la potenza: i banchi rete e guasti, coi due carichi; R512 caso per caso
-     (#34); col carico di prima analisi e deck di L47c2a, controfattuale col
-     carico di L41a compreso; ogni scarto col carico di oggi si pubblica;
-  9. il sorvegliante e i guasti (i nove casi di L41c, L47c2b2): il deck al
-     punto fisso di ogni caso rigenerato da psu.net e dalle uscite del core;
-     col carico di prima il testo dell'analisi, i deck, le uscite del core e
-     i JSON del ponte di L47c2b2;
- 10. il temporizzatore: analizza_timer.py rieseguito sui log dei due carichi,
-     i deck rigenerati; col carico di prima il testo di L47c2a;
- 11. il firmware (L47c2a): le sei sequenze come in 9, contro L47c2a; i falsi
-     sull'host di oggi uguali a quelli di L47c2b2;
+L42b, riscritto in L51b e in L64b: l'alimentatore, la seconda scheda. Il micro e il firmware
+non ci sono piu' (ADR-102): l'alimentatore di oggi e' quello di L58b (psu.py non e' cambiato
+dopo), col temporizzatore a comparatori e la coppia Q501 + Q509 (ADR-110). La prima strada e'
+la corsa del 2026-11-03 col carico di oggi (data/2026-11-03/L64b: i rail di tb_op di L64a, la
+bobina del selettore di L48a); ps() rifiuta come prima strada ogni dato di prima. I lotti si
+rileggono solo da vecchio(): L58b sullo stesso circuito, L54b3b e L58b prima della coppia, L54b2
+per la catena al jack, L51b per i banchi e il calore. Ogni log si legge prima dei suoi dati
+(limitations #33-#36), e ogni deck rigenerato oggi da psu.net deve essere quello corso, a meno dei
+percorsi del worktree.
+  8. la potenza: i banchi della rete e dei guasti di L51b sull'alimentatore di oggi
+     (--timer sorgente --tss 3.0), deck rigenerati; R512 caso per caso (#34: 110 k, la meta' di
+     R_MD da ADR-094); l'evento a 3 s, i tempi dall'evento; ogni scarto da L51b si pubblica;
+  9. il sorvegliante e i guasti, sul circuito (L64b): le sequenze del temporizzatore a
+     comparatori di lista_l64b.txt, una corsa per caso, ognuna col suo ok.txt, il log pulito e
+     il deck rigenerato da psu.net uguale a quello corso; an_l64b.csv con una riga per corsa;
+ 10. la seconda strada delle sequenze: script/confronta.py di L64b rieseguito su una copia,
+     confronto_seq.csv uguale a quello versionato, zero celle fuori dalla tolleranza contro le
+     righe di L58b (lo stesso psu.py), di L54b3b e di L58b prima della coppia (con lo scarto
+     della variante), i deck di L58b uguali a quelli di oggi a meno del carico; il censimento
+     dello standby contro L58b; lo standby da T2 (consumo.txt) dalle corse con --sonda-t2;
+ 11. (il firmware, L47c2a: tolto con ADR-102) i criteri del temporizzatore di L54b3b sulle corse
+     di oggi, le soglie lette da ADR-103, ADR-104, ADR-105; l'autodiagnosi (ADR-110): ogni guasto
+     latente della coppia e dello standby contro la corsa sana dello stesso evento;
  12. (il pilota delle LDR: tolto con ADR-062)
- 13. spegnimento e guasti al jack: tabella.py rieseguito, il deck di V2
-     rigenerato dal sorgente di oggi e dal ponte, le 18 corse rc=0, i dB SPL
-     ricalcolati con la catena di NC-028; scomposizione.csv (L47c2b2, la
-     scheda di oggi col carico di prima, oggi) contro le tre tabelle; le
-     soglie di P9 lette da REQUIREMENTS.md.
+ 13. spegnimento e guasti al jack: la catena di L54b2 sulla scheda audio di oggi, alle tre reti;
+     tabella.py rieseguito, il deck di V2 rigenerato dal sorgente di oggi e dal ponte, le 18
+     corse rc=0, i dB SPL ricalcolati con la catena di NC-028; le tabelle di L54b2 accanto, gli
+     scarti pubblicati; le soglie di P9 lette da REQUIREMENTS.md.
 
 L42d: il contratto. La sezione 0 e' il PRB, l'appendice A il registro delle
 ADR, l'appendice B l'indice dei requisiti tecnici, tutti letti dai loro file
