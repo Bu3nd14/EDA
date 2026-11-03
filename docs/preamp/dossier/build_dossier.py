@@ -1655,7 +1655,10 @@ def measure_mute():
     nb = sorted(c for c, (rc, nota) in tempi.items() if rc == "rc=0" and "nodeset_blocco" in nota)
     out.update(src_dir=d, src_corse=len(corse), nodeset=nb)
     v60 = {(r["cella"], r["grandezza"]): r for r in _csv(vecchio(L60D2, "v2", "verdetto.csv"))}
-    cambi, scarto = [], 0.0
+    # gli scarti in µV, non in dB: le celle del cambio di guadagno (B2g) stanno fra il pavimento
+    # del metodo (~1 nV) e ~13 µV, in tutte e due le direzioni, e un rapporto fra quei due non dice
+    # niente; contano lo scarto assoluto e il picco piu' alto contro il tetto
+    cambi, scarto, picco_oggi, picco_60 = [], 0.0, 0.0, 0.0
     for t_ in theirs:
         o = v60.get((t_["cella"], t_["grandezza"]))
         if o is None:
@@ -1665,8 +1668,11 @@ def measure_mute():
             cambi.append(f"{t_['cella']} {t_['grandezza']}: {o['esito']} -> {t_['esito']}")
         a_, b_ = float(t_["picco"]), float(o["picco"])
         if t_["esito"] != "dichiarato" and max(a_, b_) >= 1e-6:
-            scarto = max(scarto, abs(db20(a_ / b_)) if min(a_, b_) > 0 else float("inf"))
-    out.update(l60d2_cambi=cambi, l60d2_scarto_db=scarto, l60d2_n=len(v60))
+            scarto = max(scarto, abs(a_ - b_))
+        if t_["esito"] != "dichiarato":
+            picco_oggi, picco_60 = max(picco_oggi, a_), max(picco_60, b_)
+    out.update(l60d2_cambi=cambi, l60d2_scarto_v=scarto, l60d2_n=len(v60),
+               l60d2_picco_oggi=picco_oggi, l60d2_picco=picco_60)
     if cambi:
         refuse(f"L64a V2 contro L60d2: {len(cambi)} esiti diversi, il primo {cambi[0]}")
 
@@ -4185,8 +4191,10 @@ def build_page(M, inline=False):
       + ", ".join(f'<code>{html_escape(c)}</code>' for c in mu["via"])
       + ' manca dal manifesto finale perché la corsa abortisce. '
       f'La seconda strada è la matrice di L60d2, corsa il 2026-10-19 sul blocco di allora: '
-      f'gli esiti coincidono uno per uno, e dove il picco supera 1 µV si sposta al più di '
-      f'{fx(mu["l60d2_scarto_db"], 2)} dB. '
+      f'gli esiti coincidono uno per uno. Il picco giudicato più alto è {uv(mu["l60d2_picco_oggi"])} '
+      f'oggi e {uv(mu["l60d2_picco"])} in L60d2, e da una matrice all&rsquo;altra un picco si sposta '
+      f'al più di {uv(mu["l60d2_scarto_v"])}: sono le celle del cambio di guadagno, B2g, che '
+      'stanno fra il pavimento del metodo e pochi µV, in tutte e due le direzioni. '
       f'{len(mu["nodeset"])} celle della dispersione non trovano il punto di lavoro sul blocco di '
       'oggi, in nessuna delle tre prove del banco: sono corse col punto di partenza del blocco da '
       'solo (limitations #86), che non cambia la soluzione dove il punto di lavoro si trova anche '

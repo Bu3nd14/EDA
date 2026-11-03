@@ -22,6 +22,10 @@ attuali». Registrato da **ADR-053**. Da qui, cambiare una voce vuole una ADR.
   condensatore da 1 µF nel sorgente, due guasti interni del blocco che la ridondanza non toglie (la
   source della JFET d'ingresso aperta, il finale PNP in corto) danno 127–149 ms. Scelta dell'utente,
   sul testo proposto: «Tetto a 150 ms».
+- **PR-24**, il 2026-11-03 (**ADR-113**, L64a): da «La sicurezza non dipende dal firmware» (con il
+  micro bloccato o in reset) a «La sicurezza non dipende da un programma»: col temporizzatore a
+  comparatori (ADR-102) un microcontrollore non c'è. Scelta dell'utente, sul testo proposto:
+  «Rewrite the promise».
 
 ## Che cos'è, e come sta con gli altri documenti
 
@@ -158,9 +162,10 @@ hardware, prima che il circuito esca di regolazione.** Al jack principale l'obie
 (~60 dB SPL a 1 m), e in nessun caso più di 0,87 V (~112 dB, il tetto di non-danno).
 *Dettagli: P9 (b) · ADR-043, ADR-046, ADR-048, ADR-051.*
 
-**PR-24 · La sicurezza non dipende dal firmware.** Senza firmware, con il micro bloccato o
-in reset, l'apparecchio resta muto e il guadagno non può cambiare con le uscite collegate.
-*Dettagli: F7 · ADR-022, ADR-045, ADR-049.*
+**PR-24 · La sicurezza non dipende da un programma.** Non c'è un microcontrollore: accensione,
+ritardi e mute sono fatti da comparatori e relè, e il guadagno non può cambiare con le uscite
+collegate.
+*Dettagli: F7 · ADR-022, ADR-045, ADR-049, ADR-102, ADR-113.*
 
 **PR-25 · Accensione e spegnimento morbidi dal frontale; l'interruttore posteriore stacca
 tutto.** Da spento sul frontale l'apparecchio resta in standby e consuma ≤ 0,5 W alla presa,
