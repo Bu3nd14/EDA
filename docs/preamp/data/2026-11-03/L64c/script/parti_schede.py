@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """L64c: le parti delle schede di prova di L49 (9 ottobre) contro le netlist di oggi.
 
-Uso: /usr/bin/python3 -I parti_schede.py <repo>   -> stampa e scrive parti_schede.csv qui accanto
+Uso: /usr/bin/python3 -I parti_schede.py <repo> [<dir>]   -> stampa e scrive parti_schede.csv in <dir>
+     (per difetto la cartella di L64c, accanto a script/; il generatore del dossier passa una
+     cartella temporanea e confronta)
 
 Le schede: i riferimenti delle impronte nei .kicad_pcb di L49a / L49b. Le netlist: i riferimenti
 dei componenti di circuits/preamp/preamp_audio.net e psu.net (formato KiCad, `(comp (ref "X")`).
@@ -15,7 +17,8 @@ import re
 import sys
 
 REPO = os.path.abspath(sys.argv[1])
-QUI = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+QUI = (os.path.abspath(sys.argv[2]) if len(sys.argv) > 2
+       else os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA = os.path.join(REPO, "docs", "preamp", "data")
 COPPIE = (("audio", os.path.join(DATA, "2026-10-09", "L49a", "audio_routed.kicad_pcb"),
            os.path.join(REPO, "circuits", "preamp", "preamp_audio.net")),

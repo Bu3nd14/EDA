@@ -155,7 +155,9 @@ SCHEM = os.path.join(REPO, "docs", "preamp", "schematic")
 # Un <img src="../schematic/..."> esce dalla cartella della pagina, e un
 # visualizzatore che serve solo quella cartella li perdeva in silenzio,
 # mentre le figure fig_*.svg accanto alla pagina restavano visibili.
-SCHEMATICS = ("gain_block.svg", "preamp_blocks.svg", "psu_blocks.svg")
+SCHEMATICS = ("gain_block.svg", "preamp_blocks.svg", "psu_blocks.svg",
+              # L64c: gli schemi completi di L63 (SCHEMI_COMPLETI), copiati come gli altri
+              "audio.svg", "psu.svg")
 # L42a: i giorni in cui il blocco simulava i segnaposto (L39 li ha sostituiti il
 # 2026-09-22), e le cartelle `prima` di L39 e L40, corse sul blocco di prima.
 FORBIDDEN = ("2026-09-09", "2026-09-10", "2026-09-13", "2026-09-14", "2026-09-15",
@@ -252,29 +254,38 @@ DIST_DECKS = ("thd_1k", "thd_10k", "thd_20k", "imd")
 # controlla solo che restino sotto il tetto di V4.
 DIST_UGUALI = ("vout_pk", "thd_pct", "h2_db", "h3_db", "imd_d2_db", "imd_d3_db")
 
-# L51c: le schede di prova di L49 (L49a la scheda audio, L49b l'alimentatore e l'assieme).
-# La DRC e' rifatta il 2026-10-10 sulle copie nei dati (l'utente: «Rifarlo oggi»), e deve
-# dare quello che dava il 9 ottobre. Nessun dato delle schede da prima di SCHEDE_DA, il
-# giorno di L49; non ci sono eccezioni.
-L49A = os.path.join(DATAROOT, "2026-10-09", "L49a")
-L49B = os.path.join(DATAROOT, "2026-10-09", "L49b")
-SCHEDE_DA = "2026-10-09"
-# le immagini della sezione (l'utente: «Essenziale»): copiate accanto a index.html con
-# questi nomi, come gli schemi; nella pagina autoconsistente, incorporate
-IMMAGINI = {
-    "scheda_audio_3d.png": (L49A, "placement_3d_top.png"),
-    "scheda_audio_rame.png": (L49A, "routing_both.png"),
-    "alimentatore_3d.png": (L49B, "psu", "placement_3d_top.png"),
-    "alimentatore_rame.png": (L49B, "psu", "routing_both.png"),
-    "assieme.png": (L49B, "assembly", "assembly_A_tutto_sul_fondo.png"),
-}
+# L64c: le schede di prova di L49 (9 ottobre) escono dalla pagina (l'utente, 2026-11-03: «Togliere
+# la sezione»). Sono di una netlist vecchia: alla scheda audio mancano 195 parti di oggi, e
+# l'alimentatore di prova porta ancora il micro (data/2026-11-03/L64c/parti_schede.csv, da
+# script/parti_schede.py). Le nomina solo «Cosa questo dossier non dice», coi conti letti da li'.
+L64C = os.path.join(DATAROOT, "2026-11-03", "L64c")
+PARTI_SCHEDE = os.path.join(L64C, "parti_schede.csv")
 
-# Le parti della pagina: la scheda audio (L51a), l'alimentatore (L51b), le schede di prova
-# (L51c). Con tutte e tre il generatore scrive accanto a se'.
+# L64c: gli schemi completi di L63 (A2, una pagina per scheda), coi manifesti che
+# scripts/check_schematic.py confronta con la netlist, nei due sensi
+SCHEMI_COMPLETI = (("audio.svg", "audio.manifest.json", "preamp_audio.net", "audio.pdf"),
+                   ("psu.svg", "psu.manifest.json", "psu.net", "psu.pdf"))
+
+# L64c: la FMEA del progetto di oggi, con le misure adottate (ADR-070). Le fonti dalla piu' vecchia;
+# una riga di un lotto piu' recente prende il posto di quella con la stessa chiave (ref, modo,
+# caso). L64c riscrive le righe che dicevano il micro (ADR-073 superata da ADR-102; gli ingressi
+# del temporizzatore che L45c2 chiamava «le letture del micro»; C536 e U512), dalle corse di oggi.
+FMEA_FONTI = (("L45d2b3b3", os.path.join(DATAROOT, "2026-10-24", "L45d2b3b3", "fmea_dopo.csv")),
+              ("L58a2", os.path.join(DATAROOT, "2026-10-29", "L58a", "fmea_alimentatore.csv")),
+              ("L58b", os.path.join(DATAROOT, "2026-11-01", "L58b", "fmea_l58b.csv")),
+              ("L66", os.path.join(DATAROOT, "2026-11-02", "L66", "fmea_l66.csv")),
+              ("L64c", os.path.join(L64C, "fmea_l64c.csv")))
+FMEA_OGGI = os.path.join(L64C, "fmea_oggi.csv")
+# le parti della FMEA che non stanno su una scheda: i due trasformatori, nel telaio (ADR-048)
+FMEA_FUORI_SCHEDA = ("T1", "T2")
+
+# Le parti della pagina: la scheda audio (L51a), l'alimentatore (L51b), la chiusura (L51c: le
+# schede di prova; L64c: gli schemi completi, la FMEA, «Cosa non dice»). Con tutte e tre il
+# generatore scrive accanto a se'.
 # L64a: la prima delle tre parti di L64 (l'utente, 2026-11-02: «Three parts, like last time»);
 # finche' non ci sono tutte, il generatore scrive solo --standalone fuori dal repo.
-PARTI = ("audio", "alimentatore", "schede")
-PARTI_TUTTE = ("audio", "alimentatore", "schede")
+PARTI = ("audio", "alimentatore", "chiusura")
+PARTI_TUTTE = ("audio", "alimentatore", "chiusura")
 
 MODES = ("0db", "3db", "10db")
 MLAB = {"0db": "0 dB", "3db": "+3 dB", "10db": "+10 dB"}
@@ -349,19 +360,6 @@ def ps(root, *parts):
         raise SystemExit(f"RIFIUTATO: {rel(p)} non e' del {PSU_DA} o dopo, il giorno della "
                          "ricorsa dell'alimentatore col carico di oggi (L51b). Come seconda "
                          "strada passa da vecchio(). Nessun file e' stato scritto.")
-    return p
-
-
-def sc(root, *parts):
-    """Ogni percorso di dati delle schede di prova passa di qui (L51c): src(), e niente da un
-    giorno prima di SCHEDE_DA, il giorno di L49. Non ci sono eccezioni."""
-    p = src(root, *parts)
-    m = _DATA_DAY.search(rel(p))
-    if not m or m.group(1) < SCHEDE_DA:
-        raise SystemExit(f"RIFIUTATO: {rel(p)} non e' del {SCHEDE_DA} o dopo, il giorno delle "
-                         "schede di prova (L49). Nessun file e' stato scritto.")
-    if not os.path.exists(p):
-        raise SystemExit(f"RIFIUTATO: manca {rel(p)}. Nessun file e' stato scritto.")
     return p
 
 
@@ -2243,90 +2241,215 @@ def measure_stax():
 
 
 
-# I report delle schede di prova: i vincoli per il progetto stanno li', in un elenco numerato
-# col titolo in grassetto. Si leggono, non si riscrivono (sono testo, non numeri dei JSON).
-L49A_REPORT = os.path.join(REPO, "docs", "preamp", "reports", "2026-10-09-L49a-scheda-audio-prova.md")
-L49B_REPORT = os.path.join(REPO, "docs", "preamp", "reports", "2026-10-09-L49b-alimentatore-assieme.md")
+# ------------------------------------------- la chiusura di L64c -----
+def measure_schemi():
+    """Gli schemi completi di L63 (L64c): ogni manifesto contro la netlist di oggi nei due sensi
+    (scripts/check_schematic.py), e i due disegni rifatti dal sorgente fuori dal repo uguali a quelli
+    versionati (data/2026-11-03/L64c/script/ridisegna.sh: i manifesti byte per byte, gli SVG a meno
+    della data e degli identificativi delle clip di matplotlib)."""
+    import tempfile
+    out = {}
+    for svg, man, net, pdf in SCHEMI_COMPLETI:
+        for f in (svg, man, pdf):
+            if not os.path.isfile(os.path.join(SCHEM, f)):
+                refuse(f"schema mancante: {rel(os.path.join(SCHEM, f))}")
+                return out
+        with open(os.path.join(SCHEM, man)) as f:
+            mj = json.load(f)
+        if mj.get("source_netlist") != f"circuits/preamp/{net}":
+            refuse(f"{man}: disegnato da {mj.get('source_netlist')}, non da circuits/preamp/{net}")
+        proc = subprocess.run([sys.executable, os.path.join(REPO, "scripts", "check_schematic.py"),
+                               os.path.join(SCHEM, man), os.path.join(REPO, "circuits", "preamp", net)],
+                              capture_output=True, text=True)
+        m = re.search(r"(\d+) dispositivi nella netlist, (\d+) nel disegno", proc.stdout)
+        if proc.returncode != 0 or not m or m.group(1) != m.group(2):
+            refuse(f"{svg}: check_schematic.py rc {proc.returncode} contro {net} "
+                   f"({proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else proc.stderr[-120:]})")
+            continue
+        if int(m.group(1)) != len(mj.get("devices", {})):
+            refuse(f"{man}: {len(mj.get('devices', {}))} parti, check_schematic.py ne conta {m.group(1)}")
+        out[svg] = {"parti": int(m.group(1)), "net": net, "pdf": rel(os.path.join(SCHEM, pdf))}
+    d = tempfile.mkdtemp(prefix="l64c_schemi_")
+    proc = subprocess.run(["/bin/zsh", os.path.join(L64C, "script", "ridisegna.sh"), d],
+                          capture_output=True, text=True)
+    righe = proc.stdout.strip().splitlines()
+    if proc.returncode != 0 or len(righe) != 4 or any("DIVERSO" in r for r in righe):
+        refuse(f"gli schemi ridisegnati dal sorgente di oggi non sono quelli versionati: rc "
+               f"{proc.returncode}, {'; '.join(righe) or proc.stderr.strip()[-160:]}")
+    shutil.rmtree(d, ignore_errors=True)
+    return out
 
 
-def vincoli_l49(path):
-    """[(numero, titolo in grassetto)] dalla sezione «I vincoli che tornano al progetto»."""
-    if not os.path.isfile(path):
-        refuse(f"manca il report {rel(path)}")
-        return []
-    with open(path, encoding="utf-8") as f:
-        text = f.read()
-    m = re.search(r"^## I vincoli che tornano al progetto\n(.*?)(?=^## )", text, re.M | re.S)
-    if not m:
-        refuse(f"{rel(path)}: non trovo la sezione «I vincoli che tornano al progetto»")
-        return []
-    items = re.findall(r"^(\d+)\. \*\*(.+?)\*\*", m.group(1), re.M)
-    if not items or [int(n) for n, _ in items] != list(range(1, len(items) + 1)):
-        refuse(f"{rel(path)}: i vincoli non sono numerati 1..n ({[n for n, _ in items]})")
-    return [(int(n), t) for n, t in items]
+# la matrice di ADR-070 come tabella: (G, R) -> priorita' per P = 1 e per P >= 2 (P conta solo per G 3
+# e G 4). Scritta qui di nuovo, non copiata dal priorita() dei lotti: e' la seconda strada.
+_ADR070 = {}
+for _g in range(1, 6):
+    for _r in range(1, 4):
+        for _p in range(1, 5):
+            if _g == 5:
+                _v = "alta"
+            elif _r == 3 and _g == 4:
+                _v = "alta"
+            elif _r == 3 and _g == 3:
+                _v = "media"
+            elif _r == 3:
+                _v = "bassa"
+            elif _g == 4:
+                _v = ("media", "alta", "alta", "alta")[_p - 1]
+            elif _g == 3:
+                _v = ("bassa", "bassa", "media", "media")[_p - 1]
+            else:
+                _v = "bassa"
+            _ADR070[(_g, _p, _r)] = _v
+
+# dove va una riga, dallo stato: l'ordine conta (la prima che combacia)
+FMEA_DEST = (("NC", r"^(?:accettata[^:]*?)?\(?(NC-\d{3})"), ("a G2", r"^a G2"),
+             ("accettata", r"^accettat"), ("nel circuito", r"^(nel circuito|rimediata)"),
+             ("rivelata dall'autodiagnosi", r"^si vede"),
+             ("misurata, nessun rimedio", r"^(rimisurata|misurata)"),
+             ("invariata (riga di L45)", r"^invariata"), ("esclusa", r"^esclus"))
 
 
-def measure_boards():
-    """Le schede di prova di L49 (L51c): la DRC rifatta oggi contro quella del 9 ottobre, le
-    misure dai JSON di L49 incrociate fra loro, l'assieme, i vincoli dai report."""
-    def drc_n(j):
-        return tuple(len(j.get(k, [])) for k in ("violations", "unconnected_items", "schematic_parity"))
-    out = {"boards": {}}
-    for key, base, sub, pcb, drc in (("audio", L49A, (), "audio_routed", "drc_audio_routed.json"),
-                                     ("psu", L49B, ("psu",), "psu_routed", "drc_psu_routed.json")):
-        d = sc(base, *sub)
-        with open(sc(L51C, "drc", drc)) as f:
-            oggi = json.load(f)
-        with open(sc(base, *sub, drc)) as f:
-            prima = json.load(f)
-        for lab, j in (("oggi", oggi), ("9 ottobre", prima)):
-            if j.get("source") != pcb + ".kicad_pcb":
-                refuse(f"DRC {key} ({lab}): la scheda e' {j.get('source')}, non {pcb}.kicad_pcb")
-        if oggi.get("kicad_version") != prima.get("kicad_version"):
-            refuse(f"DRC {key}: kicad-cli {oggi.get('kicad_version')} oggi, "
-                   f"{prima.get('kicad_version')} il 9 ottobre: le due DRC non sono la stessa prova")
-        if drc_n(oggi) != drc_n(prima):
-            refuse(f"DRC {key}: oggi {drc_n(oggi)} (violazioni, aperte, parita'), il 9 ottobre "
-                   f"{drc_n(prima)}")
-        if not oggi.get("date", "").startswith(L51C.split(os.sep)[-2]):
-            refuse(f"DRC {key}: il rapporto di oggi e' del {oggi.get('date')}")
-        sc(base, *sub, pcb + ".kicad_pro")      # le classi stanno li' (limitations #52)
-        with open(sc(base, *sub, "measure.json")) as f:
-            meas = json.load(f)
-        with open(sc(base, *sub, "placement.json")) as f:
-            pl = json.load(f)
-        if pl.get("board_mm") != meas.get("board_mm") or pl.get("courtyard_overlaps"):
-            refuse(f"scheda {key}: placement.json e measure.json non danno la stessa scheda "
-                   f"({pl.get('board_mm')} / {meas.get('board_mm')}), o ci sono sovrapposizioni")
-        with open(sc(base, *sub, "freerouting.log"), errors="replace") as f:
-            fr = re.search(r"Freerouting (v[\d.]+)", f.read())
-        out["boards"][key] = {"dir": d, "pcb": os.path.join(d, pcb + ".kicad_pcb"),
-                              "drc": drc_n(oggi), "kicad": oggi.get("kicad_version"),
-                              "kicad_prima": prima.get("kicad_version"),
-                              "meas": meas, "pl": pl, "freerouting": fr.group(1) if fr else None}
-        if not fr:
-            refuse(f"scheda {key}: la versione di Freerouting non si legge dal log")
-    with open(sc(L49B, "assembly", "assembly.json")) as f:
-        asm = json.load(f)
-    if (asm.get("audio_board_mm") != out["boards"]["audio"]["meas"]["board_mm"]
-            or asm.get("supply_board_mm") != out["boards"]["psu"]["meas"]["board_mm"]):
-        refuse("assembly.json: le schede dell'assieme non sono quelle misurate")
-    fits = [k for k, v in asm["variants"].items() if v.get("fits")]
-    if fits != ["A_tutto_sul_fondo"]:
-        refuse(f"assembly.json: le varianti che ci stanno sono {fits}, non la sola A")
-    out["asm"] = asm
-    out["fit"] = asm["variants"].get("A_tutto_sul_fondo", {})
-    out["vincoli"] = {"audio": vincoli_l49(L49A_REPORT), "psu": vincoli_l49(L49B_REPORT)}
-    for name, parts in IMMAGINI.items():
-        p = sc(*parts)
-        with open(p, "rb") as f:
-            if f.read(8) != b"\x89PNG\r\n\x1a\n":
-                refuse(f"{rel(p)}: non e' un PNG")
-    out["pdf"] = {k: rel(os.path.join(b["dir"], "routing_both.pdf")) for k, b in out["boards"].items()}
-    out["pdf"]["asm"] = rel(os.path.join(L49B, "assembly", "assembly_A_tutto_sul_fondo.pdf"))
-    for p in out["pdf"].values():
-        if not os.path.isfile(os.path.join(REPO, p)):
-            refuse(f"manca {p}")
+def fmea_dest(stato):
+    for lab, pat in FMEA_DEST:
+        m = re.search(pat, stato)
+        if m:
+            return m.group(1) if lab == "NC" else lab
+    return None
+
+
+def measure_fmea(adrs, ncs):
+    """La FMEA di oggi con le misure adottate (L64c). Le cinque fonti ricomposte qui, riga per
+    riga, contro fmea_oggi.csv di L64c (le due strade); la priorita' di ogni riga contro la matrice di
+    ADR-070; ogni parte nominata nelle netlist di oggi; nessuna riga ancora alla diagnosi, nessuno
+    stato su una decisione superata, nessun micro o firmware dove la riga dice l'oggi."""
+    out = {"righe": [], "fonti": []}
+    colonne, oggi, ordine = None, {}, []
+    for lotto, path in FMEA_FONTI:
+        p = src(path)
+        with open(p, newline="", encoding="utf-8") as f:
+            rd = csv.DictReader(f)
+            righe = list(rd)
+            if colonne is None:
+                colonne = list(rd.fieldnames)
+            elif list(rd.fieldnames) != colonne:
+                refuse(f"{rel(p)}: le colonne non sono quelle di ADR-070 (fmea_dopo.csv di L45d2b3b3)")
+        nuove = 0
+        for r in righe:
+            k = (r["ref"], r["modo"], r["caso"])
+            if k not in oggi:
+                ordine.append(k)
+                nuove += 1
+                if lotto in ("L66", "L64c"):
+                    refuse(f"FMEA, {lotto}: {k} non sostituisce una riga che c'era")
+            oggi[k] = dict(r, da=lotto)
+        out["fonti"].append((lotto, rel(p), len(righe), nuove))
+    with open(src(FMEA_OGGI), newline="", encoding="utf-8") as f:
+        pub = list(csv.DictReader(f))
+    mie = [oggi[k] for k in ordine]
+    if len(pub) != len(mie):
+        refuse(f"FMEA: fmea_oggi.csv ha {len(pub)} righe, la ricomposizione {len(mie)}")
+    else:
+        for a, b in zip(pub, mie):
+            if a != b:
+                diff = [c for c in b if a.get(c) != b.get(c)]
+                refuse(f"FMEA: la riga {b['ref']} / {b['modo']} di fmea_oggi.csv non e' quella "
+                       f"ricomposta (colonne {', '.join(diff)})")
+                break
+    # le parti di oggi: le tre netlist
+    refs = set()
+    for net in ("preamp_audio.net", "psu.net", "gain_block.net"):
+        with open(os.path.join(REPO, "circuits", "preamp", net), encoding="utf-8") as f:
+            refs |= set(re.findall(r'\(ref "([^"]+)"\)', f.read()))
+    superate = {n for n, a in adrs.items() if a["stato"].lower().startswith("superata da")}
+    vietato = re.compile(r"\b(micro|firmware|ATtiny|U509)\b", re.I)
+    for r in mie:
+        k = f'{r["ref"]} / {r["modo"]} ({r["da"]})'
+        if r["priorita_dopo"] == "esclusa":
+            r["dest"] = "esclusa"
+            out["righe"].append(r)
+            continue
+        try:
+            gpr = (int(r["G_dopo"]), int(r["P_dopo"]), int(r["R_dopo"]))
+        except ValueError:
+            refuse(f"FMEA {k}: G / P / R dopo non numerici")
+            continue
+        if _ADR070.get(gpr) != r["priorita_dopo"]:
+            refuse(f"FMEA {k}: priorita' {r['priorita_dopo']}, la matrice di ADR-070 da' "
+                   f"{_ADR070.get(gpr)} (G {gpr[0]}, P {gpr[1]}, R {gpr[2]})")
+        if r["stato"].startswith("alla diagnosi"):
+            refuse(f"FMEA {k}: ancora alla diagnosi, ma L58 e' chiuso")
+        for n in re.findall(r"ADR-(\d{3})", r["stato"]):
+            if n in superate:
+                refuse(f"FMEA {k}: lo stato cita ADR-{n}, {adrs[n]['stato']}")
+        for n in re.findall(r"NC-(\d{3})", r["stato"] + r["effetto_dopo"]):
+            if f"NC-{n}" not in ncs:
+                refuse(f"FMEA {k}: NC-{n} non e' nel registro")
+        for col in ("funzione", "effetto_dopo", "stato"):
+            if vietato.search(r[col]):
+                refuse(f"FMEA {k}: «{vietato.search(r[col]).group(0)}» in {col}: il micro non c'e' "
+                       "piu' (ADR-102)")
+        toks = re.findall(r"\b([A-Z]{1,2}\d{1,3}[A-Z]?)\b", r["ref"])
+        for a, b, c in re.findall(r"\b([A-Z]+)(\d+)-[A-Z]*?(\d+)\b", r["ref"]):
+            toks += [f"{a}{i}" for i in range(int(b), int(c) + 1)]
+        fuori = sorted({t for t in toks if t not in refs and t not in FMEA_FUORI_SCHEDA})
+        if fuori:
+            refuse(f"FMEA {k}: {', '.join(fuori)} non sta in nessuna netlist di oggi")
+        r["dest"] = fmea_dest(r["stato"])
+        if r["dest"] is None:
+            refuse(f"FMEA {k}: lo stato «{r['stato'][:60]}» non dice dove va la riga")
+        out["righe"].append(r)
+    # i conti: la priorita' prima (le righe che l'avevano) e dopo; le destinazioni
+    out["n"] = len(mie)
+    out["prima"] = {p: sum(1 for r in mie if r["priorita_prima"] == p) for p in ("alta", "media", "bassa")}
+    out["dopo"] = {p: sum(1 for r in mie if r["priorita_dopo"] == p)
+                   for p in ("alta", "media", "bassa", "esclusa")}
+    out["senza_prima"] = sum(1 for r in mie if not r["priorita_prima"])
+    dest = {}
+    for r in out["righe"]:
+        d = dest.setdefault(r["dest"], {"alta": 0, "media": 0, "bassa": 0, "esclusa": 0})
+        d[r["priorita_dopo"]] += 1
+    out["dest"] = dest
+    out["nc"] = {}
+    with open(os.path.join(REPO, "docs", "preamp", "NONCOMPLIANCE.md"), encoding="utf-8") as f:
+        reg = f.read()
+    for nc in sorted({d for d in dest if d.startswith("NC-")}):
+        m = re.search(rf"^### {nc} — (.+?)\n(.*?)^\| Stato \| ([^|]+)\|", reg, re.M | re.S)
+        if not m:
+            refuse(f"FMEA: {nc} senza la riga Stato nel registro")
+            continue
+        out["nc"][nc] = (m.group(1).strip(), m.group(3).strip().split(" ")[0])
+    if sum(out["dopo"].values()) != out["n"]:
+        refuse(f"FMEA: le priorita' dopo contano {sum(out['dopo'].values())} righe su {out['n']}")
+    return out
+
+
+def measure_parti_schede():
+    """Le schede di prova di L49 contro le netlist di oggi (L64c, parti_schede.csv): solo i conti,
+    per «Cosa questo dossier non dice». parti_schede.py rieseguito in una cartella temporanea deve
+    ridare il CSV versionato byte per byte."""
+    import tempfile
+    p = src(PARTI_SCHEDE)
+    d = tempfile.mkdtemp(prefix="l64c_parti_")
+    proc = subprocess.run([sys.executable, "-I", os.path.join(L64C, "script", "parti_schede.py"), REPO, d],
+                          capture_output=True, text=True)
+    out = {}
+    for ln in proc.stdout.strip().splitlines():
+        m = re.match(r"(\w+): sulla scheda (\d+), nella netlist di oggi (\d+); tolte dopo (\d+), "
+                     r"aggiunte dopo (\d+), valore cambiato (\d+)", ln)
+        if m:
+            out[m.group(1)] = tuple(int(x) for x in m.groups()[1:])
+    if (proc.returncode != 0 or set(out) != {"audio", "alimentatore"}
+            or not stessi_byte("parti_schede.csv", p, os.path.join(d, "parti_schede.csv"))):
+        refuse(f"{rel(p)}: parti_schede.py rieseguito non ridà il CSV versionato "
+               f"(rc {proc.returncode}, {proc.stdout.strip()[-160:]})")
+        return {"audio": (0,) * 5, "alimentatore": (0,) * 5, "micro": []}
+    with open(p, encoding="utf-8") as f:
+        righe = list(csv.DictReader(f))
+    out["micro"] = sorted(r["ref"] for r in righe if r["scheda"] == "alimentatore"
+                          and r["che cosa"] == "tolta dopo"
+                          and re.search(r"ATtiny|UPDI", r["scheda_9_ottobre"]))
+    shutil.rmtree(d, ignore_errors=True)
     return out
 
 
@@ -3370,9 +3493,10 @@ SECTIONS_TUTTE = (
     ("stim", "Il temporizzatore a comparatori e lo standby", "alimentatore"),
     ("sdiag", "L&rsquo;autodiagnosi: la coppia del mute e i guasti dello standby", "alimentatore"),
     ("soff", "Spegnimento e failsafe al jack", "alimentatore"),
-    ("sbrd", "Le schede di prova e l&rsquo;assieme", "schede"),
+    # L64c: le schede di prova escono (l'utente: «Togliere la sezione»); la FMEA entra
+    ("sfmea", "I guasti singoli: la FMEA con le misure adottate", "chiusura"),
     ("s13", "Requisiti a fronte del misurato", "audio"),
-    ("s14", "Cosa questo dossier non dice", "schede"),
+    ("s14", "Cosa questo dossier non dice", "chiusura"),
     ("s15", "Provenienza", "audio"),
     ("appA", "Appendice: il registro delle ADR", "audio"),
     ("appB", "Appendice: l&rsquo;indice dei requisiti tecnici", "audio"))
@@ -3417,16 +3541,7 @@ def build_page(M, inline=False):
         return f"{it(v / 1e-9, nd)} nV".replace("-", "&minus;")
 
     def figure(svgfile, alt):
-        if svgfile in IMMAGINI:
-            # L51c: le immagini delle schede di prova, PNG
-            if inline:
-                import base64
-                with open(os.path.join(*IMMAGINI[svgfile]), "rb") as f:
-                    src_ = "data:image/png;base64," + base64.b64encode(f.read()).decode("ascii")
-            else:
-                src_ = svgfile
-            return (f'<div class="plate"><img src="{src_}" alt="{html_escape(alt)}" '
-                    'loading="lazy"></div>')
+        # L64c: le immagini PNG delle schede di prova (L51c) sono uscite con la loro sezione
         if inline:
             if svgfile in M["figs"]:
                 body = M["figs"][svgfile]
@@ -3436,6 +3551,18 @@ def build_page(M, inline=False):
             return f'<div class="plate">{body.split("?>", 1)[-1]}</div>'
         return (f'<div class="plate"><img src="{svgfile}" '
                 f'alt="{html_escape(alt)}" loading="lazy"></div>')
+
+    def schema_completo(svg, titolo, cosa):
+        """L64c: lo schema completo di L63, con quello che lo prova (measure_schemi)."""
+        sc_ = M["schemi"][svg]
+        return (f'<h3>{titolo}</h3>'
+                f'<p class="prov">Disegno <code>docs/preamp/schematic/{svg.replace(".svg", "_draw.py")}</code> '
+                f'&middot; {sc_["parti"]} parti, confrontate con <code>circuits/preamp/{sc_["net"]}</code> '
+                'nei due sensi (<code>scripts/check_schematic.py</code>) &middot; ridisegnato oggi dal '
+                'sorgente, uguale a quello versionato &middot; da ingrandire: '
+                f'<code>{html_escape(sc_["pdf"])}</code></p>'
+                f'<p>{cosa} Nessuna parte del disegno manca alla netlist, e nessuna della netlist manca al '
+                'disegno.</p>' + figure(svg, titolo.replace("&rsquo;", "'")))
 
     def marca(s):
         """L51c: un testo letto da un JSON o da un report, coi non-requisiti (T2, V5, ...)
@@ -3472,8 +3599,8 @@ def build_page(M, inline=False):
       'ricorsa (L64a), contro L60d2 &middot; interblocco da L36'
       + (' &middot; alimentatore corso il 2026-11-03 (L64b) col carico di oggi; seconda strada: '
          'L58b sullo stesso circuito, L54b3b, L54b2 e L51b' if psu else '')
-      + (' &middot; distorsione corsa il 2026-10-10 (L51c); seconda strada: L46b &middot; schede di '
-         'prova di L49a e L49b, DRC rifatta il 2026-10-10' if "schede" in PARTI else '') + '</p>')
+      + (' &middot; distorsione corsa il 2026-10-10 (L51c); seconda strada: L46b &middot; FMEA di '
+         'oggi composta da L45d2b3b3, L58a2, L58b, L66 e L64c' if "chiusura" in PARTI else '') + '</p>')
     A('<h1>Dossier di misura del preamplificatore di linea</h1>')
     A('<p class="lede">Classe A pura a componenti discreti, senza operazionali nel '
       'percorso del segnale. Quattro ingressi a relè con un condensatore ciascuno, guadagno '
@@ -3482,8 +3609,8 @@ def build_page(M, inline=False):
       + (' Le due schede: la scheda audio, poi l&rsquo;alimentatore, coi rail lineari, il '
          'sorvegliante in hardware e il temporizzatore che ordina mute, guadagno e rete.'
          if psu else '')
-      + (' Le due schede sono state piazzate e sbrogliate per prova, e l&rsquo;assieme sta nel '
-         f'contenitore ({sez("sbrd")}).' if "schede" in PARTI else '') + '</p>')
+      + (' Gli schemi completi delle due schede stanno nelle loro sezioni, e ogni guasto singolo ha la sua '
+         f'riga, con la misura che lo regge ({sez("sfmea")}).' if "chiusura" in PARTI else '') + '</p>')
 
     shape, level = adr014(resp)
     worst_shape = max(shape.values(), key=abs)
@@ -3605,6 +3732,10 @@ def build_page(M, inline=False):
       f'({sez("svol")}); il blocco B; il mute coi relè al jack su tutte e tre le uscite '
       f'({sez("smute")}).</p>')
     A(figure("preamp_blocks.svg", "Diagramma a blocchi del preamplificatore"))
+    if "chiusura" in PARTI:
+        A(schema_completo("audio.svg", "Lo schema completo della scheda audio",
+                          "In alto il canale sinistro, sotto il destro; i blocchi di guadagno come "
+                          f'simbolo, il loro interno è lo schema della {sez("s1")}.'))
 
     # --- il selettore ---
     A(h2("ssel"))
@@ -4534,6 +4665,10 @@ def build_page(M, inline=False):
           'transistor. Il diagramma è a blocchi: le soglie e le costanti di tempo stampate sono '
           'calcolate dai valori della netlist, le cifre misurate stanno nelle sezioni che seguono.</p>')
         A(figure("psu_blocks.svg", "Diagramma a blocchi dell'alimentatore"))
+        if "chiusura" in PARTI:
+            A(schema_completo("psu.svg", "Lo schema completo dell&rsquo;alimentatore",
+                              "Ogni parte della netlist, coi test point (ADR-107) e il temporizzatore a "
+                              "comparatori (ADR-102)."))
         A('<div class="tablewrap"><table><tr><th>Decisione</th><th>Che cosa</th>'
           '<th>La cifra che la regge, dai dati</th></tr>')
         pn = today.get("perdita_rete_nom", {})
@@ -4907,85 +5042,76 @@ def build_page(M, inline=False):
         A('<p>I casi ai nanovolt si muovono di molti dB nelle due direzioni: sono il fondo del metodo, '
           'migliaia di volte sotto V2.</p>')
 
-    if "schede" in PARTI:
-        # --- le schede di prova e l'assieme (L49a, L49b; L51c: «Essenziale», «Rifarlo oggi») ---
-        bd = M["brd"]
-        ba, bp, asm = bd["boards"]["audio"], bd["boards"]["psu"], bd["asm"]
-        ma, mp = ba["meas"], bp["meas"]
-        ch = asm["chassis_mm"]
-        A(h2("sbrd"))
-        A(f'<p class="prov">Schede <code>{html_escape(rel(ba["pcb"]))}</code> e '
-          f'<code>{html_escape(rel(bp["pcb"]))}</code>, piazzate e sbrogliate da L49a e L49b '
-          f'(Freerouting {html_escape(ba["freerouting"] or "?")}) &middot; DRC rifatta il 2026-10-10 '
-          f'con kicad-cli {html_escape(ba["kicad"] or "?")}, in <code>{html_escape(rel(os.path.join(L51C, "drc")))}/</code>, '
-          'uguale a quella del 9 ottobre &middot; i numeri dai <code>measure.json</code>, '
-          '<code>placement.json</code> e <code>assembly.json</code> dei due lotti</p>')
-        A('<p>Una prova di fattibilità, non il layout. Le due schede sono state piazzate e '
-          'sbrogliate dalle netlist di oggi per sapere se il progetto si può costruire, se ci sta '
-          f'nel contenitore (Modushop Pesante 3U, interni {it(ch[0], 4)} × {it(ch[1], 4)} × '
-          f'{it(ch[2], 4)} mm) e cosa chiede al pre-layout (G2). Il circuito non è cambiato per '
-          'farcele stare.</p>')
-        A('<div class="tablewrap"><table><tr><th>Scheda</th><th class="num">Misura</th>'
-          '<th class="num">Impronte sulla superficie</th><th class="num">Rame</th>'
-          '<th class="num">Vie</th><th class="num">DRC oggi: violazioni / aperte</th></tr>')
-        for lab, b in (("audio", ba), ("alimentatore", bp)):
-            m = b["meas"]
-            drc_s = "%d / %d" % b["drc"][:2]
-            A(f'<tr><td>{lab}</td><td class="num">{it(m["board_mm"][0], 4)} × {it(m["board_mm"][1], 4)} mm</td>'
-              f'<td class="num">{fx(m["fill"] * 100, 0)} %</td><td class="num">{it(m["tracks_m"], 3)} m</td>'
-              f'<td class="num">{m["vias"]}</td>'
-              + verdict(b["drc"][:2] == (0, 0), drc_s, drc_s) + '</tr>')
+    if "chiusura" in PARTI:
+        # --- la FMEA con le misure adottate (L64c; l'utente: «Sintesi + alte + medie») ---
+        fm = M["fmea"]
+        A(h2("sfmea"))
+        A('<p class="prov">Le righe da '
+          + "; ".join(f'<code>{html_escape(p)}</code> ({lot}: {n} righe, {nu} nuove)'
+                      for lot, p, n, nu in fm["fonti"])
+          + f' &middot; composte in <code>{html_escape(rel(FMEA_OGGI))}</code></p>')
+        A('<p>Ogni guasto singolo di ogni parte delle due schede, nella forma di ADR-070: la gravità '
+          '<em>G</em> (1–5, dal nessun effetto al pericolo), la probabilità <em>P</em> (1–4, dal tasso di '
+          'guasto della parte e del modo), la rilevabilità <em>R</em> (1–3, da «si vede subito» a «nessuno '
+          'se ne accorge»), e la priorità che la matrice ne dà. Ogni lotto che ha misurato di nuovo un '
+          'guasto ha riscritto la sua riga: la FMEA di oggi è la riga più recente di ciascuno, '
+          f'<strong>{fm["n"]} righe</strong>. «Prima» è la priorità di L45, prima dei rimedi; le parti '
+          f'aggiunte dopo ({fm["senza_prima"]} righe) non hanno un prima.</p>')
+        A('<p class="meta"><strong>La seconda strada.</strong> Il generatore ricompone le cinque fonti da '
+          'sé e trova le stesse righe del CSV, colonna per colonna; ricalcola la priorità di ogni riga '
+          'dalla matrice di ADR-070; cerca ogni parte nominata nelle tre netlist di oggi (i due '
+          f'trasformatori, {des("T1")} e {des("T2")}, stanno nel telaio); e rifiuta una riga ancora «alla '
+          'diagnosi», uno stato che si regge su una decisione superata, un micro o un firmware '
+          'nell&rsquo;effetto o nello stato.</p>')
+        A('<div class="tablewrap"><table><tr><th>Priorità</th><th class="num">Prima dei rimedi</th>'
+          '<th class="num">Oggi</th></tr>')
+        for p_ in ("alta", "media", "bassa"):
+            A(f'<tr><td>{p_}</td><td class="num">{fm["prima"][p_]}</td><td class="num">{fm["dopo"][p_]}</td></tr>')
+        A(f'<tr><td>esclusa</td><td class="num">&mdash;</td><td class="num">{fm["dopo"]["esclusa"]}</td></tr>')
+        A(f'<tr><td>parti aggiunte dopo L45</td><td class="num">{fm["senza_prima"]}</td><td class="num">&mdash;</td></tr>')
         A('</table></div>')
-        outs = ma["main_output_nets_mm"]
-        longest = ma["longest_signal_nets_mm"][0]
-        nk = mp["necks"]
-        A('<h3>La scheda audio</h3>')
-        A(f'<p>I relè condivisi fra i canali stanno in una spina al centro: <strong>'
-          f'{ma["n_nets_crossing_spine"]} reti di segnale</strong> passano da un canale all&rsquo;altro. '
-          'Il prezzo è la lunghezza: ogni segnale va al centro e torna, le uscite principali sono '
-          f'lunghe {" e ".join(f"{it(v, 4)} mm" for v in sorted(outs.values()))}, la rete più lunga '
-          f'(<code>{html_escape(longest[0])}</code>) {it(longest[1], 4)} mm. Per G2 i connettori '
-          'delle uscite vanno vicino alla spina.</p>')
-        A(figure("scheda_audio_3d.png", "La scheda audio di prova, render dall'alto"))
-        A(figure("scheda_audio_rame.png", "La scheda audio di prova, i due strati di rame"))
-        A('<h3>L&rsquo;alimentatore</h3>')
-        A(f'<p>La rete sta in colonna su un bordo: sul rame la distanza minima fra rete e bassa '
-          f'tensione è <strong>{it(mp["mains_to_low_voltage_mm"], 4)} mm</strong>, fra fase e neutro '
-          f'{it(mp["mains_L_to_N_mm"], 3)} mm. I rail sono larghi; si stringono in '
-          f'{nk["count"]} tratti, larghi almeno {it(nk["min_width_mm"], 3)} mm e lunghi al più '
-          f'{it(nk["max_length_mm"], 3)} mm, attorno ai piedini fini dei regolatori e delle altre parti '
-          f'({", ".join(nk["parts"])}); {len(nk["not_on_a_pad"])} di questi non toccano un piedino '
-          'a nessuna delle due estremità. Freerouting non è '
-          'ripetibile: i file sono quelli della corsa consegnata, copiati.</p>')
-        A(figure("alimentatore_3d.png", "L'alimentatore di prova, render dall'alto"))
-        A(figure("alimentatore_rame.png", "L'alimentatore di prova, i due strati di rame"))
-        fit = bd["fit"]
-        A('<h3>L&rsquo;assieme nel contenitore</h3>')
-        tor = fit.get("toroid_distances_mm", {})
-        A(f'<p><strong>{html_escape(fit.get("title", ""))}</strong>: ci sta. '
-          + " ".join(marca(re.sub(r"(\d)\.(\d)", r"\1,\2", html_escape(n))) for n in fit.get("notes", []))
-          + ' I trasformatori stanno lontani dal segnale: '
-          # il nome del trasformatore (T1, T2) e' una parte, non il requisito T1: si marca
-          + "; ".join(f'{des(t.split()[0])} {html_escape(t.split(" ", 1)[1])} a '
-                      f'{it(d["ingressi_RCA"], 4)} mm dagli ingressi e '
-                      f'{it(d["volume_bilanciamento"], 4)} mm dal volume'
-                      for t, d in tor.items() if d.get("volume_bilanciamento") is not None)
-          + f'. Le altre {len(asm["variants"]) - 1} disposizioni provate non ci stanno.</p>')
-        A(figure("assieme.png", "L'assieme nel contenitore, pianta e sezione"))
-        A(f'<p class="meta">I disegni vettoriali, da ingrandire: <code>{html_escape(bd["pdf"]["audio"])}</code>, '
-          f'<code>{html_escape(bd["pdf"]["psu"])}</code>, <code>{html_escape(bd["pdf"]["asm"])}</code>.</p>')
-        A('<h3>Cosa chiedono al pre-layout</h3>')
-        A('<p>I vincoli che le due prove restituiscono al progetto, coi titoli dei report di L49a e '
-          'L49b (letti da lì, non riscritti); il dettaglio di ciascuno sta nel report. Nessuno '
-          'cambia il circuito.</p>')
-        A('<div class="tablewrap"><table><tr><th>Prova</th><th class="num">N.</th><th>Vincolo</th></tr>')
-        for lab, key, rep in (("scheda audio", "audio", L49A_REPORT), ("alimentatore e assieme", "psu", L49B_REPORT)):
-            for n, t in bd["vincoli"][key]:
-                t = marca(re.sub(r"`([^`]+)`", r"<code>\1</code>", html_escape(t)))
-                A(f'<tr><td>{lab}</td><td class="num">{n}</td><td>{t}</td></tr>')
+        A('<p>Dove va ogni riga, dal suo stato:</p>')
+        A('<div class="tablewrap"><table><tr><th>Destinazione</th><th class="num">alta</th>'
+          '<th class="num">media</th><th class="num">bassa</th><th class="num">esclusa</th></tr>')
+        ordine_d = ("nel circuito", "rivelata dall'autodiagnosi", "misurata, nessun rimedio", "accettata",
+                    "a G2", "invariata (riga di L45)", "esclusa")
+        for dd in list(ordine_d) + sorted(d for d in fm["dest"] if d not in ordine_d):
+            if dd not in fm["dest"]:
+                continue
+            c = fm["dest"][dd]
+            lab = (f'{dd}, {html_escape(fm["nc"][dd][0])} ({html_escape(fm["nc"][dd][1])})'
+                   if dd in fm["nc"] else html_escape(dd).replace("'", "&rsquo;"))
+            A(f'<tr><td>{lab}</td>' + "".join(f'<td class="num">{c[p_] or ""}</td>'
+                                              for p_ in ("alta", "media", "bassa", "esclusa")) + '</tr>')
         A('</table></div>')
-        A(f'<p class="meta">Report: <code>{html_escape(rel(L49A_REPORT))}</code>, '
-          f'<code>{html_escape(rel(L49B_REPORT))}</code>.</p>')
+
+        def cella_n(x, nd=1):
+            try:
+                return fx(float(x), nd)
+            except (TypeError, ValueError):
+                return ""
+
+        def tabella_fmea(prio):
+            rr = [r for r in fm["righe"] if r["priorita_dopo"] == prio]
+            A(f'<h3>Le {len(rr)} righe a priorità {prio}</h3>')
+            A('<div class="tablewrap"><table><tr><th>Parte</th><th>Funzione</th><th>Modo</th>'
+              '<th>Prima</th><th class="num">G · P · R</th><th>Effetto, oggi</th>'
+              '<th class="num">Al jack</th><th class="num">T<sub>j</sub></th><th>Stato</th><th>Da</th></tr>')
+            for r in rr:
+                jack = f'{cella_n(r["picco_dopo_dB"])} dB SPL' if cella_n(r["picco_dopo_dB"]) else ""
+                tj = f'{cella_n(r["Tj_max_C"], 0)} °C' if cella_n(r["Tj_max_C"], 0) else ""
+                A(f'<tr><td>{marca(html_escape(r["ref"]))}</td><td>{marca(html_escape(r["funzione"]))}</td>'
+                  f'<td>{marca(html_escape(r["modo"]))}</td><td>{r["priorita_prima"] or "&mdash;"}</td>'
+                  f'<td class="num">{r["G_dopo"]} · {r["P_dopo"]} · {r["R_dopo"]}</td>'
+                  f'<td>{marca(html_escape(r["effetto_dopo"]))}</td><td class="num">{jack}</td>'
+                  f'<td class="num">{tj}</td><td>{marca(html_escape(r["stato"]))}</td><td>{r["da"]}</td></tr>')
+            A('</table></div>')
+        tabella_fmea("alta")
+        tabella_fmea("media")
+        A(f'<p class="meta">Le {fm["dopo"]["bassa"]} righe a priorità bassa e le colonne che qui non ci '
+          f'sono (la decisione di L45, il tasso di guasto del modo, la fonte di ogni cifra) stanno in '
+          f'<code>{html_escape(rel(FMEA_OGGI))}</code>; il picco al jack è il più alto fra principale e '
+          'fissa 1, di picco a 1 m con la catena di NC-028.</p>')
 
     # --- 13 requisiti ---
     A(h2("s13"))

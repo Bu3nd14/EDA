@@ -29,7 +29,9 @@ DATA = os.path.abspath(os.path.join(L, "..", ".."))
 FONTI = (("L45d2b3b3", os.path.join(DATA, "2026-10-24", "L45d2b3b3", "fmea_dopo.csv")),
          ("L58a2", os.path.join(DATA, "2026-10-29", "L58a", "fmea_alimentatore.csv")),
          ("L58b", os.path.join(DATA, "2026-11-01", "L58b", "fmea_l58b.csv")),
-         ("L66", os.path.join(DATA, "2026-11-02", "L66", "fmea_l66.csv")))
+         ("L66", os.path.join(DATA, "2026-11-02", "L66", "fmea_l66.csv")),
+         # L64c: le righe che dicevano il micro, riscritte dalle corse di oggi (script/fmea_l64c.py)
+         ("L64c", os.path.join(L, "fmea_l64c.csv")))
 
 
 def priorita(g, p, r):
@@ -64,8 +66,8 @@ def main():
             if k in visti:
                 errori.append(f"{lotto}: la chiave {k} si ripete")
             visti.add(k)
-            if lotto == "L66" and k not in oggi:
-                errori.append(f"L66: {k} e' una riga nuova")
+            if lotto in ("L66", "L64c") and k not in oggi:
+                errori.append(f"{lotto}: {k} e' una riga nuova")
             if k not in oggi:
                 ordine.append(k)
             oggi[k] = dict(r, da=lotto)
