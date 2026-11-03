@@ -1,0 +1,33 @@
+L64b - stima termica del telaio (CALCOLATA, potenze dal banco di oggi)
+
+dissipazione, W                         nom    min    max
+scheda audio (8 blocchi)               9.22   9.22   9.22
+regolatori +-15 V                      2.26   0.88   3.64
+resistenze davanti ai regolatori       0.89   0.89   0.89
+diodi dopo i regolatori                0.19   0.19   0.19
+raddrizzatore dei rail                 0.63   0.63   0.64
+rame di T1                             0.68   0.66   0.70
+ferro di T1 (ipotesi)                  1.00   0.50   1.50
+linea a 12 V: bobine, selettore, temporizzatore   1.47   1.47   1.47
+regolatore di VRELAY                   0.38   0.15   0.62
+raddrizzatore di VRELAY                0.28   0.28   0.28
+rame di T2                             0.29   0.28   0.30
+ferro di T2 (ipotesi)                  0.30   0.20   0.45
+il resto (partitori, ESR, riposo)      0.07   0.07   0.08
+TOTALE                                17.68  15.42  19.98
+
+telaio: A efficace 0.380 m2, h (5.5, 6.5, 4.5) W/m2K; vano: U 2.70 W/m2K
+
+gioco vano caso          P, W   dT tel  dT vano T dentro
+3 cm       nominale      17.7      8.5      9.7     53.2
+3 cm       peggiore      20.0     11.7     11.0     57.7
+5 cm       nominale      17.7      8.5      7.7     51.2
+5 cm       peggiore      20.0     11.7      8.7     55.4
+10 cm      nominale      17.7      8.5      4.8     48.2
+10 cm      peggiore      20.0     11.7      5.4     52.1
+20 cm      nominale      17.7      8.5      2.3     45.8
+20 cm      peggiore      20.0     11.7      2.7     49.4
+all'aria   nominale      17.7      8.5      0.0     43.5
+all'aria   peggiore      20.0     11.7      0.0     46.7
+
+gioco minimo del vano chiuso per 60 C nel caso peggiore: 2.0 cm per lato

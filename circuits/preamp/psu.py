@@ -133,20 +133,23 @@ FP_TSSOP14 = "Package_SO:TSSOP-14_4.4x5mm_P0.65mm"
 # 13.5 V to 10.6 V (L30), checked on this circuit in L41a's simulation.
 C_HOLD = "2200u"
 # Raw reservoirs: 4700 uF, the value L41a's rectifier sweep assumed
-# (data/2026-09-26/L41a/scelte/raddrizzatore.csv; ADR-048). On TODAY's load
-# (L51b: the rails of tb_op, the selector's coils; data/2026-10-09/L51b/rete/
-# analisi.csv) the valley is 17.89 V at -10 % mains on 2x15 V 50 VA, 2.6 V
-# above 15 V + dropout (L41a's load: 18.05 V). 35 V parts: the raw reaches
-# ~23 V at +10 % mains.
+# (data/2026-09-26/L41a/scelte/raddrizzatore.csv; ADR-048). On today's circuit
+# and load (L64b, 2026-11-03: the comparator timer of ADR-102, R550 / R551 and
+# the SB340 of ADR-092 / 093, the rails of tb_op after L66, the selector's
+# coils; data/2026-11-03/L64b/rete/analisi.csv) the valley is 17.84 V at -10 %
+# mains on 2x15 V 50 VA (L51b 17.89, L41a's load 18.05). 35 V parts: the raw
+# reaches ~23 V at +10 % mains (22.98 V, data/2026-11-03/L64b/an_l64b.csv).
 C_RAW = "4700u"
 # VRELAY's own reservoir behind D504: P9 (b) wants VRELAY >= 11.4 V (12 V
 # -5 %) for >= 25 ms after the trip. Chosen in L41a on T2 = 12 V AC (the heat
 # preference of ADR-048 point 7): 2200 uF held only 14 ms at -10 % mains -
-# the "Da riaprire se" of ADR-048. On TODAY's circuit and load (L51b: without
-# the LDR drive of ADR-062, with the selector's coils of ADR-064 and the rails
-# of tb_op; data/2026-10-09/L51b/rete/analisi.csv) 4700 uF holds VRELAY_REG
-# >= 11.4 V for 48.3 / 121.7 / 195.4 ms after the jack relays release, at
-# mains -10 / nom / +10 %: 23 ms over P9. The load sets it (NC-050): 61.1 ms
+# the "Da riaprire se" of ADR-048. On today's circuit and load (L64b,
+# 2026-11-03: the comparator timer of ADR-102, the two 5 V regulators of
+# ADR-094, K3 an IM06TS, the selector's coils of ADR-064, the rails of tb_op
+# after L66; data/2026-11-03/L64b/rete/analisi.csv) 4700 uF holds VRELAY_REG
+# >= 11.4 V for 50.3 / 109.6 / 169.1 ms after the jack relays release, at
+# mains -10 / nom / +10 %: 25 ms over P9 (L51b, the micro's circuit: 48.3 /
+# 121.7 / 195.4 ms). The load sets it (NC-050): 61.1 ms
 # without the selector (L47c2a), 36.1 with the drive (L42b), 62.8 with
 # L41a's load. Smaller values on L47c2a's bench (data/2026-10-05/L47c2a/
 # varianti/): 3300 uF 41.0 ms, 2200 uF 25.1 ms at -10 %. Kept at 4700 uF by
