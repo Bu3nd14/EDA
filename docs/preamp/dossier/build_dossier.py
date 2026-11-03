@@ -273,7 +273,7 @@ IMMAGINI = {
 # (L51c). Con tutte e tre il generatore scrive accanto a se'.
 # L64a: la prima delle tre parti di L64 (l'utente, 2026-11-02: «Three parts, like last time»);
 # finche' non ci sono tutte, il generatore scrive solo --standalone fuori dal repo.
-PARTI = ("audio", "alimentatore")
+PARTI = ("audio", "alimentatore", "schede")
 PARTI_TUTTE = ("audio", "alimentatore", "schede")
 
 MODES = ("0db", "3db", "10db")
