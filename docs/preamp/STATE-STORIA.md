@@ -18,6 +18,29 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L66 — il VAS a 126 °C e i modi fuori dai quindici (2026-11-02)
+
+- **Il banco del calore** di L45d2b3b2b2 sul sorgente, caso noto: 20 righe di L58b e 5 di L55, 775 celle, 0
+  diverse; la Stax e V4 a caldo anche loro alla cifra.
+- **Il meccanismo, misurato**: col finale NPN in corto base-emettitore il VAS deve tenere l'uscita da solo
+  (attraverso 32 Ω) contro il finale PNP, su cui cade tutto il moltiplicatore; servirebbero ~35 mA, il
+  limitatore di ADR-099 ne dà ~20: l'uscita al rail, il VAS al limite con ~27 V, 0,53 W, 126 °C. Il «degrado
+  silenzioso, 115 °C» della FMEA era il blocco di prima del limitatore.
+- **I 91 modi fuori dai quindici** rifatti sul sorgente: fuori da P7 solo **D158 in corto** (lo stesso guasto,
+  126 °C); gli altri più freddi (i finali 87 → 79 °C col dissipatore); la Stax dei due 114,3 / 120,0 ms (P10
+  150). R120 in corto lasciato per errore nella lista lunga (limitations #75), fermato, rifatto a 0,6 s.
+- **Le opzioni coi numeri** (VAS 126 / 124 / 120 °C; rame non verificabile oggi). La scelta dell'utente:
+  **«Limitatore 36,5 + 18,7 Ω»** (ADR-111, **NC-076 chiusa**): VAS 120–121 °C, i quattro di ADR-099 118–119;
+  margine di fase −0,07°, IMD a caldo −131,0 dB, il limitatore a riposo 23 µA a 90 °C.
+- **Il sorgente**: `gain_block.py`, netlist (reti uguali per piedini; AL_OUT → F2L_IN, il sinonimo in
+  `audio_draw.py`), disegni, il deck del corto in mute; `run_tests.sh` 14 / 0; il sorgente ridà la variante
+  (600 celle, 0 diverse). **La FMEA** (`fmea_l66.csv`): 145 righe del blocco, nessuna oltre P7 o P10.
+- **Errore**: le corse grezze della regressione (~260 MB) committate sul ramo, tolte nel commit dopo; lo
+  squash non le porta su `main`.
+- **Richiesta dell'utente in sessione**: un lotto per la distorsione delle istanze a guadagno unitario
+  (NC-055) **prima di L64**: è **L67**.
+- **Dopo**: **L67**, il prompt di `NEXT-SESSION.md`.
+
 ### L58b — l'autodiagnosi (2026-11-01)
 
 - **Il censimento misurato**, sui banchi di L58a (alimentatore), L45d2b3b2b2 (il blocco del sorgente) e
