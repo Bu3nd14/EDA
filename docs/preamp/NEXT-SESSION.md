@@ -1,68 +1,60 @@
-# Prompt per la sessione successiva — L64, il dossier rigenerato una volta sola prima di G1
+# Prompt per la sessione successiva — L64b, il dossier rigenerato: l'alimentatore e il temporizzatore
 
-Nome della sessione: **hi-fi preamp L64** (la convenzione è in `CLAUDE.md`).
+Nome della sessione: **hi-fi preamp L64b** (la convenzione è in `CLAUDE.md`).
 
-> Prompt scritto alla chiusura del lotto della catena a guadagno unitario (2026-11-02, NC-055 chiusa,
-> ADR-112: ogni blocco si giudica al livello a cui lavora; il circuito non è cambiato). Con quel lotto
-> si chiude l'ultimo lavoro sul sorgente prima di G1. L'ordine verso G1: **L64** → L65 → G1.
+> Prompt scritto alla chiusura della prima parte del dossier (2026-11-03: la scheda audio, ADR-113 per
+> PR-24). L'utente ha diviso L64 in tre parti («Three parts, like last time»). L'ordine verso G1:
+> **L64b** → L64c → L65 → G1.
 
-Riprendo il progetto del preamplificatore hi-fi in questo repository. Questa sessione fa **L64**, e si
-ferma.
+Riprendo il progetto del preamplificatore hi-fi in questo repository. Questa sessione fa **L64b**, e
+si ferma.
 
 ## Che cosa fare
 
-**Il dossier rigenerato, una volta sola, adesso che il circuito smette di cambiare** (decisione
-dell'utente dopo L45d2b3b2a, 2026-10-22, «si mi va bene»). L'ultimo dossier è di L51 (2026-10-10). Da lì
-non mostra l'inseguitore e l'aiuto dello specchio (L56), il rivelatore tolto e il condensatore della
-Stax (L60), i diodi del moltiplicatore e dei finali (L62, ADR-095), l'alimentatore di ADR-091…094, R153
-sdoppiata (ADR-097), i rimedi del calore e i dissipatori (ADR-099), il limitatore del VAS (ADR-111), gli
-schematici completi (L63), la FMEA con le misure adottate, l'autodiagnosi (ADR-110, `DIAGNOSI.md`), la
-catena a guadagno unitario e V4 sulla catena (ADR-112).
+**La seconda parte del dossier: l'alimentatore e il temporizzatore**, sul circuito di oggi (il
+circuito non cambia dopo L67). Da L51b l'alimentatore è cambiato quasi tutto: la partenza morbida dei
+regolatori (ADR-091, 092), lo Schottky dopo i regolatori (ADR-093), il comando dei relè e i 5 V
+(ADR-094), la retroazione dei regolatori (ADR-096), il temporizzatore a comparatori con lo standby
+al posto del micro e del firmware (ADR-102…105, 108), R585 (ADR-109), l'autodiagnosi con Q501 in
+serie a Q509 (ADR-110, `DIAGNOSI.md`).
 
 1. **Leggi prima**:
-   - la riga di L64 nella tabella dei lotti di `STATE.md`;
-   - `docs/preamp/dossier/build_dossier.py`: la regola «nessuna cifra scritta a mano», le due strade per
-     ogni numero, il rifiuto sui dati dei segnaposto;
-   - i report di L51, l'ultima rigenerazione (`reports/2026-10-09-L51a-dossier-scheda-audio.md`,
-     `2026-10-09-L51b-dossier-alimentatore.md`, `2026-10-10-L51c-dossier-schede.md`): com'era diviso il
-     lavoro, che cosa ha rifiutato il generatore;
-   - in `STATE-STORIA.md`, la sezione sul dossier («si rigenera come lotto, come ingresso di una
-     revisione»).
-2. **Il generatore sul progetto di oggi, prima di ogni sezione nuova**: `build_dossier.py` com'è deve
-   girare sui dati che cita, oppure rifiutare con una ragione. Ogni rifiuto si legge: dice quale dato è
-   vecchio o mancante.
-3. **Le sezioni nuove**, ognuna coi suoi numeri letti dai file versionati sotto `docs/preamp/data/` e
-   passati per una seconda strada. Le cifre del blocco sono quelle a caldo (ogni giunzione alla sua
-   temperatura), dove esistono.
-4. **Se il lavoro è più grande di una sessione**: dividilo con l'utente all'inizio, come L51 («Tre
-   parti»), coi nomi delle parti.
-5. **La consegna**: il dossier in PDF all'utente (vedi la memoria «Consegne in PDF»), un file per
-   documento.
+   - la riga di L64b nella tabella dei lotti di `STATE.md`;
+   - il report di L64a (`reports/2026-11-03-L64a-dossier-scheda-audio.md`): com'è fatta la seconda
+     strada sul circuito di oggi, le eccezioni dichiarate, i sabotaggi;
+   - il report di L51b (`reports/2026-10-09-L51b-dossier-alimentatore.md`) e, in `build_dossier.py`,
+     i punti 7–13 del docstring e le funzioni dell'alimentatore (`measure_psu_power`,
+     `measure_supervisor`, `measure_timer`, `measure_fw`, `measure_shutdown`, `measure_heat`);
+   - i README dei lotti dell'alimentatore dopo L51b: L45d2b2a, L45d2b2b1, L45d2b2b2, L45d2b3a,
+     L54b1, L54b2, L54b3a, L54b3b, L58a, L58b.
+2. **Il generatore con `PARTI = ("audio", "alimentatore")`, prima di ogni sezione**: in L64a, con le
+   parti dell'alimentatore accese, rifiutava R512 a 220 k (atteso 110 k, limitations #34) in tutti i
+   log di L51b, i deck della rete e dei guasti che non si rigenerano più, le quindici sequenze e i
+   quattro deck del temporizzatore. Ogni rifiuto si legge.
+3. **Le sezioni**: il firmware non c'è più (ADR-102): la sua sezione esce o si riscrive come il
+   temporizzatore a comparatori; lo standby; l'autodiagnosi; il calore del telaio coi carichi di oggi.
+   Ogni numero letto dai dati versionati e passato per una seconda strada; i lotti vecchi solo da
+   `vecchio()`.
+4. **Le domande all'utente** coi numeri, per nome.
 
 ## I vincoli
 
-- **Il dossier ha un solo lettore, l'utente**: niente avvisi di obsolescenza, si rigenera come lotto. E
-  **non si taglia**: tutto il progetto di oggi, anche sotto pressione di tempo.
-- **Il circuito non cambia in questo lotto.** Se una sezione scopre un difetto, si apre una non
-  conformità e si porta all'utente; non si corregge il sorgente qui.
-- Quelli di L58 e dei lotti dopo:
-  - comandi semplici, percorsi assoluti, script scritti con Write;
-  - `git add` un percorso alla volta;
-  - commit e push prima di ogni lista lunga.
-- **Le forme d'onda e le corse grezze non si committano**: prima di ogni `git add` di una cartella dati,
-  `.gitignore` deve coprire `run/` e le cartelle delle corse.
-- **Una catena di più blocchi** vuole i `.nodeset` dal blocco da solo (limitations #86), se il dossier
-  rifà una corsa sulla catena.
-- Le domande all'utente si fanno per nome; i colpi al jack in dB SPL; le distorsioni in dB contro il
-  tetto.
-- Il controllo del worktree rifiuta i comandi composti (cicli, pipe con variabili, heredoc con git,
-  `xargs` con `find`): scriverli in uno script.
+- **Il dossier ha un solo lettore, l'utente**, e **non si taglia**.
+- **Il circuito non cambia.** Un difetto trovato apre una non conformità e si porta all'utente.
+- **La macchina è un MacBook Air senza ventole**: al più **3 simulazioni insieme**, con `nice -n 10`;
+  prima di lanciare, `pgrep ngspice`. Gli script copiati dai lotti vecchi che ne lanciano di più si
+  chiamano con 3. Le corse lunghe della notte: `caffeinate -i -w <pid>`.
+- Comandi semplici, percorsi assoluti, script scritti con Write; il controllo del worktree rifiuta i
+  comandi composti (cicli, variabili calcolate, `nice` in una catena): scriverli in uno script.
+- `git add` un percorso alla volta; commit e push prima di ogni lista lunga.
+- Le forme d'onda e le corse grezze non si committano: `.gitignore` prima di ogni `git add` di una
+  cartella dati.
+- Una catena di più blocchi vuole i `.nodeset` dal blocco da solo (limitations #86).
+- Le domande si fanno per nome; i colpi al jack in dB SPL; le distorsioni in dB contro il tetto.
 
 ## CHIUSURA
 
-1. `STATE.md`: L64 **fatto**, il prossimo **L65**; le celle di In breve; il diario (la voce più vecchia
-   delle tre va in `STATE-STORIA.md`).
-2. Riscrivi questo file per L65 («Nome della sessione: hi-fi preamp L65»): la forma della revisione
-   (l'architetto avversariale cieco, la lettura dell'utente, o tutte e due) si decide con l'utente
-   all'apertura.
-3. Commit, push, PR; `/bin/zsh scripts/chunk_close.sh L64`; rimuovi il worktree; fermati.
+1. `STATE.md`: L64b **fatto**, il prossimo **L64c**; le celle di In breve; il diario (la voce più
+   vecchia delle tre va in `STATE-STORIA.md`).
+2. Riscrivi questo file per L64c («Nome della sessione: hi-fi preamp L64c»).
+3. Commit, push, PR; `/bin/zsh scripts/chunk_close.sh L64b`; rimuovi il worktree; fermati.

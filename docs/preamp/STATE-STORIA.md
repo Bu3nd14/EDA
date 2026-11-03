@@ -18,6 +18,34 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L58b — l'autodiagnosi (2026-11-01)
+
+- **Il censimento misurato**, sui banchi di L58a (alimentatore), L45d2b3b2b2 (il blocco del sorgente) e
+  L58a2 (V2), ciascuno col suo caso noto alla cifra:
+  - **lo standby**: sei guasti lasciano VRELAY a 12 V alla scheda audio, e **i LED restano accesi a
+    frontale spento**; Q503 in corto / K501 saldato tengono acceso il toroidale coi LED spenti (la musica a
+    17,4 ms invece di 1209);
+  - **Q501 in corto**: a ogni accensione il jack prende la salita dei rail, **~90 dB SPL** sulla principale
+    e **~110 dB SPL** sulle fisse (70 mV, 0,64 / 0,66 V), uguale a rete ±10 %;
+  - **il blocco**: 6 guasti si vedono dalla continua al test point (15–226 mV), 15 dal riposo dei finali
+    (0 / 9,5 / 39 mA contro 20,2), 3 si sentono (il +10 dB), 3 no (R123, R144, R147); **Q132 in corto B-E
+    porta l'uscita al rail** sul blocco di oggi: va a L66 (NC-076);
+  - **R585**: AT_F a ~0 V in funzionamento, il tester non la vede (detto male all'utente, poi corretto).
+- **Le scelte dell'utente**, conversando:
+  - lo standby «si», coi LED che ci sono;
+  - il mute: chiesti i dB prima di confermare; poi **«si, misura il transistor in serie; R585 resta
+    com'era»**, **«si, metti la coppia nel sorgente»**; il contatto saldato di K2–K4 coi dB: «si»;
+  - il blocco: «si», la procedura col tester e i tre invisibili accettati.
+- **La coppia**: con 10 kΩ su tutti e due i gate il corto gate-drain di Q501 apriva il jack a 50 ms, dopo
+  il guadagno; con **1 MΩ sopra** tutti i modi come la coppia sana (Q509 G-D: muto). Nel sorgente
+  (`psu.py`), il deck uguale alla variante, gli otto eventi uguali, ERC come prima, schematico e diagramma
+  a blocchi, i due guardiani insegnati (29 falsi su 29), `run_tests.sh` 14 / 0. Il ritardo attraverso
+  1 MΩ non è nel modello: ≤ ~0,2 ms dal datasheet, da confermare sul prototipo.
+- **ADR-110**, `DIAGNOSI.md`, `fmea_l58b.csv` (60 righe: le alte da 9 a 5, tutte accettate). Report
+  `reports/2026-11-01-L58b-autodiagnosi.md`. Il PDF di `DIAGNOSI.md` all'utente
+  (`~/Documents/Preamp-DIAGNOSI.pdf`, richiesta in sessione).
+- **Dopo**: **L66**, il prompt di `NEXT-SESSION.md`.
+
 ### L58a2 — le righe della FMEA delle parti nuove del temporizzatore (2026-11-01)
 
 - **Le prove sul caso noto** rifatte (le forme d'onda di L58a1 erano perse col worktree): la base come
