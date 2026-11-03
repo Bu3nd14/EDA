@@ -590,11 +590,16 @@ for _b, _r, _m, _p, _w in RIGHE_L58B:
 # ---- L58b: the series pair measured for the user (genera_tb_psu.py --q501serie): Q501 on top (drain on
 # MUTE_CMD, gate g501a), Q509 below (source on RLY_RET, gate g501b), middle n501m. Each mode of
 # either, latent from t = 0, against the same events. Only with --q501serie (the nodes exist only there)
+# L64b: the source of today HAS the pair (ADR-110, psu.net after L58b), with its own names: the middle
+# q501_mid (L58b's n501m), the gates q501_g / q509_g (g501a / g501b), the gate resistors R586 / R587
+# (RQ501G / RQ509G; L58b's psu/sorgente_uguale.py maps them the same way). The same faults on the
+# same nodes, under today's names; the case names stay L58b's, for the second road. Without
+# --q501serie: on the source of today the option would add a second pair.
 RIGHE_SERIE = [
-    ("f_q501a_corto", "Q501", "corto D-S (in serie)", ("corto", "mute_cmd", "n501m"), "resta Q509"),
-    ("f_q501a_gd", "Q501", "corto G-D (in serie)", ("corto", "g501a", "mute_cmd"), "resta Q509"),
-    ("f_q509_corto", "Q509", "corto D-S (in serie)", ("corto", "n501m", "rly_ret"), "resta Q501"),
-    ("f_q509_gd", "Q509", "corto G-D (in serie)", ("corto", "g501b", "n501m"), "resta Q501"),
+    ("f_q501a_corto", "Q501", "corto D-S (in serie)", ("corto", "mute_cmd", "q501_mid"), "resta Q509"),
+    ("f_q501a_gd", "Q501", "corto G-D (in serie)", ("corto", "q501_g", "mute_cmd"), "resta Q509"),
+    ("f_q509_corto", "Q509", "corto D-S (in serie)", ("corto", "q501_mid", "rly_ret"), "resta Q501"),
+    ("f_q509_gd", "Q509", "corto G-D (in serie)", ("corto", "q509_g", "q501_mid"), "resta Q501"),
 ]
 for _b, _r, _m, _p, _w in RIGHE_SERIE:
     for _e in EVENTI_L58B:
@@ -602,8 +607,8 @@ for _b, _r, _m, _p, _w in RIGHE_SERIE:
 # the pair's two new gate resistors, open (a short of either needs a second fault to matter: with 0 ohm
 # the gate is on MUTE_G, as today's Q501)
 RIGHE_SERIE_R = [
-    ("f_rq501g_aperto", "RQ501G", "aperto", ("aperto", [("RQ501G", 1)]), "il gate di sopra flottante"),
-    ("f_rq509g_aperto", "RQ509G", "aperto", ("aperto", [("RQ509G", 1)]), "il gate di sotto flottante"),
+    ("f_rq501g_aperto", "R586", "aperto", ("aperto", [("RR586", 1)]), "il gate di sopra flottante"),
+    ("f_rq509g_aperto", "R587", "aperto", ("aperto", [("RR587", 1)]), "il gate di sotto flottante"),
 ]
 for _b, _r, _m, _p, _w in RIGHE_SERIE_R:
     for _e in EVENTI_L58B:
