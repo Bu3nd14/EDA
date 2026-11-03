@@ -1932,12 +1932,15 @@ def measure_volume(e3e5):
         if s is None:
             refuse(f"scatti: la riga {key(r)} non c'e' in L48b")
             continue
-        a_, b_ = float(r["peggiore_uv"]), float(s["peggiore_uv"])
         n2 += 1
-        if max(a_, b_) >= 100:
-            rel_max = max(rel_max, abs(a_ - b_) / b_)
-        else:
-            abs_max = max(abs_max, abs(a_ - b_))
+        # tutte e due le colonne: il gradino nominale e il peggiore (L64a: un sabotaggio sul solo
+        # nominale passava)
+        for col in ("nominale_uv", "peggiore_uv"):
+            a_, b_ = float(r[col]), float(s[col])
+            if max(a_, b_) >= 100:
+                rel_max = max(rel_max, abs(a_ - b_) / b_)
+            else:
+                abs_max = max(abs_max, abs(a_ - b_))
     if not (rel_max <= 0.01 and abs_max <= 1.0) or n2 != len(l48):
         refuse(f"scatti contro L48b: {n2} righe su {len(l48)}, scarto {rel_max:.2%} sopra 100 uV, "
                f"{abs_max:.3f} uV sotto")
