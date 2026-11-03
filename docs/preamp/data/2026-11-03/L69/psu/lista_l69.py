@@ -7,6 +7,9 @@
 The label of a run is <option>[_m10|_p10|_t22]: seq/<label>/<case>. The options:
   a220 a470 a1k a2k2   a resistor between AT_ON and the latch's anode (Q514's emitter)
   b                    R576 as two halves in series (a short leaves one) + 1k in series with D537
+  c                    R572 and R576 each as two halves in series (a short leaves one: AT_MRQ can still be
+                       emptied, and the latch can still hold AT_ON low)
+  vaglio OPZ           the screening of one option only (vaglio_c: lista_vaglio_c.txt)
 The healthy events are L64b's sequences (an_l64b.csv: oggi/<seq>, oggi_m10/<seq>, oggi_p10/<seq>).
 """
 import sys
@@ -15,7 +18,7 @@ BASE = "sorgente --n2n7002 ds --tss 3.0 --comparatore tarato --ritenuta costrutt
 SONDE = ("--sonde Q501:3,Q502:3,Q503:3,Q505:3,D507:2,D509:2,U507:1,Q504:3,Q504:1,U503:1,U504:3,U512:3,"
          "Q513:1,Q513:2,Q513:3,Q514:2,Q514:3")
 OPZ = {"a220": "--l69ra 220", "a470": "--l69ra 470", "a1k": "--l69ra 1k", "a2k2": "--l69ra 2.2k",
-       "b": "--serie2 R576 --l69rd 1k"}
+       "b": "--serie2 R576 --l69rd 1k", "c": "--serie2 R572,R576"}
 SANI = ("accensione", "fredda", "guasto", "buco20", "perdita", "spegnimento_l", "accensione_u501",
         "inserimento")
 RETE_B = ("accensione", "perdita", "buco20", "spegnimento_l", "inserimento")   # bases in L64b at +-10 %
@@ -29,7 +32,9 @@ def riga(caso, etich, opz, extra=""):
 def main(argv):
     out = []
     if argv[1] == "vaglio":
-        for o, opz in OPZ.items():
+        scelte = argv[2].split(",") if len(argv) > 2 else ["a220", "a470", "a1k", "a2k2", "b"]
+        for o in scelte:
+            opz = OPZ[o]
             out += [riga(g, o, opz, SONDE) for g in GUASTI]
             out += [riga(s, o, opz) for s in ("guasto", "accensione_u501", "inserimento")]
     elif argv[1] == "piena":
