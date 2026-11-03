@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+"""L64b: the power supply's sequences on the circuit of today, one list.
+
+The cases are those of the last lots on the timer of today:
+  - L54b3b lista_v25.txt: the 24 sequences of the source (as the 15 of the firmware were) and the
+    7 lines of its FMEA (ADR-105);
+  - L58b lista_l58b.txt (the standby, Q501, Q503: ADR-110), lista_sorg.txt (the 8 events on the new
+    source), lista_rete.txt (accensione and Q501 at mains -10 / +10 %).
+Every line runs with the options of L58b (the comparator calibrated, the latch and the BAT54 of the
+manufacturer, --sonde-piu). The same case with the same options runs ONCE: the label of the run is
+`oggi` + the mains suffix; mappa.csv says which line of which lot each run stands for (the second
+road compares against those rows).
+
+    /usr/bin/python3 -I script/lista.py      # writes lista_l64b.txt and mappa.csv
+"""
+import csv
+import os
+import re
+
+QUI = os.path.dirname(os.path.abspath(__file__))
+L = os.path.dirname(QUI)
+DATA = os.path.dirname(os.path.dirname(L))
+SORGENTI = (("L54b3b", os.path.join(DATA, "2026-10-28", "L54b3b", "lista_v25.txt")),
+            ("L58b", os.path.join(DATA, "2026-11-01", "L58b", "lista_l58b.txt")),
+            ("L58b", os.path.join(DATA, "2026-11-01", "L58b", "lista_sorg.txt")),
+            ("L58b", os.path.join(DATA, "2026-11-01", "L58b", "lista_rete.txt")))
+BASE = ["--n2n7002", "ds", "--tss", "3.0", "--comparatore", "tarato", "--ritenuta", "costruttore",
+        "--bat54", "costruttore", "--sonde-piu"]
+
+
+def opzioni(resto):
+    """The options of a line minus those of BASE: only --rete is allowed to differ."""
+    o, rete = list(resto), None
+    if "--rete" in o:
+        i = o.index("--rete")
+        rete = o[i + 1]
+        del o[i:i + 2]
+    if "--sonde-piu" not in o:
+        o.append("--sonde-piu")
+    if o != BASE:
+        raise SystemExit(f"RIFIUTATO: opzioni diverse da quelle di L58b: {o}")
+    return rete
+
+
+righe, mappa, viste = [], [], {}
+for lotto, path in SORGENTI:
+    for ln in open(path):
+        x = ln.split()
+        if not x:
+            continue
+        caso, etich, timer = x[:3]
+        if timer != "sorgente":
+            raise SystemExit(f"RIFIUTATO: {path}: timer {timer}")
+        rete = opzioni(x[3:])
+        suff = {None: "", "0.9": "_m10", "1.1": "_p10"}[rete]
+        # an etichetta of L54b3b says the mains in its name too (v_sorgente_m10): it must agree
+        m = re.search(r"_(m10|p10)$", etich)
+        if (m and "_" + m.group(1) != suff) or (not m and suff and lotto == "L54b3b"):
+            raise SystemExit(f"RIFIUTATO: {etich} con --rete {rete}")
+        mia = "oggi" + suff
+        k = (caso, mia)
+        if k not in viste:
+            viste[k] = True
+            righe.append(" ".join([caso, mia, "sorgente"] + BASE + (["--rete", rete] if rete else [])))
+        mappa.append({"caso": caso, "oggi": mia, "lotto": lotto, "etichetta": etich})
+
+with open(os.path.join(L, "lista_l64b.txt"), "w") as f:
+    f.write("\n".join(righe) + "\n")
+with open(os.path.join(L, "mappa.csv"), "w", newline="") as f:
+    w = csv.DictWriter(f, fieldnames=["caso", "oggi", "lotto", "etichetta"])
+    w.writeheader()
+    w.writerows(mappa)
+print(f"{len(righe)} corse per {len(mappa)} righe dei lotti")
