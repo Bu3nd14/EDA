@@ -87,6 +87,14 @@ for lotto, path in SORGENTI:
             righe.append(" ".join([caso, mia, "sorgente"] + BASE + (["--rete", rete] if rete else [])))
         mappa.append({"caso": caso, "oggi": mia, "lotto": lotto, "etichetta": etich})
 
+# the bridge to the jack (L54b2's catena_audio.sh) wants corto_u503 at the nominal mains and perdita_min
+# at -10 / +10 % as well; no lot row stands for them here (their check is the chain itself)
+for caso, rete in (("corto_u503", None), ("perdita_min", "0.9"), ("perdita_min", "1.1")):
+    mia = "oggi" + {None: "", "0.9": "_m10", "1.1": "_p10"}[rete]
+    if (caso, mia) not in viste:
+        viste[(caso, mia)] = True
+        righe.append(" ".join([caso, mia, "sorgente"] + BASE + (["--rete", rete] if rete else [])))
+
 with open(os.path.join(L, "lista_l64b.txt"), "w") as f:
     f.write("\n".join(righe) + "\n")
 mancanti = [r for r in righe if not os.path.exists(os.path.join(L, "seq", r.split()[1], r.split()[0], "ok.txt"))]
