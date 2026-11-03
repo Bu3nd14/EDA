@@ -37,9 +37,11 @@ def main():
         if m and m.group(1) + m.group(2) + "A" in cov and m.group(1) + m.group(2) + "B" in cov:
             cov.add("Q" + m.group(2))
 
-    def coperta(x):
+    def coperta(x, scheda):
         if x in cov:
             return True
+        if scheda != "scheda audio":      # le copie dei blocchi stanno solo sulla scheda audio
+            return False
         m = re.fullmatch(r"([A-Z]+)([1-8])(\d\d)", x)
         return bool(m) and m.group(1) + "1" + m.group(3) in blocco and m.group(1) + "1" + m.group(3) in cov
 
@@ -47,7 +49,7 @@ def main():
     for nome, net in (("alimentatore", "psu.net"), ("scheda audio", "preamp_audio.net"),
                       ("blocco", "gain_block.net")):
         S = refs(net)
-        m = sorted((x for x in S if not coperta(x)),
+        m = sorted((x for x in S if not coperta(x, nome)),
                    key=lambda x: (re.sub(r"\d.*", "", x), int(re.sub(r"\D", "", x) or 0)))
         c = collections.Counter(re.sub(r"\d.*", "", x) for x in m)
         print(f"{nome}: {len(S)} parti, {len(m)} senza riga {dict(c)}")

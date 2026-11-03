@@ -1,57 +1,63 @@
-# Prompt per la sessione successiva — L64c, il dossier rigenerato: la chiusura
+# Prompt per la sessione successiva — L68, la FMEA del temporizzatore a comparatori
 
-Nome della sessione: **hi-fi preamp L64c** (la convenzione è in `CLAUDE.md`).
+Nome della sessione: **hi-fi preamp L68** (la convenzione è in `CLAUDE.md`).
 
-> Prompt scritto alla chiusura della seconda parte del dossier (2026-11-03: l'alimentatore e il
-> temporizzatore). L'utente ha diviso L64 in tre parti («Three parts, like last time»). L'ordine verso
-> G1: **L64c** → L65 → G1.
+> Prompt scritto alla chiusura di L64c (2026-11-03: il dossier completo). Rigenerando il dossier è
+> venuto fuori che la FMEA non ha righe per 37 parti del temporizzatore a comparatori (NC-078); l'utente
+> ha scelto «Non conformità, lotto apposta». L'ordine verso G1: **L68** → L65 → G1.
 
-Riprendo il progetto del preamplificatore hi-fi in questo repository. Questa sessione fa **L64c**, e
-si ferma.
+Riprendo il progetto del preamplificatore hi-fi in questo repository. Questa sessione fa **L68**, e si
+ferma.
 
 ## Che cosa fare
 
-**La terza parte del dossier, la chiusura**, sul circuito di oggi (il circuito non cambia): gli schemi
-completi (L63), la FMEA con le misure adottate (L45d2b3b3 e le righe dopo: L58a2, L58b, L66), le schede
-di prova (L49a, L49b), «Cosa questo dossier non dice» riscritta sul progetto di oggi, `PARTI` completa,
-`index.html` accanto al generatore, e il PDF all'utente.
+**Le righe della FMEA delle parti dell'alimentatore che non ne hanno** (NC-078), sul circuito di oggi
+(il circuito non cambia), nella forma di ADR-070, e dentro la FMEA di oggi e il dossier.
 
 1. **Leggi prima**:
-   - la riga di L64c nella tabella dei lotti di `STATE.md`;
-   - i report di L64a e L64b (`reports/2026-11-03-L64a-dossier-scheda-audio.md`,
-     `reports/2026-11-03-L64b-dossier-alimentatore.md`): com'è fatta la seconda strada sul circuito di
-     oggi, le eccezioni dichiarate, i sabotaggi;
-   - il report di L51c (`reports/2026-10-10-L51c-*.md`) e, in `build_dossier.py`, i punti 18–19 del
-     docstring, `measure_boards`, la sezione `s14` e quella della provenienza.
-2. **Il generatore con `PARTI` completa, prima di ogni sezione**: con `"schede"` accesa, ogni rifiuto si
-   legge. `s14` usa ancora nomi di L51b (il micro, «Cosa non dice» sul firmware è già tolta in L64b,
-   ma il resto della sezione è di L51c). Le schede di prova sono del 9 ottobre: dicono la netlist di
-   allora, e la pagina deve dirlo.
-3. **Le sezioni**: gli schemi di L63 accanto a `index.html`; la FMEA con le misure adottate, letta dai
-   CSV versionati; «Cosa non dice» riscritta; la provenienza (i modelli del costruttore e il comparatore
-   tarato del banco dell'alimentatore, ADR-103). Ogni numero letto dai dati versionati e passato per
-   una seconda strada; i lotti vecchi solo da `vecchio()`.
-4. **Il PDF all'utente**: un PDF per documento (`stampa_a4.py`), copiato dove l'utente vuole.
-5. **Le domande all'utente** coi numeri, per nome.
+   - NC-078 in `NONCOMPLIANCE.md`, la riga di L68 nella tabella dei lotti di `STATE.md`;
+   - il report di L64c (`reports/2026-11-03-L64c-dossier-chiusura.md`) e il README di
+     `data/2026-11-03/L64c/`: il banco (`psu/`, coi modi degli ingressi in `modi.py`), le corse, la
+     catena al jack, `fmea_l64c.py`, `fmea_oggi.py`, `copertura.py`;
+   - il report di L58a (`reports/2026-10-29-L58a-test-point-fmea-distinta.md`): com'erano fatte le righe
+     di R585 e dei BAS416, gli stessi sette eventi.
+2. **Le parti** (`data/2026-11-03/L64c/copertura.csv`): le 37 del temporizzatore — U513, U514, U515
+   (TLV1704: l'uscita di un canale aperta, bloccata bassa, l'alimentazione persa), Q513 / Q514 (la
+   ritenuta), D533, D537–D540, C545–C555, R569–R584 (aperto, in corto) —; i 5 connettori J4, J508,
+   J510, J511, J512 (un pin aperto: quale conta); i 17 test point TP501–TP517 (un corto verso la massa
+   vicina, o la ragione per cui non conta). Prima di correre, conta i casi e dillo all'utente coi numeri.
+3. **Le corse**: i modi in `modi.py` (una lista nuova, come `RIGHE_L64C`), contro i sette eventi del
+   temporizzatore (`EVENTI_TIMER`) e il mute dal frontale (`inss`); il calore dei regolatori dove i 5 V
+   vanno a massa (`calore_5v.py`); il jack con la catena (`catena/`) dove i relè cadono insieme o il
+   guadagno si muove prima del jack. Le corse sane di confronto sono in `data/2026-11-03/L64b/an_l64b.csv`.
+4. **Le righe**: uno script come `fmea_l64c.py`; la gravità dal picco al jack con le soglie di ADR-070
+   (o 5 se una parte esce dalla sua Tj max), la probabilità dai tassi (SN 29500 / IEC 61709, FMD-2016),
+   la rilevabilità dal meccanismo, la priorità dalla matrice. Le righe in `fmea_oggi.csv` come sesta
+   fonte (`fmea_oggi.py` e `FMEA_FONTI` in `build_dossier.py`); `copertura.py` deve dare 0 parti
+   dell'alimentatore senza riga.
+5. **Il dossier rigenerato** (`build_dossier.py` passa, i sabotaggi di `data/2026-11-03/L64c/script/
+   sabotaggi.py` cadono tutti), e il PDF all'utente se lo vuole (in `/Users/roberto/Documents`, un PDF
+   per documento).
+6. **Le domande all'utente** coi numeri, per nome: una riga fuori dal criterio è sua (accettarla con una
+   ADR, o una non conformità).
 
 ## I vincoli
 
-- **Il dossier ha un solo lettore, l'utente**, e **non si taglia**.
 - **Il circuito non cambia.** Un difetto trovato apre una non conformità e si porta all'utente.
 - **La macchina è un MacBook Air senza ventole**: al più **3 simulazioni insieme**, con `nice -n 10`;
   prima di lanciare, `pgrep ngspice`. Se l'utente dice che girano altre sessioni, al più **2**.
 - Comandi semplici, percorsi assoluti, script scritti con Write; il controllo del worktree rifiuta i
-  comandi composti (cicli, variabili calcolate, `nice` in una catena, `git` con percorsi relativi da
-  una sottocartella): scriverli in uno script, o `git -C <radice>`.
-- Una lista che `xargs` sta leggendo non si riscrive (L64b: una riga tagliata, otto corse saltate).
+  comandi composti (cicli, variabili calcolate, `nice` in una catena, gli script in linea con `<<`):
+  scriverli in uno script.
+- Una lista che `xargs` sta leggendo non si riscrive.
 - `git add` un percorso alla volta; commit e push prima di ogni lista lunga.
 - Le forme d'onda e le corse grezze non si committano: `.gitignore` prima di ogni `git add` di una
-  cartella dati.
-- Le domande si fanno per nome; i colpi al jack in dB SPL; le distorsioni in dB contro il tetto.
+  cartella dati. Le forme d'onda di un lotto chiuso non ci sono più: se servono, si ricorre.
+- Le domande si fanno per nome; i colpi al jack in dB SPL.
 
 ## CHIUSURA
 
-1. `STATE.md`: L64c **fatto**, L64 **fatto**, il prossimo **L65**; le celle di In breve; il diario (la
-   voce più vecchia delle tre va in `STATE-STORIA.md`).
+1. `STATE.md`: L68 **fatto**, NC-078 chiusa se le righe ci sono tutte, il prossimo **L65**; le celle di
+   In breve; il diario (la voce più vecchia delle tre va in `STATE-STORIA.md`).
 2. Riscrivi questo file per L65 («Nome della sessione: hi-fi preamp L65»).
-3. Commit, push, PR; `/bin/zsh scripts/chunk_close.sh L64c`; rimuovi il worktree; fermati.
+3. Commit, push, PR; `/bin/zsh scripts/chunk_close.sh L68`; rimuovi il worktree; fermati.

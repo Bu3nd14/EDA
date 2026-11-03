@@ -109,18 +109,25 @@ giorno del circuito di oggi, se non per un'eccezione nominata in AUDIO_PERMESSI.
      riconosce selettore e volume.
 
 L51c: le schede di prova di L49 e la chiusura; PARTI e' completa e il generatore scrive
-accanto a se' (index.html, figure, schemi, immagini, summary). --standalone resta sempre
+accanto a se' (index.html, figure, schemi, summary). L64c: la terza parte si chiama «chiusura»
+(gli schemi completi, la FMEA, «Cosa non dice»); le schede di prova escono dalla pagina. --standalone resta sempre
 fuori dal repo. «Cosa questo dossier non dice» riscritta sul progetto di oggi.
  18. (L51c) la distorsione, V4, sul blocco di oggi: il blocco corso uguale a
      gain_block_flat.inc di oggi, i deck uguali a quelli di L46b a meno del blocco; la
      THD stampata da ngspice nel log contro il CSV di leggi_four.py, caso per caso; le 24
      righe contro la variante scelta di L46b (DIST_UGUALI alla cifra); i tetti letti dalla
      tabella di V4 in REQUIREMENTS.md;
- 19. (L51c) le schede di prova: la DRC rifatta oggi contro quella del 9 ottobre (stessa
-     scheda, stesso kicad-cli, stessi conteggi); measure.json, placement.json e
-     assembly.json incrociati (la stessa misura di scheda, nessuna sovrapposizione, la sola
-     variante A dell'assieme che ci sta); i vincoli letti dai report di L49 numerati 1..n;
-     le immagini PNG che esistono; sc() rifiuta i dati di prima del giorno di L49.
+ 19. (L51c le schede di prova: uscite in L64c, «Togliere la sezione») (L64c) gli schemi completi di
+     L63: ogni manifesto contro la netlist di oggi nei due sensi (scripts/check_schematic.py), e i
+     due disegni rifatti dal sorgente fuori dal repo uguali a quelli versionati (L64c/script/
+     ridisegna.sh: i manifesti byte per byte, gli SVG a meno della data e delle clip);
+ 20. (L64c) la FMEA di oggi: le cinque fonti (FMEA_FONTI) ricomposte qui contro fmea_oggi.csv,
+     colonna per colonna; la priorita' di ogni riga contro la matrice di ADR-070 (scritta come
+     tabella); ogni parte nelle tre netlist (le meta' A / B delle doppie del blocco, i trasformatori
+     nel telaio); nessuna riga alla diagnosi, nessuno stato su una ADR superata, nessun micro; ogni
+     NC nel registro; le parti dell'alimentatore senza riga contro copertura.csv (NC-078);
+ 21. (L64c) le schede di prova del 9 ottobre contro le netlist di oggi, solo per «Cosa non dice»:
+     parti_schede.py rieseguito fuori dal repo ridà il CSV versionato byte per byte.
 
 E la provenienza dei modelli non e' scritta a mano: e' letta dagli `.include`
 di ogni deck e dai nomi di modello che il blocco istanzia.
@@ -2307,7 +2314,8 @@ FMEA_DEST = (("NC", r"^(?:accettata[^:]*?)?\(?(NC-\d{3})"), ("a G2", r"^a G2"),
              ("accettata", r"^accettat"), ("nel circuito", r"^(nel circuito|rimediata)"),
              ("rivelata dall'autodiagnosi", r"^si vede"),
              ("misurata, nessun rimedio", r"^(rimisurata|misurata)"),
-             ("invariata (riga di L45)", r"^invariata"), ("esclusa", r"^esclus"))
+             ("invariata (riga di L45)", r"^invariata"), ("esclusa", r"^esclus"),
+             ("a calcolo, senza corsa", r"^calcolo"))
 
 
 def fmea_dest(stato):
@@ -2392,7 +2400,11 @@ def measure_fmea(adrs, ncs):
         toks = re.findall(r"\b([A-Z]{1,2}\d{1,3}[A-Z]?)\b", r["ref"])
         for a, b, c in re.findall(r"\b([A-Z]+)(\d+)-[A-Z]*?(\d+)\b", r["ref"]):
             toks += [f"{a}{i}" for i in range(int(b), int(c) + 1)]
-        fuori = sorted({t for t in toks if t not in refs and t not in FMEA_FUORI_SCHEDA})
+        # le parti doppie del blocco (gain_block.net: Q110 la coppia di JFET, Q121 lo specchio) la FMEA le
+        # nomina per meta' (JQ110A / JQ110B, Q121A / Q121B): una meta' esiste se esiste la parte doppia
+        fuori = sorted({t for t in toks if t not in refs and t not in FMEA_FUORI_SCHEDA
+                        and not (re.fullmatch(r"J?(Q\d+)[AB]", t)
+                                 and re.fullmatch(r"J?(Q\d+)[AB]", t).group(1) in refs)})
         if fuori:
             refuse(f"FMEA {k}: {', '.join(fuori)} non sta in nessuna netlist di oggi")
         r["dest"] = fmea_dest(r["stato"])
@@ -2407,13 +2419,13 @@ def measure_fmea(adrs, ncs):
     out["senza_prima"] = sum(1 for r in mie if not r["priorita_prima"])
     dest = {}
     for r in out["righe"]:
-        d = dest.setdefault(r["dest"], {"alta": 0, "media": 0, "bassa": 0, "esclusa": 0})
+        d = dest.setdefault(r["dest"] or "?", {"alta": 0, "media": 0, "bassa": 0, "esclusa": 0})
         d[r["priorita_dopo"]] += 1
     out["dest"] = dest
     out["nc"] = {}
     with open(os.path.join(REPO, "docs", "preamp", "NONCOMPLIANCE.md"), encoding="utf-8") as f:
         reg = f.read()
-    for nc in sorted({d for d in dest if d.startswith("NC-")}):
+    for nc in sorted({d for d in dest if d and d.startswith("NC-")}):
         m = re.search(rf"^### {nc} — (.+?)\n(.*?)^\| Stato \| ([^|]+)\|", reg, re.M | re.S)
         if not m:
             refuse(f"FMEA: {nc} senza la riga Stato nel registro")
@@ -2421,6 +2433,23 @@ def measure_fmea(adrs, ncs):
         out["nc"][nc] = (m.group(1).strip(), m.group(3).strip().split(" ")[0])
     if sum(out["dopo"].values()) != out["n"]:
         refuse(f"FMEA: le priorita' dopo contano {sum(out['dopo'].values())} righe su {out['n']}")
+    # NC-078: le parti dell'alimentatore senza nessuna riga (le sue righe usano i riferimenti; quelle
+    # della scheda audio nominano le parti per ruolo e non si contano cosi'), ricalcolate qui contro
+    # copertura.csv di L64c (script/copertura.py)
+    with open(os.path.join(REPO, "circuits", "preamp", "psu.net"), encoding="utf-8") as f:
+        psu_refs = set(re.findall(r'\(ref "([^"]+)"\)', f.read()))
+    nominate = set()
+    for r in mie:
+        nominate |= set(re.findall(r"\b([A-Z]{1,3}\d{1,3}[A-Z]?)\b", r["ref"]))
+        for a, b, c in re.findall(r"\b([A-Z]+)(\d+)-[A-Z]*?(\d+)\b", r["ref"]):
+            nominate |= {f"{a}{i}" for i in range(int(b), int(c) + 1)}
+    out["psu_senza"] = sorted(psu_refs - nominate)
+    with open(src(os.path.join(L64C, "copertura.csv")), newline="", encoding="utf-8") as f:
+        cop = sorted(r["parte_senza_riga"] for r in csv.DictReader(f) if r["scheda"] == "alimentatore")
+    if cop != out["psu_senza"]:
+        refuse(f"FMEA: le parti dell'alimentatore senza riga sono {len(out['psu_senza'])}, copertura.csv "
+               f"ne dice {len(cop)}")
+    out["psu_parti"] = len(psu_refs)
     return out
 
 
@@ -5073,7 +5102,7 @@ def build_page(M, inline=False):
         A('<p>Dove va ogni riga, dal suo stato:</p>')
         A('<div class="tablewrap"><table><tr><th>Destinazione</th><th class="num">alta</th>'
           '<th class="num">media</th><th class="num">bassa</th><th class="num">esclusa</th></tr>')
-        ordine_d = ("nel circuito", "rivelata dall'autodiagnosi", "misurata, nessun rimedio", "accettata",
+        ordine_d = ("nel circuito", "rivelata dall'autodiagnosi", "misurata, nessun rimedio", "a calcolo, senza corsa", "accettata",
                     "a G2", "invariata (riga di L45)", "esclusa")
         for dd in list(ordine_d) + sorted(d for d in fm["dest"] if d not in ordine_d):
             if dd not in fm["dest"]:
@@ -5091,20 +5120,26 @@ def build_page(M, inline=False):
             except (TypeError, ValueError):
                 return ""
 
+        def parti_(s, tutte=False):
+            """I nomi delle parti (F501, R517, K1...) marcati come parti per il linker: F501 non e' F5.
+            Nella colonna della parte tutti; nel testo quelli a tre cifre (i requisiti ne hanno una o due)."""
+            pat = r"[A-Z]{1,3}\d{1,3}[A-Z]?" if tutte else r"[A-Z]{1,3}\d{3}[A-Z]?"
+            return marca(re.sub(rf"(?<![\w>-])({pat})(?![\w<])", lambda m: des(m.group(1)), s))
+
         def tabella_fmea(prio):
             rr = [r for r in fm["righe"] if r["priorita_dopo"] == prio]
             A(f'<h3>Le {len(rr)} righe a priorità {prio}</h3>')
             A('<div class="tablewrap"><table><tr><th>Parte</th><th>Funzione</th><th>Modo</th>'
-              '<th>Prima</th><th class="num">G · P · R</th><th>Effetto, oggi</th>'
+              '<th>Prima</th><th class="num" style="white-space:nowrap">G·P·R</th><th>Effetto, oggi</th>'
               '<th class="num">Al jack</th><th class="num">T<sub>j</sub></th><th>Stato</th><th>Da</th></tr>')
             for r in rr:
                 jack = f'{cella_n(r["picco_dopo_dB"])} dB SPL' if cella_n(r["picco_dopo_dB"]) else ""
                 tj = f'{cella_n(r["Tj_max_C"], 0)} °C' if cella_n(r["Tj_max_C"], 0) else ""
-                A(f'<tr><td>{marca(html_escape(r["ref"]))}</td><td>{marca(html_escape(r["funzione"]))}</td>'
-                  f'<td>{marca(html_escape(r["modo"]))}</td><td>{r["priorita_prima"] or "&mdash;"}</td>'
-                  f'<td class="num">{r["G_dopo"]} · {r["P_dopo"]} · {r["R_dopo"]}</td>'
-                  f'<td>{marca(html_escape(r["effetto_dopo"]))}</td><td class="num">{jack}</td>'
-                  f'<td class="num">{tj}</td><td>{marca(html_escape(r["stato"]))}</td><td>{r["da"]}</td></tr>')
+                A(f'<tr><td>{parti_(html_escape(r["ref"]), True)}</td><td>{parti_(html_escape(r["funzione"]))}</td>'
+                  f'<td>{parti_(html_escape(r["modo"]))}</td><td>{r["priorita_prima"] or "&mdash;"}</td>'
+                  f'<td class="num" style="white-space:nowrap">{r["G_dopo"]}·{r["P_dopo"]}·{r["R_dopo"]}</td>'
+                  f'<td>{parti_(html_escape(r["effetto_dopo"]))}</td><td class="num">{jack}</td>'
+                  f'<td class="num">{tj}</td><td>{parti_(html_escape(r["stato"]))}</td><td>{r["da"]}</td></tr>')
             A('</table></div>')
         tabella_fmea("alta")
         tabella_fmea("media")
@@ -5219,12 +5254,18 @@ def build_page(M, inline=False):
          if all(dist["ok"].values()) else verdict(False)) + '</tr>')
     A('</table></div>')
 
-    if "schede" in PARTI:
+    if "chiusura" in PARTI:
         # --- 14 limiti ---
         A(h2("s14"))
-        # L51c: riscritta sul progetto di oggi; ogni cifra e' letta dai dati
+        # L64c: riscritta sul progetto di oggi (L51c la scriveva col micro e con le schede di prova nella
+        # pagina); ogni cifra e' letta dai dati
         co = M["car"]
         ferro = sum(p[3] for p in M["heat"]["ipotesi"])
+        fm, pa = M["fmea"], M["parti"]
+        tp = [x for x in fm["psu_senza"] if x.startswith("TP")]
+        jj = [x for x in fm["psu_senza"] if re.fullmatch(r"J\d+", x)]
+        tim = [x for x in fm["psu_senza"] if x not in tp and x not in jj]
+        inv = sum(fm["dest"].get("invariata (riga di L45)", {}).values())
         A('<ul>')
         A(f'<li><strong>La distorsione è di modello</strong> ({sez("sdist")}): il blocco di '
           'guadagno da solo, coi modelli del costruttore, nessuna misura su un prototipo. Il tetto '
@@ -5243,18 +5284,19 @@ def build_page(M, inline=False):
           f'(<code>{html_escape(rel(os.path.join(L46B, "idss.csv")))}</code>), fuori da questa '
           'pagina.</li>')
         A('<li><strong>Le forme d&rsquo;onda dei transitori</strong> non sono versionate: di V2 del '
-          'guadagno ci sono le finestre, della matrice del mute le analisi, di V3 il CSV.</li>')
+          'guadagno ci sono le finestre, della matrice del mute le analisi, di V3 il CSV, delle '
+          'sequenze dell&rsquo;alimentatore i log e le tabelle.</li>')
         A('<li><strong>Il relè nella corsa dell&rsquo;interblocco</strong> è un modello dichiarato, '
           'non del costruttore: il datasheet non dà la dinamica della bobina.</li>')
-        A('<li><strong>L&rsquo;alimentatore è simulato con modelli dichiarati</strong>, nessuno del '
-          'costruttore: regolatori e comparatori comportamentali (il modello TI del TPS7A4701 dà un '
-          'punto di lavoro sbagliato, quello del TLV1701 non commuta in ngspice); al posto del '
-          'micro, le uscite del firmware vero eseguito sull&rsquo;host, iterate col circuito fino al '
-          f'punto fisso; i due trasformatori ({des("T1")}, {des("T2")}) come generatori ideali con '
-          'una resistenza e un&rsquo;induttanza in serie, da confermare sui pezzi. '
-          '<strong>Niente PSRR né rumore dei regolatori nei modelli</strong>: la quota di rumore '
-          'dell&rsquo;alimentazione regge su un limite per eccesso letto dai datasheet (L46b, '
-          'ADR-056), non su una simulazione (NC-011, aperta fino alla misura sul prototipo).</li>')
+        A('<li><strong>L&rsquo;alimentatore è simulato in parte con modelli dichiarati</strong> '
+          f'({sez("s15")}): i transistor, i diodi piccoli e la ritenuta hanno il modello del costruttore, '
+          'ma regolatori e comparatori sono comportamentali (il modello TI del TPS7A4701 dà un punto di '
+          'lavoro sbagliato), e il comparatore del temporizzatore è tarato sulle cifre del modello di TI, '
+          f'che sul banco non passa l&rsquo;accensione (ADR-103); i due trasformatori ({des("T1")}, '
+          f'{des("T2")}) sono generatori ideali con una resistenza e un&rsquo;induttanza in serie, da '
+          'confermare sui pezzi. <strong>Niente PSRR né rumore dei regolatori nei modelli</strong>: la '
+          'quota di rumore dell&rsquo;alimentazione regge su un limite per eccesso letto dai datasheet '
+          '(L46b, ADR-056), non su una simulazione (NC-011, aperta fino alla misura sul prototipo).</li>')
         A('<li><strong>Il carico della scheda audio sull&rsquo;alimentatore</strong> è un carico '
           f'dichiarato: {fx(float(co["i_piu_mA"]), 1)} / {fx(float(co["i_meno_mA"]), 1)} mA sui '
           f'rail, dal punto di lavoro di oggi ({sez("spow")}), e le bobine dei relè come resistenze '
@@ -5263,16 +5305,22 @@ def build_page(M, inline=False):
         A(f'<li><strong>Il calore è una stima calcolata</strong> ({sez("sheat")}), con coefficienti '
           'da letteratura, non una simulazione termica. L&rsquo;unica ipotesi fra le potenze è il '
           f'ferro dei trasformatori, {fx(ferro, 2)} W nel caso peggiore.</li>')
-        A('<li><strong>Le schede di prova non sono il layout</strong> '
-          f'({sez("sbrd")}): la massa è una rete di tracce, in attesa del lavoro su massa e terra; '
-          'connettori, contenitore e frontale si decidono al pre-layout; le distanze di rete vengono '
-          'da fonti secondarie, perché la norma non è stata letta; Freerouting non ripete la stessa '
-          'scheda due volte.</li>')
-        # L64b: il micro e il firmware non ci sono piu' (ADR-102); la riga di L51c che li diceva
-        # sarebbe falsa. L64c riscrive la sezione intera.
-        A('<li><strong>I comparatori del temporizzatore sono di comportamento</strong> '
-          f'({sez("stim")}): il modello di TI non passa l&rsquo;accensione sul banco, e il banco usa '
-          'un comparatore tarato sulle sue cifre (ADR-103), dichiarato come taratura.</li>')
+        A(f'<li><strong>La FMEA non è completa</strong> ({sez("sfmea")}). Dell&rsquo;alimentatore, '
+          f'{len(fm["psu_senza"])} parti su {fm["psu_parti"]} non hanno nessuna riga: {len(tim)} del '
+          f'temporizzatore a comparatori ({", ".join(tim)}), entrate dopo la chiusura della FMEA, '
+          f'{len(jj)} connettori ({", ".join(jj)}) e {len(tp)} test point. È NC-078, maggiore, da '
+          'chiudere prima del congelamento con un lotto suo. Sulla scheda audio il conto per nome non si '
+          f'fa: le righe nominano le parti per ruolo, ripetute sui canali. {inv} righe sono ancora quelle '
+          'di L45, sul circuito di allora, perché nessun rimedio le ha toccate; la probabilità di ogni '
+          'riga viene dai tassi di tabella (ADR-070), non da una misura.</li>')
+        A('<li><strong>Le schede non sono state sbrogliate sul circuito di oggi.</strong> Le prove di '
+          f'piazzamento e sbroglio del 9 ottobre (L49a, L49b) avevano {pa["audio"][0]} parti sulla scheda '
+          f'audio contro le {pa["audio"][1]} di oggi ({pa["audio"][3]} aggiunte dopo, {pa["audio"][4]} '
+          f'valori cambiati), e {pa["alimentatore"][0]} sull&rsquo;alimentatore contro {pa["alimentatore"][1]} '
+          f'({pa["alimentatore"][3]} aggiunte, {pa["alimentatore"][2]} tolte, fra cui il microcontrollore e '
+          f'il suo connettore, {", ".join(pa["micro"])}): non sono più il progetto, e questa pagina non le '
+          f'mostra (<code>{html_escape(rel(PARTI_SCHEDE))}</code>). Se le schede ci stiano ancora nel '
+          'contenitore lo dice il layout (G2).</li>')
         A('<li><strong>Nessuno qui giudica come suona.</strong> La simulazione copre '
           'stabilità, risposta, rumore, PSRR e impedenze; non copre l&rsquo;ascolto.</li>')
         A('</ul>')
@@ -5298,19 +5346,36 @@ def build_page(M, inline=False):
         # L51c: l'alimentatore, letto dai deck che le sue sezioni hanno dichiarato
         subs = sorted({s for _, ss in PSU_PROV.values() for s in ss})
         incs = sorted({i for ii, _ in PSU_PROV.values() for i in ii})
+        # L64c: la classe di ogni file incluso dalla sua .provenance.json («origin»), non scritta a
+        # mano: la frase di L51c («nessun modello del costruttore») era falsa da L54b3a (ADR-104)
+        def origine(inc):
+            if not inc.startswith("models" + os.sep):
+                return "banco"        # il comparatore tarato del banco (cmpta.lib, ADR-103)
+            pj = os.path.join(REPO, os.path.splitext(inc)[0] + ".provenance.json")
+            if not os.path.isfile(pj):
+                refuse(f"provenienza dell'alimentatore: {inc} senza .provenance.json")
+                return "?"
+            with open(pj) as f:
+                return json.load(f).get("origin", "?")
+        cos_ = [i for i in incs if origine(i) == "vendor_derived"]
+        gen_ = [i for i in incs if origine(i) == "authored"]
+        ban_ = [i for i in incs if origine(i) == "banco"]
+        if len(cos_) + len(gen_) + len(ban_) != len(incs):
+            refuse(f"provenienza dell'alimentatore: origini sconosciute in {incs}")
         A(f'<p><strong>L&rsquo;alimentatore</strong>: i {len(PSU_PROV)} deck che le sue sezioni '
-          'nominano, generati da '
-          '<code>circuits/preamp/psu.net</code>. Nessun modello del costruttore: i sottocircuiti '
-          f'sono comportamentali e dichiarati ({", ".join(f"<code>{html_escape(s)}</code>" for s in subs)}), '
-          f'e i file inclusi sono generici ({", ".join(f"<code>{html_escape(i)}</code>" for i in incs)}).</p>')
-    if "schede" in PARTI:
-        bd = M["brd"]
-        A('<p><strong>Le schede di prova</strong>: le netlist di <code>circuits/preamp/</code>, '
-          'i sorgenti di <code>layout/preamp/audio/</code>, <code>layout/preamp/psu/</code> e '
-          '<code>layout/preamp/assembly/</code> (L49a, L49b), Freerouting '
-          f'{html_escape(bd["boards"]["audio"]["freerouting"] or "?")}; la DRC di oggi con kicad-cli '
-          f'{html_escape(bd["boards"]["audio"]["kicad"] or "?")}, la stessa versione del 9 ottobre '
-          f'({html_escape(bd["boards"]["audio"]["kicad_prima"] or "?")}).</p>')
+          'nominano, generati da <code>circuits/preamp/psu.net</code>. I file inclusi del costruttore: '
+          f'{", ".join(f"<code>{html_escape(i)}</code>" for i in cos_) or "nessuno"}; scritti a mano, '
+          f'generici: {", ".join(f"<code>{html_escape(i)}</code>" for i in gen_) or "nessuno"} (la classe '
+          'è letta dalla <code>.provenance.json</code> di ciascuno). I regolatori, i comparatori e i '
+          f'trasformatori sono sottocircuiti comportamentali dichiarati '
+          f'({", ".join(f"<code>{html_escape(s)}</code>" for s in subs)}); il comparatore del '
+          'temporizzatore è tarato sulle cifre del modello di TI (ADR-103), in '
+          f'{", ".join(f"<code>{html_escape(i)}</code>" for i in ban_) or "nessun file"}, un file del banco.</p>')
+    if "chiusura" in PARTI:
+        A(f'<p><strong>Gli schemi completi e la FMEA</strong>: i disegni di <code>docs/preamp/schematic/</code> '
+          '(L63), confrontati con le netlist e ridisegnati oggi; la FMEA da '
+          + ", ".join(f'<code>{html_escape(p)}</code>' for _, p, _, _ in M["fmea"]["fonti"])
+          + f', composta in <code>{html_escape(rel(FMEA_OGGI))}</code>.</p>')
     A('<p class="meta">Rigenerare questa pagina: '
       '<code>/usr/bin/python3 docs/preamp/dossier/build_dossier.py'
       + ('' if all(p in PARTI for p in PARTI_TUTTE) else ' --standalone &lt;file fuori dal repo&gt;')
@@ -5386,8 +5451,11 @@ def main():
     M["l2"] = seconda_strada()
     M["dist"] = measure_distortion()
     M.update({"lim": measure_limitatore(), "gb": measure_guasti_blocco(), "stax": measure_stax()})
-    if "schede" in PARTI:
-        M["brd"] = measure_boards()
+    if "chiusura" in PARTI:
+        # L64c: gli schemi completi, la FMEA di oggi, i conti delle schede di prova per «Cosa non dice»
+        M["schemi"] = measure_schemi()
+        M["fmea"] = measure_fmea(M["ct"]["adrs"], ct.read_nc_ids())
+        M["parti"] = measure_parti_schede()
     if "alimentatore" in PARTI:
         # L64b: il banco della rete prima del calore (il calore lo usa come seconda strada)
         M["car"] = carico_di_oggi(M["op"])
@@ -5499,13 +5567,16 @@ def main():
                                  "imd_ccif_0p2V_dB": d["imd_lo"],
                                  "thd_20kHz_2V_pct": d["thd_hi_20k"],
                                  "tetti": d["soglie"], "conforme": all(d["ok"].values())}
-    if "schede" in PARTI:
-        b = M["brd"]
-        summary["dati"] += [rel(L49A), rel(L49B), rel(os.path.join(L51C, "drc"))]
-        summary["schede_di_prova"] = {
-            k: {"mm": v["meas"]["board_mm"], "drc_oggi_violazioni_aperte": list(v["drc"][:2]),
-                "kicad": v["kicad"]} for k, v in b["boards"].items()}
-        summary["schede_di_prova"]["assieme"] = b["fit"].get("title")
+    if "chiusura" in PARTI:
+        fm = M["fmea"]
+        summary["dati"] += [rel(L64C)]
+        summary["fmea"] = {"righe": fm["n"], "priorita_oggi": fm["dopo"], "priorita_prima": fm["prima"],
+                           "fonti": [f"{lot}: {n} righe, {nu} nuove" for lot, _, n, nu in fm["fonti"]],
+                           "destinazioni": fm["dest"]}
+        summary["schemi_completi"] = {k: v["parti"] for k, v in M["schemi"].items()}
+        summary["schede_di_prova_contro_oggi"] = {k: dict(zip(("scheda", "netlist", "tolte", "aggiunte",
+                                                               "valore_cambiato"), M["parti"][k]))
+                                                  for k in ("audio", "alimentatore")}
 
     if completa:
         for name, body in figs.items():
@@ -5515,9 +5586,6 @@ def main():
         for name in SCHEMATICS:
             shutil.copyfile(os.path.join(SCHEM, name), os.path.join(HERE, name))
             print(f"   copiato {name} da {rel(SCHEM)}/")
-        for name, parts in IMMAGINI.items():
-            shutil.copyfile(os.path.join(*parts), os.path.join(HERE, name))
-            print(f"   copiato {name} da {rel(os.path.join(*parts))}")
         with open(os.path.join(HERE, "index.html"), "w") as f:
             f.write(page)
         print(f"   scritto index.html ({len(page)} byte)")
