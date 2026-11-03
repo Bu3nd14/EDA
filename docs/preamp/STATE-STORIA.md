@@ -18,6 +18,27 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L67 — la distorsione delle istanze a guadagno unitario sulla catena (2026-11-02)
+
+- **I banchi di L56** (la catena di un canale, la sorgente) col blocco come argomento; per il caldo i blocchi
+  di L66 (`v4caldo.py`) avvolti in un subckt. **I casi noti**: la catena di L56 sul blocco di allora 224 celle
+  su 224 (una h5+ a −187 dB di un decimo), la sorgente 80 su 80, il blocco caldo nel subckt le 48 THD di L66,
+  il blocco di oggi avvolto 336 su 336.
+- **Il punto di lavoro della catena** (limitations #86): col blocco di oggi a 27 °C l'op a quattro istanze non
+  convergeva in nessuno dei 68 casi, e la corsa misurava una catena spenta (VPF 4,9 V, 4 A dal +15 V). I
+  `.nodeset` dal blocco da solo: 0 casi non conversi. Trovato dal controllo del livello al jack.
+- **La sorgente**: 60 su 60 dentro, margine 2,7 dB. **La catena con V4 alla lettera**: le fisse dentro (≥ 2,5
+  dB); la principale col volume a metà fuori in 2 casi su 56 a 27 °C (identici a L56) e 3 con l'aria a 57 °C
+  (−3,1 dB); col volume a −10 / −20 dB fino a −14,2 dB: la seconda armonica del blocco prima del volume al
+  suo livello, a 40 kHz, ≤ 13 dB SPL. **L'intermodulazione** sulla catena: 0 su 78 fuori, ≥ 10,8 dB.
+- **Le opzioni coi numeri**; R_F adattata esclusa dai dati (nessun minimo a R_F). La scelta dell'utente:
+  **«Ogni blocco al suo livello»** (ADR-112, **NC-055 chiusa**): tetto(L) = 0,001 % × L / 0,2 V, la
+  principale contro il livello più alto lungo il percorso; 0 su 42 fuori per blocco, margine ≥ 1,3 dB. V4 in
+  `REQUIREMENTS.md` aggiornato. Il circuito non cambia; `run_tests.sh` 14 / 0.
+- **Errori corretti prima delle cifre**: i casi del volume basso mescolati ai deck di L56 (spostati in deck a
+  parte), il livello del blocco A moltiplicato per il guadagno del modo.
+- **Dopo**: **L64**, il prompt di `NEXT-SESSION.md`.
+
 ### L66 — il VAS a 126 °C e i modi fuori dai quindici (2026-11-02)
 
 - **Il banco del calore** di L45d2b3b2b2 sul sorgente, caso noto: 20 righe di L58b e 5 di L55, 775 celle, 0
