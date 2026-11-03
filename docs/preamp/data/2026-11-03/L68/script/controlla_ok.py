@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""L64c (copied from L64b): every run of lista_l64c.txt has an ok.txt with EXACTLY the options of
+"""L68 (copied from L64c): every run of lista_l68.txt and lista_base_muss.txt has an ok.txt with EXACTLY the options of
 its line (corri_an.sh writes "<timer> <options>" there). The list of the missing was rewritten once
 while xargs read it (a line came through cut: «struttore»); a cut that still parses would run with
 an option less, and this finds it. Prints the runs that do not agree; exit 1 if any.
@@ -10,7 +10,7 @@ import sys
 
 L = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 male = []
-for f in ("lista_l64c.txt",):
+for f in ("lista_l68.txt", "lista_base_muss.txt"):
     for ln in open(os.path.join(L, f)):
         x = ln.split()
         if not x:

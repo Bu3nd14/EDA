@@ -754,3 +754,12 @@ RIGHE_L68T = [("f_%s_corto" % tp.lower(), tp, "corto verso %s (la sonda che sciv
                                     ("TP516", "VR_G", "vr_g", "rly_ret"))]
 for _b, _r, _m, _p, _w in RIGHE_L68T:
     SIMULATI.append(("%s_muss" % _b, _r, _m, _p, _w))
+
+# ---- L68: the base of the event in music (muss, nothing at TE): L64b has no healthy run of it to compare
+# the connectors' and the test points' cases against
+SIMULATI.append(("f_base_niente_muss", "-", "senza guasto: la musica", ("niente",), "il riferimento dell'evento muss"))
+
+# L68: R570 shorted (AT_PG on V5) with the mains lost stopped at TE + 0.98 s («timestep too small» on
+# vsiu512_3, both methods), with the mains gone for ~1 s; the mute, the jack, the gain and K501 of the
+# healthy perdita all come within 0.2 s of TE. Shortened to TE + 0.9 (genera_tb_psu.py, L68)
+TF["f_r570_corto_perds"] = 0.9

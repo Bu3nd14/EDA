@@ -1214,6 +1214,9 @@ def caso_fmea(nome):
         c = dict(CASI_SEQ[e["seq"]])
         c["guasto"] = GUASTI[nome][3]
         c["t_guasto"] = 0.0
+        # L68: modi.TF shortens a sequence case too (one that stops after everything is off)
+        if nome in modi.TF:
+            c["tf"] = TE + modi.TF[nome]
         return c
     # L45c2: modi.TF shortens a case that stops after everything is off (modi.py)
     c = dict(sw3=1, pre="musica", tf=TE + modi.TF.get(nome, e["tf"]))
