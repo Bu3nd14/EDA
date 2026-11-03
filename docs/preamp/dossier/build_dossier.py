@@ -121,7 +121,7 @@ fuori dal repo. «Cosa questo dossier non dice» riscritta sul progetto di oggi.
      L63: ogni manifesto contro la netlist di oggi nei due sensi (scripts/check_schematic.py), e i
      due disegni rifatti dal sorgente fuori dal repo uguali a quelli versionati (L64c/script/
      ridisegna.sh: i manifesti byte per byte, gli SVG a meno della data e delle clip);
- 20. (L64c) la FMEA di oggi: le cinque fonti (FMEA_FONTI) ricomposte qui contro fmea_oggi.csv,
+ 20. (L64c, L68) la FMEA di oggi: le sei fonti (FMEA_FONTI) ricomposte qui contro fmea_oggi.csv,
      colonna per colonna; la priorita' di ogni riga contro la matrice di ADR-070 (scritta come
      tabella); ogni parte nelle tre netlist (le meta' A / B delle doppie del blocco, i trasformatori
      nel telaio); nessuna riga alla diagnosi, nessuno stato su una ADR superata, nessun micro; ogni
@@ -266,6 +266,8 @@ DIST_UGUALI = ("vout_pk", "thd_pct", "h2_db", "h3_db", "imd_d2_db", "imd_d3_db")
 # l'alimentatore di prova porta ancora il micro (data/2026-11-03/L64c/parti_schede.csv, da
 # script/parti_schede.py). Le nomina solo «Cosa questo dossier non dice», coi conti letti da li'.
 L64C = os.path.join(DATAROOT, "2026-11-03", "L64c")
+# L68: la FMEA del temporizzatore a comparatori (NC-078): la sesta fonte, la FMEA di oggi, la copertura
+L68 = os.path.join(DATAROOT, "2026-11-03", "L68")
 PARTI_SCHEDE = os.path.join(L64C, "parti_schede.csv")
 
 # L64c: gli schemi completi di L63 (A2, una pagina per scheda), coi manifesti che
@@ -281,8 +283,10 @@ FMEA_FONTI = (("L45d2b3b3", os.path.join(DATAROOT, "2026-10-24", "L45d2b3b3", "f
               ("L58a2", os.path.join(DATAROOT, "2026-10-29", "L58a", "fmea_alimentatore.csv")),
               ("L58b", os.path.join(DATAROOT, "2026-11-01", "L58b", "fmea_l58b.csv")),
               ("L66", os.path.join(DATAROOT, "2026-11-02", "L66", "fmea_l66.csv")),
-              ("L64c", os.path.join(L64C, "fmea_l64c.csv")))
-FMEA_OGGI = os.path.join(L64C, "fmea_oggi.csv")
+              ("L64c", os.path.join(L64C, "fmea_l64c.csv")),
+              # L68: le parti del temporizzatore a comparatori, i connettori e i test point (NC-078)
+              ("L68", os.path.join(L68, "fmea_l68.csv")))
+FMEA_OGGI = os.path.join(L68, "fmea_oggi.csv")
 # le parti della FMEA che non stanno su una scheda: i due trasformatori, nel telaio (ADR-048)
 FMEA_FUORI_SCHEDA = ("T1", "T2")
 
@@ -2327,8 +2331,8 @@ def fmea_dest(stato):
 
 
 def measure_fmea(adrs, ncs):
-    """La FMEA di oggi con le misure adottate (L64c). Le cinque fonti ricomposte qui, riga per
-    riga, contro fmea_oggi.csv di L64c (le due strade); la priorita' di ogni riga contro la matrice di
+    """La FMEA di oggi con le misure adottate (L64c, L68). Le sei fonti ricomposte qui, riga per
+    riga, contro fmea_oggi.csv di L68 (le due strade); la priorita' di ogni riga contro la matrice di
     ADR-070; ogni parte nominata nelle netlist di oggi; nessuna riga ancora alla diagnosi, nessuno
     stato su una decisione superata, nessun micro o firmware dove la riga dice l'oggi."""
     out = {"righe": [], "fonti": []}
@@ -2444,7 +2448,7 @@ def measure_fmea(adrs, ncs):
         for a, b, c in re.findall(r"\b([A-Z]+)(\d+)-[A-Z]*?(\d+)\b", r["ref"]):
             nominate |= {f"{a}{i}" for i in range(int(b), int(c) + 1)}
     out["psu_senza"] = sorted(psu_refs - nominate)
-    with open(src(os.path.join(L64C, "copertura.csv")), newline="", encoding="utf-8") as f:
+    with open(src(os.path.join(L68, "copertura.csv")), newline="", encoding="utf-8") as f:
         cop = sorted(r["parte_senza_riga"] for r in csv.DictReader(f) if r["scheda"] == "alimentatore")
     if cop != out["psu_senza"]:
         refuse(f"FMEA: le parti dell'alimentatore senza riga sono {len(out['psu_senza'])}, copertura.csv "
@@ -5086,7 +5090,7 @@ def build_page(M, inline=False):
           'guasto ha riscritto la sua riga: la FMEA di oggi è la riga più recente di ciascuno, '
           f'<strong>{fm["n"]} righe</strong>. «Prima» è la priorità di L45, prima dei rimedi; le parti '
           f'aggiunte dopo ({fm["senza_prima"]} righe) non hanno un prima.</p>')
-        A('<p class="meta"><strong>La seconda strada.</strong> Il generatore ricompone le cinque fonti da '
+        A('<p class="meta"><strong>La seconda strada.</strong> Il generatore ricompone le sei fonti da '
           'sé e trova le stesse righe del CSV, colonna per colonna; ricalcola la priorità di ogni riga '
           'dalla matrice di ADR-070; cerca ogni parte nominata nelle tre netlist di oggi (i due '
           f'trasformatori, {des("T1")} e {des("T2")}, stanno nel telaio); e rifiuta una riga ancora «alla '
@@ -5305,14 +5309,26 @@ def build_page(M, inline=False):
         A(f'<li><strong>Il calore è una stima calcolata</strong> ({sez("sheat")}), con coefficienti '
           'da letteratura, non una simulazione termica. L&rsquo;unica ipotesi fra le potenze è il '
           f'ferro dei trasformatori, {fx(ferro, 2)} W nel caso peggiore.</li>')
-        A(f'<li><strong>La FMEA non è completa</strong> ({sez("sfmea")}). Dell&rsquo;alimentatore, '
-          f'{len(fm["psu_senza"])} parti su {fm["psu_parti"]} non hanno nessuna riga: {len(tim)} del '
-          f'temporizzatore a comparatori ({", ".join(tim)}), entrate dopo la chiusura della FMEA, '
-          f'{len(jj)} connettori ({", ".join(jj)}) e {len(tp)} test point. È NC-078, maggiore, da '
-          'chiudere prima del congelamento con un lotto suo. Sulla scheda audio il conto per nome non si '
-          f'fa: le righe nominano le parti per ruolo, ripetute sui canali. {inv} righe sono ancora quelle '
-          'di L45, sul circuito di allora, perché nessun rimedio le ha toccate; la probabilità di ogni '
-          'riga viene dai tassi di tabella (ADR-070), non da una misura.</li>')
+        if fm["psu_senza"]:
+            A(f'<li><strong>La FMEA non è completa</strong> ({sez("sfmea")}). Dell&rsquo;alimentatore, '
+              f'{len(fm["psu_senza"])} parti su {fm["psu_parti"]} non hanno nessuna riga: {len(tim)} del '
+              f'temporizzatore a comparatori ({", ".join(tim)}), entrate dopo la chiusura della FMEA, '
+              f'{len(jj)} connettori ({", ".join(jj)}) e {len(tp)} test point. È NC-078, maggiore, da '
+              'chiudere prima del congelamento con un lotto suo. Sulla scheda audio il conto per nome non si '
+              f'fa: le righe nominano le parti per ruolo, ripetute sui canali. {inv} righe sono ancora quelle '
+              'di L45, sul circuito di allora, perché nessun rimedio le ha toccate; la probabilità di ogni '
+              'riga viene dai tassi di tabella (ADR-070), non da una misura.</li>')
+        else:
+            # L68: NC-078 chiusa, ogni parte dell'alimentatore ha una riga; i limiti che restano
+            A(f'<li><strong>La FMEA ha i suoi limiti</strong> ({sez("sfmea")}). Dell&rsquo;alimentatore '
+              f'ogni parte, {fm["psu_parti"]} su {fm["psu_parti"]}, ha almeno una riga (L68: il '
+              'temporizzatore a comparatori, i connettori, i test point); sulla scheda audio il conto per '
+              f'nome non si fa: le righe nominano le parti per ruolo, ripetute sui canali. {inv} righe sono '
+              'ancora quelle di L45, sul circuito di allora, perché nessun rimedio le ha toccate. La '
+              'probabilità di ogni riga viene dai tassi di tabella (ADR-070), non da una misura; i test '
+              'point non hanno un tasso (la sonda che scivola è presa alla probabilità più bassa), e '
+              'l&rsquo;alimentazione persa di un comparatore del temporizzatore è un&rsquo;ipotesi (le '
+              'uscite aperte: il datasheet non lo dice).</li>')
         A('<li><strong>Le schede non sono state sbrogliate sul circuito di oggi.</strong> Le prove di '
           f'piazzamento e sbroglio del 9 ottobre (L49a, L49b) avevano {pa["audio"][0]} parti sulla scheda '
           f'audio contro le {pa["audio"][1]} di oggi ({pa["audio"][3]} aggiunte dopo, {pa["audio"][4]} '
@@ -5569,7 +5585,7 @@ def main():
                                  "tetti": d["soglie"], "conforme": all(d["ok"].values())}
     if "chiusura" in PARTI:
         fm = M["fmea"]
-        summary["dati"] += [rel(L64C)]
+        summary["dati"] += [rel(L64C), rel(L68)]
         summary["fmea"] = {"righe": fm["n"], "priorita_oggi": fm["dopo"], "priorita_prima": fm["prima"],
                            "fonti": [f"{lot}: {n} righe, {nu} nuove" for lot, _, n, nu in fm["fonti"]],
                            "destinazioni": fm["dest"]}

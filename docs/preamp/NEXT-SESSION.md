@@ -1,63 +1,72 @@
-# Prompt per la sessione successiva — L68, la FMEA del temporizzatore a comparatori
+# Prompt per la sessione successiva — L69, la ritenuta che tiene i 5 V a massa
 
-Nome della sessione: **hi-fi preamp L68** (la convenzione è in `CLAUDE.md`).
+Nome della sessione: **hi-fi preamp L69** (la convenzione è in `CLAUDE.md`).
 
-> Prompt scritto alla chiusura di L64c (2026-11-03: il dossier completo). Rigenerando il dossier è
-> venuto fuori che la FMEA non ha righe per 37 parti del temporizzatore a comparatori (NC-078); l'utente
-> ha scelto «Non conformità, lotto apposta». L'ordine verso G1: **L68** → L65 → G1.
+> Prompt scritto alla chiusura di L68 (2026-11-03: la FMEA del temporizzatore a comparatori, NC-078
+> chiusa). Le righe di R572 e R576 in corto sono uscite a gravità 5; l'utente ha scelto «Non conformità
+> maggiore» (NC-079) e poi «Prima la correzione». L'ordine verso G1: **L69** → L65 → G1.
 
-Riprendo il progetto del preamplificatore hi-fi in questo repository. Questa sessione fa **L68**, e si
+Riprendo il progetto del preamplificatore hi-fi in questo repository. Questa sessione fa **L69**, e si
 ferma.
 
 ## Che cosa fare
 
-**Le righe della FMEA delle parti dell'alimentatore che non ne hanno** (NC-078), sul circuito di oggi
-(il circuito non cambia), nella forma di ADR-070, e dentro la FMEA di oggi e il dossier.
+**Il rimedio di NC-079**: con R572 (200 kΩ, il pull-up di AT_MRQ) o R576 (10 kΩ, il pull-up di AT_ON) in
+corto, e poi un rail che cade (in musica, o all'accensione con un rail morto), la ritenuta scatta col suo
+anodo su AT_ON, che è sui 5 V (R576) o li riceve da AT_MRQ attraverso D537 (R572): Q514 e Q513 tengono i
+5 V a massa. U504 va al limite, **0,25 A**, 218 / 205 °C a calcolo; la corrente passa da Q514 nella base di
+Q513 a V_BE 1,48 V: **Q513 ~0,37 W, ~209 °C** (BC847, 403 °C/W, Tj max 150 °C; 0,25 A di emettitore
+contro i 200 mA di picco). Il circuito **cambia**.
 
 1. **Leggi prima**:
-   - NC-078 in `NONCOMPLIANCE.md`, la riga di L68 nella tabella dei lotti di `STATE.md`;
-   - il report di L64c (`reports/2026-11-03-L64c-dossier-chiusura.md`) e il README di
-     `data/2026-11-03/L64c/`: il banco (`psu/`, coi modi degli ingressi in `modi.py`), le corse, la
-     catena al jack, `fmea_l64c.py`, `fmea_oggi.py`, `copertura.py`;
-   - il report di L58a (`reports/2026-10-29-L58a-test-point-fmea-distinta.md`): com'erano fatte le righe
-     di R585 e dei BAS416, gli stessi sette eventi.
-2. **Le parti** (`data/2026-11-03/L64c/copertura.csv`): le 37 del temporizzatore — U513, U514, U515
-   (TLV1704: l'uscita di un canale aperta, bloccata bassa, l'alimentazione persa), Q513 / Q514 (la
-   ritenuta), D533, D537–D540, C545–C555, R569–R584 (aperto, in corto) —; i 5 connettori J4, J508,
-   J510, J511, J512 (un pin aperto: quale conta); i 17 test point TP501–TP517 (un corto verso la massa
-   vicina, o la ragione per cui non conta). Prima di correre, conta i casi e dillo all'utente coi numeri.
-3. **Le corse**: i modi in `modi.py` (una lista nuova, come `RIGHE_L64C`), contro i sette eventi del
-   temporizzatore (`EVENTI_TIMER`) e il mute dal frontale (`inss`); il calore dei regolatori dove i 5 V
-   vanno a massa (`calore_5v.py`); il jack con la catena (`catena/`) dove i relè cadono insieme o il
-   guadagno si muove prima del jack. Le corse sane di confronto sono in `data/2026-11-03/L64b/an_l64b.csv`.
-4. **Le righe**: uno script come `fmea_l64c.py`; la gravità dal picco al jack con le soglie di ADR-070
-   (o 5 se una parte esce dalla sua Tj max), la probabilità dai tassi (SN 29500 / IEC 61709, FMD-2016),
-   la rilevabilità dal meccanismo, la priorità dalla matrice. Le righe in `fmea_oggi.csv` come sesta
-   fonte (`fmea_oggi.py` e `FMEA_FONTI` in `build_dossier.py`); `copertura.py` deve dare 0 parti
-   dell'alimentatore senza riga.
-5. **Il dossier rigenerato** (`build_dossier.py` passa, i sabotaggi di `data/2026-11-03/L64c/script/
-   sabotaggi.py` cadono tutti), e il PDF all'utente se lo vuole (in `/Users/roberto/Documents`, un PDF
-   per documento).
-6. **Le domande all'utente** coi numeri, per nome: una riga fuori dal criterio è sua (accettarla con una
-   ADR, o una non conformità).
+   - NC-079 in `NONCOMPLIANCE.md`, ADR-115 (che cosa ha deciso l'utente e che cosa no), la riga di L69
+     nella tabella dei lotti di `STATE.md`;
+   - il report di L68 (`reports/2026-11-03-L68-fmea-temporizzatore.md`) e il README di
+     `data/2026-11-03/L68/`: il banco (`psu/`, coi modi in `modi.py`: `RIGHE_L68`, `EVENTI_L58B`), le
+     corse, `calore_5v.csv`, la catena, `fmea_l68.py`;
+   - il temporizzatore nel sorgente, `circuits/preamp/psu.py` (la ritenuta: Q513 / Q514, R582–R585,
+     C554 / C555; AT_ON = VRELAY_EN, R576; AT_MRQ, R572, D537), e ADR-102 / ADR-103 (R585) / ADR-105.
+2. **Il meccanismo, misurato** sul banco di L68 (`script/guarda.py` sulle forme d'onda di
+   `f_r576_corto_guas` e `f_r572_corto_guas`, che non sono versionate: si ricorrono): la corrente della
+   ritenuta, la potenza di Q513 e Q514, i 5 V.
+3. **Le opzioni**, ognuna misurata **prima** di portarla all'utente (memoria «Opzioni verificate sui
+   limiti»: la temperatura di Q513 / Q514 e di U504 contro il limite, a rete ±10 %): per esempio una
+   resistenza in serie all'anodo della ritenuta o al pull-up di AT_ON, o un pull-up di AT_MRQ che non arrivi
+   ad AT_ON. Per ognuna: R572 e R576 in corto col rail che cade, **e** i sette eventi e il mute dal frontale
+   a circuito sano, contro le corse sane di L64b (`data/2026-11-03/L64b/an_l64b.csv`, i criteri di L54b3b:
+   la ritenuta che scatta col rail − che cade, K501 ≥ 50 ms dopo il permesso, la base di Q513 ≤ 0,45 V dove
+   non deve scattare, anche a freddo e col comparatore a 2,2 V come in L58a). Poi la domanda all'utente,
+   per nome, coi numeri.
+4. **Il sorgente**: il rimedio scelto in `psu.py` col commento che punta all'ADR nuova; `psu.net` e i
+   disegni rigenerati (`run_tests.sh`, gli schemi completi di L63 ridisegnati uguali dove non cambia
+   niente); `check_psu_harness.py` se tocca i connettori.
+5. **Le corse rifatte sul sorgente nuovo**: le simulazioni del temporizzatore di L68 che toccano la
+   ritenuta e AT_ON (almeno le 31 righe della ritenuta cieca, R572 / R576, e le parti nuove del rimedio coi
+   loro modi), contro gli otto eventi; il calore dei 5 V; le righe toccate riscritte in una fonte nuova di
+   `fmea_oggi.py` (`FMEA_FONTI` in `build_dossier.py`), le parti nuove con le loro righe (`copertura.py`
+   deve restare a 0 per l'alimentatore).
+6. **Il dossier rigenerato** (`build_dossier.py` «OK», i sabotaggi di L68 riportati sui file nuovi cadono
+   tutti), e il PDF all'utente se lo vuole (in `/Users/roberto/Documents`, un PDF per documento).
 
 ## I vincoli
 
-- **Il circuito non cambia.** Un difetto trovato apre una non conformità e si porta all'utente.
 - **La macchina è un MacBook Air senza ventole**: al più **3 simulazioni insieme**, con `nice -n 10`;
-  prima di lanciare, `pgrep ngspice`. Se l'utente dice che girano altre sessioni, al più **2**.
+  prima di lanciare, `pgrep ngspice`. Se l'utente dice che girano altre sessioni, al più **2**. La catena al
+  jack: 2 insieme (~1 GB l'una).
 - Comandi semplici, percorsi assoluti, script scritti con Write; il controllo del worktree rifiuta i
-  comandi composti (cicli, variabili calcolate, `nice` in una catena, gli script in linea con `<<`):
-  scriverli in uno script.
-- Una lista che `xargs` sta leggendo non si riscrive.
+  comandi composti (cicli, variabili calcolate, `nice` in una catena, gli script in linea con `<<`, le
+  pipe dentro `$(...)`): scriverli in uno script.
+- Una lista che `xargs` sta leggendo non si riscrive; i sabotaggi toccano i file per un istante: niente
+  commit mentre girano.
 - `git add` un percorso alla volta; commit e push prima di ogni lista lunga.
 - Le forme d'onda e le corse grezze non si committano: `.gitignore` prima di ogni `git add` di una
-  cartella dati. Le forme d'onda di un lotto chiuso non ci sono più: se servono, si ricorre.
-- Le domande si fanno per nome; i colpi al jack in dB SPL.
+  cartella dati (L68: ~19 MB versionati, ~40 GB di forme d'onda fuori).
+- Le domande si fanno per nome; i colpi al jack in dB SPL; ogni opzione con la sua temperatura contro il
+  limite.
 
 ## CHIUSURA
 
-1. `STATE.md`: L68 **fatto**, NC-078 chiusa se le righe ci sono tutte, il prossimo **L65**; le celle di
-   In breve; il diario (la voce più vecchia delle tre va in `STATE-STORIA.md`).
+1. `STATE.md`: L69 **fatto**, NC-079 chiusa se il rimedio regge, il prossimo **L65**; le celle di In breve;
+   il diario (la voce più vecchia delle tre va in `STATE-STORIA.md`).
 2. Riscrivi questo file per L65 («Nome della sessione: hi-fi preamp L65»).
-3. Commit, push, PR; `/bin/zsh scripts/chunk_close.sh L68`; rimuovi il worktree; fermati.
+3. Commit, push, PR; `/bin/zsh scripts/chunk_close.sh L69`; rimuovi il worktree; fermati.

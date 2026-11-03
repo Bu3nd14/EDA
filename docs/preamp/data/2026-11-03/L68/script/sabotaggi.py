@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
-"""sabotaggi.py : ogni controllo di build_dossier.py fatto fallire, con la pagina completa (L64c).
+"""sabotaggi.py : ogni controllo di build_dossier.py fatto fallire, con la pagina completa (L68).
 
-    /usr/bin/python3 docs/preamp/data/2026-11-03/L64c/script/sabotaggi.py
+    /usr/bin/python3 docs/preamp/data/2026-11-03/L68/script/sabotaggi.py
 
-Come L64a/script/sabotaggi.py e L64b/script/sabotaggi.py, di cui riprende le liste (importate, non
-copiate: i loro sabotaggi.txt restano come sono), piu' quelli dei controlli nuovi di L64c: gli schemi
-completi, la FMEA di oggi, i conti delle schede di prova. Per ogni sabotaggio una sostituzione di testo
-(la prima occorrenza) in UN file versionato, il generatore lanciato, il file rimesso com'era byte per
-byte. Il sabotaggio e' «caduto» se il generatore esce != 0 e la sua uscita contiene il motivo atteso.
-Prima e dopo, il generatore sui file veri deve uscire 0. Con la pagina completa il generatore scrive
-accanto a se' solo quando passa: un sabotaggio che cade non scrive niente, e il giro finale riscrive
-la pagina vera. A priorita' bassa.
+Come L64c/script/sabotaggi.py, di cui riprende la lista (importata: il suo sabotaggi.txt resta com'e'),
+con due cambi e cinque sabotaggi nuovi:
+  - la FMEA di oggi e la copertura il generatore le legge ora da L68: i due sabotaggi di L64c su
+    L64c/fmea_oggi.csv e L64c/copertura.csv passerebbero, e qui toccano i file di L68 (la copertura di
+    L68 non ha piu' parti dell'alimentatore: il sabotaggio ne aggiunge una);
+  - le righe di L68 (fmea_l68.csv, la sesta fonte): una priorita' contro la matrice, una non conformita'
+    che non c'e', una parte che non esiste, la FMEA di oggi riscritta su una riga di L68, uno stato
+    senza la sua decisione.
+Per ogni sabotaggio una sostituzione di testo (la prima occorrenza) in UN file versionato, il generatore
+lanciato, il file rimesso com'era byte per byte. Il sabotaggio e' «caduto» se il generatore esce != 0 e
+la sua uscita contiene il motivo atteso. Prima e dopo, il generatore sui file veri deve uscire 0. A
+priorita' bassa.
 """
 import importlib.util
 import os
@@ -21,49 +25,45 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", "..", "..", "..", ".."))
 D = "docs/preamp/data/"
 BUILD = os.path.join(REPO, "docs", "preamp", "dossier", "build_dossier.py")
-L = D + "2026-11-03/L64c/"
-S = "docs/preamp/schematic/"
+L = D + "2026-11-03/L68/"
 
 
-def lista(path):
-    s = importlib.util.spec_from_file_location("sab_" + os.path.basename(os.path.dirname(os.path.dirname(path))), path)
+def modulo(path):
+    s = importlib.util.spec_from_file_location("sab_l64c", path)
     m = importlib.util.module_from_spec(s)
     s.loader.exec_module(m)
-    return m.SAB
+    return m
 
 
+L64C = modulo(os.path.join(REPO, D, "2026-11-03/L64c/script/sabotaggi.py"))
+RIPORTATI = {
+    "L64c/fmea_oggi_riscritta": ("L64c/fmea_oggi_riscritta (su L68)", L + "fmea_oggi.csv"),
+    "L64c/copertura_riscritta": None,
+}
+SAB = []
+for x in L64C.SAB:
+    if x[0] in RIPORTATI:
+        if RIPORTATI[x[0]] is None:
+            continue
+        nome, f = RIPORTATI[x[0]]
+        SAB.append((nome, f) + tuple(x[2:]))
+    else:
+        SAB.append(tuple(x))
 # (nome, file, vecchio, nuovo, frammento atteso nel rifiuto)
-NUOVI = [
-    # 19. gli schemi completi
-    ("schema_audio_contro_la_netlist", S + "audio.manifest.json", '"1": "VLIM_P"', '"1": "VLIM_X"',
-     "check_schematic.py rc"),
-    ("schema_psu_ridisegnato_diverso", S + "psu.svg", "stroke-width: 0.7", "stroke-width: 0.8",
-     "gli schemi ridisegnati"),
-    # 20. la FMEA di oggi
-    ("fmea_priorita_contro_la_matrice", L + "fmea_l64c.csv", ",1,2.4,2,3,bassa,", ",1,2.4,2,3,media,",
-     "la matrice di ADR-070"),
-    ("fmea_oggi_riscritta", L + "fmea_oggi.csv", "il canale + cieco:", "il canale + cieco, ",
+SAB += [
+    ("L68/copertura_riscritta", L + "copertura.csv", "scheda,parte_senza_riga\n",
+     "scheda,parte_senza_riga\nalimentatore,C545\n", "copertura.csv ne dice"),
+    ("L68/fmea_priorita_contro_la_matrice", L + "fmea_l68.csv", ',alta,"NC-079 (maggiore, prima di G1)"',
+     ',media,"NC-079 (maggiore, prima di G1)"', "la matrice di ADR-070"),
+    ("L68/fmea_non_conformita_che_non_esiste", L + "fmea_l68.csv", "NC-079 (maggiore, prima di G1)",
+     "NC-998 (maggiore, prima di G1)", "NC-998 non e' nel registro"),
+    ("L68/fmea_parte_che_non_esiste", L + "fmea_l68.csv", "\ntemporizzatore (L68),L68,Q513,",
+     "\ntemporizzatore (L68),L68,Q913,", "Q913 non sta in nessuna netlist"),
+    ("L68/fmea_oggi_riscritta_su_L68", L + "fmea_oggi.csv", "(la sonda che scivola)", "(la sonda scivola)",
      "non e' quella ricomposta"),
-    ("fmea_riga_ancora_alla_diagnosi", L + "fmea_l64c.csv", "misurata: la riserva e' il temporizzatore",
-     "alla diagnosi, la riserva e' il temporizzatore", "ancora alla diagnosi"),
-    ("fmea_micro_nell_effetto", L + "fmea_l64c.csv", "il canale + cieco:", "il micro cieco:",
-     "il micro non c'e'"),
-    ("fmea_stato_su_decisione_superata", L + "fmea_l64c.csv", "misurata: la riserva e' il temporizzatore",
-     "misurata (ADR-073): la riserva e' il temporizzatore", "lo stato cita ADR-073"),
-    ("fmea_parte_che_non_esiste", D + "2026-10-24/L45d2b3b3/fmea_dopo.csv", ",R550,", ",R950,",
-     "R950 non sta in nessuna netlist"),
-    ("fmea_non_conformita_che_non_esiste", L + "fmea_l64c.csv", "accettata (ADR-114, come C536",
-     "accettata (ADR-114, NC-999, come C536", "NC-999 non e' nel registro"),
-    ("fmea_riga_nuova_di_L64c", L + "fmea_l64c.csv", ",R517,", ",R917,", "non sostituisce una riga"),
-    ("copertura_riscritta", L + "copertura.csv", "alimentatore,C545", "alimentatore,C945",
-     "copertura.csv ne dice"),
-    # 21. le schede di prova contro le netlist di oggi
-    ("parti_delle_schede_riscritte", L + "parti_schede.csv", "audio,_totale,458 / 653", "audio,_totale,459 / 653",
-     "parti_schede.py rieseguito"),
+    ("L68/fmea_riga_alla_diagnosi", L + "fmea_l68.csv", "misurata, nessun rimedio",
+     "alla diagnosi, nessun rimedio", "ancora alla diagnosi"),
 ]
-SAB = ([("L64a/" + x[0],) + tuple(x[1:]) for x in lista(os.path.join(REPO, D, "2026-11-02/L64a/script/sabotaggi.py"))]
-       + [("L64b/" + x[0],) + tuple(x[1:]) for x in lista(os.path.join(REPO, D, "2026-11-03/L64b/script/sabotaggi.py"))]
-       + [("L64c/" + x[0],) + tuple(x[1:]) for x in NUOVI])
 
 
 def build(args=()):
@@ -86,6 +86,7 @@ def main():
         if old not in txt:
             righe.append(f"MANCA  {nome}: il testo da sabotare non c'e' in {rel_}")
             bad += 1
+            print(righe[-1], flush=True)
             continue
         try:
             with open(path, "wb") as f:

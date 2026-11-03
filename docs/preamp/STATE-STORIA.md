@@ -18,6 +18,30 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L64a — il dossier rigenerato, la scheda audio (2026-11-02/03)
+
+- **Le scelte dell'utente**: «Three parts, like last time» (L64a la scheda audio, L64b l'alimentatore
+  e il temporizzatore, L64c schemi, FMEA, schede di prova, «Cosa non dice», il PDF); le sedici righe
+  `Stato:`, «Yes, use these sentences»; PR-24, «Rewrite the promise» (**ADR-113**: la sicurezza non
+  dipende da un programma, perché un microcontrollore non c'è). In sessione: al più **3 simulazioni
+  insieme**, a priorità bassa («è un Air senza ventole»; in memoria).
+- **La prima strada ricorsa oggi**: i 24 deck, la matrice di V2 intera (155 corse), gli scatti del
+  volume col limitatore, i falsi del 2e, la distorsione del blocco. **La seconda**: le 10 503 misure di
+  L66 alla sesta cifra, il deck del mute di L66 ricorso (32 200), i deck col blocco della variante di
+  L66, L60d2 per V2 (gli stessi esiti), L48b per gli scatti; a caldo L66 contro L67, la catena di L67
+  con la regola di ADR-112 riscritta nel generatore.
+- **Sezioni nuove**: il limitatore d'ingresso; il blocco di oggi coi suoi 714 guasti (121 °C contro 125;
+  NC-075 detta); la Stax contro P10 (≤ 124,5 ms contro 150, letto da `REQUIREMENTS.md`: i CSV
+  giudicano contro 100).
+- **Trovato**: 22 celle della dispersione di V2 senza punto di lavoro sul blocco di oggi (limitations
+  #86), corse coi `.nodeset` del blocco da solo (le grandezze di V2 ≤ 0,64 µV di scarto dove si può
+  provare); la continua propria del blocco A −2,89 mV (era −6,62); B2g nelle celle del cambio di
+  guadagno fra ~1 nV e ~13 µV contro L60d2, nelle due direzioni (per L65); la ragione falsa
+  dell'eccezione dell'interblocco di L51a, riscritta.
+- **Il generatore**: `PARTI = ("audio",)`, solo `--standalone` fuori dal repo; «OK»; sabotaggi 24 su 24
+  (uno ha trovato un buco: gli scatti contro L48b anche sul gradino nominale). `run_tests.sh` 14 / 0.
+- **Dopo**: **L64b**, il prompt di `NEXT-SESSION.md`.
+
 ### L67 — la distorsione delle istanze a guadagno unitario sulla catena (2026-11-02)
 
 - **I banchi di L56** (la catena di un canale, la sorgente) col blocco come argomento; per il caldo i blocchi

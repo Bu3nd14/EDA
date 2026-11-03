@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""L64c: la FMEA del progetto di oggi, con le misure adottate, composta dai quattro CSV versionati
+"""L68 (copiato da L64c, con la sesta fonte): la FMEA del progetto di oggi, con le misure adottate, composta dai CSV versionati
 (le colonne di ADR-070, quelle di fmea_dopo.csv di L45d2b3b3).
 
-Uso: /usr/bin/python3 -I fmea_oggi.py   -> fmea_oggi.csv e fmea_oggi_conti.csv qui accanto (L64c/)
+Uso: /usr/bin/python3 -I fmea_oggi.py   -> fmea_oggi.csv e fmea_oggi_conti.csv qui accanto (L68/)
 
 Le fonti, dalla piu' vecchia; una riga di un lotto piu' recente prende il posto di quella con la
 stessa chiave (ref, modo, caso):
@@ -31,7 +31,9 @@ FONTI = (("L45d2b3b3", os.path.join(DATA, "2026-10-24", "L45d2b3b3", "fmea_dopo.
          ("L58b", os.path.join(DATA, "2026-11-01", "L58b", "fmea_l58b.csv")),
          ("L66", os.path.join(DATA, "2026-11-02", "L66", "fmea_l66.csv")),
          # L64c: le righe che dicevano il micro, riscritte dalle corse di oggi (script/fmea_l64c.py)
-         ("L64c", os.path.join(L, "fmea_l64c.csv")))
+         ("L64c", os.path.join(DATA, "2026-11-03", "L64c", "fmea_l64c.csv")),
+         # L68: le parti del temporizzatore a comparatori, i connettori, i test point (NC-078; script/fmea_l68.py)
+         ("L68", os.path.join(L, "fmea_l68.csv")))
 
 
 def priorita(g, p, r):
