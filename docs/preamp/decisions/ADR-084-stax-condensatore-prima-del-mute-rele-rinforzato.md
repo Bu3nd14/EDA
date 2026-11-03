@@ -1,6 +1,6 @@
 # ADR-084 — Il condensatore della Stax resta prima del relè di mute, e il relè di mute della Stax diventa a isolamento rinforzato
 
-Data: 2026-10-15 · Stato: accettata
+Data: 2026-10-15 · Stato: accettata — il relè di mute della Stax non è a isolamento rinforzato ma supplementare (ADR-085); il resto vale
 
 **Rapporti con le decisioni precedenti.**
 - **Supera ADR-082 punto 1 nella prima parte** (il condensatore da 1 µF della fissa 2 fra il relè di

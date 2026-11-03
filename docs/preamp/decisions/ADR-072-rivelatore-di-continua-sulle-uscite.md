@@ -1,6 +1,6 @@
 # ADR-072 — Un rivelatore di continua sulle uscite dei blocchi: apre il mute, toglie la linea dei relè alla scheda audio e spegne i rail audio
 
-Data: 2026-10-14 · Stato: accettata
+Data: 2026-10-14 · Stato: superata da ADR-081 (il rivelatore di continua esce dal progetto); le scelte 6, 8, 9 e 10, che si appoggiavano a lui, sono rifatte senza (ADR-082)
 
 **Rapporti con le decisioni precedenti.**
 - È il rimedio di P10 (ADR-069) per i guasti del blocco. ADR-069 lo aveva indicato come candidato e

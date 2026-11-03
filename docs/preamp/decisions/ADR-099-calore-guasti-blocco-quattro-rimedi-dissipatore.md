@@ -1,6 +1,6 @@
 # ADR-099 — Il calore dei guasti del blocco: quattro rimedi nel blocco e un dissipatore sui finali
 
-Data: 2026-10-22 · Stato: accettata
+Data: 2026-10-22 · Stato: accettata — il limitatore del VAS passa a 36,5 + 18,7 Ω (ADR-111); il resto vale
 
 **Rapporti con le decisioni precedenti.**
 - **Risponde ad ADR-097 punto 4** («Lotto dedicato»): il rimedio dei quindici guasti del blocco che

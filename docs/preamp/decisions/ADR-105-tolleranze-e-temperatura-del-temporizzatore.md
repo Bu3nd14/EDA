@@ -1,6 +1,6 @@
 # ADR-105 — Le tolleranze e la temperatura del temporizzatore: D534 a bassa perdita, R571 1,1 MΩ, i condensatori dei ritardi C0G
 
-Data: 2026-10-28 · Stato: accettata
+Data: 2026-10-28 · Stato: accettata — C548 e C552, i due condensatori da 1 µF dei ritardi, sono in film di polipropilene e non C0G (ADR-108): un C0G da 1 µF a montaggio superficiale non si trova; il resto vale
 
 **Rapporti con le decisioni precedenti.**
 - **Completa ADR-102** al punto 2 (il temporizzatore) e **ADR-104**: D534 (dal rivelatore di rete al

@@ -1,6 +1,6 @@
 # ADR-049 — Il temporizzatore: ATtiny3216 e MCP4822, firmware provato sull'host, Δ e Δ₂ in hardware, `VRELAY` tolta alla scheda audio in standby
 
-Data: 2026-09-26 · Stato: accettata — il pilota delle fotoresistenze e il convertitore che lo comandava sono tolti da ADR-062; restano il micro, i ritardi fatti in hardware e l'interruttore che in standby toglie l'alimentazione ai relè della scheda audio. Il micro e il firmware sono tolti da ADR-102 (il temporizzatore a comparatori); restano i ritardi in hardware e l'interruttore
+Data: 2026-09-26 · Stato: superata da ADR-102 (il temporizzatore a comparatori): il micro e il firmware non ci sono più, e il pilota delle fotoresistenze era già stato tolto (ADR-062); restano i ritardi fatti in hardware e l'interruttore che in standby toglie l'alimentazione ai relè della scheda audio
 
 ## Contesto
 

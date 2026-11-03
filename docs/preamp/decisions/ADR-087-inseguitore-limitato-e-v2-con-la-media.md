@@ -1,6 +1,6 @@
 # ADR-087 — L'inseguitore davanti al VAS con la resistenza di collettore, e V2 misurato con la media su ogni campione
 
-Data: 2026-10-18 · Stato: accettata
+Data: 2026-10-18 · Stato: accettata — la media di V2 si corregge per quanto la media stessa attenua (ADR-088)
 
 **Rapporti con le decisioni precedenti.**
 - **Precisa ADR-067** (l'inseguitore davanti al VAS e l'aiuto sullo specchio, L56): il collettore

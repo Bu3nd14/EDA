@@ -1,6 +1,6 @@
 # ADR-104 — I diodi dei nodi da megaohm del temporizzatore a bassa perdita, e i cali lenti di rete lasciati alla ritenuta
 
-Data: 2026-10-28 · Stato: accettata
+Data: 2026-10-28 · Stato: accettata — completata da ADR-105: anche D534 a bassa perdita, e R571 da 1,1 MΩ
 
 **Rapporti con le decisioni precedenti.**
 - **Completa ADR-102** al punto 2 (il temporizzatore): D535, D541 (su AT_T2S, 2,7 MΩ) e D536 (su AT_PGT)

@@ -188,15 +188,38 @@ L48B = os.path.join(DATAROOT, "2026-10-07", "L48b")
 L48BR = os.path.join(L48B, "regressione", "dopo")
 L48A = os.path.join(DATAROOT, "2026-10-06", "L48a")
 L47C2B1 = os.path.join(DATAROOT, "2026-10-05", "L47c2b1")
+# L64a: la scheda audio di oggi, dopo L66 (ADR-111) e L67 (il circuito non cambia). La prima
+# strada e' la ricorsa del 2026-11-02 (L64a/dopo); la seconda, le misure della regressione di
+# L66 sulla variante lim365 (il sorgente di oggi: blocco uguale a meno dei commenti), il deck del
+# mute di L66 ricorso (L64a/l66_mute), e per selettore e copie col bilanciamento gli stessi
+# deck col blocco della variante di L66 (L64a/seconda). Il mute: la matrice di V2 intera
+# ricorsa oggi (L64a/v2), contro L60d2. Il volume: gli scatti di L48b sul circuito di oggi
+# (L64a/scatti). I falsi del 2e di L48a e L48b, ricorsi sulla netlist di oggi.
+L64A = os.path.join(DATAROOT, "2026-11-02", "L64a")
+L64D = os.path.join(L64A, "dopo")
+L66 = os.path.join(DATAROOT, "2026-11-02", "L66")
+L67 = os.path.join(DATAROOT, "2026-11-02", "L67")
+L60D2 = os.path.join(DATAROOT, "2026-10-19", "L60d2")
 # Il giorno del circuito di oggi: nessun dato della scheda audio da prima, tranne
 # questi, ciascuno con la sua ragione.
-AUDIO_DA = "2026-10-07"
+AUDIO_DA = "2026-11-02"
 AUDIO_PERMESSI = {
-    os.path.join(L36, "corsa"): "la corsa al rilascio di L36 simula soli bobine e contatti, e "
-                                "gain_interlock.py non è cambiato dopo L35",
-    os.path.join(L48A, "misure", "tb_f1_selettore"): "la seconda strada del selettore: L48b "
-                                                     "non l’ha ricorso, e non tocca l’ingresso",
-    os.path.join(L48A, "falsi"): "i falsi del 2e di L48a, sulla netlist del selettore",
+    # L64a: la ragione di L51a («gain_interlock.py non è cambiato dopo L35») era falsa: L41a
+    # (ADR-048) ha portato le bobine a 12 V e la resistenza dei LED a 4,99 k. La corsa di L36 ha
+    # bobine da 5 V (237 ohm); quello che prova e' di struttura: col polo ponte la bobina non
+    # perde mai l'alimentazione, qualunque siano R e L, che la corsa spazza.
+    os.path.join(L36, "corsa"): "la corsa al rilascio di L36 simula soli bobine e contatti; le "
+                                "bobine erano da 5 V e oggi sono da 12 V (ADR-048), ma quello che "
+                                "la corsa prova è di struttura: col polo ponte la bobina non perde "
+                                "mai l’alimentazione, per ogni resistenza e induttanza spazzata",
+    # L64a: il limitatore d'ingresso (ADR-101) non e' cambiato dopo «dopo L57b»
+    # (circuits/preamp/input_limiter.py e il subckt: ultimo commit 539970c28)
+    os.path.join(DATAROOT, "2026-10-25", "dopo-L57b"): "il limitatore d’ingresso (ADR-101) non è "
+        "cambiato dopo; il suo costo in distorsione è misurato sul blocco di allora",
+    # L64a: la Stax, i modi che il limitatore del VAS di ADR-111 non tocca; L66 ha ricorso quelli
+    # che tocca, e i Q132 / Q133 ce ridanno L45d2b3b2b2 alla cifra
+    os.path.join(DATAROOT, "2026-10-24", "L45d2b3b3"): "i guasti sulla Stax che il limitatore del "
+        "VAS (ADR-111) non tocca; quelli che tocca li ha ricorsi L66",
 }
 # L51c: la distorsione del blocco di oggi (l'utente, 2026-10-10: «Rifarla e mostrarla»). La
 # prima strada e' la corsa del 2026-10-10 col banco di L46b (genera.py, esegui.sh,
@@ -232,7 +255,9 @@ IMMAGINI = {
 
 # Le parti della pagina: la scheda audio (L51a), l'alimentatore (L51b), le schede di prova
 # (L51c). Con tutte e tre il generatore scrive accanto a se'.
-PARTI = ("audio", "alimentatore", "schede")
+# L64a: la prima delle tre parti di L64 (l'utente, 2026-11-02: «Three parts, like last time»);
+# finche' non ci sono tutte, il generatore scrive solo --standalone fuori dal repo.
+PARTI = ("audio",)
 PARTI_TUTTE = ("audio", "alimentatore", "schede")
 
 MODES = ("0db", "3db", "10db")
@@ -243,7 +268,11 @@ PM_MIN = 60.0          # V1, ADR-019
 E5_MAX = 10.0          # µV, E5
 E6 = 2.7               # V RMS, E6 (FiiO K11 a fondo scala)
 TA = 60.0              # °C nel telaio, ADR-021
-RTH_MJE = 62.5         # °C/W, RθJA MJE15032/33 TO-220, ADR-021
+RTH_MJE = 62.5         # °C/W, RθJA MJE15032/33 TO-220 senza dissipatore, ADR-021
+# L64a: da ADR-099 i finali hanno il dissipatore a clip Ohmite WA-T220-101E: 20 °C/W a 1 W
+# (la cifra peggiore della curva del costruttore) + 2,5 °C/W giunzione-case + 2 °C/W
+# d'interfaccia (ipotesi dichiarata in ADR-099) = 24,5 °C/W
+RTH_MJE_DISS = 20.0 + 2.5 + 2.0
 TJ_MAX = 125.0         # °C, P7
 
 sys.path.insert(0, HERE)
@@ -289,7 +318,7 @@ def sa(root, *parts):
     if m and m.group(1) < AUDIO_DA and not any(
             p == k or p.startswith(k + os.sep) for k in AUDIO_PERMESSI):
         raise SystemExit(f"RIFIUTATO: {rel(p)} e' del {m.group(1)}, prima del circuito di oggi "
-                         f"({AUDIO_DA}, L48b), e non e' fra le eccezioni dichiarate. "
+                         f"({AUDIO_DA}, L66 e L67), e non e' fra le eccezioni dichiarate. "
                          "Nessun file e' stato scritto.")
     return p
 
@@ -763,51 +792,128 @@ def _results(path):
     return out
 
 
+# L64a: le misure dei log lette come le legge la regressione di L66 (misure() di
+# data/2026-10-22/L45d2b3b1/script/misure_regressione.py, scritta di nuovo qui): le righe
+# «nome = valore» con un nome a inizio riga, la k-esima ripetizione di un nome chiamata nome#k.
+_MISURA = re.compile(r"^([A-Za-z_@][^\s=]*)\s+=\s+([-+]?[0-9.]+(?:[eE][-+]?[0-9]+)?)", re.M)
+
+
+def misure_log(path):
+    out, visti = {}, {}
+    with open(path, errors="replace") as f:
+        for nome, val in _MISURA.findall(f.read()):
+            k = visti.get(nome, 0)
+            visti[nome] = k + 1
+            out["%s#%d" % (nome, k) if k else nome] = float(val)
+    return out
+
+
+def _senza_commenti(path, swap=None):
+    righe = []
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for ln in f:
+            s = ln.rstrip("\n")
+            if swap:
+                s = s.replace(swap, "@REPO@/spice/preamp/")
+            if s.strip() and not s.lstrip().startswith("*"):
+                righe.append(re.sub(r"\s+;.*$", "", s))
+    return righe
+
+
 def seconda_strada():
-    """L51a, la seconda strada dei deck della scheda audio: gli stessi deck corsi da
-    L48b il 2026-10-07, in un altro worktree, sullo stesso circuito (dopo L48b,
-    c098be70, circuito, deck e modelli non sono cambiati); il selettore contro la
-    corsa di L48a (L48b non l'ha ricorso); le due copie col bilanciamento contro le
-    loro uscite di L48b. Ogni riga di risultato dei log coincide; ogni CSV della
-    seconda strada, byte per byte. Un deck senza ne' righe ne' tabelle non ha
-    questa strada, e si dice."""
-    coppie = [(os.path.join(L51, d), sa(L48BR, d), d + ".log", d + ".log")
-              for d in sorted(os.listdir(sa(L48BR))) if os.path.isdir(os.path.join(L48BR, d))]
-    coppie += [(os.path.join(L51, "tb_f1_selettore"), sa(L48A, "misure", "tb_f1_selettore"),
-                "tb_f1_selettore.log", "tb_f1_selettore.log")]
-    for b, d48 in (("tb_e5_bilanciamento", "e5_bilanciamento"),
-                   ("tb_loop_bilanciamento", "v1_bilanciamento")):
-        coppie.append((os.path.join(L51, "bilanciamento", b), sa(L48B, d48, "out"),
-                       b + ".log", b + ".log"))
-    out = {"decks": [], "n_res": 0, "n_tab": 0, "senza": []}
-    for oggi, prima, lo, lp in coppie:
-        b = os.path.basename(oggi)
+    """L64a, la seconda strada dei deck della scheda audio, sul circuito di oggi.
+      a. il blocco della variante lim365 di L66 (varianti/lim365/) uguale, a meno dei
+         commenti, a spice/preamp/gain_block_flat.inc e gain_block.subckt di oggi; i deck
+         di L66 (regressione/deck_lim365/) uguali a quelli di oggi a meno del percorso del
+         blocco, dei commenti e delle righe save (tb_mute_corto: anche delle sue .meas ed echo
+         delle potenze, che hanno gli stessi nomi di quelle di oggi);
+      b. i 20 deck veloci tranne tb_mute_corto: ogni misura dei log di oggi, alla sesta cifra,
+         uguale alla colonna lim365 di L66/regressione/misure_lim365.csv, e nessuna misura da
+         una parte sola;
+      c. tb_mute_corto: il deck di L66 ricorso oggi (L64a/l66_mute) ridà tutte le sue misure di
+         misure_lim365.csv, e i suoi CSV versionati sono quelli di oggi (byte per byte; la
+         tabella delle potenze riga per riga: L66 accoda una riga in piu' per caso);
+      d. il selettore e le due copie col bilanciamento, gli stessi deck col blocco della
+         variante di L66 (L64a/seconda): ogni riga di risultato dei log, ogni CSV byte per byte.
+    """
+    out = {"decks": [], "n_res": 0, "n_tab": 0, "senza": [], "n_mis": 0, "n_mute": 0}
+    var = "@REPO@/docs/preamp/data/2026-11-02/L66/varianti/lim365/"
+    for f in ("gain_block_flat.inc", "gain_block.subckt"):
+        if (_senza_commenti(os.path.join(REPO, "spice", "preamp", f))
+                != _senza_commenti(sa(L66, "varianti", "lim365", f))):
+            refuse(f"il blocco della variante lim365 di L66 ({f}) non e' quello di oggi")
+    d66 = sa(L66, "regressione", "deck_lim365")
+    for d in sorted(os.listdir(d66)):
+        oggi = _senza_commenti(os.path.join(TB, d))
+        loro = _senza_commenti(os.path.join(d66, d), swap=var)
+        manca = [x for x in oggi if x not in loro]
+        extra = [x for x in loro if x not in oggi]
+        ok_extra = all(x.startswith("save ") or (d == "tb_mute_corto.cir" and (
+            x.lstrip().startswith(("meas tran pp_", "meas tran px_", "echo "))))
+                       for x in extra)
+        if manca or not ok_extra:
+            refuse(f"{d}: il deck di oggi non e' quello della regressione di L66 "
+                   f"({len(manca)} righe solo oggi)")
+    ref = {}
+    for r in _csv(sa(L66, "regressione", "misure_lim365.csv")):
+        if r["lim365"] != "":
+            ref.setdefault(r["deck"], {})[r["misura"]] = r["lim365"]
+    for deck in sorted(ref):
+        if deck == "tb_mute_corto":
+            continue
+        log = os.path.join(sa(L64D, deck), deck + ".log")
+        m = misure_log(log)
+        mine = {k: "%.6g" % v for k, v in m.items()}
+        if set(mine) != set(ref[deck]):
+            refuse(f"{deck}: misure solo oggi {len(set(mine) - set(ref[deck]))}, solo in L66 "
+                   f"{len(set(ref[deck]) - set(mine))}")
+        diverse = [k for k in ref[deck] if k in mine and mine[k] != ref[deck][k]]
+        if diverse:
+            k = diverse[0]
+            refuse(f"{deck}: {len(diverse)} misure diverse da L66 alla sesta cifra, la prima "
+                   f"{k} {mine[k]} contro {ref[deck][k]}")
+        out["n_mis"] += len(ref[deck])
+        out["decks"].append((deck, len(ref[deck]), 0, rel(os.path.join(L66, "regressione"))))
+    # c. tb_mute_corto
+    dm = sa(L64A, "l66_mute")
+    m = misure_log(os.path.join(dm, "tb_mute_corto.log"))
+    rm = ref.get("tb_mute_corto", {})
+    if not rm or any("%.6g" % m.get(k, float("nan")) != v for k, v in rm.items()):
+        refuse("tb_mute_corto: il deck di L66 ricorso oggi non ridà misure_lim365.csv")
+    out["n_mute"] = len(rm)
+    tabs = sorted(f for f in os.listdir(dm) if f.endswith(".csv"))
+    for t_ in tabs:
+        a_, b_ = os.path.join(L64D, "tb_mute_corto", t_), os.path.join(dm, t_)
+        if t_ == "tb_mute_corto_parti.csv":
+            with open(a_) as fa, open(b_) as fb:
+                ra = fa.read().split("\n")
+                rb = [r for r in fb.read().split("\n") if r.count(",") == ra[0].count(",")]
+            # l'intestazione di L66 ha 14 colonne: rb sono le sole righe di dati a 24
+            if not rb or ra[1:-1] != rb:
+                refuse("tb_mute_corto_parti.csv: le righe di oggi non sono quelle di L66")
+        else:
+            stessi_byte(f"tb_mute_corto/{t_}", a_, b_)
+    out["decks"].append(("tb_mute_corto", len(rm), len(tabs), rel(dm)))
+    out["n_tab"] += len(tabs)
+    # d. selettore e bilanciamento contro il blocco di L66
+    coppie = [(os.path.join(L64D, "tb_f1_selettore"), sa(L64A, "seconda", "tb_f1_selettore"),
+               "tb_f1_selettore")]
+    for b_ in ("tb_e5_bilanciamento", "tb_loop_bilanciamento"):
+        coppie.append((os.path.join(L64D, "bilanciamento", b_), sa(L64A, "seconda", b_), b_))
+    for oggi, prima, b_ in coppie:
         if not os.path.isdir(oggi):
-            refuse(f"{b}: manca la corsa di oggi in {rel(oggi)}")
+            refuse(f"{b_}: manca la corsa di oggi in {rel(oggi)}")
             continue
-        a, c = _results(os.path.join(oggi, lo)), _results(os.path.join(prima, lp))
-        if [k for k, _ in a] != [k for k, _ in c]:
-            refuse(f"{b}: le righe di risultato di oggi e di {rel(prima)} non hanno gli stessi "
-                   f"nomi nello stesso ordine ({len(a)} contro {len(c)})")
-            continue
-        worst = 0.0
-        for (k, x), (_, y) in zip(a, c):
-            den = abs(y) if abs(y) > 1e-30 else 1.0
-            worst = max(worst, abs(x - y) / den)
-        if not worst <= 1e-9:
-            refuse(f"{b}: oggi e {rel(prima)} differiscono fino a {worst:.2e} (relativo)")
+        x, y = _results(os.path.join(oggi, b_ + ".log")), _results(os.path.join(prima, b_ + ".log"))
+        if x != y:
+            refuse(f"{b_}: le righe di risultato di oggi e di {rel(prima)} non coincidono")
         tabs = sorted(f for f in os.listdir(prima) if f.endswith(".csv"))
-        for t in tabs:
-            if not os.path.isfile(os.path.join(oggi, t)):
-                refuse(f"{b}/{t}: la corsa di oggi non ha la tabella")
-                continue
-            stessi_byte(f"{b}/{t}", os.path.join(oggi, t), os.path.join(prima, t))
-        out["n_res"] += len(a)
+        for t_ in tabs:
+            stessi_byte(f"{b_}/{t_}", os.path.join(oggi, t_), os.path.join(prima, t_))
+        out["n_res"] += len(x)
         out["n_tab"] += len(tabs)
-        out["decks"].append((b, len(a), len(tabs), rel(prima)))
-        if not a and not tabs:
-            out["senza"].append(b)
-    out["spliced"] = sum(len(v) for p, v in _SPLICED.items() if p.startswith(L51))
+        out["decks"].append((b_, len(x), len(tabs), rel(prima)))
+    out["spliced"] = sum(len(v) for p_, v in _SPLICED.items() if p_.startswith(L64D))
     return out
 
 
@@ -818,7 +924,7 @@ AC_ORDER = [(m, r) for m in MODES for r in RS_AC]
 
 def measure_response():
     """Risposta in frequenza, tb_ac di L27: 3 modi x 4 sorgenti."""
-    d = sa(L51, "tb_ac")
+    d = sa(L64D, "tb_ac")
     log = os.path.join(d, "tb_ac.log")
     keys = {k: log_print(log, k) for k in ("g1k", "g20", "g20k", "g100k")}
     for nm, lst in keys.items():
@@ -872,7 +978,7 @@ def measure_v1():
     4,7 nF; blocco A col cablaggio <= 1 nF."""
     v = {}
     # --- blocco B, col trim (L16): sorgenti fino a (10 k + 442)/4 = 2,611 k
-    d = sa(L51, "tb_loop")
+    d = sa(L64D, "tb_loop")
     tab = _loop_table(d, "tb_loop_margini.csv", 660, "tb_loop.log")
     v["B_dir"] = d
     B = {}
@@ -916,7 +1022,7 @@ def measure_v1():
     v["bode_dir"] = d
 
     # --- blocco A (L16): senza trim e col partitore, scala 2 (845/464/464)
-    d = sa(L51, "tb_loop_blockA")
+    d = sa(L64D, "tb_loop_blockA")
     base = load_table(os.path.join(d, "tb_loop_blockA.csv"), 32)
     trim = load_table(os.path.join(d, "tb_loop_blockA_trim.csv"), 96)
     log = os.path.join(d, "tb_loop_blockA.log")
@@ -933,7 +1039,7 @@ def measure_v1():
     v["A_dir"] = d
 
     # --- buffer delle fisse (L27)
-    d = sa(L51, "tb_loop_bufferfissa")
+    d = sa(L64D, "tb_loop_bufferfissa")
     tab = _loop_table(d, "tb_loop_bufferfissa.csv", 44, "tb_loop_bufferfissa.log")
     v["F"] = min([r for r in tab if r["pos"] == "1"], key=pm)
     v["Fn"] = min([r for r in tab if r["pos"] == "2"], key=pm)
@@ -969,7 +1075,7 @@ ZSIG_FRAC = 0.5
 
 def measure_zout(resp):
     """Le curve di Zout: tb_zout_psrr_noise corretto in L13 (sorgente spenta)."""
-    d = zout_src(L51, "tb_zout_psrr_noise")
+    d = zout_src(L64D, "tb_zout_psrr_noise")
     log = os.path.join(d, "tb_zout_psrr_noise.log")
     n_err = count_errors(log)
     if n_err:
@@ -1012,7 +1118,7 @@ def _markers(log, pat):
 
 def measure_e4(z):
     """E4 sulle tre uscite e a manopola che gira: tb_e4_uscite di L13."""
-    d = zout_src(L51, "tb_e4_uscite")
+    d = zout_src(L64D, "tb_e4_uscite")
     log = os.path.join(d, "tb_e4_uscite.log")
     n_err = count_errors(log)
     if n_err:
@@ -1101,7 +1207,7 @@ PSRR_ORDER = [("p", m) for m in MODES] + [("m", m) for m in MODES]
 
 
 def measure_psrr():
-    d = sa(L51, "tb_zout_psrr_noise")
+    d = sa(L64D, "tb_zout_psrr_noise")
     log = os.path.join(d, "tb_zout_psrr_noise.log")
     keys = ("p100", "p1k", "p10k", "p100k")
     lv = {k: log_print(log, k) for k in keys}
@@ -1131,7 +1237,7 @@ def integrate_noise(f, s):
 def measure_noise():
     """E5 del blocco: spettri integrati contro `onoise_total` stampato."""
     out = {}
-    d = sa(L51, "tb_zout_psrr_noise")
+    d = sa(L64D, "tb_zout_psrr_noise")
     tot = log_print(os.path.join(d, "tb_zout_psrr_noise.log"), "onoise_total")
     if len(tot) != 5:
         refuse(f"tb_zout_psrr_noise.log: attese 5 occorrenze di onoise_total, trovate {len(tot)}")
@@ -1148,7 +1254,7 @@ def measure_noise():
     out["zout"] = zp
     out["zout_dir"] = d
 
-    d = sa(L51, "tb_noise_breakdown")
+    d = sa(L64D, "tb_noise_breakdown")
     tot = log_print(os.path.join(d, "tb_noise_breakdown.log"), "onoise_total")
     if len(tot) != 5:
         refuse(f"tb_noise_breakdown.log: attese 5 occorrenze di onoise_total, trovate {len(tot)}")
@@ -1170,7 +1276,7 @@ def measure_noise():
 
 def measure_trim():
     """ADR-027: attenuazione, E3 al connettore, E5 della catena (tb_trim di L16)."""
-    d = sa(L51, "tb_trim")
+    d = sa(L64D, "tb_trim")
     log = os.path.join(d, "tb_trim.log")
     e3 = load_table(os.path.join(d, "tb_trim_e3.csv"), 24)
     for col, k in (("zmin_ohm", "zmin"), ("z20_ohm", "z20"), ("z1k_ohm", "z1k"),
@@ -1224,7 +1330,7 @@ def measure_headroom(trim):
     M1: limite lineare (uscita ai bordi della finestra all'1 %, bordo minore,
     come seno RMS) contro 2,7 V RMS x guadagno misurato x attenuazione del
     trim misurata. M2 (ADR-015) e M3 (dossier fino a L32) sono etichettate."""
-    d = sa(L51, "tb_dc_headroom")
+    d = sa(L64D, "tb_dc_headroom")
     names = {"0db": "tb_dc_headroom.csv", "3db": "tb_dc_headroom_3db.csv",
              "10db": "tb_dc_headroom_10db.csv"}
     att = {"0": 0.0, "6": trim["att"]["6"], "12": trim["att"]["12"]}
@@ -1279,7 +1385,7 @@ def measure_headroom(trim):
 
 def measure_counterfactual():
     """I tre stati del controfattuale di ADR-004. col1 = v(OUT), col3 = v(FB)."""
-    d = sa(L51, "tb_switch_v2_counterfactual")
+    d = sa(L64D, "tb_switch_v2_counterfactual")
     files = [("A", "contatto CHIUSO, R_f = 1,50 kΩ", "tb_switch_v2_counterfactual.csv"),
              ("B", "contatto APERTO, R_f = 1e12 Ω", "tb_switch_v2_counterfactual_open.csv"),
              ("C", "richiuso, controprova di B", "tb_switch_v2_counterfactual_reclosed.csv")]
@@ -1307,7 +1413,7 @@ V2_WINDOWS = [("regime_0db", "s0", "regime a 0 dB"), ("regime_3db", "s3", "regim
 
 def measure_v2():
     """V2: le finestre di tb_switch_v2 contro l'inviluppo del regime a +10 dB."""
-    d = sa(L51, "tb_switch_v2")
+    d = sa(L64D, "tb_switch_v2")
     log = os.path.join(d, "tb_switch_v2.log")
     tab = load_table(os.path.join(d, "tb_switch_v2_finestre.csv"), len(V2_WINDOWS))
     rows = []
@@ -1337,7 +1443,7 @@ def measure_v2():
 def measure_v3():
     """V3, tb_v3_overload: v(SRCN), v(OUT), v(JACK), v(NX). Il deck non fa
     `print`: questi numeri hanno solo il CSV, e la pagina lo dice."""
-    d = sa(L51, "tb_v3_overload")
+    d = sa(L64D, "tb_v3_overload")
     rows = load_csv(os.path.join(d, "tb_v3_overload.csv"))
     vout = [r[3] for r in rows]
     return {"dir": d, "vmax": max(vout), "vmin": min(vout), "jack_end": rows[-1][5],
@@ -1352,7 +1458,7 @@ LISTEN = {"0": {"A", "F1", "F2", "B"}, "1": set(), "2": {"A", "F2", "B"},
 
 def measure_p7():
     """P7 (ADR-021): MJE peggiore per blocco e modo, Tj = 60 °C + P·RθJA."""
-    d = sa(L51, "tb_mute_corto")
+    d = sa(L64D, "tb_mute_corto")
     log = os.path.join(d, "tb_mute_corto.log")
     tab = load_table(os.path.join(d, "tb_mute_corto_regime.csv"), 600)
     cross_table("tb_mute_corto_regime.csv [p_q132]", tab, "p_q132", log_meas(log, "pq132"))
@@ -1366,7 +1472,7 @@ def measure_p7():
                 continue
             w = max(rows, key=lambda r: max(num(r, "p_q132"), num(r, "p_q133")))
             p = max(num(w, "p_q132"), num(w, "p_q133"))
-            worst[(blk, m)] = {"p": p, "tj": TA + p * RTH_MJE, "caso": w["caso"],
+            worst[(blk, m)] = {"p": p, "tj": TA + p * RTH_MJE_DISS, "caso": w["caso"],
                                "f": w["f_hz"]}
     classA = lambda r: num(r, "icmin_q132") > 0 and num(r, "icmax_q133") < 0  # noqa: E731
     listen = [r for r in tab if r["blk"] in LISTEN.get(r["caso"], set())]
@@ -1379,7 +1485,7 @@ def measure_p7():
 
 def measure_oppoint():
     """Punti di lavoro dal log di tb_op di L27."""
-    d = sa(L51, "tb_op")
+    d = sa(L64D, "tb_op")
     rails, cur = {}, {}
     with open(os.path.join(d, "tb_op.log")) as f:
         lines = [ln.rstrip("\n") for ln in f]
@@ -1478,10 +1584,13 @@ def v2_verdetti(man_path, ana_path):
 
 
 def measure_mute():
-    """Il mute coi soli rele' (ADR-062, ADR-063, ADR-044), dalla matrice di L48b."""
+    """Il mute coi soli rele' (ADR-062, ADR-063, ADR-044). L64a: la matrice intera ricorsa il
+    2026-11-02 sul circuito di oggi (L64a/v2); 22 celle della dispersione coi .nodeset del blocco
+    da solo (limitations #86, la prova in L64a/prova_nodeset). Seconda strada: la matrice di
+    L60d2 sul blocco di allora, cella per cella (gli stessi esiti, gli scarti si scrivono)."""
     out = {}
-    # --- 1. la matrice di L48b: verdetto.csv contro il ricalcolo
-    d = sa(L48B, "v2", "matrice")
+    # --- 1. la matrice di oggi: verdetto.csv contro il ricalcolo
+    d = sa(L64A, "v2")
     man_f, ana_f = os.path.join(d, "manifest_finale.csv"), os.path.join(d, "analisi.csv")
     mine, escluse = v2_verdetti(man_f, ana_f)
     # il manifesto finale e' quello delle corse meno la sola corsa esclusa, dichiarata
@@ -1489,14 +1598,14 @@ def measure_mute():
     fin = {r["cella"]: r for r in _csv(man_f)}
     via = sorted(set(sel) - set(fin))
     if set(fin) - set(sel) or any(sel[c]["file"] != V2_ESCLUSA + ".dat" for c in via):
-        refuse(f"L48b manifest_finale.csv non e' manifest_sel.csv meno {V2_ESCLUSA}: {via}")
+        refuse(f"L64a V2 manifest_finale.csv non e' manifest_sel.csv meno {V2_ESCLUSA}: {via}")
     theirs = _csv(os.path.join(d, "verdetto.csv"))
     if len(theirs) != len(mine):
-        refuse(f"L48b verdetto.csv: {len(theirs)} righe, il ricalcolo ne da' {len(mine)}")
+        refuse(f"L64a V2 verdetto.csv: {len(theirs)} righe, il ricalcolo ne da' {len(mine)}")
     for t in theirs:
         m = mine.get((t["cella"], t["grandezza"]))
         if m is None:
-            refuse(f"L48b verdetto.csv: {t['cella']} {t['grandezza']} non viene dal ricalcolo")
+            refuse(f"L64a V2 verdetto.csv: {t['cella']} {t['grandezza']} non viene dal ricalcolo")
             continue
         if m["dich"]:
             ok_s = t["soglia"] == "-" and t["esito"] == "dichiarato"
@@ -1504,7 +1613,7 @@ def measure_mute():
             ok_s = (abs(float(t["soglia"]) - V2_SOGLIA[t["grandezza"]]) <= 1e-12
                     and (t["esito"] == "regge") == m["ok"])
         if not ok_s or t["uscita"] != m["uscita"] or float(t["picco"]) != m["v"]:
-            refuse(f"L48b verdetto.csv: {t['cella']} {t['grandezza']} scritto {t['picco']} "
+            refuse(f"L64a V2 verdetto.csv: {t['cella']} {t['grandezza']} scritto {t['picco']} "
                    f"{t['uscita']} {t['esito']}, ricalcolato {m['v']} {m['uscita']} "
                    f"{'dichiarato' if m['dich'] else ('regge' if m['ok'] else 'NON REGGE')}")
     giud = [m for m in mine.values() if not m["dich"]]
@@ -1521,36 +1630,51 @@ def measure_mute():
             row[lab] = max(cand, key=lambda m: m["v"]) if cand else None
         rows.append(row)
     if sum(r["n"] for r in rows) != len(giud):
-        refuse(f"L48b: {len(giud)} verdetti, i gruppi 1-6 ne contano {sum(r['n'] for r in rows)}")
+        refuse(f"L64a V2: {len(giud)} verdetti, i gruppi 1-6 ne contano {sum(r['n'] for r in rows)}")
     out["rows"] = rows
 
-    # --- 2. le celle peggiori, rifatte oggi sul deck versionato (L51a)
+    # --- 2. il deck e le corse; la seconda strada, L60d2
     stessi_byte("il deck V2 rigenerato oggi dal sorgente",
-                sa(L51M, "tb_v2_casopeggiore_generato.cir"),
+                sa(L64A, "mute", "tb_v2_casopeggiore_generato.cir"),
                 os.path.join(TB, "tb_v2_casopeggiore.cir"))
-    dc = sa(L51M, "corse")
-    corse = [c.strip() for c in open(os.path.join(dc, "corse_sel.txt")) if c.strip()]
-    tempi = {ln.split()[0]: ln.split()[1] for ln in open(os.path.join(dc, "tempi.txt")) if ln.strip()}
-    male = [c for c in corse if tempi.get(c) != "rc=0"]
+    corse = [c.strip() for c in open(os.path.join(d, "corse_sel.txt")) if c.strip()]
+    tempi = {}
+    for ln in open(os.path.join(d, "tempi.txt")):
+        x = ln.split()
+        if len(x) >= 2 and (x[1] == "rc=0" or x[0] not in tempi):
+            tempi[x[0]] = (x[1], " ".join(x[4:]))
+    male = [c for c in corse if tempi.get(c, ("",))[0] != "rc=0" and c != V2_ESCLUSA]
     if male:
-        refuse(f"L51a mute: corse non finite con rc=0: {male}")
-    today = _csv(os.path.join(dc, "analisi.csv"))
-    celle = {r["cella"] for r in _csv(os.path.join(dc, "manifest_sel.csv"))}
-    key = lambda a: (a["cella"], a["grandezza"], a["uscita"], a["t_picco_s"], a["picco_V"])  # noqa: E731
-    a_oggi = sorted(key(a) for a in today)
-    a_48 = sorted(key(a) for a in _csv(ana_f) if a["cella"] in celle)
-    if a_oggi != a_48:
-        diff = sorted(set(a_oggi) ^ set(a_48))
-        refuse(f"L51a mute analisi.csv: {len(diff)} righe diverse da L48b sulle stesse celle, "
-               f"la prima {diff[0] if diff else '(conteggi diversi)'}")
-    # i peggiori della tabella sopra 1 µV, e quali hanno i dati rifatti oggi
-    oggi_celle = {a["cella"] for a in today}
-    peg = [(r["gruppo"], lab, r[lab]["src"], r[lab]["v"]) for r in rows
-           for lab, _, _ in V2_COLONNE if r[lab] is not None and r[lab]["v"] >= 1e-6]
-    rifatte = [p for p in peg if p[2] in oggi_celle]
-    out.update(src_dir=dc, src_corse=len(corse), src_righe=len(today),
-               src_celle=len(celle), peg=peg, rifatte=rifatte,
-               non_rifatte=[p for p in peg if p[2] not in oggi_celle])
+        refuse(f"L64a V2: corse non finite con rc=0: {male[:5]}{' ...' if len(male) > 5 else ''}")
+    with open(os.path.join(d, "guardia.txt")) as f:
+        g = f.read()
+    m_ = re.search(r"guardia: esce (\d+)", g)
+    if not m_ or int(m_.group(1)) > 1:
+        refuse(f"L64a V2: la guardia di L47b2b1 rifiuta {m_.group(1) if m_ else '?'} corse "
+               f"(attesa al piu' {V2_ESCLUSA})")
+    nb = sorted(c for c, (rc, nota) in tempi.items() if rc == "rc=0" and "nodeset_blocco" in nota)
+    out.update(src_dir=d, src_corse=len(corse), nodeset=nb)
+    v60 = {(r["cella"], r["grandezza"]): r for r in _csv(vecchio(L60D2, "v2", "verdetto.csv"))}
+    # gli scarti in µV, non in dB: le celle del cambio di guadagno (B2g) stanno fra il pavimento
+    # del metodo (~1 nV) e ~13 µV, in tutte e due le direzioni, e un rapporto fra quei due non dice
+    # niente; contano lo scarto assoluto e il picco piu' alto contro il tetto
+    cambi, scarto, picco_oggi, picco_60 = [], 0.0, 0.0, 0.0
+    for t_ in theirs:
+        o = v60.get((t_["cella"], t_["grandezza"]))
+        if o is None:
+            cambi.append(f"{t_['cella']} {t_['grandezza']} non c'e' in L60d2")
+            continue
+        if o["esito"] != t_["esito"]:
+            cambi.append(f"{t_['cella']} {t_['grandezza']}: {o['esito']} -> {t_['esito']}")
+        a_, b_ = float(t_["picco"]), float(o["picco"])
+        if t_["esito"] != "dichiarato" and max(a_, b_) >= 1e-6:
+            scarto = max(scarto, abs(a_ - b_))
+        if t_["esito"] != "dichiarato":
+            picco_oggi, picco_60 = max(picco_oggi, a_), max(picco_60, b_)
+    out.update(l60d2_cambi=cambi, l60d2_scarto_v=scarto, l60d2_n=len(v60),
+               l60d2_picco_oggi=picco_oggi, l60d2_picco=picco_60)
+    if cambi:
+        refuse(f"L64a V2 contro L60d2: {len(cambi)} esiti diversi, il primo {cambi[0]}")
 
     # --- 3. il clic del taglio, dichiarato (ADR-062): clic.csv contro analisi.csv
     clic = _csv(os.path.join(d, "clic.csv"))
@@ -1564,20 +1688,23 @@ def measure_mute():
         for lab, cc, col in (("c2_V", c, "c2_V"), ("altro_c2_V", altra, "altro_c2_V")):
             a = ana.get((cc, g, usc[r["uscita"]]))
             if a is None or not abs(float(r[col]) - float(a["picco_V"])) <= 5e-4 * float(a["picco_V"]):
-                refuse(f"L48b clic.csv: {r['uscita']} {r['tono']} {r['evento']} {lab} {r[col]}, "
+                refuse(f"L64a V2 clic.csv: {r['uscita']} {r['tono']} {r['evento']} {lab} {r[col]}, "
                        f"analisi.csv {a['picco_V'] if a else 'manca'} ({cc} {g})")
         if f and not abs(f["db"](float(r["c2_V"])) - float(r["dB_SPL_1m"])) <= 0.051:
-            refuse(f"L48b clic.csv: {r['uscita']} {r['tono']} {r['evento']} {r['dB_SPL_1m']} dB SPL, "
+            refuse(f"L64a V2 clic.csv: {r['uscita']} {r['tono']} {r['evento']} {r['dB_SPL_1m']} dB SPL, "
                    f"la catena di NC-028 da' {f['db'](float(r['c2_V'])):.2f}")
     if len(clic) != 18:
-        refuse(f"L48b clic.csv: {len(clic)} righe, la tabella intera ne ha 18")
+        refuse(f"L64a V2 clic.csv: {len(clic)} righe, la tabella intera ne ha 18")
     out["clic"] = sorted(clic, key=lambda r: -float(r["c2_V"]))
 
     # --- 4. il gruppo 6 col difetto noto del banco tolto (VOSB = 0, limitations #44)
-    vz = [a for a in _csv(os.path.join(sa(L48B, "v2", "sonda_vosb"), "analisi.csv"))
+    with open(sa(L64A, "v2", "sonda_vosb", "alter.txt")) as f:
+        if [ln.strip().endswith(":1") for ln in f if ln.strip()] != [True, True]:
+            refuse("L64a sonda_vosb: alter vosb dc = 0 non e' in tutte e due le corse")
+    vz = [a for a in _csv(os.path.join(sa(L64A, "v2", "sonda_vosb"), "analisi.csv"))
           if a["cella"] == "vol_g10_iii" and a["grandezza"] == "A_ins"]
     if len({a["uscita"] for a in vz}) != 3:
-        refuse("L48b sonda_vosb: attese le tre uscite di vol_g10_iii A_ins")
+        refuse("L64a sonda_vosb: attese le tre uscite di vol_g10_iii A_ins")
     out["vosb0"] = max(float(a["picco_V"]) for a in vz) if vz else float("nan")
     return out
 
@@ -1587,7 +1714,7 @@ def measure_e3e5():
     """E3 ed E5 sull'ingresso di oggi (tb_e3_e5.cir, L48a e L48b): la rete di ADR-064
     (R_J, C_IN, R_SEL, il contatto del selettore) davanti al blocco A, E3 letta al
     jack, C_T e il bilanciamento al centro nella catena (ADR-065)."""
-    d = sa(L51, "tb_e3_e5")
+    d = sa(L64D, "tb_e3_e5")
     log = os.path.join(d, "tb_e3_e5.log")
     e3 = load_table(os.path.join(d, "tb_e3_e5_e3.csv"), 9)
     e5 = load_table(os.path.join(d, "tb_e3_e5_e5.csv"), 36)
@@ -1670,13 +1797,17 @@ def measure_interlock():
 
     # --- i falsi del 2e di oggi: L48a (il selettore) e L48b (il volume, col 2f).
     # Ogni riga dice se il controllo cade come deve; la netlist vera passa.
+    # L64a: gli script dei falsi di L48a e L48b ricorsi oggi sulla netlist di oggi
+    # (L64a/falsi_l48a, falsi_l48b). Il caso «main» di L48b (la netlist di prima di L48b) esce:
+    # sul sorgente di oggi il 2f si ferma prima, su R179 del limitatore d'ingresso (ADR-101);
+    # lo stesso difetto sulla netlist di oggi e' ct_cortocircuitato_L / _R. Restano 7.
     fz = {}
     for lot, root, attesi, pat, cade in (
-            ("L48a", L48A, 10, r"^(\d+) falsi su (\d+) cadono per il motivo giusto; controlli OK$",
-             r"^CADE\s+rc=1"),
-            ("L48b", L48B, 8, r"^(\d+) falsi su (\d+) cadono dove devono; netlist vera passa$",
+            ("L48a", "falsi_l48a", 10,
+             r"^(\d+) falsi su (\d+) cadono per il motivo giusto; controlli OK$", r"^CADE\s+rc=1"),
+            ("L48b", "falsi_l48b", 7, r"^(\d+) falsi su (\d+) cadono dove devono; netlist vera passa$",
              r"^\S+\s+2e rc=1 CADE COME DEVE")):
-        d = sa(root, "falsi")
+        d = sa(L64A, root)
         with open(os.path.join(d, "verdetti.txt")) as f:
             vt = f.read()
         m = re.search(pat, vt, re.M)
@@ -1702,7 +1833,7 @@ def measure_selector():
     """F1 sul banco (tb_f1_selettore.cir, L48a, ADR-064): il cambio d'ingresso fra due
     sorgenti a continue diverse, picco dello scostamento in su e in giu' sul jack fisso
     e sul principale. modo 99 e' il controfattuale (l'ingresso di prima di L48a)."""
-    d = sa(L51, "tb_f1_selettore")
+    d = sa(L64D, "tb_f1_selettore")
     log = os.path.join(d, "tb_f1_selettore.log")
     tab = load_table(os.path.join(d, "f1_selettore.csv"), 24)
     for col, k in (("jf_su_uv", "fu"), ("jf_giu_uv", "fd"), ("jm_su_uv", "mu"), ("jm_giu_uv", "md")):
@@ -1740,7 +1871,7 @@ def measure_volume(e3e5):
     (le copie dei deck canonici di L48b, ricorse oggi); gli scatti del cursore sul banco
     di L48b, analizza.py rieseguito contro sintesi.csv e sintesi.txt."""
     out = {}
-    d = sa(L51, "bilanciamento", "tb_e5_bilanciamento")
+    d = sa(L64D, "bilanciamento", "tb_e5_bilanciamento")
     log = os.path.join(d, "tb_e5_bilanciamento.log")
     e5 = load_table(os.path.join(d, "tb_e3_e5_e5.csv"), 36)
     cross_table("tb_e5_bilanciamento [onoise_uv]", e5, "onoise_uv", log_print(log, "onu"))
@@ -1748,7 +1879,7 @@ def measure_volume(e3e5):
     out["e5_girato"] = max(num(r, "onoise_uv") for r in e5)
     out["e5_centro"] = e3e5["e5max"]
 
-    d = sa(L51, "bilanciamento", "tb_loop_bilanciamento")
+    d = sa(L64D, "bilanciamento", "tb_loop_bilanciamento")
     tab = _loop_table(d, "tb_loop_margini.csv", 528, "tb_loop_bilanciamento.log")
     out["v1_dir"] = d
     out["v1"] = []
@@ -1760,7 +1891,7 @@ def measure_volume(e3e5):
 
     # gli scatti: analizza.py su copie dei CSV, in una cartella temporanea
     import tempfile
-    dz = sa(L48B, "scatti")
+    dz = sa(L64A, "scatti")
     tmp = tempfile.mkdtemp(prefix="l51a_scatti_")
     os.mkdir(os.path.join(tmp, "deck"))
     shutil.copy(tool(dz, "analizza.py"), tmp)
@@ -1786,6 +1917,34 @@ def measure_volume(e3e5):
                           if r["var"] == "0" and r["evento"] in ("1", "2")) * 1e-6
     out["trim_max"] = max(float(r["peggiore_uv"]) for r in tri) * 1e-6
     out["n_fin"] = len(fin)
+    # L64a, la seconda strada: lo stesso banco di L48b (prima del limitatore d'ingresso e dei
+    # cambi del blocco; la continua propria del blocco A era -6,62 mV, oggi -2,89), riga per
+    # riga sulle varianti 0 e 4: entro l'1 % dove il gradino supera 100 uV, entro 1 uV dove
+    # sta al pavimento del metodo
+    key = lambda r: (r["var"], r["evento"], r["guad_db"] if "guad_db" in r else r.get("g"),  # noqa: E731
+                     r.get("modo"))
+    l48 = {key(r): r for r in _csv(vecchio(L48B, "scatti", "sintesi.csv")) if r["var"] in ("0", "4")}
+    rel_max, abs_max, n2 = 0.0, 0.0, 0
+    for r in rows:
+        if r["var"] not in ("0", "4"):
+            continue
+        s = l48.get(key(r))
+        if s is None:
+            refuse(f"scatti: la riga {key(r)} non c'e' in L48b")
+            continue
+        n2 += 1
+        # tutte e due le colonne: il gradino nominale e il peggiore (L64a: un sabotaggio sul solo
+        # nominale passava)
+        for col in ("nominale_uv", "peggiore_uv"):
+            a_, b_ = float(r[col]), float(s[col])
+            if max(a_, b_) >= 100:
+                rel_max = max(rel_max, abs(a_ - b_) / b_)
+            else:
+                abs_max = max(abs_max, abs(a_ - b_))
+    if not (rel_max <= 0.01 and abs_max <= 1.0) or n2 != len(l48):
+        refuse(f"scatti contro L48b: {n2} righe su {len(l48)}, scarto {rel_max:.2%} sopra 100 uV, "
+               f"{abs_max:.3f} uV sotto")
+    out.update(l48b_rel=rel_max, l48b_abs_uv=abs_max, l48b_n=n2)
     return out
 
 
@@ -1809,11 +1968,22 @@ def v4_soglie():
 
 
 def measure_distortion():
-    """V4 sul blocco di oggi (L51c). Tre strade: la THD che ngspice stampa nel log, caso per
-    caso, contro il CSV di leggi_four.py; il CSV contro quello di L46b sulla variante scelta
-    (le colonne di DIST_UGUALI uguali alla cifra); il blocco corso uguale al
-    gain_block_flat.inc di oggi, e i deck uguali a quelli di L46b a meno del blocco incluso."""
-    inc = sa(L51CD, "inc", "oggi.inc")
+    """V4 sul blocco di oggi, in tre parti (L64a).
+      1. il blocco a 27 °C col banco di L46b, ricorso oggi (L64a/distorsione, come L51c): il
+         blocco corso uguale a gain_block_flat.inc di oggi; i deck uguali a quelli di L46b a meno
+         del blocco incluso; la THD che ngspice stampa nel log contro il CSV di leggi_four.py,
+         caso per caso. La seconda strada e' la corsa di L51c sullo stesso banco col blocco di
+         allora: gli scarti si pubblicano, non si chiede l'uguaglianza (il blocco e' cambiato);
+      2. il blocco a caldo, ogni giunzione alla sua temperatura (L66, la variante lim365 che e'
+         il sorgente di oggi): L66/sintesi_caldo.csv contro le 48 THD del deck di L66 che L67 ha
+         rifatto (L67/noto_caldo.csv, colonna thd_piatto_pct), massimo per condizione e livello;
+      3. la catena (L67, ADR-112): ogni blocco al suo livello, tetto(L) = 0,001 % x L / 0,2 V con
+         L = max(livello del blocco A, livello alla principale), scritto di nuovo qui e applicato
+         ai catena_<blocco>.csv, contro verifica_livello.csv riga per riga; l'intermodulazione
+         sulla catena (imd_catena.csv) contro il tetto di V4 letto da REQUIREMENTS.md.
+    I tetti di V4 sono letti da REQUIREMENTS.md."""
+    dd = sa(L64A, "distorsione")
+    inc = sa(dd, "inc", "oggi.inc")
     with open(inc) as f:
         head, body = f.read().split("\n", 1)
     with open(os.path.join(REPO, "spice", "preamp", "gain_block_flat.inc")) as f:
@@ -1821,22 +1991,22 @@ def measure_distortion():
             refuse(f"{rel(inc)}: non e' spice/preamp/gain_block_flat.inc di oggi con una riga di "
                    "commento in testa: il blocco corso non e' quello del sorgente")
     for d in DIST_DECKS:
-        stesso_deck(f"distorsione, {d}", sa(L51CD, "deck", "oggi", d + ".cir"),
+        stesso_deck(f"distorsione, {d}", sa(dd, "deck", "oggi", d + ".cir"),
                     vecchio(L46B, "deck", L46B_VAR, d + ".cir"),
                     swap=(("variante oggi", "variante " + L46B_VAR),
-                          ("data/2026-10-10/L51c/distorsione/inc/oggi.inc",
+                          ("data/2026-11-02/L64a/distorsione/inc/oggi.inc",
                            f"data/2026-10-01/L46b/inc/{L46B_VAR}.inc")))
     esiti = {}
-    with open(sa(L51CD, "run", "esiti.tsv")) as f:
+    with open(sa(dd, "run", "esiti.tsv")) as f:
         for ln in f:
             c = ln.rstrip("\n").split("\t")
             if len(c) == 4 and c[0] == "oggi":
                 esiti[c[1]] = c[2]
-    rows = rows_of(sa(L51CD, "run", "oggi", "distorsione.csv"))
+    rows = rows_of(sa(dd, "run", "oggi", "distorsione.csv"))
     for d in DIST_DECKS:
         if esiti.get(d) != "0":
             refuse(f"distorsione, {d}: run_simulation.sh ha dato rc {esiti.get(d)} (esiti.tsv)")
-        log = sa(L51CD, "run", "oggi", d, d + ".log")
+        log = sa(dd, "run", "oggi", d, d + ".log")
         log_pulito(log)
         if d == "imd":
             continue
@@ -1849,36 +2019,96 @@ def measure_distortion():
             refuse(f"distorsione, {d}: {len(casi)} casi e {len(thd)} THD di v(out) nel log, "
                    "invece di 6 e 6")
             continue
-        for (modo, liv), t in zip(casi, thd):
+        for (modo, liv), t_ in zip(casi, thd):
             r = [x for x in rows if x["deck"] == d and x["modo"] == modo and x["livello"] == liv]
-            if len(r) != 1 or not math.isclose(float(r[0]["thd_pct"]), float(t), rel_tol=1e-3):
-                refuse(f"distorsione, {d} modo {modo} {liv}: la THD del log ({t} %) non e' quella "
+            if len(r) != 1 or not math.isclose(float(r[0]["thd_pct"]), float(t_), rel_tol=1e-3):
+                refuse(f"distorsione, {d} modo {modo} {liv}: la THD del log ({t_} %) non e' quella "
                        f"del CSV ({r[0]['thd_pct'] if len(r) == 1 else 'assente'})")
+    # la seconda strada: L51c, lo stesso banco col blocco del 2026-10-10; gli scarti in dB
     old = {(r["deck"], r["modo"], r["livello"]): r
-           for r in rows_of(vecchio(L46B, "run", L46B_VAR, "distorsione.csv"))}
+           for r in rows_of(vecchio(L51CD, "run", "oggi", "distorsione.csv"))}
     new = {(r["deck"], r["modo"], r["livello"]): r for r in rows}
     if set(old) != set(new) or len(new) != 24:
-        refuse(f"distorsione: {len(new)} casi oggi, {len(old)} in L46b, non gli stessi 24")
-    for k in sorted(set(old) & set(new)):
-        for c in DIST_UGUALI:
-            if new[k][c] != old[k][c]:
-                refuse(f"distorsione, {' '.join(k)}: {c} {new[k][c]} oggi, {old[k][c]} in L46b")
+        refuse(f"distorsione: {len(new)} casi oggi, {len(old)} in L51c, non gli stessi 24")
+    scarto_thd = max((abs(db20(float(new[k]["thd_pct"]) / float(old[k]["thd_pct"])))
+                      for k in new if k in old and new[k]["thd_pct"] and old[k]["thd_pct"]),
+                     default=float("nan"))
+    scarto_imd = max((abs(float(new[k]["imd_d2_db"]) - float(old[k]["imd_d2_db"]))
+                      for k in new if k in old and new[k]["imd_d2_db"] and old[k]["imd_d2_db"]),
+                     default=float("nan"))
 
-    def mx(col, deck, liv):
-        v = [float(r[col]) for r in rows if r["livello"] == liv and r["deck"].startswith(deck)
+    def mx(col, deck, liv, rr=rows):
+        v = [float(r[col]) for r in rr if r["livello"] == liv and r["deck"].startswith(deck)
              and r[col] != ""]
         return max(v) if v else float("nan")
-    out = {"dir": L51CD, "rows": rows, "soglie": v4_soglie(),
+    out = {"dir": dd, "rows": rows, "soglie": v4_soglie(),
            "thd_lo": {f: mx("thd_pct", f"thd_{f}", "lo") for f in ("1k", "10k", "20k")},
            "h5_lo": mx("h5su_db", "thd", "lo"), "imd_lo": mx("imd_d2_db", "imd", "lo"),
            "thd_hi_20k": mx("thd_pct", "thd_20k", "hi"), "imd_hi": mx("imd_d2_db", "imd", "hi"),
-           # floor: le armoniche dalla 5a oggi e in L46b, che non coincidono alla cifra
-           "h5_lo_l46b": max(float(r["h5su_db"]) for r in old.values()
-                             if r["livello"] == "lo" and r["deck"].startswith("thd"))}
+           "h5_lo_l46b": mx("h5su_db", "thd", "lo", list(old.values())),
+           "l51c_dir": L51CD, "scarto_thd_db": scarto_thd, "scarto_imd_db": scarto_imd,
+           "thd_20k_l51c": mx("thd_pct", "thd_20k", "lo", list(old.values()))}
     s = out["soglie"]
     out["ok"] = {"thd20_lo": out["thd_lo"]["20k"] <= s["thd20_lo"],
-                 "h5": out["h5_lo"] <= s["h5"] and out["h5_lo_l46b"] <= s["h5"],
+                 "h5": out["h5_lo"] <= s["h5"],
                  "imd": out["imd_lo"] <= s["imd"], "thd20_hi": out["thd_hi_20k"] <= s["thd20_hi"]}
+
+    # 2. a caldo (L66), contro le 48 THD rifatte da L67
+    sc = [r for r in _csv(sa(L66, "sintesi_caldo.csv")) if r["spec"] == "lim365--sot223--diss"]
+    noto = _csv(sa(L67, "noto_caldo.csv"))
+    caldo = []
+    for r in sc:
+        nn = [x for x in noto if x["cond"] == r["cond"]]
+        if len(nn) != 12:
+            refuse(f"L67/noto_caldo.csv: {len(nn)} casi per {r['cond']}, attesi 12")
+            continue
+        for liv, col in (("lo", "thd_lo_max_pct"), ("hi", "thd_hi_max_pct")):
+            m = max(float(x["thd_piatto_pct"]) for x in nn if f"livello={liv}" in x["caso"])
+            if "%.3g" % m != "%.3g" % float(r[col]):
+                refuse(f"a caldo, {r['cond']} {liv}: L66 scrive {r[col]} %, le THD rifatte da L67 "
+                       f"danno {m:.6g} %")
+            if any(float(x["diff_rel"]) != 0 for x in nn):
+                refuse(f"L67/noto_caldo.csv: il blocco avvolto non ridà L66 in {r['cond']}")
+        caldo.append({"cond": r["cond"], "fuori": int(r["thd_fuori"]),
+                      "margine": float(r["thd_margine_min_dB"]), "thd_lo": float(r["thd_lo_max_pct"]),
+                      "thd_hi": float(r["thd_hi_max_pct"]), "imd": float(r["imd_lo_max_dB"])})
+    if len(caldo) != 4:
+        refuse(f"L66/sintesi_caldo.csv: {len(caldo)} condizioni per lim365, attese 4")
+    out["caldo"] = caldo
+    out["caldo_dir"] = L66
+
+    # 3. la catena (L67, ADR-112)
+    liv_main = {"lo": 0.2, "hi": 2.0}
+    ver = _csv(sa(L67, "verifica_livello.csv"))
+    blocchi = sorted({r["blocco"] for r in ver})
+    cat = {}
+    for bl in blocchi:
+        mine = []
+        for r in _csv(sa(L67, f"catena_{bl}.csv")):
+            if r["freq"] != "20000":
+                continue
+            L_ = max(float(r["livello_A_V"]), liv_main[r["livello"]])
+            tetto = s["thd20_lo"] * L_ / 0.2
+            mine.append((r["griglia"], r["uscita"], r["livello"], r["modo"], r["vol"], r["rs"],
+                         20 * math.log10(tetto / float(r["thd_pct"])), r["verdetto"]))
+        theirs = [(r["griglia"], r["uscita"], r["livello"], r["modo"], r["vol"], r["rs"],
+                   float(r["margine_dB"]), r["verdetto_v4"]) for r in ver if r["blocco"] == bl]
+        if len(mine) != len(theirs) or any(
+                a_[:6] != b_[:6] or abs(a_[6] - b_[6]) > 0.051 or a_[7] != b_[7]
+                for a_, b_ in zip(mine, theirs)):
+            refuse(f"L67, la catena {bl}: la regola di ADR-112 rifatta qui non ridà verifica_livello.csv")
+        cat[bl] = {"n": len(mine), "fuori": sum(1 for x in mine if x[6] < 0),
+                   "margine": min(x[6] for x in mine),
+                   "fuori_v4": sum(1 for x in mine if x[7] != "dentro")}
+    out["catena"] = cat
+    imd = _csv(sa(L67, "imd_catena.csv"))
+    for r in imd:
+        if abs((s["imd"] - float(r["imd_d2_db"])) - float(r["margine_dB"])) > 0.051:
+            refuse(f"L67/imd_catena.csv: margine {r['margine_dB']} dB, il tetto di V4 da' "
+                   f"{s['imd'] - float(r['imd_d2_db']):.1f}")
+    out["imd_catena"] = {"n": len(imd), "fuori": sum(1 for r in imd if r["verdetto"] != "dentro"),
+                         "margine": min(float(r["margine_dB"]) for r in imd)}
+    out["catena_dir"] = L67
     # V1 sulla dispersione di I_DSS del blocco scelto (L46b): per «Cosa non dice»
     idss = [r for r in rows_of(vecchio(L46B, "idss.csv")) if r["variante"] == L46B_VAR]
     out["v1_idss"] = (min(float(idss[0][c]) for c in ("B_pubbl_min", "A_pubbl_min", "buf_pubbl_min"))
@@ -1886,6 +2116,114 @@ def measure_distortion():
     if out["v1_idss"] is None:
         refuse(f"L46b/idss.csv: la riga {L46B_VAR} non c'e'")
     return out
+
+
+# ------------------------------------------- le sezioni nuove di L64a -----
+RTH_VAS = 125.0        # °C/W, il VAS in SOT-223 (ADR-068), la cifra dei banchi del calore di L66
+
+
+def p10_soglia_ms():
+    """Il tetto di P10 sulla Stax, letto da REQUIREMENTS.md (ADR-086), non scritto qui."""
+    with open(os.path.join(REPO, "docs", "preamp", "REQUIREMENTS.md")) as f:
+        r = [ln for ln in f if ln.startswith("| P10 |")]
+    m = re.search(r"al più \*\*(\d+) ms\*\*", r[0]) if len(r) == 1 else None
+    if not m:
+        refuse("REQUIREMENTS.md: non trovo il tetto di P10 in ms")
+        return float("nan")
+    return float(m.group(1))
+
+
+def measure_limitatore():
+    """Il limitatore d'ingresso (ADR-101, «dopo L57b»): l'RCA collegato a caldo e il costo.
+    Seconda strada: le cifre di THD ed E5 di sintesi.csv uguali a quelle di costo/costo.csv."""
+    d = sa(DATAROOT, "2026-10-25", "dopo-L57b")
+    rows = _csv(os.path.join(d, "sintesi.csv"))
+    lim = [r for r in rows if r["variante"] == "lim"]
+    mute = [r for r in rows if r["variante"] == "mute_lim"]
+    if len(lim) != 3 or len(mute) != 3:
+        refuse("dopo-L57b/sintesi.csv: attese tre reti per lim e per mute_lim")
+        return {}
+    costo = _csv(os.path.join(d, "costo", "costo.csv"))
+
+    def c(var, f, liv, col):
+        r = [x for x in costo if x["variante"] == var and x["freq"] == f and x["livello"] == liv]
+        return float(r[0][col]) if len(r) == 1 and r[0][col] else float("nan")
+    for r in lim:
+        for col, f, liv, cc in (("thd20k_02v_pct", "20000", "lo", "thd_pct"),
+                                ("thd20k_2v_pct", "20000", "hi", "thd_pct"),
+                                ("e5_stima_uv", "1000", "lo", "e5_stima_uv")):
+            if float(r[col]) != c("lim", f, liv, cc):
+                refuse(f"dopo-L57b: {col} {r[col]} in sintesi.csv, {c('lim', f, liv, cc)} in costo.csv")
+    w = max(lim, key=lambda r: float(r["ain_pk_v"]))
+    return {"dir": d, "ain": float(w["ain_pk_v"]), "gg_m": min(float(r["gg_margine_v"]) for r in lim),
+            "gd_m": min(float(r["gd_margine_v"]) for r in lim),
+            "k11_0": max(float(r["k11_0db_dbspl"]) for r in lim),
+            "k11_10": max(float(r["k11_10db_dbspl"]) for r in lim),
+            "mute_0": max(float(r["k11_0db_dbspl"]) for r in mute),
+            "mute_10": max(float(r["k11_10db_dbspl"]) for r in mute),
+            "thd_senza": c("senza", "20000", "lo", "thd_pct"), "thd_lim": c("lim", "20000", "lo", "thd_pct"),
+            "e5_senza": c("senza", "1000", "lo", "e5_stima_uv"), "e5_lim": c("lim", "1000", "lo", "e5_stima_uv")}
+
+
+def measure_guasti_blocco():
+    """I guasti del blocco sul sorgente di oggi, col dissipatore sui finali (L66, calore_dopo.csv:
+    714 modi, quattro posizioni). Seconda strada: la temperatura dei finali e del VAS rifatta qui
+    dalla potenza, 60 °C d'aria, RTH_MJE_DISS e RTH_VAS, entro l'arrotondamento al grado."""
+    rows = _csv(sa(L66, "calore_dopo.csv"))
+    male = 0
+    for r in rows:
+        for dev, rth in (("q132", RTH_MJE_DISS), ("q133", RTH_MJE_DISS)):
+            if abs(TA + float(r[f"P_{dev}_W"]) * rth - float(r[f"Tj_{dev}_60"])) > 0.6:
+                male += 1
+        if float(r["Tj_max_60"]) < TA + float(r["P_q122_W"]) * RTH_VAS - 0.6:
+            male += 1
+    if male:
+        refuse(f"L66/calore_dopo.csv: {male} temperature non tornano dalla potenza")
+    w = max(rows, key=lambda r: float(r["Tj_max_60"]))
+    fin = max(rows, key=lambda r: max(float(r["Tj_q132_60"]), float(r["Tj_q133_60"])))
+    oltre = [r for r in rows if float(r["Tj_max_60"]) > TJ_MAX]
+    tj = _csv(sa(L66, "tj", "lim365--sot223--diss.csv"))
+    # le righe di nota del file (Tj = «coda=...») non sono temperature
+    riposo = {(r["aria"], r["variante"], r["disp"]): float(r["Tj"]) for r in tj
+              if re.fullmatch(r"[-+0-9.eE]+", r["Tj"] or "")}
+    return {"dir": L66, "n": len(rows), "w": w, "tjmax": float(w["Tj_max_60"]),
+            "fin": fin, "fin_tj": max(float(fin["Tj_q132_60"]), float(fin["Tj_q133_60"])),
+            "oltre": len(oltre), "oltre_flag": sum(1 for r in rows if r["oltre_i_limiti_60C"]),
+            # le parti oltre i loro limiti (non le giunzioni): C145 in corto, NC-075
+            "oltre_txt": sorted({(r["modo"], r["oltre_i_limiti_60C"]) for r in rows
+                                 if r["oltre_i_limiti_60C"]}),
+            "riposo_fin_57": max(v for (a, v_, d), v in riposo.items()
+                                 if a == "57" and d.upper() in ("Q132", "Q133")),
+            "riposo_max_57": max(v for (a, v_, d), v in riposo.items() if a == "57")}
+
+
+def measure_stax():
+    """La Stax (fissa 2) contro P10 (ADR-086), il tetto letto da REQUIREMENTS.md: il tempo sopra
+    0,87 V sul jack della Stax (fix2_sopra_ms). I modi che il limitatore di ADR-111 tocca, sul
+    sorgente di oggi (L66/p10_stax.csv); gli altri modi nuovi di L45d2b3b3. La colonna «p10»
+    dei CSV e' giudicata contro 100 ms (LIMITE_P10_MS di L45b, prima di ADR-086): non si legge.
+    Seconda strada: fix2_sopra_ms <= fix2_ultimo_ms riga per riga, e p10_sopra_ms_max >= ogni
+    colonna _sopra_ms."""
+    soglia = p10_soglia_ms()
+    out = {"soglia": soglia, "parti": []}
+    for lab, path in (("oggi (L66)", sa(L66, "p10_stax.csv")),
+                      ("modi nuovi (L45d2b3b3)", sa(DATAROOT, "2026-10-24", "L45d2b3b3",
+                                                     "p10_stax_nuove.csv")),
+                      ("controllo (L45d2b3b3)", sa(DATAROOT, "2026-10-24", "L45d2b3b3",
+                                                    "p10_stax_controllo.csv"))):
+        rows = _csv(path)
+        for r in rows:
+            s_ = [float(r[k]) for k in ("main_sopra_ms", "fix1_sopra_ms", "fix2_sopra_ms")]
+            if float(r["fix2_sopra_ms"]) > float(r["fix2_ultimo_ms"]) + 0.05 or \
+                    abs(float(r["p10_sopra_ms_max"]) - max(s_)) > 0.05:
+                refuse(f"{rel(path)}: {r['modo']}, i tempi sopra 0,87 V non tornano")
+        w = max(rows, key=lambda r: float(r["fix2_sopra_ms"]))
+        out["parti"].append({"lab": lab, "path": path, "n": len(rows),
+                             "fuori": sum(1 for r in rows if float(r["fix2_sopra_ms"]) > soglia),
+                             "max": float(w["fix2_sopra_ms"]), "modo": w["modo"]})
+    out["max"] = max(x["max"] for x in out["parti"])
+    return out
+
 
 
 # I report delle schede di prova: i vincoli per il progetto stanno li', in un elenco numerato
@@ -2953,6 +3291,7 @@ SECTIONS_TUTTE = (
     ("s0", "Il contratto: il Product Requirements Book", "audio"),
     ("s1", "Il blocco di guadagno", "audio"), ("s2", "Il preamplificatore intero", "audio"),
     ("ssel", "Il selettore d&rsquo;ingresso: F1", "audio"),
+    ("slim", "Il limitatore d&rsquo;ingresso", "audio"),
     ("s3", "Punti di lavoro", "audio"), ("s4", "Risposta in frequenza", "audio"),
     ("s5", "Stabilità: la matrice V1", "audio"),
     ("s6", "Il trim e l&rsquo;impedenza d&rsquo;ingresso", "audio"),
@@ -2965,6 +3304,8 @@ SECTIONS_TUTTE = (
     ("smute", "Il mute: i relè al jack, V2", "audio"),
     ("sint", "Il guadagno interbloccato e i comandi", "audio"),
     ("s12", "Sovraccarico e corto: V3, P7", "audio"),
+    ("sprot", "Il blocco di oggi: i guasti e il calore", "audio"),
+    ("sstax", "La Stax: il condensatore e i guasti lunghi, P10", "audio"),
     ("sheat", "Il calore del telaio", "alimentatore"),
     ("spsu", "L&rsquo;alimentatore: schema e decisioni", "alimentatore"),
     ("spow", "Potenza, rail e VRELAY", "alimentatore"),
@@ -3149,7 +3490,7 @@ def build_page(M, inline=False):
       'richiede <strong>46 dB di attenuazione</strong>, causa misurabile della mancanza '
       'di dinamica lamentata. La topologia canonica è in <code>circuits/preamp/</code>; i '
       'banchi di prova in <code>spice/preamp/tb/</code>; i dati dei deck in '
-      f'<code>{rel(L51)}/</code>, corsi oggi sul circuito di <code>main</code>; quelli del '
+      f'<code>{rel(L64D)}/</code>, corsi oggi sul circuito di <code>main</code>; quelli del '
       'mute, del volume e dell&rsquo;interblocco nelle cartelle dei loro lotti, nominate sotto '
       'ogni sezione.</p>')
 
@@ -3165,11 +3506,15 @@ def build_page(M, inline=False):
       '<code>meas</code> dello stesso log, e una cella vuota è un rifiuto; la cifra di '
       'headroom contro lo script di L16 che l&rsquo;ha scelta. Se una strada diverge, il '
       'generatore rifiuta di produrre la pagina.</p>')
-    A(f'<p class="meta"><strong>La seconda corsa.</strong> Gli stessi {len(l2["decks"])} deck '
-      'sono stati corsi da L48b il 2026-10-07, in un altro worktree, sullo stesso circuito '
-      f'(<code>{rel(L48BR)}/</code>; il selettore da L48a): le {l2["n_res"]} righe di '
-      f'risultato dei log coincidono una per una, e le {l2["n_tab"]} tabelle coincidono byte '
-      'per byte. '
+    A(f'<p class="meta"><strong>La seconda strada.</strong> Il blocco di oggi è quello che L66 '
+      'ha corso e misurato come variante prima di portarlo nel sorgente (ADR-111), e i deck sono '
+      f'i suoi: le {l2["n_mis"]} misure dei log dei 20 deck veloci coincidono alla sesta cifra con '
+      f'quelle della regressione di L66 (<code>{rel(os.path.join(L66, "regressione"))}/</code>); il '
+      f'deck del mute di L66, ricorso oggi, ridà le sue {l2["n_mute"]} misure e le tabelle di oggi. '
+      'Il selettore e le due copie col bilanciamento non hanno una corsa precedente sul circuito '
+      'di oggi: la loro seconda strada sono gli stessi deck col blocco preso dai file della '
+      f'variante di L66, e le {l2["n_res"]} righe di risultato coincidono una per una; in tutto '
+      f'{l2["n_tab"]} tabelle coincidono byte per byte. '
       + (f'Senza questa strada: {", ".join(l2["senza"])}, che non stampa risultati né tiene '
          'tabelle. ' if l2["senza"] else '')
       + ((f'{l2["spliced"]} <code>print</code> spezzate nei log da una Note del gmin stepping '
@@ -3248,6 +3593,31 @@ def build_page(M, inline=False):
     A('</table></div>')
 
     # --- 3 punti di lavoro ---
+    # --- il limitatore d'ingresso (L64a: ADR-101, «dopo L57b») ---
+    li = M["lim"]
+    A(h2("slim"))
+    A(f'<p class="prov">Dati <code>{html_escape(rel(li["dir"]))}/</code> &middot; il limitatore non è '
+      'cambiato dopo (ADR-101; il modello del BAV199 è del costruttore, Diodes Incorporated)</p>')
+    A('<p>Fra il contatto del selettore e il gate del blocco A ci sono 1 kΩ in serie e una coppia '
+      'di diodi BAV199 verso due riferimenti a ±5 V (ADR-101): un cavo RCA collegato a caldo, o una '
+      'sorgente guasta, non porta il gate oltre quello che il JFET regge.</p>')
+    A('<div class="tablewrap"><table><tr><th>Grandezza</th><th class="num">Valore</th></tr>')
+    A(f'<tr><td>picco sul gate, RCA collegato a caldo (reti −10 / 0 / +10 %)</td><td class="num">'
+      f'{fx(li["ain"], 1)} V</td></tr>')
+    A(f'<tr><td>margine sul massimo gate-gate del JFET</td><td class="num">{fx(li["gg_m"], 1)} V</td></tr>')
+    A(f'<tr><td>margine sul massimo gate-drain</td><td class="num">{fx(li["gd_m"], 1)} V</td></tr>')
+    A(f'<tr><td>il colpo alla principale, 0 / +10 dB</td><td class="num">{fx(li["k11_0"], 1)} / '
+      f'{fx(li["k11_10"], 1)} dB SPL</td></tr>')
+    A(f'<tr><td>lo stesso col mute inserito</td><td class="num">{fx(li["mute_0"], 1)} / '
+      f'{fx(li["mute_10"], 1)} dB SPL</td></tr>')
+    A('</table></div>')
+    A(f'<p>Il costo nel suono, sul blocco del giorno della prova: la THD a 20 kHz, 0,2 V, passa da '
+      f'{pct(li["thd_senza"])} a {pct(li["thd_lim"])} % ({fx(db20(li["thd_lim"] / li["thd_senza"]), 1)} dB), '
+      f'e il rumore stimato al jack da {fx(li["e5_senza"], 2)} a {fx(li["e5_lim"], 2)} µV. Per questo il '
+      'manuale chiede di collegare i cavi d&rsquo;ingresso col mute inserito.</p>')
+    A('<p class="meta">Seconda strada: le cifre di THD e di rumore della sintesi tornano, rete per '
+      'rete, nella tabella del costo dello stesso lotto.</p>')
+
     A(h2("s3"))
     A(prov_line("tb_op.cir", op["dir"]))
     A('<p>Corrente dai rail e punto di lavoro di ogni dispositivo attivo, a ingresso a '
@@ -3273,7 +3643,7 @@ def build_page(M, inline=False):
 
     # --- 4 risposta ---
     A(h2("s4"))
-    A(prov_line("tb_ac.cir", sa(L51, "tb_ac")))
+    A(prov_line("tb_ac.cir", sa(L64D, "tb_ac")))
     A(figure("fig_response.svg", "Risposta in frequenza"))
     A('<div class="tablewrap"><table><tr><th>Curva</th><th class="num">20 Hz</th>'
       '<th class="num">1 kHz</th><th class="num">20 kHz</th><th class="num">100 kHz</th></tr>')
@@ -3424,10 +3794,10 @@ def build_page(M, inline=False):
 
     # --- il volume col bilanciamento ---
     A(h2("svol"))
-    A(prov_line("tb_e5_bilanciamento.cir", vol["e5_dir"], deckdir=sa(L48B, "e5_bilanciamento"),
+    A(prov_line("tb_e5_bilanciamento.cir", vol["e5_dir"], deckdir=sa(L64A, "bilanciamento"),
                 note=" &middot; <strong>copia del deck</strong> col bilanciamento girato di 3 dB "
                      "(L48b), ricorsa oggi"))
-    A(prov_line("tb_loop_bilanciamento.cir", vol["v1_dir"], deckdir=sa(L48B, "v1_bilanciamento"),
+    A(prov_line("tb_loop_bilanciamento.cir", vol["v1_dir"], deckdir=sa(L64A, "bilanciamento"),
                 note=" &middot; <strong>copia di tb_loop.cir</strong> con le sorgenti del "
                      "bilanciamento (L48b), ricorsa oggi"))
     A('<p>Il volume è un potenziometro, non più un attenuatore a scatti, con un bilanciamento '
@@ -3570,7 +3940,7 @@ def build_page(M, inline=False):
 
     # --- 9 PSRR ---
     A(h2("s9"))
-    A(prov_line("tb_zout_psrr_noise.cir", sa(L51, "tb_zout_psrr_noise")))
+    A(prov_line("tb_zout_psrr_noise.cir", sa(L64D, "tb_zout_psrr_noise")))
     A(figure("fig_psrr.svg", "PSRR"))
     A('<div class="tablewrap"><table><tr><th>Rail e modo</th><th class="num">100 Hz</th>'
       '<th class="num">1 kHz</th><th class="num">10 kHz</th><th class="num">100 kHz</th></tr>')
@@ -3653,7 +4023,8 @@ def build_page(M, inline=False):
       'blocco di guadagno da solo nei tre modi, sorgente 2,5 kΩ, carico 47 Ω + 4,7 µF + 10 kΩ, '
       'a due livelli d&rsquo;uscita: 0,2 V RMS, il livello musicale scelto dall&rsquo;utente '
       '(&minus;20 dB), e 2 V RMS, la prova di stress. È stato corso di nuovo il '
-      '2026-10-10 sul blocco che il sorgente genera oggi.</p>')
+      '2026-11-02 sul blocco che il sorgente genera oggi, a 27 °C uniformi; le cifre a caldo e '
+      'quelle sulla catena sono sotto.</p>')
     A('<div class="tablewrap"><table><tr><th>Clausola</th><th class="num">Tetto</th>'
       '<th class="num">Il blocco di oggi, il peggiore sui tre modi</th><th>Esito</th></tr>')
     for k, lab, val, tet in (
@@ -3684,13 +4055,60 @@ def build_page(M, inline=False):
     A('</table></div>')
     A(f'<p class="meta">Tre controlli. La THD che ngspice stampa nel log, caso per caso, coincide '
       'con la tabella di <code>leggi_four.py</code>. Il blocco corso è '
-      '<code>spice/preamp/gain_block_flat.inc</code> di oggi, rigenerato dal sorgente e uguale '
-      'byte per byte, e i deck sono quelli di L46b a meno del blocco incluso. Le 24 righe '
-      f'coincidono alla cifra con quelle della variante scelta in L46b (<code>{html_escape(rel(os.path.join(L46B, "run", L46B_VAR)))}/</code>) '
-      'su ampiezza, THD, seconda e terza armonica e i due prodotti '
-      'd&rsquo;intermodulazione; cambiano solo il pavimento numerico e le armoniche sotto '
-      f'~&minus;190 dB, il fondo del metodo (dalla 5ª in su, {fx(dist["h5_lo"], 1)} dB oggi, '
-      f'{fx(dist["h5_lo_l46b"], 1)} dB in L46b).</p>')
+      '<code>spice/preamp/gain_block_flat.inc</code> di oggi, uguale byte per byte, e i deck sono '
+      'quelli di L46b a meno del blocco incluso. La seconda strada è la corsa di L51c sullo stesso '
+      f'banco col blocco del 2026-10-10 (<code>{html_escape(rel(os.path.join(dist["l51c_dir"], "run", "oggi")))}/</code>): '
+      'il blocco è cambiato, quindi le cifre non coincidono e lo scarto si scrive. La THD a 20 kHz, '
+      f'0,2 V, era {pct(dist["thd_20k_l51c"])} % ed è {pct(dist["thd_lo"]["20k"])} %; '
+      f'fra i 24 casi la THD si sposta al più di {fx(dist["scarto_thd_db"], 1)} dB e '
+      f'l&rsquo;intermodulazione al più di {fx(dist["scarto_imd_db"], 1)} dB.</p>')
+    A('<h3>A caldo: ogni giunzione alla sua temperatura</h3>')
+    A(f'<p class="prov">Dati <code>{html_escape(rel(os.path.join(dist["caldo_dir"], "sintesi_caldo.csv")))}</code> '
+      '(L66, la variante che ADR-111 ha portato nel sorgente)</p>')
+    A('<p>Lo stesso banco col blocco a caldo: ogni dispositivo alla temperatura che raggiunge '
+      'col proprio calore, a 27 °C e a 57 °C d&rsquo;aria, col rame del layout o col rame minimo. '
+      'Il tetto della THD a 20 kHz è quello di V4 al livello del caso.</p>')
+    A('<div class="tablewrap"><table><tr><th>Aria, rame</th><th class="num">Fuori</th>'
+      '<th class="num">Margine minimo</th><th class="num">THD 20 kHz, 0,2 V</th>'
+      '<th class="num">THD 20 kHz, 2 V</th><th class="num">Intermodulazione</th></tr>')
+    for c in dist["caldo"]:
+        aria, rame = c["cond"].split("_")
+        A(f'<tr><td>{aria[1:]} °C, {"rame del layout" if rame == "rame" else "rame minimo"}</td>'
+          f'<td class="num">{c["fuori"]} su 12</td><td class="num">{fx(c["margine"], 1)} dB</td>'
+          f'<td class="num">{pct(c["thd_lo"])} %</td><td class="num">{pct(c["thd_hi"])} %</td>'
+          f'<td class="num">{fx(c["imd"], 1)} dB</td></tr>')
+    A('</table></div>')
+    A('<p class="meta">Seconda strada: le 48 THD del deck di L66 rifatte da L67 col blocco avvolto '
+      f'in un sottocircuito (<code>{html_escape(rel(os.path.join(dist["catena_dir"], "noto_caldo.csv")))}</code>) '
+      'ridanno i massimi di questa tabella alla cifra.</p>')
+    A('<h3>Sulla catena: ogni blocco al suo livello</h3>')
+    A(f'<p class="prov">Dati <code>{html_escape(rel(dist["catena_dir"]))}/</code> (L67, ADR-112)</p>')
+    cg = dist["catena"]
+    A('<p>Il blocco da solo non dice tutto: sulla catena di un canale il blocco prima del volume '
+      'lavora al livello della sorgente, che può essere più alto di quello all&rsquo;uscita. Per '
+      'decisione dell&rsquo;utente (ADR-112, «Ogni blocco al suo livello») la THD a 20 kHz si '
+      'giudica al livello a cui ogni blocco lavora: il tetto scala da '
+      f'{pct(ds["thd20_lo"], tetto=True)} % a 0,2 V a {pct(ds["thd20_lo"] * 10, tetto=True)} % a 2 V, '
+      'e alla principale vale il livello più alto lungo il percorso.</p>')
+    A('<div class="tablewrap"><table><tr><th>Il blocco, la temperatura</th><th class="num">Casi</th>'
+      '<th class="num">Fuori, ogni blocco al suo livello</th><th class="num">Margine minimo</th>'
+      '<th class="num">Fuori, V4 letto alla lettera</th></tr>')
+    nomi = {"l56": "il blocco di L56", "oggi": "il blocco di oggi, 27 °C",
+            "caldo_t27_rame": "a caldo, 27 °C, rame del layout", "caldo_t27_minima": "a caldo, 27 °C, rame minimo",
+            "caldo_t57_rame": "a caldo, 57 °C, rame del layout", "caldo_t57_minima": "a caldo, 57 °C, rame minimo"}
+    for k in ("oggi", "caldo_t27_rame", "caldo_t27_minima", "caldo_t57_rame", "caldo_t57_minima", "l56"):
+        if k in cg:
+            x = cg[k]
+            A(f'<tr><td>{nomi[k]}</td><td class="num">{x["n"]}</td><td class="num">{x["fuori"]}</td>'
+              f'<td class="num">{fx(x["margine"], 1)} dB</td><td class="num">{x["fuori_v4"]}</td></tr>')
+    A('</table></div>')
+    ic = dist["imd_catena"]
+    A(f'<p>L&rsquo;intermodulazione sulla catena: <strong>{ic["fuori"]} casi su {ic["n"]}</strong> '
+      f'oltre il tetto di {fx(ds["imd"], 0)} dB, margine minimo {fx(ic["margine"], 1)} dB.</p>')
+    A('<p class="meta">Seconda strada: la regola di ADR-112 è scritta di nuovo in questo generatore '
+      'e applicata alle corse della catena; dà, riga per riga, i margini e i verdetti di '
+      '<code>verifica_livello.csv</code>. I margini dell&rsquo;intermodulazione tornano dal tetto '
+      'letto in <code>REQUIREMENTS.md</code>.</p>')
     A('<div class="note"><strong>Cifre di modello, non misure.</strong> I dispositivi usano i '
       f'modelli del costruttore ({sez("s15")}); dove la misura sul prototipo diverge, vale la '
       'misura. Il banco è il blocco da solo: il selettore, il trim, il volume e i buffer delle '
@@ -3738,10 +4156,7 @@ def build_page(M, inline=False):
     # --- il mute ---
     A(h2("smute"))
     A(prov_line("tb_v2_casopeggiore.cir", mu["mat_dir"],
-                note=f" &middot; la matrice di L48b, {mu['n_corse']} corse"))
-    A(prov_line("tb_v2_casopeggiore.cir", mu["src_dir"],
-                note=f" &middot; le celle peggiori e i loro riferimenti, {mu['src_corse']} corse "
-                     "rifatte oggi"))
+                note=f" &middot; la matrice intera, {mu['n_corse']} corse, ricorsa il 2026-11-02"))
     A('<p>Il mute taglia coi soli relè al jack (ADR-062, PR-21): con la musica il silenzio '
       'arriva di colpo, e al rilascio la musica torna di colpo al livello di prima. Un relè per '
       'uscita, geometria iii (ADR-044): comune sul lato del condensatore, NO sul jack, NC a '
@@ -3778,15 +4193,15 @@ def build_page(M, inline=False):
       'quello morbido dell&rsquo;alimentatore), e '
       + ", ".join(f'<code>{html_escape(c)}</code>' for c in mu["via"])
       + ' manca dal manifesto finale perché la corsa abortisce. '
-      f'Rifatte oggi sul deck versionato, {mu["src_corse"]} corse e {mu["src_celle"]} celle: '
-      f'le {mu["src_righe"]} righe dell&rsquo;analisi coincidono con quelle di L48b. Dei '
-      f'{len(mu["peg"])} peggiori della tabella sopra 1 µV ne hanno i dati rifatti '
-      f'{len(mu["rifatte"])}'
-      + ((': non rifatti ' + ", ".join(f'{lab} del gruppo {gr} (<code>{html_escape(c)}</code>)'
-                                       for gr, lab, c, _ in mu["non_rifatte"])
-          + ', corse a 20 kHz che in L48b hanno richiesto da sette a oltre quaranta ore, e '
-          'restano a una sola strada') if mu["non_rifatte"] else '')
-      + '. Il deck rigenerato oggi dal sorgente è uguale byte per byte a quello versionato.</p>')
+      f'La seconda strada è la matrice di L60d2, corsa il 2026-10-19 sul blocco di allora: '
+      f'gli esiti coincidono uno per uno. Il picco giudicato più alto è {uv(mu["l60d2_picco_oggi"])} '
+      f'oggi e {uv(mu["l60d2_picco"])} in L60d2, e da una matrice all&rsquo;altra un picco si sposta '
+      f'al più di {uv(mu["l60d2_scarto_v"])}: sono le celle del cambio di guadagno, B2g, che '
+      'stanno fra il pavimento del metodo e pochi µV, in tutte e due le direzioni. '
+      f'{len(mu["nodeset"])} celle della dispersione non trovano il punto di lavoro sul blocco di '
+      'oggi, in nessuna delle tre prove del banco: sono corse col punto di partenza del blocco da '
+      'solo (limitations #86), che non cambia la soluzione dove il punto di lavoro si trova anche '
+      'senza (provato su tre celle: le grandezze di V2 si spostano al più di 0,64 µV)'      + '. Il deck rigenerato oggi dal sorgente è uguale byte per byte a quello versionato.</p>')
     A(f'<p>Il gruppo 6, lo scatto del volume nel banco di V2, porta il difetto noto del banco '
       '(l&rsquo;offset del primo stadio davanti a R<sub>IN</sub>, limitations #44): con '
       f'quell&rsquo;offset tolto lo stesso evento vale {uv(mu["vosb0"])}.</p>')
@@ -3873,7 +4288,9 @@ def build_page(M, inline=False):
     A('<h3>P7: ogni uscita regge un corto, il mute si tiene a tempo indefinito</h3>')
     A(prov_line("tb_mute_corto.cir", p7["dir"]))
     A(f'<p>Criterio di ADR-021: Tj = {it(TA, 3)} °C + P<sub>media</sub> · R<sub>θJA</sub> ≤ '
-      f'{it(TJ_MAX, 3)} °C, con R<sub>θJA</sub> = {it(RTH_MJE, 3)} °C/W per i MJE in TO-220. '
+      f'{it(TJ_MAX, 3)} °C, con R<sub>θJA</sub> = {it(RTH_MJE_DISS, 3)} °C/W per i MJE col '
+      'dissipatore di ADR-099 (20 °C/W del dissipatore a 1 W, 2,5 giunzione-case, 2 '
+      f'd&rsquo;interfaccia, ipotesi; senza dissipatore sarebbero {it(RTH_MJE, 3)}). '
       'Casi: normale, mute, corto su ciascuna uscita, apparecchio spento su una fissa; '
       'manopola e ampiezza spazzate, 1 kHz e 20 kHz. Il dispositivo d&rsquo;uscita peggiore '
       'per blocco e modo:</p>')
@@ -3890,6 +4307,62 @@ def build_page(M, inline=False):
       f'{p7["n_listen"]}</strong> ne escono. La 47 Ω dell&rsquo;uscita principale dissipa al '
       f'massimo {it(p7["rsep"]["0"], 3)} / {it(p7["rsep"]["3"], 3)} / {it(p7["rsep"]["10"], 3)} W '
       'a 0 / +3 / +10 dB, e va dimensionata di conseguenza.</p>')
+
+    # --- il blocco di oggi: i guasti e il calore (L64a: L66, ADR-099, ADR-111) ---
+    gb = M["gb"]
+    A(h2("sprot"))
+    A(f'<p class="prov">Dati <code>{html_escape(rel(os.path.join(gb["dir"], "calore_dopo.csv")))}</code> '
+      '(L66, sul sorgente di oggi)</p>')
+    A('<p>Da L51 il blocco è cambiato per i suoi guasti, non per il suono: l&rsquo;inseguitore '
+      'davanti al VAS con la sua resistenza (ADR-067, ADR-087), quattro diodi di riserva al '
+      'moltiplicatore e un diodo sulla base di ciascun finale (ADR-090, ADR-095), R153 sdoppiata '
+      '(ADR-097), quattro rimedi del calore e un dissipatore sui finali (ADR-099), e il limitatore '
+      'del VAS a 36,5 + 18,7 Ω (ADR-111). Ogni guasto singolo di ogni parte del blocco, in ognuna '
+      f'delle posizioni, è stato simulato col blocco di oggi: <strong>{gb["n"]} modi</strong>.</p>')
+    w = gb["w"]
+    A('<div class="tablewrap"><table><tr><th>Con 60 °C d&rsquo;aria</th><th class="num">Valore</th>'
+      '<th>Esito</th></tr>')
+    A(f'<tr><td>la giunzione più calda, su tutti i modi ({html_escape(w["Tj_max_disp_60"].upper())}, '
+      f'{html_escape(w["modo"])}, blocco {html_escape(w["posizione"])})</td>'
+      f'<td class="num">{fx(gb["tjmax"], 0)} °C</td>{verdict(gb["tjmax"] <= TJ_MAX)}</tr>')
+    A(f'<tr><td>il finale più caldo, col dissipatore ({html_escape(gb["fin"]["modo"])})</td>'
+      f'<td class="num">{fx(gb["fin_tj"], 0)} °C</td>{verdict(gb["fin_tj"] <= TJ_MAX)}</tr>')
+    A(f'<tr><td>modi oltre {it(TJ_MAX, 3)} °C (P7)</td><td class="num">{gb["oltre"]}</td>'
+      f'{verdict(gb["oltre"] == 0)}</tr>')
+    A(f'<tr><td>a riposo, 57 °C d&rsquo;aria: il finale / la giunzione più calda</td>'
+      f'<td class="num">{fx(gb["riposo_fin_57"], 1)} / {fx(gb["riposo_max_57"], 1)} °C</td><td></td></tr>')
+    A('</table></div>')
+    if gb["oltre_txt"]:
+        modi = sorted({m for m, _ in gb["oltre_txt"]})
+        A(f'<p>Oltre i loro limiti vanno parti che non sono giunzioni, in {gb["oltre_flag"]} modi '
+          f'({html_escape(", ".join(modi))}): '
+          + "; ".join(html_escape(x) for x in sorted({f for _, f in gb["oltre_txt"]}))
+          + '. È la non conformità NC-075, aperta, che si chiude con la scelta della parte.</p>')
+    A(f'<p class="meta">Seconda strada: la temperatura dei finali e del VAS rifatta qui dalla potenza '
+      f'di ogni modo ({it(TA, 3)} °C + P · {it(RTH_MJE_DISS, 3)} °C/W per i finali, '
+      f'{it(RTH_VAS, 3)} °C/W per il VAS) torna, al grado, quella del file.</p>')
+
+    # --- la Stax (L64a: ADR-081, ADR-085, ADR-086, P10) ---
+    st = M["stax"]
+    A(h2("sstax"))
+    A('<p>La fissa 2 alimenta le cuffie elettrostatiche Stax: il suo condensatore d&rsquo;uscita è '
+      'da 1 µF film (ADR-081), prima del relè di mute (ADR-084), e il relè ha l&rsquo;isolamento '
+      'supplementare fra bobina e contatti (ADR-085). Un guasto singolo della scheda audio '
+      f'mentre si ascolta può tenere il jack sopra 0,87 V al più <strong>{fx(st["soglia"], 0)} ms</strong> '
+      '(P10, ADR-086), col carico della Stax.</p>')
+    A('<div class="tablewrap"><table><tr><th>I guasti</th><th class="num">Modi</th>'
+      '<th class="num">Il più lungo sulla Stax</th><th>Esito</th></tr>')
+    for x in st["parti"]:
+        A(f'<tr><td>{html_escape(x["lab"])}: <code>{html_escape(rel(x["path"]))}</code></td>'
+          f'<td class="num">{x["n"]}</td><td class="num">{fx(x["max"], 1)} ms '
+          f'({html_escape(x["modo"])})</td>{verdict(x["fuori"] == 0)}</tr>')
+    A('</table></div>')
+    A('<p class="meta">I modi che il limitatore del VAS tocca sono ricorsi sul sorgente di oggi; gli '
+      'altri vengono dal lotto che li ha introdotti, prima del limitatore. La colonna «p10» di '
+      'quei file è giudicata contro 100 ms, una soglia di prima di ADR-086: qui il tetto è letto '
+      'da <code>REQUIREMENTS.md</code>. Seconda strada: per ogni riga il tempo sopra la soglia non '
+      'supera l&rsquo;ultimo istante sopra la soglia, e il massimo delle tre uscite è quello '
+      'dichiarato.</p>')
 
     if psu:
         heat = M["heat"]
@@ -4647,6 +5120,7 @@ def main():
     M["hr"] = measure_headroom(M["trim"])
     M["l2"] = seconda_strada()
     M["dist"] = measure_distortion()
+    M.update({"lim": measure_limitatore(), "gb": measure_guasti_blocco(), "stax": measure_stax()})
     if "schede" in PARTI:
         M["brd"] = measure_boards()
     if "alimentatore" in PARTI:
@@ -4656,8 +5130,8 @@ def main():
     M["decks"] = ([os.path.join(TB, d) for d in DECKS]
                   + [os.path.join(TB, "tb_v2_casopeggiore.cir"), os.path.join(TB, "tb_e3_e5.cir"),
                      os.path.join(TB, "tb_f1_selettore.cir"),
-                     os.path.join(L48B, "e5_bilanciamento", "tb_e5_bilanciamento.cir"),
-                     os.path.join(L48B, "v1_bilanciamento", "tb_loop_bilanciamento.cir")]
+                     os.path.join(L64A, "bilanciamento", "tb_e5_bilanciamento.cir"),
+                     os.path.join(L64A, "bilanciamento", "tb_loop_bilanciamento.cir")]
                   + [os.path.join(L51CD, "deck", "oggi", d + ".cir") for d in DIST_DECKS])
     for deck in M["decks"]:
         provenance(deck)
@@ -4695,10 +5169,11 @@ def main():
     v1, hr, trim, mu, ee = M["v1"], M["hr"], M["trim"], M["mute"], M["e3e5"]
     summary = {
         "parti": list(PARTI),
-        "dati": [rel(L51), rel(mu["mat_dir"]), rel(mu["src_dir"]), rel(M["il"]["corsa_dir"]),
+        "dati": [rel(L64D), rel(mu["mat_dir"]), rel(mu["src_dir"]), rel(M["il"]["corsa_dir"]),
                  rel(M["vol"]["scatti_dir"])],
         "controlli_incrociati": "tutti superati",
-        "seconda_corsa_L48b": {"deck": len(M["l2"]["decks"]), "righe": M["l2"]["n_res"],
+        "seconda_strada_L66": {"deck": len(M["l2"]["decks"]), "misure": M["l2"]["n_mis"],
+                               "misure_mute": M["l2"]["n_mute"], "righe": M["l2"]["n_res"],
                                "tabelle": M["l2"]["n_tab"]},
         "guadagno_1kHz_dB": {m: M["resp"][(m, "1.5")]["g1k"] for m in MODES},
         "adr014_scarto_20kHz_rif_1kHz_dB_peggiore": max(adr014(M["resp"])[0].values(), key=abs),

@@ -1,6 +1,6 @@
 # ADR-080 — Il rivelatore di continua guarda la differenza fra l'ingresso e la reazione di ogni blocco, non la sua uscita
 
-Data: 2026-10-15 · Stato: accettata
+Data: 2026-10-15 · Stato: superata da ADR-081 (il rivelatore di continua esce dal progetto)
 
 **Rapporti con le decisioni precedenti.**
 - **Supera in parte ADR-079**: la presa sulle sei uscite (F1, F2 e B per canale) e la ragione «la
