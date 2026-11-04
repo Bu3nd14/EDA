@@ -48,8 +48,19 @@ SPOSTATI = {
     "L68/fmea_oggi_riscritta_su_L68": (L69 + "fmea_oggi.csv", None, None, None),
     "L68/copertura_riscritta": (L69 + "copertura.csv", None, None, None),
 }
-# i testi da sabotare che la corsa di oggi ha cambiato (nome -> (vecchio, nuovo)); vuoto se nessuno
-VALORI = {}
+# i testi da sabotare che la corsa di oggi ha cambiato (nome -> (vecchio, nuovo)), e i sabotaggi di L68
+# sulle righe di R572 / R576 in corto (NC-079): da L69 quelle righe sono sostituite da fmea_l69.csv e non
+# entrano piu' nella FMEA di oggi, quindi passerebbero; qui toccano righe di L68 ancora vive
+VALORI = {
+    "L64b/potenza_del_calore_riscritta": ("CALORE regime_nom pt1=13.9339 ", "CALORE regime_nom pt1=13.9839 "),
+    "L64b/standby_illeggibile": ("2.500-3.000 s: T2 129.76 mW", "2.500-3.000 s: T2 = 129.76 mW"),
+    "L64b/tabella_della_catena_riscritta": ("spegnimento_l,MAINJACK,3.686e-09,-55.2,",
+                                            "spegnimento_l,MAINJACK,3.686e-09,-45.2,"),
+    "L68/fmea_priorita_contro_la_matrice": (',alta,"accettata in P9 (e), come R585 in corto (ADR-115)"',
+                                            ',media,"accettata in P9 (e), come R585 in corto (ADR-115)"'),
+    "L68/fmea_non_conformita_che_non_esiste": ('"accettata in P9 (e), come R585 in corto (ADR-115)"',
+                                               '"NC-998 (maggiore, prima di G1)"'),
+}
 
 SAB = []
 for nome, f, old, new, atteso in L68.SAB:
@@ -75,8 +86,9 @@ SAB += [
      "non e' del 2026-11-04"),
     ("L69b/confronto_con_L64b_riscritto", L + "confronto_l64b.csv", "\n", "\nan_l64b.csv,x,y,1,1,0\n",
      "confronta_l64b.py rieseguito"),
-    ("L69/fmea_priorita_contro_la_matrice", L69 + "fmea_l69.csv", ",corto,f_r572_corto_*,,1,1,3,bassa,",
-     ",corto,f_r572_corto_*,,1,1,3,media,", "la matrice di ADR-070"),
+    # la priorita' dopo il rimedio (G, P, R di dopo -> priorita_dopo) della riga di R572 in corto
+    ("L69/fmea_priorita_contro_la_matrice", L69 + "fmea_l69.csv", ',1,0.025,1,3,bassa,"misurata',
+     ',1,0.025,1,3,media,"misurata', "la matrice di ADR-070"),
     ("L69/fmea_parte_che_non_esiste", L69 + "fmea_l69.csv", "\ntemporizzatore (L68),L69,R572,",
      "\ntemporizzatore (L68),L69,R972,", "R972 non sta in nessuna netlist"),
 ]

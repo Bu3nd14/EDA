@@ -18,6 +18,28 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L64c — il dossier rigenerato, la chiusura (2026-11-03)
+
+- **Le scelte dell'utente**: le righe della FMEA che dicevano il micro, «Riscriverle ora»; la FMEA nella
+  pagina, «Sintesi + alte + medie»; le schede di prova del 9 ottobre, «Togliere la sezione»; i PDF, «qui
+  sul mac nella folder che dici tu, ma 3 PDF» (`/Users/roberto/Documents`); R517 / R518 in corto
+  «Accettare come C536» e i 5 V persi «Accettare come U503» (**ADR-114**); la FMEA del temporizzatore
+  «Non conformità, lotto apposta» (**NC-078**, L68).
+- **Il primo giro** con `PARTI` completa non rifiutava, ma la pagina diceva tre cose false (le schede
+  «dalle netlist di oggi», il firmware in «Cosa non dice», «nessun modello del costruttore»).
+- **La pagina**: gli schemi completi di L63 (653 e 187 parti), contro la netlist e ridisegnati uguali dal
+  sorgente; la FMEA di oggi (L45d2b3b3, L58a2, L58b, L66, L64c) **563 righe, 15 alte, 67 medie**, ricomposta
+  dal generatore e controllata riga per riga contro la matrice di ADR-070 e le netlist; «Cosa non dice»
+  riscritta; la provenienza dell'alimentatore dalle `.provenance.json`. `index.html` 282 KB, il PDF 65
+  pagine. «OK»; sabotaggi 56 su 56.
+- **Le 28 righe del micro, da 44 corse** (`data/2026-11-03/L64c/`): il sorvegliante cieco da alta a bassa
+  (al jack 32,3 / 16,6 dB SPL, sotto V2); **R517 / R518 in corto da bassa ad alta** (U504 2,93 W, 241 °C,
+  come C536); U512 spento da bassa a media (i 5 V persi, al jack **69,7 dB SPL**, come U503 in corto: la
+  catena ridà i 6,492 mV di L64b); R543, R544–R547 escluse.
+- **NC-078**: dell'alimentatore 59 parti su 187 senza riga — 37 del temporizzatore, entrate dopo la
+  chiusura di NC-042, 5 connettori, 17 test point.
+- **Dopo**: **L68**, il prompt di `NEXT-SESSION.md`.
+
 ### L64b — il dossier rigenerato, l'alimentatore e il temporizzatore (2026-11-03)
 
 - **Le scelte dell'utente**: «non caricare troppo la CPU se devi fare simulazioni, ci sono altre

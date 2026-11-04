@@ -33,6 +33,60 @@ rifanno lo stesso, perché il dossier legge tutto l'alimentatore da una cartella
 
 Le forme d'onda e le corse grezze non stanno nel repository (`.gitignore`).
 
+## Le corse
+
+Il 2026-11-04, 09:04–09:32: **117 sequenze** (3 alla volta, ~24 s l'una da sola), poi insieme lo standby
+(3), il ponte e la catena al jack (18 corse per rete, 2 alla volta) e i banchi `rete`, `guasti` e il
+calore (1 alla volta). **Tutte rc 0**; `controlla_ok.py`: ogni `ok.txt` con le opzioni della sua riga.
+Nessuna lista riscritta mentre `xargs` la leggeva (la lista corsa era una copia ferma).
+
+## La seconda strada contro i lotti (`confronta.py`)
+
+Al primo giro **68 celle fuori** contro L58b, tutte in tre colonne: `t_arm_ms` (34), `arm_pg_ms` (26),
+`bn_max` (8) — l'armo della ritenuta e la sua base, le colonne che leggono AT_ON. Il meccanismo, misurato
+(`script/armo.py` → `armo.txt`, sulla forma d'onda dell'accensione di oggi): AT_ON alto 4,4712 V, 51,0 µA nel
+pull-up; 20 Ω in meno (10 kΩ → 9,98 kΩ) alzano AT_ON di **1,02 mV**; AT_T2S si carica da AT_ON (R580 2,7 MΩ /
+C552 1 µF) fino a VREF 2,47 V, e 1 mV in più anticipa l'armo di **0,76 ms** — misurati −0,6 / −0,7. La base
+della ritenuta, su AT_ON attraverso Q514, si sposta di 0,3 mV. A queste tre colonne sole lo scarto di
+ADR-116 in più (1 ms, 0,5 mV), scritto in `toll()`; nient'altro. Dopo: **4255 celle, 3772 identiche, 483
+entro, 0 fuori; 107 deck di L58b uguali a quelli di oggi** a meno del carico e delle due metà.
+
+## La seconda strada contro L64b (`confronta_l64b.py`)
+
+**7578 celle, 386 diverse** (`confronto_l64b.csv`); la struttura (file, righe, colonne) coincide. Le
+cifre del report di L64b, alla cifra stampata, sono le stesse: la tenuta di `VRELAY_REG` **50,3 / 109,6 /
+169,1 ms**, il permissivo **39,6 ms**, la musica **612,8 ms** dopo il buco, K501 **75,6 ms** dopo il
+permissivo allo spegnimento, al jack U501 spento **32,2 dB SPL** e la perdita di rete a −10 % **+4,3 dB
+SPL**, il calore **17,68 / 15,42 / 19,98 W** (la stima del telaio identica, 0 numeri diversi). Le celle
+diverse, per gruppo:
+
+| Celle | Dove | Scarto | Perché |
+|---|---|---|---|
+| 94 | `on_min` (il minimo di AT_ON = VRELAY_EN) | −2,4 … +0,9 mV | è il nodo del pull-up; e la `.meas` sui punti del transitorio prende due valori col passo (L64b: 4,4533 / 4,4564 V lo stesso caso) |
+| 50 | `t_arm_ms`, `arm_pg_ms` | −0,6 / −0,7 ms | l'armo da AT_ON, `armo.txt` (sopra) |
+| 40 | `bn_max` (la base della ritenuta) | −0,1 … +0,4 mV | su AT_ON attraverso Q514 |
+| 56 | `dvm_mv`, `dvp_mv` | — | `0.0` → `-0.0`: il segno di uno zero |
+| 62 | `t_gain_ms`, `t_k501_ms`, `k_perm_ms`, `t_fpgt_ms`, `v5_min`, `rawv_max` | 0,1 ms; 1 mV | l'ultima cifra stampata. Non ho provato la causa (i passi del transitorio cambiano con la matrice) |
+| 49 | i banchi `rete` e `guasti` | ≤ 0,03 ms; una cella −0,29 ms | l'ultima cifra dei tempi al microsecondo; la cella: `vr80_hold_ms` di `perdita_senza_rivelatore_m10`, 346,99 → 346,70 ms (0,08 %), una coda lenta di `VRELAY` che passa l'80 %, molto sopra P9 |
+| 32 | la catena al jack | pochi nV | `spegnimento_l` 3,542 → 3,686 nV al jack principale, −55,6 → −55,2 dB SPL, contro un criterio di 100 µV |
+| 3 | lo standby | +0,02 mW | 115,86 / 129,76 / 143,86 mW (L64b 115,84 / 129,74 / 143,84) |
+
+## Il dossier
+
+`build_dossier.py`: `L64B` → `L69B` (questa cartella), `PSU_DA` al 2026-11-04 (ogni dato di L64b sulla prima
+strada è rifiutato), `PARTI_SCHEDE` di qui, le scritte («L58b sullo stesso circuito» non è più vero), e un
+controllo nuovo: `confronta_l64b.py` rieseguito su una copia, `confronto_l64b.csv` uguale byte per byte,
+le celle diverse contate in pagina. **«OK: tutti i controlli incrociati sono passati»**, 11 s.
+
+**Sabotaggi 67 su 67** (`sabotaggi.txt`): i 61 di L68 (L64a, L64b, L64c, L68) coi file spostati, più sei
+nuovi (una metà di un pull-up cambiata nel deck corso, la lettura delle due metà in `confronta.py`, il
+dossier ripuntato sui dati di L64b, `confronto_l64b.csv` riscritto, due righe di L69 nella FMEA). Al primo
+giro 61 su 67: tre testi da sabotare portavano le cifre di L64b (129,74 mW, 3,542 nV, la potenza del
+calore a quattro decimali), riportati su quelle di oggi; **due di L68 passavano**, perché toccavano le
+righe di R572 / R576 in corto (NC-079), che da L69 sono sostituite da `fmea_l69.csv` e non entrano più
+nella FMEA di oggi — riportati su una riga di L68 ancora viva; uno mio toccava la priorità di prima del
+rimedio invece di quella di dopo.
+
 ## Come si rifà
 
 ```sh
