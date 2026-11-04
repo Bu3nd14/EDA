@@ -5,7 +5,7 @@ Nome della sessione: **hi-fi preamp L70** (la convenzione è in `CLAUDE.md`).
 > Prompt scritto alla chiusura della revisione dell'architetto sul dossier rigenerato (2026-11-04, report
 > `reports/2026-11-04-L65-esiti-architetto.md`). Fra le semplificazioni proposte dall'architetto, l'utente ha
 > scelto di studiarne **due prima di G1**. L'ordine verso G1: **L70** → L71 → L72 → L73 → L74 → G1 (la tabella
-> dei lotti di `STATE.md`; l'utente può cambiarlo all'apertura).
+> dei lotti di `STATE.md`; l'ordine concordato dall'utente il 2026-11-04: «concordo con la sequenza»).
 
 Riprendo il progetto del preamplificatore hi-fi in questo repository. Questa sessione fa **L70**, e si ferma.
 
