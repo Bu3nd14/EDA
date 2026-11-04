@@ -47,21 +47,22 @@ export_fab.sh sulla DRC:
 L42b, riscritto in L51b e in L64b: l'alimentatore, la seconda scheda. Il micro e il firmware
 non ci sono piu' (ADR-102): l'alimentatore di oggi e' quello di L58b (psu.py non e' cambiato
 dopo), col temporizzatore a comparatori e la coppia Q501 + Q509 (ADR-110). La prima strada e'
-la corsa del 2026-11-03 col carico di oggi (data/2026-11-03/L64b: i rail di tb_op di L64a, la
-bobina del selettore di L48a); ps() rifiuta come prima strada ogni dato di prima. I lotti si
-rileggono solo da vecchio(): L58b sullo stesso circuito, L54b3b e L58b prima della coppia, L54b2
-per la catena al jack, L51b per i banchi e il calore. Ogni log si legge prima dei suoi dati
+la corsa del 2026-11-04 col carico di oggi (data/2026-11-04/L69b, L64b rifatto sul sorgente di
+ADR-116: i rail di tb_op di L64a, la bobina del selettore di L48a); ps() rifiuta come prima strada
+ogni dato di prima. I lotti si rileggono solo da vecchio(): L64b sul circuito di prima di ADR-116
+(confronta_l64b.py), L58b con le due meta' dei pull-up lette come la resistenza unica, L54b3b e
+L58b prima della coppia, L54b2 per la catena al jack, L51b per i banchi e il calore. Ogni log si legge prima dei suoi dati
 (limitations #33-#36), e ogni deck rigenerato oggi da psu.net deve essere quello corso, a meno dei
 percorsi del worktree.
   8. la potenza: i banchi della rete e dei guasti di L51b sull'alimentatore di oggi
      (--timer sorgente --tss 3.0), deck rigenerati; R512 caso per caso (#34: 110 k, la meta' di
      R_MD da ADR-094); l'evento a 3 s, i tempi dall'evento; ogni scarto da L51b si pubblica;
-  9. il sorvegliante e i guasti, sul circuito (L64b): le sequenze del temporizzatore a
+  9. il sorvegliante e i guasti, sul circuito (L64b, rifatto in L69b): le sequenze del temporizzatore a
      comparatori di lista_l64b.txt, una corsa per caso, ognuna col suo ok.txt, il log pulito e
      il deck rigenerato da psu.net uguale a quello corso; an_l64b.csv con una riga per corsa;
- 10. la seconda strada delle sequenze: script/confronta.py di L64b rieseguito su una copia,
+ 10. la seconda strada delle sequenze: script/confronta.py di L69b rieseguito su una copia,
      confronto_seq.csv uguale a quello versionato, zero celle fuori dalla tolleranza contro le
-     righe di L58b (lo stesso psu.py), di L54b3b e di L58b prima della coppia (con lo scarto
+     righe di L58b (psu.py prima di ADR-116, le due meta' come la resistenza unica), di L54b3b e di L58b prima della coppia (con lo scarto
      della variante), i deck di L58b uguali a quelli di oggi a meno del carico; il censimento
      dello standby contro L58b; lo standby da T2 (consumo.txt) dalle corse con --sonda-t2;
  11. (il firmware, L47c2a: tolto con ADR-102) i criteri del temporizzatore di L54b3b sulle corse
@@ -189,7 +190,10 @@ FORBIDDEN = ("2026-09-09", "2026-09-10", "2026-09-13", "2026-09-14", "2026-09-15
 # della coppia con la tolleranza della variante, L54b2 per la catena al jack, L51b per i banchi e il
 # calore, tutti da vecchio(). L51b-prima, L47c2a e L47c2b2 (il firmware) non si leggono piu'.
 L51B = os.path.join(DATAROOT, "2026-10-09", "L51b")
-L64B = os.path.join(DATAROOT, "2026-11-03", "L64b")
+# L69b: la stessa evidenza rifatta sul sorgente di ADR-116 (R572 + R588, R576 + R589): le corse di
+# L64b non sono piu' del circuito di oggi. Gli stessi script e gli stessi nomi dei file, nella
+# cartella del 2026-11-04 (README di L69b); la seconda strada contro L64b e' confronta_l64b.py.
+L69B = os.path.join(DATAROOT, "2026-11-04", "L69b")
 L58B = os.path.join(DATAROOT, "2026-11-01", "L58b")
 L54B3B = os.path.join(DATAROOT, "2026-10-28", "L54b3b")
 L54B2 = os.path.join(DATAROOT, "2026-10-28", "L54b2")
@@ -200,7 +204,9 @@ PSU_OPZ = ("--timer", "sorgente", "--tss", "3.0", "--n2n7002", "ds", "--comparat
            "--ritenuta", "costruttore", "--bat54", "costruttore")
 # Il giorno dell'alimentatore di oggi: nessun dato della prima strada da prima. Le cartelle
 # dei lotti che la seconda strada rilegge passano da vecchio().
-PSU_DA = "2026-11-03"
+# L69b: il 2026-11-04, il giorno della ricorsa sul sorgente di ADR-116 (le corse di L64b, del
+# 2026-11-03, sono del circuito di prima e passano solo da vecchio())
+PSU_DA = "2026-11-04"
 
 # L51a: la scheda audio di oggi. Il circuito e' quello di L48b (c098be70): dopo,
 # circuito, deck e modelli non sono cambiati. La prima strada e' la ricorsa del
@@ -271,7 +277,8 @@ L68 = os.path.join(DATAROOT, "2026-11-03", "L68")
 # L69: i pull-up di AT_MRQ e di AT_ON in due meta' (ADR-116, NC-079): la settima fonte, la FMEA di oggi e la
 # copertura lette da qui
 L69 = os.path.join(DATAROOT, "2026-11-03", "L69")
-PARTI_SCHEDE = os.path.join(L64C, "parti_schede.csv")
+# L69b: parti_schede.py di L64c rifatto su psu.net di ADR-116 (R572 / R576 a meta', R588 / R589 in piu')
+PARTI_SCHEDE = os.path.join(L69B, "parti_schede.csv")
 
 # L64c: gli schemi completi di L63 (A2, una pagina per scheda), coi manifesti che
 # scripts/check_schematic.py confronta con la netlist, nei due sensi
@@ -2469,7 +2476,7 @@ def measure_parti_schede():
     import tempfile
     p = src(PARTI_SCHEDE)
     d = tempfile.mkdtemp(prefix="l64c_parti_")
-    proc = subprocess.run([sys.executable, "-I", os.path.join(L64C, "script", "parti_schede.py"), REPO, d],
+    proc = subprocess.run([sys.executable, "-I", os.path.join(os.path.dirname(PARTI_SCHEDE), "script", "parti_schede.py"), REPO, d],
                           capture_output=True, text=True)
     out = {}
     for ln in proc.stdout.strip().splitlines():
@@ -2498,7 +2505,7 @@ def measure_heat(op, pw):
     dichiarata. L64b: tre voci nuove dal banco, le 4,7 ohm davanti ai regolatori (ADR-092), gli SB340
     dopo (ADR-093), i diodi inversi (ADR-094) nel resto; la scheda audio sul banco del calore
     contro i rail del banco della rete (due corse diverse dello stesso circuito)."""
-    d = ps(L64B, "termica")
+    d = ps(L69B, "termica")
     # il deck del calore si rigenera dal deck della rete di oggi e dev'essere quello corso
     deck = os.path.join(d, "tb_calore.cir")
     _, tmp = in_tmp(tool(d, "genera_calore.py"), [], ["--uscita", "@TMP@/tb_calore.cir"],
@@ -2538,7 +2545,7 @@ def measure_heat(op, pw):
     if len(audio) != 1 or not abs(8 * p_blk - audio[0][1]) <= 0.005:
         refuse(f"calore: la scheda audio della stima vale {audio[0][1] if audio else '?'} W, "
                f"8 x 15 V x i(rail) di tb_op di oggi da' {8 * p_blk:.4f} W")
-    car = leggi_carico(L64B)
+    car = leggi_carico(L69B)
     ip, im = float(car["i_piu_mA"]) * 1e-3, float(car["i_meno_mA"]) * 1e-3
     for c, b in bench.items():
         if not abs(b["paud"] - 8 * p_blk) <= 0.005 * 8 * p_blk:
@@ -2757,7 +2764,7 @@ def leggi_carico(lot):
 def carico_di_oggi(op):
     """L64b: carico.txt di L64b e' quello di tb_op di oggi (8 blocchi, i due rail), il resto di
     VRELAY quello di L48a (51,5 mA), il metodo dei casi di U503 gear (L51b, L58b)."""
-    car = leggi_carico(L64B)
+    car = leggi_carico(L69B)
     for k, n in (("i_piu_mA", "i(vpp)"), ("i_meno_mA", "i(vmm)")):
         if not abs(float(car.get(k, "nan")) - 8000 * abs(op["rails"].get(n, 0))) <= 1e-3:
             refuse(f"carico.txt di L64b: {k} {car.get(k)}, 8 x {n} di tb_op "
@@ -2778,10 +2785,10 @@ def measure_psu_power():
     net = open(PSU_NET).read()
     m = re.search(r'\(ref "R512"\)\s*\(value "([\d.]+)k"\)', net)
     r512 = float(m.group(1)) * 1e3 if m else float("nan")
-    gen = tool(L64B, "psu", "genera_tb_psu.py")
+    gen = tool(L69B, "psu", "genera_tb_psu.py")
     rows = {}
     for nome in ("rete", "guasti"):
-        dd = ps(L64B, nome)
+        dd = ps(L69B, nome)
         deck = os.path.join(dd, f"tb_psu_{nome}.cir")
         log = deck[:-4] + ".log"
         log_pulito(log)
@@ -2794,8 +2801,8 @@ def measure_psu_power():
         rows.update({r["file"]: r for r in rr})
     # l'evento e' a 3 s (--tss 3.0): analizza.py ha preso 3.0, e i tempi sono dall'evento
     tl = re.findall(r"alter @venv\[pwl\] = \[ 0 [\d.]+ ([\d.]+) [\d.]+ [\d.]+ 0 1000 0 \]",
-                    open(os.path.join(L64B, "rete", "tb_psu_rete.log"), errors="replace").read()
-                    + open(os.path.join(L64B, "rete", "tb_psu_rete.cir")).read())
+                    open(os.path.join(L69B, "rete", "tb_psu_rete.log"), errors="replace").read()
+                    + open(os.path.join(L69B, "rete", "tb_psu_rete.cir")).read())
     if not tl or any(abs(float(x) - 3.0) > 1e-9 for x in tl):
         refuse(f"il banco della rete: la rete si perde a {sorted(set(tl))} s, non a 3")
     for c, r in rows.items():
@@ -2814,7 +2821,7 @@ def measure_psu_power():
         for k in T_COLS + V_COLS + ("vrelay_reg",):
             if not _uguali(k, _cella(ro, k), _cella(rp, k)):
                 scarti.append((caso, k, rp.get(k), ro.get(k)))
-    return {"dir": ps(L64B), "oggi": rows, "l51b": l51, "scarti": scarti, "r512": r512}
+    return {"dir": ps(L69B), "oggi": rows, "l51b": l51, "scarti": scarti, "r512": r512}
 
 
 PSU_PROV = {}
@@ -2882,7 +2889,7 @@ def lista_seq():
     """Le corse di lista_l64b.txt (e lista_consumo.txt): {(etichetta, caso): [opzioni]}."""
     out = {}
     for f in ("lista_l64b.txt", "lista_consumo.txt"):
-        for ln in open(os.path.join(L64B, f)):
+        for ln in open(os.path.join(L69B, f)):
             x = ln.split()
             if x:
                 if x[2] != "sorgente":
@@ -2899,9 +2906,9 @@ def measure_seq():
     (contro L58b sullo stesso circuito, contro L54b3b e L58b prima della coppia con la tolleranza
     della variante) e i deck di oggi uguali a quelli di L58b a meno del carico."""
     corse = lista_seq()
-    gen = tool(L64B, "psu", "genera_tb_psu.py")
+    gen = tool(L69B, "psu", "genera_tb_psu.py")
     for (lab, c), opz in sorted(corse.items()):
-        cd = ps(L64B, "seq", lab, c)
+        cd = ps(L69B, "seq", lab, c)
         if not os.path.isfile(os.path.join(cd, "ok.txt")):
             refuse(f"{rel(cd)}: la corsa non ha ok.txt")
             continue
@@ -2912,14 +2919,51 @@ def measure_seq():
                                   "--angolo", ang, "--timer", "sorgente", *opz], cwd_files=False)
         stesso_deck(f"sequenza {lab}/{c}", os.path.join(tmp, os.path.basename(deck)), deck,
                     swap=((tmp, cd),))
-    an = {r["caso"]: r for r in rows_of(ps(L64B, "an_l64b.csv"))}
+    an = {r["caso"]: r for r in rows_of(ps(L69B, "an_l64b.csv"))}
     attese = sorted(f"{lab}/{c}" for lab, c in corse if not lab.startswith("consumo"))
     if sorted(an) != attese:
         refuse(f"an_l64b.csv: {len(an)} righe, attese le {len(attese)} corse di lista_l64b.txt")
     for k, r in an.items():
         if r.get("esito") != "letto":
             refuse(f"an_l64b.csv, {k}: esito {r.get('esito')}")
-    return {"dir": ps(L64B, "seq"), "an": an, "corse": corse, "l2": seconda_seq()}
+    return {"dir": ps(L69B, "seq"), "an": an, "corse": corse, "l2": seconda_seq(), "l64b": seconda_l64b()}
+
+
+# L69b: i file di risultato che confronta_l64b.py legge, relativi alla cartella del lotto
+L64B_OLD = os.path.join(DATAROOT, "2026-11-03", "L64b")
+CONFRONTO_L64B = (["an_l64b.csv", "censimento_psu.csv", "consumo.txt", os.path.join("rete", "analisi.csv"),
+                   os.path.join("guasti", "analisi.csv"), os.path.join("termica", "stima_telaio_l64b.txt")]
+                  + [f"tabella_{r}.csv" for r in ("nom", "m10", "p10")]
+                  + [os.path.join("corse", r, "analisi.csv") for r in ("nom", "m10", "p10")])
+
+
+def seconda_l64b():
+    """L69b: la seconda strada contro L64b, lo stesso banco sul circuito di prima di ADR-116.
+    confronta_l64b.py rieseguito su una COPIA dei risultati di oggi (L64b collegato, si legge
+    soltanto): esce 0 (la struttura coincide: gli stessi file, righe e colonne) e ridà
+    confronto_l64b.csv byte per byte. Le celle diverse si pubblicano, non rifiutano: il README di
+    L69b le spiega una per una."""
+    import tempfile
+    data = os.path.join(tempfile.mkdtemp(prefix="l69b_"), "data")
+    L = os.path.join(data, os.path.basename(os.path.dirname(L69B)), os.path.basename(L69B))
+    for f in CONFRONTO_L64B + [os.path.join("script", "confronta_l64b.py")]:
+        os.makedirs(os.path.dirname(os.path.join(L, f)), exist_ok=True)
+        shutil.copy(ps(L69B, f), os.path.join(L, f))
+    day = os.path.join(data, os.path.basename(os.path.dirname(L64B_OLD)))
+    os.makedirs(day, exist_ok=True)
+    os.symlink(vecchio(L64B_OLD), os.path.join(day, os.path.basename(L64B_OLD)))
+    proc = subprocess.run([sys.executable, "-I", os.path.join(L, "script", "confronta_l64b.py")],
+                          capture_output=True, text=True)
+    if proc.returncode != 0:
+        refuse(f"confronta_l64b.py: rc {proc.returncode}, {proc.stdout.strip()[-300:]!r}")
+        return {}
+    if not stessi_byte("confronta_l64b.py rieseguito", os.path.join(L, "confronto_l64b.csv"),
+                       ps(L69B, "confronto_l64b.csv")):
+        return {}
+    m = re.search(r"in tutto: (\d+) celle diverse", proc.stdout)
+    celle = sum(int(x) for x in re.findall(r", (\d+) (?:celle|numeri), ", proc.stdout))
+    return {"celle": celle, "diverse": rows_of(ps(L69B, "confronto_l64b.csv")),
+            "n_diverse": int(m.group(1)) if m else -1}
 
 
 def seconda_seq():
@@ -2930,12 +2974,12 @@ def seconda_seq():
     # la struttura che confronta.py si aspetta: <dati>/<giorno>/<lotto>; i dati di oggi copiati, le
     # corse e i lotti di prima collegati (si leggono soltanto)
     data = os.path.join(tempfile.mkdtemp(prefix="l64b_"), "data")
-    L = os.path.join(data, os.path.basename(os.path.dirname(L64B)), "L64b")
+    L = os.path.join(data, os.path.basename(os.path.dirname(L69B)), os.path.basename(L69B))
     os.makedirs(os.path.join(L, "script"))
     for f in ("an_l64b.csv", "mappa.csv"):
-        shutil.copy(os.path.join(L64B, f), L)
-    shutil.copy(os.path.join(L64B, "script", "confronta.py"), os.path.join(L, "script"))
-    os.symlink(os.path.join(L64B, "seq"), os.path.join(L, "seq"))
+        shutil.copy(os.path.join(L69B, f), L)
+    shutil.copy(os.path.join(L69B, "script", "confronta.py"), os.path.join(L, "script"))
+    os.symlink(os.path.join(L69B, "seq"), os.path.join(L, "seq"))
     for lot in (L58B, L54B3B):
         day = os.path.join(data, os.path.basename(os.path.dirname(lot)))
         os.makedirs(day, exist_ok=True)
@@ -2943,7 +2987,7 @@ def seconda_seq():
     proc = subprocess.run([sys.executable, "-I", os.path.join(L, "script", "confronta.py")],
                           capture_output=True, text=True)
     stessi_byte("confronta.py rieseguito", os.path.join(L, "confronto_seq.csv"),
-                ps(L64B, "confronto_seq.csv"))
+                ps(L69B, "confronto_seq.csv"))
     m = re.search(r"(\d+) righe dei lotti, (\d+) celle confrontate: (\d+) identiche, (\d+) entro la "
                   r"tolleranza, (\d+) fuori", proc.stdout)
     md = re.search(r"deck di oggi contro L58b: (\d+) righe di L58b, (\d+) diversi oltre il carico",
@@ -2954,7 +2998,7 @@ def seconda_seq():
     n = {k: int(v) for k, v in zip(("righe", "celle", "identiche", "entro", "fuori"), m.groups())}
     n["deck_l58b"] = int(md.group(1))
     # le celle diverse, per la pagina: dal CSV versionato
-    n["diverse"] = rows_of(ps(L64B, "confronto_seq.csv"))
+    n["diverse"] = rows_of(ps(L69B, "confronto_seq.csv"))
     if len(n["diverse"]) != n["celle"] - n["identiche"]:
         refuse(f"confronto_seq.csv: {len(n['diverse'])} righe, {n['celle'] - n['identiche']} celle diverse")
     return n
@@ -2964,7 +3008,7 @@ def measure_censimento():
     """Lo standby a regime e le bobine del mute (psu/censimento.py di L58b, sulle corse di oggi):
     censimento_psu.csv ha una riga per corsa di seq/oggi; contro L58b (censimento_psu.csv, lo
     stesso circuito salvo la coppia) le righe comuni uguali alla cifra stampata o di un'unita'."""
-    rr = {r["caso"]: r for r in rows_of(ps(L64B, "censimento_psu.csv"))}
+    rr = {r["caso"]: r for r in rows_of(ps(L69B, "censimento_psu.csv"))}
     oggi = sorted(f"oggi/{c}" for lab, c in lista_seq() if lab == "oggi")
     if sorted(rr) != oggi:
         refuse(f"censimento_psu.csv: {len(rr)} righe, {len(oggi)} corse in seq/oggi")
@@ -2995,11 +3039,11 @@ def measure_consumo():
     consumo.txt, tre righe (rete -10 / nominale / +10 %). La seconda strada: L54b2 (116,14 / 130,08 /
     144,21 mW, il sorgente di prima di ADR-104, 105, 110), scarto pubblicato."""
     out = {}
-    if not os.path.isfile(ps(L64B, "consumo.txt")):
-        refuse(f"manca {rel(ps(L64B, 'consumo.txt'))}: lo standby non e' stato misurato")
+    if not os.path.isfile(ps(L69B, "consumo.txt")):
+        refuse(f"manca {rel(ps(L69B, 'consumo.txt'))}: lo standby non e' stato misurato")
         return {**{k: {"t2": float("nan"), "t1": float("nan")} for k in ("m10", "nom", "p10")},
                 "l54b2": (float("nan"),) * 3}
-    righe = [ln for ln in open(ps(L64B, "consumo.txt")) if ln.strip()]
+    righe = [ln for ln in open(ps(L69B, "consumo.txt")) if ln.strip()]
     if len(righe) != 3:
         refuse(f"consumo.txt: {len(righe)} righe, attese tre (le tre reti, in quest'ordine)")
     for ln, (r, lab) in zip(righe, (("consumo", "nom"), ("consumo_m10", "m10"), ("consumo_p10", "p10"))):
@@ -3008,7 +3052,7 @@ def measure_consumo():
             refuse(f"consumo.txt: la riga di {r} non si legge: {ln.strip()!r}")
             continue
         out[lab] = {"t2": float(m.group(1)), "t1": float(m.group(2))}
-        cd = ps(L64B, "seq", r, "accensione")
+        cd = ps(L69B, "seq", r, "accensione")
         log_pulito(os.path.join(cd, "tb_psu_seq_accensione_g1.log"))
         if "--sonda-t2" not in open(os.path.join(cd, "ok.txt")).read():
             refuse(f"{rel(cd)}: la corsa dello standby non ha --sonda-t2")
@@ -3151,27 +3195,27 @@ def measure_chain():
     gen_v2 = tool(DATAROOT, "2026-09-23", "L29c", "deck", "genera_tb_v2_casopeggiore.py")
     out = {}
     manca = [p for r in ("nom", "m10", "p10") for p in (
-        ps(L64B, f"tabella_{r}.csv"), ps(L64B, "corse", r, "analisi.csv"), ps(L64B, "corse", r, "fallite.txt"),
-        ps(L64B, "corse", r, "tempi.txt"), ps(L64B, "deck", f"tb_v2_l41c_{r}.cir")) if not os.path.isfile(p)]
+        ps(L69B, f"tabella_{r}.csv"), ps(L69B, "corse", r, "analisi.csv"), ps(L69B, "corse", r, "fallite.txt"),
+        ps(L69B, "corse", r, "tempi.txt"), ps(L69B, "deck", f"tb_v2_l41c_{r}.cir")) if not os.path.isfile(p)]
     if manca:
         refuse(f"la catena al jack: mancano {len(manca)} file, il primo {rel(manca[0])}")
         return {"rows": [], "m10": [], "p10": [], "l54b2": {"nom": [], "m10": [], "p10": []}, "f": f}
     for r in ("nom", "m10", "p10"):
-        d = ps(L64B, "corse", r)
-        t = ps(L64B, f"tabella_{r}.csv")
+        d = ps(L69B, "corse", r)
+        t = ps(L69B, f"tabella_{r}.csv")
         ins = [os.path.join(d, "analisi.csv"), os.path.join(d, "fallite.txt")]
         if open(ins[1]).read().strip():
             refuse(f"{rel(ins[1])}: corse fallite")
         tempi = [ln.split() for ln in open(os.path.join(d, "tempi.txt")) if ln.strip()]
         if len(tempi) != 18 or any(x[1] != "rc=0" for x in tempi):
             refuse(f"{rel(d)}/tempi.txt: {len(tempi)} corse, non tutte rc=0")
-        _, tmp = in_tmp(tool(L64B, "script", "tabella.py"), ins,
+        _, tmp = in_tmp(tool(L69B, "script", "tabella.py"), ins,
                         [os.path.basename(ins[0]), os.path.basename(ins[1]), "tabella.csv"])
         stessi_byte(f"catena {r}: tabella.py rieseguito", os.path.join(tmp, "tabella.csv"), t)
-        _, tmp = in_tmp(gen_v2, [], ["--matrice", "l41c", "--ponte", ps(L64B, "ponte", r),
+        _, tmp = in_tmp(gen_v2, [], ["--matrice", "l41c", "--ponte", ps(L69B, "ponte", r),
                                      "--uscita", f"@TMP@/tb_v2_l41c_{r}.cir"], cwd_files=False)
         stessi_byte(f"catena {r}: il deck di V2 rigenerato oggi", os.path.join(tmp, f"tb_v2_l41c_{r}.cir"),
-                    ps(L64B, "deck", f"tb_v2_l41c_{r}.cir"))
+                    ps(L69B, "deck", f"tb_v2_l41c_{r}.cir"))
         rows = rows_of(t)
         for x in rows:
             v, db = x.get("picco_V", "-"), x.get("dB_SPL_picco_1m", "-")
@@ -3635,8 +3679,8 @@ def build_page(M, inline=False):
     A('<p class="eyebrow">Scheda audio &middot; deck corsi il 2026-11-02 (L64a) sul circuito dopo '
       'L67 &middot; seconda strada: la regressione di L66 &middot; mute dalla matrice di V2 intera '
       'ricorsa (L64a), contro L60d2 &middot; interblocco da L36'
-      + (' &middot; alimentatore corso il 2026-11-03 (L64b) col carico di oggi; seconda strada: '
-         'L58b sullo stesso circuito, L54b3b, L54b2 e L51b' if psu else '')
+      + (' &middot; alimentatore corso il 2026-11-04 (L69b) sul circuito di ADR-116, col carico di '
+         'oggi; seconda strada: L64b sul circuito di prima, L58b, L54b3b, L54b2 e L51b' if psu else '')
       + (' &middot; distorsione corsa il 2026-10-10 (L51c); seconda strada: L46b &middot; FMEA di '
          'oggi composta da L45d2b3b3, L58a2, L58b, L66 e L64c' if "chiusura" in PARTI else '') + '</p>')
     A('<h1>Dossier di misura del preamplificatore di linea</h1>')
@@ -4758,7 +4802,7 @@ def build_page(M, inline=False):
         # --- potenza ---
         A(h2("spow"))
         A(prov_psu(os.path.join(pw["dir"], "rete", "tb_psu_rete.cir"), pw["dir"],
-                   " &middot; corso il 2026-11-03 sul <code>psu.net</code> di oggi, col carico di oggi; "
+                   " &middot; corso il 2026-11-04 sul <code>psu.net</code> di oggi, col carico di oggi; "
                    "deck rigenerati da questa pagina e uguali a quelli corsi"))
         A('<p><strong>Il carico di oggi.</strong> La scheda audio pesa sul banco come la misura '
           f'<code>tb_op</code> di oggi: {it(float(car["i_piu_mA"]), 7)} mA sul rail + e '
@@ -4865,9 +4909,9 @@ def build_page(M, inline=False):
         # --- sorvegliante ---
         A(h2("ssup"))
         A(prov_psu(os.path.join(sq["dir"], "oggi", "perdita", "tb_psu_seq_perdita_g1.cir"), sq["dir"],
-                   f" &middot; {len(sq['corse'])} corse il 2026-11-03 sul <code>psu.net</code> di oggi, col "
+                   f" &middot; {len(sq['corse'])} corse il 2026-11-04 sul <code>psu.net</code> di oggi, col "
                    "carico di oggi, ognuna col suo deck rigenerato da questa pagina e uguale a quello corso "
-                   f"&middot; seconda strada: <code>{rel(os.path.join(L64B, 'script', 'confronta.py'))}</code>, "
+                   f"&middot; seconda strada: <code>{rel(os.path.join(L69B, 'script', 'confronta.py'))}</code>, "
                    "rieseguito"))
         A('<p>Le sequenze dell&rsquo;alimentatore col temporizzatore del sorgente, una corsa per caso: '
           'non c&rsquo;è più un programma da iterare col circuito. I relè sono presi all&rsquo;angolo '
@@ -4927,12 +4971,25 @@ def build_page(M, inline=False):
           f'rappresentate da {len([1 for lab, c in sq["corse"] if not lab.startswith("consumo")])} corse '
           f'di oggi: {l2.get("celle", 0)} celle confrontate, <strong>{l2.get("identiche", 0)} identiche</strong>, '
           f'{l2.get("entro", 0)} entro la tolleranza, {l2.get("fuori", 0)} fuori. La tolleranza è '
-          'l&rsquo;unità della cifra stampata (0,1 ms, 0,01 V) contro L58b, che correva lo stesso '
-          '<code>psu.py</code>; contro le corse di prima della coppia Q501 + Q509 (L54b3b e le righe di '
-          'L58b sul sorgente di prima) in più lo scarto che L58b misurò fra il sorgente nuovo e la '
-          f'variante, 0,1 ms. I {l2.get("deck_l58b", 0)} deck di L58b sono quelli di oggi a meno del '
-          'carico della scheda audio (la coppia letta con i nomi della variante, o tolta per le corse '
-          'di prima della coppia).</p>')
+          'l&rsquo;unità della cifra stampata (0,1 ms, 0,01 V) contro L58b, che correva il '
+          '<code>psu.py</code> di prima dei pull-up in due metà (ADR-116); contro le corse di prima della '
+          'coppia Q501 + Q509 (L54b3b e le righe di L58b sul sorgente di prima) in più lo scarto che L58b '
+          'misurò fra il sorgente nuovo e la variante, 0,1 ms. I '
+          f'{l2.get("deck_l58b", 0)} deck di L58b sono quelli di oggi a meno del carico della scheda '
+          'audio e delle due metà dei pull-up, lette come la resistenza unica di prima (R572 + R588 '
+          'come 200 kΩ, R576 + R589 come 10 kΩ); la coppia letta con i nomi della variante, o tolta '
+          'per le corse di prima della coppia.</p>')
+        l64 = sq.get("l64b", {})
+        dv = l64.get("diverse", [])
+        A(f'<p><strong>Contro L64b</strong>, lo stesso banco e le stesse liste sul circuito di prima di '
+          f'ADR-116 (<code>{rel(os.path.join(L69B, "script", "confronta_l64b.py"))}</code>, rieseguito): '
+          f'le sequenze, lo standby, i banchi della rete e dei guasti, il calore e la catena al jack, '
+          f'{l64.get("celle", 0)} celle, <strong>{len(dv)} diverse</strong>'
+          + (': ' + '; '.join(f'{html_escape(d["file"])} {html_escape(d["chiave"])} '
+                              f'<code>{html_escape(d["colonna"])}</code> {html_escape(d["l64b"])} → '
+                              f'{html_escape(d["l69b"])}' for d in dv) if 0 < len(dv) <= 12 else '')
+          + ('. Ogni cella diversa è spiegata nel README di L69b.' if dv else
+             ': il circuito cambia solo nei due pull-up, e nessuna cifra se n&rsquo;è accorta.') + '</p>')
 
         # --- temporizzatore ---
         A(h2("stim"))
@@ -5032,7 +5089,7 @@ def build_page(M, inline=False):
 
         # --- spegnimento e guasti al jack ---
         A(h2("soff"))
-        A(f'<p class="prov">Scheda audio <code>{rel(os.path.join(L64B, "deck", "tb_v2_l41c_nom.cir"))}</code> '
+        A(f'<p class="prov">Scheda audio <code>{rel(os.path.join(L69B, "deck", "tb_v2_l41c_nom.cir"))}</code> '
           '(e <code>_m10</code>, <code>_p10</code>), dal sorgente di oggi e dal ponte delle sequenze di '
           'oggi, rigenerato da questa pagina e uguale a quello corso &middot; il metodo di V2, il contatto '
           'col fronte di 4,55 µs (ADR-063) &middot; <code>tabella.py</code> rieseguito sull&rsquo;analisi '
@@ -5580,7 +5637,7 @@ def main():
             "guasti_al_jack_V": {r["caso"]: float(r["picco_V"]) for r in M["off"]["rows"]
                                  if r.get("picco_V") not in ("-", "")},
             "carico_del_banco": M["car"]})
-        summary["dati"] += [rel(L64B)]
+        summary["dati"] += [rel(L69B)]
     d = M["dist"]
     summary["dati"].append(rel(L51CD))
     summary["v4_distorsione"] = {"thd_20kHz_0p2V_pct": d["thd_lo"]["20k"],
