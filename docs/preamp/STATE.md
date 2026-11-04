@@ -13,17 +13,36 @@ fino al 2026-10-26, con tutta la loro storia, sono in `STATE-STORIA.md`.
 
 | | |
 |---|---|
-| Ultimo aggiornamento | **2026-11-04** (L70bis: il lavoro di una seconda sessione che aveva eseguito lo stesso prompt di L70 in parallelo, conservato su richiesta dell'utente — i fusibili anche sul lato continua (R550 resta a 34–430 J nel corto sul piedino del regolatore, contro 6–9 J di oggi), i buchi di rete da 40 a 150 ms, la catena al jack senza rivelatore e senza ritenuta (16,9–17,9 dB SPL). **La decisione resta quella di L70, «Tenere tutto» (ADR-119)**; nessuna ADR nuova, nessuna non conformità aperta o chiusa, il circuito non cambia) |
-| Ultimo lotto chiuso | **L70bis** — il supplemento di L70 (2026-11-04). Report `reports/2026-11-04-L70bis-semplificazioni-supplemento.md`, dati `data/2026-11-04/L70bis/`. Prima: **L70** (report `reports/2026-11-04-L70-semplificazioni.md`, dati `data/2026-11-04/L70/`, ADR-119) |
-| **Prossimo lotto** | **L71 — il frontale mosso durante una sequenza** (NC-083), sul temporizzatore di oggi, che L70 non ha cambiato (prompt in `NEXT-SESSION.md`). Poi L72 → L73 → L74 → **G1** (la tabella dei lotti; l'ordine concordato dall'utente il 2026-11-04) |
-| Non conformità | **27 aperte, 2 bloccanti** (L70, 2026-11-04: **aperta NC-089**, minore, il buco di rete di 20 ms; NC-073 avanza). Il registro è `NONCOMPLIANCE.md` |
-| Le bloccanti | Per **G1**: **NC-048** (la prova di spazio sul circuito di oggi, riaperta in L65); da chiudere prima di G1 per decisione dell'utente: **NC-072** (maggiore, il rame del layout), **NC-080** (il testo di E8 / T5), **NC-082** (le finestre della lista ammessa), **NC-083** (il frontale mosso, maggiore, confermata dall'utente), **NC-084** (minore, la motivazione della principale); NC-073 e NC-075 (maggiori) alla scelta della parte. Per **G2**: NC-044 (L50), NC-081, le impronte di NC-080 / NC-082 |
-| Suite | `run_tests.sh` alla chiusura di L70bis (2026-11-04, dal worktree): **14 passed / 0 failed**. Il circuito non è cambiato da L69b; il dossier si rigenera in L74 |
+| Ultimo aggiornamento | **2026-11-04** (L71: il frontale e il tasto del mute mossi durante una sequenza, 230 sequenze a rete ±10 % e agli angoli delle tolleranze; al jack al più −47,9 dB SPL, 12,3 dB SPL la musica che torna; stati finali tutti quelli attesi. Il ritardo del permissivo scende a 10,0 ms con una musica di 3 ms: il criterio diventa la regola fisica, che regge con almeno 6,9 ms, «Sì, regola fisica» (ADR-120). **Chiusa NC-083**; il circuito non cambia) |
+| Ultimo lotto chiuso | **L71** — il frontale mosso durante una sequenza (2026-11-04). Report `reports/2026-11-04-L71-frontale-mosso.md`, dati `data/2026-11-04/L71/`, ADR-120 |
+| **Prossimo lotto** | **L72 — i testi e le parti** (NC-080, NC-081, NC-082, NC-084; prompt in `NEXT-SESSION.md`). Poi L73 → L74 → **G1** (la tabella dei lotti; l'ordine concordato dall'utente il 2026-11-04) |
+| Non conformità | **26 aperte, 2 bloccanti** (L71, 2026-11-04: **chiusa NC-083**). Il registro è `NONCOMPLIANCE.md` |
+| Le bloccanti | Per **G1**: **NC-048** (la prova di spazio sul circuito di oggi, riaperta in L65); da chiudere prima di G1 per decisione dell'utente: **NC-072** (maggiore, il rame del layout), **NC-080** (il testo di E8 / T5), **NC-082** (le finestre della lista ammessa), **NC-084** (minore, la motivazione della principale); NC-073 e NC-075 (maggiori) alla scelta della parte. Per **G2**: NC-044 (L50), NC-081, le impronte di NC-080 / NC-082 |
+| Suite | `run_tests.sh` alla chiusura di L71 (2026-11-04, dal worktree): **14 passed / 0 failed**. Il circuito non è cambiato da L69b; il dossier si rigenera in L74 |
 
 ## Diario degli ultimi lotti
 
 Le ultime tre voci. Le più vecchie sono in `STATE-STORIA.md`, nello stesso ordine (la più recente
 in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quella sezione.
+
+### L71 — il frontale mosso durante una sequenza (2026-11-04)
+
+- **Le corse** (`data/2026-11-04/L71/`, il banco di L69b copiato, i deck dei casi di prima uguali riga per
+  riga): **230 sequenze** rc 0 — il frontale rispento a 100–1300 ms dall'accensione, riacceso a 5–400 ms dallo
+  spegnimento, SW3 rimesso dentro Δ dalla musica e dal mute e durante lo spegnimento, a rete −10 / 0 / +10 %,
+  e 48 agli angoli peggiori di Δ di ADR-105 (0 / 25 / 60 °C, rete −10 %; 16 col ripiego numerico a 0 °C);
+  **11 catene al jack**, 198 corse audio, con un ponte nuovo (i nove posti del deck, la finestra sul frontale,
+  il «rientro» della musica che torna).
+- **Al jack**: al più **−47,9 dB SPL** quando il jack si stacca, **12,3 dB SPL** quando la musica torna dopo
+  un riacceso a K501 già aperto (K501 che si richiude fa calare V+ di 125–205 mV, col jack ancora in mute).
+  Stati finali tutti quelli attesi, la ritenuta mai scattata, niente acceso fuori dallo stato atteso.
+- **Esce il criterio del banco**: con una musica di 3–4 ms (frontale o mute mossi 6,3–7,0 ms prima che
+  arrivi) il permissivo cade 10,0–16,9 ms dopo il mute, sotto i 16,9 ms di C3. Il meccanismo: AT_PRT carico
+  appena sopra VREF, resta solo PERMIT_T. La regola fisica di ADR-045 regge con almeno **6,9 ms**.
+- **Le scelte dell'utente**: «direi 1. ma spiegami cosa intendi con guadagno libero», poi **«Sì, regola
+  fisica»** (ADR-120); la musica di 3–6 ms dopo il comando contrario **«Va bene, dichiararlo»**.
+  **NC-083 chiusa**. Il circuito, il PRB e la FMEA non cambiano; P9 cita ADR-120.
+- **Dopo**: **L72**, il prompt di `NEXT-SESSION.md`.
 
 ### L70bis — L70 fatto due volte: il lavoro della seconda sessione, conservato (2026-11-04)
 
@@ -58,26 +77,6 @@ in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quel
 - **La scelta dell'utente**: **«Tenere tutto»** (ADR-119). **NC-089** aperta, minore (il buco di 20 ms). Il
   circuito, P9, il PRB e la FMEA non cambiano.
 - **Dopo**: **L71**, il prompt di `NEXT-SESSION.md`.
-
-### L65 — la revisione del dossier rigenerato, solo l'architetto (2026-11-04)
-
-- **Le scelte dell'utente**: la forma **«Solo l'architetto»**, con l'accento sul prototipo («l'unica cosa che
-  vogliamo valutare sul proto è la qualità audio percepita. Le modifiche post prototipo devono limitarsi a
-  cambio condensatori di accoppiamento»); il PDF sì (`/Users/roberto/Documents/preamp-dossier-L65.pdf`, A4).
-- **L'architetto**, nuovo e cieco, lanciato dal worktree: **ha eseguito** (in L52 e L59 non poteva) — la THD a
-  20 kHz del dossier 0,000446 / 0,00449 % contro 0,000447 / 0,00449 %. Verdetto: nessun difetto elettrico del
-  circuito simulato; i rischi del primo prototipo nel fisico e nelle parti aperte.
-- **Riaperta NC-048**, **«Riaprire, bloccante G1»**: la prova di spazio era su 458 parti, oggi 653.
-- **Aperte**: NC-080 (la Stax a ~0,97–1,2 µF contro E8 / T5 a 4,7 µF, impronta uguale al Singxer), NC-081
-  (0,49 dB fra i canali con l'1 %, lo 0,1 %), NC-082 (la lista ammessa, **«dissalderemo»**: niente zoccoli),
-  NC-083 (il frontale mosso, maggiore: confermata dall'utente dopo la chiusura, «va bene maggiore»); minori
-  NC-084…NC-088. L'ordine L70 → L71 → L72 → L73 → L74 → G1 concordato dall'utente («concordo con la sequenza»).
-- **Firme**: PR-12 **«Tenere le resistenze»** (ADR-118: sul prototipo solo il suono; dopo si cambiano i
-  condensatori di accoppiamento e le resistenze critiche, dissaldandoli); i «Dettagli» di PR-30 **«Firmo
-  così»** (ADR-117: 0,87 V è il clipping delle Heresy, la Stax satura fino a ~204 ms; un'ipotesi dichiarata).
-- **Le semplificazioni da studiare prima di G1**: togliere il rivelatore di rete, la ritenuta → fusibili; non
-  scelte: i buffer delle fisse, il +10 dB.
-- **Dopo**: **L70**, il prompt di `NEXT-SESSION.md`.
 
 ## Come si lavora da qui: a lotti piccoli e pushati
 
@@ -266,8 +265,8 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L65 | **La revisione del dossier rigenerato**, prima del gate (come L42 → L43 e L51 → L52): la forma — l'architetto avversariale cieco, la lettura dell'utente, o tutte e due — si decide con l'utente all'apertura | S/M | — | **fatto** (2026-11-04): «Solo l'architetto», con l'accento dell'utente sul prototipo; l'architetto ha eseguito; **NC-048 riaperta** bloccante per G1, **NC-080…NC-088** aperte; PR-12 riscritta (ADR-118), il tetto della Stax un'ipotesi dichiarata (ADR-117); due semplificazioni da studiare prima di G1. Report `reports/2026-11-04-L65-esiti-architetto.md` |
 | L70 | **Le due semplificazioni** (L65, scelta dell'utente fra quelle dell'architetto, rilievi S1, S2 e R12): **togliere il rivelatore di rete** (resta il sorvegliante dei rail; un buco di rete di 20 ms non toglierebbe più la musica per ~0,6 s) e **la ritenuta dopo un guasto di rail sostituita da un fusibile per rail sul secondario di T1** con R550 / R551 antifiamma (circa 25 delle 47 righe alte della FMEA in meno; l'I²t del fusibile contro l'impulso di R550, con NC-073). Ciascuna sul banco del temporizzatore e dei guasti di oggi, a rete ±10 %, coi colpi al jack in dB SPL e il calore contro i limiti; la scelta all'utente coi numeri; se cambia il circuito: sorgente, netlist, disegni, FMEA, `run_tests.sh` | M | (NC-073) | **fatto** (2026-11-04): misurate (150 sequenze, il calore della scheda audio con un rail solo, il jack di S1+S2) e respinte, **«Tenere tutto»** (ADR-119): il rivelatore da solo non si toglie (la ritenuta scatterebbe alla perdita di rete); senza la ritenuta la cella RC in corto porta U501 a 156–298 °C e C509 / C510 R550 a 35–54 W, senza fine. **NC-089** aperta (il buco di 20 ms, minore); NC-073 avanza. Il circuito non cambia. Report `reports/2026-11-04-L70-semplificazioni.md` |
 | L70bis | **L70 fatto due volte** (una seconda sessione sullo stesso prompt, in parallelo): il suo lavoro conservato come supplemento — i fusibili anche sul lato continua, i buchi di rete da 40 a 150 ms, la catena al jack senza rivelatore e senza ritenuta | XS | — | **fatto** (2026-11-04: la decisione resta ADR-119; il circuito non cambia) |
-| L71 | **Il frontale mosso durante una sequenza** (NC-083): il frontale spento prima della musica, riacceso nello spegnimento, SW3 dentro Δ, sul temporizzatore che esce da L70, a rete ±10 % | S/M | NC-083 | da fare — **prossimo** |
-| L72 | **I testi e le parti**: E8 / T5 e la sezione 6 del dossier sul condensatore della Stax (NC-080); la lista ammessa dei condensatori di segnale accanto a P6, le finestre di valore e i tipi in polipropilene (NC-082); le resistenze del guadagno e del trim allo 0,1 % e E10 ricalcolato (NC-081); la motivazione di PR-30 sulla principale (NC-084, con ADR e la firma dell'utente) | S/M | NC-080, NC-081, NC-082, NC-084 | da fare |
+| L71 | **Il frontale mosso durante una sequenza** (NC-083): il frontale spento prima della musica, riacceso nello spegnimento, SW3 dentro Δ, sul temporizzatore che esce da L70, a rete ±10 % | S/M | NC-083 | **fatto** (2026-11-04): 230 sequenze e 11 catene al jack, al più −47,9 dB SPL (12,3 la musica che torna), stati finali giusti; il ritardo del permissivo a 10,0 ms con una musica di 3 ms, la regola fisica regge con 6,9 ms: **«Sì, regola fisica»** (ADR-120). **NC-083 chiusa**. Il circuito non cambia. Report `reports/2026-11-04-L71-frontale-mosso.md` |
+| L72 | **I testi e le parti**: E8 / T5 e la sezione 6 del dossier sul condensatore della Stax (NC-080); la lista ammessa dei condensatori di segnale accanto a P6, le finestre di valore e i tipi in polipropilene (NC-082); le resistenze del guadagno e del trim allo 0,1 % e E10 ricalcolato (NC-081); la motivazione di PR-30 sulla principale (NC-084, con ADR e la firma dell'utente) | S/M | NC-080, NC-081, NC-082, NC-084 | da fare — **prossimo** |
 | L73 | **La prova di spazio sul circuito di oggi** (NC-048, bloccante per G1): piazzamento e sbroglio di prova della scheda audio e dell'alimentatore come L49a / L49b, con le impronte della lista ammessa di L72 e i dissipatori, nel Pesante 3U | M | NC-048 | da fare |
 | L74 | **Il dossier rigenerato** sul circuito di L70–L73, prima del gate | M | — | da fare |
 | G1 | **Il congelamento della topologia**: `design-reviewer` al gate, offline su `main`, sul dossier rigenerato (L74) e sui dati misurati, con gli esiti di L65 trattati (L70–L73); riesegue le verifiche da sé; il prodotto è un report datato con le non conformità che apre (`AGENTS.md`) | M | nessuna bloccante per G1 dopo L56 (NC-060 chiusa); da chiudere prima per decisione dell'utente: NC-072 (maggiore, il rame del layout) — NC-042, NC-054, NC-055, NC-056, NC-059, NC-076, NC-078, NC-079 chiuse | da fare — dopo L74 |
