@@ -883,7 +883,14 @@ if __name__ == "__main__":
                   (AT_MRQ, VREF, MUTE_REQ),
                   (AT_PRT, VREF, PERMIT_REQ)))
     cap("100n", "C546", V5, RET)
-    res("200k", "R572", V5, AT_MRQ)
+    # ADR-116 (L69, NC-079): AT_MRQ's 200k pull-up as TWO 100k in series (R572 + R588). With one
+    # 200k shorted AT_MRQ sat on V5: nothing could empty it, D537 put V5 straight onto AT_ON, and a
+    # tripped latch held the 5 V to ground (U504 at its 0.25 A limit, 205 C; Q513 / Q514 ~140 C).
+    # One half shorted now leaves 100k: the circuit does what it does healthy (K501 open 129 ms
+    # after a rail fault, the latch ~60 C, U504 62 C, at mains +-10 %)
+    AT_MRQ_M = Net("AT_MRQ_M")
+    res("100k", "R572", V5, AT_MRQ_M)
+    res("100k", "R588", AT_MRQ_M, AT_MRQ)
     cap("100n", "C549", AT_MRQ, RET, FP_C1206)
     diode("BAT54", "D537", AT_MRQ, AT_ON)
     res("10k", "R573", V5, MUTE_REQ)
@@ -920,7 +927,13 @@ if __name__ == "__main__":
                   (AT_T2S, VREF, AT_F),       # not armed
                   (VREF, AT_PG, AT_F)))       # power good
     cap("100n", "C547", V5, RET)
-    res("10k", "R576", V5, AT_ON)
+    # ADR-116 (L69, NC-079): AT_ON's 10k pull-up as TWO 4.99k in series (R576 + R589, 9.98k). With
+    # one 10k shorted AT_ON sat on V5 and a tripped latch, its anode on AT_ON, held the 5 V to ground
+    # (U504 218 C, Q513 / Q514 ~149 C, 259 mA peak). One half shorted now leaves 4.99k: the latch
+    # still holds AT_ON at ~0.72 V, K501 opens 133 ms after a rail fault (77 ms after the permissive)
+    AT_ON_M = Net("AT_ON_M")
+    res("4.99k", "R576", V5, AT_ON_M)
+    res("4.99k", "R589", AT_ON_M, AT_ON)
     res("1k", "R577", AT_ON, AT_MA)
     diode("1N4148", "D539", AT_MA, AT_MT)
     diode("1N4148", "D540", VR_G, AT_MT)
