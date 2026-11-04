@@ -1,0 +1,32 @@
+{
+  "part_name": "FST 5x20 (time-lag T, low breaking capacity, glass tube, IEC 60127-2/3), order numbers 0034.3104-0034.3130",
+  "vendor_name": "SCHURTER AG",
+  "device_class": "fuse",
+  "product_page": "https://www.schurter.com/en/datasheet/typ_FST_5x20.pdf",
+  "date_obtained": "2026-11-04",
+  "lotto": "L70",
+  "obtained_by": "AI agent (Claude Opus 5.5, Claude Code background session) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Fetched through the session's WebFetch tool from SCHURTER's own host (HTTP 200, application/pdf); the raw bytes were saved by the harness and copied here unchanged. A plain curl to the same URL answered HTTP 403; Littelfuse (218 series) answered 403 to both curl and WebFetch, Bel Fuse served an HTML library page, Eaton (S506) timed out.",
+  "license_notes": "Manufacturer datasheet, redistributed here unmodified for engineering traceability only. Copyright remains SCHURTER AG.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "typ_FST_5x20.pdf",
+      "role": "datasheet",
+      "url": "https://www.schurter.com/en/datasheet/typ_FST_5x20.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 311211,
+      "sha256": "a1c6507029d56303a65e6d7f4aeb7b5c3eaa3b66d2eaf1abc4e8537b032e63f7",
+      "local_filename": "typ_FST_5x20.pdf",
+      "renamed": false
+    }
+  ],
+  "revision_note": "The document's own footer date is 21.07.2026 (pdftotext -layout typ_FST_5x20.pdf - | grep 2026); PDF CreationDate 2026-07-22.",
+  "why_this_file": "L70, simplification S1 (the latch after a rail fault replaced by fuses on T1's secondary, ADR-102 point 2, NC-073): the fuse's melting I2t and its pre-arcing times against the fault currents of the supply bench.",
+  "what_was_read": {
+    "table": "Variants: Melting I2t 10.0 In typ. [A2s] - 1 A 3.3, 1.25 A 5.5, 1.6 A 10.5, 2 A 16, 2.5 A 21.9, 3.15 A 47, 4 A 68.3; breaking capacity 35 A @ 250 VAC up to 3.15 A",
+    "pre_arcing": "0.125 A - 6.3 A: 1.5 In 60 min min; 2.1 In 120 s max; 2.75 In 600 ms - 10 s; 4.0 In 150 ms - 3 s; 10.0 In 20 ms - 300 ms",
+    "ambient": "Admissible ambient temperature -55 C to 125 C"
+  }
+}
