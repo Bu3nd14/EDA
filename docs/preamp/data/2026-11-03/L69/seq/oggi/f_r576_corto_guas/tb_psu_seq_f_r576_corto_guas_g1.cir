@@ -223,11 +223,11 @@ RR555 md_r md 110k
 RR569 v5 at_md 100k
 RR570 v5 at_pg 100k
 RR571 v5 at_pgt 1.1MEG
-RR572 v5 at_mrq 200k
+RR572 v5 at_mrq_m 100k
 RR573 v5 mute_req 10k
 RR574 at_prt rly_ret 4.7MEG
 RR575 v5 permit_req 10k
-RR576 v5 vrelay_en 10k
+RR576 v5 at_on_m 4.99k
 RR577 vrelay_en at_ma 1k
 RR578 at_mt rly_ret 1MEG
 RR579 v5 mains_req 22k
@@ -239,6 +239,8 @@ RR584 vrelay_en at_bp 100k
 RR585 at_f rly_ret 33k
 RR586 mute_g q501_g 1MEG
 RR587 mute_g q509_g 10k
+RR588 at_mrq_m at_mrq 100k
+RR589 at_on_m vrelay_en 4.99k
 XU501 raw_pr vplus_reg 0 en_u501 REGPSS VSET=15.3 VDO=0.3 ILIM=1 IQ=0.58m TAU=0.47
 VENU501 en_u501 0 pwl(0 1 1000 1)
 XU502 raw_mr vminus_reg 0 en_u502 REGMSS VSET=15.288 VDO=0.3 ILIM=1 IQ=1m TSS=0.564
@@ -308,8 +310,8 @@ RT2_SEC_A_float t2_sec_b 0 10meg
 VIQ iq_mcu 0 pwl(0 0 1000 0)
 VENU502 en_u502 0 pwl(0 1 3 1 3.000001 0 1000 0)
 VGF_c gf_c 0 pwl(0 1 1000 1)
-BF_c v5 fc_s I = V(v5,vrelay_en)*10*V(gf_c)
-VFC fc_s vrelay_en 0
+BF_c v5 fc_s I = V(v5,at_on_m)*10*V(gf_c)
+VFC fc_s at_on_m 0
 RLOADP vplus 0 49.4513
 RLOADM 0 vminus 48.1513
 CAUDIOP vplus 0 800.8u

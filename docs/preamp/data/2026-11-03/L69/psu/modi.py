@@ -702,11 +702,16 @@ RIGHE_L68 += [
 ]
 RIGHE_L68 += [("f_%s_aperto" % c.lower(), c, "aperto", ("aperto", [("C" + c, 1)]), "")
               for c in ("C548", "C549", "C550", "C551", "C552", "C553", "C554", "C555")]
+# L69 (ADR-116): AT_MRQ's pull-up is R572 + R588 (100k + 100k, through at_mrq_m) and AT_ON's is R576 + R589
+# (4.99k + 4.99k, through at_on_m). A short of one half is a short on ITS two nodes (v5 - at_mrq_m is
+# R572; v5 - at_mrq was both halves, a double fault); R588 / R589 enter with their open and short rows.
 RIGHE_L68 += [("f_%s_aperto" % r.lower(), r, "aperto", ("aperto", [("R" + r, 1)]), "")
-              for r in ["R%d" % i for i in range(569, 585)]]
+              for r in ["R%d" % i for i in range(569, 585)] + ["R588", "R589"]]
 for _r, _a, _b in (("R569", "v5", "at_md"), ("R570", "v5", "at_pg"), ("R571", "v5", "at_pgt"),
-                   ("R572", "v5", "at_mrq"), ("R573", "v5", "mute_req"), ("R575", "v5", "permit_req"),
-                   ("R576", "v5", "vrelay_en"), ("R577", "vrelay_en", "at_ma"), ("R579", "v5", "mains_req"),
+                   ("R572", "v5", "at_mrq_m"), ("R588", "at_mrq_m", "at_mrq"),
+                   ("R573", "v5", "mute_req"), ("R575", "v5", "permit_req"),
+                   ("R576", "v5", "at_on_m"), ("R589", "at_on_m", "vrelay_en"),
+                   ("R577", "vrelay_en", "at_ma"), ("R579", "v5", "mains_req"),
                    ("R580", "vrelay_en", "at_t2s"), ("R581", "v5", "at_f"), ("R582", "at_f", "at_bn")):
     RIGHE_L68.append(("f_%s_corto" % _r.lower(), _r, "corto", ("corto", _a, _b), ""))
 for _b, _r, _m, _p, _w in RIGHE_L68:

@@ -46,6 +46,22 @@ def main(argv):
             for r, f in (("m10", "0.9"), ("p10", "1.1")):
                 out += [riga(s, "%s_%s" % (o, r), opz, "--rete " + f) for s in RETE_B + ("guasto",)]
                 out += [riga(g, "%s_%s" % (o, r), opz, SONDE + " --rete " + f) for g in GUASTI]
+    elif argv[1] in ("sorgente", "prova"):
+        # L69 on the NEW source (ADR-116): every timer row of L68 (modi.RIGHE_L68, with R572 / R576 on
+        # their halves and R588 / R589 added) x the eight events, label oggi; the eight healthy events,
+        # label sano (against L64b: does the source change the healthy circuit?)
+        sys.path.insert(0, __import__("os").path.dirname(__import__("os").path.abspath(__file__)))
+        import modi
+        casi = ["%s_%s" % (b, e) for b, _r, _m, _p, _w in modi.RIGHE_L68 for e in modi.EVENTI_L58B]
+        if argv[1] == "prova":
+            casi = ["f_r572_corto_guas", "f_r588_corto_guas", "f_r576_corto_guas", "f_r589_corto_guas",
+                    "f_r588_aperto_accs", "f_r589_aperto_accs"]
+            assert all(c in ["%s_%s" % (b, e) for b, _r, _m, _p, _w in modi.RIGHE_L68
+                             for e in modi.EVENTI_L58B] for c in casi)
+            out += [riga(c, "oggi", "") for c in casi]
+        else:
+            out += [riga(c, "oggi", "") for c in casi]
+            out += [riga(s, "sano", "") for s in SANI]
     else:
         raise SystemExit(__doc__)
     print("\n".join(out))
