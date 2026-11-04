@@ -18,6 +18,23 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L69b — l'evidenza dell'alimentatore e il dossier sul sorgente nuovo (2026-11-04)
+
+- **Il primo giro**: 124 rifiuti, tutti l'evidenza di L64b sul circuito di prima (120 sequenze, i deck dei
+  banchi, `parti_schede.csv`).
+- **Le corse** (`data/2026-11-04/L69b/`, il banco di L64b copiato): 117 sequenze, lo standby, i banchi della
+  rete e dei guasti, il calore, il ponte e la catena al jack a tre reti, 09:04–09:32, **tutte rc 0**.
+- **Contro L64b** (`confronta_l64b.py`, nuovo): **7578 celle, 386 diverse**, spiegate per gruppo nel README;
+  le cifre del dossier alla cifra stampata sono quelle di L64b (`VRELAY_REG` 50,3 / 109,6 / 169,1 ms, U501
+  spento 32,2 dB SPL al jack, il calore 17,68 / 15,42 / 19,98 W); lo standby +0,02 mW.
+- **Trovato**: l'armo della ritenuta **0,6–0,7 ms prima** (68 celle fuori contro L58b): AT_ON alto +1,02 mV
+  col pull-up a 9,98 kΩ, e AT_T2S si carica da AT_ON — 0,76 ms a calcolo (`armo.txt`). Lo scarto di ADR-116
+  in `confronta.py` solo su quelle tre colonne: poi 0 fuori, i 107 deck di L58b uguali a meno delle metà.
+- **Il dossier**: `L64B` → `L69B`, `PSU_DA` al 2026-11-04 (L64b rifiutato come prima strada), `parti_schede`
+  rifatto (118 / 189), la seconda strada contro L64b controllata in pagina; **«OK»**; sabotaggi 67 su 67
+  (due di L68 riportati su righe vive: quelle di NC-079 sono sostituite da L69).
+- **Dopo**: **L65**, il prompt di `NEXT-SESSION.md`.
+
 ### L69 — la ritenuta che tiene i 5 V a massa (2026-11-03/04)
 
 - **Le scelte dell'utente**: il rimedio **«Due metà per pull-up»** (**ADR-116**), contro una resistenza da
