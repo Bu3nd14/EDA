@@ -1,0 +1,1510 @@
+tb_v2_casopeggiore.cir - V2 al jack, il caso peggiore col mute che taglia coi soli rele' al jack (ADR-062): guadagno, trim, dispersione, durata del mute, accensione (L29c, NC-028, L47c2b1)
+* Prima riga = titolo (docs/limitations.md #10).
+* GENERATO da docs/preamp/data/2026-09-23/L29c/deck/genera_tb_v2_casopeggiore.py: non si
+* edita a mano. L'intestazione del generatore dice cosa c'e' dentro, le ipotesi di
+* accensione e spegnimento, e come si corre. Matrice: l41c.
+* MATRICE sorgente (L29e, ADR-044): il mute al jack e' la geometria iii com'e' in
+* circuits/preamp/preamp_audio.net - un deviatore per uscita, COM al lato del condensatore,
+* NC a massa, NO al jack. Il generatore la LEGGE dalla netlist col controllo del 2e e rifiuta
+* se non c'e'; i bleed lato condensatore (rbcm/rbc1/rbc2) sono i valori della netlist, il
+* bleed del jack deve coincidere con RBLx del blocco. Dal banco restano: il contatto aperto
+* 0,1 pF (datasheet, L29d2), il trasferimento 1 ms (ipotesi) e 0 pF di cavo (caso peggiore).
+* Nomi e righe sono quelli di L29d2 (suffisso _iii), variante di progetto.
+*
+* NIENTE FOTORESISTENZE (ADR-062, L47c2b1): la sorgente arriva al blocco A dalla sua RSRC,
+* come nella cella di L40. Ogni dispositivo attivo e' il modello del
+* costruttore in models/ (L39); nessuno porta la dispersione, che qui si inietta: VOS* e
+* `altermod lsk489a vto` (gruppo B, ADR-031). UN MODELLO ALTERATO PORTA ANCORA IL NOME
+* LSK489A (limitations #29): le corse alterate lo dicono nel nome (_gb*) e stampano showmod
+* e la corrente della sonda JPRB.
+*
+* IL MUTE TAGLIA: il contatto in serie al jack si apre 24 ms dopo il tasto (MUTE_CMD 21 ms,
+* firmware di L47c2a, piu' 3 ms del G6K), la derivazione 1 ms dopo; al rilascio lo stesso.
+* t_ins e t_rel del manifesto sono gli istanti del tasto.
+* ANALISI: scripts/v2_metodo.py analizza sul manifesto; le colonne gruppo e conta dicono
+* quali grandezze di ogni riga sono verdetto. Si corre DIVISO (dividi.py): le corse di
+* accensione alterano le sorgenti dei rail, e in sequenza l'alterazione resterebbe.
+* CONVENZIONE DI PERCORSO: `.include @REPO@/...` (tb_op.cir, L2-L3).
+
+.include @REPO@/models/jfet/lsk489.lib
+.include @REPO@/models/bjt_npn/mmbt5551.lib
+.include @REPO@/models/bjt_pnp/mmbt5401.lib
+.include @REPO@/models/bjt_npn/mje15032.lib
+.include @REPO@/models/bjt_pnp/mje15033.lib
+.include @REPO@/models/diodes/1n4148.lib
+.include @REPO@/models/bjt_pnp/ls350.lib
+.include @REPO@/spice/preamp/gain_block.subckt
+
+* >>> CANALE - identico nei tre deck tb_v2_mute_*.cir (v2_metodo.py canale)
+* TOLLERANZE (L29a, ripresa 2026-09-16): vedi il blocco esteso in
+* tb_v2_mute_varianti.cir. vntol=1e-9 rendeva il deck non eseguibile (41 ore
+* per una cella senza segnale); vntol=1e-6 la fa in 5,5 s e le cifre non
+* cambiano - verificato, data/2026-09-16/L29a/tolleranze/.
+.options reltol=1e-6 vntol=1e-6 abstol=1e-12
+VPP VPLUS 0 DC 15
+VMM VMINUS 0 DC -15
+
+* ---- sorgente con inviluppo d'entrata ----
+VAMP NAMP 0 DC 3.818
+VFRQ NFRQ 0 DC 1000
+VPHS NPHS 0 DC 0
+VTEN NTEN 0 DC 0.3
+BSRC SRC 0 V = V(NAMP) * sin(6.283185307179586*V(NFRQ)*time + V(NPHS))
++ * (0.5 - 0.5*cos(3.141592653589793*min(time/V(NTEN), 1)))
+RSRC SRC SELA 1.5
+
+* ---- stati dei contatti: t_ins, t_rel, durata graduale, netto(1)/graduale(0) ----
+VTIJK NTIJK 0 DC 1000
+VTRJK NTRJK 0 DC 2000
+VTGJK NTGJK 0 DC 1
+VMHJK NMHJK 0 DC 1
+BSJKR SJKR 0 V = V(NMHJK)
++ * pwl(time - V(NTIJK), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ * pwl(time - V(NTRJK), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
++ + (1 - V(NMHJK)) * min(max((time - V(NTIJK))/V(NTGJK), 0), 1)
++ * (1 - min(max((time - V(NTRJK))/V(NTGJK), 0), 1))
+RSJK SJKR SJK 1k
+CSJK SJK 0 4.55n
+VTIPRE NTIPRE 0 DC 1000
+VTRPRE NTRPRE 0 DC 2000
+VTGPRE NTGPRE 0 DC 1
+VMHPRE NMHPRE 0 DC 1
+BSPRER SPRER 0 V = V(NMHPRE)
++ * pwl(time - V(NTIPRE), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ * pwl(time - V(NTRPRE), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
++ + (1 - V(NMHPRE)) * min(max((time - V(NTIPRE))/V(NTGPRE), 0), 1)
++ * (1 - min(max((time - V(NTRPRE))/V(NTGPRE), 0), 1))
+RSPRE SPRER SPRE 1k
+CSPRE SPRE 0 4.55n
+VTISER NTISER 0 DC 1000
+VTRSER NTRSER 0 DC 2000
+VTGSER NTGSER 0 DC 1
+VMHSER NMHSER 0 DC 1
+BSSERR SSERR 0 V = V(NMHSER)
++ * pwl(time - V(NTISER), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ * pwl(time - V(NTRSER), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
++ + (1 - V(NMHSER)) * min(max((time - V(NTISER))/V(NTGSER), 0), 1)
++ * (1 - min(max((time - V(NTRSER))/V(NTGSER), 0), 1))
+RSSER SSERR SSER 1k
+CSSER SSER 0 4.55n
+VTISEL NTISEL 0 DC 1000
+VTRSEL NTRSEL 0 DC 2000
+VTGSEL NTGSEL 0 DC 1
+VMHSEL NMHSEL 0 DC 1
+BSSELR SSELR 0 V = V(NMHSEL)
++ * pwl(time - V(NTISEL), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ * pwl(time - V(NTRSEL), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
++ + (1 - V(NMHSEL)) * min(max((time - V(NTISEL))/V(NTGSEL), 0), 1)
++ * (1 - min(max((time - V(NTRSEL))/V(NTGSEL), 0), 1))
+RSSEL SSELR SSEL 1k
+CSSEL SSEL 0 4.55n
+
+* ---- selettore d'ingresso: serie, s = 1 vuol dire APERTO ----
+BSEL SELA INA I = V(SELA,INA) * pow(10, -12 + 13*(1 - V(SSEL)))
+
+* ---------------- BLOCCO A: guadagno 1, R_g non montata ------------------
+VOSA INA INAX DC 0
+XA INAX OUTA FBA RGA RG10A VPLUS VMINUS GAINBLOCK
+RRGA RGA 0 1G
+CRGA RGA 0 15p
+RRG10A RG10A 0 1G
+CRG10A RG10A 0 15p
+
+* Attenuatore da 10 k: RATTT a 1 mohm = manopola al massimo.
+RATTT OUTA W 1m
+RATTB W 0 10k
+
+* ---------------- BUFFER DELLE FISSE (ADR-023): guadagno 1 ---------------
+VOSF1 OUTA F1IN DC 0
+XF1 F1IN OUTF1 FBF1 RGF1 RG10F1 VPLUS VMINUS GAINBLOCK
+RRGF1 RGF1 0 1G
+CRGF1 RGF1 0 15p
+RRG10F1 RG10F1 0 1G
+CRG10F1 RG10F1 0 15p
+VOSF2 OUTA F2IN DC 0
+XF2 F2IN OUTF2 FBF2 RGF2 RG10F2 VPLUS VMINUS GAINBLOCK
+RRGF2 RGF2 0 1G
+CRGF2 RGF2 0 15p
+RRG10F2 RG10F2 0 1G
+CRG10F2 RG10F2 0 15p
+
+RSEP1 OUTF1 FIX1 47
+BPRE1 FIX1 0 I = V(FIX1) * pow(10, -12 + 13*V(SPRE))
+CFIX1 FIX1 FIXC1 4.7u
+RBC1 FIXC1 0 1e12
+RBY1 FIXC1 FIXJACK1 1m
+BSER1 FIXC1 FIXJACK1 I = V(FIXC1,FIXJACK1) * pow(10, -12 + 13*(1 - V(SSER)))
+BJK1 FIXJACK1 0 I = V(FIXJACK1) * pow(10, -12 + 13*V(SJK))
+RBL1 FIXJACK1 0 470k
+RLD1 FIXJACK1 0 100k
+
+RSEP2 OUTF2 FIX2 47
+BPRE2 FIX2 0 I = V(FIX2) * pow(10, -12 + 13*V(SPRE))
+CFIX2 FIX2 FIXC2 4.7u
+RBC2 FIXC2 0 1e12
+RBY2 FIXC2 FIXJACK2 1m
+BSER2 FIXC2 FIXJACK2 I = V(FIXC2,FIXJACK2) * pow(10, -12 + 13*(1 - V(SSER)))
+BJK2 FIXJACK2 0 I = V(FIXJACK2) * pow(10, -12 + 13*V(SJK))
+RBL2 FIXJACK2 0 470k
+RLD2 FIXJACK2 0 100k
+
+* ---------------- BLOCCO B: 0 / +3 / +10 dB, due rele' su R_g ------------
+* Contatto aperto = 1 G + 15 pF, chiuso = alter ... = 0.1 (ADR-026):
+*   0 dB   rrgb = 1G    rrg10b = 1G
+*   +3 dB  rrgb = 0.1   rrg10b = 1G
+*   +10 dB rrgb = 0.1   rrg10b = 0.1
+VOSB W WB DC 0
+XB WB OUTB FBB RGB RG10B VPLUS VMINUS GAINBLOCK
+RRGB RGB 0 1G
+CRGB RGB 0 15p
+RRG10B RG10B 0 1G
+CRG10B RG10B 0 15p
+RISOM OUTB MAIN_A 47
+BPREM MAIN_A 0 I = V(MAIN_A) * pow(10, -12 + 13*V(SPRE))
+COUTM MAIN_A MAINC 4.7u
+RBCM MAINC 0 1e12
+RBYM MAINC MAINJACK 1m
+BSERM MAINC MAINJACK I = V(MAINC,MAINJACK) * pow(10, -12 + 13*(1 - V(SSER)))
+BJKM MAINJACK 0 I = V(MAINJACK) * pow(10, -12 + 13*V(SJK))
+RBLM MAINJACK 0 220k
+RLDM MAINJACK 0 100k
+* <<< CANALE
+* ---- L47b2b1: IOSA fornisce a R113 (dentro il blocco A) la corrente dovuta a VOSA, che
+* nel circuito non passa nella rete d'ingresso: vedi iosa() nel generatore, limitations #44 ----
+IOSA INAX 0 DC 0
+
+* ---- L29c: i contatti del guadagno, in parallelo a RRGB / RRG10B del blocco ----
+* interruttore nativo: 0,1 ohm chiuso (il massimo del G6K), 1 T aperto; soglia 0,5 V sulla
+* pwl 0/1 dei rimbalzi, isteresi 0,25 V
+.model SWK SW(RON=0.1 ROFF=1e12 VT=0.5 VH=0.25)
+VK1I NK1I 0 DC 0
+VK1T NK1T 0 DC 1000
+BK1R SK1R 0 V = (1 - V(NK1I)) * pwl(time - V(NK1T), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ + V(NK1I) * pwl(time - V(NK1T), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
+SK1 RGB 0 SK1R 0 SWK
+VK5I NK5I 0 DC 0
+VK5T NK5T 0 DC 1000
+BK5R SK5R 0 V = (1 - V(NK5I)) * pwl(time - V(NK5T), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ + V(NK5I) * pwl(time - V(NK5T), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
+SK5 RG10B 0 SK5R 0 SWK
+VK1BI NK1BI 0 DC 0
+VK1BT NK1BT 0 DC 1000
+BK1BR SK1BR 0 V = (1 - V(NK1BI)) * pwl(time - V(NK1BT), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ + V(NK1BI) * pwl(time - V(NK1BT), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
+RK1BS SK1BR SK1B 1k
+CK1BS SK1B 0 4.55n
+BK1B RGB 0 I = V(RGB) * pow(10, -12 + 13*V(SK1B))
+VK5BI NK5BI 0 DC 0
+VK5BT NK5BT 0 DC 1000
+BK5BR SK5BR 0 V = (1 - V(NK5BI)) * pwl(time - V(NK5BT), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ + V(NK5BI) * pwl(time - V(NK5BT), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
+RK5BS SK5BR SK5B 1k
+CK5BS SK5B 0 4.55n
+BK5B RG10B 0 I = V(RG10B) * pow(10, -12 + 13*V(SK5B))
+* ---- L29d: il contatto in serie al jack e la derivazione lato condensatore ----
+VKSA NKSA 0 DC 1000
+VKSB NKSB 0 DC 2000
+BKSR NKSR 0 V = pwl(time - V(NKSA), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0) + pwl(time - V(NKSB), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
+VKCA NKCA 0 DC 1000
+VKCB NKCB 0 DC 2000
+BKCR NKCR 0 V = pwl(time - V(NKCA), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1) + pwl(time - V(NKCB), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0) - 1
+SKSM MAINC MAINJACK NKSR 0 SWK
+CKSM MAINC MAINJACK 0.1p
+SKCM MAINC 0 NKCR 0 SWK
+CCAVM MAINJACK 0 1e-18
+SKS1 FIXC1 FIXJACK1 NKSR 0 SWK
+CKS1 FIXC1 FIXJACK1 0.1p
+SKC1 FIXC1 0 NKCR 0 SWK
+CCAV1 FIXJACK1 0 1e-18
+SKS2 FIXC2 FIXJACK2 NKSR 0 SWK
+CKS2 FIXC2 FIXJACK2 0.1p
+SKC2 FIXC2 0 NKCR 0 SWK
+CCAV2 FIXJACK2 0 1e-18
+
+* ---- L29c: il trim (ADR-027, trim.py candidato 2) fra OUTA e l'attenuatore ----
+* RATTT del blocco si apre nel .control (alter rattt = 1e12): OUTA arriva a W da qui.
+RL1 OUTA TAP6 845
+RL2 TAP6 TAP12 464
+RL3 TAP12 0 464
+VT1RI NT1RI 0 DC 0
+VT1RT NT1RT 0 DC 1000
+BT1RR ST1RR 0 V = (1 - V(NT1RI)) * pwl(time - V(NT1RT), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ + V(NT1RI) * pwl(time - V(NT1RT), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
+ST1R OUTA ATOP ST1RR 0 SWK
+CT1RP OUTA ATOP 15p
+RT1RP OUTA ATOP 1G
+VT1SI NT1SI 0 DC 0
+VT1ST NT1ST 0 DC 1000
+BT1SR ST1SR 0 V = (1 - V(NT1SI)) * pwl(time - V(NT1ST), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ + V(NT1SI) * pwl(time - V(NT1ST), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
+ST1S T2C ATOP ST1SR 0 SWK
+CT1SP T2C ATOP 15p
+RT1SP T2C ATOP 1G
+VT2RI NT2RI 0 DC 0
+VT2RT NT2RT 0 DC 1000
+BT2RR ST2RR 0 V = (1 - V(NT2RI)) * pwl(time - V(NT2RT), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ + V(NT2RI) * pwl(time - V(NT2RT), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
+ST2R TAP6 T2C ST2RR 0 SWK
+CT2RP TAP6 T2C 15p
+RT2RP TAP6 T2C 1G
+VT2SI NT2SI 0 DC 0
+VT2ST NT2ST 0 DC 1000
+BT2SR ST2SR 0 V = (1 - V(NT2SI)) * pwl(time - V(NT2ST), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ + V(NT2SI) * pwl(time - V(NT2ST), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
+ST2S TAP12 T2C ST2SR 0 SWK
+CT2SP TAP12 T2C 15p
+RT2SP TAP12 T2C 1G
+* ---- L48b (ADR-065, NC-041): C_T 10u fra il trim e il volume, il bilanciamento MN allo
+* scatto centrale (la pista da 50k dalla cima a massa, il cursore sulla cima) e il volume:
+* KVH e KVL portano il partitore da 0 a -2 dB in cima alla corsa (con att = max: RATTH
+* 1m, RATTB 10k; 2,057k in alto, 10k || 38,47k = 7,937k in basso). R_G 1M e' R113 del
+* blocco. RBYCT 1m scavalca C_T nel controfattuale (corsa(ct=False)). ----
+CT ATOP ATTC 10u
+RBYCT ATOP ATTC 1e12
+RBAL ATTC 0 50k
+CWIRE ATTC 0 100p
+RATTH ATTC VH 1m
+RVOLH VH W 2.057k
+RVOLL W VL 38.47k
+VKVHI NKVHI 0 DC 0
+VKVHT NKVHT 0 DC 1000
+BKVHR SKVHR 0 V = (1 - V(NKVHI)) * pwl(time - V(NKVHT), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ + V(NKVHI) * pwl(time - V(NKVHT), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
+SKVH VH W SKVHR 0 SWK
+VKVLI NKVLI 0 DC 0
+VKVLT NKVLT 0 DC 1000
+BKVLR SKVLR 0 V = (1 - V(NKVLI)) * pwl(time - V(NKVLT), -1e4,0, 0,0, 1u,1, 150u,1, 151u,0, 300u,0, 301u,1, 450u,1, 451u,0, 520u,0, 521u,1, 1e4,1)
++ + V(NKVLI) * pwl(time - V(NKVLT), -1e4,1, 0,1, 1u,0, 400u,0, 401u,1, 600u,1, 601u,0, 1e4,0)
+SKVL VL 0 SKVLR 0 SWK
+* ---- L29c: la sonda del gruppo B (limitations #29), su nodi propri (#24) ----
+VPRBD PRBD 0 DC 15
+VPRBG PRBG 0 DC 0
+JPRB PRBD PRBG 0 LSK489A
+* ---- L29c: il punto di partenza di Newton per l'op (limitations #33) ----
+* Con l'interruttore del trim fra OUTA e W il blocco A ha una seconda soluzione in continua,
+* agganciata al rail (+13 V): gmin e source stepping falliscono e il 'transient op' finisce
+* li', 'successfully'. Il nodeset e' solo il primo tentativo di Newton: la soluzione resta
+* una soluzione del circuito, e ridà quella del deck di main (sonde/op/, controfattuale).
+.nodeset V(OUTA)=0 V(W)=0 V(ATOP)=0 V(OUTB)=0 V(MAIN_A)=0 V(OUTF1)=0 V(OUTF2)=0
+
+.control
+* limitations #30: il tempo a 16 cifre, prima di ogni wrdata
+set numdgt=15
+set d = .dat
+* L29c: corri.sh rifiuta ogni corsa col 'Transient op' nel log (limitations #33).
+save v(mainjack) v(fixjack1) v(fixjack2) v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+echo "cella,file,variante,f_hz,amp,gm,rl,t_ins,t_rel,t_fine,tmax,tipo,rif_ins,rif_rel,t_grad,gruppo,conta" > tb_v2_casopeggiore_manifest.csv
+* la sorgente arriva dalla RSRC del blocco, col selettore chiuso (L47c2b1: niente LDR)
+alter vphs dc = 1.5707963267948966
+alter vmhjk dc = 1
+* il trim porta OUTA all'attenuatore: RATTT del blocco aperto
+alter rattt = 1e12
+* ---- L41c: rif_spegnimento_l_l41c (dal ponte: spegnimento_l, giro 1) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vtijk dc = 1000.024000
+alter vtrjk dc = 1000.000000
+alter vosa dc = 0
+alter iosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter rbyct = 1e12
+alter rbal = 50k
+alter vk1bi dc = 1
+alter vk1bt dc = 1000.000000
+alter vk5bi dc = 1
+alter vk5bt dc = 1000.000000
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter vkvhi dc = 1
+alter vkvht dc = 1000.000000
+alter vkvli dc = 0
+alter vkvlt dc = 1000.000000
+alter vtijk dc = 1000.000000
+alter vtrjk dc = 2000.000000
+alter vksa dc = -10
+alter vksb dc = 1000
+alter vkca dc = 1000.025000
+alter vkcb dc = 1000.000000
+alter vtiser dc = 1000.024000
+alter vtrser dc = 1000.001000
+alter rbym = 1e12
+alter rby1 = 1e12
+alter rby2 = 1e12
+alter rbcm = 220k
+alter rbc1 = 470k
+alter rbc2 = 470k
+alter cksm = 0.1p
+alter cks1 = 0.1p
+alter cks2 = 0.1p
+alter ccavm = 1e-18
+alter ccav1 = 1e-18
+alter ccav2 = 1e-18
+print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance] @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]
+alter @vpp[pwl] = [ 0.000000000 14.979609 0.990000000 14.979609 2.100000000 14.979609 ]
+alter @vmm[pwl] = [ 0.000000000 -14.966540 0.990000000 -14.966540 2.100000000 -14.966540 ]
+tran 1e-05 2.100000000004 0 1e-05
+wrdata rif_spegnimento_l_l41c$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rif_spegnimento_l_l41c_stati$d v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+destroy all
+echo "rif_spegnimento_l_l41c,rif_spegnimento_l_l41c.dat,rif,1000,0,10,100k,0.990000000,1000,2.100000000004,1e-05,rif_mai,-,-,0.0,0," >> tb_v2_casopeggiore_manifest.csv
+* ---- L41c: spegnimento_l_l41c (dal ponte: spegnimento_l, giro 1) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vtijk dc = 1.010300
+alter vtrjk dc = 1000.000000
+alter vosa dc = 0
+alter iosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter rbyct = 1e12
+alter rbal = 50k
+alter vk1bi dc = 1
+alter vk1bt dc = 1.046900
+alter vk5bi dc = 1
+alter vk5bt dc = 1.047200
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter vkvhi dc = 1
+alter vkvht dc = 1000.000000
+alter vkvli dc = 0
+alter vkvlt dc = 1000.000000
+alter vtijk dc = 1000.000000
+alter vtrjk dc = 2000.000000
+alter vksa dc = -10
+alter vksb dc = 1000
+alter vkca dc = 1.011300
+alter vkcb dc = 1000.000000
+alter vtiser dc = 1.010300
+alter vtrser dc = 1000.001000
+alter rbym = 1e12
+alter rby1 = 1e12
+alter rby2 = 1e12
+alter rbcm = 220k
+alter rbc1 = 470k
+alter rbc2 = 470k
+alter cksm = 0.1p
+alter cks1 = 0.1p
+alter cks2 = 0.1p
+alter ccavm = 1e-18
+alter ccav1 = 1e-18
+alter ccav2 = 1e-18
+print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance] @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]
+alter @vpp[pwl] = [ 0.000000000 14.979609 1.189800000 14.979609 1.190300000 14.978902 1.190800000 14.976903 1.191400000 14.973164 1.192100000 14.967368 1.192900000 14.959323 1.193700000 14.950153 1.195700000 14.923976 1.198100000 14.888850 1.201000000 14.843238 1.204200000 14.790210 1.207700000 14.729822 1.211500000 14.662110 1.217000000 14.561231 1.223400000 14.440997 1.230200000 14.311317 1.248800000 13.953876 1.258700000 13.764667 1.269400000 13.562135 1.279600000 13.371357 1.291000000 13.161010 1.302300000 12.955608 1.313600000 12.753326 1.325000000 12.552407 1.335000000 12.378748 1.345100000 12.205777 1.355200000 12.035215 1.365400000 11.865376 1.375600000 11.697929 1.385900000 11.531233 1.396200000 11.366908 1.406600000 11.203360 1.418700000 11.016031 1.430800000 10.831830 1.443000000 10.649219 1.455300000 10.468223 1.467700000 10.288863 1.480100000 10.112571 1.492600000 9.937908 1.505200000 9.764896 1.517800000 9.594890 1.530500000 9.426524 1.543300000 9.259815 1.556200000 9.094781 1.569200000 8.931438 1.582200000 8.771021 1.595300000 8.612280 1.608500000 8.455226 1.622300000 8.294088 1.636200000 8.134879 1.650200000 7.977608 1.664200000 7.823370 1.678400000 7.669967 1.692600000 7.519565 1.706900000 7.371077 1.721300000 7.224507 1.735900000 7.078868 1.750500000 6.936157 1.765200000 6.795368 1.780000000 6.656501 1.794900000 6.519553 1.809900000 6.384525 1.825000000 6.251412 1.840300000 6.119359 1.855600000 5.990087 1.871100000 5.861901 1.886600000 5.736449 1.902300000 5.612107 1.918100000 5.489685 1.934000000 5.369175 1.950000000 5.250569 1.966200000 5.133140 1.982500000 5.017627 1.998900000 4.904019 2.015400000 4.792304 2.032100000 4.681817 2.048900000 4.573228 2.065800000 4.466524 2.082800000 4.361690 2.100000000 4.258117 ]
+alter @vmm[pwl] = [ 0.000000000 -14.966540 1.187300000 -14.966540 1.187800000 -14.965624 1.188400000 -14.962507 1.189000000 -14.957374 1.189600000 -14.950391 1.190200000 -14.941712 1.190800000 -14.931476 1.191400000 -14.919813 1.192100000 -14.904560 1.192800000 -14.887698 1.193500000 -14.869383 1.194200000 -14.849756 1.195000000 -14.825882 1.195800000 -14.800634 1.196600000 -14.774165 1.197500000 -14.743100 1.198400000 -14.710838 1.199300000 -14.677533 1.200300000 -14.639468 1.201800000 -14.580619 1.203500000 -14.511894 1.205300000 -14.437347 1.207400000 -14.348715 1.211100000 -14.189894 1.219300000 -13.834313 1.223400000 -13.657398 1.227600000 -13.477728 1.231700000 -13.304178 1.235500000 -13.145098 1.239200000 -12.991908 1.242900000 -12.840429 1.246600000 -12.690669 1.251200000 -12.506874 1.255900000 -12.321805 1.260500000 -12.143308 1.265200000 -11.963588 1.269900000 -11.786520 1.274600000 -11.612064 1.279300000 -11.440183 1.284100000 -11.267265 1.288500000 -11.111047 1.292900000 -10.956990 1.297300000 -10.805064 1.301700000 -10.655239 1.306100000 -10.507487 1.310600000 -10.358490 1.315100000 -10.211600 1.319600000 -10.066788 1.324100000 -9.924024 1.328700000 -9.780174 1.333200000 -9.641463 1.337800000 -9.501698 1.342400000 -9.363953 1.347100000 -9.225270 1.351700000 -9.091521 1.356400000 -8.956861 1.361500000 -8.812989 1.366700000 -8.668668 1.371900000 -8.526704 1.377200000 -8.384394 1.382500000 -8.244451 1.387800000 -8.106837 1.393100000 -7.971512 1.398500000 -7.835949 1.403900000 -7.702684 1.409300000 -7.571677 1.414800000 -7.440526 1.420300000 -7.311639 1.425800000 -7.184977 1.431400000 -7.058257 1.437000000 -6.933764 1.442600000 -6.811458 1.448200000 -6.691301 1.453900000 -6.571166 1.459600000 -6.453180 1.465400000 -6.335288 1.471200000 -6.219542 1.477000000 -6.105901 1.482900000 -5.992422 1.488800000 -5.881043 1.494700000 -5.771724 1.500700000 -5.662627 1.506700000 -5.555582 1.512800000 -5.448818 1.518900000 -5.344095 1.525000000 -5.241375 1.531200000 -5.138984 1.537400000 -5.038583 1.543200000 -4.946426 1.549100000 -4.854401 1.555000000 -4.764078 1.560900000 -4.675427 1.566800000 -4.588416 1.572800000 -4.501581 1.578800000 -4.416380 1.584900000 -4.331402 1.591000000 -4.248049 1.597200000 -4.164963 1.603400000 -4.083492 1.609600000 -4.003604 1.615900000 -3.924018 1.622200000 -3.846003 1.628600000 -3.768328 1.635000000 -3.692210 1.641500000 -3.616465 1.648000000 -3.542263 1.654500000 -3.469572 1.661100000 -3.397277 1.667700000 -3.326477 1.674400000 -3.256101 1.681100000 -3.187203 1.687900000 -3.118754 1.694700000 -3.051763 1.701600000 -2.985245 1.708500000 -2.920165 1.715500000 -2.855577 1.722500000 -2.792406 1.729600000 -2.729746 1.736700000 -2.668479 1.743900000 -2.607739 1.753800000 -2.526450 1.763800000 -2.446887 1.773900000 -2.369044 1.784100000 -2.292917 1.794400000 -2.218498 1.804800000 -2.145778 1.815300000 -2.074748 1.826000000 -2.004754 1.836800000 -1.936470 1.847700000 -1.869881 1.858700000 -1.804970 1.869900000 -1.741162 1.881200000 -1.679037 1.892600000 -1.618574 1.904100000 -1.559753 1.915900000 -1.501538 1.917400000 -1.485897 1.924000000 -1.412630 1.928500000 -1.363640 1.932800000 -1.318019 1.937100000 -1.273647 1.941800000 -1.226617 1.946400000 -1.182104 1.951000000 -1.139177 1.955600000 -1.097815 1.960500000 -1.055415 1.965400000 -1.014661 1.970400000 -0.974707 1.975400000 -0.936334 1.980500000 -0.898760 1.985700000 -0.862010 1.991000000 -0.826110 1.996300000 -0.791715 2.002000000 -0.756332 2.007800000 -0.721964 2.013700000 -0.688617 2.019600000 -0.656822 2.025600000 -0.626007 2.031800000 -0.595697 2.038100000 -0.566414 2.044500000 -0.538155 2.051000000 -0.510912 2.057600000 -0.484676 2.064300000 -0.459436 2.071200000 -0.434833 2.078200000 -0.411236 2.085300000 -0.388628 2.092600000 -0.366697 2.100000000 -0.345747 ]
+tran 1e-05 2.100000000004 0 1e-05
+wrdata spegnimento_l_l41c$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata spegnimento_l_l41c_stati$d v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+destroy all
+echo "spegnimento_l_l41c,spegnimento_l_l41c.dat,l41c_spegnimento_l,1000,0,10a0,100k,0.990000000,1000,2.100000000004,1e-05,evento,rif_spegnimento_l_l41c,-,0.0,6,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- L41c: rif_perdita_l41c (dal ponte: perdita, giro 1) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vtijk dc = 1000.024000
+alter vtrjk dc = 1000.000000
+alter vosa dc = 0
+alter iosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter rbyct = 1e12
+alter rbal = 50k
+alter vk1bi dc = 1
+alter vk1bt dc = 1000.000000
+alter vk5bi dc = 1
+alter vk5bt dc = 1000.000000
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter vkvhi dc = 1
+alter vkvht dc = 1000.000000
+alter vkvli dc = 0
+alter vkvlt dc = 1000.000000
+alter vtijk dc = 1000.000000
+alter vtrjk dc = 2000.000000
+alter vksa dc = -10
+alter vksb dc = 1000
+alter vkca dc = 1000.025000
+alter vkcb dc = 1000.000000
+alter vtiser dc = 1000.024000
+alter vtrser dc = 1000.001000
+alter rbym = 1e12
+alter rby1 = 1e12
+alter rby2 = 1e12
+alter rbcm = 220k
+alter rbc1 = 470k
+alter rbc2 = 470k
+alter cksm = 0.1p
+alter cks1 = 0.1p
+alter cks2 = 0.1p
+alter ccavm = 1e-18
+alter ccav1 = 1e-18
+alter ccav2 = 1e-18
+print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance] @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]
+alter @vpp[pwl] = [ 0.000000000 14.979609 0.990000000 14.979609 2.000000000 14.979609 ]
+alter @vmm[pwl] = [ 0.000000000 -14.966540 0.990000000 -14.966540 2.000000000 -14.966540 ]
+tran 1e-05 2.0000000000040004 0 1e-05
+wrdata rif_perdita_l41c$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rif_perdita_l41c_stati$d v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+destroy all
+echo "rif_perdita_l41c,rif_perdita_l41c.dat,rif,1000,0,10,100k,0.990000000,1000,2.0000000000040004,1e-05,rif_mai,-,-,0.0,0," >> tb_v2_casopeggiore_manifest.csv
+* ---- L41c: perdita_l41c (dal ponte: perdita, giro 1) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vtijk dc = 1.109500
+alter vtrjk dc = 1000.000000
+alter vosa dc = 0
+alter iosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter rbyct = 1e12
+alter rbal = 50k
+alter vk1bi dc = 1
+alter vk1bt dc = 1.147600
+alter vk5bi dc = 1
+alter vk5bt dc = 1.147900
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter vkvhi dc = 1
+alter vkvht dc = 1000.000000
+alter vkvli dc = 0
+alter vkvlt dc = 1000.000000
+alter vtijk dc = 1000.000000
+alter vtrjk dc = 2000.000000
+alter vksa dc = -10
+alter vksb dc = 1000
+alter vkca dc = 1.110500
+alter vkcb dc = 1000.000000
+alter vtiser dc = 1.109500
+alter vtrser dc = 1000.001000
+alter rbym = 1e12
+alter rby1 = 1e12
+alter rby2 = 1e12
+alter rbcm = 220k
+alter rbc1 = 470k
+alter rbc2 = 470k
+alter cksm = 0.1p
+alter cks1 = 0.1p
+alter cks2 = 0.1p
+alter ccavm = 1e-18
+alter ccav1 = 1e-18
+alter ccav2 = 1e-18
+print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance] @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]
+alter @vpp[pwl] = [ 0.000000000 14.979609 1.069800000 14.979609 1.070300000 14.978902 1.070900000 14.976372 1.071500000 14.972421 1.072200000 14.966436 1.073000000 14.958231 1.073800000 14.948943 1.075800000 14.922578 1.078200000 14.887326 1.081100000 14.841619 1.084300000 14.788515 1.087800000 14.728065 1.091600000 14.660303 1.097000000 14.561230 1.103400000 14.440996 1.110200000 14.311317 1.128900000 13.951957 1.138800000 13.762763 1.149600000 13.558371 1.159900000 13.365781 1.171400000 13.153685 1.182900000 12.944789 1.194400000 12.739123 1.205900000 12.536679 1.216200000 12.358069 1.226600000 12.180294 1.237000000 12.005068 1.247400000 11.832356 1.257900000 11.660498 1.268400000 11.491131 1.279000000 11.322642 1.289700000 11.155065 1.302100000 10.963958 1.314500000 10.776120 1.327000000 10.590018 1.339500000 10.407125 1.352100000 10.225959 1.364800000 10.046541 1.377600000 9.868889 1.390500000 9.693022 1.403500000 9.518955 1.416500000 9.348009 1.429600000 9.178847 1.442800000 9.011483 1.456100000 8.845932 1.469400000 8.683416 1.482800000 8.522690 1.496300000 8.363767 1.510400000 8.200937 1.524600000 8.040149 1.538900000 7.881406 1.553200000 7.725791 1.567700000 7.571129 1.582200000 7.419555 1.596800000 7.269995 1.611600000 7.121454 1.626400000 6.975941 1.641400000 6.831487 1.656500000 6.689083 1.671700000 6.548726 1.687000000 6.410411 1.702400000 6.274133 1.717900000 6.139888 1.733500000 6.007667 1.749200000 5.877465 1.765100000 5.748472 1.781000000 5.622300 1.797100000 5.497354 1.813300000 5.374425 1.829600000 5.253502 1.846000000 5.134573 1.862600000 5.016926 1.879300000 4.901280 1.896100000 4.787621 1.913100000 4.675282 1.930200000 4.564931 1.947400000 4.456551 1.964800000 4.349519 1.982300000 4.244453 2.000000000 4.140757 ]
+alter @vmm[pwl] = [ 0.000000000 -14.966540 1.067300000 -14.966540 1.067900000 -14.965252 1.068500000 -14.961787 1.069100000 -14.956335 1.069700000 -14.949059 1.070300000 -14.940110 1.070900000 -14.929627 1.071500000 -14.917738 1.072200000 -14.902245 1.072900000 -14.885167 1.073600000 -14.866656 1.074300000 -14.846852 1.075100000 -14.822797 1.075900000 -14.797388 1.076700000 -14.770777 1.077600000 -14.739570 1.078500000 -14.707185 1.080400000 -14.635605 1.081900000 -14.576630 1.083600000 -14.507795 1.085400000 -14.433161 1.087400000 -14.348714 1.091100000 -14.189893 1.099300000 -13.834312 1.103400000 -13.657397 1.107600000 -13.477728 1.111700000 -13.304177 1.115500000 -13.145097 1.119300000 -12.987791 1.123100000 -12.832289 1.126900000 -12.678601 1.131600000 -12.491016 1.136300000 -12.306180 1.141000000 -12.124061 1.145700000 -11.944625 1.150500000 -11.764103 1.155300000 -11.586301 1.160100000 -11.411180 1.164900000 -11.238699 1.169300000 -11.082876 1.173800000 -10.925741 1.178300000 -10.770829 1.182800000 -10.618107 1.187300000 -10.467546 1.191900000 -10.315839 1.196500000 -10.166325 1.201100000 -10.018973 1.205700000 -9.873750 1.210400000 -9.727539 1.215000000 -9.586529 1.219700000 -9.444560 1.224400000 -9.304686 1.229200000 -9.163968 1.233900000 -9.028239 1.238700000 -8.891689 1.243900000 -8.746084 1.249200000 -8.600124 1.254500000 -8.456592 1.259900000 -8.312808 1.265300000 -8.171461 1.270700000 -8.032509 1.276100000 -7.895913 1.281600000 -7.759166 1.287100000 -7.624779 1.292600000 -7.492712 1.298200000 -7.360586 1.303800000 -7.230780 1.309400000 -7.103256 1.315100000 -6.975755 1.320800000 -6.850534 1.326500000 -6.727552 1.332300000 -6.604669 1.338100000 -6.484022 1.343900000 -6.365570 1.349800000 -6.247286 1.355700000 -6.131191 1.361600000 -6.017244 1.367600000 -5.903528 1.373600000 -5.791951 1.379700000 -5.680666 1.385800000 -5.571509 1.391900000 -5.464440 1.398100000 -5.357714 1.404300000 -5.253062 1.410600000 -5.148805 1.416900000 -5.046606 1.423200000 -4.946426 1.429100000 -4.854401 1.435100000 -4.762562 1.441100000 -4.672450 1.447200000 -4.582575 1.453300000 -4.494419 1.459400000 -4.407948 1.465600000 -4.321755 1.471800000 -4.237236 1.478100000 -4.153037 1.484400000 -4.070500 1.490700000 -3.989593 1.497100000 -3.909038 1.503500000 -3.830098 1.510000000 -3.751545 1.516500000 -3.674591 1.523000000 -3.599205 1.529600000 -3.524230 1.536300000 -3.449705 1.543000000 -3.376743 1.549700000 -3.305313 1.556500000 -3.234349 1.563300000 -3.164896 1.570200000 -3.095934 1.577100000 -3.028461 1.584100000 -2.961501 1.591100000 -2.896008 1.598200000 -2.831045 1.605400000 -2.766642 1.612600000 -2.703690 1.619800000 -2.642157 1.627100000 -2.581184 1.634500000 -2.520798 1.643900000 -2.446104 1.653300000 -2.373599 1.662800000 -2.302483 1.672400000 -2.232759 1.682100000 -2.164427 1.691900000 -2.097490 1.701800000 -2.031946 1.711800000 -1.967793 1.721900000 -1.905027 1.732100000 -1.843645 1.742400000 -1.783640 1.752900000 -1.724451 1.763400000 -1.667198 1.774100000 -1.610780 1.784800000 -1.556241 1.795900000 -1.501537 1.797400000 -1.485895 1.804200000 -1.410426 1.809000000 -1.358271 1.813600000 -1.309666 1.818200000 -1.262500 1.823200000 -1.212907 1.828000000 -1.166991 1.832900000 -1.121905 1.837800000 -1.078570 1.843000000 -1.034420 1.848200000 -0.992087 1.853600000 -0.949969 1.859000000 -0.909650 1.864500000 -0.870354 1.870100000 -0.832098 1.875800000 -0.794897 1.881500000 -0.759371 1.887900000 -0.721385 1.894400000 -0.684764 1.901000000 -0.649498 1.907800000 -0.615077 1.914700000 -0.582032 1.921700000 -0.550339 1.928800000 -0.519973 1.936100000 -0.490516 1.943500000 -0.462379 1.951100000 -0.435180 1.958800000 -0.409275 1.966700000 -0.384321 1.974800000 -0.360337 1.983000000 -0.337604 1.991400000 -0.315828 2.000000000 -0.295013 ]
+tran 1e-05 2.0000000000040004 0 1e-05
+wrdata perdita_l41c$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata perdita_l41c_stati$d v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+destroy all
+echo "perdita_l41c,perdita_l41c.dat,l41c_perdita,1000,0,10a0,100k,0.990000000,1000,2.0000000000040004,1e-05,evento,rif_perdita_l41c,-,0.0,6,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- L41c: rif_perdita_min_l41c (dal ponte: perdita_min, giro 1) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vtijk dc = 1000.024000
+alter vtrjk dc = 1000.000000
+alter vosa dc = 0
+alter iosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter rbyct = 1e12
+alter rbal = 50k
+alter vk1bi dc = 1
+alter vk1bt dc = 1000.000000
+alter vk5bi dc = 1
+alter vk5bt dc = 1000.000000
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter vkvhi dc = 1
+alter vkvht dc = 1000.000000
+alter vkvli dc = 0
+alter vkvlt dc = 1000.000000
+alter vtijk dc = 1000.000000
+alter vtrjk dc = 2000.000000
+alter vksa dc = -10
+alter vksb dc = 1000
+alter vkca dc = 1000.025000
+alter vkcb dc = 1000.000000
+alter vtiser dc = 1000.024000
+alter vtrser dc = 1000.001000
+alter rbym = 1e12
+alter rby1 = 1e12
+alter rby2 = 1e12
+alter rbcm = 220k
+alter rbc1 = 470k
+alter rbc2 = 470k
+alter cksm = 0.1p
+alter cks1 = 0.1p
+alter cks2 = 0.1p
+alter ccavm = 1e-18
+alter ccav1 = 1e-18
+alter ccav2 = 1e-18
+print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance] @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]
+alter @vpp[pwl] = [ 0.000000000 14.979609 0.990000000 14.979609 2.000000000 14.979609 ]
+alter @vmm[pwl] = [ 0.000000000 -14.966540 0.990000000 -14.966540 2.000000000 -14.966540 ]
+tran 1e-05 2.0000000000040004 0 1e-05
+wrdata rif_perdita_min_l41c$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rif_perdita_min_l41c_stati$d v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+destroy all
+echo "rif_perdita_min_l41c,rif_perdita_min_l41c.dat,rif,1000,0,10,100k,0.990000000,1000,2.0000000000040004,1e-05,rif_mai,-,-,0.0,0," >> tb_v2_casopeggiore_manifest.csv
+* ---- L41c: perdita_min_l41c (dal ponte: perdita_min, giro 1) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vtijk dc = 1.108800
+alter vtrjk dc = 1000.000000
+alter vosa dc = 0
+alter iosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter rbyct = 1e12
+alter rbal = 50k
+alter vk1bi dc = 1
+alter vk1bt dc = 1.145900
+alter vk5bi dc = 1
+alter vk5bt dc = 1.146200
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter vkvhi dc = 1
+alter vkvht dc = 1000.000000
+alter vkvli dc = 0
+alter vkvlt dc = 1000.000000
+alter vtijk dc = 1000.000000
+alter vtrjk dc = 2000.000000
+alter vksa dc = -10
+alter vksb dc = 1000
+alter vkca dc = 1.109800
+alter vkcb dc = 1000.000000
+alter vtiser dc = 1.108800
+alter vtrser dc = 1000.001000
+alter rbym = 1e12
+alter rby1 = 1e12
+alter rby2 = 1e12
+alter rbcm = 220k
+alter rbc1 = 470k
+alter rbc2 = 470k
+alter cksm = 0.1p
+alter cks1 = 0.1p
+alter cks2 = 0.1p
+alter ccavm = 1e-18
+alter ccav1 = 1e-18
+alter ccav2 = 1e-18
+print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance] @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]
+alter @vpp[pwl] = [ 0.000000000 14.979609 1.069800000 14.979609 1.070300000 14.978902 1.070900000 14.976372 1.071500000 14.972421 1.072200000 14.966436 1.073000000 14.958231 1.073800000 14.948943 1.075800000 14.922578 1.078200000 14.887326 1.081100000 14.841619 1.084300000 14.788515 1.087800000 14.728065 1.091600000 14.660303 1.097000000 14.561230 1.103400000 14.440996 1.110200000 14.311317 1.128900000 13.951957 1.138800000 13.762763 1.149600000 13.558371 1.159900000 13.365781 1.171400000 13.153685 1.182900000 12.944789 1.194400000 12.739123 1.205900000 12.536679 1.216200000 12.358069 1.226600000 12.180294 1.237000000 12.005068 1.247400000 11.832356 1.257900000 11.660498 1.268400000 11.491131 1.279000000 11.322642 1.289700000 11.155065 1.302100000 10.963958 1.314500000 10.776120 1.327000000 10.590018 1.339500000 10.407125 1.352100000 10.225959 1.364800000 10.046541 1.377600000 9.868889 1.390500000 9.693022 1.403500000 9.518955 1.416500000 9.348009 1.429600000 9.178847 1.442800000 9.011483 1.456100000 8.845932 1.469400000 8.683416 1.482800000 8.522690 1.496300000 8.363767 1.510400000 8.200937 1.524600000 8.040149 1.538900000 7.881406 1.553200000 7.725791 1.567700000 7.571129 1.582200000 7.419555 1.596800000 7.269995 1.611600000 7.121454 1.626400000 6.975941 1.641400000 6.831487 1.656500000 6.689083 1.671700000 6.548726 1.687000000 6.410411 1.702400000 6.274133 1.717900000 6.139888 1.733500000 6.007667 1.749200000 5.877465 1.765100000 5.748472 1.781000000 5.622300 1.797100000 5.497354 1.813300000 5.374425 1.829600000 5.253502 1.846000000 5.134573 1.862600000 5.016926 1.879300000 4.901280 1.896100000 4.787621 1.913100000 4.675282 1.930200000 4.564931 1.947400000 4.456551 1.964800000 4.349519 1.982300000 4.244453 2.000000000 4.140757 ]
+alter @vmm[pwl] = [ 0.000000000 -14.966540 1.067300000 -14.966540 1.067900000 -14.965252 1.068500000 -14.961787 1.069100000 -14.956334 1.069700000 -14.949058 1.070300000 -14.940110 1.070900000 -14.929627 1.071500000 -14.917738 1.072200000 -14.902245 1.072900000 -14.885166 1.073600000 -14.866655 1.074300000 -14.846851 1.075100000 -14.822797 1.075900000 -14.797388 1.076700000 -14.770777 1.077600000 -14.739570 1.078500000 -14.707185 1.080400000 -14.635605 1.081900000 -14.576630 1.083600000 -14.507794 1.085400000 -14.433161 1.087400000 -14.348713 1.091100000 -14.189893 1.099300000 -13.834311 1.103400000 -13.657397 1.107600000 -13.477727 1.111700000 -13.304176 1.115500000 -13.145096 1.119300000 -12.987790 1.123100000 -12.832288 1.126900000 -12.678600 1.131600000 -12.491015 1.136300000 -12.306179 1.141000000 -12.124060 1.145700000 -11.944624 1.150500000 -11.764102 1.155300000 -11.586301 1.160100000 -11.411179 1.164900000 -11.238698 1.169300000 -11.082875 1.173800000 -10.925740 1.178300000 -10.770828 1.182800000 -10.618106 1.187300000 -10.467545 1.191900000 -10.315838 1.196500000 -10.166324 1.201100000 -10.018972 1.205700000 -9.873749 1.210400000 -9.727538 1.215000000 -9.586528 1.219700000 -9.444558 1.224400000 -9.304685 1.229200000 -9.163967 1.233900000 -9.028237 1.238700000 -8.891688 1.243900000 -8.746083 1.249200000 -8.600123 1.254500000 -8.456591 1.259900000 -8.312807 1.265300000 -8.171460 1.270700000 -8.032508 1.276100000 -7.895912 1.281600000 -7.759165 1.287100000 -7.624778 1.292600000 -7.492711 1.298200000 -7.360584 1.303800000 -7.230779 1.309400000 -7.103254 1.315100000 -6.975754 1.320800000 -6.850532 1.326500000 -6.727550 1.332300000 -6.604668 1.338100000 -6.484021 1.343900000 -6.365569 1.349800000 -6.247285 1.355700000 -6.131190 1.361600000 -6.017243 1.367600000 -5.903526 1.373600000 -5.791949 1.379700000 -5.680664 1.385800000 -5.571508 1.391900000 -5.464439 1.398100000 -5.357712 1.404300000 -5.253060 1.410600000 -5.148803 1.416900000 -5.046605 1.423200000 -4.946425 1.429100000 -4.854399 1.435100000 -4.762560 1.441100000 -4.672449 1.447200000 -4.582574 1.453300000 -4.494417 1.459400000 -4.407947 1.465600000 -4.321753 1.471800000 -4.237235 1.478100000 -4.153036 1.484400000 -4.070499 1.490700000 -3.989592 1.497100000 -3.909036 1.503500000 -3.830096 1.510000000 -3.751543 1.516500000 -3.674590 1.523000000 -3.599204 1.529600000 -3.524229 1.536300000 -3.449703 1.543000000 -3.376741 1.549700000 -3.305311 1.556500000 -3.234347 1.563300000 -3.164894 1.570200000 -3.095932 1.577100000 -3.028460 1.584100000 -2.961499 1.591100000 -2.896006 1.598200000 -2.831043 1.605400000 -2.766640 1.612600000 -2.703688 1.619800000 -2.642155 1.627100000 -2.581183 1.634500000 -2.520797 1.643900000 -2.446102 1.653300000 -2.373598 1.662800000 -2.302481 1.672400000 -2.232757 1.682100000 -2.164426 1.691900000 -2.097488 1.701800000 -2.031944 1.711800000 -1.967791 1.721900000 -1.905026 1.732100000 -1.843643 1.742400000 -1.783638 1.752900000 -1.724450 1.763400000 -1.667196 1.774100000 -1.610778 1.784800000 -1.556239 1.795900000 -1.501534 1.797400000 -1.485890 1.804200000 -1.410421 1.809000000 -1.358266 1.813600000 -1.309662 1.818200000 -1.262496 1.823200000 -1.212903 1.828000000 -1.166987 1.832900000 -1.121901 1.837800000 -1.078566 1.843000000 -1.034416 1.848200000 -0.992084 1.853600000 -0.949966 1.859000000 -0.909647 1.864500000 -0.870350 1.870100000 -0.832095 1.875800000 -0.794894 1.881500000 -0.759368 1.887900000 -0.721381 1.894400000 -0.684761 1.901000000 -0.649495 1.907800000 -0.615074 1.914700000 -0.582029 1.921700000 -0.550336 1.928800000 -0.519970 1.936100000 -0.490514 1.943500000 -0.462376 1.951100000 -0.435177 1.958800000 -0.409272 1.966700000 -0.384318 1.974800000 -0.360334 1.983000000 -0.337602 1.991400000 -0.315826 2.000000000 -0.295011 ]
+tran 1e-05 2.0000000000040004 0 1e-05
+wrdata perdita_min_l41c$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata perdita_min_l41c_stati$d v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+destroy all
+echo "perdita_min_l41c,perdita_min_l41c.dat,l41c_perdita_min,1000,0,10a0,100k,0.990000000,1000,2.0000000000040004,1e-05,evento,rif_perdita_min_l41c,-,0.0,6,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- L41c: rif_guasto_l41c (dal ponte: guasto, giro 1) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vtijk dc = 1000.024000
+alter vtrjk dc = 1000.000000
+alter vosa dc = 0
+alter iosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter rbyct = 1e12
+alter rbal = 50k
+alter vk1bi dc = 1
+alter vk1bt dc = 1000.000000
+alter vk5bi dc = 1
+alter vk5bt dc = 1000.000000
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter vkvhi dc = 1
+alter vkvht dc = 1000.000000
+alter vkvli dc = 0
+alter vkvlt dc = 1000.000000
+alter vtijk dc = 1000.000000
+alter vtrjk dc = 2000.000000
+alter vksa dc = -10
+alter vksb dc = 1000
+alter vkca dc = 1000.025000
+alter vkcb dc = 1000.000000
+alter vtiser dc = 1000.024000
+alter vtrser dc = 1000.001000
+alter rbym = 1e12
+alter rby1 = 1e12
+alter rby2 = 1e12
+alter rbcm = 220k
+alter rbc1 = 470k
+alter rbc2 = 470k
+alter cksm = 0.1p
+alter cks1 = 0.1p
+alter cks2 = 0.1p
+alter ccavm = 1e-18
+alter ccav1 = 1e-18
+alter ccav2 = 1e-18
+print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance] @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]
+alter @vpp[pwl] = [ 0.000000000 14.979609 0.990000000 14.979609 2.000000000 14.979609 ]
+alter @vmm[pwl] = [ 0.000000000 -14.966540 0.990000000 -14.966540 2.000000000 -14.966540 ]
+tran 1e-05 2.0000000000040004 0 1e-05
+wrdata rif_guasto_l41c$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rif_guasto_l41c_stati$d v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+destroy all
+echo "rif_guasto_l41c,rif_guasto_l41c.dat,rif,1000,0,10,100k,0.990000000,1000,2.0000000000040004,1e-05,rif_mai,-,-,0.0,0," >> tb_v2_casopeggiore_manifest.csv
+* ---- L41c: guasto_l41c (dal ponte: guasto, giro 1) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vtijk dc = 1.015600
+alter vtrjk dc = 1000.000000
+alter vosa dc = 0
+alter iosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter rbyct = 1e12
+alter rbal = 50k
+alter vk1bi dc = 1
+alter vk1bt dc = 1.053200
+alter vk5bi dc = 1
+alter vk5bt dc = 1.053500
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter vkvhi dc = 1
+alter vkvht dc = 1000.000000
+alter vkvli dc = 0
+alter vkvlt dc = 1000.000000
+alter vtijk dc = 1000.000000
+alter vtrjk dc = 2000.000000
+alter vksa dc = -10
+alter vksb dc = 1000
+alter vkca dc = 1.016600
+alter vkcb dc = 1000.000000
+alter vtiser dc = 1.015600
+alter vtrser dc = 1000.001000
+alter rbym = 1e12
+alter rby1 = 1e12
+alter rby2 = 1e12
+alter rbcm = 220k
+alter rbc1 = 470k
+alter rbc2 = 470k
+alter cksm = 0.1p
+alter cks1 = 0.1p
+alter cks2 = 0.1p
+alter ccavm = 1e-18
+alter ccav1 = 1e-18
+alter ccav2 = 1e-18
+print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance] @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]
+alter @vpp[pwl] = [ 0.000000000 14.979609 2.000000000 14.979609 ]
+alter @vmm[pwl] = [ 0.000000000 -14.966540 1.000000000 -14.966540 1.000100000 -14.950836 1.002000000 -14.723244 1.003700000 -14.522410 1.005400000 -14.324316 1.006900000 -14.151774 1.008500000 -13.970020 1.010000000 -13.801747 1.011600000 -13.624490 1.013100000 -13.460381 1.014600000 -13.298249 1.016100000 -13.138071 1.017700000 -12.969342 1.019200000 -12.813128 1.020800000 -12.648573 1.022400000 -12.486133 1.024000000 -12.325780 1.025500000 -12.177321 1.027100000 -12.020936 1.028700000 -11.866560 1.030300000 -11.714167 1.031900000 -11.563733 1.033500000 -11.415232 1.035100000 -11.268638 1.036700000 -11.123928 1.038300000 -10.981078 1.039900000 -10.840062 1.041500000 -10.700859 1.043200000 -10.554915 1.044800000 -10.419375 1.046500000 -10.277272 1.048100000 -10.145300 1.049800000 -10.006937 1.051400000 -9.878438 1.053100000 -9.743716 1.054800000 -9.610833 1.056500000 -9.479763 1.058200000 -9.350482 1.059900000 -9.222965 1.061600000 -9.097188 1.063400000 -8.965883 1.065100000 -8.843615 1.066900000 -8.715972 1.068600000 -8.597113 1.070400000 -8.473031 1.072100000 -8.357488 1.073900000 -8.236866 1.075700000 -8.117986 1.077500000 -8.000824 1.079300000 -7.885353 1.081100000 -7.771550 1.082900000 -7.659391 1.084800000 -7.542758 1.086600000 -7.433904 1.088500000 -7.320707 1.090300000 -7.215059 1.092200000 -7.105197 1.094100000 -6.997010 1.096000000 -6.890470 1.097900000 -6.785555 1.099800000 -6.682238 1.101700000 -6.580496 1.103600000 -6.480305 1.105500000 -6.381640 1.107500000 -6.279406 1.109400000 -6.183803 1.111400000 -6.084741 1.113300000 -5.992104 1.115300000 -5.896117 1.117300000 -5.801668 1.119300000 -5.708734 1.121300000 -5.617290 1.123300000 -5.527313 1.125300000 -5.438778 1.127400000 -5.347344 1.129400000 -5.261695 1.131500000 -5.173241 1.133600000 -5.086275 1.135700000 -5.000774 1.137800000 -4.916711 1.139900000 -4.834063 1.142000000 -4.752806 1.144200000 -4.669147 1.146300000 -4.590665 1.148500000 -4.509863 1.150700000 -4.430484 1.152900000 -4.352505 1.155100000 -4.275900 1.157300000 -4.200645 1.159500000 -4.126717 1.161800000 -4.050820 1.164000000 -3.979532 1.166300000 -3.906347 1.168600000 -3.834509 1.170900000 -3.763995 1.173200000 -3.694779 1.175500000 -3.626838 1.177800000 -3.560148 1.180200000 -3.491868 1.182500000 -3.427664 1.184900000 -3.361929 1.187300000 -3.297457 1.189700000 -3.234223 1.192100000 -3.172205 1.194600000 -3.108868 1.197000000 -3.049258 1.199500000 -2.988380 1.202000000 -2.928721 1.204500000 -2.870255 1.207000000 -2.812959 1.209600000 -2.754586 1.212100000 -2.699603 1.214700000 -2.643587 1.217300000 -2.588737 1.219900000 -2.535026 1.222500000 -2.482433 1.225200000 -2.428974 1.227900000 -2.376669 1.230600000 -2.325493 1.233300000 -2.275422 1.236000000 -2.226432 1.238700000 -2.178499 1.241500000 -2.129883 1.244300000 -2.082356 1.247100000 -2.035891 1.249900000 -1.990467 1.252800000 -1.944491 1.255700000 -1.899580 1.258600000 -1.855710 1.263900000 -1.778143 1.269200000 -1.703828 1.274600000 -1.631315 1.280100000 -1.560642 1.285700000 -1.491839 1.291400000 -1.424935 1.297200000 -1.359947 1.303000000 -1.297936 1.309000000 -1.236773 1.315000000 -1.178505 1.321100000 -1.122093 1.327300000 -1.067536 1.333600000 -1.014830 1.340100000 -0.963192 1.346700000 -0.913463 1.353400000 -0.865621 1.360200000 -0.819644 1.367100000 -0.775502 1.374100000 -0.733167 1.381300000 -0.692051 1.388600000 -0.652736 1.396100000 -0.614688 1.403700000 -0.578415 1.411500000 -0.543433 1.419500000 -0.509774 1.427600000 -0.477840 1.435900000 -0.447216 1.444400000 -0.417912 1.453100000 -0.389932 1.462000000 -0.363274 1.471100000 -0.337929 1.480400000 -0.313882 1.489400000 -0.292271 1.498600000 -0.271745 1.508100000 -0.252093 1.517800000 -0.233524 1.527800000 -0.215846 1.538000000 -0.199227 1.548500000 -0.183493 1.559400000 -0.168511 1.570600000 -0.154433 1.582100000 -0.141244 1.594000000 -0.128827 1.606200000 -0.117278 1.618900000 -0.106407 1.632000000 -0.096303 1.645600000 -0.086886 1.659800000 -0.078098 1.688900000 -0.062953 1.720500000 -0.050078 1.755000000 -0.039312 1.793100000 -0.030439 1.835100000 -0.023356 1.882500000 -0.017780 1.936600000 -0.013548 2.000000000 -0.010455 ]
+tran 1e-05 2.0000000000040004 0 1e-05
+wrdata guasto_l41c$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata guasto_l41c_stati$d v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+destroy all
+echo "guasto_l41c,guasto_l41c.dat,l41c_guasto,1000,0,10a0,100k,0.990000000,1000,2.0000000000040004,1e-05,evento,rif_guasto_l41c,-,0.0,6,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- L41c: rif_guasto_u501_l41c (dal ponte: guasto_u501, giro 1) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vtijk dc = 1000.024000
+alter vtrjk dc = 1000.000000
+alter vosa dc = 0
+alter iosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter rbyct = 1e12
+alter rbal = 50k
+alter vk1bi dc = 1
+alter vk1bt dc = 1000.000000
+alter vk5bi dc = 1
+alter vk5bt dc = 1000.000000
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter vkvhi dc = 1
+alter vkvht dc = 1000.000000
+alter vkvli dc = 0
+alter vkvlt dc = 1000.000000
+alter vtijk dc = 1000.000000
+alter vtrjk dc = 2000.000000
+alter vksa dc = -10
+alter vksb dc = 1000
+alter vkca dc = 1000.025000
+alter vkcb dc = 1000.000000
+alter vtiser dc = 1000.024000
+alter vtrser dc = 1000.001000
+alter rbym = 1e12
+alter rby1 = 1e12
+alter rby2 = 1e12
+alter rbcm = 220k
+alter rbc1 = 470k
+alter rbc2 = 470k
+alter cksm = 0.1p
+alter cks1 = 0.1p
+alter cks2 = 0.1p
+alter ccavm = 1e-18
+alter ccav1 = 1e-18
+alter ccav2 = 1e-18
+print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance] @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]
+alter @vpp[pwl] = [ 0.000000000 14.979609 0.990000000 14.979609 2.000000000 14.979609 ]
+alter @vmm[pwl] = [ 0.000000000 -14.966540 0.990000000 -14.966540 2.000000000 -14.966540 ]
+tran 1e-05 2.0000000000040004 0 1e-05
+wrdata rif_guasto_u501_l41c$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rif_guasto_u501_l41c_stati$d v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+destroy all
+echo "rif_guasto_u501_l41c,rif_guasto_u501_l41c.dat,rif,1000,0,10,100k,0.990000000,1000,2.0000000000040004,1e-05,rif_mai,-,-,0.0,0," >> tb_v2_casopeggiore_manifest.csv
+* ---- L41c: guasto_u501_l41c (dal ponte: guasto_u501, giro 1) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vtijk dc = 1.048100
+alter vtrjk dc = 1000.000000
+alter vosa dc = 0
+alter iosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter rbyct = 1e12
+alter rbal = 50k
+alter vk1bi dc = 1
+alter vk1bt dc = 1.086000
+alter vk5bi dc = 1
+alter vk5bt dc = 1.086300
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter vkvhi dc = 1
+alter vkvht dc = 1000.000000
+alter vkvli dc = 0
+alter vkvlt dc = 1000.000000
+alter vtijk dc = 1000.000000
+alter vtrjk dc = 2000.000000
+alter vksa dc = -10
+alter vksb dc = 1000
+alter vkca dc = 1.049100
+alter vkcb dc = 1000.000000
+alter vtiser dc = 1.048100
+alter vtrser dc = 1000.001000
+alter rbym = 1e12
+alter rby1 = 1e12
+alter rby2 = 1e12
+alter rbcm = 220k
+alter rbc1 = 470k
+alter rbc2 = 470k
+alter cksm = 0.1p
+alter cks1 = 0.1p
+alter cks2 = 0.1p
+alter ccavm = 1e-18
+alter ccav1 = 1e-18
+alter ccav2 = 1e-18
+print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance] @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]
+alter @vpp[pwl] = [ 0.000000000 14.979609 1.000000000 14.979609 1.000100000 14.964721 1.000300000 14.943129 1.000500000 14.922728 1.000700000 14.903492 1.000900000 14.885336 1.001300000 14.851939 1.001700000 14.821935 1.002100000 14.794812 1.002600000 14.764301 1.003100000 14.736904 1.003600000 14.712044 1.004200000 14.684904 1.004800000 14.660095 1.005400000 14.637110 1.006100000 14.612077 1.006900000 14.585241 1.007700000 14.559793 1.008700000 14.529367 1.010200000 14.485614 1.012000000 14.434859 1.017100000 14.295338 1.024600000 14.094337 1.032400000 13.888466 1.039500000 13.703694 1.046600000 13.521381 1.053800000 13.338979 1.061000000 13.159039 1.068100000 12.983977 1.075300000 12.808828 1.082500000 12.636043 1.089800000 12.463239 1.097100000 12.292800 1.104400000 12.124693 1.111800000 11.956630 1.119200000 11.790899 1.126600000 11.627465 1.134100000 11.464137 1.141600000 11.303103 1.149200000 11.142232 1.156800000 10.983651 1.164400000 10.827328 1.172000000 10.673232 1.179700000 10.519347 1.186500000 10.385295 1.193400000 10.251018 1.200300000 10.118480 1.207200000 9.987656 1.214100000 9.858524 1.221100000 9.729228 1.228100000 9.601629 1.235200000 9.473918 1.242300000 9.347907 1.249400000 9.223573 1.256500000 9.100894 1.263700000 8.978155 1.270900000 8.857072 1.278200000 8.735976 1.285500000 8.616537 1.292800000 8.498732 1.300100000 8.382539 1.307500000 8.266377 1.314900000 8.151826 1.322400000 8.037348 1.329900000 7.924480 1.337400000 7.813197 1.344900000 7.703479 1.352500000 7.593870 1.360100000 7.485823 1.367800000 7.377923 1.375500000 7.271580 1.383200000 7.166771 1.391000000 7.062142 1.398800000 6.959043 1.406600000 6.857450 1.414500000 6.756068 1.422200000 6.658696 1.429900000 6.562730 1.437600000 6.468147 1.445400000 6.373728 1.453200000 6.280689 1.461100000 6.187842 1.469000000 6.096370 1.477000000 6.005119 1.485000000 5.915235 1.493000000 5.826699 1.501100000 5.738407 1.509200000 5.651455 1.517300000 5.565822 1.525500000 5.480455 1.533700000 5.396399 1.542000000 5.312632 1.550300000 5.230168 1.558700000 5.148015 1.567100000 5.067153 1.575500000 4.987564 1.584000000 4.908302 1.592600000 4.829390 1.601200000 4.751749 1.609800000 4.675358 1.618500000 4.599330 1.627200000 4.524541 1.636000000 4.450130 1.644800000 4.376946 1.653700000 4.304155 1.662600000 4.232577 1.671600000 4.161408 1.680600000 4.091437 1.689700000 4.021886 1.698800000 3.953520 1.708000000 3.885586 1.717200000 3.818821 1.726500000 3.752499 1.735800000 3.687331 1.745200000 3.622614 1.754600000 3.559035 1.764100000 3.495915 1.773700000 3.433270 1.783300000 3.371750 1.793000000 3.310712 1.802700000 3.250780 1.812500000 3.191335 1.822400000 3.132389 1.832300000 3.074534 1.842300000 3.017182 1.852300000 2.960902 1.862400000 2.905128 1.872600000 2.849870 1.882800000 2.795665 1.893100000 2.741978 1.903500000 2.688818 1.913900000 2.636691 1.924400000 2.585091 1.935000000 2.534027 1.945700000 2.483506 1.956400000 2.433996 1.978100000 2.336605 2.000000000 2.242278 ]
+alter @vmm[pwl] = [ 0.000000000 -14.966540 2.000000000 -14.966540 ]
+tran 1e-05 2.0000000000040004 0 1e-05
+wrdata guasto_u501_l41c$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata guasto_u501_l41c_stati$d v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+destroy all
+echo "guasto_u501_l41c,guasto_u501_l41c.dat,l41c_guasto_u501,1000,0,10a0,100k,0.990000000,1000,2.0000000000040004,1e-05,evento,rif_guasto_u501_l41c,-,0.0,6,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- L41c: rif_guasto_u503_l41c (dal ponte: guasto_u503, giro 1) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vtijk dc = 1000.024000
+alter vtrjk dc = 1000.000000
+alter vosa dc = 0
+alter iosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter rbyct = 1e12
+alter rbal = 50k
+alter vk1bi dc = 1
+alter vk1bt dc = 1000.000000
+alter vk5bi dc = 1
+alter vk5bt dc = 1000.000000
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter vkvhi dc = 1
+alter vkvht dc = 1000.000000
+alter vkvli dc = 0
+alter vkvlt dc = 1000.000000
+alter vtijk dc = 1000.000000
+alter vtrjk dc = 2000.000000
+alter vksa dc = -10
+alter vksb dc = 1000
+alter vkca dc = 1000.025000
+alter vkcb dc = 1000.000000
+alter vtiser dc = 1000.024000
+alter vtrser dc = 1000.001000
+alter rbym = 1e12
+alter rby1 = 1e12
+alter rby2 = 1e12
+alter rbcm = 220k
+alter rbc1 = 470k
+alter rbc2 = 470k
+alter cksm = 0.1p
+alter cks1 = 0.1p
+alter cks2 = 0.1p
+alter ccavm = 1e-18
+alter ccav1 = 1e-18
+alter ccav2 = 1e-18
+print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance] @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]
+alter @vpp[pwl] = [ 0.000000000 14.979609 0.990000000 14.979609 2.000000000 14.979609 ]
+alter @vmm[pwl] = [ 0.000000000 -14.966540 0.990000000 -14.966540 2.000000000 -14.966540 ]
+tran 1e-05 2.0000000000040004 0 1e-05
+wrdata rif_guasto_u503_l41c$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rif_guasto_u503_l41c_stati$d v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+destroy all
+echo "rif_guasto_u503_l41c,rif_guasto_u503_l41c.dat,rif,1000,0,10,100k,0.990000000,1000,2.0000000000040004,1e-05,rif_mai,-,-,0.0,0," >> tb_v2_casopeggiore_manifest.csv
+* ---- L41c: guasto_u503_l41c (dal ponte: guasto_u503, giro 1) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vtijk dc = 1.017900
+alter vtrjk dc = 1000.000000
+alter vosa dc = 0
+alter iosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter rbyct = 1e12
+alter rbal = 50k
+alter vk1bi dc = 1
+alter vk1bt dc = 1.045200
+alter vk5bi dc = 1
+alter vk5bt dc = 1.045500
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter vkvhi dc = 1
+alter vkvht dc = 1000.000000
+alter vkvli dc = 0
+alter vkvlt dc = 1000.000000
+alter vtijk dc = 1000.000000
+alter vtrjk dc = 2000.000000
+alter vksa dc = -10
+alter vksb dc = 1000
+alter vkca dc = 1.018900
+alter vkcb dc = 1000.000000
+alter vtiser dc = 1.017900
+alter vtrser dc = 1000.001000
+alter rbym = 1e12
+alter rby1 = 1e12
+alter rby2 = 1e12
+alter rbcm = 220k
+alter rbc1 = 470k
+alter rbc2 = 470k
+alter cksm = 0.1p
+alter cks1 = 0.1p
+alter cks2 = 0.1p
+alter ccavm = 1e-18
+alter ccav1 = 1e-18
+alter ccav2 = 1e-18
+print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance] @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]
+alter @vpp[pwl] = [ 0.000000000 14.979609 1.092000000 14.979609 1.092500000 14.978849 1.093000000 14.976807 1.093600000 14.973028 1.094300000 14.967197 1.095100000 14.959122 1.095900000 14.949930 1.097900000 14.923717 1.100300000 14.888568 1.103200000 14.842938 1.106400000 14.789896 1.109900000 14.729496 1.113700000 14.661776 1.119200000 14.560886 1.125600000 14.440645 1.132400000 14.310962 1.151000000 13.953520 1.160800000 13.766218 1.171500000 13.563668 1.181700000 13.372871 1.193100000 13.162502 1.204400000 12.957078 1.215700000 12.754773 1.227000000 12.555581 1.237000000 12.381878 1.247100000 12.208864 1.257200000 12.038259 1.267300000 11.870031 1.277500000 11.702518 1.287700000 11.537364 1.298000000 11.372952 1.308300000 11.210879 1.320400000 11.023425 1.332500000 10.839101 1.344700000 10.656368 1.356900000 10.476710 1.369300000 10.297205 1.381700000 10.120770 1.394200000 9.945966 1.406700000 9.774176 1.419300000 9.604009 1.432000000 9.435483 1.444800000 9.268616 1.457600000 9.104695 1.470500000 8.942420 1.483500000 8.781807 1.496600000 8.622870 1.509800000 8.465624 1.523600000 8.304288 1.537400000 8.146020 1.551300000 7.989648 1.565300000 7.835178 1.579400000 7.682615 1.593600000 7.531966 1.607900000 7.383234 1.622300000 7.236422 1.636800000 7.091533 1.651400000 6.948568 1.666000000 6.808477 1.680800000 6.669342 1.695700000 6.532131 1.710700000 6.396843 1.725800000 6.263475 1.741000000 6.132023 1.756300000 6.002484 1.771700000 5.874853 1.787200000 5.749126 1.802900000 5.624510 1.818600000 5.502586 1.834500000 5.381794 1.850500000 5.262910 1.866600000 5.145924 1.882800000 5.030827 1.899200000 4.916921 1.915700000 4.804914 1.932300000 4.694793 1.949000000 4.586545 1.965900000 4.479531 1.982900000 4.374393 2.000000000 4.271116 ]
+alter @vmm[pwl] = [ 0.000000000 -14.966540 1.090200000 -14.966540 1.090800000 -14.965377 1.091400000 -14.962023 1.092000000 -14.956671 1.092600000 -14.949488 1.093200000 -14.940625 1.093800000 -14.930221 1.094400000 -14.918403 1.095100000 -14.902987 1.095800000 -14.885977 1.096500000 -14.867528 1.097200000 -14.847780 1.098000000 -14.823783 1.098800000 -14.798425 1.099600000 -14.771859 1.100500000 -14.740697 1.101400000 -14.708351 1.103300000 -14.636838 1.104800000 -14.577903 1.106500000 -14.509102 1.108300000 -14.434496 1.110300000 -14.350070 1.114000000 -14.191271 1.122200000 -13.835692 1.126300000 -13.658768 1.130500000 -13.479085 1.134600000 -13.305520 1.138300000 -13.150589 1.142000000 -12.997339 1.145700000 -12.845798 1.149400000 -12.695977 1.154000000 -12.512106 1.158600000 -12.330871 1.163200000 -12.152243 1.167900000 -11.972392 1.172600000 -11.795194 1.177300000 -11.620610 1.182000000 -11.448603 1.186800000 -11.275557 1.191100000 -11.122754 1.195500000 -10.968535 1.199900000 -10.816450 1.204300000 -10.666467 1.208700000 -10.518559 1.213200000 -10.369406 1.217700000 -10.222362 1.222200000 -10.077397 1.226700000 -9.934483 1.231300000 -9.790482 1.235800000 -9.651626 1.240400000 -9.511714 1.245000000 -9.373824 1.249700000 -9.234995 1.254300000 -9.101105 1.259000000 -8.966304 1.264100000 -8.822281 1.269300000 -8.677808 1.274500000 -8.535694 1.279800000 -8.393235 1.285000000 -8.255767 1.290300000 -8.117964 1.295600000 -7.982454 1.301000000 -7.846706 1.306400000 -7.713258 1.311800000 -7.582072 1.317200000 -7.453110 1.322700000 -7.324006 1.328200000 -7.197130 1.333800000 -7.070197 1.339400000 -6.945494 1.345000000 -6.822983 1.350600000 -6.702624 1.356300000 -6.582287 1.362000000 -6.464102 1.367800000 -6.346013 1.373600000 -6.230072 1.379400000 -6.116241 1.385200000 -6.004480 1.391100000 -5.892878 1.397000000 -5.783341 1.403000000 -5.674026 1.409000000 -5.566768 1.415000000 -5.461528 1.421100000 -5.356563 1.427200000 -5.253605 1.433300000 -5.152617 1.439500000 -5.051952 1.445300000 -4.959554 1.451100000 -4.868836 1.457000000 -4.778248 1.462900000 -4.689336 1.468800000 -4.602068 1.474800000 -4.514978 1.480800000 -4.429527 1.486900000 -4.344299 1.493000000 -4.260701 1.499100000 -4.178702 1.505300000 -4.096965 1.511500000 -4.016817 1.517800000 -3.936972 1.524100000 -3.858704 1.530400000 -3.781980 1.536800000 -3.705591 1.543200000 -3.630733 1.549700000 -3.556242 1.556200000 -3.483269 1.562800000 -3.410693 1.569400000 -3.339618 1.576100000 -3.268969 1.582800000 -3.199803 1.589500000 -3.132089 1.596300000 -3.064817 1.603200000 -2.998019 1.610100000 -2.932666 1.617000000 -2.868724 1.624000000 -2.805267 1.631000000 -2.743201 1.638100000 -2.681638 1.645300000 -2.620605 1.655200000 -2.538924 1.665300000 -2.458190 1.675500000 -2.379235 1.685800000 -2.302051 1.696200000 -2.226631 1.706700000 -2.152963 1.717300000 -2.081037 1.728100000 -2.010195 1.739000000 -1.941111 1.750000000 -1.873769 1.761100000 -1.808151 1.772400000 -1.743678 1.783800000 -1.680931 1.795300000 -1.619887 1.807000000 -1.560022 1.818800000 -1.501849 1.820300000 -1.486490 1.827000000 -1.412133 1.831600000 -1.362087 1.835800000 -1.317559 1.840000000 -1.274224 1.844600000 -1.228167 1.849200000 -1.183609 1.853700000 -1.141553 1.858200000 -1.100997 1.863000000 -1.059333 1.867900000 -1.018437 1.872800000 -0.979128 1.877800000 -0.940590 1.882900000 -0.902853 1.888000000 -0.866640 1.893200000 -0.831222 1.898500000 -0.796623 1.904100000 -0.761641 1.909800000 -0.727623 1.915600000 -0.694580 1.921400000 -0.663051 1.927400000 -0.631953 1.933400000 -0.602328 1.939500000 -0.573645 1.945800000 -0.545471 1.952100000 -0.518695 1.958600000 -0.492461 1.965200000 -0.467198 1.971900000 -0.442893 1.978700000 -0.419536 1.985700000 -0.396796 1.992800000 -0.375009 2.000000000 -0.354156 ]
+tran 1e-05 2.0000000000040004 0 1e-05
+wrdata guasto_u503_l41c$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata guasto_u503_l41c_stati$d v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+destroy all
+echo "guasto_u503_l41c,guasto_u503_l41c.dat,l41c_guasto_u503,1000,0,10a0,100k,0.990000000,1000,2.0000000000040004,1e-05,evento,rif_guasto_u503_l41c,-,0.0,6,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- L41c: rif_guasto_u503_min_l41c (dal ponte: guasto_u503_min, giro 1) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vtijk dc = 1000.024000
+alter vtrjk dc = 1000.000000
+alter vosa dc = 0
+alter iosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter rbyct = 1e12
+alter rbal = 50k
+alter vk1bi dc = 1
+alter vk1bt dc = 1000.000000
+alter vk5bi dc = 1
+alter vk5bt dc = 1000.000000
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter vkvhi dc = 1
+alter vkvht dc = 1000.000000
+alter vkvli dc = 0
+alter vkvlt dc = 1000.000000
+alter vtijk dc = 1000.000000
+alter vtrjk dc = 2000.000000
+alter vksa dc = -10
+alter vksb dc = 1000
+alter vkca dc = 1000.025000
+alter vkcb dc = 1000.000000
+alter vtiser dc = 1000.024000
+alter vtrser dc = 1000.001000
+alter rbym = 1e12
+alter rby1 = 1e12
+alter rby2 = 1e12
+alter rbcm = 220k
+alter rbc1 = 470k
+alter rbc2 = 470k
+alter cksm = 0.1p
+alter cks1 = 0.1p
+alter cks2 = 0.1p
+alter ccavm = 1e-18
+alter ccav1 = 1e-18
+alter ccav2 = 1e-18
+print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance] @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]
+alter @vpp[pwl] = [ 0.000000000 14.979609 0.990000000 14.979609 2.000000000 14.979609 ]
+alter @vmm[pwl] = [ 0.000000000 -14.966540 0.990000000 -14.966540 2.000000000 -14.966540 ]
+tran 1e-05 2.0000000000040004 0 1e-05
+wrdata rif_guasto_u503_min_l41c$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rif_guasto_u503_min_l41c_stati$d v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+destroy all
+echo "rif_guasto_u503_min_l41c,rif_guasto_u503_min_l41c.dat,rif,1000,0,10,100k,0.990000000,1000,2.0000000000040004,1e-05,rif_mai,-,-,0.0,0," >> tb_v2_casopeggiore_manifest.csv
+* ---- L41c: guasto_u503_min_l41c (dal ponte: guasto_u503_min, giro 1) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vtijk dc = 1.017600
+alter vtrjk dc = 1000.000000
+alter vosa dc = 0
+alter iosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter rbyct = 1e12
+alter rbal = 50k
+alter vk1bi dc = 1
+alter vk1bt dc = 1.045300
+alter vk5bi dc = 1
+alter vk5bt dc = 1.045600
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter vkvhi dc = 1
+alter vkvht dc = 1000.000000
+alter vkvli dc = 0
+alter vkvlt dc = 1000.000000
+alter vtijk dc = 1000.000000
+alter vtrjk dc = 2000.000000
+alter vksa dc = -10
+alter vksb dc = 1000
+alter vkca dc = 1.018600
+alter vkcb dc = 1000.000000
+alter vtiser dc = 1.017600
+alter vtrser dc = 1000.001000
+alter rbym = 1e12
+alter rby1 = 1e12
+alter rby2 = 1e12
+alter rbcm = 220k
+alter rbc1 = 470k
+alter rbc2 = 470k
+alter cksm = 0.1p
+alter cks1 = 0.1p
+alter cks2 = 0.1p
+alter ccavm = 1e-18
+alter ccav1 = 1e-18
+alter ccav2 = 1e-18
+print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance] @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]
+alter @vpp[pwl] = [ 0.000000000 14.979609 1.092000000 14.979609 1.092500000 14.978849 1.093000000 14.976807 1.093600000 14.973029 1.094300000 14.967197 1.095100000 14.959122 1.095900000 14.949930 1.097900000 14.923717 1.100300000 14.888568 1.103200000 14.842938 1.106400000 14.789896 1.109900000 14.729496 1.113700000 14.661776 1.119200000 14.560886 1.125600000 14.440645 1.132400000 14.310962 1.151000000 13.953520 1.160800000 13.766217 1.171500000 13.563668 1.181700000 13.372871 1.193100000 13.162502 1.204400000 12.957078 1.215700000 12.754773 1.227000000 12.555581 1.237000000 12.381878 1.247100000 12.208864 1.257200000 12.038259 1.267300000 11.870031 1.277500000 11.702518 1.287700000 11.537364 1.298000000 11.372952 1.308300000 11.210879 1.320400000 11.023425 1.332500000 10.839101 1.344700000 10.656367 1.356900000 10.476710 1.369300000 10.297205 1.381700000 10.120770 1.394200000 9.945966 1.406700000 9.774176 1.419300000 9.604008 1.432000000 9.435483 1.444800000 9.268616 1.457600000 9.104695 1.470500000 8.942420 1.483500000 8.781807 1.496600000 8.622870 1.509800000 8.465624 1.523600000 8.304288 1.537400000 8.146020 1.551300000 7.989648 1.565300000 7.835177 1.579400000 7.682615 1.593600000 7.531966 1.607900000 7.383234 1.622300000 7.236422 1.636800000 7.091533 1.651400000 6.948568 1.666100000 6.807527 1.680800000 6.669342 1.695700000 6.532131 1.710700000 6.396843 1.725800000 6.263475 1.741000000 6.132023 1.756300000 6.002484 1.771700000 5.874853 1.787200000 5.749126 1.802900000 5.624510 1.818600000 5.502586 1.834500000 5.381794 1.850500000 5.262910 1.866600000 5.145924 1.882800000 5.030827 1.899200000 4.916921 1.915700000 4.804914 1.932300000 4.694793 1.949000000 4.586545 1.965900000 4.479531 1.982900000 4.374393 2.000000000 4.271116 ]
+alter @vmm[pwl] = [ 0.000000000 -14.966540 1.090200000 -14.966540 1.090800000 -14.965377 1.091400000 -14.962022 1.092000000 -14.956671 1.092600000 -14.949488 1.093200000 -14.940625 1.093800000 -14.930221 1.094400000 -14.918403 1.095100000 -14.902986 1.095800000 -14.885976 1.096500000 -14.867528 1.097200000 -14.847780 1.098000000 -14.823782 1.098800000 -14.798424 1.099600000 -14.771858 1.100500000 -14.740697 1.101400000 -14.708351 1.103300000 -14.636837 1.104800000 -14.577902 1.106500000 -14.509102 1.108300000 -14.434496 1.110300000 -14.350070 1.114000000 -14.191270 1.122200000 -13.835692 1.126300000 -13.658768 1.130500000 -13.479084 1.134600000 -13.305519 1.138300000 -13.150588 1.142000000 -12.997338 1.145700000 -12.845797 1.149400000 -12.695976 1.154000000 -12.512106 1.158600000 -12.330870 1.163200000 -12.152242 1.167900000 -11.972391 1.172600000 -11.795193 1.177300000 -11.620609 1.182000000 -11.448602 1.186800000 -11.275556 1.191100000 -11.122753 1.195500000 -10.968534 1.199900000 -10.816449 1.204300000 -10.666466 1.208700000 -10.518558 1.213200000 -10.369405 1.217700000 -10.222361 1.222200000 -10.077396 1.226700000 -9.934482 1.231300000 -9.790481 1.235800000 -9.651625 1.240400000 -9.511712 1.245000000 -9.373823 1.249700000 -9.234994 1.254300000 -9.101104 1.259000000 -8.966303 1.264100000 -8.822280 1.269300000 -8.677807 1.274500000 -8.535693 1.279800000 -8.393234 1.285000000 -8.255766 1.290300000 -8.117963 1.295600000 -7.982453 1.301000000 -7.846705 1.306400000 -7.713257 1.311800000 -7.582071 1.317200000 -7.453109 1.322700000 -7.324005 1.328200000 -7.197129 1.333800000 -7.070196 1.339400000 -6.945493 1.345000000 -6.822981 1.350600000 -6.702622 1.356300000 -6.582286 1.362000000 -6.464101 1.367800000 -6.346012 1.373600000 -6.230071 1.379400000 -6.116239 1.385200000 -6.004478 1.391100000 -5.892876 1.397000000 -5.783340 1.403000000 -5.674025 1.409000000 -5.566766 1.415000000 -5.461526 1.421100000 -5.356561 1.427200000 -5.253604 1.433300000 -5.152615 1.439500000 -5.051951 1.445300000 -4.959552 1.451100000 -4.868834 1.457000000 -4.778246 1.462900000 -4.689334 1.468800000 -4.602067 1.474800000 -4.514976 1.480800000 -4.429525 1.486900000 -4.344297 1.493000000 -4.260699 1.499100000 -4.178700 1.505300000 -4.096963 1.511500000 -4.016815 1.517800000 -3.936970 1.524100000 -3.858702 1.530400000 -3.781979 1.536800000 -3.705589 1.543200000 -3.630731 1.549700000 -3.556241 1.556200000 -3.483267 1.562800000 -3.410691 1.569400000 -3.339616 1.576100000 -3.268967 1.582800000 -3.199801 1.589500000 -3.132087 1.596300000 -3.064815 1.603200000 -2.998017 1.610100000 -2.932664 1.617000000 -2.868722 1.624000000 -2.805265 1.631000000 -2.743199 1.638100000 -2.681636 1.645300000 -2.620603 1.655200000 -2.538922 1.665300000 -2.458188 1.675500000 -2.379233 1.685800000 -2.302049 1.696200000 -2.226629 1.706700000 -2.152961 1.717300000 -2.081035 1.728100000 -2.010193 1.739000000 -1.941109 1.750000000 -1.873767 1.761100000 -1.808149 1.772400000 -1.743676 1.783800000 -1.680929 1.795300000 -1.619885 1.807000000 -1.560019 1.818800000 -1.501847 1.820300000 -1.486484 1.827000000 -1.412127 1.831600000 -1.362081 1.835800000 -1.317554 1.840000000 -1.274218 1.844600000 -1.228162 1.849200000 -1.183604 1.853700000 -1.141548 1.858200000 -1.100993 1.863000000 -1.059329 1.867900000 -1.018432 1.872800000 -0.979123 1.877800000 -0.940585 1.882900000 -0.902848 1.888000000 -0.866636 1.893200000 -0.831218 1.898500000 -0.796619 1.904100000 -0.761637 1.909800000 -0.727619 1.915600000 -0.694577 1.921400000 -0.663047 1.927400000 -0.631950 1.933400000 -0.602324 1.939500000 -0.573642 1.945800000 -0.545467 1.952100000 -0.518691 1.958600000 -0.492458 1.965200000 -0.467194 1.971900000 -0.442890 1.978700000 -0.419533 1.985700000 -0.396793 1.992800000 -0.375006 2.000000000 -0.354153 ]
+tran 1e-05 2.0000000000040004 0 1e-05
+wrdata guasto_u503_min_l41c$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata guasto_u503_min_l41c_stati$d v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+destroy all
+echo "guasto_u503_min_l41c,guasto_u503_min_l41c.dat,l41c_guasto_u503_min,1000,0,10a0,100k,0.990000000,1000,2.0000000000040004,1e-05,evento,rif_guasto_u503_min_l41c,-,0.0,6,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- L41c: rif_cf_nodelta_l41c (dal ponte: cf_nodelta, giro 1) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vtijk dc = 1000.024000
+alter vtrjk dc = 1000.000000
+alter vosa dc = 0
+alter iosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter rbyct = 1e12
+alter rbal = 50k
+alter vk1bi dc = 1
+alter vk1bt dc = 1000.000000
+alter vk5bi dc = 1
+alter vk5bt dc = 1000.000000
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter vkvhi dc = 1
+alter vkvht dc = 1000.000000
+alter vkvli dc = 0
+alter vkvlt dc = 1000.000000
+alter vtijk dc = 1000.000000
+alter vtrjk dc = 2000.000000
+alter vksa dc = -10
+alter vksb dc = 1000
+alter vkca dc = 1000.025000
+alter vkcb dc = 1000.000000
+alter vtiser dc = 1000.024000
+alter vtrser dc = 1000.001000
+alter rbym = 1e12
+alter rby1 = 1e12
+alter rby2 = 1e12
+alter rbcm = 220k
+alter rbc1 = 470k
+alter rbc2 = 470k
+alter cksm = 0.1p
+alter cks1 = 0.1p
+alter cks2 = 0.1p
+alter ccavm = 1e-18
+alter ccav1 = 1e-18
+alter ccav2 = 1e-18
+print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance] @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]
+alter @vpp[pwl] = [ 0.000000000 14.979609 0.990000000 14.979609 2.000000000 14.979609 ]
+alter @vmm[pwl] = [ 0.000000000 -14.966540 0.990000000 -14.966540 2.000000000 -14.966540 ]
+tran 1e-05 2.0000000000040004 0 1e-05
+wrdata rif_cf_nodelta_l41c$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rif_cf_nodelta_l41c_stati$d v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+destroy all
+echo "rif_cf_nodelta_l41c,rif_cf_nodelta_l41c.dat,rif,1000,0,10,100k,0.990000000,1000,2.0000000000040004,1e-05,rif_mai,-,-,0.0,0," >> tb_v2_casopeggiore_manifest.csv
+* ---- L41c: cf_nodelta_l41c (dal ponte: cf_nodelta, giro 1) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vtijk dc = 1.082400
+alter vtrjk dc = 1000.000000
+alter vosa dc = 0
+alter iosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter rbyct = 1e12
+alter rbal = 50k
+alter vk1bi dc = 1
+alter vk1bt dc = 1.080300
+alter vk5bi dc = 1
+alter vk5bt dc = 1.080600
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter vkvhi dc = 1
+alter vkvht dc = 1000.000000
+alter vkvli dc = 0
+alter vkvlt dc = 1000.000000
+alter vtijk dc = 1000.000000
+alter vtrjk dc = 2000.000000
+alter vksa dc = -10
+alter vksb dc = 1000
+alter vkca dc = 1.083400
+alter vkcb dc = 1000.000000
+alter vtiser dc = 1.082400
+alter vtrser dc = 1000.001000
+alter rbym = 1e12
+alter rby1 = 1e12
+alter rby2 = 1e12
+alter rbcm = 220k
+alter rbc1 = 470k
+alter rbc2 = 470k
+alter cksm = 0.1p
+alter cks1 = 0.1p
+alter cks2 = 0.1p
+alter ccavm = 1e-18
+alter ccav1 = 1e-18
+alter ccav2 = 1e-18
+print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance] @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]
+alter @vpp[pwl] = [ 0.000000000 14.979609 1.042000000 14.979609 1.042500000 14.978849 1.043100000 14.976269 1.043700000 14.972280 1.044400000 14.966261 1.045200000 14.958026 1.046000000 14.948717 1.048000000 14.922318 1.050400000 14.887043 1.053200000 14.842938 1.056400000 14.789895 1.059900000 14.729496 1.063700000 14.661775 1.069100000 14.562744 1.075400000 14.444435 1.082200000 14.314793 1.101200000 13.949684 1.111300000 13.756702 1.122300000 13.548619 1.132800000 13.352437 1.144600000 13.135054 1.156300000 12.922843 1.168000000 12.713978 1.179700000 12.508443 1.190400000 12.323364 1.201100000 12.141011 1.211800000 11.961347 1.222600000 11.782693 1.233500000 11.605085 1.244400000 11.430149 1.255400000 11.256276 1.266400000 11.085044 1.279100000 10.890581 1.291900000 10.698032 1.304800000 10.507417 1.317700000 10.320192 1.330700000 10.134885 1.343800000 9.951512 1.357000000 9.770089 1.370200000 9.591967 1.383500000 9.415774 1.396900000 9.241522 1.410400000 9.069224 1.424000000 8.898892 1.437700000 8.730534 1.451400000 8.565355 1.465300000 8.400951 1.479200000 8.239697 1.493700000 8.074771 1.508300000 7.912036 1.523000000 7.751492 1.537800000 7.593139 1.552700000 7.436976 1.567700000 7.283001 1.582800000 7.131210 1.598100000 6.980628 1.613400000 6.833217 1.628900000 6.687044 1.644400000 6.543990 1.660100000 6.402200 1.675900000 6.262600 1.691800000 6.125181 1.707800000 5.989932 1.723900000 5.856842 1.740100000 5.725902 1.756500000 5.596317 1.773000000 5.468891 1.789700000 5.342866 1.806400000 5.219734 1.823300000 5.098007 1.840300000 4.978413 1.857500000 4.860256 1.874800000 4.744231 1.892300000 4.629672 1.909900000 4.517236 1.927600000 4.406905 1.945500000 4.298056 1.963500000 4.191299 1.981700000 4.086040 2.000000000 3.982855 ]
+alter @vmm[pwl] = [ 0.000000000 -14.966540 1.040200000 -14.966540 1.040800000 -14.965377 1.041400000 -14.962022 1.042000000 -14.956671 1.042600000 -14.949488 1.043200000 -14.940625 1.043800000 -14.930220 1.044400000 -14.918403 1.045100000 -14.902986 1.045800000 -14.885976 1.046500000 -14.867527 1.047200000 -14.847779 1.048000000 -14.823782 1.048800000 -14.798424 1.049600000 -14.771858 1.050400000 -14.744220 1.051300000 -14.711998 1.052200000 -14.678727 1.053200000 -14.640695 1.054700000 -14.581887 1.056400000 -14.513198 1.058200000 -14.438678 1.060300000 -14.350069 1.063900000 -14.195590 1.072300000 -13.831362 1.076500000 -13.650171 1.080800000 -13.466319 1.085000000 -13.288689 1.088900000 -13.125621 1.092700000 -12.968536 1.096600000 -12.809196 1.100400000 -12.655779 1.105100000 -12.468527 1.109900000 -12.280125 1.114700000 -12.094552 1.119500000 -11.911772 1.124300000 -11.731745 1.129200000 -11.550766 1.134100000 -11.372571 1.139000000 -11.197118 1.143600000 -11.034865 1.148200000 -10.874958 1.152800000 -10.717362 1.157400000 -10.562044 1.162000000 -10.408971 1.166700000 -10.254856 1.171400000 -10.103017 1.176100000 -9.953420 1.180800000 -9.806032 1.185600000 -9.657754 1.190400000 -9.511713 1.195200000 -9.367873 1.200000000 -9.226202 1.204900000 -9.083784 1.209800000 -8.943557 1.214700000 -8.805488 1.220100000 -8.655791 1.225500000 -8.508631 1.230900000 -8.363965 1.236400000 -8.219140 1.241900000 -8.076815 1.247400000 -7.936946 1.253000000 -7.797014 1.258600000 -7.659540 1.264200000 -7.524482 1.269900000 -7.389449 1.275600000 -7.256831 1.281300000 -7.126584 1.287100000 -6.996442 1.292900000 -6.868668 1.298700000 -6.743218 1.304600000 -6.617947 1.310500000 -6.494993 1.316500000 -6.372289 1.322500000 -6.251893 1.328500000 -6.133762 1.334600000 -6.015940 1.340700000 -5.900372 1.346800000 -5.787014 1.353000000 -5.674018 1.359200000 -5.563219 1.365500000 -5.452838 1.371800000 -5.344636 1.378100000 -5.238571 1.384500000 -5.132967 1.390900000 -5.029480 1.397400000 -4.926501 1.403900000 -4.825619 1.410000000 -4.732814 1.416200000 -4.640307 1.422400000 -4.549597 1.428600000 -4.460651 1.434900000 -4.372040 1.441200000 -4.285179 1.447600000 -4.198695 1.454000000 -4.113946 1.460400000 -4.030897 1.466900000 -3.948254 1.473400000 -3.867294 1.480000000 -3.786776 1.486600000 -3.707923 1.493300000 -3.629542 1.500000000 -3.552807 1.506800000 -3.476572 1.513600000 -3.401961 1.520500000 -3.327877 1.527400000 -3.255393 1.534300000 -3.184475 1.541300000 -3.114096 1.548400000 -3.044286 1.555500000 -2.976028 1.562700000 -2.908357 1.569900000 -2.842212 1.577200000 -2.776669 1.584600000 -2.711757 1.592000000 -2.648348 1.599500000 -2.585579 1.607000000 -2.524284 1.614600000 -2.463638 1.622200000 -2.404434 1.630700000 -2.339885 1.639300000 -2.276320 1.648000000 -2.213753 1.656800000 -2.152196 1.665700000 -2.091660 1.674600000 -2.032806 1.683600000 -1.974953 1.692700000 -1.918109 1.701900000 -1.862282 1.711200000 -1.807476 1.720600000 -1.753697 1.730000000 -1.701496 1.739600000 -1.649763 1.749200000 -1.599579 1.758900000 -1.550398 1.768800000 -1.501736 1.770200000 -1.487337 1.777500000 -1.406378 1.782700000 -1.350058 1.787700000 -1.297551 1.792700000 -1.246758 1.798000000 -1.194831 1.803200000 -1.145900 1.808500000 -1.098096 1.813900000 -1.051451 1.819600000 -1.004374 1.825300000 -0.959416 1.831200000 -0.915012 1.837100000 -0.872676 1.843100000 -0.831643 1.849300000 -0.791282 1.855500000 -0.752894 1.861900000 -0.715234 1.869200000 -0.674590 1.876600000 -0.635766 1.884200000 -0.598238 1.891900000 -0.562495 1.899800000 -0.528063 1.907900000 -0.494971 1.916200000 -0.463235 1.924600000 -0.433213 1.933200000 -0.404516 1.942100000 -0.376846 1.951100000 -0.350817 1.960400000 -0.325837 1.969900000 -0.302187 1.979700000 -0.279620 1.989700000 -0.258363 2.000000000 -0.238192 ]
+tran 1e-05 2.0000000000040004 0 1e-05
+wrdata cf_nodelta_l41c$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata cf_nodelta_l41c_stati$d v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+destroy all
+echo "cf_nodelta_l41c,cf_nodelta_l41c.dat,l41c_cf_nodelta,1000,0,10a0,100k,0.990000000,1000,2.0000000000040004,1e-05,evento,rif_cf_nodelta_l41c,-,0.0,6,A_ins" >> tb_v2_casopeggiore_manifest.csv
+* ---- L41c: rif_corto_u503_l41c (dal ponte: corto_u503, giro 1) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vtijk dc = 1000.024000
+alter vtrjk dc = 1000.000000
+alter vosa dc = 0
+alter iosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter rbyct = 1e12
+alter rbal = 50k
+alter vk1bi dc = 1
+alter vk1bt dc = 1000.000000
+alter vk5bi dc = 1
+alter vk5bt dc = 1000.000000
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter vkvhi dc = 1
+alter vkvht dc = 1000.000000
+alter vkvli dc = 0
+alter vkvlt dc = 1000.000000
+alter vtijk dc = 1000.000000
+alter vtrjk dc = 2000.000000
+alter vksa dc = -10
+alter vksb dc = 1000
+alter vkca dc = 1000.025000
+alter vkcb dc = 1000.000000
+alter vtiser dc = 1000.024000
+alter vtrser dc = 1000.001000
+alter rbym = 1e12
+alter rby1 = 1e12
+alter rby2 = 1e12
+alter rbcm = 220k
+alter rbc1 = 470k
+alter rbc2 = 470k
+alter cksm = 0.1p
+alter cks1 = 0.1p
+alter cks2 = 0.1p
+alter ccavm = 1e-18
+alter ccav1 = 1e-18
+alter ccav2 = 1e-18
+print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance] @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]
+alter @vpp[pwl] = [ 0.000000000 14.979609 0.990000000 14.979609 2.000000000 14.979609 ]
+alter @vmm[pwl] = [ 0.000000000 -14.966540 0.990000000 -14.966543 2.000000000 -14.966543 ]
+tran 1e-05 2.0000000000040004 0 1e-05
+wrdata rif_corto_u503_l41c$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata rif_corto_u503_l41c_stati$d v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+destroy all
+echo "rif_corto_u503_l41c,rif_corto_u503_l41c.dat,rif,1000,0,10,100k,0.990000000,1000,2.0000000000040004,1e-05,rif_mai,-,-,0.0,0," >> tb_v2_casopeggiore_manifest.csv
+* ---- L41c: corto_u503_l41c (dal ponte: corto_u503, giro 1) ----
+alter vamp dc = 0
+alter vfrq dc = 1000
+alter rldm = 100k
+alter rld1 = 100k
+alter rld2 = 100k
+alter vtijk dc = 1.003100
+alter vtrjk dc = 1000.000000
+alter vosa dc = 0
+alter iosa dc = 0
+alter vosb dc = 0
+alter vosf1 dc = 0
+alter vosf2 dc = 0
+alter ratth = 1m
+alter rattb = 10k
+alter rl1 = 845
+alter cwire = 100p
+alter rbyct = 1e12
+alter rbal = 50k
+alter vk1bi dc = 1
+alter vk1bt dc = 1.000100
+alter vk5bi dc = 1
+alter vk5bt dc = 1.000400
+alter vk1i dc = 0
+alter vk1t dc = 1000.000000
+alter vk5i dc = 0
+alter vk5t dc = 1000.000000
+alter vt1ri dc = 1
+alter vt1rt dc = 1000.000000
+alter vt1si dc = 0
+alter vt1st dc = 1000.000000
+alter vt2ri dc = 1
+alter vt2rt dc = 1000.000000
+alter vt2si dc = 0
+alter vt2st dc = 1000.000000
+alter vkvhi dc = 1
+alter vkvht dc = 1000.000000
+alter vkvli dc = 0
+alter vkvlt dc = 1000.000000
+alter vtijk dc = 1000.000000
+alter vtrjk dc = 2000.000000
+alter vksa dc = -10
+alter vksb dc = 1000
+alter vkca dc = 1.004100
+alter vkcb dc = 1000.000000
+alter vtiser dc = 1.003100
+alter vtrser dc = 1000.001000
+alter rbym = 1e12
+alter rby1 = 1e12
+alter rby2 = 1e12
+alter rbcm = 220k
+alter rbc1 = 470k
+alter rbc2 = 470k
+alter cksm = 0.1p
+alter cks1 = 0.1p
+alter cks2 = 0.1p
+alter ccavm = 1e-18
+alter ccav1 = 1e-18
+alter ccav2 = 1e-18
+print @cksm[capacitance] @cks1[capacitance] @cks2[capacitance] @ccavm[capacitance] @ccav1[capacitance] @ccav2[capacitance]
+alter @vpp[pwl] = [ 0.000000000 14.979609 1.042000000 14.979609 1.042500000 14.978849 1.043100000 14.976269 1.043700000 14.972280 1.044400000 14.966261 1.045200000 14.958027 1.046000000 14.948717 1.048000000 14.922318 1.050400000 14.887043 1.053200000 14.842938 1.056400000 14.789895 1.059900000 14.729496 1.063700000 14.661775 1.069100000 14.562744 1.075400000 14.444435 1.082200000 14.314793 1.101200000 13.949684 1.111300000 13.756702 1.122300000 13.548619 1.132800000 13.352437 1.144600000 13.135053 1.156300000 12.922843 1.168000000 12.713977 1.179700000 12.508443 1.190400000 12.323364 1.201100000 12.141010 1.211800000 11.961346 1.222600000 11.782693 1.233500000 11.605084 1.244400000 11.430148 1.255400000 11.256276 1.266400000 11.085044 1.279100000 10.890581 1.291900000 10.698032 1.304800000 10.507417 1.317700000 10.320192 1.330700000 10.134885 1.343800000 9.951512 1.357000000 9.770089 1.370200000 9.591967 1.383500000 9.415773 1.396900000 9.241522 1.410400000 9.069224 1.424000000 8.898891 1.437700000 8.730534 1.451400000 8.565355 1.465300000 8.400951 1.479200000 8.239696 1.493700000 8.074771 1.508300000 7.912036 1.523000000 7.751492 1.537800000 7.593139 1.552700000 7.436976 1.567700000 7.283000 1.582800000 7.131210 1.598100000 6.980628 1.613400000 6.833216 1.628900000 6.687044 1.644400000 6.543989 1.660100000 6.402200 1.675900000 6.262600 1.691800000 6.125181 1.707800000 5.989932 1.723900000 5.856842 1.740100000 5.725902 1.756500000 5.596317 1.773000000 5.468891 1.789700000 5.342866 1.806400000 5.219734 1.823300000 5.098007 1.840300000 4.978413 1.857500000 4.860256 1.874800000 4.744231 1.892300000 4.629672 1.909900000 4.517236 1.927600000 4.406905 1.945500000 4.298056 1.963500000 4.191299 1.981700000 4.086040 2.000000000 3.982855 ]
+alter @vmm[pwl] = [ 0.000000000 -14.966540 1.040200000 -14.966543 1.040800000 -14.965393 1.041400000 -14.962051 1.042000000 -14.956711 1.042600000 -14.949538 1.043200000 -14.940685 1.043800000 -14.930290 1.044400000 -14.918481 1.045100000 -14.903074 1.045800000 -14.886072 1.046500000 -14.867631 1.047200000 -14.847891 1.048000000 -14.823902 1.048800000 -14.798552 1.049600000 -14.771992 1.050400000 -14.744361 1.051300000 -14.712146 1.052200000 -14.678881 1.053200000 -14.640856 1.054700000 -14.582057 1.056400000 -14.513377 1.058200000 -14.438867 1.060300000 -14.350267 1.064000000 -14.191483 1.072300000 -13.831604 1.076500000 -13.650427 1.080800000 -13.466588 1.085000000 -13.288971 1.088900000 -13.125913 1.092700000 -12.968839 1.096600000 -12.809510 1.100400000 -12.656103 1.105100000 -12.468864 1.109900000 -12.280475 1.114700000 -12.094915 1.119500000 -11.912147 1.124300000 -11.732132 1.129200000 -11.551164 1.134100000 -11.372981 1.139000000 -11.197540 1.143600000 -11.035298 1.148200000 -10.875402 1.152800000 -10.717816 1.157400000 -10.562508 1.162000000 -10.409446 1.166700000 -10.255341 1.171400000 -10.103511 1.176100000 -9.953924 1.180800000 -9.806545 1.185600000 -9.658277 1.190400000 -9.512245 1.195200000 -9.368414 1.200000000 -9.226753 1.204900000 -9.084343 1.209800000 -8.944125 1.214700000 -8.806065 1.220100000 -8.656377 1.225500000 -8.509226 1.230900000 -8.364569 1.236400000 -8.219753 1.241900000 -8.077436 1.247400000 -7.937575 1.253000000 -7.797652 1.258600000 -7.660186 1.264200000 -7.525136 1.269900000 -7.390111 1.275600000 -7.257501 1.281300000 -7.127261 1.287100000 -6.997127 1.292900000 -6.869360 1.298700000 -6.743917 1.304600000 -6.618653 1.310500000 -6.495706 1.316500000 -6.373009 1.322500000 -6.252619 1.328500000 -6.134495 1.334600000 -6.016680 1.340700000 -5.901117 1.346800000 -5.787765 1.353000000 -5.674776 1.359200000 -5.563982 1.365500000 -5.453607 1.371800000 -5.345411 1.378100000 -5.239352 1.384500000 -5.133752 1.390900000 -5.030271 1.397400000 -4.927297 1.403900000 -4.826420 1.410000000 -4.733620 1.416200000 -4.641117 1.422400000 -4.550412 1.428600000 -4.461470 1.434900000 -4.372863 1.441200000 -4.286006 1.447600000 -4.199527 1.454000000 -4.114781 1.460400000 -4.031736 1.466900000 -3.949097 1.473400000 -3.868141 1.480000000 -3.787626 1.486600000 -3.708777 1.493300000 -3.630399 1.500000000 -3.553667 1.506800000 -3.477436 1.513600000 -3.402828 1.520500000 -3.328746 1.527400000 -3.256266 1.534400000 -3.184335 1.541400000 -3.113980 1.548500000 -3.044195 1.555600000 -2.975961 1.562800000 -2.908315 1.570000000 -2.842193 1.577300000 -2.776674 1.584700000 -2.711784 1.592100000 -2.648397 1.599600000 -2.585651 1.607100000 -2.524378 1.614700000 -2.463753 1.622300000 -2.404570 1.630800000 -2.340043 1.639400000 -2.276501 1.648100000 -2.213956 1.656900000 -2.152421 1.665800000 -2.091905 1.674700000 -2.033071 1.683700000 -1.975239 1.692800000 -1.918415 1.702000000 -1.862607 1.711300000 -1.807820 1.720700000 -1.754060 1.730100000 -1.701876 1.739700000 -1.650161 1.749300000 -1.599994 1.759100000 -1.550331 1.769000000 -1.501699 1.770400000 -1.487219 1.777700000 -1.406298 1.782800000 -1.351075 1.787900000 -1.297533 1.792900000 -1.246773 1.798200000 -1.194882 1.803400000 -1.145988 1.808700000 -1.098220 1.814100000 -1.051611 1.819800000 -1.004570 1.825500000 -0.959647 1.831400000 -0.915277 1.837300000 -0.872973 1.843300000 -0.831972 1.849400000 -0.792276 1.855600000 -0.753886 1.862000000 -0.716225 1.869300000 -0.675579 1.876700000 -0.636753 1.884300000 -0.599222 1.892000000 -0.563477 1.899900000 -0.529044 1.908000000 -0.495950 1.916300000 -0.464212 1.924700000 -0.434188 1.933300000 -0.405490 1.942100000 -0.378118 1.951100000 -0.352066 1.960400000 -0.327065 1.969900000 -0.303394 1.979700000 -0.280807 1.989700000 -0.259531 2.000000000 -0.239342 ]
+tran 1e-05 2.0000000000040004 0 1e-05
+wrdata corto_u503_l41c$d v(mainjack) v(fixjack1) v(fixjack2)
+wrdata corto_u503_l41c_stati$d v(ina) v(vplus) v(vminus) v(main_a) v(mainc) v(fixc1) v(fixc2)
+destroy all
+echo "corto_u503_l41c,corto_u503_l41c.dat,l41c_corto_u503,1000,0,10a0,100k,0.990000000,1000,2.0000000000040004,1e-05,evento,rif_corto_u503_l41c,-,0.0,6,A_ins" >> tb_v2_casopeggiore_manifest.csv
+.endc
+
+.end

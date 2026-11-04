@@ -1,0 +1,33 @@
+{
+  "part_name": "PR01, PR02, PR03 power metal film leaded resistors (flameproof coating UL 94 V-0, defined fusing)",
+  "vendor_name": "Vishay BCcomponents",
+  "device_class": "resistor",
+  "product_page": "https://www.vishay.com/product/28729",
+  "date_obtained": "2026-11-04",
+  "lotto": "L70",
+  "obtained_by": "AI agent (Claude Opus 5.5, Claude Code background session) on behalf of roberto.carmeli@gmail.com",
+  "obtained_from": "Downloaded with curl directly from Vishay's own host; byte for byte as served, nothing converted or edited.",
+  "license_notes": "Manufacturer datasheet, redistributed here unmodified for engineering traceability only. Copyright remains Vishay Intertechnology.",
+  "file_mode_frozen": true,
+  "freeze_mechanism": "chmod 0444 via scripts/freeze_vendor.sh",
+  "files": [
+    {
+      "original_filename": "pr010203.pdf",
+      "role": "datasheet",
+      "url": "https://www.vishay.com/docs/28729/pr010203.pdf",
+      "served_content_type": "application/pdf",
+      "bytes": 227845,
+      "pages": 10,
+      "sha256": "1b65216400497850afb3e740f378a10a77cd584809e647ae7fcdb707d9b6a2bc",
+      "local_filename": "28729.pdf",
+      "renamed": true
+    }
+  ],
+  "revision_note": "Footer: 'Revision: 08-Jul-2025', 'Document Number: 28729' (pdftotext -layout 28729.pdf - | grep Revision).",
+  "why_this_file": "L70, simplification S1 and NC-073: R550 / R551 (4.7 ohm, 2 W axial, ADR-092) as flameproof film; the pulse they take in a short on the regulator's pin against what the part admits.",
+  "what_was_read": {
+    "page_2": "PR02 rated dissipation P70 2 W; maximum film temperature 250 C (applied maximum film temperature); resistance range 0.33 ohm to 1 Mohm",
+    "page_8": "maximum permissible hot-spot temperature 205 C PR01, 220 C PR02, 250 C PR03",
+    "page_9": "PR02 'Pulse on a regular basis; maximum permissible peak pulse power vs pulse duration' - a GRAPH, read at 110 dpi: the dashed upper line ~30 W at 10 ms, ~12 W at 100 ms, ~9 W at 1 s; the tp/ti = 1000 curve ~5 W at 100 ms. The legend does not name the dashed line; by Vishay's usual graphs it is the single pulse (a reading, not a datasheet statement)."
+  }
+}
