@@ -18,6 +18,28 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L69 — la ritenuta che tiene i 5 V a massa (2026-11-03/04)
+
+- **Le scelte dell'utente**: il rimedio **«Due metà per pull-up»** (**ADR-116**), contro una resistenza da
+  1 kΩ sull'anodo della ritenuta; il dossier **«Lotto a parte»** (L69b, prima di L65).
+- **Il meccanismo, con le sonde**: con R572 / R576 in corto e il rail − che cade U504 205 / 218 °C, Q513
+  0,20 / 0,22 W e Q514 0,19 / 0,22 W fino a 149 °C, 259 mA di picco (la divisione di L68, 0,37 / 0,07 W,
+  era sbagliata; il verdetto no).
+- **Le opzioni** (76 corse): una resistenza sull'anodo salva i 5 V ma lascia **K501 chiuso** (il corto tiene
+  AT_ON alto); R576 in due metà + 1 kΩ con D537 non risolve R572 (AT_MRQ inchiodato tiene il permesso);
+  **R572 e R576 in due metà**: con una metà in corto come il circuito sano, K501 a 129,4 / 132,6 ms, la
+  ritenuta ~60 °C, U504 62 °C. Le due finali a rete ±10 % e col comparatore a 2,2 V: 0 fuori.
+- **Il sorgente**: R572 + **R588** (100 + 100 kΩ), R576 + **R589** (4,99 + 4,99 kΩ); `psu.net` a 189 parti,
+  lo schema dell'alimentatore ridisegnato (quello audio uguale); `run_tests.sh` 14 / 0.
+- **Le corse sul sorgente nuovo**: **672**, nessun ripiego; gli otto eventi sani uguali a L64b; **ogni caso del
+  temporizzatore di L68 fuori dai pull-up uguale a L68** (600 corse); le metà in corto come la corsa sana, le
+  metà aperte come i pull-up aperti di L68.
+- **La FMEA**: 8 righe nuove, tutte basse (la settima fonte): **692 righe, 47 alte**; dell'alimentatore 0
+  parti su 189 senza riga. **NC-079 chiusa.**
+- **Il dossier** rifiuta, giustamente: i deck dell'alimentatore di L64b rigenerati dal `psu.net` di oggi non
+  sono quelli corsi; `parti_schede.csv` di L64c conta 2 parti in più. I sabotaggi non rifatti: con L69b.
+- **Dopo**: **L69b**, il prompt di `NEXT-SESSION.md`.
+
 ### L68 — la FMEA del temporizzatore a comparatori (2026-11-03)
 
 - **Le scelte dell'utente**: la ritenuta cieca (31 righe) «Accettare come R585»; R572 / R576 in corto

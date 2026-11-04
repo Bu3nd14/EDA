@@ -107,3 +107,14 @@ e resterebbero alte con una gravità più seria.
 4. **Entrambe**: in più il buco di 20 ms non si sente e il colpo alla perdita di rete sale a ~18 dB SPL.
 
 La scelta dell'utente e le sue conseguenze sono nella sezione che segue (aggiunta alla risposta).
+
+## La scelta dell'utente
+
+Domanda posta con le tre opzioni reali (la quarta, il solo rivelatore tolto, detta come non funzionante), i
+colpi al jack in dB SPL e le temperature contro i limiti a rete −10 / 0 / +10 %. Risposta: **«Tenere tutto»**
+(l'opzione consigliata).
+
+- **ADR-119**: rivelatore di rete e ritenuta restano; il sorgente, P9 e il PRB non cambiano.
+- **NC-089**, minore, aperta: il buco di rete di 20 ms che toglie la musica per ~0,6 s, dichiarato.
+- **NC-073** avanza: il numero del PR02 contro i 6,1–9,4 J di oggi.
+- La FMEA non cambia (692 righe, 47 alte): `fmea_l70.csv` resta come studio.
