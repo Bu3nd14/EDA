@@ -2,6 +2,12 @@
 """L64b: the second road of the sequences - every run of today against the rows of the lots it stands
 for (mappa.csv), column by column.
 
+L69b (copied from L64b): the source of today has AT_MRQ's and AT_ON's pull-ups in two halves (ADR-116:
+RR572 v5 at_mrq_m 100k + RR588 at_mrq_m at_mrq 100k; RR576 v5 at_on_m 4.99k + RR589 at_on_m vrelay_en
+4.99k). L58b's decks have the single resistor (RR572 v5 at_mrq 200k, RR576 v5 vrelay_en 10k): in today's
+deck the two halves are read as that one resistor (HALVES below), and nothing else is forgiven. 4.99k + 4.99k
+is 9.98k, not 10k: the 0,2 % stays in the figures, not in the deck check.
+
   - L58b ran on the psu.py of today (no commit to psu.py after 6a8e626); its load differs from today's
     by the block of L66 (303,373 / 311,539 mA against 303,3288 / 311,5182): the decks must be the same
     but for those two numbers and the paths (deck_uguale), the rows the same at the printed figure or
@@ -63,6 +69,15 @@ def toll(col, lot):
     on the source of before the pair (L54b3b, L58b «prima») L58b's 0,1 ms / 0,1 mV of the variant on
     top."""
     extra = 1.0 if lot in ("L54b3b", "prima") else 0.0
+    # L69b (ADR-116): every lot here ran AT_ON's 10k pull-up, today's is 9.98k. AT_ON high rises by
+    # 1,02 mV (51 uA x 20 ohm) and AT_T2S, charged from AT_ON (R580 2.7M / C552 1u), arms 0,76 ms
+    # earlier (armo.txt, from today's accensione); measured -0,6 / -0,7 ms against L64b. The latch's
+    # base (bn_max, on AT_ON through Q514) moves by 0,3 mV. These three columns alone get the ADR's
+    # share on top, 1 ms and 0,5 mV; nothing else.
+    if col in ("t_arm_ms", "arm_pg_ms"):
+        return 0.1 + 0.1 * extra + 1.0 + 1e-9
+    if col == "bn_max":
+        return 1e-4 + 1e-4 * extra + 5e-4 + 1e-12
     if col.endswith("_ms"):
         return 0.1 + 0.1 * extra + 1e-9
     if col.endswith("_mv"):
@@ -99,6 +114,22 @@ def modo_l58b(etich):
     return "prima"
 
 
+# L69b (ADR-116): today's two halves -> the single pull-up of L58b's deck. Each pair must be there exactly
+# as written, and its middle node nowhere else, or the check refuses.
+HALVES = ((("RR572 v5 at_mrq_m 100k", "RR588 at_mrq_m at_mrq 100k"), "RR572 v5 at_mrq 200k", "at_mrq_m"),
+          (("RR576 v5 at_on_m 4.99k", "RR589 at_on_m vrelay_en 4.99k"), "RR576 v5 vrelay_en 10k", "at_on_m"))
+
+
+def mezze(r):
+    for (a, b), uno, nodo in HALVES:
+        if r.count(a) != 1 or r.count(b) != 1:
+            sys.exit("RIFIUTATO: le due meta' %r / %r non sono nel deck di oggi una volta" % (a, b))
+        if sum(1 for x in r if nodo in x.split()) != 2:
+            sys.exit("RIFIUTATO: il nodo %s compare fuori dalle due meta'" % nodo)
+        r = [uno if x == a else x for x in r if x != b]
+    return r
+
+
 def decks_uguali(caso, etich_oggi, etich_l58b):
     """Today's deck against L58b's: the same lines but the load (the two currents of the audio board)
     and the paths; the pair compared as in sorgente_uguale.py (variante) or left out (prima)."""
@@ -109,12 +140,13 @@ def decks_uguali(caso, etich_oggi, etich_l58b):
         return "manca un deck"
     modo = modo_l58b(etich_l58b)
     pat = re.compile(r"/Users/\S*?/(?=(?:circuits|models|docs|spice)/)", re.I)
-    lot = (os.path.join("2026-11-03", "L64b"), os.path.join("2026-11-01", "L58b"))
+    lot = (os.path.join("2026-11-04", "L69b"), os.path.join("2026-11-01", "L58b"))
 
     def leggi(p, oggi):
         r = [pat.sub("", x) for x in open(p).read().splitlines()[1:]]
         if oggi:
             r = [x.replace(lot[0], lot[1]) for x in r]
+            r = mezze(r)
         if oggi and modo == "variante":
             # the nodes and the resistors of the pair under the variant's names on EVERY line (the
             # faults of modi.py name them: BF_c q501_g ...), the values only on the pair's own lines

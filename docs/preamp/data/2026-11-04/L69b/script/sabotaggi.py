@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
-"""sabotaggi.py : ogni controllo nuovo di build_dossier.py (L64b, l'alimentatore) fatto fallire.
+"""sabotaggi.py : ogni controllo di build_dossier.py fatto fallire, con la pagina completa (L69b).
 
-    /usr/bin/python3 docs/preamp/data/2026-11-03/L64b/script/sabotaggi.py
+    /usr/bin/python3 docs/preamp/data/2026-11-04/L69b/script/sabotaggi.py
 
-Come L64a/script/sabotaggi.py: per ogni sabotaggio una sostituzione di testo (la prima occorrenza)
-in UN file versionato, il generatore lanciato, il file rimesso com'era byte per byte. Il sabotaggio
-e' «caduto» se il generatore esce != 0 e la sua uscita contiene il motivo atteso. Prima e dopo, il
-generatore sui file veri deve uscire 0. Con PARTI = ("audio", "alimentatore") il generatore senza
---standalone non scrive niente. Il generatore gira a priorita' bassa (l'utente: «non caricare troppo
-la CPU»). Gli scarti contro L51b, L54b2 e L54b3b (le tabelle «cosa è cambiato») si pubblicano e non
-rifiutano: lì non c'e' niente da sabotare.
+Come L68/script/sabotaggi.py, di cui riprende la lista (importata: L64a, L64b, L64c, L68; il suo
+sabotaggi.txt resta com'e'), con i file spostati dove il generatore li legge oggi:
+  - i sabotaggi di L64b toccano i file di L69b (la stessa evidenza rifatta sul sorgente di ADR-116,
+    con gli stessi nomi), coi valori di oggi dove la corsa nuova li ha cambiati (VALORI);
+  - il giorno dell'alimentatore e' il 2026-11-04: il sabotaggio lo sposta al 2026-11-05;
+  - parti_schede.csv e' quello di L69b; la FMEA di oggi e la copertura sono quelle di L69;
+e i sabotaggi nuovi: una meta' di un pull-up cambiata nel deck corso, la lettura delle due meta' in
+confronta.py, il dossier ripuntato sui dati di L64b (devono essere rifiutati), il confronto contro L64b,
+le righe di L69 nella FMEA (la settima fonte).
+Per ogni sabotaggio una sostituzione di testo (la prima occorrenza) in UN file versionato, il generatore
+lanciato, il file rimesso com'era byte per byte. Il sabotaggio e' «caduto» se il generatore esce != 0 e
+la sua uscita contiene il motivo atteso. Prima e dopo, il generatore sui file veri deve uscire 0. A
+priorita' bassa.
 """
+import importlib.util
 import os
 import subprocess
 import sys
@@ -19,59 +26,59 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", "..", "..", "..", ".."))
 D = "docs/preamp/data/"
 BUILD = os.path.join(REPO, "docs", "preamp", "dossier", "build_dossier.py")
-L = D + "2026-11-03/L64b/"
-L58 = D + "2026-11-01/L58b/"
+L = D + "2026-11-04/L69b/"
+L64B = D + "2026-11-03/L64b/"
+L69 = D + "2026-11-03/L69/"
+
+
+def modulo(path):
+    s = importlib.util.spec_from_file_location("sab_l68", path)
+    m = importlib.util.module_from_spec(s)
+    s.loader.exec_module(m)
+    return m
+
+
+L68 = modulo(os.path.join(REPO, D, "2026-11-03/L68/script/sabotaggi.py"))
+# nome -> (file, vecchio, nuovo, atteso): None tiene quello di L68
+SPOSTATI = {
+    "L64b/giorno_di_oggi_spostato": ("docs/preamp/dossier/build_dossier.py", 'PSU_DA = "2026-11-04"',
+                                     'PSU_DA = "2026-11-05"', "non e' del 2026-11-05"),
+    "L64c/parti_delle_schede_riscritte": (L + "parti_schede.csv", None, None, None),
+    "L64c/fmea_oggi_riscritta (su L68)": (L69 + "fmea_oggi.csv", None, None, None),
+    "L68/fmea_oggi_riscritta_su_L68": (L69 + "fmea_oggi.csv", None, None, None),
+    "L68/copertura_riscritta": (L69 + "copertura.csv", None, None, None),
+}
+# i testi da sabotare che la corsa di oggi ha cambiato (nome -> (vecchio, nuovo)); vuoto se nessuno
+VALORI = {}
+
+SAB = []
+for nome, f, old, new, atteso in L68.SAB:
+    if nome in SPOSTATI:
+        nf, no, nn, na = SPOSTATI[nome]
+        f, old, new, atteso = nf, no or old, nn or new, na or atteso
+        nome += " (L69b)"
+    elif f.startswith(L64B):
+        f = L + f[len(L64B):]
+        nome += " (su L69b)"
+    if nome.split(" (")[0] in VALORI:
+        old, new = VALORI[nome.split(" (")[0]]
+    SAB.append((nome, f, old, new, atteso))
 
 # (nome, file, vecchio, nuovo, frammento atteso nel rifiuto)
-SAB = [
-    # 8. la potenza: i banchi della rete e dei guasti
-    ("R512_a_220k_nel_log", L + "rete/tb_psu_rete.log", "@rr512[resistance] = 1.100000000000000e+05",
-     "@rr512[resistance] = 2.200000000000000e+05", "(#34)"),
-    ("deck_della_rete_diverso", L + "rete/tb_psu_rete.cir", "RR550 raw_p raw_pr 4.7",
-     "RR550 raw_p raw_pr 4.8", "il circuito corso non e' quello di oggi"),
-    ("caso_della_rete_rinominato", L + "rete/analisi.csv", "perdita_rete_nom,", "perdita_rete_nomx,",
-     "analisi.csv: casi"),
-    ("analisi_senza_3_secondi", L + "rete/analisi.csv", "perdita_rete_nom,,,,,,,,14.402,",
-     "perdita_rete_nom,,,,,,,,1014.402,", "analizza.py senza 3.0"),
-    ("giorno_di_oggi_spostato", "docs/preamp/dossier/build_dossier.py", 'PSU_DA = "2026-11-03"',
-     'PSU_DA = "2026-11-04"', "non e' del 2026-11-04"),
-    # il calore
-    ("rail_della_rete_contro_il_calore", L + "rete/analisi.csv", "regime_nom,14.9854,",
-     "regime_nom,14.9954,", "dai rail del banco della rete"),
-    ("potenza_del_calore_riscritta", L + "termica/tb_calore.log", "CALORE regime_nom pt1=13.934 ",
-     "CALORE regime_nom pt1=13.984 ", "il bilancio dei secondari"),
-    ("stima_del_telaio_riscritta", L + "termica/stima_telaio_l64b.txt",
-     "TOTALE                                17.68", "TOTALE                                17.78",
-     "non ridà stima_telaio_l64b.txt"),
-    ("carico_non_quello_di_tb_op", L + "carico.txt", "i_piu_mA   303.3288", "i_piu_mA   303.4288",
-     "carico.txt di L64b"),
-    # 9-11. le sequenze
-    ("deck_di_una_sequenza_diverso", L + "seq/oggi/accensione/tb_psu_seq_accensione_g1.cir",
-     "RR550 raw_p raw_pr 4.7", "RR550 raw_p raw_pr 4.8", "sequenza oggi/accensione"),
-    ("log_di_una_sequenza_sporco", L + "seq/oggi/accensione/tb_psu_seq_accensione_g1.log",
-     "Note: No compatibility mode selected!", "Error: timestep too small", "invalidano la corsa"),
-    ("riga_di_oggi_riscritta", L + "an_l64b.csv", "oggi/perdita,1,1,1,1,1,17.4,",
-     "oggi/perdita,1,1,1,1,1,17.9,", "confronta.py"),
-    ("confronto_versionato_riscritto", L + "confronto_seq.csv",
-     "v_sorgente/spegnimento_l,L54b3b,t_v106_ms,418.6,418.5,", "v_sorgente/spegnimento_l,L54b3b,t_v106_ms,418.7,418.5,",
-     "confronta.py rieseguito"),
-    ("riga_di_L58b_riscritta", L58 + "an_l58b.csv", "l58b_base/accensione,0,1,1,0,0,3.0,0.0,0.0,0.0,1209.3,",
-     "l58b_base/accensione,0,1,1,0,0,3.0,0.0,0.0,0.0,1219.3,", "confronta.py"),
-    ("soglia_del_permissivo_sparita", "docs/preamp/decisions/ADR-105-tolleranze-e-temperatura-del-temporizzatore.md",
-     "il permissivo dopo il mute (≥ 16,9 ms)", "il permissivo dopo il mute (16,9 ms)", "la soglia perm"),
-    # l'autodiagnosi e lo standby
-    ("censimento_riscritto", L + "censimento_psu.csv", "oggi/f_q505_corto_accs,2.50-3.00,11.9911,",
-     "oggi/f_q505_corto_accs,2.50-3.00,11.9811,", "censimento, f_q505_corto_accs"),
-    ("standby_illeggibile", L + "consumo.txt", "2.500-3.000 s: T2 129.74 mW", "2.500-3.000 s: T2 = 129.74 mW",
-     "consumo.txt: la riga"),
-    ("standby_senza_sonda", L + "seq/consumo/accensione/ok.txt", "--sonda-t2", "--sonda-tx", "non ha --sonda-t2"),
-    # 13. la catena al jack
-    ("tabella_della_catena_riscritta", L + "tabella_nom.csv", "spegnimento_l,MAINJACK,3.542e-09,-55.6,",
-     "spegnimento_l,MAINJACK,3.542e-09,-45.6,", "tabella.py rieseguito"),
-    ("corsa_della_catena_non_finita", L + "corse/nom/tempi.txt", "rif_spegnimento_l_l41c rc=0 ",
-     "rif_spegnimento_l_l41c rc=1 ", "non tutte rc=0"),
-    ("deck_di_V2_della_catena_diverso", L + "deck/tb_v2_l41c_nom.cir", "RSRC SRC SELA 1.5",
-     "RSRC SRC SELA 1.6", "il deck di V2 rigenerato oggi"),
+SAB += [
+    ("L69b/meta_del_pullup_nel_deck", L + "seq/oggi/accensione/tb_psu_seq_accensione_g1.cir",
+     "RR588 at_mrq_m at_mrq 100k", "RR588 at_mrq_m at_mrq 120k", "sequenza oggi/accensione"),
+    ("L69b/meta_lette_come_un_altro_pullup", L + "script/confronta.py",
+     '"RR576 v5 vrelay_en 10k", "at_on_m"', '"RR576 v5 vrelay_en 12k", "at_on_m"', "confronta.py"),
+    ("L69b/dossier_sui_dati_di_L64b", "docs/preamp/dossier/build_dossier.py",
+     'L69B = os.path.join(DATAROOT, "2026-11-04", "L69b")', 'L69B = os.path.join(DATAROOT, "2026-11-03", "L64b")',
+     "non e' del 2026-11-04"),
+    ("L69b/confronto_con_L64b_riscritto", L + "confronto_l64b.csv", "\n", "\nan_l64b.csv,x,y,1,1,0\n",
+     "confronta_l64b.py rieseguito"),
+    ("L69/fmea_priorita_contro_la_matrice", L69 + "fmea_l69.csv", ",corto,f_r572_corto_*,,1,1,3,bassa,",
+     ",corto,f_r572_corto_*,,1,1,3,media,", "la matrice di ADR-070"),
+    ("L69/fmea_parte_che_non_esiste", L69 + "fmea_l69.csv", "\ntemporizzatore (L68),L69,R572,",
+     "\ntemporizzatore (L68),L69,R972,", "R972 non sta in nessuna netlist"),
 ]
 
 
@@ -95,6 +102,7 @@ def main():
         if old not in txt:
             righe.append(f"MANCA  {nome}: il testo da sabotare non c'e' in {rel_}")
             bad += 1
+            print(righe[-1], flush=True)
             continue
         try:
             with open(path, "wb") as f:
@@ -106,7 +114,8 @@ def main():
         caduto = rc != 0 and atteso in out
         bad += not caduto
         righe.append(f"{'CADE   ' if caduto else 'PASSA! '} {nome}: rc={rc}"
-                     + ("" if caduto else f" ({out.strip()[-200:]!r})"))
+                     + ("" if caduto else f" ({out.strip()[-300:]!r})"))
+        print(righe[-1], flush=True)
     rc, out = build()
     righe.append(f"generatore sui file veri dopo i sabotaggi: rc={rc}")
     bad += rc != 0
@@ -114,7 +123,7 @@ def main():
     righe.append(f"{n - bad + (rc != 0)} sabotaggi su {n} cadono come devono")
     with open(os.path.join(HERE, "..", "sabotaggi.txt"), "w") as f:
         f.write("\n".join(righe) + "\n")
-    print("\n".join(righe))
+    print("\n".join(righe[-2:]))
     return 1 if bad else 0
 
 
