@@ -18,6 +18,26 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L65 — la revisione del dossier rigenerato, solo l'architetto (2026-11-04)
+
+- **Le scelte dell'utente**: la forma **«Solo l'architetto»**, con l'accento sul prototipo («l'unica cosa che
+  vogliamo valutare sul proto è la qualità audio percepita. Le modifiche post prototipo devono limitarsi a
+  cambio condensatori di accoppiamento»); il PDF sì (`/Users/roberto/Documents/preamp-dossier-L65.pdf`, A4).
+- **L'architetto**, nuovo e cieco, lanciato dal worktree: **ha eseguito** (in L52 e L59 non poteva) — la THD a
+  20 kHz del dossier 0,000446 / 0,00449 % contro 0,000447 / 0,00449 %. Verdetto: nessun difetto elettrico del
+  circuito simulato; i rischi del primo prototipo nel fisico e nelle parti aperte.
+- **Riaperta NC-048**, **«Riaprire, bloccante G1»**: la prova di spazio era su 458 parti, oggi 653.
+- **Aperte**: NC-080 (la Stax a ~0,97–1,2 µF contro E8 / T5 a 4,7 µF, impronta uguale al Singxer), NC-081
+  (0,49 dB fra i canali con l'1 %, lo 0,1 %), NC-082 (la lista ammessa, **«dissalderemo»**: niente zoccoli),
+  NC-083 (il frontale mosso, maggiore: confermata dall'utente dopo la chiusura, «va bene maggiore»); minori
+  NC-084…NC-088. L'ordine L70 → L71 → L72 → L73 → L74 → G1 concordato dall'utente («concordo con la sequenza»).
+- **Firme**: PR-12 **«Tenere le resistenze»** (ADR-118: sul prototipo solo il suono; dopo si cambiano i
+  condensatori di accoppiamento e le resistenze critiche, dissaldandoli); i «Dettagli» di PR-30 **«Firmo
+  così»** (ADR-117: 0,87 V è il clipping delle Heresy, la Stax satura fino a ~204 ms; un'ipotesi dichiarata).
+- **Le semplificazioni da studiare prima di G1**: togliere il rivelatore di rete, la ritenuta → fusibili; non
+  scelte: i buffer delle fisse, il +10 dB.
+- **Dopo**: **L70**, il prompt di `NEXT-SESSION.md`.
+
 ### L69b — l'evidenza dell'alimentatore e il dossier sul sorgente nuovo (2026-11-04)
 
 - **Il primo giro**: 124 rifiuti, tutti l'evidenza di L64b sul circuito di prima (120 sequenze, i deck dei
