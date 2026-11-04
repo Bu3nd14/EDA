@@ -13,17 +13,36 @@ fino al 2026-10-26, con tutta la loro storia, sono in `STATE-STORIA.md`.
 
 | | |
 |---|---|
-| Ultimo aggiornamento | **2026-11-04** (L65: la terza revisione dell'architetto avversariale, cieca, sul dossier rigenerato, con l'accento dell'utente sul prototipo — «l'unica cosa che vogliamo valutare sul proto è la qualità audio percepita»; questa volta l'architetto ha eseguito (la THD a 20 kHz del dossier rifatta, uguale); nessun difetto elettrico del circuito simulato, i rischi del prototipo nel fisico e nelle parti aperte; **NC-048 riaperta bloccante per G1**, **NC-080…NC-088 aperte**; PR-12 riscritta (ADR-118), il tetto della Stax dichiarato come ipotesi (ADR-117); due semplificazioni da studiare prima di G1) |
-| Ultimo lotto chiuso | **L65** — la revisione del dossier rigenerato, solo l'architetto avversariale (2026-11-04). Report `reports/2026-11-04-L65-architetto-avversariale.md` (verbatim) e `reports/2026-11-04-L65-esiti-architetto.md`; il PDF all'utente in `/Users/roberto/Documents/preamp-dossier-L65.pdf` |
-| **Prossimo lotto** | **L70 — le due semplificazioni** (togliere il rivelatore di rete; la ritenuta dopo un guasto di rail sostituita da fusibili), studiate coi numeri e scelte dall'utente (prompt in `NEXT-SESSION.md`). Poi L71 → L72 → L73 → L74 → **G1** (la tabella dei lotti; l'ordine concordato dall'utente il 2026-11-04) |
+| Ultimo aggiornamento | **2026-11-04** (L70: le due semplificazioni dell'architetto misurate su copie del sorgente, 310 corse a rete ±10 %: togliere il rivelatore di rete da solo fa scattare la ritenuta a ogni buco di 60–200 ms; la ritenuta sostituita da fusibili toglierebbe ~24 delle 47 righe alte, ma nel corto sul piedino del regolatore R550 passerebbe da 6–9 J a 34–430 J. **«Tenere com'è»** (ADR-119): il circuito non cambia; nessuna non conformità aperta o chiusa) |
+| Ultimo lotto chiuso | **L70** — le due semplificazioni (2026-11-04). Report `reports/2026-11-04-L70-semplificazioni.md`, dati `data/2026-11-04/L70/`, decisione ADR-119 |
+| **Prossimo lotto** | **L71 — il frontale mosso durante una sequenza** (NC-083), sul temporizzatore di oggi (L70 non l'ha cambiato), a rete ±10 % (prompt in `NEXT-SESSION.md`). Poi L72 → L73 → L74 → **G1** (la tabella dei lotti; l'ordine concordato dall'utente il 2026-11-04) |
 | Non conformità | **26 aperte, 2 bloccanti** (L65, 2026-11-04: **riaperta NC-048**, la prova di spazio sul circuito di oggi; **aperte NC-080…NC-088**, quattro maggiori e cinque minori). Il registro è `NONCOMPLIANCE.md` |
 | Le bloccanti | Per **G1**: **NC-048** (la prova di spazio sul circuito di oggi, riaperta in L65); da chiudere prima di G1 per decisione dell'utente: **NC-072** (maggiore, il rame del layout), **NC-080** (il testo di E8 / T5), **NC-082** (le finestre della lista ammessa), **NC-083** (il frontale mosso, maggiore, confermata dall'utente), **NC-084** (minore, la motivazione della principale); NC-073 e NC-075 (maggiori) alla scelta della parte. Per **G2**: NC-044 (L50), NC-081, le impronte di NC-080 / NC-082 |
-| Suite | `run_tests.sh` alla chiusura di L65 (2026-11-04, dal worktree): **14 passed / 0 failed**. `build_dossier.py` (fuori dalla suite): **«OK: tutti i controlli incrociati sono passati»** col PRB e le ADR 117–118 di L65 |
+| Suite | `run_tests.sh` alla chiusura di L70 (2026-11-04, dal worktree): **14 passed / 0 failed**. `build_dossier.py` (fuori dalla suite): **«OK: tutti i controlli incrociati sono passati»** con ADR-119 (la pagina scritta su una copia fuori dal repo; il dossier del repo non è stato toccato) |
 
 ## Diario degli ultimi lotti
 
 Le ultime tre voci. Le più vecchie sono in `STATE-STORIA.md`, nello stesso ordine (la più recente
 in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quella sezione.
+
+### L70 — le due semplificazioni, misurate e non scelte (2026-11-04)
+
+- **Le varianti** (copie di `psu.py`, `data/2026-11-04/L70/varianti/`): senza il rivelatore di rete (178 parti),
+  senza la ritenuta con un fusibile per ramo del secondario di T1 (176), le due (167), le due con un fusibile per
+  rail anche sul lato continua (169). Il banco di L69b copiato; sul circuito di oggi il deck è quello di L69b.
+  **310 corse**, tutte pulite; la catena al jack; il blocco audio con un rail solo (5 deck).
+- **Senza rivelatore**, il buco di 20 ms non toglie più la musica (oggi 613 ms), ma **da solo non sta in
+  piedi**: la ritenuta si arma «con la rete presente» dal rivelatore, e scatta a ogni perdita di rete e nei buchi
+  di 60–200 ms (spento fino al frontale). Con le due insieme: perdita di rete al jack 16,9–17,9 dB SPL.
+- **La ritenuta → fusibili**: nei rami 0,69 A efficaci e 3,0 A²s per accensione (la Littelfuse 218 da 1,6 A);
+  serbatoi e ponte in corto, il fusibile fonde in 107–198 ms; la scheda audio su un rail solo ≤ 75 °C. Ma **C509 /
+  C510 in corto**: oggi R550 6,1 / 7,7 / 9,4 J; coi fusibili sul secondario nessuno fonde (R550 34–53 W di
+  continuo), con 1 A anche sul lato continua 34–43 J nel modello, fino a ~430 J coi tempi garantiti; la PR02 / PR03
+  antifiamma regge ~0,3–1 J.
+- **Un errore mio, corretto**: il primo modello del fusibile lasciava 1 Ω nel ramo; corse buttate e rifatte.
+- **La scelta dell'utente**: **«Tenere com'è»** (la raccomandazione), contro un rivelatore più lento, le due con
+  quattro fusibili, solo la ritenuta → fusibili. **ADR-119**; il circuito non cambia; R12 resta accettato.
+- **Dopo**: **L71**, il prompt di `NEXT-SESSION.md`.
 
 ### L65 — la revisione del dossier rigenerato, solo l'architetto (2026-11-04)
 
@@ -61,28 +80,6 @@ in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quel
   rifatto (118 / 189), la seconda strada contro L64b controllata in pagina; **«OK»**; sabotaggi 67 su 67
   (due di L68 riportati su righe vive: quelle di NC-079 sono sostituite da L69).
 - **Dopo**: **L65**, il prompt di `NEXT-SESSION.md`.
-
-### L69 — la ritenuta che tiene i 5 V a massa (2026-11-03/04)
-
-- **Le scelte dell'utente**: il rimedio **«Due metà per pull-up»** (**ADR-116**), contro una resistenza da
-  1 kΩ sull'anodo della ritenuta; il dossier **«Lotto a parte»** (L69b, prima di L65).
-- **Il meccanismo, con le sonde**: con R572 / R576 in corto e il rail − che cade U504 205 / 218 °C, Q513
-  0,20 / 0,22 W e Q514 0,19 / 0,22 W fino a 149 °C, 259 mA di picco (la divisione di L68, 0,37 / 0,07 W,
-  era sbagliata; il verdetto no).
-- **Le opzioni** (76 corse): una resistenza sull'anodo salva i 5 V ma lascia **K501 chiuso** (il corto tiene
-  AT_ON alto); R576 in due metà + 1 kΩ con D537 non risolve R572 (AT_MRQ inchiodato tiene il permesso);
-  **R572 e R576 in due metà**: con una metà in corto come il circuito sano, K501 a 129,4 / 132,6 ms, la
-  ritenuta ~60 °C, U504 62 °C. Le due finali a rete ±10 % e col comparatore a 2,2 V: 0 fuori.
-- **Il sorgente**: R572 + **R588** (100 + 100 kΩ), R576 + **R589** (4,99 + 4,99 kΩ); `psu.net` a 189 parti,
-  lo schema dell'alimentatore ridisegnato (quello audio uguale); `run_tests.sh` 14 / 0.
-- **Le corse sul sorgente nuovo**: **672**, nessun ripiego; gli otto eventi sani uguali a L64b; **ogni caso del
-  temporizzatore di L68 fuori dai pull-up uguale a L68** (600 corse); le metà in corto come la corsa sana, le
-  metà aperte come i pull-up aperti di L68.
-- **La FMEA**: 8 righe nuove, tutte basse (la settima fonte): **692 righe, 47 alte**; dell'alimentatore 0
-  parti su 189 senza riga. **NC-079 chiusa.**
-- **Il dossier** rifiuta, giustamente: i deck dell'alimentatore di L64b rigenerati dal `psu.net` di oggi non
-  sono quelli corsi; `parti_schede.csv` di L64c conta 2 parti in più. I sabotaggi non rifatti: con L69b.
-- **Dopo**: **L69b**, il prompt di `NEXT-SESSION.md`.
 
 ## Come si lavora da qui: a lotti piccoli e pushati
 
@@ -269,8 +266,8 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L69 | **La ritenuta che tiene i 5 V a massa** (NC-079, maggiore, prima di G1; l'utente, 2026-11-03: «Non conformità maggiore», poi «Prima la correzione»): con R572 o R576 in corto e un rail che cade la ritenuta tira 0,25 A dai 5 V e Q513 va a ~209 °C. Il rimedio misurato con l'utente coi numeri, nel sorgente; la netlist e i disegni rigenerati; le corse del temporizzatore di L68 rifatte sul sorgente nuovo, le righe toccate riscritte, il dossier rigenerato | M | **NC-079** chiusa | **fatto** (2026-11-04): «Due metà per pull-up» (R588, R589; ADR-116) contro 1 kΩ sull'anodo; con una metà in corto il circuito fa quello che fa sano (K501 a 129–133 ms, la ritenuta ~60 °C, U504 62 °C, a rete ±10 %); 672 corse sul sorgente nuovo, uguali a L68 fuori dai pull-up; 8 righe della FMEA, tutte basse; il dossier rimandato a **L69b** («Lotto a parte»). Report `reports/2026-11-04-L69-ritenuta.md` |
 | L69b | **L'evidenza dell'alimentatore e il dossier sul sorgente nuovo** (l'utente, L69, 2026-11-04: «Lotto a parte»): le corse di L64b rifatte sul `psu.net` di ADR-116 (le 117 sequenze, i banchi della rete e dei guasti, il calore, lo standby, il ponte e la catena al jack a tre reti), la seconda strada contro L64b, `parti_schede.csv` rifatto, `build_dossier.py` «OK» con i sabotaggi di L64b / L68 riportati sui file nuovi, la pagina e il PDF all'utente se lo vuole | M | — | **fatto** (2026-11-04): 117 sequenze e i banchi sul sorgente di ADR-116, tutte rc 0; contro L64b 386 celle diverse su 7578, spiegate (l'armo 0,7 ms prima, dal pull-up di AT_ON a 9,98 kΩ); il dossier «OK», sabotaggi 67 su 67. Report `reports/2026-11-04-L69b-dossier-alimentatore.md` |
 | L65 | **La revisione del dossier rigenerato**, prima del gate (come L42 → L43 e L51 → L52): la forma — l'architetto avversariale cieco, la lettura dell'utente, o tutte e due — si decide con l'utente all'apertura | S/M | — | **fatto** (2026-11-04): «Solo l'architetto», con l'accento dell'utente sul prototipo; l'architetto ha eseguito; **NC-048 riaperta** bloccante per G1, **NC-080…NC-088** aperte; PR-12 riscritta (ADR-118), il tetto della Stax un'ipotesi dichiarata (ADR-117); due semplificazioni da studiare prima di G1. Report `reports/2026-11-04-L65-esiti-architetto.md` |
-| L70 | **Le due semplificazioni** (L65, scelta dell'utente fra quelle dell'architetto, rilievi S1, S2 e R12): **togliere il rivelatore di rete** (resta il sorvegliante dei rail; un buco di rete di 20 ms non toglierebbe più la musica per ~0,6 s) e **la ritenuta dopo un guasto di rail sostituita da un fusibile per rail sul secondario di T1** con R550 / R551 antifiamma (circa 25 delle 47 righe alte della FMEA in meno; l'I²t del fusibile contro l'impulso di R550, con NC-073). Ciascuna sul banco del temporizzatore e dei guasti di oggi, a rete ±10 %, coi colpi al jack in dB SPL e il calore contro i limiti; la scelta all'utente coi numeri; se cambia il circuito: sorgente, netlist, disegni, FMEA, `run_tests.sh` | M | (NC-073) | da fare — **prossimo** |
-| L71 | **Il frontale mosso durante una sequenza** (NC-083): il frontale spento prima della musica, riacceso nello spegnimento, SW3 dentro Δ, sul temporizzatore che esce da L70, a rete ±10 % | S/M | NC-083 | da fare |
+| L70 | **Le due semplificazioni** (L65, scelta dell'utente fra quelle dell'architetto, rilievi S1, S2 e R12): **togliere il rivelatore di rete** (resta il sorvegliante dei rail; un buco di rete di 20 ms non toglierebbe più la musica per ~0,6 s) e **la ritenuta dopo un guasto di rail sostituita da un fusibile per rail sul secondario di T1** con R550 / R551 antifiamma (circa 25 delle 47 righe alte della FMEA in meno; l'I²t del fusibile contro l'impulso di R550, con NC-073). Ciascuna sul banco del temporizzatore e dei guasti di oggi, a rete ±10 %, coi colpi al jack in dB SPL e il calore contro i limiti; la scelta all'utente coi numeri; se cambia il circuito: sorgente, netlist, disegni, FMEA, `run_tests.sh` | M | (NC-073) | **fatto** (2026-11-04: «Tenere com'è», ADR-119; il circuito non cambia) |
+| L71 | **Il frontale mosso durante una sequenza** (NC-083): il frontale spento prima della musica, riacceso nello spegnimento, SW3 dentro Δ, sul temporizzatore che esce da L70, a rete ±10 % | S/M | NC-083 | da fare — **prossimo** |
 | L72 | **I testi e le parti**: E8 / T5 e la sezione 6 del dossier sul condensatore della Stax (NC-080); la lista ammessa dei condensatori di segnale accanto a P6, le finestre di valore e i tipi in polipropilene (NC-082); le resistenze del guadagno e del trim allo 0,1 % e E10 ricalcolato (NC-081); la motivazione di PR-30 sulla principale (NC-084, con ADR e la firma dell'utente) | S/M | NC-080, NC-081, NC-082, NC-084 | da fare |
 | L73 | **La prova di spazio sul circuito di oggi** (NC-048, bloccante per G1): piazzamento e sbroglio di prova della scheda audio e dell'alimentatore come L49a / L49b, con le impronte della lista ammessa di L72 e i dissipatori, nel Pesante 3U | M | NC-048 | da fare |
 | L74 | **Il dossier rigenerato** sul circuito di L70–L73, prima del gate | M | — | da fare |
