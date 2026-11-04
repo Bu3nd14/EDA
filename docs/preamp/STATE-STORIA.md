@@ -18,6 +18,30 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L64b — il dossier rigenerato, l'alimentatore e il temporizzatore (2026-11-03)
+
+- **Le scelte dell'utente**: «non caricare troppo la CPU se devi fare simulazioni, ci sono altre
+  sessioni di claude running oggi» (al più due corse insieme, a priorità bassa); i commenti di `C_RAW` e
+  `C_VRELAY` in `psu.py`, che davano per «di oggi» le cifre di L51b, **«Rewrite now»** (`psu.net`
+  rigenerato: cambiano solo le righe del sorgente e la data).
+- **Il primo giro**: 57 rifiuti, tutti dell'alimentatore (R512 a 220 k nei log di L51b, da ADR-094 è
+  110 k; il generatore dei banchi di L51b non legge più la netlist; le sequenze del firmware).
+- **La prima strada, oggi** (`data/2026-11-03/L64b/`): i banchi della rete e dei guasti di L51b col
+  temporizzatore del sorgente; il calore con le voci nuove (R550 / R551, gli SB340); **117 sequenze**
+  per le 138 righe di L54b3b e L58b (la coppia Q501 + Q509 coi nomi di oggi in `modi.py`; fuori le 12
+  righe del Q501 di prima della coppia); lo standby da T2; la catena al jack di L54b2 alle tre reti.
+- **La seconda**: `confronta.py`, 4255 celle, 4002 identiche, 253 entro, **0 fuori**; i 107 deck di L58b
+  uguali a meno del carico; L51b e L54b2 accanto, gli scarti pubblicati.
+- **Le cifre**: `VRELAY_REG` 50,3 / 109,6 / 169,1 ms (P9 ≥ 25); Δ ≥ 39,6 ms (≥ 16,9); la musica 612,8 ms
+  dopo un buco di 20 ms (≥ 500); K501 75,6 ms (≥ 50); lo standby 115,8 / 129,7 / 143,8 mW; al jack il
+  peggiore U501 spento 32,2 dB SPL, a rete −10 % la perdita +4,3 dB SPL; il calore 19,98 W nel caso
+  peggiore, 57,7 °C a 3 cm, gioco minimo **2,0 cm** (era 1,5). La coppia: 64 corse dei guasti singoli,
+  51 come sana, 6 col solo K501 spostato (≤ 2,5 ms), 7 col mute inserito (Q509 gate-drain).
+- **Il generatore**: `PARTI = ("audio", "alimentatore")`, solo `--standalone` fuori dal repo; «OK»;
+  sabotaggi 21 su 21. Corretta anche la riga in cima alla pagina (diceva L51a e L48b) e tolta la riga
+  sul firmware di «Cosa non dice». NC-050 col dato di oggi. `run_tests.sh`: vedi la cella «Suite».
+- **Dopo**: **L64c**, il prompt di `NEXT-SESSION.md`.
+
 ### L64a — il dossier rigenerato, la scheda audio (2026-11-02/03)
 
 - **Le scelte dell'utente**: «Three parts, like last time» (L64a la scheda audio, L64b l'alimentatore
