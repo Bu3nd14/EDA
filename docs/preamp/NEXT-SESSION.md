@@ -1,31 +1,36 @@
-# Prompt per la sessione successiva — L65, la revisione del dossier rigenerato
+# Prompt per la sessione successiva — L70, le due semplificazioni
 
-Nome della sessione: **hi-fi preamp L65** (la convenzione è in `CLAUDE.md`).
+Nome della sessione: **hi-fi preamp L70** (la convenzione è in `CLAUDE.md`).
 
-> Prompt scritto alla chiusura di L69b (2026-11-04: l'evidenza dell'alimentatore rifatta sul sorgente di
-> ADR-116 in `data/2026-11-04/L69b/`, `build_dossier.py` «OK», i sabotaggi tutti caduti). Il dossier su
-> `main` è di nuovo quello del circuito di oggi. L'ordine verso G1: **L65** → G1.
+> Prompt scritto alla chiusura della revisione dell'architetto sul dossier rigenerato (2026-11-04, report
+> `reports/2026-11-04-L65-esiti-architetto.md`). Fra le semplificazioni proposte dall'architetto, l'utente ha
+> scelto di studiarne **due prima di G1**. L'ordine verso G1: **L70** → L71 → L72 → L73 → L74 → G1 (la tabella
+> dei lotti di `STATE.md`; l'utente può cambiarlo all'apertura).
 
-Riprendo il progetto del preamplificatore hi-fi in questo repository. Questa sessione fa **L65**, e si
-ferma.
+Riprendo il progetto del preamplificatore hi-fi in questo repository. Questa sessione fa **L70**, e si ferma.
+
+## La regola dell'utente sul prototipo (PR-12, ADR-118)
+
+«Il prototipo sarà molto costoso e quindi dobbiamo essere certi che funzioni perfettamente, l'unica cosa che
+vogliamo valutare sul proto è la qualità audio percepita.» Dopo il prototipo si cambiano solo i condensatori
+di accoppiamento e le resistenze critiche, dissaldandoli. **Ciò che si può simulare si simula qui.**
 
 ## Che cosa fare
 
-**La revisione del dossier rigenerato, prima del gate** (come L42 → L43 e L51 → L52; la riga di L65 nella
-tabella dei lotti di `STATE.md`).
-
-1. **Leggi prima**: `STATE.md`, `PRB.md` (il contratto: è l'ingresso di ogni revisione), il report di L69b
-   (`reports/2026-11-04-L69b-dossier-alimentatore.md`) e `NONCOMPLIANCE.md`.
-2. **La forma si decide con l'utente all'apertura**, ed è la prima cosa da chiedere: l'architetto
-   avversariale cieco (`adversarial-architect`, lanciato nuovo e alla cieca rispetto ad altre revisioni),
-   la lettura dell'utente, o tutte e due. Se l'utente ha già trovato un difetto, non cercarlo tu (il
-   controllo cieco).
-3. **Il dossier da rivedere** è `docs/preamp/dossier/index.html` su `main`; si rigenera con
-   `/usr/bin/python3 docs/preamp/dossier/build_dossier.py --standalone <fuori dal repo>/dossier.html`
-   (11 s). Il PDF, se l'utente lo vuole, in `/Users/roberto/Documents`, un PDF per documento.
-4. **Gli esiti** in un report datato in `reports/`; i rilievi che diventano non conformità in
-   `NONCOMPLIANCE.md`, ognuno col requisito, l'evidenza, la severità proposta e lo stato. Le scelte
-   all'utente, per nome e coi numeri.
+1. **Leggi prima**: `STATE.md`, `PRB.md`, il report degli esiti e quello verbatim dell'architetto
+   (`reports/2026-11-04-L65-architetto-avversariale.md`: «Le semplificazioni proposte», righe S1 e S2, e il
+   rilievo R12), `NONCOMPLIANCE.md` (NC-073, NC-077), ADR-102, ADR-109, ADR-115, ADR-116.
+2. **S2, togliere il rivelatore di rete**: resta il sorvegliante dei rail a 13,5 V. Da misurare sul banco del
+   temporizzatore di oggi (`data/2026-11-04/L69b/`, copiato, non rieseguito sul posto): la perdita di rete e
+   lo spegnimento al jack (l'architetto legge 87 µV con U501 spento) e il buco di rete di 20 ms che oggi
+   toglie la musica per ~613 ms (dossier, sezione 25). Che cosa dice P9 (b) senza il rivelatore.
+3. **S1, la ritenuta dopo un guasto di rail sostituita da fusibili**: un fusibile per rail sul secondario di
+   T1 e R550 / R551 a film antifiamma, al posto di Q513 / Q514, R581–R585, C552–C555 e parte di U515. Da
+   misurare: l'I²t del fusibile contro l'impulso di R550 (NC-073), il toroidale acceso fino al frontale dopo un
+   guasto, quante righe alte della FMEA cadono (l'architetto stima ~25 su 47).
+4. **Le opzioni all'utente coi numeri**, per nome: i colpi al jack in dB SPL, ogni parte con la sua temperatura
+   contro il limite, a rete ±10 %. Se una semplificazione è scelta: ADR, sorgente, netlist, disegni, FMEA,
+   `run_tests.sh`.
 
 ## I vincoli
 
@@ -42,7 +47,7 @@ tabella dei lotti di `STATE.md`).
 
 ## CHIUSURA
 
-1. `STATE.md`: L65 **fatto**, il prossimo **G1**; le celle di In breve; il diario (la voce più vecchia
+1. `STATE.md`: L70 **fatto**, il prossimo **L71**; le celle di In breve; il diario (la voce più vecchia
    delle tre va in `STATE-STORIA.md`).
-2. Riscrivi questo file per G1 («Nome della sessione: hi-fi preamp G1»).
-3. Commit, push, PR; `/bin/zsh scripts/chunk_close.sh L65`; rimuovi il worktree; fermati.
+2. Riscrivi questo file per L71 («Nome della sessione: hi-fi preamp L71»).
+3. Commit, push, PR; `/bin/zsh scripts/chunk_close.sh L70`; rimuovi il worktree; fermati.

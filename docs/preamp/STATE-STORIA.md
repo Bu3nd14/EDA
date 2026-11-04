@@ -18,6 +18,28 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L68 — la FMEA del temporizzatore a comparatori (2026-11-03)
+
+- **Le scelte dell'utente**: la ritenuta cieca (31 righe) «Accettare come R585»; R572 / R576 in corto
+  «Non conformità maggiore» (**NC-079**); C545–C547 in corto e TP507 a massa «Accettare come C536»; i
+  colpi di J4 e dei test point «Accettare tutti» (**ADR-115**, P9 (e) estesa); l'ordine verso G1 «Prima
+  la correzione» (L69 → L65 → G1).
+- **I conti detti prima delle corse**: 97 righe del temporizzatore, 11 dei pin dei connettori, 17 dei
+  test point; 79 + 4 + 13 simulazioni distinte, ~660 corse, una ~25 s.
+- **Le corse** (`data/2026-11-03/L68/`): **662 sequenze** sul banco di L64c, nessun ripiego numerico; le
+  basi uguali a L64b colonna per colonna; due prove rifiutate al primo giro e rifatte (l'alimentazione
+  persa con la primitiva `aperti`; i pin di J4 / J508 dal lato dell'alimentatore); la catena al jack su 20
+  casi, il controllo `corto_u503` **6,492 mV**; il calore dei 5 V su tutte.
+- **Le righe**: **125, 34 alte, 3 medie, 88 basse**. La ritenuta cieca (K501 chiuso dopo un rail che cade,
+  il mute che regge) in **31 guasti singoli**, come R585; i tempi del permesso e di K501 fuori criterio
+  col jack già staccato (≤ 16,3 dB SPL); colpi a **69,7 dB SPL** (J4 PERMIT_CMD, sei test point) e **97,0
+  dB SPL** all'uscita fissa 1 (il rail − a massa da TP502; TP501 dichiarato per simmetria).
+- **NC-079**: con R572 o R576 in corto e un rail che cade la ritenuta tiene i 5 V a massa con **0,25 A**:
+  U504 218 °C, **Q513 ~209 °C** (Tj max 150, emettitore oltre i 200 mA di picco).
+- **Il dossier**: sei fonti, **688 righe, 49 alte**; dell'alimentatore **0 parti su 187 senza riga**
+  (NC-078 chiusa); «OK», **sabotaggi 61 su 61**. `run_tests.sh` 14 / 0.
+- **Dopo**: **L69**, il prompt di `NEXT-SESSION.md`.
+
 ### L64c — il dossier rigenerato, la chiusura (2026-11-03)
 
 - **Le scelte dell'utente**: le righe della FMEA che dicevano il micro, «Riscriverle ora»; la FMEA nella

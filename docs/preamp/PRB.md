@@ -26,6 +26,11 @@ attuali». Registrato da **ADR-053**. Da qui, cambiare una voce vuole una ADR.
   micro bloccato o in reset) a «La sicurezza non dipende da un programma»: col temporizzatore a
   comparatori (ADR-102) un microcontrollore non c'è. Scelta dell'utente, sul testo proposto:
   «Rewrite the promise».
+- **PR-12**, il 2026-11-04 (**ADR-118**, L65): da «si cambiano senza dissaldare» a «sul prototipo si
+  giudica solo il suono; dopo si cambiano solo i condensatori di accoppiamento e le resistenze critiche,
+  dissaldandoli». Scelta dell'utente, sul testo proposto: «Tenere le resistenze».
+- **PR-30**, il 2026-11-04 (**ADR-117**, L65): la sola riga «Dettagli», il tetto della Stax dichiarato come
+  ipotesi (il clipping delle Heresy, non un limite della Stax). Firma dell'utente: «Firmo così».
 
 ## Che cos'è, e come sta con gli altri documenti
 
@@ -102,10 +107,10 @@ continua, anche coi condensatori montati per prova d'ascolto (PR-12): le prove s
 tipi di una lista ammessa.
 *Dettagli: E12, P6 · ADR-007, ADR-053 · l'offset interno resta senza soglia.*
 
-**PR-12 · Il giudizio del suono è dell'utente, sull'hardware.** Condensatori di segnale e
-resistenze critiche si cambiano senza dissaldare, per provarli all'ascolto. Nessun agente
-dichiara come suona il circuito.
-*Dettagli: P6 · `AGENTS.md`.*
+**PR-12 · Il giudizio del suono è dell'utente, sull'hardware.** Sul prototipo si giudica solo il suono: tutto il resto si verifica prima, in simulazione.
+Dopo il prototipo si cambiano solo i condensatori di accoppiamento e le resistenze critiche, dissaldandoli, coi tipi della lista ammessa.
+Nessun agente dichiara come suona il circuito.
+*Dettagli: P6 · ADR-118 · NC-082 · `AGENTS.md` · riscritta e firmata il 2026-11-04.*
 
 ## C. L'uso e i comandi
 
@@ -179,7 +184,7 @@ della fabbricazione; senza, il progetto non va avanti.
 **PR-30 · Un guasto della scheda audio non danneggia la catena di oggi.** Un componente che si rompe mentre si ascolta
 può dare un colpo, ma sull'uscita della Stax resta sopra il tetto di non-danno (0,87 V) al più 150 ms, col suo carico.
 L'uscita principale conta sul trasformatore del finale a valvole, la fissa 1 sulla protezione dichiarata del Singxer. Un apparecchio nuovo a valle fa rivedere il preamp.
-*Dettagli: P10 · ADR-069, ADR-081, ADR-086 · NC-042, NC-069 · firmata il 2026-10-13, riscritta e firmata il 2026-10-15; il tetto da 125 a 150 ms il 2026-10-15 (ADR-086).*
+*Dettagli: P10 · ADR-069, ADR-081, ADR-086, ADR-117 · NC-042, NC-069 · firmata il 2026-10-13, riscritta e firmata il 2026-10-15; il tetto da 125 a 150 ms il 2026-10-15 (ADR-086). 0,87 V è il clipping del finale delle Heresy, non un limite della Stax: Stax non lo pubblica, e l'SRM-T1 è accoppiato in continua. È un'ipotesi dichiarata: col guasto peggiore l'energizzatore a volume massimo resta saturo fino a ~204 ms; col volume a −20 dB, ~63 ms (ADR-117, firmata il 2026-11-04).*
 
 ## F. Il fisico
 
