@@ -33,7 +33,10 @@ FONTI = (("L45d2b3b3", os.path.join(DATA, "2026-10-24", "L45d2b3b3", "fmea_dopo.
          # L64c: le righe che dicevano il micro, riscritte dalle corse di oggi (script/fmea_l64c.py)
          ("L64c", os.path.join(DATA, "2026-11-03", "L64c", "fmea_l64c.csv")),
          # L68: le parti del temporizzatore a comparatori, i connettori, i test point (NC-078; script/fmea_l68.py)
-         ("L68", os.path.join(L, "fmea_l68.csv")))
+         ("L68", os.path.join(DATA, "2026-11-03", "L68", "fmea_l68.csv")),
+         # L69: i pull-up di AT_MRQ e di AT_ON in due meta' (ADR-116, NC-079): R572 / R576 al posto delle
+         # righe di L68, R588 / R589 nuove (script/fmea_l69.py)
+         ("L69", os.path.join(L, "fmea_l69.csv")))
 
 
 def priorita(g, p, r):

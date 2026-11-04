@@ -121,7 +121,7 @@ fuori dal repo. «Cosa questo dossier non dice» riscritta sul progetto di oggi.
      L63: ogni manifesto contro la netlist di oggi nei due sensi (scripts/check_schematic.py), e i
      due disegni rifatti dal sorgente fuori dal repo uguali a quelli versionati (L64c/script/
      ridisegna.sh: i manifesti byte per byte, gli SVG a meno della data e delle clip);
- 20. (L64c, L68) la FMEA di oggi: le sei fonti (FMEA_FONTI) ricomposte qui contro fmea_oggi.csv,
+ 20. (L64c, L68, L69) la FMEA di oggi: le sette fonti (FMEA_FONTI) ricomposte qui contro fmea_oggi.csv,
      colonna per colonna; la priorita' di ogni riga contro la matrice di ADR-070 (scritta come
      tabella); ogni parte nelle tre netlist (le meta' A / B delle doppie del blocco, i trasformatori
      nel telaio); nessuna riga alla diagnosi, nessuno stato su una ADR superata, nessun micro; ogni
@@ -268,6 +268,9 @@ DIST_UGUALI = ("vout_pk", "thd_pct", "h2_db", "h3_db", "imd_d2_db", "imd_d3_db")
 L64C = os.path.join(DATAROOT, "2026-11-03", "L64c")
 # L68: la FMEA del temporizzatore a comparatori (NC-078): la sesta fonte, la FMEA di oggi, la copertura
 L68 = os.path.join(DATAROOT, "2026-11-03", "L68")
+# L69: i pull-up di AT_MRQ e di AT_ON in due meta' (ADR-116, NC-079): la settima fonte, la FMEA di oggi e la
+# copertura lette da qui
+L69 = os.path.join(DATAROOT, "2026-11-03", "L69")
 PARTI_SCHEDE = os.path.join(L64C, "parti_schede.csv")
 
 # L64c: gli schemi completi di L63 (A2, una pagina per scheda), coi manifesti che
@@ -285,8 +288,10 @@ FMEA_FONTI = (("L45d2b3b3", os.path.join(DATAROOT, "2026-10-24", "L45d2b3b3", "f
               ("L66", os.path.join(DATAROOT, "2026-11-02", "L66", "fmea_l66.csv")),
               ("L64c", os.path.join(L64C, "fmea_l64c.csv")),
               # L68: le parti del temporizzatore a comparatori, i connettori e i test point (NC-078)
-              ("L68", os.path.join(L68, "fmea_l68.csv")))
-FMEA_OGGI = os.path.join(L68, "fmea_oggi.csv")
+              ("L68", os.path.join(L68, "fmea_l68.csv")),
+              # L69: R572 / R576 al posto delle righe di L68, R588 / R589 nuove (ADR-116)
+              ("L69", os.path.join(L69, "fmea_l69.csv")))
+FMEA_OGGI = os.path.join(L69, "fmea_oggi.csv")
 # le parti della FMEA che non stanno su una scheda: i due trasformatori, nel telaio (ADR-048)
 FMEA_FUORI_SCHEDA = ("T1", "T2")
 
@@ -2448,7 +2453,7 @@ def measure_fmea(adrs, ncs):
         for a, b, c in re.findall(r"\b([A-Z]+)(\d+)-[A-Z]*?(\d+)\b", r["ref"]):
             nominate |= {f"{a}{i}" for i in range(int(b), int(c) + 1)}
     out["psu_senza"] = sorted(psu_refs - nominate)
-    with open(src(os.path.join(L68, "copertura.csv")), newline="", encoding="utf-8") as f:
+    with open(src(os.path.join(L69, "copertura.csv")), newline="", encoding="utf-8") as f:
         cop = sorted(r["parte_senza_riga"] for r in csv.DictReader(f) if r["scheda"] == "alimentatore")
     if cop != out["psu_senza"]:
         refuse(f"FMEA: le parti dell'alimentatore senza riga sono {len(out['psu_senza'])}, copertura.csv "
@@ -5585,7 +5590,7 @@ def main():
                                  "tetti": d["soglie"], "conforme": all(d["ok"].values())}
     if "chiusura" in PARTI:
         fm = M["fmea"]
-        summary["dati"] += [rel(L64C), rel(L68)]
+        summary["dati"] += [rel(L64C), rel(L68), rel(L69)]
         summary["fmea"] = {"righe": fm["n"], "priorita_oggi": fm["dopo"], "priorita_prima": fm["prima"],
                            "fonti": [f"{lot}: {n} righe, {nu} nuove" for lot, _, n, nu in fm["fonti"]],
                            "destinazioni": fm["dest"]}

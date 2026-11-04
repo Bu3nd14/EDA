@@ -93,4 +93,5 @@ def main():
         print("%-32s on_min %-7s rit %-2s %s" % (x["caso"], x["on_min"], x["ritenuta"], x["difetti"] or "ok"))
 
 
-main()
+if __name__ == "__main__":
+    main()
