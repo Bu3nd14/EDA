@@ -1,0 +1,938 @@
+{
+ "chassis_mm": [
+  415.0,
+  300.0,
+  115.0
+ ],
+ "gap_mm": 5.0,
+ "zgap_mm": 3.0,
+ "audio_board_mm": [
+  392.6,
+  198.3
+ ],
+ "supply_board_mm": [
+  246.9,
+  110.0
+ ],
+ "assumed_heights_mm": {
+  "control_axis": 65.0,
+  "rca_rows": [
+   52.0,
+   78.0
+  ],
+  "iec_axis": 80.0,
+  "standoff": 6.0
+ },
+ "variants": {
+  "A_tutto_sul_fondo": {
+   "title": "A — tutto sul fondo, i pannelli sopra le schede",
+   "fits": false,
+   "failed": [
+    {
+     "what": "scheda alimentatore dentro il telaio",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 18.3
+    },
+    {
+     "what": "sezione di rete dell'alimentatore dentro il telaio",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 18.3
+    },
+    {
+     "what": "RCA (14, due file) / scheda audio (C162 4.7u) (in altezza)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 3.6
+    },
+    {
+     "what": "RCA (14, due file) / scheda audio (C162 4.7u) (in altezza)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 3.6
+    },
+    {
+     "what": "scheda audio (J6 GAIN_LED) / T1 2×15 V 50 VA (in profondità)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 0.1
+    },
+    {
+     "what": "scheda audio (J6 GAIN_LED) / T2 12 V (in profondità)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 0.1
+    },
+    {
+     "what": "scheda audio (J6 GAIN_LED) / scheda alimentatore (in profondità)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 0.1
+    }
+   ],
+   "notes": [
+    "Davanti alla scheda audio restano 86.7 mm fino al frontale; i comandi stanno sopra, da 50 mm."
+   ],
+   "toroid_distances_mm": {
+    "T1 2×15 V 50 VA": {
+     "ingressi_RCA": 245.7,
+     "volume_bilanciamento": 245.4
+    },
+    "T2 12 V": {
+     "ingressi_RCA": 210.0,
+     "volume_bilanciamento": 168.6
+    }
+   },
+   "items": [
+    {
+     "label": "RCA (14, due file)",
+     "shape": "rect",
+     "x": 154.0,
+     "y": 0,
+     "w": 182.0,
+     "d": 30.0,
+     "z0": 39.0,
+     "z1": 91.0,
+     "kind": "panel",
+     "group": "RCA (14, due file)"
+    },
+    {
+     "label": "IEC con fusibile e interruttore",
+     "shape": "rect",
+     "x": 5.0,
+     "y": 0,
+     "w": 65.0,
+     "d": 50.0,
+     "z0": 64.2,
+     "z1": 95.8,
+     "kind": "mains",
+     "group": "IEC con fusibile e interruttore"
+    },
+    {
+     "label": "selettore",
+     "shape": "rect",
+     "x": 23.75,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "panel",
+     "group": "selettore"
+    },
+    {
+     "label": "guadagno",
+     "shape": "rect",
+     "x": 91.25,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "panel",
+     "group": "guadagno"
+    },
+    {
+     "label": "trim",
+     "shape": "rect",
+     "x": 158.75,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "panel",
+     "group": "trim"
+    },
+    {
+     "label": "mute",
+     "shape": "rect",
+     "x": 226.25,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "panel",
+     "group": "mute"
+    },
+    {
+     "label": "volume",
+     "shape": "rect",
+     "x": 293.75,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "audio",
+     "group": "volume"
+    },
+    {
+     "label": "bilanciamento",
+     "shape": "rect",
+     "x": 361.25,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "audio",
+     "group": "bilanciamento"
+    },
+    {
+     "label": "scheda audio (J104 IN4_L)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 5.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 22.6,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (C162 4.7u)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 15.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 39.6,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (C162 4.7u)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 25.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 39.6,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (C162 4.7u)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 35.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 39.6,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (C374 1u)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 45.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 28.6,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (K3 IM06TS MUTE2)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 55.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 17.6,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (Q731 MJE15032)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 65.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 43.2,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (Q731 MJE15032)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 75.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 43.2,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (C340 100u)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 85.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 19.1,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (C2 100n)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 95.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 17.6,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (C738 100n)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 105.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 17.6,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (C738 100n)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 115.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 17.6,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (Q831 MJE15032)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 125.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 43.2,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (Q831 MJE15032)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 135.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 43.2,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (C839 100u)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 145.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 19.1,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (C423 470p)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 155.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 17.6,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (C405 100n)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 165.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 17.6,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (C239 100n)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 175.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 17.6,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (SW2 GAIN 0/+3/+10 dB)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 185.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 0,
+     "z1": 22.6,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "scheda audio (J6 GAIN_LED)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 195.0,
+     "w": 392.6,
+     "d": 8.4,
+     "z0": 0,
+     "z1": 22.6,
+     "kind": "board",
+     "group": "scheda audio"
+    },
+    {
+     "label": "T1 2×15 V 50 VA",
+     "shape": "circle",
+     "x": 5.0,
+     "y": 208.3,
+     "w": 87.3,
+     "d": 87.3,
+     "z0": 0,
+     "z1": 45.7,
+     "kind": "toroid",
+     "group": "T1 2×15 V 50 VA"
+    },
+    {
+     "label": "T2 12 V",
+     "shape": "circle",
+     "x": 97.3,
+     "y": 208.3,
+     "w": 60.0,
+     "d": 60.0,
+     "z0": 0,
+     "z1": 30.3,
+     "kind": "toroid",
+     "group": "T2 12 V"
+    },
+    {
+     "label": "scheda alimentatore",
+     "shape": "rect",
+     "x": 162.3,
+     "y": 208.3,
+     "w": 246.9,
+     "d": 110.0,
+     "z0": 0,
+     "z1": 43.1,
+     "kind": "board",
+     "group": "scheda alimentatore"
+    },
+    {
+     "label": "sezione di rete dell'alimentatore",
+     "shape": "rect",
+     "x": 162.3,
+     "y": 208.3,
+     "w": 45.39,
+     "d": 110.0,
+     "z0": 0,
+     "z1": 43.1,
+     "kind": "zone",
+     "group": "sezione di rete dell'alimentatore"
+    }
+   ]
+  },
+  "B_alimentatore_sotto": {
+   "title": "B — alimentatore sotto la scheda audio, toroidali davanti",
+   "fits": false,
+   "failed": [
+    {
+     "what": "RCA (14, due file) / scheda audio (piano alto) (J104 IN4_L) (in profondità)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 20.0
+    },
+    {
+     "what": "RCA (14, due file) / scheda audio (piano alto) (C162 4.7u) (in profondità)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 20.0
+    },
+    {
+     "what": "RCA (14, due file) / scheda audio (piano alto) (C162 4.7u) (in profondità)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 10.0
+    },
+    {
+     "what": "IEC con fusibile e interruttore / scheda audio (piano alto) (J104 IN4_L) (in altezza)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 4.0
+    },
+    {
+     "what": "IEC con fusibile e interruttore / scheda audio (piano alto) (C162 4.7u) (in altezza)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 21.0
+    },
+    {
+     "what": "IEC con fusibile e interruttore / scheda audio (piano alto) (C162 4.7u) (in altezza)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 21.0
+    },
+    {
+     "what": "IEC con fusibile e interruttore / scheda audio (piano alto) (C162 4.7u) (in profondità)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 20.0
+    },
+    {
+     "what": "IEC con fusibile e interruttore / scheda audio (piano alto) (C374 1u) (in profondità)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 10.0
+    },
+    {
+     "what": "scheda audio (piano alto) (J6 GAIN_LED) / T1 2×15 V 50 VA (in profondità)",
+     "ok": false,
+     "value": null,
+     "limit": null,
+     "shortfall_mm": 0.1
+    }
+   ],
+   "notes": [
+    "Due piani: alimentatore fino a 43.1 mm, scheda audio da 48.6 a 76.2 mm."
+   ],
+   "toroid_distances_mm": {
+    "T1 2×15 V 50 VA": {
+     "ingressi_RCA": 245.7,
+     "volume_bilanciamento": 245.4
+    },
+    "T2 12 V": {
+     "ingressi_RCA": 210.0,
+     "volume_bilanciamento": 168.6
+    }
+   },
+   "items": [
+    {
+     "label": "RCA (14, due file)",
+     "shape": "rect",
+     "x": 154.0,
+     "y": 0,
+     "w": 182.0,
+     "d": 30.0,
+     "z0": 39.0,
+     "z1": 91.0,
+     "kind": "panel",
+     "group": "RCA (14, due file)"
+    },
+    {
+     "label": "IEC con fusibile e interruttore",
+     "shape": "rect",
+     "x": 5.0,
+     "y": 0,
+     "w": 65.0,
+     "d": 50.0,
+     "z0": 64.2,
+     "z1": 95.8,
+     "kind": "mains",
+     "group": "IEC con fusibile e interruttore"
+    },
+    {
+     "label": "selettore",
+     "shape": "rect",
+     "x": 23.75,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "panel",
+     "group": "selettore"
+    },
+    {
+     "label": "guadagno",
+     "shape": "rect",
+     "x": 91.25,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "panel",
+     "group": "guadagno"
+    },
+    {
+     "label": "trim",
+     "shape": "rect",
+     "x": 158.75,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "panel",
+     "group": "trim"
+    },
+    {
+     "label": "mute",
+     "shape": "rect",
+     "x": 226.25,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "panel",
+     "group": "mute"
+    },
+    {
+     "label": "volume",
+     "shape": "rect",
+     "x": 293.75,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "audio",
+     "group": "volume"
+    },
+    {
+     "label": "bilanciamento",
+     "shape": "rect",
+     "x": 361.25,
+     "y": 265.0,
+     "w": 30.0,
+     "d": 35.0,
+     "z0": 50.0,
+     "z1": 80.0,
+     "kind": "audio",
+     "group": "bilanciamento"
+    },
+    {
+     "label": "scheda audio (piano alto) (J104 IN4_L)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 5.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 65.2,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (C162 4.7u)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 15.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 82.2,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (C162 4.7u)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 25.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 82.2,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (C162 4.7u)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 35.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 82.2,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (C374 1u)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 45.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 71.2,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (K3 IM06TS MUTE2)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 55.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 60.2,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (Q731 MJE15032)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 65.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 85.8,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (Q731 MJE15032)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 75.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 85.8,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (C340 100u)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 85.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 61.7,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (C2 100n)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 95.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 60.2,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (C738 100n)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 105.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 60.2,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (C738 100n)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 115.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 60.2,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (Q831 MJE15032)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 125.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 85.8,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (Q831 MJE15032)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 135.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 85.8,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (C839 100u)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 145.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 61.7,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (C423 470p)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 155.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 60.2,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (C405 100n)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 165.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 60.2,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (C239 100n)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 175.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 60.2,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (SW2 GAIN 0/+3/+10 dB)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 185.0,
+     "w": 392.6,
+     "d": 10.0,
+     "z0": 48.6,
+     "z1": 65.2,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda audio (piano alto) (J6 GAIN_LED)",
+     "shape": "rect",
+     "x": 11.2,
+     "y": 195.0,
+     "w": 392.6,
+     "d": 8.4,
+     "z0": 48.6,
+     "z1": 65.2,
+     "kind": "board",
+     "group": "scheda audio (piano alto)"
+    },
+    {
+     "label": "scheda alimentatore (sotto)",
+     "shape": "rect",
+     "x": 163.1,
+     "y": 93.3,
+     "w": 246.9,
+     "d": 110.0,
+     "z0": 0,
+     "z1": 43.1,
+     "kind": "board",
+     "group": "scheda alimentatore (sotto)"
+    },
+    {
+     "label": "T1 2×15 V 50 VA",
+     "shape": "circle",
+     "x": 5.0,
+     "y": 208.3,
+     "w": 87.3,
+     "d": 87.3,
+     "z0": 0,
+     "z1": 45.7,
+     "kind": "toroid",
+     "group": "T1 2×15 V 50 VA"
+    },
+    {
+     "label": "T2 12 V",
+     "shape": "circle",
+     "x": 97.3,
+     "y": 208.3,
+     "w": 60.0,
+     "d": 60.0,
+     "z0": 0,
+     "z1": 30.3,
+     "kind": "toroid",
+     "group": "T2 12 V"
+    }
+   ]
+  }
+ }
+}

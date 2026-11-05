@@ -18,6 +18,23 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L70bis — L70 fatto due volte: il lavoro della seconda sessione, conservato (2026-11-04)
+
+- **Che cosa è successo**: due sessioni hanno eseguito lo stesso prompt di L70 in parallelo, entrambe da
+  `main` a 2082fabf1. L'altra ha chiuso per prima (PR #170, 12:16, «Tenere tutto», ADR-119, NC-089); questa
+  aveva il worktree di prima e non ha ricontrollato `main`, ha corso dalle 12:35 e ha rifatto all'utente la
+  stessa domanda (risposta «Tenere com'è», la stessa decisione). Il doppione è emerso al merge (PR #171, chiusa).
+  L'utente: «rinominerei il lotto [...] in L70bis [...] e mergerei, mi spiace perdere le info».
+- **Che cosa aggiunge** (`data/2026-11-04/L70bis/`, report `reports/2026-11-04-L70bis-semplificazioni-supplemento.md`):
+  il fusibile nel banco (`--fusibile`, i dati della Littelfuse 218 in `parti_fusibile.md`); nei rami di T1 0,69 A
+  efficaci e 3,0 A²s per accensione (la 1,6 A); con un fusibile da 1 A anche sul lato continua il corto sul
+  piedino del regolatore dà ancora 34–43 J in R550 nel modello, fino a ~430 J coi tempi garantiti; i buchi di
+  rete da 40 a 150 ms (senza rivelatore la ritenuta scatta da 60 ms a rete −10 %); la catena al jack senza
+  rivelatore e senza ritenuta, 16,9–17,9 dB SPL; il blocco audio su un rail solo ≤ 75 °C.
+- **Un errore mio, corretto**: il primo modello del fusibile lasciava 1 Ω nel ramo; corse buttate e rifatte.
+- **La decisione** resta ADR-119; nessuna ADR nuova, nessuna NC aperta o chiusa.
+- **Dopo**: **L71**, il prompt di `NEXT-SESSION.md` (invariato, con un controllo di `main` in più).
+
 ### L70 — le due semplificazioni, misurate e respinte (2026-11-04)
 
 - **Le corse** (`data/2026-11-04/L70/`, il banco di L69b copiato): quattro varianti di `psu.py` per

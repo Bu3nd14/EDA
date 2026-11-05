@@ -4154,6 +4154,17 @@ pannello (assi ≥ 63,7 mm dal fondo). Dieci vincoli numerati nel report, nessun
 circuito. Il frontale da 483 mm si decide al pre-layout (scelta dell'utente). Report
 `reports/2026-10-09-L49b-alimentatore-assieme.md`.
 
+**Avanzamento, L73a (2026-11-05), la prova a due strati sul circuito di oggi — resta aperta.** La scheda
+audio (653 parti, i sedici dissipatori, i condensatori al pezzo più grande della lista ammessa) si piazza in
+**392,6 × 198,3 mm** (riempimento 0,46) e si sbroglia a due strati con **una connessione aperta e due
+distanze di 0,248 mm**: al limite, senza il piano di massa né la stella. Nel **Pesante 3U a fondo piatto
+mancano 18,3 mm** di profondità (l'alimentatore di oggi, 189 parti, è 246,9 × 110 mm) e 3,6 mm d'altezza
+sotto i RCA. **Un rilievo sulla chiusura di L49a**: i transistor `Q_NPN` / `Q_PNP` (piedini B / C / E) non si
+collegano alle piazzole 1 / 2 / 3 delle impronte SOT-23 / SOT-223 / TO-220 — la scheda di L49a ne aveva 64
+scollegati; L73a li mappa dai datasheet (`data/2026-11-05/L73/script/pinmap.py`). L'utente: senza margine lo
+sbroglio vero peggiora; **misurare contenitore più profondo, quattro strati, scheda figlia e due
+contenitori** (L73b). Report `reports/2026-11-05-L73a-prova-di-spazio-due-strati.md`.
+
 ### NC-049 — S del mute con la cima delle LDR a 12 mA non è mai stato misurato
 
 | | |

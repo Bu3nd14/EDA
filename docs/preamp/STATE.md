@@ -13,18 +13,34 @@ fino al 2026-10-26, con tutta la loro storia, sono in `STATE-STORIA.md`.
 
 | | |
 |---|---|
-| Ultimo aggiornamento | **2026-11-05** (L72: i testi e le parti. La Stax a 1 µF ±5 %, capacità reale 0,895–1,265 µF, il limite alto simulato (149,5–149,7 ms a 1,265 µF), E8 / T5 riscritti (ADR-121); la lista ammessa dei condensatori in polipropilene sotto P6, coi codici e i pezzi più grandi (ADR-122); le sei resistenze del guadagno e del trim allo 0,1 %, E10 0,049 dB (ADR-123, il sorgente cambia solo nel campo di tolleranza); PR-30 sulla potenza del finale, 113,8 dB SPL, firmata, i 100 W delle Heresy come ipotesi (ADR-124). **Chiuse NC-081 e NC-084**) |
-| Ultimo lotto chiuso | **L72** — i testi e le parti (2026-11-05). Report `reports/2026-11-05-L72-testi-e-parti.md`, dati `data/2026-11-05/L72/`, ADR-121…ADR-124 |
-| **Prossimo lotto** | **L73 — la prova di spazio sul circuito di oggi** (NC-048, bloccante per G1; prompt in `NEXT-SESSION.md`). Poi L74 → **G1** (la tabella dei lotti; l'ordine concordato dall'utente il 2026-11-04) |
-| **L73 in volo** (2026-11-05, ramo `worktree-L73`) | Script in `data/2026-11-05/L73/script/` (copie di `layout/preamp/`), impronte di prova in `footprints/`. **Trovato**: i transistor SMD (Q_NPN / Q_PNP, piedini B/C/E) arrivano sulla scheda **senza rete** sulle piazzole 1/2/3 — anche sulla scheda di L49a, chiusa «100 %, DRC 0 / 0» (annotato solo nel README di L45d2b3b2b1); `script/pinmap.py` lo mappa dai datasheet, solo per la prova. **Piazzamento**: scheda audio 392,6 × 198,3 mm col riempimento «più alti prima» (L73_PACK=height, gap 1,0, blocco 80), 0 sovrapposizioni, dissipatori ≥ 10,9 mm; alimentatore 246,9 × 110 (logica a 3,0 mm). **Nel Pesante 3U a fondo piatto mancano 18,3 mm di profondità** (`floorplan.py`) e 3,6 mm d'altezza sotto i RCA (i 10 µF da 32 mm). **Sbroglio audio a 2 strati** (`data/2026-11-05/L73/audio/`, non ancora versionato): 6154 tracce, 419 vie, DRC **1 connessione aperta** (K3 piedino 6, R_FIXC2) e **2 distanze a 0,248 mm** contro 0,25 su SOT-223 (Q122, Q621), più 52 avvisi estetici: al limite, nessun margine. Sbroglio dell'alimentatore (110 mm, logica 3,0, piste 1,0) in corsa. **L'utente** (2026-11-05): senza margini lo sbroglio vero con massa a stella e piani peggiora; valutare **due contenitori, più strati, schede figlie**. Da misurare: 4 strati, scheda figlia delle uscite fisse, l'Hifi2000 Slimline 3U 350 (interni 415 × 350 × 120, esterni 435 × 361 × 122, entro P8); poi la domanda con le alternative. L'utente chiede di **spezzare il lavoro se servono token** |
+| Ultimo aggiornamento | **2026-11-05** (L73a: la prova di spazio a due strati sul circuito di oggi. La scheda audio 392,6 × 198,3 mm, riempimento 0,46, sbrogliata con 1 connessione aperta e 2 distanze di 0,248 mm: **al limite**; nel Pesante 3U a fondo piatto **mancano 18,3 mm**. **I transistor `Q_NPN` / `Q_PNP` non si collegano alle piazzole** delle impronte SOT-23 / SOT-223 / TO-220, anche sulla scheda di L49a. L'utente: misurare quattro strade, è L73b. **NC-048 resta aperta**) |
+| Ultimo lotto chiuso | **L73a** — la prova di spazio a due strati (2026-11-05). Report `reports/2026-11-05-L73a-prova-di-spazio-due-strati.md`, dati e script `data/2026-11-05/L73/` |
+| **Prossimo lotto** | **L73b — le quattro strade, misurate** (contenitore più profondo, quattro strati, scheda figlia, due contenitori; NC-048, bloccante per G1; prompt in `NEXT-SESSION.md`). Poi L74 → **G1** |
 | Non conformità | **24 aperte, 2 bloccanti** (L72, 2026-11-05: **chiuse NC-081 e NC-084**; NC-080 e NC-082 aperte per G2 soltanto). Il registro è `NONCOMPLIANCE.md` |
-| Le bloccanti | Per **G1**: **NC-048** (la prova di spazio sul circuito di oggi, riaperta in L65: è L73); da chiudere prima di G1 per decisione dell'utente: **NC-072** (maggiore, il rame del layout); NC-073 e NC-075 (maggiori) alla scelta della parte. Per **G2**: NC-044 (L50), le impronte di NC-080 (la Stax distinta dal Singxer) e di NC-082 (i pezzi più grandi della lista) |
-| Suite | `run_tests.sh` alla chiusura di L72 (2026-11-05, dal worktree): **14 passed / 0 failed**. Il circuito è cambiato solo nel campo `Tolerance` di dodici resistenze (netlist uguali a main salvo quello); il dossier si rigenera in L74 |
+| Le bloccanti | Per **G1**: **NC-048** (la prova di spazio sul circuito di oggi, riaperta in L65: L73a al limite, L73b misura le quattro strade); da chiudere prima di G1 per decisione dell'utente: **NC-072** (maggiore, il rame del layout); NC-073 e NC-075 (maggiori) alla scelta della parte. Per **G2**: NC-044 (L50), le impronte di NC-080 (la Stax distinta dal Singxer) e di NC-082 (i pezzi più grandi della lista) |
+| Suite | `run_tests.sh` alla chiusura di L73a (2026-11-05, dal worktree): **14 passed / 0 failed**. Il circuito non è cambiato (L73a lavora su copie della netlist); il dossier si rigenera in L74 |
 
 ## Diario degli ultimi lotti
 
 Le ultime tre voci. Le più vecchie sono in `STATE-STORIA.md`, nello stesso ordine (la più recente
 in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quella sezione.
+
+### L73a — la prova di spazio a due strati sul circuito di oggi (2026-11-05)
+
+- **La scheda audio** (`data/2026-11-05/L73/`, script copiati da `layout/preamp/`): 653 parti, i condensatori
+  al pezzo più grande della lista ammessa, la Stax con un'impronta sua a passo 22,5 (NC-080, proposta per G2).
+  Coi «più alti prima» **392,6 × 198,3 mm**, riempimento 0,46 (con la connettività di L49a 409,7 × 268,1);
+  sbroglio a 2 strati con **1 connessione aperta e 2 distanze di 0,248 mm**: al limite, senza piano di massa.
+- **Nel Pesante 3U a fondo piatto mancano 18,3 mm** (l'alimentatore di oggi, 189 parti, 246,9 × 110 mm) e
+  3,6 mm d'altezza sotto i RCA; l'alimentatore sotto la scheda audio va peggio (fino a 21 mm).
+- **Il rilievo**: `Q_NPN` / `Q_PNP` (piedini B / C / E) non si collegano alle piazzole 1 / 2 / 3 delle
+  impronte, senza errore: la scheda di L49a aveva 64 transistor scollegati. Mappati per la prova dai
+  datasheet (`script/pinmap.py`); per G2 è del sorgente, la severità la decide l'utente in L73b.
+- **L'utente**: «se non ci sono margini, lo sbroglio vero con massa a stella e piani di massa potrebbe
+  peggiorare le cose»; scelte da misurare **tutte e quattro** le strade: contenitore più profondo (Hifi2000
+  Slimline 3U 350, interni 415 × 350 × 120, entro P8), quattro strati, scheda figlia, due contenitori. Lotto
+  spezzato su sua richiesta (i token).
+- **Dopo**: **L73b**, il prompt di `NEXT-SESSION.md`.
 
 ### L72 — i testi e le parti (2026-11-05)
 
@@ -60,23 +76,6 @@ in cima); alla chiusura di un lotto la voce che esce da qui passa in cima a quel
   fisica»** (ADR-120); la musica di 3–6 ms dopo il comando contrario **«Va bene, dichiararlo»**.
   **NC-083 chiusa**. Il circuito, il PRB e la FMEA non cambiano; P9 cita ADR-120.
 - **Dopo**: **L72**, il prompt di `NEXT-SESSION.md`.
-
-### L70bis — L70 fatto due volte: il lavoro della seconda sessione, conservato (2026-11-04)
-
-- **Che cosa è successo**: due sessioni hanno eseguito lo stesso prompt di L70 in parallelo, entrambe da
-  `main` a 2082fabf1. L'altra ha chiuso per prima (PR #170, 12:16, «Tenere tutto», ADR-119, NC-089); questa
-  aveva il worktree di prima e non ha ricontrollato `main`, ha corso dalle 12:35 e ha rifatto all'utente la
-  stessa domanda (risposta «Tenere com'è», la stessa decisione). Il doppione è emerso al merge (PR #171, chiusa).
-  L'utente: «rinominerei il lotto [...] in L70bis [...] e mergerei, mi spiace perdere le info».
-- **Che cosa aggiunge** (`data/2026-11-04/L70bis/`, report `reports/2026-11-04-L70bis-semplificazioni-supplemento.md`):
-  il fusibile nel banco (`--fusibile`, i dati della Littelfuse 218 in `parti_fusibile.md`); nei rami di T1 0,69 A
-  efficaci e 3,0 A²s per accensione (la 1,6 A); con un fusibile da 1 A anche sul lato continua il corto sul
-  piedino del regolatore dà ancora 34–43 J in R550 nel modello, fino a ~430 J coi tempi garantiti; i buchi di
-  rete da 40 a 150 ms (senza rivelatore la ritenuta scatta da 60 ms a rete −10 %); la catena al jack senza
-  rivelatore e senza ritenuta, 16,9–17,9 dB SPL; il blocco audio su un rail solo ≤ 75 °C.
-- **Un errore mio, corretto**: il primo modello del fusibile lasciava 1 Ω nel ramo; corse buttate e rifatte.
-- **La decisione** resta ADR-119; nessuna ADR nuova, nessuna NC aperta o chiusa.
-- **Dopo**: **L71**, il prompt di `NEXT-SESSION.md` (invariato, con un controllo di `main` in più).
 
 ## Come si lavora da qui: a lotti piccoli e pushati
 
@@ -267,7 +266,8 @@ nascere non da una revisione ma da un **controllo prescritto da una ADR**.
 | L70bis | **L70 fatto due volte** (una seconda sessione sullo stesso prompt, in parallelo): il suo lavoro conservato come supplemento — i fusibili anche sul lato continua, i buchi di rete da 40 a 150 ms, la catena al jack senza rivelatore e senza ritenuta | XS | — | **fatto** (2026-11-04: la decisione resta ADR-119; il circuito non cambia) |
 | L71 | **Il frontale mosso durante una sequenza** (NC-083): il frontale spento prima della musica, riacceso nello spegnimento, SW3 dentro Δ, sul temporizzatore che esce da L70, a rete ±10 % | S/M | NC-083 | **fatto** (2026-11-04): 230 sequenze e 11 catene al jack, al più −47,9 dB SPL (12,3 la musica che torna), stati finali giusti; il ritardo del permissivo a 10,0 ms con una musica di 3 ms, la regola fisica regge con 6,9 ms: **«Sì, regola fisica»** (ADR-120). **NC-083 chiusa**. Il circuito non cambia. Report `reports/2026-11-04-L71-frontale-mosso.md` |
 | L72 | **I testi e le parti**: E8 / T5 e la sezione 6 del dossier sul condensatore della Stax (NC-080); la lista ammessa dei condensatori di segnale accanto a P6, le finestre di valore e i tipi in polipropilene (NC-082); le resistenze del guadagno e del trim allo 0,1 % e E10 ricalcolato (NC-081); la motivazione di PR-30 sulla principale (NC-084, con ADR e la firma dell'utente) | S/M | NC-080, NC-081, NC-082, NC-084 | **fatto** (2026-11-05): la Stax 0,895–1,265 µF reali, solo 1,0 µF ±5 % (ADR-121); la lista sotto P6 (ADR-122); lo 0,1 %, E10 0,049 dB (ADR-123); PR-30 firmata sulla potenza del finale (ADR-124); NC-081 e NC-084 chiuse; report `reports/2026-11-05-L72-testi-e-parti.md` |
-| L73 | **La prova di spazio sul circuito di oggi** (NC-048, bloccante per G1): piazzamento e sbroglio di prova della scheda audio e dell'alimentatore come L49a / L49b, con le impronte della lista ammessa di L72 e i dissipatori, nel Pesante 3U | M | NC-048 | da fare — **prossimo** |
+| L73a | **La prova di spazio sul circuito di oggi, a due strati** (NC-048, bloccante per G1): piazzamento e sbroglio di prova della scheda audio e dell'alimentatore come L49a / L49b, con le impronte della lista ammessa di L72 e i dissipatori, nel Pesante 3U | M | NC-048 | **fatto** (2026-11-05): la scheda audio 392,6 × 198,3 mm sbrogliata al limite (1 aperta, 2 distanze di 0,248 mm); nel Pesante 3U a fondo piatto mancano 18,3 mm; i transistor `Q_NPN` / `Q_PNP` senza rete sulle impronte (anche L49a). L'utente: misurare quattro strade. Report `reports/2026-11-05-L73a-prova-di-spazio-due-strati.md` |
+| L73b | **Le quattro strade, misurate** (NC-048): contenitore più profondo (Hifi2000 Slimline 3U 350), quattro strati, scheda figlia delle uscite fisse, due contenitori — ognuna con la sua prova e il margine che lascia; lo sbroglio dell'alimentatore a piste larghe; la severità del rilievo dei transistor; la decisione dell'utente | M | NC-048 | da fare — **prossimo** |
 | L74 | **Il dossier rigenerato** sul circuito di L70–L73, prima del gate | M | — | da fare |
 | G1 | **Il congelamento della topologia**: `design-reviewer` al gate, offline su `main`, sul dossier rigenerato (L74) e sui dati misurati, con gli esiti di L65 trattati (L70–L73); riesegue le verifiche da sé; il prodotto è un report datato con le non conformità che apre (`AGENTS.md`) | M | nessuna bloccante per G1 dopo L56 (NC-060 chiusa); da chiudere prima per decisione dell'utente: NC-072 (maggiore, il rame del layout) — NC-042, NC-054, NC-055, NC-056, NC-059, NC-076, NC-078, NC-079 chiuse | da fare — dopo L74 |
 | L45 | **La FMEA della scheda audio** (richiesta dell'utente in L43a, 2026-09-27): ogni guasto singolo della scheda audio (dispositivi d'uscita in corto o aperti, bobine e contatti dei relè, condensatori d'uscita, firmware delle LDR) col suo effetto al jack principale e alle fisse in dB SPL contro il tetto di non-danno; i casi che lo superano, simulati. Poi la decisione dell'utente su un rivelatore di continua che comandi il sink di `MUTE_CMD`, e su un tetto per le fisse; con NC-046 (la metrica delle fisse in cuffia) | M | **NC-042**, NC-046 | **diviso** in L45a, L45b, L45c, L45d (decisione dell'utente all'inizio, 2026-10-13: «Quattro parti», dopo aver allargato il lotto: «ritengo necessario fare la FMEA anche dell'alimentatore e della parte controlli»); **prima di G1** (L52) |
