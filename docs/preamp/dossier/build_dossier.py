@@ -1864,6 +1864,11 @@ def measure_interlock():
 
 # --------------------------------------------- il selettore e il volume -----
 F1_MAX = 100e-6       # V di picco su ogni uscita, F1 / PR-14 (~33 dB SPL)
+# ADR-124 (L72, NC-084): il tetto della principale e' la potenza del finale, non il suo trasformatore.
+# Il cj Evolution 250 (30 W su 8 ohm) satura a sqrt(2 * 30 * 8) = 21,9 V di picco; con la convenzione
+# di NC-028 (Heresy 96 dB / 1 W / 1 m, 2,83 V) sono 96 + 20 log10(21,9 / 2,83) = 113,8 dB SPL di picco.
+# Le cifre della FMEA sopra questo tetto sono lineari: il finale non le puo' dare.
+TETTO_FINALE_DB = 96 + 20 * math.log10(math.sqrt(2 * 30 * 8) / 2.83)
 F1_MODI = (("0", "0 dB"), ("3", "+3 dB"), ("10", "+10 dB"))
 
 
@@ -3948,7 +3953,11 @@ def build_page(M, inline=False):
     A('<h3>Il taglio in bassa, col carico da 50 kΩ</h3>')
     A(f'<p>Con il carico Stax-like da 50 kΩ: {fx(lf["g1k"], 4)} dB a 1 kHz, '
       f'{fx(lf["g20"], 4)} dB a 20 Hz, {fx(lf["g5"], 4)} dB a 5 Hz. Il polo è quello '
-      'del condensatore d&rsquo;uscita da 4,7 µF (E8, ADR-007).</p>')
+      'del condensatore del banco <code>tb_ac.cir</code>, 4,7 µF su 50 kΩ ∥ 220 kΩ: il valore '
+      'della principale e della fissa 1 (E8, ADR-007), <em>non</em> quello della Stax. Sulla '
+      'Stax il condensatore è da 1 µF ±5 %, nella finestra di 0,895–1,265 µF reali (E8, ADR-081, '
+      'ADR-121): sul netlist, col carico della Stax e i bleed (41,2 kΩ), 0,147 / 0,161 / 0,178 dB '
+      'a 20 Hz a +5 % / nominale / −5 % (L60c2, <code>e9.csv</code>), contro i 0,2 dB di E9.</p>')
 
     # --- 5 V1 ---
     B = v1["B"]
@@ -5200,6 +5209,12 @@ def build_page(M, inline=False):
               '<th class="num">Al jack</th><th class="num">T<sub>j</sub></th><th>Stato</th><th>Da</th></tr>')
             for r in rr:
                 jack = f'{cella_n(r["picco_dopo_dB"])} dB SPL' if cella_n(r["picco_dopo_dB"]) else ""
+                try:   # ADR-124: sopra il tetto il finale satura; la cifra lineare resta accanto
+                    if float(r["picco_dopo_dB"]) > TETTO_FINALE_DB:
+                        jack = (f'{fx(TETTO_FINALE_DB, 1)} dB SPL, il finale in clipping '
+                                f'(lineare {cella_n(r["picco_dopo_dB"])})')
+                except (TypeError, ValueError):
+                    pass
                 tj = f'{cella_n(r["Tj_max_C"], 0)} °C' if cella_n(r["Tj_max_C"], 0) else ""
                 A(f'<tr><td>{parti_(html_escape(r["ref"]), True)}</td><td>{parti_(html_escape(r["funzione"]))}</td>'
                   f'<td>{parti_(html_escape(r["modo"]))}</td><td>{r["priorita_prima"] or "&mdash;"}</td>'
@@ -5212,7 +5227,10 @@ def build_page(M, inline=False):
         A(f'<p class="meta">Le {fm["dopo"]["bassa"]} righe a priorità bassa e le colonne che qui non ci '
           f'sono (la decisione di L45, il tasso di guasto del modo, la fonte di ogni cifra) stanno in '
           f'<code>{html_escape(rel(FMEA_OGGI))}</code>; il picco al jack è il più alto fra principale e '
-          'fissa 1, di picco a 1 m con la catena di NC-028.</p>')
+          'fissa 1, di picco a 1 m con la catena di NC-028. Sopra '
+          f'{fx(TETTO_FINALE_DB, 1)} dB SPL il finale da 30 W va in clipping: è quella potenza, non il '
+          'trasformatore d&rsquo;uscita (che un gradino lo passa come transitorio di bassa frequenza), a '
+          'proteggere le Heresy: al più 60 W in onda quadra, contro 100 W continui, un&rsquo;ipotesi dichiarata (ADR-124, PR-30).</p>')
 
     # --- 13 requisiti ---
     A(h2("s13"))

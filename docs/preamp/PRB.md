@@ -31,6 +31,10 @@ attuali». Registrato da **ADR-053**. Da qui, cambiare una voce vuole una ADR.
   dissaldandoli». Scelta dell'utente, sul testo proposto: «Tenere le resistenze».
 - **PR-30**, il 2026-11-04 (**ADR-117**, L65): la sola riga «Dettagli», il tetto della Stax dichiarato come
   ipotesi (il clipping delle Heresy, non un limite della Stax). Firma dell'utente: «Firmo così».
+- **PR-30**, il 2026-11-05 (**ADR-124**, L72): la principale non conta più «sul trasformatore del finale a
+  valvole» ma sulla sua potenza (30 W, clipping a ~114 dB SPL di picco, meno di quanto le Heresy reggono;
+  100 W come ipotesi dichiarata, scelta dell'utente «100 W, ipotesi dichiarata»). Firma dell'utente sul
+  testo proposto: «Firmo così».
 
 ## Che cos'è, e come sta con gli altri documenti
 
@@ -183,8 +187,8 @@ della fabbricazione; senza, il progetto non va avanti.
 
 **PR-30 · Un guasto della scheda audio non danneggia la catena di oggi.** Un componente che si rompe mentre si ascolta
 può dare un colpo, ma sull'uscita della Stax resta sopra il tetto di non-danno (0,87 V) al più 150 ms, col suo carico.
-L'uscita principale conta sul trasformatore del finale a valvole, la fissa 1 sulla protezione dichiarata del Singxer. Un apparecchio nuovo a valle fa rivedere il preamp.
-*Dettagli: P10 · ADR-069, ADR-081, ADR-086, ADR-117 · NC-042, NC-069 · firmata il 2026-10-13, riscritta e firmata il 2026-10-15; il tetto da 125 a 150 ms il 2026-10-15 (ADR-086). 0,87 V è il clipping del finale delle Heresy, non un limite della Stax: Stax non lo pubblica, e l'SRM-T1 è accoppiato in continua. È un'ipotesi dichiarata: col guasto peggiore l'energizzatore a volume massimo resta saturo fino a ~204 ms; col volume a −20 dB, ~63 ms (ADR-117, firmata il 2026-11-04).*
+L'uscita principale conta sulla potenza del finale: 30 W, che vanno in clipping a ~114 dB SPL di picco, meno di quanto le Heresy reggono; la fissa 1 sulla protezione dichiarata del Singxer. Un apparecchio nuovo a valle fa rivedere il preamp.
+*Dettagli: P10 · ADR-069, ADR-081, ADR-086, ADR-117, ADR-124 · NC-042, NC-069 · firmata il 2026-10-13, riscritta e firmata il 2026-10-15; il tetto da 125 a 150 ms il 2026-10-15 (ADR-086). 0,87 V è il clipping del finale delle Heresy, non un limite della Stax: Stax non lo pubblica, e l'SRM-T1 è accoppiato in continua. È un'ipotesi dichiarata: col guasto peggiore l'energizzatore a volume massimo resta saturo fino a ~204 ms; col volume a −20 dB, ~63 ms (ADR-117, firmata il 2026-11-04). La principale riscritta il 2026-11-05 (ADR-124, NC-084): il trasformatore d'uscita un gradino lo passa, la potenza no; il finale dà al diffusore al più 60 W in onda quadra, e i 100 W delle Heresy sono un'ipotesi dichiarata (Klipsch li pubblica per Heresy III e IV, non per la I).*
 
 ## F. Il fisico
 
