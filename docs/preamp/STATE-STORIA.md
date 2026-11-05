@@ -18,6 +18,23 @@ presente è in `STATE.md`.
 
 ## Diario, le voci più vecchie (la più recente in cima)
 
+### L70 — le due semplificazioni, misurate e respinte (2026-11-04)
+
+- **Le corse** (`data/2026-11-04/L70/`, il banco di L69b copiato): quattro varianti di `psu.py` per
+  sostituzione (`oggi` uguale al netlist di oggi), **150 sequenze** a rete ±10 %, 25 corse del calore della
+  scheda audio con un rail solo (il banco di L66), la catena al jack di S1+S2; tutte rc 0, nessun ripiego.
+- **Il rivelatore da solo non si toglie**: senza, la ritenuta scatta alla perdita di rete e dopo un buco di
+  200 ms l'apparecchio resta spento fino al frontale. Con S1+S2 il buco di 20 ms non si sente e il colpo alla
+  perdita di rete sale da −55 a ~18 dB SPL (i relè del jack a 55 / 82 / 110 ms).
+- **Senza la ritenuta**: la cella RC in corto porta U501 a 156 / 227 / 298 °C (le 20 Ω a 3,5 W, nessun
+  fusibile apre); C509 / C510 a massa R550 a 35 / 44 / 54 W; serbatoio o ponte in corto 11–19 A nel
+  secondario fino al fusibile. La scheda audio con un rail solo regge (Tj ≤ 75 °C a 60 °C d'aria).
+- **I datasheet**: SCHURTER FST 5×20 (Littelfuse rifiuta il download) e Vishay PR02, in `vendor/`. Il PR02
+  ammette ~12 W per 100 ms: R550 non regge il corto del piedino **nemmeno oggi** (6,1–9,4 J): NC-073 avanza.
+- **La scelta dell'utente**: **«Tenere tutto»** (ADR-119). **NC-089** aperta, minore (il buco di 20 ms). Il
+  circuito, P9, il PRB e la FMEA non cambiano.
+- **Dopo**: **L71**, il prompt di `NEXT-SESSION.md`.
+
 ### L65 — la revisione del dossier rigenerato, solo l'architetto (2026-11-04)
 
 - **Le scelte dell'utente**: la forma **«Solo l'architetto»**, con l'accento sul prototipo («l'unica cosa che

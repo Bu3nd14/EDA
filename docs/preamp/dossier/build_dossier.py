@@ -5230,7 +5230,7 @@ def build_page(M, inline=False):
           'fissa 1, di picco a 1 m con la catena di NC-028. Sopra '
           f'{fx(TETTO_FINALE_DB, 1)} dB SPL il finale da 30 W va in clipping: è quella potenza, non il '
           'trasformatore d&rsquo;uscita (che un gradino lo passa come transitorio di bassa frequenza), a '
-          'proteggere le Heresy, che reggono più di 30 W (ADR-124, PR-30).</p>')
+          'proteggere le Heresy: al più 60 W in onda quadra, contro 100 W continui, un&rsquo;ipotesi dichiarata (ADR-124, PR-30).</p>')
 
     # --- 13 requisiti ---
     A(h2("s13"))
