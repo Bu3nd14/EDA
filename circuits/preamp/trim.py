@@ -105,6 +105,11 @@ KU_COM2, KU_RESET2, KU_SET2 = "6", "7", "5"
 # deg (tb_loop.cir, L16). The heaviest load on block A is 1.51 k at 0 dB:
 # 3.82 V peak of E6 draws 2.5 mA from a ~20 mA class A stage (ADR-042).
 R1_TRIM, R2_TRIM, R3_TRIM = "845", "464", "464"
+# ADR-123 (L72, NC-081): the ladder sets the gain between the channels at -6 and
+# -12 dB, so its three resistors are 0.1 %, as the switched block's R_F / R_G
+# (gain_block.TOL_GAIN): at 1 % the ladder alone is 0.26 dB at -12 dB against
+# E10's 0.2 dB (docs/preamp/data/2026-11-05/L72/script/e10_caso_peggiore.py).
+TOL_TRIM = "0.1%"
 
 # LED current limiter from VRELAY, sized for VRELAY = 12 V (ADR-048; was 1.5 k
 # for 5 V): (12 - ~2) V / 4.99 k = ~2 mA in a red LED.
@@ -251,6 +256,7 @@ def trim_channel(ch, a_out, att_top, gnd, t1, t2, pole):
                                      (R2_TRIM, tap6, tap12),
                                      (R3_TRIM, tap12, gnd)), start=1):
         r = Part("Device", "R", value=val, footprint=FP_R, ref=f"R{base + n}")
+        r.fields["Tolerance"] = TOL_TRIM        # ADR-123
         r[1] += a
         r[2] += b
     t1[com] += att_top

@@ -1,0 +1,9 @@
+posizione,finestra_nominale_uF,oggi_uF,tau_IR_min_s_per_E12,perche
+ingresso C171-C174 / C371-C374,1-2.2,1.0,,"basso: il budget di E9 delle altre finestre e' calcolato con 1 uF; alto: PR-14 (F1 regge ~0,65 V di continua della sorgente con C/tau_IR = 1 uF / 10 000 s, ADR-064): tau_IR >= 10 000 s x C[uF]"
+C_T C265 / C465,6.8-10,10.0,,"basso: E9 sulla principale con C_IN e C_out al loro basso; alto: 10 uF, il valore verificato (il gradino del trim si scarica in C_T con tau ~0,1 s sotto il mute, PR-17)"
+principale C262 / C462,2.2-10,4.7,52.4,"basso: E9 col cj EV250 da 100 kOhm (architetto L65); alto: nessun requisito, le durate di P10 sulla principale e il clic al rilascio a 20 Hz si dichiarano (non hanno soglia)"
+fissa 1 C162 / C362,4.7-10,4.7,235.0,"basso: 4,7 uF, l'impedenza d'ingresso del Singxer non e' pubblicata (ADR-007); alto: nessun requisito"
+fissa 2 C165 / C365,1-1.1,1.0,25.8,"reale 0,895-1,265 uF (stax_finestra.py e le corse di stax/): 1,0 o 1,1 uF a +-5 %"
+E9 catena principale,,,,20 Hz al basso -5 %: 0.128 dB; oggi 0.050 dB; scarto L-R 0.023 dB
+E9 catena fissa 1,,,,20 Hz al basso -5 %: 0.150 dB; oggi 0.136 dB; scarto L-R 0.027 dB
+E9 catena fissa 2,,,,20 Hz al basso -5 %: 0.179 dB; oggi 0.162 dB; scarto L-R 0.032 dB

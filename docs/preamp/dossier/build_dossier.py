@@ -3948,7 +3948,11 @@ def build_page(M, inline=False):
     A('<h3>Il taglio in bassa, col carico da 50 kΩ</h3>')
     A(f'<p>Con il carico Stax-like da 50 kΩ: {fx(lf["g1k"], 4)} dB a 1 kHz, '
       f'{fx(lf["g20"], 4)} dB a 20 Hz, {fx(lf["g5"], 4)} dB a 5 Hz. Il polo è quello '
-      'del condensatore d&rsquo;uscita da 4,7 µF (E8, ADR-007).</p>')
+      'del condensatore del banco <code>tb_ac.cir</code>, 4,7 µF su 50 kΩ ∥ 220 kΩ: il valore '
+      'della principale e della fissa 1 (E8, ADR-007), <em>non</em> quello della Stax. Sulla '
+      'Stax il condensatore è da 1 µF ±5 %, nella finestra di 0,895–1,265 µF reali (E8, ADR-081, '
+      'ADR-121): sul netlist, col carico della Stax e i bleed (41,2 kΩ), 0,147 / 0,161 / 0,178 dB '
+      'a 20 Hz a +5 % / nominale / −5 % (L60c2, <code>e9.csv</code>), contro i 0,2 dB di E9.</p>')
 
     # --- 5 V1 ---
     B = v1["B"]

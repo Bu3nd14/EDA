@@ -131,6 +131,14 @@ R_G3 = "3.57k"      # Leg 1, relay K1. Alone: 1 + 1500/3570 = 1.420 = +3.05 dB,
                     # E2's "+3 dB". The E96 neighbours give 2.99 dB (3.65k)
                     # and 2.93 dB (3.74k); 3.57k is the one whose PAIR with
                     # R_G10 lands +10 dB closest to where it always was.
+# ADR-123 (L72, NC-081): R_F, R_G3 and R_G10 of the SWITCHED block (block B)
+# are 0.1 %, written as the part's "Tolerance" field so it reaches the netlist
+# and the BOM. They set the gain between the channels: at 1 % the worst case
+# is 0.24 dB at +10 dB and 0.49 dB with the trim at -12 dB, against E10's
+# 0.2 dB; at 0.1 % 0.024 / 0.049 dB (docs/preamp/data/2026-11-05/L72/script/
+# e10_caso_peggiore.py). The followers (switchable=False) are unity gain by
+# construction: their R_F does not set the gain and stays 1 %.
+TOL_GAIN = "0.1%"
 R_G10 = "866"       # Leg 2, relay K5, commanded only TOGETHER with K1:
                     # 3.57k || 866 = 696.9 ohm, 1 + 1500/696.9 = 3.152 =
                     # +9.97 dB - E2's "+10 dB", 0.16 % from the single 698 ohm
@@ -732,7 +740,9 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # ========================================================================
     # 6. FEEDBACK NETWORK  (ADR-004 - read LOOP INTEGRITY at the top)
     # ========================================================================
-    R(R_F, OUT, FB)
+    r_f = R(R_F, OUT, FB)
+    if switchable:
+        r_f.fields["Tolerance"] = TOL_GAIN      # ADR-123
     # C_f compensates the stray capacitance that the OPEN relay contacts and
     # the unused R_g legs leave hanging on the FB node (~15 pF each). Without it the
     # feedback factor rolls off near the loop's unity-gain frequency and the
@@ -746,7 +756,7 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
     # (333 -> 183 kHz). MUST be C0G/NP0, for the same reason as C124.
     C("330p", OUT, FB)
     if switchable:
-        R(R_G3, FB, RG)
+        R(R_G3, FB, RG).fields["Tolerance"] = TOL_GAIN      # ADR-123
         # The relay contacts themselves are instantiated in the channel file:
         # one Omron G6K-2F-Y (2 poles) per leg serves both channels - K1 for
         # this leg, K5 for R_G10 below. The design needs the NORMALLY OPEN
@@ -766,7 +776,7 @@ def gain_block(tag="", base=100, switchable=True, r_in=R_IN,
         # takes the next free number (R143 here, R242/R442 on the audio board)
         # and every reference designator that existed before L27 keeps its
         # number. A renumbering breaks decks in silence (limitations.md #22).
-        R(R_G10, FB, RG10)
+        R(R_G10, FB, RG10).fields["Tolerance"] = TOL_GAIN   # ADR-123
 
     # ========================================================================
     # 7. RC CELL FOR THE MIRROR AND THE VAS (ADR-056, L46b, NC-047)
