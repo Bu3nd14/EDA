@@ -18,8 +18,9 @@ dicono 4,7 µF. Chi segue E8 monta un condensatore che tiene la Stax sopra 0,87 
 ## Decisione
 
 Sulla fissa 2 il condensatore d'uscita è **1 µF ±5 %** in polipropilene, e la sua **capacità reale deve
-stare in 0,895–1,265 µF**. Sono ammessi i valori nominali **1,0 µF e 1,1 µF a ±5 %**; non 1,2 µF ±5 %, non
-un ±10 %. E8 e T5 lo dicono.
+stare in 0,895–1,265 µF**. È ammesso **1,0 µF ±5 %** (anche 1,1 µF ±5 %, che alla distinta di L72 non si
+trova). 1,2 µF ±5 % (1,14–1,26 µF) e 1,0 µF ±10 % (0,90–1,10 µF) ci stanno per 5 nF: senza margine, **non** si
+ammettono. E8 e T5 lo dicono.
 
 ## Perché
 
@@ -35,8 +36,9 @@ Calcolo e corse in `data/2026-11-05/L72/` (`script/stax_finestra.py`, `stax/stax
   tre JFET / Q146 di L45d2b3b2b2, i due di L66 sul blocco di oggi) rifatti a 1,05 µF ridanno le cifre versionate
   entro 0,1 ms, e a 1,265 µF danno **149,5 / 149,7 / 149,5 / 144,5 / 144,5 ms**, entro 0,4 ms dalla scala
   lineare. Il margine è nullo per costruzione: 1,265 µF è il limite.
-- **Sul nominale**, con la tolleranza della parte: a ±5 % 0,942–1,205 µF, quindi 1,0 e 1,1 µF (1,1 µF: E9
-  0,148 dB al −5 %, P10 137 ms al +5 %); a ±10 % 0,995–1,150 µF, e nessun valore della serie ci sta.
+- **Sul nominale**, con la tolleranza della parte: a ±5 % 0,942–1,205 µF, quindi 1,0 µF (E9 0,178 dB al −5 %,
+  P10 124,5 ms al +5 %) e 1,1 µF (0,148 dB, 137 ms); 1,2 µF ci sta per 5 nF. A ±10 % 0,995–1,150 µF: il solo
+  1,0 µF, per 5 nF. I due casi da 5 nF non hanno margine né per la deriva del film né per il modello.
 - La differenza dal «~0,97» dell'architetto: lui dava una cifra a occhio fra le righe della sua tabella
   (0,95 µF fa 0,176 dB); il limite esatto sulla capacità reale è 0,895 µF.
 
@@ -44,7 +46,7 @@ Calcolo e corse in `data/2026-11-05/L72/` (`script/stax_finestra.py`, `stax/stax
 
 - **Lasciare E8 com'era e scrivere l'eccezione solo in ADR-081**: E8 è il testo che si consulta montando la
   scheda; è lì che il valore sbagliato rompe PR-30.
-- **Allargare la finestra con un ±10 %**: non ci sta nessun valore.
+- **Ammettere 1,2 µF ±5 % o 1,0 µF ±10 %**: stanno dentro per 5 nF; un margine nullo non è una finestra.
 
 ## Da riaprire se
 
