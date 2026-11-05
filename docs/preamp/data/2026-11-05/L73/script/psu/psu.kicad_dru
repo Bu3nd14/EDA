@@ -1,0 +1,15 @@
+(version 1)
+# L49b: the supply trial board's custom rules, copied next to the routed board
+# by route.py (kicad-cli reads <board>.kicad_dru from the board's folder).
+#
+# Mains to everything else: the TRIAL reinforced creepage, 6.4 mm
+# (make_board.py: the sources, and why the netclass cannot carry it). The
+# placement keeps an empty band for it (place.py); this rule is what judges it.
+(rule "mains_to_low_voltage"
+  (constraint clearance (min 6.4mm))
+  (condition "A.NetClass == 'MAINS' && B.NetClass != 'MAINS'"))
+
+# Between two mains nets (L and N) the insulation is functional, and the
+# source's footprints set it: the Phoenix MKDS 1,5 at 5.08 mm pitch leaves
+# 2.48 mm pad to pad. The netclass carries 2.4 mm; the figure for L to N is
+# G2's, with the norm (SAFETY.md) - here it is the footprint's, written down.
